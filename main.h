@@ -1,0 +1,197 @@
+#ifndef _HI_MAIN_H
+#define _HI_MAIN_H
+
+#include <signal.h>
+#include <time.h>
+#include <string.h>
+#include <unistd.h>
+#include <mysql++.h>
+
+#include <gloox/component.h>
+#include <gloox/messagehandler.h>
+#include <gloox/connectiontcpclient.h>
+#include <gloox/disco.h>
+#include <gloox/connectionlistener.h>
+#include <gloox/presencehandler.h>
+#include <gloox/subscriptionhandler.h>
+#include <gloox/socks5bytestreamserver.h>
+#include <gloox/siprofileft.h>
+
+#include <glib.h>
+
+#include "account.h"
+#include "conversation.h"
+#include "core.h"
+#include "debug.h"
+#include "ft.h"
+#include "notify.h"
+#include "prefs.h"
+#include "prpl.h"
+#include "pounce.h"
+#include "savedstatuses.h"
+#include "sound.h"
+#include "status.h"
+#include "util.h"
+#include "whiteboard.h"
+#include "request.h"
+#include "ft.h"
+
+#define HIICQ_UI "hiicq"
+
+#include "registerhandler.h"
+#include "discoinfohandler.h"
+#include "xpinghandler.h"
+#include "statshandler.h"
+#include "vcardhandler.h"
+#include "gatewayhandler.h"
+#include "caps.h"
+#include "sql.h"
+#include "user.h"
+#include "filetransfermanager.h"
+#include <sys/stat.h>
+#include <sys/types.h>
+
+
+using namespace gloox;
+
+class GlooxDiscoHandler;
+class GlooxDiscoInfoHandler;
+class GlooxRegisterHandler;
+class GlooxXPingHandler;
+class GlooxStatsHandler;
+class GlooxVCardHandler;
+class GlooxGatewayHandler;
+class SQLClass;
+class FileTranferManager;
+class UserManager;
+class AbstractProtocol;
+
+struct User;
+struct UserRow;
+struct authData;
+
+
+typedef enum { 	TRANSPORT_FEATURE_TYPING_NOTIFY = 2,
+				TRANSPORT_FEATURE_AVATARS = 4,
+                TRANSPORT_MANGLE_STATUS = 8,
+				} TransportFeatures;
+
+struct fileTransferData{
+	std::string from;
+	std::string to;
+	std::string filename;
+	std::string name;
+};
+
+struct Configuration {
+	std::string discoName;	// name which will be shown in service discovery
+	std::string protocol;	// protocol used for transporting
+	std::string server;		// address of server to bind to
+	std::string password;	// server password
+	std::string jid;		// JID of this transport
+	int port;				// server port
+	
+	bool onlyForVIP;		// true if transport is only for users in VIP users database
+	std::map<int,std::string> bindIPs;	// IP address to which libpurple should bind connections
+	
+	std::string userDir;	// directory used as .tmp directory for avatars and other libpurple stuff
+	std::string filetransferCache;	// directory where files are saved
+	std::string base64Dir;	// TODO: I'm depracted, remove me
+
+	std::string sqlHost;	// mysql host
+	std::string sqlPassword;	// mysql password
+	std::string sqlUser;	// mysql user
+	std::string sqlDb;		// mysql database
+	std::string sqlPrefix;	// mysql prefix used for tables
+};
+
+class GlooxMessageHandler : public MessageHandler,ConnectionListener,PresenceHandler,SubscriptionHandler
+{
+
+public:
+	GlooxMessageHandler();
+	~GlooxMessageHandler();
+	
+	static GlooxMessageHandler *instance() { return m_pInstance; }
+	
+	// Purple related
+	void purpleBuddyChanged(PurpleBuddy* buddy);
+	void purpleConnectionError(PurpleConnection *gc);
+	void purpleConnectionError(PurpleConnection *gc,PurpleConnectionError reason,const char *text);
+	void purpleMessageReceived(PurpleAccount* account,char * name,char *msg,PurpleConversation *conv,PurpleMessageFlags flags);
+	void * purpleAuthorizeReceived(PurpleAccount *account,const char *remote_user,const char *id,const char *alias,const char *message,gboolean on_list,PurpleAccountRequestAuthorizationCb authorize_cb,PurpleAccountRequestAuthorizationCb deny_cb,void *user_data);
+	void purpleBuddyTyping(PurpleAccount *account, const char *who);
+	void purpleBuddyTypingStopped(PurpleAccount *account, const char *who);
+	void purpleAuthorizeClose(void *data);
+	void purpleFileReceiveRequest(PurpleXfer *xfer);
+	void purpleFileReceiveComplete(PurpleXfer *xfer);
+
+	// MessageHandler
+	void handleMessage( Stanza* stanza,MessageSession* session);
+
+	// ConnectionListener
+	void onConnect();
+	void onDisconnect(ConnectionError e);
+	void onSessionCreateError  	(   	SessionCreateError   	 error);
+	bool onTLSConnect(const CertInfo & info);
+	
+	// Gloox handlers
+	void handlePresence(Stanza * stanza);
+	void handleSubscription(Stanza * stanza);
+	void signedOn(PurpleConnection *gc,gpointer unused);
+	
+	// User related
+	// maybe we should move it to something like UserManager
+	bool hasCaps(const std::string &name);
+	void removeUser(User *user);
+	
+	UserManager *userManager() { return m_userManager; }
+	GlooxStatsHandler *stats() { return m_stats; }
+	Configuration configuration() { return m_configuration; }
+	std::string jid() { return m_configuration.jid; } // just to create shortcut and because of historical reasons
+	SQLClass *sql() { return m_sql; }
+	GlooxVCardHandler *vcard() { return m_vcard; }
+	AbstractProtocol *protocol() { return m_protocol; }
+	
+	FileTransferManager* ftManager;
+	SIProfileFT* ft;
+	
+	Component *j;
+// 	std::vector<User*> *users;
+	int lastIP;
+	std::map <std::string,int> capsCache;
+	
+	
+	
+	GlooxGatewayHandler *gatewayHandler;
+	SOCKS5BytestreamServer* ftServer;
+	
+private:
+// 	bool callback(GIOCondition condition);
+	bool initPurple();
+	void loadConfigFile();
+	void loadProtocol();
+	
+	Configuration m_configuration;
+	AbstractProtocol *m_protocol;
+
+	SQLClass *m_sql;
+	
+	GlooxDiscoHandler *m_discoHandler;
+	GlooxDiscoInfoHandler *m_discoInfoHandler;
+ 	GlooxRegisterHandler *m_reg;
+	GlooxXPingHandler *m_xping;
+	GlooxStatsHandler *m_stats;
+	GlooxVCardHandler *m_vcard;
+	
+	GIOChannel *connectIO;
+	
+	UserManager *m_userManager;
+	static GlooxMessageHandler* m_pInstance;
+	bool m_firstConnection;
+
+	
+	
+};
+
+#endif

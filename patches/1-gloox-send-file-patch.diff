@@ -1,0 +1,499 @@
+Common subdirectories: src/.deps and src-new/.deps
+Common subdirectories: src/examples and src-new/examples
+Common subdirectories: src/.libs and src-new/.libs
+diff -u src/sihandler.h src-new/sihandler.h
+--- src/sihandler.h	2008-01-12 21:24:23.000000000 +0100
++++ src-new/sihandler.h	2008-11-05 20:40:46.000000000 +0100
+@@ -51,7 +51,7 @@
+        * @param ptag The profile-specific child of the SI request. May be 0.
+        * @param fneg The &lt;feature/&gt; child of the SI request. May be 0 (but should not be).
+        */
+-      virtual void handleSIRequestResult( const JID& from, const std::string& sid,
++      virtual void handleSIRequestResult( const JID& from,const JID& to, const std::string& sid,
+                                           Tag* si, Tag* ptag, Tag* fneg ) = 0;
+ 
+       /**
+diff -u src/simanager.cpp src-new/simanager.cpp
+--- src/simanager.cpp	2008-01-12 21:24:23.000000000 +0100
++++ src-new/simanager.cpp	2008-11-06 13:10:01.000000000 +0100
+@@ -43,7 +43,7 @@
+     }
+   }
+ 
+-  const std::string SIManager::requestSI( SIHandler* sih, const JID& to, const std::string& profile,
++  const std::string SIManager::requestSI( SIHandler* sih, const JID& to,const JID& from, const std::string& profile,
+                                           Tag* child1, Tag* child2, const std::string& mimetype )
+   {
+     if( !m_parent || !sih )
+@@ -56,6 +56,7 @@
+     iq->addAttribute( "type", "set" );
+     iq->addAttribute( "id", id );
+     iq->addAttribute( "to", to.full() );
++	iq->addAttribute( "from", from.full() );
+     Tag* si = new Tag( iq, "si" );
+     si->addAttribute( "xmlns", XMLNS_SI );
+     si->addAttribute( "id", id2 );
+@@ -79,11 +80,12 @@
+     return id2;
+   }
+ 
+-  void SIManager::acceptSI( const JID& to, const std::string& id, Tag* child1, Tag* child2 )
++  void SIManager::acceptSI( const JID& to,const JID &from, const std::string& id, Tag* child1, Tag* child2 )
+   {
+     Tag* iq = new Tag( "iq" );
+     iq->addAttribute( "id", id );
+     iq->addAttribute( "to", to.full() );
++	iq->addAttribute( "from", from.full() );
+     iq->addAttribute( "type", "result" );
+     Tag* si = new Tag( iq, "si" );
+     si->addAttribute( "xmlns", XMLNS_SI );
+@@ -163,7 +165,7 @@
+       {
+         Tag* p = si->findChildWithAttrib( "xmlns", profile );
+         Tag* f = si->findChild( "feature", "xmlns", XMLNS_FEATURE_NEG );
+-        (*it).second->handleSIRequest( stanza->from(), stanza->id(), profile, si, p, f );
++        (*it).second->handleSIRequest( stanza->from(),stanza->to(), stanza->id(), profile, si, p, f );
+         return true;
+       }
+     }
+@@ -189,7 +191,7 @@
+               ptag = si->findChildWithAttrib( "xmlns", (*it).second.profile );
+               fneg = si->findChild( "feature", "xmlns", XMLNS_FEATURE_NEG );
+             }
+-            (*it).second.sih->handleSIRequestResult( stanza->from(), (*it).second.sid, si, ptag, fneg );
++            (*it).second.sih->handleSIRequestResult( stanza->from(),stanza->to(), (*it).second.sid, si, ptag, fneg );
+             m_track.erase( it );
+           }
+           return true;
+diff -u src/simanager.h src-new/simanager.h
+--- src/simanager.h	2008-01-12 21:24:23.000000000 +0100
++++ src-new/simanager.h	2008-11-05 21:07:43.000000000 +0100
+@@ -71,7 +71,7 @@
+        * @note The SIManager claims ownership of the Tags supplied to this function, and will
+        * delete them after use.
+        */
+-      const std::string requestSI( SIHandler* sih, const JID& to, const std::string& profile, Tag* child1,
++      const std::string requestSI( SIHandler* sih, const JID& to,const JID& from, const std::string& profile, Tag* child1,
+                                    Tag* child2 = 0, const std::string& mimetype = "binary/octet-stream" );
+ 
+       /**
+@@ -85,7 +85,7 @@
+        * @note The SIManager claims ownership of the Tags supplied to this function, and will
+        * delete them after use.
+        */
+-      void acceptSI( const JID& to, const std::string& id, Tag* child1, Tag* child2 = 0 );
++      void acceptSI( const JID& to, const JID& from,const std::string& id, Tag* child1, Tag* child2 = 0 );
+ 
+       /**
+        * Call this function to decline an SI request previously announced by means of
+diff -u src/siprofileft.cpp src-new/siprofileft.cpp
+--- src/siprofileft.cpp	2008-01-12 21:24:23.000000000 +0100
++++ src-new/siprofileft.cpp	2008-11-06 13:30:21.000000000 +0100
+@@ -55,7 +55,7 @@
+       delete m_socks5Manager;
+   }
+ 
+-  const std::string SIProfileFT::requestFT( const JID& to, const std::string& name, long size,
++  const std::string SIProfileFT::requestFT( const JID& to, const JID& from,const std::string& filename, const std::string& name, long size,
+                                             const std::string& hash, const std::string& desc,
+                                             const std::string& date, const std::string& mimetype )
+   {
+@@ -63,7 +63,7 @@
+       return std::string();
+ 
+     Tag* file = new Tag( "file", "xmlns", XMLNS_SI_FT );
+-    file->addAttribute( "name", name );
++    file->addAttribute( "name", filename );
+     file->addAttribute( "size", size );
+     if( !hash.empty() )
+       file->addAttribute( "hash", hash );
+@@ -85,10 +85,10 @@
+     df.addField( dff );
+     feature->addChild( df.tag() );
+ 
+-    return m_manager->requestSI( this, to, XMLNS_SI_FT, file, feature, mimetype );;
++    return m_manager->requestSI( this, to,from, XMLNS_SI_FT, file, feature, mimetype );;
+   }
+ 
+-  void SIProfileFT::acceptFT( const JID& to, const std::string& id, StreamType type )
++  void SIProfileFT::acceptFT( const JID& to, const JID &from, const std::string& id, StreamType type )
+   {
+     if( !m_manager )
+       return;
+@@ -111,7 +111,7 @@
+     df.addField( dff );
+     feature->addChild( df.tag() );
+ 
+-    m_manager->acceptSI( to, id, 0, feature );
++    m_manager->acceptSI( to,from, id, 0, feature );
+   }
+ 
+   void SIProfileFT::declineFT( const JID& to, const std::string& id, SIManager::SIError reason,
+@@ -141,7 +141,7 @@
+       m_socks5Manager->addStreamHost( jid, host, port );
+   }
+ 
+-  void SIProfileFT::handleSIRequest( const JID& from, const std::string& id, const std::string& profile,
++  void SIProfileFT::handleSIRequest( const JID& from, const JID& to, const std::string& id, const std::string& profile,
+                                      Tag* si, Tag* ptag, Tag* /*fneg*/ )
+   {
+     if( profile != XMLNS_SI_FT || !ptag || !si )
+@@ -163,14 +163,14 @@
+           length = atol( r->findAttribute( "length" ).c_str() );
+       }
+       const std::string& mt = si->findAttribute( "mime-type" );
+-      m_handler->handleFTRequest( from, id, si->findAttribute( "id" ), ptag->findAttribute( "name" ),
++      m_handler->handleFTRequest( from,to, id, si->findAttribute( "id" ), ptag->findAttribute( "name" ),
+                                   atol( ptag->findAttribute( "size" ).c_str() ),
+                                   ptag->findAttribute( "hash" ), ptag->findAttribute( "date" ),
+                                   mt.empty() ? "binary/octet-stream" : mt, desc, FTTypeS5B, offset, length );
+     }
+   }
+ 
+-  void SIProfileFT::handleSIRequestResult( const JID& from, const std::string& sid,
++  void SIProfileFT::handleSIRequestResult( const JID& from, const JID& to, const std::string& sid,
+                                            Tag* /*si*/, Tag* /*ptag*/, Tag* fneg )
+   {
+ 
+@@ -181,7 +181,7 @@
+       if( dff && dff->value() == XMLNS_BYTESTREAMS )
+       {
+         // check return value:
+-        m_socks5Manager->requestSOCKS5Bytestream( from, SOCKS5BytestreamManager::S5BTCP, sid );
++        m_socks5Manager->requestSOCKS5Bytestream( from,to, SOCKS5BytestreamManager::S5BTCP, sid );
+       }
+     }
+ 
+diff -u src/siprofileft.h src-new/siprofileft.h
+--- src/siprofileft.h	2008-01-12 21:24:23.000000000 +0100
++++ src-new/siprofileft.h	2008-11-06 13:29:34.000000000 +0100
+@@ -168,7 +168,7 @@
+        * @return The requested stream's ID (SID). Empty if conditions above (file name, size)
+        * are not met.
+        */
+-      const std::string requestFT( const JID& to, const std::string& name, long size,
++      const std::string requestFT( const JID& to,const JID& from,const std::string& filename,const std::string& name, long size,
+                                    const std::string& hash = "", const std::string& desc = "",
+                                    const std::string& date = "", const std::string& mimetype = "" );
+ 
+@@ -180,7 +180,7 @@
+        * @param type The desired stream type to use for this file transfer. Defaults to
+        * SOCKS5 Bytestream.
+        */
+-      void acceptFT( const JID& to, const std::string& id, StreamType type = FTTypeS5B );
++      void acceptFT( const JID& to,const JID &from,  const std::string& id, StreamType type = FTTypeS5B );
+ 
+       /**
+        * Call this function to decline a FT request previously announced by means of
+@@ -251,11 +251,11 @@
+         { if( m_socks5Manager ) m_socks5Manager->removeSOCKS5BytestreamServer(); }
+ 
+       // re-implemented from SIProfileHandler
+-      virtual void handleSIRequest( const JID& from, const std::string& id, const std::string& profile,
++      virtual void handleSIRequest( const JID& from, const JID& to, const std::string& id, const std::string& profile,
+                                     Tag* si, Tag* ptag, Tag* fneg );
+ 
+       // re-implemented from SIHandler
+-      virtual void handleSIRequestResult( const JID& from, const std::string& sid,
++      virtual void handleSIRequestResult( const JID& from,const JID& to, const std::string& sid,
+                                           Tag* si, Tag* ptag, Tag* fneg );
+ 
+       // re-implemented from SIHandler
+diff -u src/siprofilefthandler.h src-new/siprofilefthandler.h
+--- src/siprofilefthandler.h	2008-01-12 21:24:23.000000000 +0100
++++ src-new/siprofilefthandler.h	2008-11-05 20:45:42.000000000 +0100
+@@ -59,7 +59,7 @@
+        * @param length The number of bytes to send, starting from the given offset. A value of -1
+        * indicates that the entire file is to be transmitted (taking the offset into account).
+        */
+-      virtual void handleFTRequest( const JID& from, const std::string& id, const std::string& sid,
++      virtual void handleFTRequest( const JID& from, const JID& to,const std::string& id, const std::string& sid,
+                                     const std::string& name, long size, const std::string& hash,
+                                     const std::string& date, const std::string& mimetype,
+                                     const std::string& desc, int stypes, long offset, long length ) = 0;
+diff -u src/siprofilehandler.h src-new/siprofilehandler.h
+--- src/siprofilehandler.h	2008-01-12 21:24:23.000000000 +0100
++++ src-new/siprofilehandler.h	2008-11-05 20:59:43.000000000 +0100
+@@ -54,7 +54,7 @@
+        * @param ptag The profile-specific child of the SI request. May be 0, but should not be.
+        * @param fneg The &lt;feature/&gt; child of the SI request. May be 0.
+        */
+-      virtual void handleSIRequest( const JID& from, const std::string& id, const std::string& profile,
++      virtual void handleSIRequest( const JID& from, const JID& to,const std::string& id, const std::string& profile,
+                                     Tag* si, Tag* ptag, Tag* fneg ) = 0;
+ 
+   };
+diff -u src/socks5bytestream.cpp src-new/socks5bytestream.cpp
+--- src/socks5bytestream.cpp	2008-01-12 21:24:23.000000000 +0100
++++ src-new/socks5bytestream.cpp	2008-11-06 11:24:50.000000000 +0100
+@@ -23,10 +23,10 @@
+ {
+ 
+   SOCKS5Bytestream::SOCKS5Bytestream( SOCKS5BytestreamManager* manager, ConnectionBase* connection,
+-                                      LogSink& logInstance, const JID& initiator, const JID& target,
++                                      LogSink& logInstance, const JID& initiator, const JID& target,const JID& from,
+                                       const std::string& sid )
+     : m_manager( manager ), m_connection( 0 ), m_socks5( 0 ), m_logInstance( logInstance ),
+-      m_socks5BytestreamDataHandler( 0 ), m_initiator( initiator ), m_target( target ),
++      m_socks5BytestreamDataHandler( 0 ), m_initiator( initiator ), m_target( target ), m_from( from ),
+       m_sid( sid ), m_open( false )
+   {
+     if( connection && connection->state() == StateConnected )
+@@ -53,7 +53,7 @@
+ 
+     SHA sha;
+     sha.feed( m_sid );
+-    sha.feed( m_initiator.full() );
++    sha.feed( m_from.full() );
+     sha.feed( m_target.full() );
+     m_socks5 = new ConnectionSOCKS5Proxy( this, connection, m_logInstance, sha.hex(), 0 );
+   }
+@@ -77,12 +77,20 @@
+       }
+     }
+ 
+-    m_manager->acknowledgeStreamHost( false, JID(), std::string() );
++    m_manager->acknowledgeStreamHost( false, JID(),JID(), std::string() );
+     return false;
+   }
+ 
+   bool SOCKS5Bytestream::send( const std::string& data )
+   {
++	if (!m_open)
++		return 0;
++	if (!m_connection)
++		return -1;
++	if (!m_socks5)
++		return -2;
++	if (!m_manager)
++		return -3;
+     if( !m_open || !m_connection || !m_socks5 || !m_manager )
+       return false;
+ 
+@@ -139,7 +147,7 @@
+ 
+   void SOCKS5Bytestream::handleConnect( const ConnectionBase* /*connection*/ )
+   {
+-    m_manager->acknowledgeStreamHost( true, m_proxy, m_sid );
++    m_manager->acknowledgeStreamHost( true, m_proxy,m_from, m_sid );
+   }
+ 
+   void SOCKS5Bytestream::handleDisconnect( const ConnectionBase* /*connection*/, ConnectionError /*reason*/ )
+diff -u src/socks5bytestream.h src-new/socks5bytestream.h
+--- src/socks5bytestream.h	2008-01-12 21:24:23.000000000 +0100
++++ src-new/socks5bytestream.h	2008-11-06 07:30:43.000000000 +0100
+@@ -160,7 +160,7 @@
+ 
+     private:
+       SOCKS5Bytestream( SOCKS5BytestreamManager* manager, ConnectionBase* connection,
+-                        LogSink& logInstance, const JID& initiator, const JID& target,
++                        LogSink& logInstance, const JID& initiator, const JID& target, const JID& from,
+                         const std::string& sid );
+       void activate();
+ 
+@@ -171,6 +171,7 @@
+       SOCKS5BytestreamDataHandler *m_socks5BytestreamDataHandler;
+       const JID m_initiator;
+       const JID m_target;
++	  const JID m_from;
+       std::string m_sid;
+       bool m_open;
+       JID m_proxy;
+diff -u src/socks5bytestreammanager.cpp src-new/socks5bytestreammanager.cpp
+--- src/socks5bytestreammanager.cpp	2008-01-12 21:24:23.000000000 +0100
++++ src-new/socks5bytestreammanager.cpp	2008-11-06 11:26:52.000000000 +0100
+@@ -30,6 +30,7 @@
+   {
+     if( m_parent )
+       m_parent->registerIqHandler( this, XMLNS_BYTESTREAMS );
++	m_server = NULL;
+   }
+ 
+   SOCKS5BytestreamManager::~SOCKS5BytestreamManager()
+@@ -57,7 +58,7 @@
+     m_hosts.push_back( sh );
+   }
+ 
+-  bool SOCKS5BytestreamManager::requestSOCKS5Bytestream( const JID& to, S5BMode /*mode*/,
++  bool SOCKS5BytestreamManager::requestSOCKS5Bytestream( const JID& to,const JID& from, S5BMode /*mode*/,
+                                                          const std::string& sid )
+   {
+     if( !m_parent )
+@@ -75,6 +76,7 @@
+     Tag *iq = new Tag( "iq" );
+     iq->addAttribute( "type", "set" );
+     iq->addAttribute( "to", to.full() );
++	iq->addAttribute( "from", from.full() );
+     iq->addAttribute( "id", id );
+     Tag *q = new Tag( iq, "query", "xmlns", XMLNS_BYTESTREAMS );
+     q->addAttribute( "sid", msid );
+@@ -92,7 +94,7 @@
+     {
+       SHA sha;
+       sha.feed( msid );
+-      sha.feed( m_parent->jid().full() );
++      sha.feed( from.full() );
+       sha.feed( to.full() );
+       m_server->registerHash( sha.hex() );
+     }
+@@ -111,7 +113,7 @@
+     return true;
+   }
+ 
+-  void SOCKS5BytestreamManager::acknowledgeStreamHost( bool success, const JID& jid,
++  void SOCKS5BytestreamManager::acknowledgeStreamHost( bool success, const JID& jid,const JID& from,
+                                                        const std::string& sid )
+   {
+     AsyncTrackMap::const_iterator it = m_asyncTrackMap.find( sid );
+@@ -123,6 +125,7 @@
+     if( (*it).second.incoming )
+     {
+       iq->addAttribute( "to", (*it).second.from.full() );
++	  iq->addAttribute( "from", from.full() );
+       iq->addAttribute( "id", (*it).second.id );
+ 
+       if( success )
+@@ -146,6 +149,7 @@
+       {
+         const std::string& id = m_parent->getID();
+         iq->addAttribute( "to", jid.full() );
++		iq->addAttribute( "from", from.full() );
+         iq->addAttribute( "id", id );
+         iq->addAttribute( "type", "set" );
+         Tag* q = new Tag( iq, "query", "xmlns", XMLNS_BYTESTREAMS );
+@@ -253,7 +257,7 @@
+ 
+     SOCKS5Bytestream* s5b = new SOCKS5Bytestream( this, m_parent->connectionImpl()->newInstance(),
+                                                   m_parent->logInstance(),
+-                                                  (*it).second.from, m_parent->jid(), sid );
++                                                  (*it).second.from, m_parent->jid(),JID(), sid );
+     s5b->setStreamHosts( (*it).second.sHosts );
+     m_s5bMap[sid] = s5b;
+     m_socks5BytestreamHandler->handleIncomingSOCKS5Bytestream( s5b );
+@@ -350,18 +354,18 @@
+               {
+                 SHA sha;
+                 sha.feed( (*it).second );
+-                sha.feed( m_parent->jid().full() );
++                sha.feed( stanza->to().full() );
+                 sha.feed( stanza->from().full() );
+                 s5b = new SOCKS5Bytestream( this, m_server->getConnection( sha.hex() ),
+                                             m_parent->logInstance(),
+-                                            m_parent->jid(), stanza->from(),
++                                            stanza->to(), stanza->from(),stanza->to(),
+                                             (*it).second );
+               }
+               else
+               {
+                 s5b = new SOCKS5Bytestream( this, m_parent->connectionImpl()->newInstance(),
+                                             m_parent->logInstance(),
+-                                            m_parent->jid(), stanza->from(),
++                                            stanza->to(), stanza->from(),stanza->to(),
+                                             (*it).second );
+                 StreamHostList shl;
+                 shl.push_back( *sh );
+diff -u src/socks5bytestreammanager.h src-new/socks5bytestreammanager.h
+--- src/socks5bytestreammanager.h	2008-01-12 21:24:23.000000000 +0100
++++ src-new/socks5bytestreammanager.h	2008-11-06 07:31:55.000000000 +0100
+@@ -104,7 +104,7 @@
+        * @b not indicate that the bytestream has been opened. This is announced by means of the
+        * SOCKS5BytestreamHandler.
+        */
+-      bool requestSOCKS5Bytestream( const JID& to, S5BMode mode, const std::string& sid = "" );
++      bool requestSOCKS5Bytestream( const JID& to,const JID& from, S5BMode mode, const std::string& sid = "" );
+ 
+       /**
+        * To get rid of a bytestream (i.e., close and delete it), call this function. You
+@@ -164,7 +164,7 @@
+       bool haveStream( const JID& from );
+       const StreamHost* findProxy( const JID& from, const std::string& hostjid, const std::string& sid );
+ 
+-      void acknowledgeStreamHost( bool success, const JID& jid, const std::string& sid );
++      void acknowledgeStreamHost( bool success, const JID& jid,const JID& from, const std::string& sid );
+ 
+       enum IBBActionType
+       {
+diff -u src/socks5bytestreamserver.cpp src-new/socks5bytestreamserver.cpp
+--- src/socks5bytestreamserver.cpp	2008-01-12 21:24:23.000000000 +0100
++++ src-new/socks5bytestreamserver.cpp	2008-11-06 11:03:26.000000000 +0100
+@@ -114,6 +114,7 @@
+ 
+   void SOCKS5BytestreamServer::handleIncomingConnection( ConnectionBase* connection )
+   {
++    printf("NEW INCOMMING CONNECTION\n");
+     connection->registerConnectionDataHandler( this );
+     ConnectionInfo ci;
+     ci.state = StateUnnegotiated;
+@@ -123,17 +124,19 @@
+   void SOCKS5BytestreamServer::handleReceivedData( const ConnectionBase* connection,
+                                                    const std::string& data )
+   {
++  	printf("DATA RECEIVED %s\n",data.c_str());
+     ConnectionMap::iterator it = m_connections.find( const_cast<ConnectionBase*>( connection ) );
+     if( it == m_connections.end() )
+       return;
+-
+     switch( (*it).second.state )
+     {
+       case StateDisconnected:
++		printf("state disconnected\n");
+         (*it).first->disconnect();
+         break;
+       case StateUnnegotiated:
+       {
++	  	printf("state unnegotiated\n");
+         char c[2];
+         c[0] = 0x05;
+         c[1] = (char)0xFF;
+@@ -149,6 +152,7 @@
+             if( data[i] == 0x00 )
+             {
+               c[1] = 0x00;
++			  printf("changing state to stateAuthAccepted\n");
+               (*it).second.state = StateAuthAccepted;
+               break;
+             }
+@@ -158,10 +162,12 @@
+         break;
+       }
+       case StateAuthmethodAccepted:
++		printf("state authmethodaccepted\n");
+         // place to implement any future auth support
+         break;
+       case StateAuthAccepted:
+       {
++	  	printf("state auth accepted\n");
+         std::string reply = data;
+         if( reply.length() < 2 )
+           reply.resize( 2 );
+@@ -173,24 +179,29 @@
+         if( data.length() == 47 && data[0] == 0x05 && data[1] == 0x01 && data[2] == 0x00
+             && data[3] == 0x03 && data[4] == 0x28 && data[45] == 0x00 && data[46] == 0x00 )
+         {
++			printf("well formated...\n");
+           const std::string hash = data.substr( 5, 40 );
+-
+           HashMap::const_iterator ith = m_hashes.begin();
+           for( ; ith != m_hashes.end() && (*ith) != hash; ++ith )
+             ;
+ 
+           if( ith != m_hashes.end() )
+           {
++		  	printf("changing state to StateDescinationAccepted\n");
+             reply[1] = 0x00;
+             (*it).second.hash = hash;
+             (*it).second.state = StateDestinationAccepted;
+           }
++		  else{
++		  	printf("not in m_hashes\n");
++		  }
+         }
+         (*it).first->send( reply );
+         break;
+       }
+       case StateDestinationAccepted:
+       case StateActive:
++		printf("should not happen\n");
+         // should not happen
+         break;
+     }
