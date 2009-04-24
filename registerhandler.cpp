@@ -83,9 +83,9 @@ bool GlooxRegisterHandler::handleIq (Stanza *stanza){
 		if(query->hasChild( "remove" )) {
 			std::cout << "* removing user from database and disconnecting from legacy network\n";
 			if (user!=NULL){
-				if (user->connected==true){
+				if (user->isConnected()==true){
 					purple_account_disconnect(user->account());
-					user->connected=false;
+					user->disconnected();
 				}
 			}
 			// TODO: uncomment this line when jabbim will know rosterx

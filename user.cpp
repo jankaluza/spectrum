@@ -34,21 +34,21 @@ static gboolean sync_cb(gpointer data)
 }
 
 User::User(GlooxMessageHandler *parent, const std::string &jid, const std::string &username, const std::string &password){
-	p=parent;
+	p = parent;
 	m_jid = jid;
 	m_username = username;
 	m_password = password;
-	this->connected=false;
+	m_connected = false;
 	m_roster = p->sql()->getRosterByJid(m_jid);
 	m_vip = p->sql()->isVIP(m_jid);
 	m_syncTimer = 0;
 	m_readyForConnect = false;
 	m_rosterXCalled = false;
-	m_account=NULL;
-	this->connectionStart = time(NULL);
+	m_account = NULL;
+	m_connectionStart = time(NULL);
 	m_subscribeLastCount = -1;
-	this->reconnectCount=0;
-	this->features=6; // TODO: I can't be hardcoded
+	m_reconnectCount = 0;
+	this->features = 6; // TODO: I can't be hardcoded
 }
 
 bool User::syncCallback() {
@@ -292,7 +292,7 @@ Tag *User::generatePresenceStanza(PurpleBuddy *buddy){
  * Re-requests authorization for buddy if we can do it (if buddy is not authorized).
  */
 void User::purpleReauthorizeBuddy(PurpleBuddy *buddy){
-	if (!this->connected)
+	if (!m_connected)
 		return;
 	if (!buddy)
 		return;
@@ -545,7 +545,7 @@ void User::connect(){
 
 		purple_accounts_add(m_account);
 	}
-	this->connectionStart = time(NULL);
+	m_connectionStart = time(NULL);
 	m_readyForConnect = false;
 	purple_account_set_string(m_account,"bind",std::string(m_bindIP).c_str());
 	purple_account_set_string(m_account,"lastUsedJid",std::string(m_jid +"/"+m_resource).c_str());
@@ -564,11 +564,27 @@ void User::connect(){
 }
 
 /*
+ * called when we are disconnected from legacy network
+ */
+void User::disconnected() {
+	m_connected = false;
+	m_reconnectCount += 1;
+}
+
+/*
+ * called when we are disconnected from legacy network
+ */
+void User::connected() {
+	m_connected = true;
+	m_reconnectCount = 0;
+}
+
+/*
  * Received jabber presence...
  */
 void User::receivedPresence(Stanza *stanza){
 	// we're connected
-	if (this->connected){
+	if (m_connected){
 	
 		// respond to probe presence
 		if (stanza->subtype() == StanzaPresenceProbe && stanza->to().username()!=""){
@@ -710,13 +726,13 @@ void User::receivedPresence(Stanza *stanza){
 		if(stanza->presence() == PresenceUnavailable) {
 			// disconnect from legacy network if we are connected
 			std::map<std::string,int> ::iterator iter = m_resources.begin();
-			if ((this->connected==false && int(time(NULL))>int(this->connectionStart)+10) || this->connected==true){
+			if ((m_connected==false && int(time(NULL))>int(m_connectionStart)+10) || m_connected==true){
 				iter = m_resources.find(stanza->from().resource());
 				if(iter != m_resources.end()){
 					m_resources.erase(stanza->from().resource());
 				}
 			}
-			if (this->connected){
+			if (m_connected){
 				if (m_resources.empty()){
 					Log().Get(m_jid) << "disconecting";
 					purple_account_disconnect(m_account);
@@ -726,10 +742,10 @@ void User::receivedPresence(Stanza *stanza){
 					iter = m_resources.begin();
 					m_resource=(*iter).first;
 				}
-// 				this->connected=false;
+// 				m_connected=false;
 			}
 			else {
-				if (!m_resources.empty() && int(time(NULL))>int(this->connectionStart)+10){
+				if (!m_resources.empty() && int(time(NULL))>int(m_connectionStart)+10){
 					iter = m_resources.begin();
 					m_resource=(*iter).first;
 				}
@@ -747,7 +763,7 @@ void User::receivedPresence(Stanza *stanza){
 			}
 
 			Log().Get(m_jid) << "resource: " << m_resource;
-			if (!this->connected){
+			if (!m_connected){
 				// we are not connected to legacy network, so we should do it when disco#info arrive :)
 				Log().Get(m_jid) << "connecting: capsVersion=" << m_capsVersion;
 				if (m_readyForConnect==false){
@@ -810,7 +826,7 @@ void User::receivedPresence(Stanza *stanza){
 		}
 		
 		// send presence about tranport status to user
-		if(this->connected || m_readyForConnect) {
+		if(m_connected || m_readyForConnect) {
 			Stanza *tag = Stanza::createPresenceStanza(m_jid, stanza->status(),stanza->presence());
 			tag->addAttribute( "from", p->jid() );
 			p->j->send( tag );

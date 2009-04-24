@@ -35,7 +35,7 @@ static gboolean transferFinished(gpointer data){
 				if (user){
 					Log().Get(user->jid()) << "trying to send file "<< (*u).second.filename <<" to " << (*u).second.from.username();
 					if (user->account()){
-						if (user->connected){
+						if (user->isConnected()){
 							if (user->isVIP()){
 								Log().Get(user->jid()) << "sending file";
 								serv_send_file(purple_account_get_connection(user->account()),(*u).second.from.username().c_str(),(*u).second.filename.c_str());

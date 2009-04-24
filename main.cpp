@@ -354,7 +354,7 @@ static gboolean sendFileToJabber(gpointer data){
 static gboolean connectUser(gpointer data){
 	std::string name((char*)data);
 	User *user = GlooxMessageHandler::instance()->userManager()->getUserByJID(name);
-	if (user && user->readyForConnect() && !user->connected){
+	if (user && user->readyForConnect() && !user->isConnected()){
 		user->connect();
 	}
 	g_free(data);
@@ -472,21 +472,6 @@ void GlooxMessageHandler::onSessionCreateError (SessionCreateError error){
 	Log().Get("gloox") << "sessionCreateError";
 }
 
-// depracted.... TODO: remove me, I'm not used...
-void GlooxMessageHandler::purpleConnectionError(PurpleConnection *gc){
-	PurpleAccount *account = purple_connection_get_account(gc);
-	User *user = userManager()->getUserByAccount(account);
-	std::cout << "disconnect because of error\n";
-	if (user!=NULL){
-		std::cout << "*** "<< user->jid() <<": disconnected from legacy network because of error\n";
-		if (user->connected==true){
-			user->connected=false;
-		}
-		
-		m_userManager->removeUser(user);
-	}
-}
-
 void GlooxMessageHandler::purpleConnectionError(PurpleConnection *gc,PurpleConnectionError reason,const char *text){
 	PurpleAccount *account = purple_connection_get_account(gc);
 	User *user = userManager()->getUserByAccount(account);
@@ -502,29 +487,26 @@ void GlooxMessageHandler::purpleConnectionError(PurpleConnection *gc,PurpleConne
 				s->addAttribute("from",jid());
 				j->send(s);
 			}
-			if (user->connected==true){
-				user->connected=false;
-			}
+// 			if (user->isConnected()==true){
+// 				user->isConnected()=false;
+// 			}
 			m_userManager->removeUserTimer(user);
 		}
 		else{
-			if (user->reconnectCount==1){
+			if (user->reconnectCount()==1){
 				if (text){
 					Stanza *s = Stanza::createMessageStanza(user->jid(), (std::string)text);
 					std::string from;
 					s->addAttribute("from",jid());
 					j->send(s);
 				}
-				if (user->connected==true){
-					user->connected=false;
-				}
+// 				if (user->isConnected()==true){
+// 					user->isConnected()=false;
+// 				}
 				m_userManager->removeUserTimer(user);
 			}
 			else{
-				if (user->connected==true){
-					user->connected=false;
-				}
-				user->reconnectCount+=1;
+
 				g_timeout_add(5000,&reconnect,g_strdup(user->jid().c_str()));
 			}
 		}
@@ -560,8 +542,7 @@ void GlooxMessageHandler::signedOn(PurpleConnection *gc,gpointer unused){
 	User *user = userManager()->getUserByAccount(account);
 	if (user!=NULL){
 		Log().Get(user->jid()) << "logged in to legacy network";
-		user->connected=true;
-		user->reconnectCount=0;
+		user->connected();
 	}
 }
 
@@ -585,7 +566,7 @@ void * GlooxMessageHandler::purpleAuthorizeReceived(PurpleAccount *account,const
 		return NULL;
 	User *user = userManager()->getUserByAccount(account);
 	if (user!=NULL){
-		if (user->connected){
+		if (user->isConnected()){
 			user->purpleAuthorizeReceived(account,remote_user,id,alias,message,on_list,authorize_cb,deny_cb,user_data);
 			authData *data = new authData;
 			data->account = account;
@@ -699,7 +680,7 @@ void GlooxMessageHandler::purpleFileReceiveComplete(PurpleXfer *xfer){
 	std::string basename(g_path_get_basename(purple_xfer_get_local_filename(xfer)));
 	User *user = userManager()->getUserByAccount(purple_xfer_get_account(xfer));
 	if (user!=NULL){
-		if (user->connected){
+		if (user->isConnected()){
 			Log().Get(user->jid()) << "Trying to send file " << filename;
 			if(user->hasFeature(GLOOX_FEATURE_FILETRANSFER)){
 				if (user->isVIP()){
@@ -743,7 +724,7 @@ void GlooxMessageHandler::purpleMessageReceived(PurpleAccount* account,char * na
 	m_stats->messageFromLegacy();
 	User *user = userManager()->getUserByAccount(account);
 	if (user){
-		if (user->connected){
+		if (user->isConnected()){
 			user->purpleMessageReceived(account,name,msg,conv,flags);
 		}
 		else {
@@ -904,15 +885,15 @@ void GlooxMessageHandler::handlePresence(Stanza * stanza){
 		user->receivedPresence(stanza);
 	}
 	if(stanza->to().username() == "" && user!=NULL){
-		if(stanza->presence() == PresenceUnavailable && user->connected==true && user->resources().empty()) {
+		if(stanza->presence() == PresenceUnavailable && user->isConnected()==true && user->resources().empty()) {
 			Log().Get(stanza->from().full()) << "Logging out";
 			m_userManager->removeUser(user);
 		}
-		else if (stanza->presence() == PresenceUnavailable && user->connected==false && int(time(NULL))>int(user->connectionStart)+10 && user->resources().empty()){
+		else if (stanza->presence() == PresenceUnavailable && user->isConnected()==false && int(time(NULL))>int(user->connectionStart())+10 && user->resources().empty()){
 			Log().Get(stanza->from().full()) << "Logging out, but he's not connected...";
 			m_userManager->removeUser(user);
 		}
-		else if (stanza->presence() == PresenceUnavailable && user->connected==false){
+		else if (stanza->presence() == PresenceUnavailable && user->isConnected()==false){
 			Log().Get(stanza->from().full()) << "Can't logout because we're connecting now...";
 		}
 	}
@@ -952,7 +933,7 @@ bool GlooxMessageHandler::onTLSConnect(const CertInfo & info){
 void GlooxMessageHandler::handleMessage( Stanza* stanza, MessageSession* session = 0 ){
 	User *user = userManager()->getUserByJID(stanza->from().bare());
 	if (user!=NULL){
-		if (user->connected){
+		if (user->isConnected()){
 			Tag *chatstates = stanza->findChildWithAttrib("xmlns","http://jabber.org/protocol/chatstates");
 			if (chatstates!=NULL){
 				user->receivedChatState(stanza->to().username(),chatstates->name());

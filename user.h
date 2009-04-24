@@ -31,25 +31,6 @@ class GlooxMessageHandler;
 #include "sql.h"
 #include "caps.h"
 
-#include "account.h"
-#include "conversation.h"
-#include "core.h"
-#include "debug.h"
-#include "eventloop.h"
-#include "ft.h"
-#include "log.h"
-#include "notify.h"
-#include "prefs.h"
-#include "prpl.h"
-#include "pounce.h"
-#include "savedstatuses.h"
-#include "sound.h"
-#include "status.h"
-#include "util.h"
-#include "whiteboard.h"
-#include "privacy.h"
-#include "striphtmltags.h"
-
 class RosterRow;
 
 using namespace gloox;
@@ -71,60 +52,70 @@ struct subscribeContact {
 	std::string	group;
 };
 
-class User
-{
+class User {
+	public:
+		User(GlooxMessageHandler *parent, const std::string &jid, const std::string &username, const std::string &password);
+		~User();
 
-public:
-	User(GlooxMessageHandler *parent, const std::string &jid, const std::string &username, const std::string &password);
-	~User();
-// 	void init(GlooxMessageHandler *parent);
-	GlooxMessageHandler *p;
-	bool syncCallback();
-	bool connected;
-	void receivedPresence(Stanza *stanza);
-	void purpleBuddyChanged(PurpleBuddy *buddy);
-	void purpleMessageReceived(PurpleAccount* account,char * name,char *msg,PurpleConversation *conv,PurpleMessageFlags flags);
-	void purpleAuthorizeReceived(PurpleAccount *account,const char *remote_user,const char *id,const char *alias,const char *message,gboolean on_list,PurpleAccountRequestAuthorizationCb authorize_cb,PurpleAccountRequestAuthorizationCb deny_cb,void *user_data);
-	Tag *generatePresenceStanza(PurpleBuddy *buddy);
-	bool isInRoster(const std::string &name,const std::string &subscription);
-	bool isOpenedConversation(const std::string &name);
-	bool hasFeature(int feature);
-	void receivedMessage( Stanza* stanza);
-	void receivedChatState(const std::string &uin,const std::string &state);
-	void purpleBuddyTypingStopped(const std::string &uin);
-	void purpleBuddyTyping(const std::string &uin);
-	void sendRosterX();
-	void syncContacts();
-	void remove();
-	void connect();
-	bool hasTransportFeature(int feature);
-	void purpleReauthorizeBuddy(PurpleBuddy *buddy);
+		void connect();
+		void sendRosterX();
+		void syncContacts();
+		bool hasTransportFeature(int feature); // TODO: move me to p->hasTransportFeature and rewrite my API
 
-	std::string actionData;
-	time_t connectionStart;
-	
-	int reconnectCount;
-	int features;
-	
-	// Entity Capabilities
-	std::string capsVersion() { return m_capsVersion; }
-	void setCapsVersion(const std::string &capsVersion) { m_capsVersion = capsVersion; }
-	
-	// Authorization requests
-	bool hasAuthRequest(const std::string &name);
-	void removeAuthRequest(const std::string &name);
-	
-	// bind IP
-	void setBindIP(const std::string& bindIP) { m_bindIP = bindIP; }
-	
-	PurpleAccount *account() { return m_account; }
-	std::map<std::string,int> resources() { return m_resources; }
-	bool isVIP() { return m_vip; }
-	bool readyForConnect() { return m_readyForConnect; }
-	std::string username() { return m_username; }
-	std::string jid() { return m_jid; }
-	std::string resource() { return m_resource; }
-	std::map<std::string,RosterRow> roster() { return m_roster; }
+		// Utils
+		Tag *generatePresenceStanza(PurpleBuddy *buddy);
+		bool syncCallback();
+		bool isInRoster(const std::string &name,const std::string &subscription);
+		bool isOpenedConversation(const std::string &name);
+		bool hasFeature(int feature);
+
+		// Gloox callbacks
+		void receivedPresence(Stanza *stanza);
+		void receivedMessage( Stanza* stanza);
+		void receivedChatState(const std::string &uin,const std::string &state);
+
+		// Libpurple callbacks
+		void purpleBuddyChanged(PurpleBuddy *buddy);
+		void purpleMessageReceived(PurpleAccount* account,char * name,char *msg,PurpleConversation *conv,PurpleMessageFlags flags);
+		void purpleAuthorizeReceived(PurpleAccount *account,const char *remote_user,const char *id,const char *alias,const char *message,gboolean on_list,PurpleAccountRequestAuthorizationCb authorize_cb,PurpleAccountRequestAuthorizationCb deny_cb,void *user_data);
+		void purpleBuddyTypingStopped(const std::string &uin);
+		void purpleBuddyTyping(const std::string &uin);
+		void purpleReauthorizeBuddy(PurpleBuddy *buddy);
+		void connected();
+		void disconnected();
+
+
+		std::string actionData;
+		int features;
+
+		// Connected
+		bool isConnected() { return m_connected; }
+
+		// Entity Capabilities
+		std::string capsVersion() { return m_capsVersion; }
+		void setCapsVersion(const std::string &capsVersion) { m_capsVersion = capsVersion; }
+		
+		// Authorization requests
+		bool hasAuthRequest(const std::string &name);
+		void removeAuthRequest(const std::string &name);
+		
+		// bind IP
+		void setBindIP(const std::string& bindIP) { m_bindIP = bindIP; }
+		
+		// connection start
+		time_t connectionStart() { return m_connectionStart; }
+		
+		PurpleAccount *account() { return m_account; }
+		std::map<std::string,int> resources() { return m_resources; }
+		int reconnectCount() { return m_reconnectCount; }
+		bool isVIP() { return m_vip; }
+		bool readyForConnect() { return m_readyForConnect; }
+		std::string username() { return m_username; }
+		std::string jid() { return m_jid; }
+		std::string resource() { return m_resource; }
+		std::map<std::string,RosterRow> roster() { return m_roster; }
+		
+		GlooxMessageHandler *p;
 	
 	private:
 		PurpleAccount *m_account;	// PurpleAccount to which this user is connected
@@ -133,12 +124,15 @@ public:
 		bool m_vip;					// true if the user is VIP
 		bool m_readyForConnect;		// true if the user user wants to connect and we're ready to do it
 		bool m_rosterXCalled;		// true if we are counting buddies for roster X
+		bool m_connected;			// true if this user is connected to legacy account
+		bool m_reconnectCount;		// number of passed reconnect tries
 		std::string m_bindIP;		// IP address to which libpurple will be binded
 		std::string m_password;		// password used to connect to legacy network
 		std::string m_username;		// legacy network user name
 		std::string m_jid;			// Jabber ID of this user
 		std::string m_resource;		// active resource
 		std::string m_capsVersion;	// caps version of client which connected as first (TODO: this should be changed with active resource)
+		time_t m_connectionStart;		// connection start timestamp
 		std::map<std::string,RosterRow> m_roster;	// jabber roster of this user
 		std::map<std::string,int> m_resources;	// list of all resources which are connected to the transport
 		std::map<std::string,authRequest> m_authRequests;	// list of authorization requests (holds callbacks and user data)

@@ -97,7 +97,7 @@ bool GlooxVCardHandler::handleIq (Stanza *stanza){
 	User *user = p->userManager()->getUserByJID(stanza->from().bare());
 	if (user==NULL)
 		return false;
-	if (!user->connected){
+	if (!user->isConnected()){
 		return false;
 	}
 
@@ -128,7 +128,7 @@ void GlooxVCardHandler::userInfoArrived(PurpleConnection *gc,std::string who, Pu
 	PurpleNotifyUserInfoEntry *vcardEntry;
 
 	if (user!=NULL){
-		if (!user->connected)
+		if (!user->isConnected())
 			return;
 		if (!hasVCardRequest(who))
 			return;
