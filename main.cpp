@@ -1,3 +1,23 @@
+/**
+ * XMPP - libpurple transport
+ *
+ * Copyright (C) 2009, Jan Kaluza <hanzz@soc.pidgin.im>
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02111-1301  USA
+ */
+
 #include "main.h"
 #include "utf8.h"
 #include "log.h"
@@ -334,7 +354,7 @@ static gboolean sendFileToJabber(gpointer data){
 static gboolean connectUser(gpointer data){
 	std::string name((char*)data);
 	User *user = GlooxMessageHandler::instance()->userManager()->getUserByJID(name);
-	if (user && user->readyForConnect && !user->connected){
+	if (user && user->readyForConnect() && !user->connected){
 		user->connect();
 	}
 	g_free(data);
@@ -849,7 +869,7 @@ void GlooxMessageHandler::handlePresence(Stanza * stanza){
 				user = new User(this, stanza->from().bare(), res.uin, res.password);
 				if (c!=NULL)
 					if(hasCaps(c->findAttribute("ver")))
-						user->capsVersion=capsCache[c->findAttribute("ver")];
+						user->setCapsVersion(c->findAttribute("ver"));
 // 				if (!isVip)
 // 					user->features=features0;
 // 				else

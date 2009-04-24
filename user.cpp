@@ -1,3 +1,23 @@
+/**
+ * XMPP - libpurple transport
+ *
+ * Copyright (C) 2009, Jan Kaluza <hanzz@soc.pidgin.im>
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02111-1301  USA
+ */
+
 #include "user.h"
 #include "main.h"
 #include "log.h"
@@ -22,25 +42,25 @@ User::User(GlooxMessageHandler *parent, const std::string &jid, const std::strin
 	m_roster = p->sql()->getRosterByJid(m_jid);
 	m_vip = p->sql()->isVIP(m_jid);
 	m_syncTimer = 0;
-	this->readyForConnect=false;
-	this->save_called=false;
+	m_readyForConnect = false;
+	m_rosterXCalled = false;
 	m_account=NULL;
 	this->connectionStart = time(NULL);
-	this->lastCount=-1;
+	m_subscribeLastCount = -1;
 	this->reconnectCount=0;
 	this->features=6; // TODO: I can't be hardcoded
 }
 
 bool User::syncCallback() {
-	Log().Get(jid()) << "sync_cb lastCount: " << lastCount << "cacheSize: " << int(subscribeCache.size());
+	Log().Get(jid()) << "sync_cb lastCount: " << m_subscribeLastCount << "cacheSize: " << int(m_subscribeCache.size());
 	// we have to check, if all users arrived and repeat this call if not
-	if (lastCount==int(subscribeCache.size())){
+	if (m_subscribeLastCount == int(m_subscribeCache.size())) {
 		syncContacts();
 		sendRosterX();
 		return FALSE;
 	}
 	else{
-		lastCount=int(subscribeCache.size());
+		m_subscribeLastCount = int(m_subscribeCache.size());
 		return TRUE;
 	}
 }
@@ -50,9 +70,9 @@ bool User::syncCallback() {
  * otherwise returns false.
  */
 bool User::hasFeature(int feature){
-	if (this->capsVersion.empty())
+	if (m_capsVersion.empty())
 		return false;
-	if (p->capsCache[this->capsVersion]&feature)
+	if (p->capsCache[m_capsVersion]&feature)
 		return true;
 	return false;
 }
@@ -115,9 +135,9 @@ bool User::isOpenedConversation(const std::string &name){
  */
 void User::sendRosterX()
 {
-	this->save_called=true;
+	m_rosterXCalled = true;
 	m_syncTimer = 0;
-	if (int(this->subscribeCache.size())==0)
+	if (int(m_subscribeCache.size())==0)
 		return;
 	Log().Get(m_jid) << "Sending rosterX";
 	Tag *tag = new Tag("iq");
@@ -132,8 +152,8 @@ void User::sendRosterX()
 	Tag *item;
 
 	// adding these users to roster db with subscription=ask
-	std::vector<subscribeContact>::iterator it = this->subscribeCache.begin();
-	while(it != this->subscribeCache.end()) {
+	std::vector<subscribeContact>::iterator it = m_subscribeCache.begin();
+	while(it != m_subscribeCache.end()) {
 		if (!(*it).uin.empty()){
 			RosterRow user;
 			user.id=-1;
@@ -158,7 +178,8 @@ void User::sendRosterX()
 	std::cout << tag->xml() << "\n";
 	p->j->send(tag);
 	
-	this->subscribeCache.clear();
+	m_subscribeCache.clear();
+	m_subscribeLastCount = -1;
 }
 
 /*
@@ -318,17 +339,17 @@ void User::purpleBuddyChanged(PurpleBuddy *buddy){
 
 	Log().Get(m_jid) << "purpleBuddyChanged: " << name << " ("<< alias <<") (" << s << ")";
 
-	if (m_syncTimer==0 && !this->save_called){
+	if (m_syncTimer==0 && !m_rosterXCalled){
 		m_syncTimer = purple_timeout_add_seconds(4, sync_cb, this);
 	}
 
 	if (!isInRoster(name,"")){
-		if (!this->save_called && hasFeature(GLOOX_FEATURE_ROSTERX)){
+		if (!m_rosterXCalled && hasFeature(GLOOX_FEATURE_ROSTERX)){
 			subscribeContact c;
 			c.uin=name;
 			c.alias=alias;
 			c.group=(std::string) purple_group_get_name(purple_buddy_get_group(buddy));
-			this->subscribeCache.push_back(c);
+			m_subscribeCache.push_back(c);
 			Log().Get(m_jid) << "Not in roster => adding to rosterX cache";
 		}
 		else {
@@ -341,7 +362,7 @@ void User::purpleBuddyChanged(PurpleBuddy *buddy){
 				c.uin=name;
 				c.alias=alias;
 				c.group=(std::string) purple_group_get_name(purple_buddy_get_group(buddy));
-				this->subscribeCache.push_back(c);
+				m_subscribeCache.push_back(c);
 			}
 			else {
 				Log().Get(m_jid) << "Not in roster => sending subscribe";
@@ -510,7 +531,7 @@ void User::purpleAuthorizeReceived(PurpleAccount *account,const char *remote_use
  * Called when we're ready to connect (we know caps)
  */
 void User::connect(){
-	Log().Get(m_jid) << "Connecting with caps: " << this->capsVersion;
+	Log().Get(m_jid) << "Connecting with caps: " << m_capsVersion;
 	if (purple_accounts_find(m_username.c_str(), this->p->protocol()->protocol().c_str()) != NULL){
 		Log().Get(m_jid) << "this account already exists";
 		m_account = purple_accounts_find(m_username.c_str(), this->p->protocol()->protocol().c_str());
@@ -525,7 +546,7 @@ void User::connect(){
 		purple_accounts_add(m_account);
 	}
 	this->connectionStart = time(NULL);
-	this->readyForConnect = false;
+	m_readyForConnect = false;
 	purple_account_set_string(m_account,"bind",std::string(m_bindIP).c_str());
 	purple_account_set_string(m_account,"lastUsedJid",std::string(m_jid +"/"+m_resource).c_str());
 	purple_account_set_password(m_account,m_password.c_str());
@@ -728,11 +749,11 @@ void User::receivedPresence(Stanza *stanza){
 			Log().Get(m_jid) << "resource: " << m_resource;
 			if (!this->connected){
 				// we are not connected to legacy network, so we should do it when disco#info arrive :)
-				Log().Get(m_jid) << "connecting: capsVersion=" << this->capsVersion;
-				if (this->readyForConnect==false){
-					this->readyForConnect=true;
-					if (this->capsVersion.empty()){
-						// caps not arrived yet, so we can't connect...
+				Log().Get(m_jid) << "connecting: capsVersion=" << m_capsVersion;
+				if (m_readyForConnect==false){
+					m_readyForConnect=true;
+					if (m_capsVersion.empty()){
+						// caps not arrived yet, so we can't connect just now and we have to wait for caps
 					}
 					else{
 						connect();
@@ -789,7 +810,7 @@ void User::receivedPresence(Stanza *stanza){
 		}
 		
 		// send presence about tranport status to user
-		if(this->connected || this->readyForConnect) {
+		if(this->connected || m_readyForConnect) {
 			Stanza *tag = Stanza::createPresenceStanza(m_jid, stanza->status(),stanza->presence());
 			tag->addAttribute( "from", p->jid() );
 			p->j->send( tag );

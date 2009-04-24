@@ -1,3 +1,23 @@
+/**
+ * XMPP - libpurple transport
+ *
+ * Copyright (C) 2009, Jan Kaluza <hanzz@soc.pidgin.im>
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02111-1301  USA
+ */
+
 #ifndef _HI_USER_H
 #define _HI_USER_H
 
@@ -82,13 +102,13 @@ public:
 
 	std::string actionData;
 	time_t connectionStart;
-		
-	bool readyForConnect;
-	bool save_called;
+	
 	int reconnectCount;
-	int lastCount;
 	int features;
-	std::string capsVersion;
+	
+	// Entity Capabilities
+	std::string capsVersion() { return m_capsVersion; }
+	void setCapsVersion(const std::string &capsVersion) { m_capsVersion = capsVersion; }
 	
 	// Authorization requests
 	bool hasAuthRequest(const std::string &name);
@@ -100,6 +120,7 @@ public:
 	PurpleAccount *account() { return m_account; }
 	std::map<std::string,int> resources() { return m_resources; }
 	bool isVIP() { return m_vip; }
+	bool readyForConnect() { return m_readyForConnect; }
 	std::string username() { return m_username; }
 	std::string jid() { return m_jid; }
 	std::string resource() { return m_resource; }
@@ -108,17 +129,21 @@ public:
 	private:
 		PurpleAccount *m_account;	// PurpleAccount to which this user is connected
 		guint m_syncTimer;			// timer used for syncing purple buddy list and roster
+		int m_subscribeLastCount;	// number of buddies which was in subscribeCache in previous iteration of m_syncTimer
 		bool m_vip;					// true if the user is VIP
+		bool m_readyForConnect;		// true if the user user wants to connect and we're ready to do it
+		bool m_rosterXCalled;		// true if we are counting buddies for roster X
 		std::string m_bindIP;		// IP address to which libpurple will be binded
 		std::string m_password;		// password used to connect to legacy network
 		std::string m_username;		// legacy network user name
 		std::string m_jid;			// Jabber ID of this user
 		std::string m_resource;		// active resource
+		std::string m_capsVersion;	// caps version of client which connected as first (TODO: this should be changed with active resource)
 		std::map<std::string,RosterRow> m_roster;	// jabber roster of this user
 		std::map<std::string,int> m_resources;	// list of all resources which are connected to the transport
 		std::map<std::string,authRequest> m_authRequests;	// list of authorization requests (holds callbacks and user data)
 		std::map<std::string,PurpleConversation *> m_conversations; // list of opened conversations
-		std::vector<subscribeContact> subscribeCache;	// cache for contacts for roster X
+		std::vector<subscribeContact> m_subscribeCache;	// cache for contacts for roster X
 };
 
 #endif
