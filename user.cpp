@@ -193,7 +193,7 @@ void User::syncContacts()
 	for(std::map<std::string, RosterRow>::iterator u = m_roster.begin(); u != m_roster.end() ; u++){
 		buddy = purple_find_buddy(m_account, (*u).second.uin.c_str());
 		// buddy is not in blist, so it's not on server
-		if(!buddy) {
+		if (!buddy) {
 			// add buddy to server
 			buddy = purple_buddy_new(m_account,(*u).second.uin.c_str(),(*u).second.uin.c_str());
 			purple_blist_add_buddy(buddy, NULL, NULL ,NULL);
@@ -217,7 +217,7 @@ Tag *User::generatePresenceStanza(PurpleBuddy *buddy){
 	PurpleStatus *stat = purple_presence_get_active_status(pres);
 	if (stat==NULL)
 		return NULL;
-	int s=purple_status_type_get_primitive(purple_status_get_type(stat));
+	int s = purple_status_type_get_primitive(purple_status_get_type(stat));
 	const char *statusMessage = purple_status_get_attr_string(stat, "message");
 
 	Log().Get(m_jid) << "Generating presence stanza for user " << name;
@@ -304,18 +304,19 @@ void User::purpleReauthorizeBuddy(PurpleBuddy *buddy){
 		PurplePluginProtocolInfo *prpl_info = PURPLE_PLUGIN_PROTOCOL_INFO(purple_account_get_connection(m_account)->prpl);
 		if(prpl_info && prpl_info->blist_node_menu){
 			for(l = ll = prpl_info->blist_node_menu((PurpleBlistNode*)buddy); l; l = l->next) {
-				if (l->data){
+				if (l->data) {
 					PurpleMenuAction *act = (PurpleMenuAction *) l->data;
 					if (act->label) {
 						Log().Get(m_jid) << (std::string)act->label;
 						if ((std::string)act->label == "Re-request Authorization"){
-							Log().Get(m_jid) << "rerequestin authorization for " << name;
+							Log().Get(m_jid) << "rerequesting authorization for " << name;
 							((GSourceFunc) act->callback)(act->data);
 							break;
 						}
 					}
 				}
 			}
+			g_list_free(ll);
 		}
 	}
 }
@@ -334,7 +335,8 @@ void User::purpleBuddyChanged(PurpleBuddy *buddy){
 	PurpleStatus *stat = purple_presence_get_active_status(pres);
 	if (stat==NULL)
 		return;
-	int s=purple_status_type_get_primitive(purple_status_get_type(stat));
+	int s = purple_status_type_get_primitive(purple_status_get_type(stat));
+	// TODO: rewrite me to use prpl_info->status_text(buddy)
 	const char *statusMessage = purple_status_get_attr_string(stat, "message");
 
 	Log().Get(m_jid) << "purpleBuddyChanged: " << name << " ("<< alias <<") (" << s << ")";
@@ -343,7 +345,13 @@ void User::purpleBuddyChanged(PurpleBuddy *buddy){
 		m_syncTimer = purple_timeout_add_seconds(4, sync_cb, this);
 	}
 
-	if (!isInRoster(name,"")){
+	bool inRoster = purple_blist_node_get_bool(&buddy->node, "inRoster");
+	if (!inRoster) {
+		inRoster = isInRoster(name,"");
+		purple_blist_node_set_bool(&buddy->node, "inRoster", true);
+	}
+
+	if (!inRoster) {
 		if (!m_rosterXCalled && hasFeature(GLOOX_FEATURE_ROSTERX)){
 			subscribeContact c;
 			c.uin=name;

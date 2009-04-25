@@ -63,11 +63,16 @@ class User {
 		bool hasTransportFeature(int feature); // TODO: move me to p->hasTransportFeature and rewrite my API
 
 		// Utils
-		Tag *generatePresenceStanza(PurpleBuddy *buddy);
 		bool syncCallback();
 		bool isInRoster(const std::string &name,const std::string &subscription);
 		bool isOpenedConversation(const std::string &name);
 		bool hasFeature(int feature);
+		
+		// XMPP stuff
+		Tag *generatePresenceStanza(PurpleBuddy *buddy);
+		
+		// Libpurple stuff
+		void purpleReauthorizeBuddy(PurpleBuddy *buddy);
 
 		// Gloox callbacks
 		void receivedPresence(Stanza *stanza);
@@ -80,7 +85,6 @@ class User {
 		void purpleAuthorizeReceived(PurpleAccount *account,const char *remote_user,const char *id,const char *alias,const char *message,gboolean on_list,PurpleAccountRequestAuthorizationCb authorize_cb,PurpleAccountRequestAuthorizationCb deny_cb,void *user_data);
 		void purpleBuddyTypingStopped(const std::string &uin);
 		void purpleBuddyTyping(const std::string &uin);
-		void purpleReauthorizeBuddy(PurpleBuddy *buddy);
 		void connected();
 		void disconnected();
 
