@@ -1,0 +1,276 @@
+diff -p pidgin/pidgin-2.5.2/libpurple/account.c p2/libpurple/account.c
+*** pidgin/pidgin-2.5.2/libpurple/account.c	2009-01-05 19:42:59.000000000 +0100
+--- p2/libpurple/account.c	2008-09-23 18:34:03.000000000 +0200
+*************** static void
+*** 470,476 ****
+  schedule_accounts_save(void)
+  {
+  	if (save_timer == 0)
+! 		save_timer = purple_timeout_add_seconds(600, save_cb, NULL);
+  }
+  
+  
+--- 470,476 ----
+  schedule_accounts_save(void)
+  {
+  	if (save_timer == 0)
+! 		save_timer = purple_timeout_add_seconds(5, save_cb, NULL);
+  }
+  
+  
+diff -p pidgin/pidgin-2.5.2/libpurple/blist.c p2/libpurple/blist.c
+*** pidgin/pidgin-2.5.2/libpurple/blist.c	2009-01-04 20:30:49.000000000 +0100
+--- p2/libpurple/blist.c	2008-07-14 04:05:31.000000000 +0200
+*************** void
+*** 363,369 ****
+  purple_blist_schedule_save()
+  {
+  	if (save_timer == 0)
+! 		save_timer = purple_timeout_add_seconds(600, save_cb, NULL);
+  }
+  
+  
+--- 363,369 ----
+  purple_blist_schedule_save()
+  {
+  	if (save_timer == 0)
+! 		save_timer = purple_timeout_add_seconds(5, save_cb, NULL);
+  }
+  
+  
+diff -p pidgin/pidgin-2.5.2/libpurple/buddyicon.c p2/libpurple/buddyicon.c
+*** pidgin/pidgin-2.5.2/libpurple/buddyicon.c	2008-11-03 20:49:05.000000000 +0100
+--- p2/libpurple/buddyicon.c	2008-09-23 18:34:03.000000000 +0200
+*************** purple_buddy_icon_data_new(guchar *icon_
+*** 254,260 ****
+  
+  	if (filename == NULL)
+  	{
+! 		file = _purple_util_get_image_filename(icon_data, icon_len, purple_buddy_icons_get_cache_dir());
+  		if (file == NULL)
+  		{
+  			g_free(icon_data);
+--- 254,260 ----
+  
+  	if (filename == NULL)
+  	{
+! 		file = purple_util_get_image_filename(icon_data, icon_len);
+  		if (file == NULL)
+  		{
+  			g_free(icon_data);
+*************** migrate_buddy_icon(PurpleBlistNode *node
+*** 1041,1047 ****
+  
+  		g_free(path);
+  
+! 		new_filename = _purple_util_get_image_filename(icon_data, icon_len,purple_buddy_icons_get_cache_dir());
+  		if (new_filename == NULL)
+  		{
+  			purple_debug_error("buddyicon",
+--- 1041,1047 ----
+  
+  		g_free(path);
+  
+! 		new_filename = purple_util_get_image_filename(icon_data, icon_len);
+  		if (new_filename == NULL)
+  		{
+  			purple_debug_error("buddyicon",
+Common subdirectories: pidgin/pidgin-2.5.2/libpurple/example and p2/libpurple/example
+diff -p pidgin/pidgin-2.5.2/libpurple/ft.c p2/libpurple/ft.c
+*** pidgin/pidgin-2.5.2/libpurple/ft.c	2008-11-09 20:41:34.000000000 +0100
+--- p2/libpurple/ft.c	2008-03-06 01:43:59.000000000 +0100
+*************** purple_xfer_request_accepted(PurpleXfer 
+*** 506,523 ****
+  		purple_xfer_set_size(xfer, st.st_size);
+  
+  		utf8 = g_filename_to_utf8(g_basename(filename), -1, NULL, NULL, NULL);
+  
+-                 char * name = strchr(utf8, '-');
+-                 if (name) {
+- 	                name = strchr(name+1, '-');
+-                     if (name) {
+-                         name += 1;
+-                     }
+-                 }
+- 	        if (name)
+- 	            purple_xfer_set_filename(xfer, name);
+- 	        else
+- 	            purple_xfer_set_filename(xfer, utf8);
+  		msg = g_strdup_printf(_("Offering to send %s to %s"),
+  				utf8, buddy ? purple_buddy_get_alias(buddy) : xfer->who);
+  		g_free(utf8);
+--- 506,513 ----
+  		purple_xfer_set_size(xfer, st.st_size);
+  
+  		utf8 = g_filename_to_utf8(g_basename(filename), -1, NULL, NULL, NULL);
++ 		purple_xfer_set_filename(xfer, utf8);
+  
+  		msg = g_strdup_printf(_("Offering to send %s to %s"),
+  				utf8, buddy ? purple_buddy_get_alias(buddy) : xfer->who);
+  		g_free(utf8);
+Common subdirectories: pidgin/pidgin-2.5.2/libpurple/gconf and p2/libpurple/gconf
+Only in pidgin/pidgin-2.5.2/libpurple/: Makefile
+Common subdirectories: pidgin/pidgin-2.5.2/libpurple/plugins and p2/libpurple/plugins
+Common subdirectories: pidgin/pidgin-2.5.2/libpurple/protocols and p2/libpurple/protocols
+diff -p pidgin/pidgin-2.5.2/libpurple/proxy.c p2/libpurple/proxy.c
+*** pidgin/pidgin-2.5.2/libpurple/proxy.c	2009-04-25 12:30:40.000000000 +0200
+--- p2/libpurple/proxy.c	2008-09-23 18:34:05.000000000 +0200
+*************** struct _PurpleProxyConnectData {
+*** 44,50 ****
+  	void *handle;
+  	PurpleProxyConnectFunction connect_cb;
+  	gpointer data;
+- 	gchar *bind;
+  	gchar *host;
+  	int port;
+  	int fd;
+--- 44,49 ----
+*************** purple_proxy_info_destroy(PurpleProxyInf
+*** 110,116 ****
+  	g_return_if_fail(info != NULL);
+  
+  	g_free(info->host);
+- 	g_free(info->bind);
+  	g_free(info->username);
+  	g_free(info->password);
+  
+--- 109,114 ----
+*************** static void
+*** 671,677 ****
+  proxy_connect_none(PurpleProxyConnectData *connect_data, struct sockaddr *addr, socklen_t addrlen)
+  {
+  	int flags;
+- 	struct sockaddr_in bindaddr;
+  
+  	purple_debug_info("proxy", "Connecting to %s:%d with no proxy\n",
+  			connect_data->host, connect_data->port);
+--- 669,674 ----
+*************** proxy_connect_none(PurpleProxyConnectDat
+*** 684,706 ****
+  		return;
+  	}
+  
+- 	if (g_strcasecmp(connect_data->bind, "")!=0){
+- 		memset(&bindaddr, 0, sizeof(bindaddr));
+- 		bindaddr.sin_family = AF_INET;
+- 		bindaddr.sin_port = htons(0);
+- 		bindaddr.sin_addr.s_addr = inet_addr(connect_data->bind);
+- 
+- 		purple_debug_info("proxy", "Using IP address %s for this proxy\n",
+- 			connect_data->bind);
+- 
+- 		if (bind(connect_data->fd, (struct sockaddr*)&bindaddr, sizeof(bindaddr)) <0)
+- 		{
+- 			purple_proxy_connect_data_disconnect_formatted(connect_data,
+- 					_("Unable to bind socket:\n%s"), g_strerror(errno));
+- 			return;
+- 		}
+- 	}
+- 
+  	flags = fcntl(connect_data->fd, F_GETFL);
+  	fcntl(connect_data->fd, F_SETFL, flags | O_NONBLOCK);
+  #ifndef _WIN32
+--- 681,686 ----
+*************** purple_proxy_connect(void *handle, Purpl
+*** 2148,2154 ****
+  	connect_data->host = g_strdup(host);
+  	connect_data->port = port;
+  	connect_data->gpi = purple_proxy_get_setup(account);
+- 	connect_data->bind = g_strdup(purple_account_get_string(account,"bind",""));
+  
+  	if ((purple_proxy_info_get_type(connect_data->gpi) != PURPLE_PROXY_NONE) &&
+  		(purple_proxy_info_get_host(connect_data->gpi) == NULL ||
+--- 2128,2133 ----
+Only in pidgin/pidgin-2.5.2/libpurple/: purple.pc
+Only in pidgin/pidgin-2.5.2/libpurple/: purple-uninstalled.pc
+diff -p pidgin/pidgin-2.5.2/libpurple/savedstatuses.c p2/libpurple/savedstatuses.c
+*** pidgin/pidgin-2.5.2/libpurple/savedstatuses.c	2008-11-03 19:47:47.000000000 +0100
+--- p2/libpurple/savedstatuses.c	2008-07-14 04:05:37.000000000 +0200
+*************** static void
+*** 362,368 ****
+  schedule_save(void)
+  {
+  	if (save_timer == 0)
+! 		save_timer = purple_timeout_add_seconds(600, save_cb, NULL);
+  }
+  
+  
+--- 362,368 ----
+  schedule_save(void)
+  {
+  	if (save_timer == 0)
+! 		save_timer = purple_timeout_add_seconds(5, save_cb, NULL);
+  }
+  
+  
+Common subdirectories: pidgin/pidgin-2.5.2/libpurple/tests and p2/libpurple/tests
+diff -p pidgin/pidgin-2.5.2/libpurple/util.c p2/libpurple/util.c
+*** pidgin/pidgin-2.5.2/libpurple/util.c	2008-11-03 20:48:00.000000000 +0100
+--- p2/libpurple/util.c	2008-09-23 18:34:05.000000000 +0200
+*************** purple_util_get_image_filename(gconstpoi
+*** 2940,2977 ****
+  {
+  	/* Return the filename */
+  	char *checksum = purple_util_get_image_checksum(image_data, image_len);
+! 	char *filename = g_strdup_printf("%s.%s",checksum,
+  	                       purple_util_get_image_extension(image_data, image_len));
+  	g_free(checksum);
+  	return filename;
+  }
+  
+- 
+- char *
+- _purple_util_get_image_filename(gconstpointer image_data, size_t image_len,const char *dirname)
+- {
+- 	/* Return the filename */
+- 	char *checksum = purple_util_get_image_checksum(image_data, image_len);
+- 	char *firstTwoChars = g_strdup(checksum);
+- 	firstTwoChars[2] = 0;
+- 	char *filename = g_strdup_printf("%s/%s.%s", firstTwoChars,checksum,
+- 	                       purple_util_get_image_extension(image_data, image_len));
+- 	char *directory = g_strdup(g_build_filename(dirname,firstTwoChars,NULL));
+- 	if (!g_file_test(directory, G_FILE_TEST_IS_DIR))
+- 		{
+- 		    if (g_mkdir(directory, S_IRUSR | S_IWUSR | S_IXUSR) == -1){
+- 			
+- 		    }
+- 		}
+- 
+- 	g_free(checksum);
+- 	g_free(firstTwoChars);
+- 	g_free(directory);
+- 	return filename;
+- }
+- 
+- 
+- 
+  gboolean
+  purple_program_is_valid(const char *program)
+  {
+--- 2940,2951 ----
+  {
+  	/* Return the filename */
+  	char *checksum = purple_util_get_image_checksum(image_data, image_len);
+! 	char *filename = g_strdup_printf("%s.%s", checksum,
+  	                       purple_util_get_image_extension(image_data, image_len));
+  	g_free(checksum);
+  	return filename;
+  }
+  
+  gboolean
+  purple_program_is_valid(const char *program)
+  {
+diff -p pidgin/pidgin-2.5.2/libpurple/util.h p2/libpurple/util.h
+*** pidgin/pidgin-2.5.2/libpurple/util.h	2008-11-03 20:49:50.000000000 +0100
+--- p2/libpurple/util.h	2008-08-13 03:23:17.000000000 +0200
+*************** char *purple_util_get_image_checksum(gco
+*** 718,724 ****
+   *         be g_freed by the caller.
+   */
+  char *purple_util_get_image_filename(gconstpointer image_data, size_t image_len);
+- char *_purple_util_get_image_filename(gconstpointer image_data, size_t image_len,const char *dirname);
+  
+  /*@}*/
+  
+--- 718,723 ----
+Common subdirectories: pidgin/pidgin-2.5.2/libpurple/win32 and p2/libpurple/win32
