@@ -265,12 +265,23 @@ Tag *User::generatePresenceStanza(PurpleBuddy *buddy){
 	tag->addChild(c);
 	
 	// vcard-temp:x:update
-	const char *avatarHash = purple_buddy_icons_get_checksum_for_user(buddy);
+	char *avatarHash = NULL;
+	PurpleBuddyIcon *icon = purple_buddy_get_icon(buddy);
+	if (icon != NULL) {
+		avatarHash = purple_buddy_icon_get_full_path(icon);
+	}
+
 	Tag *x = new Tag("x");
 	x->addAttribute("xmlns","vcard-temp:x:update");
-	if (avatarHash!=NULL){
+	if (avatarHash != NULL) {
 		Log().Get(m_jid) << "Got avatar hash";
-		x->addChild(new Tag("photo",(std::string)avatarHash));
+		// Check if it's patched libpurple which saved icons to directories
+		char *hash = rindex(avatarHash,'/');
+		std::string h;
+		if (hash)
+			x->addChild(new Tag("photo",(std::string) hash));
+		else
+			x->addChild(new Tag("photo",(std::string) avatarHash));
 	}
 	else{
 		Log().Get(m_jid) << "no avatar hash";
