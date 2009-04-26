@@ -141,7 +141,7 @@ class User {
 		std::map<std::string,int> m_resources;	// list of all resources which are connected to the transport
 		std::map<std::string,authRequest> m_authRequests;	// list of authorization requests (holds callbacks and user data)
 		std::map<std::string,PurpleConversation *> m_conversations; // list of opened conversations
-		std::vector<subscribeContact> m_subscribeCache;	// cache for contacts for roster X
+		std::map<std::string,subscribeContact> m_subscribeCache;	// cache for contacts for roster X
 };
 
 #endif

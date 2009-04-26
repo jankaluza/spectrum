@@ -152,24 +152,24 @@ void User::sendRosterX()
 	Tag *item;
 
 	// adding these users to roster db with subscription=ask
-	std::vector<subscribeContact>::iterator it = m_subscribeCache.begin();
+	std::map<std::string,subscribeContact>::iterator it = m_subscribeCache.begin();
 	while(it != m_subscribeCache.end()) {
-		if (!(*it).uin.empty()){
+		if (!(*it).second.uin.empty()){
 			RosterRow user;
-			user.id=-1;
-			user.jid=m_jid;
-			user.uin=(*it).uin;
-			user.subscription="ask";
-			user.online=false;
-			user.lastPresence="";
-			m_roster[(*it).uin]=user;
-			p->sql()->addUserToRoster(m_jid,(*it).uin,"ask");
+			user.id = -1;
+			user.jid = m_jid;
+			user.uin = (*it).second.uin;
+			user.subscription = "ask";
+			user.online = false;
+			user.lastPresence = "";
+			m_roster[(*it).second.uin] = user;
+			p->sql()->addUserToRoster(m_jid,(*it).second.uin,"ask");
 
 			item = new Tag("item");
 			item->addAttribute("action","add");
-			item->addAttribute("jid",(*it).uin+"@"+p->jid());
-			item->addAttribute("name",(*it).alias);
-			item->addChild(new Tag("group",(*it).group));
+			item->addAttribute("jid",(*it).second.uin+"@"+p->jid());
+			item->addAttribute("name",(*it).second.alias);
+			item->addChild(new Tag("group",(*it).second.group));
 			x->addChild(item);
 		}
 		it++;
@@ -365,10 +365,10 @@ void User::purpleBuddyChanged(PurpleBuddy *buddy){
 	if (!inRoster) {
 		if (!m_rosterXCalled && hasFeature(GLOOX_FEATURE_ROSTERX)){
 			subscribeContact c;
-			c.uin=name;
-			c.alias=alias;
-			c.group=(std::string) purple_group_get_name(purple_buddy_get_group(buddy));
-			m_subscribeCache.push_back(c);
+			c.uin = name;
+			c.alias = alias;
+			c.group = (std::string) purple_group_get_name(purple_buddy_get_group(buddy));
+			m_subscribeCache[name] = c;
 			Log().Get(m_jid) << "Not in roster => adding to rosterX cache";
 		}
 		else {
@@ -378,10 +378,10 @@ void User::purpleBuddyChanged(PurpleBuddy *buddy){
 					m_syncTimer = purple_timeout_add_seconds(4, sync_cb, this);
 				}
 				subscribeContact c;
-				c.uin=name;
-				c.alias=alias;
-				c.group=(std::string) purple_group_get_name(purple_buddy_get_group(buddy));
-				m_subscribeCache.push_back(c);
+				c.uin = name;
+				c.alias = alias;
+				c.group = (std::string) purple_group_get_name(purple_buddy_get_group(buddy));
+				m_subscribeCache[name] = c;
 			}
 			else {
 				Log().Get(m_jid) << "Not in roster => sending subscribe";
