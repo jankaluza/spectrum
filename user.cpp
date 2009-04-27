@@ -218,7 +218,14 @@ Tag *User::generatePresenceStanza(PurpleBuddy *buddy){
 	if (stat==NULL)
 		return NULL;
 	int s = purple_status_type_get_primitive(purple_status_get_type(stat));
-	const char *statusMessage = purple_status_get_attr_string(stat, "message");
+	char *text = NULL;
+	char *statusMessage = NULL;
+
+	PurplePluginProtocolInfo *prpl_info = PURPLE_PLUGIN_PROTOCOL_INFO(purple_account_get_connection(m_account)->prpl);
+
+	if (prpl_info && prpl_info->status_text) {
+		statusMessage = prpl_info->status_text(buddy);
+	}
 
 	Log().Get(m_jid) << "Generating presence stanza for user " << name;
 	Tag *tag = new Tag("presence");
@@ -232,6 +239,7 @@ Tag *User::generatePresenceStanza(PurpleBuddy *buddy){
 		std::string _status(statusMessage);
 		Log().Get(m_jid) << "Raw status message: " << _status;
 		tag->addChild( new Tag("status", stripHTMLTags(_status)));
+		g_free(statusMessage);
 	}
 	
 	switch(s) {
