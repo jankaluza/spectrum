@@ -138,6 +138,7 @@ public:
 	void purpleBuddyChanged(PurpleBuddy* buddy);
 	void purpleConnectionError(PurpleConnection *gc,PurpleConnectionError reason,const char *text);
 	void purpleMessageReceived(PurpleAccount* account,char * name,char *msg,PurpleConversation *conv,PurpleMessageFlags flags);
+	void purpleConversationWriteIM(PurpleConversation *conv, const char *who, const char *message, PurpleMessageFlags flags, time_t mtime);
 	void * purpleAuthorizeReceived(PurpleAccount *account,const char *remote_user,const char *id,const char *alias,const char *message,gboolean on_list,PurpleAccountRequestAuthorizationCb authorize_cb,PurpleAccountRequestAuthorizationCb deny_cb,void *user_data);
 	void purpleBuddyTyping(PurpleAccount *account, const char *who);
 	void purpleBuddyTypingStopped(PurpleAccount *account, const char *who);

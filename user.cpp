@@ -218,14 +218,7 @@ Tag *User::generatePresenceStanza(PurpleBuddy *buddy){
 	if (stat==NULL)
 		return NULL;
 	int s = purple_status_type_get_primitive(purple_status_get_type(stat));
-	char *text = NULL;
-	char *statusMessage = NULL;
-
-	PurplePluginProtocolInfo *prpl_info = PURPLE_PLUGIN_PROTOCOL_INFO(purple_account_get_connection(m_account)->prpl);
-
-	if (prpl_info && prpl_info->status_text) {
-		statusMessage = prpl_info->status_text(buddy);
-	}
+	const char *statusMessage = purple_status_get_attr_string(stat, "message");
 
 	Log().Get(m_jid) << "Generating presence stanza for user " << name;
 	Tag *tag = new Tag("presence");
@@ -239,7 +232,6 @@ Tag *User::generatePresenceStanza(PurpleBuddy *buddy){
 		std::string _status(statusMessage);
 		Log().Get(m_jid) << "Raw status message: " << _status;
 		tag->addChild( new Tag("status", stripHTMLTags(_status)));
-		g_free(statusMessage);
 	}
 	
 	switch(s) {
@@ -356,7 +348,7 @@ void User::purpleBuddyChanged(PurpleBuddy *buddy){
 		return;
 	int s = purple_status_type_get_primitive(purple_status_get_type(stat));
 	// TODO: rewrite me to use prpl_info->status_text(buddy)
-	const char *statusMessage = purple_status_get_attr_string(stat, "message");
+// 	const char *statusMessage = purple_status_get_attr_string(stat, "message");
 
 	Log().Get(m_jid) << "purpleBuddyChanged: " << name << " ("<< alias <<") (" << s << ")";
 
@@ -428,22 +420,46 @@ void User::purpleMessageReceived(PurpleAccount* account,char * name,char *msg,Pu
 		conv = purple_conversation_new(PURPLE_CONV_TYPE_IM,account,name);
 		m_conversations[(std::string)name]=conv;
 	}
+}
+
+void User::purpleConversationWriteIM(PurpleConversation *conv, const char *who, const char *msg, PurpleMessageFlags flags, time_t mtime) {
+	if (who == NULL)
+		return;
+	std::string name = (std::string) purple_conversation_get_name(conv);
+	// new message from legacy network has been received
+	if (!isOpenedConversation(name)) {
+			m_conversations[name] = conv;
+	}
+
+	Log().Get(m_jid) <<  "purpleConversationWriteIM:" << name;
+
 	// send message to user
 	std::string message(purple_unescape_html(msg));
 	Stanza *s = Stanza::createMessageStanza(m_jid, message);
 	std::string from;
-	from.append((std::string)name);
+	from.append(name);
 	from.append("@");
-	from.append(p->jid()+"/bot");
+	from.append(p->jid() + "/bot");
 	s->addAttribute("from",from);
-	
+
 	// chatstates
-	if (hasFeature(GLOOX_FEATURE_CHATSTATES)){
+	if (hasFeature(GLOOX_FEATURE_CHATSTATES)) {
 		Tag *active = new Tag("active");
 		active->addAttribute("xmlns","http://jabber.org/protocol/chatstates");
 		s->addChild(active);
 	}
 	
+	// Delayed messages, we have to count with some delay
+	if (int(time(NULL))-10>int(mtime)) {
+		char buf[80];
+		strftime(buf, sizeof(buf), "%Y%m%dT%H:%M:%S", localtime(&mtime));
+		std::string timestamp(buf);
+		Tag *delay = new Tag("delay");
+		delay->addAttribute("xmlns","urn:xmpp:delay");
+		delay->addAttribute("stamp",timestamp);
+		s->addChild(delay);
+	}
+
 	p->j->send( s );
 }
 

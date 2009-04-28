@@ -87,11 +87,19 @@ namespace gloox {
 };
 
 /*
- * New message from legacy network received
+ * New message from legacy network received (we can create conversation here)
  */
 static void newMessageReceived(PurpleAccount* account,char * name,char *msg,PurpleConversation *conv,PurpleMessageFlags flags)
 {
-	GlooxMessageHandler::instance()->purpleMessageReceived(account,name,msg,conv,flags);
+        GlooxMessageHandler::instance()->purpleMessageReceived(account,name,msg,conv,flags);
+}
+
+/*
+ * Called when message from legacy network arrived (we have to resend message)
+ */
+static void conv_write_im(PurpleConversation *conv, const char *who, const char *message, PurpleMessageFlags flags, time_t mtime)
+{
+        GlooxMessageHandler::instance()->purpleConversationWriteIM(conv,who,message,flags,mtime);
 }
 
 /*
@@ -304,18 +312,42 @@ static PurpleXferUiOps xferUiOps =
 
 static PurpleConnectionUiOps conn_ui_ops =
 {
-        NULL,
-        NULL,
-        NULL,//connection_disconnected,
-        NULL,
-        NULL,
-        NULL,
-        NULL,
-        connection_report_disconnect,
-        NULL,
-        NULL,
-        NULL
+	NULL,
+	NULL,
+	NULL,//connection_disconnected,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	connection_report_disconnect,
+	NULL,
+	NULL,
+	NULL
 };
+
+static PurpleConversationUiOps conversation_ui_ops =
+{
+	NULL,//pidgin_conv_new,
+	NULL,//pidgin_conv_destroy,              /* destroy_conversation */
+	NULL,                              /* write_chat           */
+	conv_write_im,             /* write_im             */
+	NULL,//pidgin_conv_write_conv,           /* write_conv           */
+	NULL,//pidgin_conv_chat_add_users,       /* chat_add_users       */
+	NULL,//pidgin_conv_chat_rename_user,     /* chat_rename_user     */
+	NULL,//pidgin_conv_chat_remove_users,    /* chat_remove_users    */
+	NULL,//pidgin_conv_chat_update_user,     /* chat_update_user     */
+	NULL,//pidgin_conv_present_conversation, /* present              */
+	NULL,//pidgin_conv_has_focus,            /* has_focus            */
+	NULL,//pidgin_conv_custom_smiley_add,    /* custom_smiley_add    */
+	NULL,//pidgin_conv_custom_smiley_write,  /* custom_smiley_write  */
+	NULL,//pidgin_conv_custom_smiley_close,  /* custom_smiley_close  */
+	NULL,//pidgin_conv_send_confirm,         /* send_confirm         */
+	NULL,
+	NULL,
+	NULL,
+	NULL
+};
+
 
 /***** Core Ui Ops *****/
 static void transport_core_ui_init(void)
@@ -326,6 +358,7 @@ static void transport_core_ui_init(void)
 	purple_request_set_ui_ops(&requestUiOps);
 	purple_xfers_set_ui_ops(&xferUiOps);
 	purple_connections_set_ui_ops(&conn_ui_ops);
+	purple_conversations_set_ui_ops(&conversation_ui_ops);
 }
 
 static PurpleCoreUiOps coreUiOps =
@@ -721,7 +754,6 @@ void GlooxMessageHandler::purpleFileReceiveComplete(PurpleXfer *xfer){
 
 
 void GlooxMessageHandler::purpleMessageReceived(PurpleAccount* account,char * name,char *msg,PurpleConversation *conv,PurpleMessageFlags flags){
-	m_stats->messageFromLegacy();
 	User *user = userManager()->getUserByAccount(account);
 	if (user){
 		if (user->isConnected()){
@@ -735,6 +767,26 @@ void GlooxMessageHandler::purpleMessageReceived(PurpleAccount* account,char * na
 		Log().Get("purple") << "purpleMessageReceived called, but user does not exist!!!";
 	}
 }
+
+void GlooxMessageHandler::purpleConversationWriteIM(PurpleConversation *conv, const char *who, const char *message, PurpleMessageFlags flags, time_t mtime){
+	if (who==NULL)
+		return;
+	PurpleAccount *account = purple_conversation_get_account(conv);
+	User *user = userManager()->getUserByAccount(account);
+	if (user) {
+		if (user->isConnected()){
+			m_stats->messageFromLegacy();
+			user->purpleConversationWriteIM(conv,who,message,flags,mtime);
+		}
+		else {
+			Log().Get(user->jid()) << "purpleConversationWriteIM called for unconnected user...";
+		}
+	}
+	else {
+		Log().Get("purple") << "purpleConversationWriteIM called, but user does not exist!!!";
+	}
+}
+
 
 void GlooxMessageHandler::purpleBuddyChanged(PurpleBuddy* buddy){
 	if (buddy!=NULL){
