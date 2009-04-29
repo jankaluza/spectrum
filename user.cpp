@@ -22,6 +22,7 @@
 #include "main.h"
 #include "log.h"
 #include "protocols/abstractprotocol.h"
+#include "usermanager.h"
 
 /*
  * Called when contact list has been received from legacy network.
@@ -291,10 +292,16 @@ Tag *User::generatePresenceStanza(PurpleBuddy *buddy){
 
 	// update stats...
 	if (s==PURPLE_STATUS_OFFLINE){
-		m_roster[name].online=false;
+		if (m_roster[name].online) {
+			m_roster[name].online = false;
+			p->userManager()->buddyOffline();
+		}
 	}
 	else
-		m_roster[name].online=true;
+		if (!m_roster[name].online) {
+			m_roster[name].online = true;
+			p->userManager()->buddyOnline();
+		}
 
 	return tag;
 }
@@ -896,6 +903,7 @@ User::~User(){
 			tag->addAttribute( "type", "unavailable" );
 			tag->addAttribute( "from", (*u).second.uin+"@"+ p->jid() + "/bot");
 			p->j->send( tag );
+			p->userManager()->buddyOffline();
 		}
 	}
 

@@ -38,12 +38,15 @@ class UserManager
 		void addUser(User *user) { m_users[user->jid()] = user; }
 		void removeUser(User *user);
 		void removeUserTimer(User *user);
+		void buddyOnline();
+		void buddyOffline();
 		long onlineUserCount();
 		int userCount() { return m_users.size(); }
 	
 	private:
 		GlooxMessageHandler *main;
 		std::map<std::string, User*> m_users;
+		long m_onlineBuddies;
 	
 };
 

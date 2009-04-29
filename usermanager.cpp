@@ -66,15 +66,14 @@ void UserManager::removeUserTimer(User *user){
 	g_timeout_add(0,&deleteUser,user);
 }
 
-long UserManager::onlineUserCount(){
-	long users=0;
+void UserManager::buddyOnline() {
+	m_onlineBuddies++;
+}
 
-	for(std::map<std::string,User*>::iterator it = m_users.begin() ; it != m_users.end() ; it++) {
-		for(std::map<std::string, RosterRow>::iterator u = (*it).second->roster().begin(); u != (*it).second->roster().end() ; u++){
-			if ((*u).second.online==true){
-				users+=1;
-			}
-		}
-	}
-	return users;
+void UserManager::buddyOffline() {
+	m_onlineBuddies--;
+}
+
+long UserManager::onlineUserCount(){
+	return m_onlineBuddies;
 }
