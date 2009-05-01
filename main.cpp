@@ -442,11 +442,11 @@ GlooxMessageHandler::GlooxMessageHandler() : MessageHandler(),ConnectionListener
 	GMainLoop *loop = g_main_loop_new(NULL, FALSE);
 	signal(SIGCHLD, SIG_IGN);
 
-	initPurple();
-	
 	m_sql = new SQLClass(this);
 	m_userManager = new UserManager(this);
-	
+
+	initPurple();
+
 	m_discoHandler=new GlooxDiscoHandler(this);
  	j->removeIqHandler(XMLNS_DISCO_INFO);
 	
@@ -1057,9 +1057,6 @@ bool GlooxMessageHandler::initPurple(){
 
 	purple_core_set_ui_ops(&coreUiOps);
 	purple_eventloop_set_ui_ops(getEventLoopUiOps());
-	
-	purple_set_blist(purple_blist_new());
-	purple_blist_load();
 
 	ret = purple_core_init(HIICQ_UI);
 	if (ret){
@@ -1075,6 +1072,10 @@ bool GlooxMessageHandler::initPurple(){
 				names = g_list_append(names, info->id);
 			}
 		}
+		
+		purple_set_blist(purple_blist_new());
+		purple_blist_load();
+		
 		purple_signal_connect(purple_conversations_get_handle(), "received-im-msg", &conversation_handle, PURPLE_CALLBACK(newMessageReceived), NULL);
 		purple_signal_connect(purple_conversations_get_handle(), "buddy-typing", &conversation_handle, PURPLE_CALLBACK(buddyTyping), NULL);
 		purple_signal_connect(purple_conversations_get_handle(), "buddy-typing-stopped", &conversation_handle, PURPLE_CALLBACK(buddyTypingStopped), NULL);
