@@ -22,9 +22,9 @@
 #define USERMANAGER_H
 
 #include <string>
-#include <map>
 #include "account.h"
 #include "user.h"
+#include "glib.h"
 
 class GlooxMessageHandler;
 
@@ -35,17 +35,17 @@ class UserManager
 		~UserManager();
 		User *getUserByJID(std::string barejid);
 		User *getUserByAccount(PurpleAccount *account);
-		void addUser(User *user) { m_users[user->jid()] = user; }
+		void addUser(User *user) { g_hash_table_replace(m_users, g_strdup(user->jid().c_str()), user); }
 		void removeUser(User *user);
 		void removeUserTimer(User *user);
 		void buddyOnline();
 		void buddyOffline();
 		long onlineUserCount();
-		int userCount() { return m_users.size(); }
+		int userCount() { return g_hash_table_size(m_users); }
 	
 	private:
 		GlooxMessageHandler *main;
-		std::map<std::string, User*> m_users;
+		GHashTable *m_users;	// key = JID; value = User*
 		long m_onlineBuddies;
 	
 };

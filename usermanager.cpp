@@ -32,6 +32,7 @@ static gboolean deleteUser(gpointer data){
 
 UserManager::UserManager(GlooxMessageHandler *m){
 	main = m;
+	m_users = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
 }
 
 UserManager::~UserManager(){
@@ -39,10 +40,7 @@ UserManager::~UserManager(){
 }
 
 User *UserManager::getUserByJID(std::string barejid){
-	User *user = NULL;
-	std::map<std::string,User*>::iterator it = m_users.find(barejid);
-	if (it != m_users.end())
-		user = (*it).second;
+	User *user = (User*) g_hash_table_lookup(m_users, user->jid().c_str());
 	return user;
 }
 
@@ -54,14 +52,14 @@ User *UserManager::getUserByAccount(PurpleAccount * account){
 
 void UserManager::removeUser(User *user){
 	Log().Get("logout") << "removing user";
-	m_users.erase(user->jid());
+	g_hash_table_remove(m_users, user->jid().c_str());
 	delete user;
 	Log().Get("logout") << "delete user; called => user is sucesfully removed";
 }
 
 void UserManager::removeUserTimer(User *user){
 	Log().Get("logout") << "removing user by timer";
-	m_users.erase(user->jid());
+	g_hash_table_remove(m_users, user->jid().c_str());
 	// this will be called by gloop after all
 	g_timeout_add(0,&deleteUser,user);
 }
