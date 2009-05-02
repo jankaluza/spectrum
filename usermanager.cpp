@@ -36,7 +36,7 @@ UserManager::UserManager(GlooxMessageHandler *m){
 }
 
 UserManager::~UserManager(){
-	
+	g_hash_table_destroy(m_users);
 }
 
 User *UserManager::getUserByJID(std::string barejid){
