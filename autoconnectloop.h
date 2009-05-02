@@ -23,6 +23,8 @@
 
 #include <string>
 #include <map>
+#include "glib.h"
+#include "account.h"
 
 class GlooxMessageHandler;
 
@@ -31,11 +33,12 @@ class AutoConnectLoop
 	public:
 		AutoConnectLoop(GlooxMessageHandler *m);
 		~AutoConnectLoop();
+		void purpleAccountRemoved(const PurpleAccount *account);
 		bool restoreNextConnection();
 	
 	private:
 		GlooxMessageHandler *main;
-		std::map<std::string,int> m_probes;
+		GList *m_account;
 	
 };
 
