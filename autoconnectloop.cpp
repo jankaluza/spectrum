@@ -62,12 +62,13 @@ void AutoConnectLoop::purpleAccountRemoved(const PurpleAccount *account) {
 
 bool AutoConnectLoop::restoreNextConnection() {
 	Stanza * stanza;
-	PurpleAccount *account;
-	GList *l;
 	User *user;
+	PurpleAccount *account;
 	Log().Get("connection restorer") << "Restoring new connection";
 	if (m_account == NULL)
 		return false;
+
+	account = (PurpleAccount *) m_account->data;
 
 	Log().Get("connection restorer") << "Checking next account";
 	if (purple_presence_is_online(account->presence)) {

@@ -40,7 +40,7 @@ UserManager::~UserManager(){
 }
 
 User *UserManager::getUserByJID(std::string barejid){
-	User *user = (User*) g_hash_table_lookup(m_users, user->jid().c_str());
+	User *user = (User*) g_hash_table_lookup(m_users, barejid.c_str());
 	return user;
 }
 
