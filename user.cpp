@@ -155,11 +155,11 @@ void User::sendRosterX()
 	// adding these users to roster db with subscription=ask
 	std::map<std::string,PurpleBuddy*>::iterator it = m_subscribeCache.begin();
 	while(it != m_subscribeCache.end()) {
-// 		if (!(*it).second.uin.empty()){
+		PurpleBuddy *buddy = (*it).second;
+		std::string name(purple_buddy_get_name(buddy));
+		if (!name.empty()){
 			RosterRow user;
-			PurpleBuddy *buddy = (*it).second;
 			std::string alias(purple_buddy_get_alias(buddy));
-			std::string name(purple_buddy_get_name(buddy));
 			user.id = -1;
 			user.jid = m_jid;
 			user.uin = name;
@@ -175,7 +175,7 @@ void User::sendRosterX()
 			item->addAttribute("name",alias);
 			item->addChild(new Tag("group",(std::string) purple_group_get_name(purple_buddy_get_group(buddy))));
 			x->addChild(item);
-// 		}
+		}
 		it++;
 	}
 	tag->addChild(x);
@@ -283,8 +283,14 @@ Tag *User::generatePresenceStanza(PurpleBuddy *buddy){
 		// Check if it's patched libpurple which saved icons to directories
 		char *hash = rindex(avatarHash,'/');
 		std::string h;
-		if (hash)
+		if (hash) {
+			char *dot
+			hash++;
+			dot = strchr(hash, '.');
+			if (dot)
+				*dot = '\0';
 			x->addChild(new Tag("photo",(std::string) hash));
+		}
 		else
 			x->addChild(new Tag("photo",(std::string) avatarHash));
 	}
@@ -367,11 +373,11 @@ void User::purpleBuddyChanged(PurpleBuddy *buddy){
 		m_syncTimer = purple_timeout_add_seconds(4, sync_cb, this);
 	}
 
-	bool inRoster = purple_blist_node_get_bool(&buddy->node, "inRoster");
-	if (!inRoster) {
-		inRoster = isInRoster(name,"");
-		purple_blist_node_set_bool(&buddy->node, "inRoster", true);
-	}
+// 	bool inRoster = purple_blist_node_get_bool(&buddy->node, "inRoster");
+// 	if (!inRoster) {
+	bool inRoster = isInRoster(name,"");
+// 		purple_blist_node_set_bool(&buddy->node, "inRoster", true);
+// 	}
 
 	if (!inRoster) {
 		if (!m_rosterXCalled && hasFeature(GLOOX_FEATURE_ROSTERX)){

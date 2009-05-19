@@ -153,6 +153,8 @@ std::map<std::string,RosterRow> SQLClass::getRosterByJid(const std::string &jid)
 			user.jid=(std::string)row["jid"];
 			user.uin=(std::string)row["uin"];
 			user.subscription=(std::string)row["subscription"];
+			user.nickname=(std::string)row["nickname"];
+			user.group=(std::string)row["group"];
 			if (user.subscription.empty())
 				user.subscription="ask";
 			user.online=false;
@@ -176,6 +178,8 @@ std::map<std::string,RosterRow> SQLClass::getRosterByJidAsk(const std::string &j
 			user.jid=(std::string)row["jid"];
 			user.uin=(std::string)row["uin"];
 			user.subscription=(std::string)row["subscription"];
+			user.nickname=(std::string)row["nickname"];
+			user.group=(std::string)row["group"];
 			user.online=false;
 			user.lastPresence="";
 			rows[(std::string)row["uin"]]=user;

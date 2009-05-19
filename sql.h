@@ -42,6 +42,8 @@ struct RosterRow {
 	std::string uin;
 	std::string subscription;
 	bool online;
+	std::string nickname;
+	std::string group;
 	std::string lastPresence;
 };
 
