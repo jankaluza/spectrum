@@ -159,7 +159,11 @@ void User::sendRosterX()
 		std::string name(purple_buddy_get_name(buddy));
 		if (!name.empty()){
 			RosterRow user;
-			std::string alias(purple_buddy_get_alias(buddy));
+			std::string alias;                                                                                                                                          
+			if (purple_buddy_get_server_alias(buddy))                                                                                                                   
+				alias = (std::string) purple_buddy_get_server_alias(buddy);
+			else
+				alias = (std::string) purple_buddy_get_alias(buddy);
 			user.id = -1;
 			user.jid = m_jid;
 			user.uin = name;
@@ -213,7 +217,12 @@ void User::syncContacts()
 Tag *User::generatePresenceStanza(PurpleBuddy *buddy){
 	if (buddy==NULL)
 		return NULL;
-	std::string alias(purple_buddy_get_alias(buddy));
+	std::string alias;
+	if (purple_buddy_get_server_alias(buddy))
+		alias = (std::string) purple_buddy_get_server_alias(buddy);
+	else
+		alias = (std::string) purple_buddy_get_alias(buddy);
+
 	std::string name(purple_buddy_get_name(buddy));
 	PurplePresence *pres = purple_buddy_get_presence(buddy);
 	if (pres==NULL)
@@ -284,7 +293,7 @@ Tag *User::generatePresenceStanza(PurpleBuddy *buddy){
 		char *hash = rindex(avatarHash,'/');
 		std::string h;
 		if (hash) {
-			char *dot
+			char *dot;
 			hash++;
 			dot = strchr(hash, '.');
 			if (dot)
@@ -355,7 +364,12 @@ void User::purpleReauthorizeBuddy(PurpleBuddy *buddy){
 void User::purpleBuddyChanged(PurpleBuddy *buddy){
 	if (buddy==NULL)
 		return;
-	std::string alias(purple_buddy_get_alias(buddy));
+	std::string alias;
+	if (purple_buddy_get_server_alias(buddy))
+		alias = (std::string) purple_buddy_get_server_alias(buddy);
+	else
+		alias = (std::string) purple_buddy_get_alias(buddy);
+
 	std::string name(purple_buddy_get_name(buddy));
 	PurplePresence *pres = purple_buddy_get_presence(buddy);
 	if (pres==NULL)
