@@ -90,3 +90,9 @@ std::list<std::string> FacebookProtocol::transportFeatures(){
 std::list<std::string> FacebookProtocol::buddyFeatures(){
 	return m_buddyFeatures;
 }
+
+std::string FacebookProtocol::text(std::string &key) {
+	if (key == "instructions")
+		return "Enter your Facebook email and password:";
+	return "not defined";
+}

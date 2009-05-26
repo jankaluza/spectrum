@@ -72,3 +72,10 @@ std::list<std::string> ICQProtocol::transportFeatures(){
 std::list<std::string> ICQProtocol::buddyFeatures(){
 	return m_buddyFeatures;
 }
+
+std::string ICQProtocol::text(std::string &key) {
+	if (key == "instructions")
+		return "Enter your UIN and password:";
+	return "not defined";
+}
+

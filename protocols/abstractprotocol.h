@@ -52,6 +52,10 @@ class AbstractProtocol
 		 * Returns disco features used by contacts
 		 */
 		virtual std::list<std::string> buddyFeatures() = 0;
+		/*
+		 * Returns pregenerated text according to key
+		 */
+		virtual std::string text(std::string &key) = 0;
 };
 
 #endif

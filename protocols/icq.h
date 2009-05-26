@@ -36,6 +36,7 @@ class ICQProtocol : AbstractProtocol
 		std::string prepareUserName(std::string &username);
 		std::list<std::string> transportFeatures();
 		std::list<std::string> buddyFeatures();
+		std::string text(std::string &key);
 		
 		std::string replace(std::string &str, const char *string_to_replace, const char *new_string);
 	

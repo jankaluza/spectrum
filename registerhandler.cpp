@@ -53,17 +53,16 @@ bool GlooxRegisterHandler::handleIq (Stanza *stanza){
 		reply->addAttribute( "from", p->jid() );
 		Tag *query = new Tag( "query" );
 		query->addAttribute( "xmlns", "jabber:iq:register" );
-		query->addChild( new Tag("instructions", "Enter your UIN and password") );
 		UserRow res = p->sql()->getUserByJid(stanza->from().bare());
 		if(res.id==-1) {
 			std::cout << "* sending registration form; user is not registered\n";
-			query->addChild( new Tag("instructions", "Enter your UIN and password") );
+			query->addChild( new Tag("instructions", p->protocol()->text("instructions")) );
 			query->addChild( new Tag("username") );
 			query->addChild( new Tag("password") );
 		}
 		else {
 			std::cout << "* sending registration form; user is registered\n";
-			query->addChild( new Tag("instructions", "Enter your UIN and password") );
+			query->addChild( new Tag("instructions", p->protocol()->text("instructions")) );
 			query->addChild( new Tag("registered") );
 			query->addChild( new Tag("username",res.uin));
 			query->addChild( new Tag("password"));
