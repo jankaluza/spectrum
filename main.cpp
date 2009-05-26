@@ -441,7 +441,6 @@ GlooxMessageHandler::GlooxMessageHandler() : MessageHandler(),ConnectionListener
 	capsCache["_default"]=0;
 	
 	loadConfigFile();
-	loadProtocol();
 	
 	Log().Get("gloox") << "connecting to: " << m_configuration.server << " as " << m_configuration.jid << " with password " << m_configuration.password;
 	j = new HiComponent("jabber:component:accept",m_configuration.server,m_configuration.jid,m_configuration.password,m_configuration.port);
@@ -453,6 +452,7 @@ GlooxMessageHandler::GlooxMessageHandler() : MessageHandler(),ConnectionListener
 	m_userManager = new UserManager(this);
 
 	initPurple();
+	loadProtocol();
 
 	m_discoHandler=new GlooxDiscoHandler(this);
  	j->removeIqHandler(XMLNS_DISCO_INFO);
@@ -1108,24 +1108,6 @@ bool GlooxMessageHandler::initPurple(){
 // 				std::cout << "!!! Can't make base64 cache dir\n";
 // 			}
 // 		}
-
-	PurpleCertificatePool *tls_peers;
-	tls_peers = purple_certificate_find_pool("x509", "tls_peers");
-	if (!purple_certificate_pool_contains(tls_peers, "login.facebook.com")){
-		PurpleCertificateScheme *x509;
-		PurpleCertificate *crt;
-
-		/* Load the scheme of our tls_peers pool (ought to be x509) */
-		x509 = purple_certificate_pool_get_scheme(tls_peers);
-
-		/* Now load the certificate from disk */
-		crt = purple_certificate_import(x509, "certificate.pem");
-		purple_certificate_pool_store(tls_peers, "login.facebook.com", crt);
-
-		/* And this certificate is not needed any more */
-		purple_certificate_destroy(crt);
-	}
-
 
 	}
 	return ret;
