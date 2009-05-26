@@ -442,6 +442,15 @@ void User::purpleBuddyChanged(PurpleBuddy *buddy){
 }
 
 /*
+ * Called when PurpleBuddy is removed.
+ */
+void User::purpleBuddyRemoved(PurpleBuddy *buddy) {
+	// we should remove pointer to buddy from subscribCache
+	std::string name(purple_buddy_get_name(buddy));
+	m_subscribeCache.erase(name);
+}
+
+/*
  * Called when new message has been received.
  */
 void User::purpleMessageReceived(PurpleAccount* account,char * name,char *msg,PurpleConversation *conv,PurpleMessageFlags flags){

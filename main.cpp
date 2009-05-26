@@ -125,6 +125,13 @@ static void buddyTypingStopped(PurpleAccount *account, const char *who, gpointer
 }
 
 /*
+ * Called when PurpleBuddy is removed
+ */
+static void buddyRemoved(PurpleBuddy *buddy, gpointer null) {
+	GlooxMessageHandler::instance()->purpleBuddyRemoved(buddy);
+}
+
+/*
  * Called when purple disconnects from legacy network.
  */
 void connection_report_disconnect(PurpleConnection *gc,PurpleConnectionError reason,const char *text){
@@ -557,6 +564,15 @@ void GlooxMessageHandler::purpleBuddyTyping(PurpleAccount *account, const char *
 	}
 	else {
 		Log().Get("purple") << "purpleBuddyTyping called, but user does not exist!!!";
+	}
+}
+
+void GlooxMessageHandler::purpleBuddyRemoved(PurpleBuddy *buddy) {
+	if (buddy != NULL){
+		PurpleAccount *a = purple_buddy_get_account(buddy);
+		User *user = userManager()->getUserByAccount(a);
+		if (user!=NULL)
+			user->purpleBuddyRemoved(buddy);
 	}
 }
 
@@ -1063,6 +1079,7 @@ bool GlooxMessageHandler::initPurple(){
 		static int conversation_handle;
 		static int conn_handle;
 		static int xfer_handle;
+		static int blist_handle;
 		iter = purple_plugins_get_protocols();
 		for (i = 0; iter; iter = iter->next) {
 			PurplePlugin *plugin = (PurplePlugin *)iter->data;
@@ -1082,6 +1099,7 @@ bool GlooxMessageHandler::initPurple(){
 		purple_signal_connect(purple_xfers_get_handle(), "file-recv-request", &xfer_handle, PURPLE_CALLBACK(newXfer), NULL);
 		purple_signal_connect(purple_xfers_get_handle(), "file-recv-complete", &xfer_handle, PURPLE_CALLBACK(XferComplete), NULL);
 		purple_signal_connect(purple_connections_get_handle(), "signed-on", &conn_handle,PURPLE_CALLBACK(signed_on), NULL);
+		purple_signal_connect(purple_blist_get_handle(), "buddy-removed", &blist_handle,PURPLE_CALLBACK(buddyRemoved), NULL);
 // 		purple_signal_connect(purple_connections_get_handle(), "connection-error", &conn_handle,PURPLE_CALLBACK(connection_error_cb), NULL);
 // 		base64Dir = std::string(g_build_filename(userDir.c_str(), "base64", NULL));
 // 		if (!g_file_test(base64Dir.c_str(), G_FILE_TEST_IS_DIR))
