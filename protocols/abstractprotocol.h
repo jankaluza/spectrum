@@ -55,7 +55,7 @@ class AbstractProtocol
 		/*
 		 * Returns pregenerated text according to key
 		 */
-		virtual std::string text(std::string &key) = 0;
+		virtual std::string text(const std::string &key) = 0;
 };
 
 #endif

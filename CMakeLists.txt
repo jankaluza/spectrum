@@ -78,6 +78,8 @@ set(hiicq_SRCS
 	geventloop.cpp
 	autoconnectloop.cpp
 	usermanager.cpp
+	adhochandler.cpp
+	adhocrepeater.cpp
 	protocols/icq.cpp
 	protocols/facebook.cpp
 )
@@ -102,6 +104,8 @@ set(hiicq_MOC_HDRS
 	geventloop.h
 	autoconnectloop.h
 	usermanager.h
+	adhocrepeater.h
+	adhochandler.h
 	protocols/abstractprotocol.h
 	protocols/icq.h
 	protocols/facebook.h

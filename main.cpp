@@ -24,6 +24,8 @@
 #include "geventloop.h"
 #include "autoconnectloop.h"
 #include "usermanager.h"
+#include "adhochandler.h"
+#include "adhocrepeater.h"
 #include "protocols/abstractprotocol.h"
 #include "protocols/icq.h"
 #include "protocols/facebook.h"
@@ -460,6 +462,8 @@ GlooxMessageHandler::GlooxMessageHandler() : MessageHandler(),ConnectionListener
  	m_discoInfoHandler=new GlooxDiscoInfoHandler(this);
  	j->registerIqHandler(m_discoInfoHandler,XMLNS_DISCO_INFO);
 	
+	m_adhoc = new AdhocHandler(this);
+	
 	ftManager = new FileTransferManager();
 	ft = new SIProfileFT(j, ftManager );
 	ftManager->setSIProfileFT(ft,this);
@@ -506,6 +510,23 @@ void GlooxMessageHandler::loadProtocol(){
 		m_protocol = (AbstractProtocol*) new ICQProtocol(this);
 	else if (configuration().protocol == "facebook")
 		m_protocol = (AbstractProtocol*) new FacebookProtocol(this);
+
+	
+// 	PurplePlugin *plugin = purple_find_prpl(m_protocol->protocol().c_str());
+// 	if (plugin && PURPLE_PLUGIN_HAS_ACTIONS(plugin)) {
+// 		PurplePluginAction *action = NULL;
+// 		GList *actions, *l;
+// 
+// 		actions = PURPLE_PLUGIN_ACTIONS(plugin, gc);
+// 
+// 		for (l = actions; l != NULL; l = l->next) {
+// 			if (l->data) {
+// 				action = (PurplePluginAction *) l->data;
+// 				m_adhoc->registerAdhocCommandProvider(adhocProvider, (std::string) action->label ,(std::string) action->label);
+// 				purple_plugin_action_free(action);
+// 			}
+// 		}
+// 	}
 }
 
 void GlooxMessageHandler::onSessionCreateError (SessionCreateError error){
@@ -704,7 +725,7 @@ void GlooxMessageHandler::purpleFileReceiveRequest(PurpleXfer *xfer){
         if (*it == '\\' || *it == '&' || *it == '/' || *it == '?' || *it == '*' || *it == ':') {
             *it = '_';
         }
-    } 
+    }
 
 	purple_xfer_request_accepted(xfer, std::string(configuration().filetransferCache+"/"+remote_user+"-"+j->getID()+"-"+filename).c_str());
 	User *user = userManager()->getUserByAccount(purple_xfer_get_account(xfer));

@@ -27,6 +27,7 @@ ICQProtocol::ICQProtocol(GlooxMessageHandler *main){
 	m_transportFeatures.push_back("http://jabber.org/protocol/disco#info");
 	m_transportFeatures.push_back("http://jabber.org/protocol/caps");
 	m_transportFeatures.push_back("http://jabber.org/protocol/chatstates");
+	m_transportFeatures.push_back("http://jabber.org/protocol/commands");
 	
 	m_buddyFeatures.push_back("http://jabber.org/protocol/disco#info");
 	m_buddyFeatures.push_back("http://jabber.org/protocol/caps");
@@ -73,7 +74,7 @@ std::list<std::string> ICQProtocol::buddyFeatures(){
 	return m_buddyFeatures;
 }
 
-std::string ICQProtocol::text(std::string &key) {
+std::string ICQProtocol::text(const std::string &key) {
 	if (key == "instructions")
 		return "Enter your UIN and password:";
 	return "not defined";

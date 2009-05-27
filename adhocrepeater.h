@@ -17,35 +17,27 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02111-1301  USA
  */
+ 
+#ifndef _HI_ADHOC_REPEATER_H
+#define _HI_ADHOC_REPEATER_H
 
-#ifndef _HI_FACEBOOK_PROTOCOL_H
-#define _HI_FACEBOOK_PROTOCOL_H
-
-#include "abstractprotocol.h"
+#include <string>
+#include "account.h"
+#include "user.h"
+#include "glib.h"
 
 class GlooxMessageHandler;
 
-class FacebookProtocol : AbstractProtocol
+class AdhocRepeater
 {
 	public:
-		FacebookProtocol(GlooxMessageHandler *main);
-		~FacebookProtocol();
-		std::string gatewayIdentity() { return "fb"; }
-		std::string protocol() { return "prpl-bigbrownchunx-facebookim"; }
-		bool isValidUsername(std::string &username);
-		std::string prepareUserName(std::string &username);
-		std::list<std::string> transportFeatures();
-		std::list<std::string> buddyFeatures();
-		std::string text(const std::string &key);
-		
-		std::string replace(std::string &str, const char *string_to_replace, const char *new_string);
+		AdhocRepeater(GlooxMessageHandler *m);
+		~AdhocRepeater();
 	
 	private:
-		GlooxMessageHandler *m_main;
-		std::list<std::string> m_transportFeatures;
-		std::list<std::string> m_buddyFeatures;
+		GlooxMessageHandler *main;
 	
 };
 
-#endif	
-	
+#endif
+ 
