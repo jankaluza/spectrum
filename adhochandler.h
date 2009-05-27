@@ -27,6 +27,7 @@
 #include "glib.h"
 
 class GlooxMessageHandler;
+class AdhocRepeater;
 
 class AdhocHandler : public DiscoNodeHandler, public DiscoHandler, public IqHandler
 {
@@ -41,10 +42,14 @@ class AdhocHandler : public DiscoNodeHandler, public DiscoHandler, public IqHand
 		virtual void handleDiscoInfoResult( Stanza *stanza, int context );
 		virtual void handleDiscoItemsResult( Stanza *stanza, int context );
 		virtual void handleDiscoError( Stanza *stanza, int context );
+		void registerSession(const std::string &jid, AdhocRepeater *repeater) {std::cout << jid << "\n"; m_sessions[jid] = repeater; }
+		void unregisterSession(std::string &jid) { m_sessions.erase(jid); }
+		bool hasSession(const std::string &jid);
 
 	private:
 		GlooxMessageHandler *main;
-	
+		std::map<std::string, AdhocRepeater *> m_sessions;
+
 };
 
 #endif

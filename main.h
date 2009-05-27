@@ -176,7 +176,7 @@ public:
 	SQLClass *sql() { return m_sql; }
 	GlooxVCardHandler *vcard() { return m_vcard; }
 	AbstractProtocol *protocol() { return m_protocol; }
-	AdhocRepeater *adhocRepeater() { return m_adhocRepeater; }
+	AdhocHandler *adhoc() { m_adhoc; }
 	
 	FileTransferManager* ftManager;
 	SIProfileFT* ft;
@@ -209,7 +209,6 @@ private:
 	GlooxStatsHandler *m_stats;
 	GlooxVCardHandler *m_vcard;
 // 	std::list <GlooxAdhocHandler *> m_adhoc_handlers;
-	AdhocRepeater *m_adhocRepeater;
 	AdhocHandler *m_adhoc;
 	
 	GIOChannel *connectIO;

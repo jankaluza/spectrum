@@ -35,6 +35,12 @@ class RosterRow;
 
 using namespace gloox;
 
+struct AdhocData {
+	std::string id;
+	std::string from;
+	std::string node;
+};
+
 struct authData{
 	PurpleAccount *account;
 	std::string who;
@@ -119,6 +125,8 @@ class User {
 		std::string username() { return m_username; }
 		std::string jid() { return m_jid; }
 		std::string resource() { return m_resource; }
+		AdhocData adhocData() { return m_adhocData; }
+		void setAdhocData(AdhocData data) { m_adhocData = data; }
 		std::map<std::string,RosterRow> roster() { return m_roster; }
 		
 		GlooxMessageHandler *p;
@@ -132,6 +140,7 @@ class User {
 		bool m_rosterXCalled;		// true if we are counting buddies for roster X
 		bool m_connected;			// true if this user is connected to legacy account
 		bool m_reconnectCount;		// number of passed reconnect tries
+		AdhocData m_adhocData;		// name of node for AdhocHandler
 		std::string m_bindIP;		// IP address to which libpurple will be binded
 		std::string m_password;		// password used to connect to legacy network
 		std::string m_username;		// legacy network user name

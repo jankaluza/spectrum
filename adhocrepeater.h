@@ -25,18 +25,24 @@
 #include "account.h"
 #include "user.h"
 #include "glib.h"
+#include "request.h"
 
 class GlooxMessageHandler;
+class User;
 
 class AdhocRepeater
 {
 	public:
-		AdhocRepeater(GlooxMessageHandler *m);
+		AdhocRepeater(GlooxMessageHandler *m, User *user, const std::string &title, const std::string &primaryString, const std::string &secondaryString, const std::string &value, gboolean multiline, gboolean masked, GCallback ok_cb, GCallback cancel_cb, void * user_data);
 		~AdhocRepeater();
+		bool handleIq(Stanza *stanza);
 	
 	private:
 		GlooxMessageHandler *main;
-	
+		User *m_user;
+		void *m_requestData;
+		GCallback m_ok_cb;
+		GCallback m_cancel_cb;
 };
 
 #endif

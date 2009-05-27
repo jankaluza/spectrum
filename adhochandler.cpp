@@ -20,6 +20,8 @@
  
  #include "adhochandler.h"
  #include "usermanager.h"
+ #include "log.h"
+ #include "adhocrepeater.h"
  
 AdhocHandler::AdhocHandler(GlooxMessageHandler *m) {
 	main = m;
@@ -91,7 +93,73 @@ StringMap AdhocHandler::handleDiscoNodeIdentities( const std::string& node, std:
 }
 
 bool AdhocHandler::handleIq( Stanza *stanza ) {
+	Log().Get("AdhocHandler") << "handleIq";
+	std::string to = stanza->to().bare();
+	std::string from = stanza->from().bare();
+	Tag *tag = stanza->findChild( "command" );
+	const std::string& node = tag->findAttribute( "node" );
+	if (node.empty()) return false;
+
+	if (to == main->jid()) {
+// 		if (tag->hasAttribute("action","cancel")){
+// 			Stanza *response = Stanza::createIqStanza(from, stanza()->id, StanzaIqResult, "", 0);
+// 			response->addAttribute("from",p->jid);
+// 
+// 			Tag *c = new Tag("command");
+// 			c->addAttribute("xmlns","http://jabber.org/protocol/commands");
+// 			c->addAttribute("sessionid",tag->findAttribute("sessionid"));
+// 			c->addAttribute("node","configuration");
+// 			c->addAttribute("status","canceled");
+// 			p->j->send(response);
+// 
+// 			return;
+// 		}
+
+		User *user = main->userManager()->getUserByJID(from);
+		if (user) {
+			if (user->isConnected() && purple_account_get_connection(user->account())) {
+				if (hasSession(stanza->from().full())) {
+					m_sessions[stanza->from().full()]->handleIq(stanza);
+				}
+				else {
+					PurpleConnection *gc = purple_account_get_connection(user->account());
+					PurplePlugin *plugin = gc && PURPLE_CONNECTION_IS_CONNECTED(gc) ? gc->prpl : NULL;
+					if (plugin && PURPLE_PLUGIN_HAS_ACTIONS(plugin)) {
+						PurplePluginAction *action = NULL;
+						GList *actions, *l;
+
+						actions = PURPLE_PLUGIN_ACTIONS(plugin, gc);
+
+						for (l = actions; l != NULL; l = l->next) {
+							if (l->data) {
+								action = (PurplePluginAction *) l->data;
+								if (node == (std::string) action->label) {
+									AdhocData data;
+									data.id = stanza->id();
+									data.from = stanza->from().full();
+									data.node = node;
+									user->setAdhocData(data);
+									action->plugin = plugin;
+									action->context = gc;
+									action->callback(action);
+								}
+								purple_plugin_action_free(action);
+							}
+						}
+					}
+				}
+			}
+		}
+	}
 	return true;
+}
+
+bool AdhocHandler::hasSession(const std::string &jid) {
+	std::map<std::string,AdhocRepeater *> ::iterator iter = m_sessions.begin();
+	iter = m_sessions.find(jid);
+	if(iter != m_sessions.end())
+		return true;
+	return false;
 }
 
 bool AdhocHandler::handleIqID( Stanza *stanza, int context ) {

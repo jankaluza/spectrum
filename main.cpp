@@ -148,15 +148,26 @@ static void * requestInput(const char *title, const char *primary,const char *se
 	if (primary){
 		std::string primaryString(primary);
 		Log().Get("purple") << "primary string: " << primaryString;
-		if (primaryString=="Authorization Request Message:") {
-			Log().Get("purple") << "accepting this authorization request";
-			((PurpleRequestInputCb) ok_cb)(user_data,"Please authorize me.");
+		User *user = GlooxMessageHandler::instance()->userManager()->getUserByAccount(account);
+		if (!user) return NULL;
+		if (!user->adhocData().id.empty()) {
+			AdhocRepeater *repeater = new AdhocRepeater(GlooxMessageHandler::instance(), user, title ? std::string(title):std::string(), primaryString, secondary ? std::string(secondary):std::string(), default_value ? std::string(default_value):std::string(), multiline, masked, ok_cb, cancel_cb, user_data);
+			GlooxMessageHandler::instance()->adhoc()->registerSession("test@localhost/hanzz-laptop", repeater);
+			AdhocData data;
+			data.id="";
+			user->setAdhocData(data);
+			return repeater;
 		}
-		else if ( primaryString == "Set your Facebook status" ) {
-			Log().Get("purple") << "set facebook status";
-			User *user = GlooxMessageHandler::instance()->userManager()->getUserByAccount(account);
-			if (user!=NULL){
-				((PurpleRequestInputCb) ok_cb)(user_data,user->actionData.c_str());
+		else {
+			if (primaryString=="Authorization Request Message:") {
+				Log().Get("purple") << "accepting this authorization request";
+				((PurpleRequestInputCb) ok_cb)(user_data,"Please authorize me.");
+			}
+			else if ( primaryString == "Set your Facebook status" ) {
+				Log().Get("purple") << "set facebook status";
+				if (user!=NULL){
+					((PurpleRequestInputCb) ok_cb)(user_data,user->actionData.c_str());
+				}
 			}
 		}
 	}
