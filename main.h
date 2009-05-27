@@ -176,7 +176,7 @@ public:
 	SQLClass *sql() { return m_sql; }
 	GlooxVCardHandler *vcard() { return m_vcard; }
 	AbstractProtocol *protocol() { return m_protocol; }
-	AdhocHandler *adhoc() { m_adhoc; }
+	AdhocHandler *adhoc() { return m_adhoc; }
 	
 	FileTransferManager* ftManager;
 	SIProfileFT* ft;

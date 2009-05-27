@@ -68,6 +68,45 @@ AdhocRepeater::AdhocRepeater(GlooxMessageHandler *m, User *user, const std::stri
 AdhocRepeater::~AdhocRepeater() {}
 
 bool AdhocRepeater::handleIq(Stanza *stanza) {
+	Tag *tag = stanza->findChild( "command" );
+	if (tag->hasAttribute("action","cancel")){
+		Stanza *response = Stanza::createIqStanza(stanza->from().full(), stanza->id(), StanzaIqResult, "", 0);
+		response->addAttribute("from", main->jid());
+
+		Tag *c = new Tag("command");
+		c->addAttribute("xmlns","http://jabber.org/protocol/commands");
+		c->addAttribute("sessionid",tag->findAttribute("sessionid"));
+		c->addAttribute("node","configuration");
+		c->addAttribute("status","canceled");
+		main->j->send(response);
+
+		return true;
+	}
+	
+	Tag *x = tag->findChildWithAttrib("xmlns","jabber:x:data");
+	if (x) {
+		std::string result("");
+		for(std::list<Tag*>::iterator it = x->children().begin(); it != x->children().end(); ++it){
+			if ((*it)->hasAttribute("var","result")){
+				result = (*it)->findChild("value")->cdata();
+				break;
+			}
+		}
+
+		((PurpleRequestInputCb) m_ok_cb)(m_requestData, result.c_str());
+
+		Stanza *response = Stanza::createIqStanza(stanza->from().full(), stanza->id(), StanzaIqResult, "", 0);
+		response->addAttribute("from", main->jid());
+
+		Tag *c = new Tag("command");
+		c->addAttribute("xmlns","http://jabber.org/protocol/commands");
+		c->addAttribute("sessionid",tag->findAttribute("sessionid"));
+		c->addAttribute("node","configuration");
+		c->addAttribute("status","completed");
+		main->j->send(response);
+	}
+
+
 	return true;
 }
 

@@ -101,25 +101,11 @@ bool AdhocHandler::handleIq( Stanza *stanza ) {
 	if (node.empty()) return false;
 
 	if (to == main->jid()) {
-// 		if (tag->hasAttribute("action","cancel")){
-// 			Stanza *response = Stanza::createIqStanza(from, stanza()->id, StanzaIqResult, "", 0);
-// 			response->addAttribute("from",p->jid);
-// 
-// 			Tag *c = new Tag("command");
-// 			c->addAttribute("xmlns","http://jabber.org/protocol/commands");
-// 			c->addAttribute("sessionid",tag->findAttribute("sessionid"));
-// 			c->addAttribute("node","configuration");
-// 			c->addAttribute("status","canceled");
-// 			p->j->send(response);
-// 
-// 			return;
-// 		}
-
 		User *user = main->userManager()->getUserByJID(from);
 		if (user) {
 			if (user->isConnected() && purple_account_get_connection(user->account())) {
 				if (hasSession(stanza->from().full())) {
-					m_sessions[stanza->from().full()]->handleIq(stanza);
+					return m_sessions[stanza->from().full()]->handleIq(stanza);
 				}
 				else {
 					PurpleConnection *gc = purple_account_get_connection(user->account());
