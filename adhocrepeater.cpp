@@ -20,6 +20,14 @@
  
 #include "adhocrepeater.h"
 #include "gloox/stanza.h"
+#include "log.h"
+ 
+static gboolean removeRepeater(gpointer data){
+	AdhocRepeater *repeater = (AdhocRepeater*) data;
+	purple_request_close(repeater->type(),repeater);
+	Log().Get("AdhocRepeater") << "repeater closed";
+	return FALSE;
+}
  
 AdhocRepeater::AdhocRepeater(GlooxMessageHandler *m, User *user, const std::string &title, const std::string &primaryString, const std::string &secondaryString, const std::string &value, gboolean multiline, gboolean masked, GCallback ok_cb, GCallback cancel_cb, void * user_data) {
 	main = m;
@@ -28,6 +36,7 @@ AdhocRepeater::AdhocRepeater(GlooxMessageHandler *m, User *user, const std::stri
 	m_cancel_cb = cancel_cb;
 	m_requestData = user_data;
 	AdhocData data = user->adhocData();
+	m_from = data.from;
 	
 	Stanza *response = Stanza::createIqStanza(data.from,data.id,StanzaIqResult,"",0);
 	response->addAttribute("from",main->jid());
@@ -79,6 +88,8 @@ bool AdhocRepeater::handleIq(Stanza *stanza) {
 		c->addAttribute("node","configuration");
 		c->addAttribute("status","canceled");
 		main->j->send(response);
+
+		g_timeout_add(0,&removeRepeater,this);
 
 		return true;
 	}

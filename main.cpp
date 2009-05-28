@@ -152,7 +152,8 @@ static void * requestInput(const char *title, const char *primary,const char *se
 		if (!user) return NULL;
 		if (!user->adhocData().id.empty()) {
 			AdhocRepeater *repeater = new AdhocRepeater(GlooxMessageHandler::instance(), user, title ? std::string(title):std::string(), primaryString, secondary ? std::string(secondary):std::string(), default_value ? std::string(default_value):std::string(), multiline, masked, ok_cb, cancel_cb, user_data);
-			GlooxMessageHandler::instance()->adhoc()->registerSession("test@localhost/hanzz-laptop", repeater);
+			repeater->setType(PURPLE_REQUEST_INPUT);
+			GlooxMessageHandler::instance()->adhoc()->registerSession(user->adhocData().from, repeater);
 			AdhocData data;
 			data.id="";
 			user->setAdhocData(data);
@@ -184,6 +185,14 @@ static void * requestAction(const char *title, const char *primary,const char *s
 	}
 }
 
+static void requestClose(PurpleRequestType type, void *ui_handle) {
+	if (type == PURPLE_REQUEST_INPUT) {
+		AdhocRepeater *repeater = (AdhocRepeater *) ui_handle;
+		std::string from = repeater->from();
+		GlooxMessageHandler::instance()->adhoc()->unregisterSession(from);
+		delete repeater;
+	}
+}
 
 /*
  * Called when somebody from legacy network wants to send file to us.
@@ -228,7 +237,7 @@ static void buddyListUpdate(PurpleBuddyList *blist, PurpleBlistNode *node){
  * Called when somebody from legacy network wants to authorize some jabber user.
  * We can return some object which will be connected with this request all the time...
  */
-static void * requestAuth(PurpleAccount *account,const char *remote_user,const char *id,const char *alias,const char *message,gboolean on_list,PurpleAccountRequestAuthorizationCb authorize_cb,PurpleAccountRequestAuthorizationCb deny_cb,void *user_data){
+static void * accountRequestAuth(PurpleAccount *account,const char *remote_user,const char *id,const char *alias,const char *message,gboolean on_list,PurpleAccountRequestAuthorizationCb authorize_cb,PurpleAccountRequestAuthorizationCb deny_cb,void *user_data){
 	Log().Get("purple") << "new AUTHORIZE REQUEST";
 	return GlooxMessageHandler::instance()->purpleAuthorizeReceived(account,remote_user,id,alias,message,on_list,authorize_cb,deny_cb,user_data);
 }
@@ -236,7 +245,7 @@ static void * requestAuth(PurpleAccount *account,const char *remote_user,const c
 /*
  * Called when account is disconnecting and all requests will be closed and unreachable.
  */
-static void requestClose(void *data){
+static void accountRequestClose(void *data){
 	Log().Get("purple") << "AUTHORIZE REQUEST CLOSE";
 	GlooxMessageHandler::instance()->purpleAuthorizeClose(data);
 }
@@ -279,8 +288,8 @@ static PurpleAccountUiOps accountUiOps =
 	NULL,
 	NULL,
 	NULL,
-	requestAuth,
-	requestClose,
+	accountRequestAuth,
+	accountRequestClose,
 	NULL,
 	NULL,
 	NULL,
@@ -312,7 +321,7 @@ static PurpleRequestUiOps requestUiOps =
 	requestAction,
 	NULL,
 	NULL,
-	NULL,
+	requestClose,
 	NULL,
 	NULL,
 	NULL,
@@ -1032,6 +1041,7 @@ bool GlooxMessageHandler::onTLSConnect(const CertInfo & info){
 
 void GlooxMessageHandler::handleMessage( Stanza* stanza, MessageSession* session = 0 ){
 	User *user = userManager()->getUserByJID(stanza->from().bare());
+	Log().Get("purple") << stanza->xml();
 	if (user!=NULL){
 		if (user->isConnected()){
 			Tag *chatstates = stanza->findChildWithAttrib("xmlns","http://jabber.org/protocol/chatstates");
