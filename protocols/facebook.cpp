@@ -33,6 +33,7 @@ FacebookProtocol::FacebookProtocol(GlooxMessageHandler *main){
 	m_buddyFeatures.push_back("http://jabber.org/protocol/disco#info");
 	m_buddyFeatures.push_back("http://jabber.org/protocol/caps");
 	m_buddyFeatures.push_back("http://jabber.org/protocol/chatstates");
+	m_buddyFeatures.push_back("http://jabber.org/protocol/commands");
 
 	// load certificate from certificate.pem
 	PurpleCertificatePool *tls_peers;

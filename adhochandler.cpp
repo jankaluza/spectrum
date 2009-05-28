@@ -77,6 +77,32 @@ DiscoNodeItemList AdhocHandler::handleDiscoNodeItems( const std::string &from, c
 				}
 			}
 		}
+		else {
+			User *user = main->userManager()->getUserByJID(from);
+			if (user) {
+				if (user->isConnected() && purple_account_get_connection(user->account())) {
+					GList *l, *ll;
+					PurpleConnection *gc = purple_account_get_connection(user->account());
+					PurplePlugin *plugin = gc && PURPLE_CONNECTION_IS_CONNECTED(gc) ? gc->prpl : NULL;
+					PurplePluginProtocolInfo *prpl_info = PURPLE_PLUGIN_PROTOCOL_INFO(plugin);
+
+					if(!prpl_info || !prpl_info->blist_node_menu)
+						return lst;
+
+					PurpleBuddy *buddy = purple_find_buddy(user->account(), JID(to).username().c_str());
+
+					for(l = ll = prpl_info->blist_node_menu((PurpleBlistNode*)buddy); l; l = l->next) {
+						PurpleMenuAction *action = (PurpleMenuAction *) l->data;
+						DiscoNodeItem item;
+						item.node = (std::string) action->label;
+						item.jid = to + "/bot";
+						item.name = (std::string) action->label;
+						purple_menu_action_free(action);
+						lst.push_back( item );
+					}
+				}
+			}
+		}
 	}
 	return lst;
 }
