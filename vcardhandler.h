@@ -69,8 +69,8 @@ class GlooxVCardHandler : public IqHandler
 public:
 	GlooxVCardHandler(GlooxMessageHandler *parent);
 	~GlooxVCardHandler();
-	bool handleIq (Stanza *stanza);
-	bool handleIqID (Stanza *stanza, int context);
+	bool handleIq (const IQ &iq);
+	void handleIqID (const IQ &iq, int context);
 	bool hasVCardRequest (const std::string &name);
 	void userInfoArrived(PurpleConnection *gc,std::string who, PurpleNotifyUserInfo *user_info);
 	GlooxMessageHandler *p;

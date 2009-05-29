@@ -89,25 +89,25 @@ GlooxVCardHandler::GlooxVCardHandler(GlooxMessageHandler *parent) : IqHandler(){
 GlooxVCardHandler::~GlooxVCardHandler(){
 }
 
-bool GlooxVCardHandler::handleIq (Stanza *stanza){
+bool GlooxVCardHandler::handleIq (const IQ &stanza){
 
-	if (stanza->from().username()=="")
+	if (stanza.from().username()=="")
 		return false;
 
-	User *user = p->userManager()->getUserByJID(stanza->from().bare());
+	User *user = p->userManager()->getUserByJID(stanza.from().bare());
 	if (user==NULL)
 		return false;
 	if (!user->isConnected()){
 		return false;
 	}
 
-	if(stanza->subtype() == StanzaIqGet) {
+	if(stanza.subtype() == IQ::Get) {
 		std::list<std::string> temp;
-		temp.push_back((std::string)stanza->id());
-		temp.push_back((std::string)stanza->from().full());
-		vcardRequests[(std::string)stanza->to().username()]=temp;
+		temp.push_back((std::string)stanza.id());
+		temp.push_back((std::string)stanza.from().full());
+		vcardRequests[(std::string)stanza.to().username()]=temp;
 		
-		serv_get_info(purple_account_get_connection(user->account()), stanza->to().username().c_str());
+		serv_get_info(purple_account_get_connection(user->account()), stanza.to().username().c_str());
 	}
 
 	return true;
@@ -254,6 +254,5 @@ void GlooxVCardHandler::userInfoArrived(PurpleConnection *gc,std::string who, Pu
 	}
 }
 
-bool GlooxVCardHandler::handleIqID (Stanza *stanza, int context){
-	return false;
+void GlooxVCardHandler::handleIqID (const IQ &iq, int context){
 }

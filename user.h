@@ -81,8 +81,9 @@ class User {
 		void purpleReauthorizeBuddy(PurpleBuddy *buddy);
 
 		// Gloox callbacks
-		void receivedPresence(Stanza *stanza);
-		void receivedMessage( Stanza* stanza);
+		void receivedPresence(const Presence &presence);
+		void receivedSubscription(const Subscription &subscription);
+		void receivedMessage(const Message& msg);
 		void receivedChatState(const std::string &uin,const std::string &state);
 
 		// Libpurple callbacks

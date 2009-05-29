@@ -25,7 +25,7 @@ void FileTransferManager::setSIProfileFT(gloox::SIProfileFT *sipft,GlooxMessageH
 	p = parent;
 	mutex = new MyMutex();
 }
-
+/*
 void FileTransferManager::handleFTRequest( const gloox::JID &from,const gloox::JID &to, const std::string &id, const std::string &sid,
                                              const std::string &name, long size, const std::string &hash,
                                              const std::string &date, const std::string &mimetype,
@@ -105,4 +105,4 @@ void FileTransferManager::sendFile(std::string jid, std::string from, std::strin
     } else {
         std::cout << "FileTransferManager::sendFile" << " Couldn't open the file " << file << "!\n";
     }
-}
+}*/

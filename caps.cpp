@@ -27,29 +27,35 @@
 
 GlooxDiscoHandler::GlooxDiscoHandler(GlooxMessageHandler *parent) : DiscoHandler(){
 	p=parent;
+	version = 0;
 }
 
 GlooxDiscoHandler::~GlooxDiscoHandler(){
 }
 
-bool GlooxDiscoHandler::hasVersion(const std::string &name){
-	std::map<std::string,std::string> ::iterator iter = versions.begin();
+bool GlooxDiscoHandler::hasVersion(int name){
+	std::map<int,std::string> ::iterator iter = versions.begin();
 	iter = versions.find(name);
 	if(iter != versions.end())
 		return true;
 	return false;
 }
 
-void GlooxDiscoHandler::handleDiscoInfoResult(Stanza *stanza,int context){
-	if (stanza->id().empty())
+// 	void handleDiscoInfo(const JID &jid, const Disco::Info &info, int context);
+// 	void handleDiscoItems(const JID &jid, const Disco::Items &items, int context);
+// 	void handleDiscoError(const JID &jid, const Error *error, int context);
+
+void GlooxDiscoHandler::handleDiscoInfo(const JID &jid, const Disco::Info &info, int context) {
+// 	if (stanza->id().empty())
+// 		return;
+	if (!hasVersion(context))
 		return;
-	if (!hasVersion(stanza->id()))
-		return;
-	Tag *query = stanza->findChildWithAttrib("xmlns","http://jabber.org/protocol/disco#info");
-	if (query==NULL)
-		return;
+// 	Tag *query = stanza->findChildWithAttrib("xmlns","http://jabber.org/protocol/disco#info");
+// 	if (query==NULL)
+// 		return;
 	//if (query->findChild("identity") && query->findChild("identity")->findChild("category") && !query->findChild("identity")->findChildWithAttrib("category","client"))
 		//return;
+	Tag *query = info.tag();
 	if (query->findChild("identity") && !query->findChildWithAttrib("category","client"))
 		return;
 	int feature=0;
@@ -70,49 +76,49 @@ void GlooxDiscoHandler::handleDiscoInfoResult(Stanza *stanza,int context){
 			}
 		}
 	std::cout << "*** FEATURES ARRIVED: " << feature << "\n";
-	p->capsCache[versions[stanza->id()]]=feature;
-	User *user = p->userManager()->getUserByJID(stanza->from().bare());
+	p->capsCache[versions[context]]=feature;
+	User *user = p->userManager()->getUserByJID(jid.bare());
 	if (user==NULL){
 		std::cout << "no user?! wtf...";
 	}
 	else{
 		if (user->capsVersion().empty()){
-			user->setCapsVersion(versions[stanza->id()]);
+			user->setCapsVersion(versions[context]);
 			if (user->readyForConnect())
 				user->connect();
 		}
 	}
 	// TODO: CACHE CAPS IN DATABASE ACCORDING TO VERSION
-	versions.erase(stanza->id());
+	versions.erase(context);
 }
 
-void GlooxDiscoHandler::handleDiscoItemsResult(Stanza *stanza,int context){
+void GlooxDiscoHandler::handleDiscoItems(const JID &jid, const Disco::Items &items, int context){
 
 }
 
-void GlooxDiscoHandler::handleDiscoError(Stanza *stanza,int context){
-	if (stanza->id().empty())
-		return;
-	if (!hasVersion(stanza->id()))
-		return;
-	Tag *query = stanza->findChildWithAttrib("xmlns","http://jabber.org/protocol/disco#info");
-	if (query==NULL)
-		return;
-	// we are now using timeout
-	return;
-	int feature=0;
-	p->capsCache[versions[stanza->id()]]=feature;
-	std::cout << "*** FEATURES ERROR received: " << feature << "\n";
-	User *user = p->userManager()->getUserByJID(stanza->from().bare());
-	if (user==NULL){
-		std::cout << "no user?! wtf...";
-	}
-	else{
-		if (user->capsVersion().empty()){
-			user->setCapsVersion(versions[stanza->id()]);
-			if (user->readyForConnect())
-				user->connect();
-		}
-	}
-	versions.erase(stanza->id());
+void GlooxDiscoHandler::handleDiscoError(const JID &jid, const Error *error, int context){
+// // 	if (stanza->id().empty())
+// // 		return;
+// // 	if (!hasVersion(context))
+// // 		return;
+// // 	Tag *query = stanza->findChildWithAttrib("xmlns","http://jabber.org/protocol/disco#info");
+// // 	if (query==NULL)
+// // 		return;
+// 	// we are now using timeout
+// 	return;
+// 	int feature=0;
+// 	p->capsCache[versions[stanza->id()]]=feature;
+// 	std::cout << "*** FEATURES ERROR received: " << feature << "\n";
+// 	User *user = p->userManager()->getUserByJID(stanza->from().bare());
+// 	if (user==NULL){
+// 		std::cout << "no user?! wtf...";
+// 	}
+// 	else{
+// 		if (user->capsVersion().empty()){
+// 			user->setCapsVersion(versions[stanza->id()]);
+// 			if (user->readyForConnect())
+// 				user->connect();
+// 		}
+// 	}
+// 	versions.erase(stanza->id());
 }

@@ -27,16 +27,16 @@ GlooxXPingHandler::GlooxXPingHandler(GlooxMessageHandler *parent) : IqHandler(){
 GlooxXPingHandler::~GlooxXPingHandler(){
 }
 
-bool GlooxXPingHandler::handleIq (Stanza *stanza){
-	Stanza *s = Stanza::createIqStanza(stanza->from(), stanza->id(), StanzaIqResult, "urn:xmpp:ping");
-
+bool GlooxXPingHandler::handleIq (const IQ &iq){
+	IQ s(IQ::Result, iq.from(), iq.id());
 	std::string from;
 	from.append(p->jid());
-	s->addAttribute("from",from);
-	p->j->send( s );
+	s.setFrom(from);
+	Tag *tag = s.tag();
+	tag->setXmlns("urn:xmpp:ping");
+	p->j->send(tag);
 	return true;
 }
 
-bool GlooxXPingHandler::handleIqID (Stanza *stanza, int context){
-	return false;
+void GlooxXPingHandler::handleIqID (const IQ &iq, int context){
 }

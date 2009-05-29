@@ -477,7 +477,7 @@ GlooxMessageHandler::GlooxMessageHandler() : MessageHandler(),ConnectionListener
 	loadProtocol();
 
 	m_discoHandler=new GlooxDiscoHandler(this);
- 	j->removeIqHandler(XMLNS_DISCO_INFO);
+//  	j->removeIqHandler(XMLNS_DISCO_INFO);
 	
  	m_discoInfoHandler=new GlooxDiscoInfoHandler(this);
  	j->registerIqHandler(m_discoInfoHandler,XMLNS_DISCO_INFO);
@@ -563,9 +563,9 @@ void GlooxMessageHandler::purpleConnectionError(PurpleConnection *gc,PurpleConne
 		// fatal error => account will be disconnected, so we have to remove it
 		if (reason!=0){
 			if (text){
-				Stanza *s = Stanza::createMessageStanza(user->jid(), (std::string)text);
+				Message s(Message::Chat, user->jid(), (std::string)text);
 				std::string from;
-				s->addAttribute("from",jid());
+				s.setFrom(jid());
 				j->send(s);
 			}
 // 			if (user->isConnected()==true){
@@ -576,9 +576,9 @@ void GlooxMessageHandler::purpleConnectionError(PurpleConnection *gc,PurpleConne
 		else{
 			if (user->reconnectCount()==1){
 				if (text){
-					Stanza *s = Stanza::createMessageStanza(user->jid(), (std::string)text);
+					Message s(Message::Chat, user->jid(), (std::string)text);
 					std::string from;
-					s->addAttribute("from",jid());
+					s.setFrom(jid());
 					j->send(s);
 				}
 // 				if (user->isConnected()==true){
@@ -751,13 +751,13 @@ void GlooxMessageHandler::purpleFileReceiveRequest(PurpleXfer *xfer){
 	User *user = userManager()->getUserByAccount(purple_xfer_get_account(xfer));
 	if (user!=NULL){
 		if(user->hasFeature(GLOOX_FEATURE_FILETRANSFER)){
-			Stanza *s = Stanza::createMessageStanza(user->jid(), "Uzivatel vam posila soubor '"+filename+"'. Ihned po doruceni na nas server vam bude preposlan.");
-			s->addAttribute("from",remote_user+"@"+jid()+"/bot");
+			Message s(Message::Chat, user->jid(), "Uzivatel vam posila soubor '"+filename+"'. Ihned po doruceni na nas server vam bude preposlan.");
+			s.setFrom(remote_user+"@"+jid()+"/bot");
 			j->send(s);
 		}
 		else{
-			Stanza *s = Stanza::createMessageStanza(user->jid(), "Uzivatel vam posila soubor '"+filename+"'. Ihned po doruceni na nas server vam bude preposlan odkaz umoznujici stazeni souboru.");
-			s->addAttribute("from",remote_user+"@"+jid()+"/bot");
+			Message s(Message::Chat, user->jid(), "Uzivatel vam posila soubor '"+filename+"'. Ihned po doruceni na nas server vam bude preposlan odkaz umoznujici stazeni souboru.");
+			s.setFrom(remote_user+"@"+jid()+"/bot");
 			j->send(s);
 		}
 	}
@@ -785,8 +785,8 @@ void GlooxMessageHandler::purpleFileReceiveComplete(PurpleXfer *xfer){
 				else {
 					sql()->addDownload(basename,"0");
 				}
-				Stanza *s = Stanza::createMessageStanza(user->jid(), "Soubor '"+filename+"' byl prijat. Muzete jej stahnout z adresy http://soumar.jabbim.cz/icq/" + basename +" .");
-				s->addAttribute("from",remote_user+"@"+jid()+"/bot");
+				Message s(Message::Chat, user->jid(), "Soubor '"+filename+"' byl prijat. Muzete jej stahnout z adresy http://soumar.jabbim.cz/icq/" + basename +" .");
+				s.setFrom(remote_user+"@"+jid()+"/bot");
 				j->send(s);
 			}
 			else{
@@ -796,8 +796,8 @@ void GlooxMessageHandler::purpleFileReceiveComplete(PurpleXfer *xfer){
 				else {
 					sql()->addDownload(basename,"0");
 				}
-				Stanza *s = Stanza::createMessageStanza(user->jid(), "Soubor '"+filename+"' byl prijat. Muzete jej stahnout z adresy http://soumar.jabbim.cz/icq/" + basename +" .");
-				s->addAttribute("from",remote_user+"@"+jid()+"/bot");
+				Message s(Message::Chat, user->jid(), "Soubor '"+filename+"' byl prijat. Muzete jej stahnout z adresy http://soumar.jabbim.cz/icq/" + basename +" .");
+				s.setFrom(remote_user+"@"+jid()+"/bot");
 				j->send(s);
 			}
 		}
@@ -878,85 +878,90 @@ bool GlooxMessageHandler::hasCaps(const std::string &name){
 	return false;
 }
 
-void GlooxMessageHandler::handleSubscription(Stanza *stanza) {
-	handlePresence(stanza);
+void GlooxMessageHandler::handleSubscription(const Subscription &stanza) {
+	// answer to subscibe
+	if(stanza.subtype() == Subscription::Subscribe && stanza.to().username() == "") {
+		Log().Get(stanza.from().full()) << "Subscribe presence received => sending subscribed";
+		Tag *reply = new Tag("presence");
+		reply->addAttribute( "to", stanza.from().bare() );
+		reply->addAttribute( "from", stanza.to().bare() );
+		reply->addAttribute( "type", "subscribed" );
+		j->send( reply );
+	}
+	
+	User *user = userManager()->getUserByJID(stanza.from().bare());
+	if (user)
+		user->receivedSubscription(stanza);
+	
 }
 
-void GlooxMessageHandler::handlePresence(Stanza * stanza){
-	if(stanza->subtype() == StanzaPresenceError) {
+void GlooxMessageHandler::handlePresence(const Presence &stanza){
+	if(stanza.subtype() == Presence::Error) {
 		return;
 	}
 	// get entity capabilities
 	Tag *c = NULL;
-	Log().Get(stanza->from().full()) << "Presence received (" << stanza->subtype() << ") for: " << stanza->to().full();
+	Log().Get(stanza.from().full()) << "Presence received (" << stanza.subtype() << ") for: " << stanza.to().full();
 
-	if (stanza->presence() != PresenceUnavailable && stanza->to().username() == ""){
-		Tag *c = stanza->findChildWithAttrib("xmlns","http://jabber.org/protocol/caps");
+	if (stanza.presence() != Presence::Unavailable && stanza.to().username() == ""){
+		Tag *c = stanza.tag()->findChildWithAttrib("xmlns","http://jabber.org/protocol/caps");
 		// presence has caps
 		if (c!=NULL){
 			// caps is not chached
 			if (!hasCaps(c->findAttribute("ver"))){
 				// ask for caps
 				std::string id = j->getID();
-				Log().Get(stanza->from().full()) << "asking for caps with ID: " << id;
-				m_discoHandler->versions[id]=c->findAttribute("ver");
+				Log().Get(stanza.from().full()) << "asking for caps with ID: " << id;
+				m_discoHandler->versions[m_discoHandler->version]=c->findAttribute("ver");
 				std::string node;
 				node = c->findAttribute("node")+std::string("#")+c->findAttribute("ver");
-				j->disco()->getDiscoInfo(stanza->from(),node,m_discoHandler,0,id);
+				j->disco()->getDiscoInfo(stanza.from(),node,m_discoHandler,m_discoHandler->version,id);
+				m_discoHandler->version++;
 			}
 			else {
 				std::string id = j->getID();
-				Log().Get(stanza->from().full()) << "asking for disco#info with ID: " << id;
-				m_discoHandler->versions[id]=stanza->from().full();
-				j->disco()->getDiscoInfo(stanza->from(),"",m_discoHandler,0,id);
+				Log().Get(stanza.from().full()) << "asking for disco#info with ID: " << id;
+				m_discoHandler->versions[m_discoHandler->version]=stanza.from().full();
+				j->disco()->getDiscoInfo(stanza.from(),"",m_discoHandler,m_discoHandler->version,id);
+				m_discoHandler->version++;
 			}
 		}
 		else {
 			std::string id = j->getID();
-			Log().Get(stanza->from().full()) << "asking for disco#info with ID: " << id;
-			m_discoHandler->versions[id]=stanza->from().full();
-			j->disco()->getDiscoInfo(stanza->from(),"",m_discoHandler,0,id);
+			Log().Get(stanza.from().full()) << "asking for disco#info with ID: " << id;
+			m_discoHandler->versions[m_discoHandler->version]=stanza.from().full();
+			j->disco()->getDiscoInfo(stanza.from(),"",m_discoHandler,m_discoHandler->version,id);
+			m_discoHandler->version++;
 		}
 	}
 
-
-	// answer to subscibe
-	if(stanza->subtype() == StanzaS10nSubscribe && stanza->to().username() == "") {
-		Log().Get(stanza->from().full()) << "Subscribe presence received => sending subscribed";
-		Tag *reply = new Tag("presence");
-		reply->addAttribute( "to", stanza->from().bare() );
-		reply->addAttribute( "from", stanza->to().bare() );
-		reply->addAttribute( "type", "subscribed" );
-		j->send( reply );
-	}
-
-	User *user = userManager()->getUserByJID(stanza->from().bare());
+	User *user = userManager()->getUserByJID(stanza.from().bare());
 	if (user==NULL){
 		// we are not connected and probe arrived => answer with unavailable
-		if (stanza->subtype() == StanzaPresenceProbe){
-			Log().Get(stanza->from().full()) << "Answering to probe presence with unavailable presence";
+		if (stanza.subtype() == Presence::Probe){
+			Log().Get(stanza.from().full()) << "Answering to probe presence with unavailable presence";
 			Tag *tag = new Tag("presence");
-			tag->addAttribute("to",stanza->from().full());
-			tag->addAttribute("from",stanza->to().bare()+"/bot");
+			tag->addAttribute("to",stanza.from().full());
+			tag->addAttribute("from",stanza.to().bare()+"/bot");
 			tag->addAttribute("type","unavailable");
 			j->send(tag);
 		}
-		else if (stanza->to().username() == "" && stanza->presence() != PresenceUnavailable){
-			UserRow res = sql()->getUserByJid(stanza->from().bare());
+		else if (stanza.to().username() == "" && stanza.presence() != Presence::Unavailable){
+			UserRow res = sql()->getUserByJid(stanza.from().bare());
 			if(res.id==-1) {
 				// presence from unregistered user
-				Log().Get(stanza->from().full()) << "This user is not registered";
+				Log().Get(stanza.from().full()) << "This user is not registered";
 				return;
 			}
 			else {
-				bool isVip = sql()->isVIP(stanza->from().bare());
+				bool isVip = sql()->isVIP(stanza.from().bare());
 				if (configuration().onlyForVIP && !isVip){
-					Log().Get(stanza->from().full()) << "This user is not VIP, can't login...";
+					Log().Get(stanza.from().full()) << "This user is not VIP, can't login...";
 					return;
 				}
 
-				Log().Get(stanza->from().full()) << "Creating new User instance";
-				user = new User(this, stanza->from().bare(), res.uin, res.password);
+				Log().Get(stanza.from().full()) << "Creating new User instance";
+				user = new User(this, stanza.from().bare(), res.uin, res.password);
 				if (c!=NULL)
 					if(hasCaps(c->findAttribute("ver")))
 						user->setCapsVersion(c->findAttribute("ver"));
@@ -978,13 +983,13 @@ void GlooxMessageHandler::handlePresence(Stanza * stanza){
 // 				user->init(this);
 				m_userManager->addUser(user);
 				user->receivedPresence(stanza);
-				g_timeout_add(15000,&connectUser,g_strdup(stanza->from().bare().c_str()));
+				g_timeout_add(15000,&connectUser,g_strdup(stanza.from().bare().c_str()));
 			}
 		}
-		if (stanza->presence() == PresenceUnavailable && stanza->to().username() == ""){
-			Log().Get(stanza->from().full()) << "User is already logged out => sending unavailable presence";
+		if (stanza.presence() == Presence::Unavailable && stanza.to().username() == ""){
+			Log().Get(stanza.from().full()) << "User is already logged out => sending unavailable presence";
 			Tag *tag = new Tag("presence");
-			tag->addAttribute( "to", stanza->from().bare() );
+			tag->addAttribute( "to", stanza.from().bare() );
 			tag->addAttribute( "type", "unavailable" );
 			tag->addAttribute( "from", jid() );
 			j->send( tag );
@@ -993,17 +998,17 @@ void GlooxMessageHandler::handlePresence(Stanza * stanza){
 	else{
 		user->receivedPresence(stanza);
 	}
-	if(stanza->to().username() == "" && user!=NULL){
-		if(stanza->presence() == PresenceUnavailable && user->isConnected()==true && user->resources().empty()) {
-			Log().Get(stanza->from().full()) << "Logging out";
+	if(stanza.to().username() == "" && user!=NULL){
+		if(stanza.presence() == Presence::Unavailable && user->isConnected()==true && user->resources().empty()) {
+			Log().Get(stanza.from().full()) << "Logging out";
 			m_userManager->removeUser(user);
 		}
-		else if (stanza->presence() == PresenceUnavailable && user->isConnected()==false && int(time(NULL))>int(user->connectionStart())+10 && user->resources().empty()){
-			Log().Get(stanza->from().full()) << "Logging out, but he's not connected...";
+		else if (stanza.presence() == Presence::Unavailable && user->isConnected()==false && int(time(NULL))>int(user->connectionStart())+10 && user->resources().empty()){
+			Log().Get(stanza.from().full()) << "Logging out, but he's not connected...";
 			m_userManager->removeUser(user);
 		}
-		else if (stanza->presence() == PresenceUnavailable && user->isConnected()==false){
-			Log().Get(stanza->from().full()) << "Can't logout because we're connecting now...";
+		else if (stanza.presence() == Presence::Unavailable && user->isConnected()==false){
+			Log().Get(stanza.from().full()) << "Can't logout because we're connecting now...";
 		}
 	}
     
@@ -1039,22 +1044,21 @@ bool GlooxMessageHandler::onTLSConnect(const CertInfo & info){
 	return false;
 }
 
-void GlooxMessageHandler::handleMessage( Stanza* stanza, MessageSession* session = 0 ){
-	User *user = userManager()->getUserByJID(stanza->from().bare());
-	Log().Get("purple") << stanza->xml();
+void GlooxMessageHandler::handleMessage (const Message &msg, MessageSession *session) {
+	User *user = userManager()->getUserByJID(msg.from().bare());
 	if (user!=NULL){
 		if (user->isConnected()){
-			Tag *chatstates = stanza->findChildWithAttrib("xmlns","http://jabber.org/protocol/chatstates");
+			Tag *chatstates = msg.tag()->findChildWithAttrib("xmlns","http://jabber.org/protocol/chatstates");
 			if (chatstates!=NULL){
-				user->receivedChatState(stanza->to().username(),chatstates->name());
+				user->receivedChatState(msg.to().username(),chatstates->name());
 			}
-			if(stanza->findChild("body")!=NULL) {
+			if(msg.tag()->findChild("body")!=NULL) {
 				m_stats->messageFromJabber();
-				user->receivedMessage(stanza);
+				user->receivedMessage(msg);
 			}
 			else {
 				// handle activity; TODO: move me to another function or better file
-				Tag *event = stanza->findChild("event");
+				Tag *event = msg.tag()->findChild("event");
 				if (!event) return;
 				Tag *items = event->findChildWithAttrib("node","http://jabber.org/protocol/activity");
 				if (!items) return;
@@ -1093,11 +1097,11 @@ void GlooxMessageHandler::handleMessage( Stanza* stanza, MessageSession* session
 			}
 		}
 		else{
-			Log().Get(stanza->from().bare()) << "New message received, but we're not connected yet";
+			Log().Get(msg.from().bare()) << "New message received, but we're not connected yet";
 		}
 	}
 	else{
-		Log().Get(stanza->from().bare()) << "New message received, but we're not connected to legacy network";
+		Log().Get(msg.from().bare()) << "New message received, but we're not connected to legacy network";
 	}
 
 }

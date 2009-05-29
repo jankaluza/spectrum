@@ -61,7 +61,7 @@ void AutoConnectLoop::purpleAccountRemoved(const PurpleAccount *account) {
 }
 
 bool AutoConnectLoop::restoreNextConnection() {
-	Stanza * stanza;
+// 	Stanza * stanza;
 	User *user;
 	PurpleAccount *account;
 	Log().Get("connection restorer") << "Restoring new connection";
@@ -75,7 +75,7 @@ bool AutoConnectLoop::restoreNextConnection() {
 		user = main->userManager()->getUserByAccount(account);
 		if (user == NULL) {
 			Log().Get("connection restorer") << "Sending probe presence to "<< JID((std::string)purple_account_get_string(account,"lastUsedJid","")).bare();
-			stanza = new Stanza("presence");
+			Tag *stanza = new Tag("presence");
 			stanza->addAttribute( "to", JID((std::string)purple_account_get_string(account,"lastUsedJid","")).bare());
 			stanza->addAttribute( "type", "probe");
 			stanza->addAttribute( "from", main->jid());

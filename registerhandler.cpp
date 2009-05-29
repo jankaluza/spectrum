@@ -34,26 +34,26 @@ GlooxRegisterHandler::GlooxRegisterHandler(GlooxMessageHandler *parent) : IqHand
 GlooxRegisterHandler::~GlooxRegisterHandler(){
 }
 
-bool GlooxRegisterHandler::handleIq (Stanza *stanza){
-	std::cout << "*** "<< stanza->from().full() << ": iq:register received (" << stanza->subtype() << ")\n";
-	User *user = p->userManager()->getUserByJID(stanza->from().bare());
+bool GlooxRegisterHandler::handleIq (const IQ &iq){
+	std::cout << "*** "<< iq.from().full() << ": iq:register received (" << iq.subtype() << ")\n";
+	User *user = p->userManager()->getUserByJID(iq.from().bare());
 	if (p->configuration().onlyForVIP){
-		bool isVIP = p->sql()->isVIP(stanza->from().bare());
+		bool isVIP = p->sql()->isVIP(iq.from().bare());
 		if (!isVIP)
 			return false;
 	}
 	
 	
 	// send registration form
-	if(stanza->subtype() == StanzaIqGet) {
+	if(iq.subtype() == IQ::Get) {
 		Tag *reply = new Tag( "iq" );
-		reply->addAttribute( "id", stanza->id() );
+		reply->addAttribute( "id", iq.id() );
 		reply->addAttribute( "type", "result" );
-		reply->addAttribute( "to", stanza->from().full() );
+		reply->addAttribute( "to", iq.from().full() );
 		reply->addAttribute( "from", p->jid() );
 		Tag *query = new Tag( "query" );
 		query->addAttribute( "xmlns", "jabber:iq:register" );
-		UserRow res = p->sql()->getUserByJid(stanza->from().bare());
+		UserRow res = p->sql()->getUserByJid(iq.from().bare());
 		if(res.id==-1) {
 			std::cout << "* sending registration form; user is not registered\n";
 			query->addChild( new Tag("instructions", p->protocol()->text("instructions")) );
@@ -72,9 +72,9 @@ bool GlooxRegisterHandler::handleIq (Stanza *stanza){
 		p->j->send( reply );
 		return true;
 	}
-	else if(stanza->subtype() == StanzaIqSet) {
+	else if(iq.subtype() == IQ::Set) {
 		bool sendsubscribe = false;
-		Tag *query = stanza->findChild( "query" );
+		Tag *query = iq.tag()->findChild( "query" );
 
 		if (!query) return true;
 
@@ -92,7 +92,7 @@ bool GlooxRegisterHandler::handleIq (Stanza *stanza){
 			if (true){
 				std::cout << "* sending rosterX\n";
 				Tag *tag = new Tag("message");
-				tag->addAttribute( "to", stanza->from().bare() );
+				tag->addAttribute( "to", iq.from().bare() );
 				std::string from;
 				from.append(p->jid());
 				tag->addAttribute( "from", from );
@@ -102,7 +102,7 @@ bool GlooxRegisterHandler::handleIq (Stanza *stanza){
 				Tag *item;
 
 				std::map<std::string,RosterRow> roster;
-				roster = p->sql()->getRosterByJid(stanza->from().bare());
+				roster = p->sql()->getRosterByJid(iq.from().bare());
 				// add users which are added to roster
 				for(std::map<std::string, RosterRow>::iterator u = roster.begin(); u != roster.end() ; u++){
 					if (!(*u).second.uin.empty()){
@@ -116,8 +116,8 @@ bool GlooxRegisterHandler::handleIq (Stanza *stanza){
 				tag->addChild(x);
 				std::cout << "* sending " << tag->xml() << "\n";
 				p->j->send(tag);
-				p->sql()->removeUser(stanza->from().bare());
-				p->sql()->removeUserFromRoster(stanza->from().bare());
+				p->sql()->removeUser(iq.from().bare());
+				p->sql()->removeUserFromRoster(iq.from().bare());
 
 			}
 			else{
@@ -136,19 +136,19 @@ bool GlooxRegisterHandler::handleIq (Stanza *stanza){
 			Tag *reply = new Tag("iq");
 			reply->addAttribute( "type", "result" );
 			reply->addAttribute( "from", p->jid() );
-			reply->addAttribute( "to", stanza->from().full() );
-			reply->addAttribute( "id", stanza->id() );
+			reply->addAttribute( "to", iq.from().full() );
+			reply->addAttribute( "id", iq.id() );
 			p->j->send( reply );
 
 			reply = new Tag( "presence" );
 			reply->addAttribute( "type", "unsubscribe" );
 			reply->addAttribute( "from", p->jid() );
-			reply->addAttribute( "to", stanza->from().full() );
+			reply->addAttribute( "to", iq.from().full() );
 			p->j->send( reply );
 
 			reply = new Tag("presence");
 			reply->addAttribute( "type", "unsubscribed" );
-			reply->addAttribute( "to", stanza->from().full() );
+			reply->addAttribute( "to", iq.from().full() );
 			reply->addAttribute( "from", p->jid() );
 			p->j->send( reply );
 			return true;
@@ -156,7 +156,7 @@ bool GlooxRegisterHandler::handleIq (Stanza *stanza){
 	
 		// Register or change password
 	
-		std::string jid = stanza->from().bare();
+		std::string jid = iq.from().bare();
 		Tag *usernametag = query->findChild("username");
 		Tag *passwordtag = query->findChild("password");
 		std::string username("");
@@ -182,11 +182,11 @@ bool GlooxRegisterHandler::handleIq (Stanza *stanza){
 //	</error>
 //    </iq>
 		if (e) {
-		    Tag *iq = new Tag("iq");
-		    iq->addAttribute("type","error");
-		    iq->addAttribute("from", p->jid());
-		    iq->addAttribute("to", stanza->from().full());
-		    iq->addAttribute("id", stanza->id());
+		    Tag *iq2 = new Tag("iq");
+		    iq2->addAttribute("type","error");
+		    iq2->addAttribute("from", p->jid());
+		    iq2->addAttribute("to", iq.from().full());
+		    iq2->addAttribute("id", iq.id());
 		    
 			Tag *error = new Tag("error");
 		    error->addAttribute("code",400);
@@ -195,16 +195,16 @@ bool GlooxRegisterHandler::handleIq (Stanza *stanza){
 		    bad->addAttribute("xmlns","urn:ietf:params:xml:ns:xmpp-stanzas");
 		    
 		    error->addChild(bad);
-		    iq->addChild(error);
+		    iq2->addChild(error);
 		    
-		    p->j->send(iq);
+		    p->j->send(iq2);
 		    
 		    return true;
 		}
 
 
 
-		UserRow res = p->sql()->getUserByJid(stanza->from().bare());
+		UserRow res = p->sql()->getUserByJid(iq.from().bare());
 		if(res.id==-1) {
 	
 // 			if(false) {
@@ -227,12 +227,12 @@ bool GlooxRegisterHandler::handleIq (Stanza *stanza){
 		} else {
 			// change password
 			std::cout << "* changing user password: "<< jid << ", " << username << ", " << password <<"\n";
-			p->sql()->updateUserPassword(stanza->from().bare(),password);
+			p->sql()->updateUserPassword(iq.from().bare(),password);
 		}
 		Tag *reply = new Tag( "iq" );
-		reply->addAttribute( "id", stanza->id() );
+		reply->addAttribute( "id", iq.id() );
 		reply->addAttribute( "type", "result" );
-		reply->addAttribute( "to", stanza->from().full() );
+		reply->addAttribute( "to", iq.from().full() );
 		reply->addAttribute( "from", p->jid() );
 		Tag *rquery = new Tag( "query" );
 		rquery->addAttribute( "xmlns", "jabber:iq:register" );
@@ -242,7 +242,7 @@ bool GlooxRegisterHandler::handleIq (Stanza *stanza){
 		if(sendsubscribe) {
 		reply = new Tag("presence");
 		reply->addAttribute( "from", p->jid() );
-		reply->addAttribute( "to", stanza->from().bare() );
+		reply->addAttribute( "to", iq.from().bare() );
 		reply->addAttribute( "type", "subscribe" );
 		p->j->send( reply );
 		}
@@ -251,7 +251,6 @@ bool GlooxRegisterHandler::handleIq (Stanza *stanza){
 	return false;
 }
 
-bool GlooxRegisterHandler::handleIqID (Stanza *stanza, int context){
+void GlooxRegisterHandler::handleIqID (const IQ &iq, int context){
 	std::cout << "IQ ID IQ ID IQ ID\n";
-	return true;
 }

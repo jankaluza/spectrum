@@ -35,8 +35,8 @@ class GlooxGatewayHandler : public IqHandler
 public:
 	GlooxGatewayHandler(GlooxMessageHandler *parent);
 	~GlooxGatewayHandler();
-	bool handleIq (Stanza *stanza);
-	bool handleIqID (Stanza *stanza, int context);
+	bool handleIq (const IQ &iq);
+	void handleIqID (const IQ &iq, int context);
 	std::string replace(std::string &str, const char *string_to_replace, const char *new_string);
 	GlooxMessageHandler *p;
 };

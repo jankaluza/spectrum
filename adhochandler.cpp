@@ -22,10 +22,11 @@
  #include "usermanager.h"
  #include "log.h"
  #include "adhocrepeater.h"
+ #include "gloox/disconodehandler.h"
  
 AdhocHandler::AdhocHandler(GlooxMessageHandler *m) {
 	main = m;
-	main->j->registerIqHandler( this, XMLNS_ADHOC_COMMANDS );
+	main->j->registerIqHandler( this, ExtAdhocCommand );
 	main->j->disco()->addFeature( XMLNS_ADHOC_COMMANDS );
 	main->j->disco()->registerNodeHandler( this, XMLNS_ADHOC_COMMANDS );
 	main->j->disco()->registerNodeHandler( this, std::string() );
@@ -34,22 +35,20 @@ AdhocHandler::AdhocHandler(GlooxMessageHandler *m) {
 
 AdhocHandler::~AdhocHandler() { }
 
-StringList AdhocHandler::handleDiscoNodeFeatures( const std::string& /*node*/ ) {
+StringList AdhocHandler::handleDiscoNodeFeatures (const JID &from, const std::string &node) {
 	StringList features;
 	features.push_back( XMLNS_ADHOC_COMMANDS );
 	return features;
 }
 
-DiscoNodeItemList AdhocHandler::handleDiscoNodeItems( const std::string &from, const std::string &to, const std::string& node ) {
-	DiscoNodeItemList lst;
-	if (node.empty()) {
-		DiscoNodeItem item;
-		item.node = XMLNS_ADHOC_COMMANDS;
-		item.jid = main->jid();
-		item.name = "Ad-Hoc Commands";
-		lst.push_back( item );
-	}
-	else if (node == XMLNS_ADHOC_COMMANDS) {
+Disco::ItemList AdhocHandler::handleDiscoNodeItems( const JID &_from, const JID &_to, const std::string& node ) {
+	Disco::ItemList lst;
+	std::string from = _from.bare();
+	std::string to = _to.bare();
+// 	if (node.empty()) {
+// 		lst.push_back( new Disco::Item( main->jid(), XMLNS_ADHOC_COMMANDS, "Ad-Hoc Commands" ) );
+// 	}
+// 	else if (node == XMLNS_ADHOC_COMMANDS) {
 		if (to == main->jid()) {
 			User *user = main->userManager()->getUserByJID(from);
 			if (user) {
@@ -65,12 +64,8 @@ DiscoNodeItemList AdhocHandler::handleDiscoNodeItems( const std::string &from, c
 						for (l = actions; l != NULL; l = l->next) {
 							if (l->data) {
 								action = (PurplePluginAction *) l->data;
-								DiscoNodeItem item;
-								item.node = (std::string) action->label;
-								item.jid = main->jid();
-								item.name = (std::string) action->label;
+								lst.push_back( new Disco::Item( main->jid(), (std::string) action->label, (std::string) action->label ) );
 								purple_plugin_action_free(action);
-								lst.push_back( item );
 							}
 						}
 					}
@@ -93,44 +88,35 @@ DiscoNodeItemList AdhocHandler::handleDiscoNodeItems( const std::string &from, c
 
 					for(l = ll = prpl_info->blist_node_menu((PurpleBlistNode*)buddy); l; l = l->next) {
 						PurpleMenuAction *action = (PurpleMenuAction *) l->data;
-						DiscoNodeItem item;
-						item.node = (std::string) action->label;
-						item.jid = to + "/bot";
-						item.name = (std::string) action->label;
+						lst.push_back( new Disco::Item( main->jid(), (std::string) action->label, (std::string) action->label ) );
 						purple_menu_action_free(action);
-						lst.push_back( item );
 					}
 				}
 			}
 		}
-	}
+// 	}
 	return lst;
 }
 
-StringMap AdhocHandler::handleDiscoNodeIdentities( const std::string& node, std::string& name ) {
-	name = (std::string) node;
-
-	StringMap ident;
-	if( node == XMLNS_ADHOC_COMMANDS )
-		ident["automation"] = "command-list";
-	else
-		ident["automation"] = "command-node";
-	return ident;
+Disco::IdentityList AdhocHandler::handleDiscoNodeIdentities( const JID& jid, const std::string& node ) {
+	Disco::IdentityList l;
+	l.push_back( new Disco::Identity( "automation",node == XMLNS_ADHOC_COMMANDS ? "command-list" : "command-node",node == XMLNS_ADHOC_COMMANDS ? "Ad-Hoc Commands" : "") );
+	return l;
 }
 
-bool AdhocHandler::handleIq( Stanza *stanza ) {
+bool AdhocHandler::handleIq( const IQ &stanza ) {
 	Log().Get("AdhocHandler") << "handleIq";
-	std::string to = stanza->to().bare();
-	std::string from = stanza->from().bare();
-	Tag *tag = stanza->findChild( "command" );
+	std::string to = stanza.to().bare();
+	std::string from = stanza.from().bare();
+	Tag *tag = stanza.tag()->findChild( "command" );
 	const std::string& node = tag->findAttribute( "node" );
 	if (node.empty()) return false;
 
 	User *user = main->userManager()->getUserByJID(from);
 	if (user) {
 		if (user->isConnected() && purple_account_get_connection(user->account())) {
-			if (hasSession(stanza->from().full())) {
-				return m_sessions[stanza->from().full()]->handleIq(stanza);
+			if (hasSession(stanza.from().full())) {
+				return m_sessions[stanza.from().full()]->handleIq(stanza);
 			}
 			else if (to == main->jid()) {
 				PurpleConnection *gc = purple_account_get_connection(user->account());
@@ -146,8 +132,8 @@ bool AdhocHandler::handleIq( Stanza *stanza ) {
 							action = (PurplePluginAction *) l->data;
 							if (node == (std::string) action->label) {
 								AdhocData data;
-								data.id = stanza->id();
-								data.from = stanza->from().full();
+								data.id = stanza.id();
+								data.from = stanza.from().full();
 								data.node = node;
 								user->setAdhocData(data);
 								action->plugin = plugin;
@@ -177,15 +163,16 @@ bool AdhocHandler::handleIq( Stanza *stanza ) {
 						if (callback)
 							callback((PurpleBlistNode*)buddy, action->data);
 
-						Stanza *response = Stanza::createIqStanza(stanza->from().full(), stanza->id(), StanzaIqResult, "", 0);
-						response->addAttribute("from", main->jid());
+						IQ _s(IQ::Result, stanza.from().full(), stanza.id());
+						_s.setFrom(main->jid());
+						Tag *s = _s.tag();
 
 						Tag *c = new Tag("command");
 						c->addAttribute("xmlns","http://jabber.org/protocol/commands");
 						c->addAttribute("sessionid",tag->findAttribute("sessionid"));
 						c->addAttribute("node","configuration");
 						c->addAttribute("status","completed");
-						main->j->send(response);
+						main->j->send(s);
 
 					}
 					purple_menu_action_free(action);
@@ -204,20 +191,11 @@ bool AdhocHandler::hasSession(const std::string &jid) {
 	return false;
 }
 
-bool AdhocHandler::handleIqID( Stanza *stanza, int context ) {
-	return true;
+void AdhocHandler::handleIqID( const IQ &iq, int context ) {
 }
 
-void AdhocHandler::handleDiscoInfoResult( Stanza *stanza, int context ) {
-	
-}
-
-void AdhocHandler::handleDiscoItemsResult( Stanza *stanza, int context ) {
-	
-}
-
-void AdhocHandler::handleDiscoError( Stanza *stanza, int context ) {
-	
-}
+void AdhocHandler::handleDiscoInfo(const JID &jid, const Disco::Info &info, int context) {}
+void AdhocHandler::handleDiscoItems(const JID &jid, const Disco::Items &items, int context) {}
+void AdhocHandler::handleDiscoError(const JID &jid, const Error *error, int context) {}
 
 

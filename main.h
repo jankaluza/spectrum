@@ -36,6 +36,7 @@
 #include <gloox/subscriptionhandler.h>
 #include <gloox/socks5bytestreamserver.h>
 #include <gloox/siprofileft.h>
+#include <gloox/message.h>
 
 #include <glib.h>
 
@@ -151,7 +152,7 @@ public:
 	void purpleFileReceiveComplete(PurpleXfer *xfer);
 
 	// MessageHandler
-	void handleMessage( Stanza* stanza,MessageSession* session);
+	void handleMessage (const Message &msg, MessageSession *session=0);
 
 	// ConnectionListener
 	void onConnect();
@@ -160,8 +161,8 @@ public:
 	bool onTLSConnect(const CertInfo & info);
 	
 	// Gloox handlers
-	void handlePresence(Stanza * stanza);
-	void handleSubscription(Stanza * stanza);
+	void handlePresence(const Presence &presence);
+	void handleSubscription(const Subscription &stanza);
 	void signedOn(PurpleConnection *gc,gpointer unused);
 	
 	// User related

@@ -42,12 +42,16 @@ class GlooxDiscoHandler : public DiscoHandler
 public:
 	GlooxDiscoHandler(GlooxMessageHandler *parent);
 	~GlooxDiscoHandler();
-	void handleDiscoInfoResult(Stanza *stanza,int context);
-	void handleDiscoItemsResult(Stanza *stanza,int context);
-	void handleDiscoError(Stanza *stanza,int context);
-	bool hasVersion(const std::string &name);
+// 	void handleDiscoInfoResult(Stanza *stanza,int context);
+// 	void handleDiscoItemsResult(Stanza *stanza,int context);
+// 	void handleDiscoError(Stanza *stanza,int context);
+	void handleDiscoInfo(const JID &jid, const Disco::Info &info, int context);
+	void handleDiscoItems(const JID &jid, const Disco::Items &items, int context);
+	void handleDiscoError(const JID &jid, const Error *error, int context);
+	bool hasVersion(int i);
 	GlooxMessageHandler *p;
-	std::map<std::string,std::string> versions;
+	std::map<int,std::string> versions;
+	int version;
 };
 
 #endif

@@ -45,9 +45,9 @@ std::string GlooxGatewayHandler::replace(std::string &str, const char *string_to
 	return str;
 }
 
-bool GlooxGatewayHandler::handleIq (Stanza *stanza){
+bool GlooxGatewayHandler::handleIq (const IQ &stanza){
 
-	if(stanza->subtype() == StanzaIqGet) {
+	if(stanza.subtype() == IQ::Get) {
 		//   <iq type='result' from='aim.jabber.org' to='stpeter@jabber.org/roundabout' id='gate1'>
 		//     <query xmlns='jabber:iq:gateway'>
 		//       <desc>
@@ -57,8 +57,10 @@ bool GlooxGatewayHandler::handleIq (Stanza *stanza){
 		//       <prompt>Contact ID</prompt>
 		//     </query>
 		//   </iq>
-		Stanza *s = Stanza::createIqStanza(stanza->from(), stanza->id(), StanzaIqResult, "jabber:iq:gateway");
-		s->addAttribute("from",p->jid());
+		IQ _s(IQ::Result, stanza.from(), stanza.id());
+		_s.setFrom(p->jid());
+		Tag *s = _s.tag();
+		s->setXmlns("jabber:iq:gateway");
 		
 		s->findChild("query")->addChild(new Tag("desc","Please enter the ICQ Number of the person you would like to contact."));
 		s->findChild("query")->addChild(new Tag("prompt","Contact ID"));
@@ -66,8 +68,8 @@ bool GlooxGatewayHandler::handleIq (Stanza *stanza){
 		p->j->send( s );
 		return true;
 	}
-	else if(stanza->subtype() == StanzaIqSet){
-		Tag *query = stanza->findChild("query");
+	else if(stanza.subtype() == IQ::Set){
+		Tag *query = stanza.tag()->findChild("query");
 		if (query==NULL)
 			return false;
 		Tag *prompt = query->findChild("prompt");
@@ -79,8 +81,10 @@ bool GlooxGatewayHandler::handleIq (Stanza *stanza){
 		uin = replace(uin,"-","");
 		uin = replace(uin," ","");
 		
-		Stanza *s = Stanza::createIqStanza(stanza->from(), stanza->id(), StanzaIqResult, "jabber:iq:gateway");
-		s->addAttribute("from",p->jid());
+		IQ _s(IQ::Result, stanza.from(), stanza.id());
+		_s.setFrom(p->jid());
+		Tag *s = _s.tag();
+		s->setXmlns("jabber:iq:gateway");
 		s->findChild("query")->addChild(new Tag("jid",uin+"@"+p->jid()));
 		s->findChild("query")->addChild(new Tag("prompt",uin+"@"+p->jid()));
 		
@@ -91,6 +95,5 @@ bool GlooxGatewayHandler::handleIq (Stanza *stanza){
 	return false;
 }
 
-bool GlooxGatewayHandler::handleIqID (Stanza *stanza, int context){
-	return false;
+void GlooxGatewayHandler::handleIqID (const IQ &iq, int context){
 }

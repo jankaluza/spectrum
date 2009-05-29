@@ -25,6 +25,7 @@
 #include "account.h"
 #include "user.h"
 #include "glib.h"
+#include "gloox/disconodehandler.h"
 
 class GlooxMessageHandler;
 class AdhocRepeater;
@@ -34,14 +35,14 @@ class AdhocHandler : public DiscoNodeHandler, public DiscoHandler, public IqHand
 	public:
 		AdhocHandler(GlooxMessageHandler *m);
 		~AdhocHandler();
-		virtual StringList handleDiscoNodeFeatures( const std::string& node );
-		virtual StringMap handleDiscoNodeIdentities( const std::string& node, std::string& name );
-		virtual DiscoNodeItemList handleDiscoNodeItems( const std::string &from, const std::string &to, const std::string& node );
-		virtual bool handleIq( Stanza *stanza );
-		virtual bool handleIqID( Stanza *stanza, int context );
-		virtual void handleDiscoInfoResult( Stanza *stanza, int context );
-		virtual void handleDiscoItemsResult( Stanza *stanza, int context );
-		virtual void handleDiscoError( Stanza *stanza, int context );
+		StringList handleDiscoNodeFeatures (const JID &from, const std::string &node);
+		Disco::IdentityList handleDiscoNodeIdentities( const JID& jid, const std::string& node );
+		Disco::ItemList handleDiscoNodeItems (const JID &from, const JID &to, const std::string &node=EmptyString);
+		bool handleIq (const IQ &iq);
+		void handleIqID (const IQ &iq, int context);
+		void handleDiscoInfo(const JID &jid, const Disco::Info &info, int context);
+		void handleDiscoItems(const JID &jid, const Disco::Items &items, int context);
+		void handleDiscoError(const JID &jid, const Error *error, int context);
 		void registerSession(const std::string &jid, AdhocRepeater *repeater) {std::cout << jid << "\n"; m_sessions[jid] = repeater; }
 		void unregisterSession(std::string &jid) { m_sessions.erase(jid); }
 		bool hasSession(const std::string &jid);

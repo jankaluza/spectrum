@@ -35,8 +35,8 @@ class GlooxStatsHandler : public IqHandler
 	public:
 		GlooxStatsHandler(GlooxMessageHandler *parent);
 		~GlooxStatsHandler();
-		bool handleIq (Stanza *stanza);
-		bool handleIqID (Stanza *stanza, int context);
+		bool handleIq (const IQ &iq);
+		void handleIqID (const IQ &iq, int context);
 		GlooxMessageHandler *p;
 	
 		void messageFromLegacy() { m_messagesOut++; }

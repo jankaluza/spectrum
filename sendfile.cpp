@@ -25,7 +25,7 @@ SendFile::SendFile(gloox::SOCKS5Bytestream *stream, std::string filename, int si
     m_stream = stream;
     m_filename = filename;
     m_size = size;
-    m_stream->registerSOCKS5BytestreamDataHandler(this);
+//     m_stream->registerSOCKS5BytestreamDataHandler(this);
 	m_mutex = mutex;
 	m_parent = manager;
 	if (m_stream->connect())

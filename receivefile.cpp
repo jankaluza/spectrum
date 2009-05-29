@@ -48,8 +48,8 @@ static gboolean transferFinished(gpointer data){
 							else {
 								user->p->sql()->addDownload(basename,"0");
 							}
-							Stanza *s = Stanza::createMessageStanza((*u).second.from.bare(), "Uzivatel Vam poslal soubor '"+basename+"'. Muzete jej stahnout z adresy http://soumar.jabbim.cz/icq/" + basename +" .");
-							s->addAttribute("from",user->jid());
+							Message s(Message::Chat, (*u).second.from.bare(), "Uzivatel Vam poslal soubor '"+basename+"'. Muzete jej stahnout z adresy http://soumar.jabbim.cz/icq/" + basename +" .");
+							s.setFrom(user->jid());
 							user->receivedMessage(s);
 						}
 					}
@@ -71,7 +71,7 @@ ReceiveFile::ReceiveFile(gloox::SOCKS5Bytestream *stream, std::string filename, 
     m_stream = stream;
     m_size = size;
     m_filename = filename;
-    m_stream->registerSOCKS5BytestreamDataHandler(this);
+//     m_stream->registerSOCKS5BytestreamDataHandler(this);
     m_finished = false;
 	m_mutex = mutex;
 	m_parent = manager;
@@ -113,7 +113,7 @@ void ReceiveFile::handleSOCKS5Data(gloox::SOCKS5Bytestream *s5b, const std::stri
 
 void ReceiveFile::handleSOCKS5Error(gloox::SOCKS5Bytestream *s5b, gloox::Stanza *stanza) {
 	Log().Get(m_filename) << "STREAM ERROR!";
-	Log().Get(m_filename) << stanza->xml();
+// 	Log().Get(m_filename) << stanza->xml();
 }
 
 void ReceiveFile::handleSOCKS5Open(gloox::SOCKS5Bytestream *s5b) {

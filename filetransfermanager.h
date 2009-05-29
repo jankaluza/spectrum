@@ -66,14 +66,18 @@ class FileTransferManager : public gloox::SIProfileFTHandler {
 		std::map<std::string, progress> m_progress;
 		void setSIProfileFT(gloox::SIProfileFT *sipft,GlooxMessageHandler *parent);
 
-		void handleFTRequest(   const gloox::JID &from,const gloox::JID &to, const std::string &id, const std::string &sid, const std::string &name,
-                             long size, const std::string &hash, const std::string &date, const std::string &mimetype,
-                             const std::string &desc, int stypes, long offset, long length);
+// 		void handleFTRequest(   const gloox::JID &from,const gloox::JID &to, const std::string &id, const std::string &sid, const std::string &name,
+//                              long size, const std::string &hash, const std::string &date, const std::string &mimetype,
+//                              const std::string &desc, int stypes, long offset, long length);
  
-		void handleFTRequestError(gloox::Stanza *stanza, const std::string &sid);
+// 		void handleFTRequestError(gloox::Stanza *stanza, const std::string &sid);
 
-		void handleFTSOCKS5Bytestream(gloox::SOCKS5Bytestream *s5b);
+// 		void handleFTSOCKS5Bytestream(gloox::SOCKS5Bytestream *s5b);
+		void handleFTRequest (const JID &from, const std::string &sid, const std::string &name, long size, const std::string &hash, const std::string &date, const std::string &mimetype, const std::string &desc, int stypes, long offset, long length) {}
+		void handleFTRequestError (const IQ &iq, const std::string &sid) {}
+		void handleFTBytestream (Bytestream *bs) {}
+		const std::string handleOOBRequestResult (const JID &from, const std::string &sid) { return ""; }
 
-		void sendFile(std::string jid,std::string from,std::string name, std::string file);
+		void sendFile(std::string jid,std::string from,std::string name, std::string file) {}
 	};
 #endif

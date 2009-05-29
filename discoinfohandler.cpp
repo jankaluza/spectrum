@@ -29,19 +29,19 @@ GlooxDiscoInfoHandler::~GlooxDiscoInfoHandler(){
 }
 
 
-bool GlooxDiscoInfoHandler::handleIq (Stanza *stanza){
+bool GlooxDiscoInfoHandler::handleIq (const IQ &stanza){
 
-/*	User *user = p->getUserByJID(stanza->from().bare());
+/*	User *user = p->getUserByJID(stanza.from().bare());
 	if (user==NULL)
 		return true;
 
-	if(stanza->subtype() == StanzaIqGet) {
+	if(stanza.subtype() == IQ::Get) {
 		std::list<std::string> temp;
-		temp.push_back((std::string)stanza->id());
-		temp.push_back((std::string)stanza->from().full());
-		vcardRequests[(std::string)stanza->to().username()]=temp;
+		temp.push_back((std::string)stanza.id());
+		temp.push_back((std::string)stanza.from().full());
+		vcardRequests[(std::string)stanza.to().username()]=temp;
 		
-		serv_get_info(purple_account_get_connection(user->account), stanza->to().username().c_str());
+		serv_get_info(purple_account_get_connection(user->account), stanza.to().username().c_str());
 	}*/
 /*
 <iq from='romeo@montague.lit/orchard' 
@@ -58,15 +58,18 @@ bool GlooxDiscoInfoHandler::handleIq (Stanza *stanza){
   </query>
 </iq>*/
 
-	std::cout << "DISCO DISCO DISCO " << stanza->xml() << "\n";
-	if(stanza->subtype() == StanzaIqGet && stanza->to().username()!="") {
-		Tag *query = stanza->findChildWithAttrib("xmlns","http://jabber.org/protocol/disco#info");
+// 	std::cout << "DISCO DISCO DISCO " << stanza.xml() << "\n";
+	if(stanza.subtype() == IQ::Get && stanza.to().username()!="") {
+		Tag *query = stanza.tag()->findChildWithAttrib("xmlns","http://jabber.org/protocol/disco#info");
 		if (query!=NULL){
-			Stanza *s = Stanza::createIqStanza(stanza->from(), stanza->id(), StanzaIqResult, "http://jabber.org/protocol/disco#info");
-			s->addAttribute("node",query->findAttribute("node"));
+			IQ _s(IQ::Result, stanza.from(), stanza.id());
 			std::string from;
-			from.append(stanza->to().full());
-			s->addAttribute("from",from);
+			from.append(stanza.to().full());
+			_s.setFrom(from);
+			
+			Tag *s = _s.tag();
+			s->setXmlns("http://jabber.org/protocol/disco#info");
+			s->addAttribute("node",query->findAttribute("node"));
 			Tag *t;
 			t = new Tag("identity");
 			t->addAttribute("category","gateway");
@@ -89,7 +92,7 @@ bool GlooxDiscoInfoHandler::handleIq (Stanza *stanza){
 	return p->j->disco()->handleIq(stanza);
 }
 
-bool GlooxDiscoInfoHandler::handleIqID (Stanza *stanza, int context){
-	return p->j->disco()->handleIqID(stanza,context);
+void GlooxDiscoInfoHandler::handleIqID (const IQ &stanza, int context){
+	p->j->disco()->handleIqID(stanza,context);
 }
 

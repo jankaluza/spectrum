@@ -40,8 +40,8 @@ class GlooxXPingHandler : public IqHandler
 public:
 	GlooxXPingHandler(GlooxMessageHandler *parent);
 	~GlooxXPingHandler();
-	bool handleIq (Stanza *stanza);
-	bool handleIqID (Stanza *stanza, int context);
+	bool handleIq (const IQ &iq);
+	void handleIqID (const IQ &iq, int context);
 	GlooxMessageHandler *p;
 };
 

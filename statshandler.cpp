@@ -38,7 +38,7 @@ GlooxStatsHandler::GlooxStatsHandler(GlooxMessageHandler *parent) : IqHandler(){
 GlooxStatsHandler::~GlooxStatsHandler(){
 }
 
-bool GlooxStatsHandler::handleIq (Stanza *stanza){
+bool GlooxStatsHandler::handleIq (const IQ &stanza){
 // 	      recv:     <iq type='result' from='component'>
 //                   <query xmlns='http://jabber.org/protocol/stats'>
 // 	            <stat name='time/uptime'/>
@@ -52,17 +52,20 @@ bool GlooxStatsHandler::handleIq (Stanza *stanza){
 //                 </iq>
 //       
 
-	Tag *query = stanza->findChild("query");
+	Tag *query = stanza.tag()->findChild("query");
 	if (query==NULL)
 		return true;
-	std::cout << "*** "<< stanza->from().full() << ": received stats request\n";
+	std::cout << "*** "<< stanza.from().full() << ": received stats request\n";
 	std::list<Tag*> stats = query->children();
 	if (stats.empty()){
 		std::cout << "* sending stats keys\n";
-		Stanza *s = Stanza::createIqStanza(stanza->from(), stanza->id(), StanzaIqResult, "http://jabber.org/protocol/stats");
+		IQ _s(IQ::Result, stanza.from(), stanza.id());
 		std::string from;
 		from.append(p->jid());
-		s->addAttribute("from",from);
+		_s.setFrom(from);
+
+		Tag *s = _s.tag();
+		s->setXmlns("http://jabber.org/protocol/stats");
 		Tag *t;
 
 		t = new Tag("stat");
@@ -98,10 +101,13 @@ bool GlooxStatsHandler::handleIq (Stanza *stanza){
 	}
 	else{
 		std::cout << "* sending stats values\n";
-		Stanza *s = Stanza::createIqStanza(stanza->from(), stanza->id(), StanzaIqResult, "http://jabber.org/protocol/stats");
+		IQ _s(IQ::Result, stanza.from(), stanza.id());
 		std::string from;
 		from.append(p->jid());
-		s->addAttribute("from",from);
+		_s.setFrom(from);
+
+		Tag *s = _s.tag();
+		s->setXmlns("http://jabber.org/protocol/stats");
 		Tag *t;
 		long registered = p->sql()->getRegisteredUsersCount();
 		long registeredUsers = p->sql()->getRegisteredUsersRosterCount();
@@ -164,6 +170,5 @@ bool GlooxStatsHandler::handleIq (Stanza *stanza){
 	return true;
 }
 
-bool GlooxStatsHandler::handleIqID (Stanza *stanza, int context){
-	return false;
+void GlooxStatsHandler::handleIqID (const IQ &iq, int context){
 }
