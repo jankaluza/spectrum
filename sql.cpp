@@ -31,53 +31,96 @@ SQLClass::SQLClass(GlooxMessageHandler *parent){
 }
 
 bool SQLClass::isVIP(const std::string &jid){
-	if (!vipSQL->connected())
-		return true;
+// 	if (!vipSQL->connected())
+// 		return true;
 	mysqlpp::Query query = vipSQL->query();
+#if MYSQLPP_HEADER_VERSION < 0x030000
 	mysqlpp::Result res;
+#else
+	mysqlpp::StoreQueryResult res;
+#endif
 	mysqlpp::Row myrow;
 	query << "SELECT COUNT(jid) as is_vip FROM `users` WHERE jid='"<< jid <<"' and expire>NOW();";
 	res = query.store();
+#if MYSQLPP_HEADER_VERSION < 0x030000
 	myrow = res.fetch_row();
 	if (int(myrow.at(0))==0)
 		return false;
 	else
 		return true;
+#else
+	mysqlpp::StoreQueryResult::size_type i;
+	for (i = 0; i < res.num_rows(); ++i) {
+		myrow = res[i];
+		if (int(myrow.at(0))==0)
+			return false;
+		else
+			return true;
+	}
+	return true;
+#endif
 }
 
 long SQLClass::getRegisteredUsersCount(){
 	mysqlpp::Query query = sql->query();
+#if MYSQLPP_HEADER_VERSION < 0x030000
 	mysqlpp::Result res;
+#else
+	mysqlpp::StoreQueryResult res;
+#endif
 	mysqlpp::Row myrow;
 	query << "select count(*) as count from "<< p->configuration().sqlPrefix <<"users";
 	res = query.store();
+#if MYSQLPP_HEADER_VERSION < 0x030000
 	if (res){
 		myrow = res.fetch_row();
 		return long(myrow.at(0));
 	}
 	else return 0;
+#else
+	mysqlpp::StoreQueryResult::size_type i;
+	for (i = 0; i < res.num_rows(); ++i) {
+		myrow = res[i];
+		return long(myrow.at(0));
+	}
+	return 0;
+#endif
 }
 
 long SQLClass::getRegisteredUsersRosterCount(){
 	mysqlpp::Query query = sql->query();
+#if MYSQLPP_HEADER_VERSION < 0x030000
 	mysqlpp::Result res;
+#else
+	mysqlpp::StoreQueryResult res;
+#endif
 	mysqlpp::Row myrow;
 	query << "select count(*) as count from "<< p->configuration().sqlPrefix <<"rosters";
 	res = query.store();
+#if MYSQLPP_HEADER_VERSION < 0x030000
 	if (res){
 		myrow = res.fetch_row();
 		return long(myrow.at(0));
 	}
 	else return 0;
+#else
+	mysqlpp::StoreQueryResult::size_type i;
+	for (i = 0; i < res.num_rows(); ++i) {
+		myrow = res[i];
+		return long(myrow.at(0));
+	}
+	return 0;
+#endif
+	
 }
 
-void SQLClass::updateUserPassword(const std::string &jid,const std::string &password){
+void SQLClass::updateUserPassword(const std::string &jid,const std::string &password) {
 	mysqlpp::Query query = sql->query();
 	query << "UPDATE "<< p->configuration().sqlPrefix <<"users SET password=\"" << password <<"\" WHERE jid=\"" << jid << "\";";
 	query.execute();
 }
 
-void SQLClass::removeUINFromRoster(const std::string &jid,const std::string &uin){
+void SQLClass::removeUINFromRoster(const std::string &jid,const std::string &uin) {
 	mysqlpp::Query query = sql->query();
 	query << "DELETE FROM "<< p->configuration().sqlPrefix <<"rosters WHERE jid=\"" << jid << "\" AND uin=\"" << uin << "\";";
 	query.execute();
@@ -125,11 +168,16 @@ UserRow SQLClass::getUserByJid(const std::string &jid){
 	UserRow user;
 	mysqlpp::Query query = sql->query();
 	query << "SELECT * FROM "<< p->configuration().sqlPrefix <<"users WHERE jid=\"" << jid << "\";";
+#if MYSQLPP_HEADER_VERSION < 0x030000
 	mysqlpp::Result res = query.store();
+#else
+	mysqlpp::StoreQueryResult res = query.store();
+#endif
 	user.id=-1;
 	user.jid="";
 	user.uin="";
 	user.password="";
+#if MYSQLPP_HEADER_VERSION < 0x030000
 	if (res.size()) {
 		mysqlpp::Row row = res.fetch_row();
 		user.id=(long) row["id"];
@@ -138,6 +186,18 @@ UserRow SQLClass::getUserByJid(const std::string &jid){
 		user.password=(std::string)row["password"];
 		user.category=(int) row["group"];
 	}
+#else
+	mysqlpp::StoreQueryResult::size_type i;
+	mysqlpp::Row row;
+	if (res.num_rows() > 0) {
+		row = res[0];
+		user.id=(long) row["id"];
+		user.jid=(std::string)row["jid"];
+		user.uin=(std::string)row["uin"];
+		user.password=(std::string)row["password"];
+		user.category=(int) row["group"];
+	}
+#endif
 	return user;
 }
 
@@ -145,7 +205,13 @@ std::map<std::string,RosterRow> SQLClass::getRosterByJid(const std::string &jid)
 	std::map<std::string,RosterRow> rows;
 	mysqlpp::Query query = sql->query();
 	query << "SELECT * FROM "<< p->configuration().sqlPrefix <<"rosters WHERE jid=\"" << jid << "\";";
+#if MYSQLPP_HEADER_VERSION < 0x030000
 	mysqlpp::Result res = query.store();
+#else
+	mysqlpp::StoreQueryResult res = query.store();
+#endif
+
+#if MYSQLPP_HEADER_VERSION < 0x030000
 	if (res) {
 		mysqlpp::Row row;
 		while(row = res.fetch_row()){
@@ -163,6 +229,25 @@ std::map<std::string,RosterRow> SQLClass::getRosterByJid(const std::string &jid)
 			rows[(std::string)row["uin"]]=user;
 		}
 	}
+#else
+	mysqlpp::StoreQueryResult::size_type i;
+	mysqlpp::Row row;
+	for (i = 0; i < res.num_rows(); ++i) {
+		row = res[i];
+		RosterRow user;
+		user.id=(long) row["id"];
+		user.jid=(std::string)row["jid"];
+		user.uin=(std::string)row["uin"];
+		user.subscription=(std::string)row["subscription"];
+		user.nickname=(std::string)row["nickname"];
+		user.group=(std::string)row["group"];
+		if (user.subscription.empty())
+			user.subscription="ask";
+		user.online=false;
+		user.lastPresence="";
+		rows[(std::string)row["uin"]]=user;
+	}
+#endif
 	return rows;
 }
 
@@ -170,7 +255,12 @@ std::map<std::string,RosterRow> SQLClass::getRosterByJidAsk(const std::string &j
 	std::map<std::string,RosterRow> rows;
 	mysqlpp::Query query = sql->query();
 	query << "SELECT * FROM "<< p->configuration().sqlPrefix <<"rosters WHERE jid=\"" << jid << "\" AND subscription=\"ask\";";
+#if MYSQLPP_HEADER_VERSION < 0x030000
 	mysqlpp::Result res = query.store();
+#else
+	mysqlpp::StoreQueryResult res = query.store();
+#endif
+#if MYSQLPP_HEADER_VERSION < 0x030000
 	if (res) {
 		mysqlpp::Row row;
 		while(row = res.fetch_row()){
@@ -186,13 +276,36 @@ std::map<std::string,RosterRow> SQLClass::getRosterByJidAsk(const std::string &j
 			rows[(std::string)row["uin"]]=user;
 		}
 	}
+#else
+	mysqlpp::StoreQueryResult::size_type i;
+	mysqlpp::Row row;
+	for (i = 0; i < res.num_rows(); ++i) {
+		row = res[i];
+		RosterRow user;
+		user.id=(long) row["id"];
+		user.jid=(std::string)row["jid"];
+		user.uin=(std::string)row["uin"];
+		user.subscription=(std::string)row["subscription"];
+		user.nickname=(std::string)row["nickname"];
+		user.group=(std::string)row["group"];
+		if (user.subscription.empty())
+			user.subscription="ask";
+		user.online=false;
+		user.lastPresence="";
+		rows[(std::string)row["uin"]]=user;
+	}
+#endif
 	return rows;
 }
 
 void SQLClass::getRandomStatus(std::string & status)
 {
     mysqlpp::Query query = sql->query();
-    mysqlpp::Result res;
+#if MYSQLPP_HEADER_VERSION < 0x030000
+	mysqlpp::Result res;
+#else
+	mysqlpp::StoreQueryResult res;
+#endif
     mysqlpp::Row row;
 
     status.clear();
@@ -200,12 +313,19 @@ void SQLClass::getRandomStatus(std::string & status)
     query << "SELECT reklama FROM ad_statusy ORDER BY RAND() LIMIT 1";
 
     res = query.store();
-
+#if MYSQLPP_HEADER_VERSION < 0x030000
     if (res) {
         if (row = res.fetch_row()) {
             status = (std::string)row["reklama"];
         }
     }
+#else
+    if (res.num_rows() > 0) {
+        if (row = res[0]) {
+            status = (std::string)row["reklama"];
+        }
+    }
+#endif
 }
 
 			
