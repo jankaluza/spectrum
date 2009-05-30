@@ -14,6 +14,8 @@ CREATE TABLE `rosters` (
   `jid` varchar(255) collate utf8_bin NOT NULL,
   `uin` varchar(255) collate utf8_bin NOT NULL,
   `subscription` varchar(10) collate utf8_bin NOT NULL,
+  `nickname` varchar(255) collate utf8_bin NOT NULL,
+  `group` varchar(255) collate utf8_bin NOT NULL,
   PRIMARY KEY  (`id`),
   KEY `jid` (`jid`),
   KEY `uin` (`uin`)
