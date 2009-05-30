@@ -280,7 +280,7 @@ Tag *User::generatePresenceStanza(PurpleBuddy *buddy){
 	
 	// vcard-temp:x:update
 	char *avatarHash = NULL;
-	PurpleBuddyIcon *icon = purple_buddy_get_icon(buddy);
+	PurpleBuddyIcon *icon = purple_buddy_icons_find(m_account, name.c_str());
 	if (icon != NULL) {
 		avatarHash = purple_buddy_icon_get_full_path(icon);
 		Log().Get(m_jid) << "avatarHash";

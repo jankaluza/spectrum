@@ -152,7 +152,7 @@ void GlooxVCardHandler::userInfoArrived(PurpleConnection *gc,std::string who, Pu
 			std::cout << "found buddy " << who << "\n";
 			gsize len;
 			PurpleBuddyIcon *icon = NULL;
-			icon = purple_buddy_get_icon(buddy);
+			icon = purple_buddy_icons_find(purple_connection_get_account(gc), who.c_str());
 			if(icon!=NULL) {
 				std::cout << "found icon\n";
 				const gchar * data = (gchar*)purple_buddy_icon_get_data(icon, &len);
