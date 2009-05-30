@@ -1,0 +1,78 @@
+Index: src/capabilities.cpp
+===================================================================
+--- src/capabilities.cpp	(revision 4003)
++++ src/capabilities.cpp	(working copy)
+@@ -126,7 +126,7 @@
+     return ret;
+   }
+ 
+-  Disco::ItemList Capabilities::handleDiscoNodeItems( const JID&, const std::string& )
++  Disco::ItemList Capabilities::handleDiscoNodeItems( const JID&, const JID&, const std::string& )
+   {
+     return Disco::ItemList();
+   }
+Index: src/adhoc.cpp
+===================================================================
+--- src/adhoc.cpp	(revision 4003)
++++ src/adhoc.cpp	(working copy)
+@@ -202,7 +202,7 @@
+ //    return StringList( 1, XMLNS_ADHOC_COMMANDS );
+   }
+ 
+-  Disco::ItemList Adhoc::handleDiscoNodeItems( const JID& from, const std::string& node )
++  Disco::ItemList Adhoc::handleDiscoNodeItems( const JID& from, const JID& to, const std::string& node )
+   {
+     Disco::ItemList l;
+     if( node.empty() )
+Index: src/capabilities.h
+===================================================================
+--- src/capabilities.h	(revision 4003)
++++ src/capabilities.h	(working copy)
+@@ -98,7 +98,7 @@
+                                                              const std::string& node );
+ 
+       // reimplemented from DiscoNodeHandler
+-      virtual Disco::ItemList handleDiscoNodeItems( const JID& from,
++      virtual Disco::ItemList handleDiscoNodeItems( const JID& from, const JID& to,
+                                                     const std::string& node = EmptyString );
+ 
+     private:
+Index: src/disco.cpp
+===================================================================
+--- src/disco.cpp	(revision 4003)
++++ src/disco.cpp	(working copy)
+@@ -344,7 +344,7 @@
+               DiscoNodeHandlerList::const_iterator in = (*it).second.begin();
+               for( ; in != (*it).second.end(); ++in )
+               {
+-                ItemList il = (*in)->handleDiscoNodeItems( iq.from(), items->node() );
++                ItemList il = (*in)->handleDiscoNodeItems( iq.from(), iq.to(), items->node() );
+                 itemlist.merge( il );
+               }
+               i->setItems( itemlist );
+Index: src/disconodehandler.h
+===================================================================
+--- src/disconodehandler.h	(revision 4003)
++++ src/disconodehandler.h	(working copy)
+@@ -70,7 +70,7 @@
+        * @param node The node this handler is supposed to handle.
+        * @return A list of items supported by this node.
+        */
+-      virtual Disco::ItemList handleDiscoNodeItems( const JID& from,
++      virtual Disco::ItemList handleDiscoNodeItems( const JID& from, const JID& to,
+                                                     const std::string& node = EmptyString ) = 0;
+ 
+   };
+Index: src/adhoc.h
+===================================================================
+--- src/adhoc.h	(revision 4003)
++++ src/adhoc.h	(working copy)
+@@ -412,7 +412,7 @@
+           const std::string& node );
+ 
+       // reimplemented from DiscoNodeHandler
+-      virtual Disco::ItemList handleDiscoNodeItems( const JID& from, const std::string& node );
++      virtual Disco::ItemList handleDiscoNodeItems( const JID& from, const JID& to, const std::string& node );
+ 
+       // reimplemented from IqHandler
+       virtual bool handleIq( const IQ& iq );
