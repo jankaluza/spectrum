@@ -467,6 +467,8 @@ void User::purpleConversationWriteIM(PurpleConversation *conv, const char *who, 
 	if (who == NULL)
 		return;
 	std::string name = (std::string) purple_conversation_get_name(conv);
+	if (name.empty())
+		return;
 	// new message from legacy network has been received
 	if (!isOpenedConversation(name)) {
 			m_conversations[name] = conv;
