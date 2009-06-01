@@ -57,7 +57,11 @@
 #include "request.h"
 #include "ft.h"
 
+#include <libintl.h>
+#include <locale.h>
+
 #define HIICQ_UI "hiicq"
+#define _(STRING)    gettext(STRING)
 
 #include "registerhandler.h"
 #include "discoinfohandler.h"

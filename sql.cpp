@@ -31,8 +31,8 @@ SQLClass::SQLClass(GlooxMessageHandler *parent){
 }
 
 bool SQLClass::isVIP(const std::string &jid){
-// 	if (!vipSQL->connected())
-// 		return true;
+	if (!vipSQL->connected())
+		return true;
 	mysqlpp::Query query = vipSQL->query();
 #if MYSQLPP_HEADER_VERSION < 0x030000
 	mysqlpp::Result res;
