@@ -466,6 +466,10 @@ void User::purpleMessageReceived(PurpleAccount* account,char * name,char *msg,Pu
 void User::purpleConversationWriteIM(PurpleConversation *conv, const char *who, const char *msg, PurpleMessageFlags flags, time_t mtime) {
 	if (who == NULL)
 		return;
+	
+	if (flags & PURPLE_MESSAGE_SEND)
+		return;
+	
 	std::string name = (std::string) purple_conversation_get_name(conv);
 	if (name.empty())
 		return;
