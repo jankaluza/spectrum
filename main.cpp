@@ -500,7 +500,7 @@ GlooxMessageHandler::GlooxMessageHandler() : MessageHandler(),ConnectionListener
 	j->registerMessageHandler( this );
 	j->registerConnectionListener(this);
 	gatewayHandler = new GlooxGatewayHandler(this);
-	j->registerIqHandler(gatewayHandler,"jabber:iq:gateway");
+	j->registerIqHandler(gatewayHandler,ExtGateway);
 	m_reg = new GlooxRegisterHandler(this);
 	j->registerIqHandler(m_reg,ExtRegistration);
 	m_xping = new GlooxXPingHandler(this);

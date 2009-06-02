@@ -23,8 +23,36 @@
 #include "main.h"
 #include "sql.h"
 
+GatewayExtension::GatewayExtension() : StanzaExtension( ExtGateway )
+{
+	m_tag = NULL;
+}
+
+GatewayExtension::GatewayExtension(const Tag *tag) : StanzaExtension( ExtGateway )
+{
+	m_tag = tag->clone();
+}
+
+GatewayExtension::~GatewayExtension()
+{
+	Log().Get("GatewayExtension") << "deleting GatewayExtension()";
+	delete m_tag;
+}
+
+const std::string& GatewayExtension::filterString() const
+{
+	static const std::string filter = "iq/query[@xmlns='jabber:iq:gateway']";
+	return filter;
+}
+
+Tag* GatewayExtension::tag() const
+{
+	return m_tag->clone();
+}
+
 GlooxGatewayHandler::GlooxGatewayHandler(GlooxMessageHandler *parent) : IqHandler(){
 	p=parent;
+	p->j->registerStanzaExtension( new GatewayExtension() );
 }
 
 GlooxGatewayHandler::~GlooxGatewayHandler(){
@@ -35,7 +63,7 @@ std::string GlooxGatewayHandler::replace(std::string &str, const char *string_to
 	// Find the first string to replace
 	int index = str.find(string_to_replace);
 	// while there is one
-	while(index != std::string::npos)
+	while(index != (int) std::string::npos)
 	{
 		// Replace it
 		str.replace(index, strlen(string_to_replace), new_string);
@@ -60,15 +88,18 @@ bool GlooxGatewayHandler::handleIq (const IQ &stanza){
 		IQ _s(IQ::Result, stanza.from(), stanza.id());
 		_s.setFrom(p->jid());
 		Tag *s = _s.tag();
-		s->setXmlns("jabber:iq:gateway");
+		Tag *query = new Tag("query");
+		query->setXmlns("jabber:iq:gateway");
 		
-		s->findChild("query")->addChild(new Tag("desc","Please enter the ICQ Number of the person you would like to contact."));
-		s->findChild("query")->addChild(new Tag("prompt","Contact ID"));
+		query->addChild(new Tag("desc","Please enter the ICQ Number of the person you would like to contact."));
+		query->addChild(new Tag("prompt","Contact ID"));
+		s->addChild(query);
 		
 		p->j->send( s );
 		return true;
 	}
 	else if(stanza.subtype() == IQ::Set){
+		Log().Get("tag") << stanza.tag()->xml();
 		Tag *query = stanza.tag()->findChild("query");
 		if (query==NULL)
 			return false;
@@ -84,9 +115,13 @@ bool GlooxGatewayHandler::handleIq (const IQ &stanza){
 		IQ _s(IQ::Result, stanza.from(), stanza.id());
 		_s.setFrom(p->jid());
 		Tag *s = _s.tag();
-		s->setXmlns("jabber:iq:gateway");
-		s->findChild("query")->addChild(new Tag("jid",uin+"@"+p->jid()));
-		s->findChild("query")->addChild(new Tag("prompt",uin+"@"+p->jid()));
+		query = new Tag("query");
+		query->setXmlns("jabber:iq:gateway");
+		
+		query->addChild(new Tag("jid",uin+"@"+p->jid()));
+		query->addChild(new Tag("prompt",uin+"@"+p->jid()));
+		
+		s->addChild(query);
 		
 		p->j->send( s );
 		return true;
