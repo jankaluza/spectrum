@@ -30,11 +30,11 @@
 class GlooxMessageHandler;
 class AdhocRepeater;
 
-class AdhocHandler : public DiscoNodeHandler, public DiscoHandler, public IqHandler
+class GlooxAdhocHandler : public DiscoNodeHandler, public DiscoHandler, public IqHandler
 {
 	public:
-		AdhocHandler(GlooxMessageHandler *m);
-		~AdhocHandler();
+		GlooxAdhocHandler(GlooxMessageHandler *m);
+		~GlooxAdhocHandler();
 		StringList handleDiscoNodeFeatures (const JID &from, const std::string &node);
 		Disco::IdentityList handleDiscoNodeIdentities( const JID& jid, const std::string& node );
 		Disco::ItemList handleDiscoNodeItems (const JID &from, const JID &to, const std::string &node=EmptyString);

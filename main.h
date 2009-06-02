@@ -91,7 +91,7 @@ class SQLClass;
 class FileTranferManager;
 class UserManager;
 class AbstractProtocol;
-class AdhocHandler;
+// class AdhocHandler;
 class AdhocRepeater;
 
 struct User;
@@ -181,7 +181,7 @@ public:
 	SQLClass *sql() { return m_sql; }
 	GlooxVCardHandler *vcard() { return m_vcard; }
 	AbstractProtocol *protocol() { return m_protocol; }
-	AdhocHandler *adhoc() { return m_adhoc; }
+	GlooxAdhocHandler *adhoc() { return m_adhoc; }
 	
 	FileTransferManager* ftManager;
 	SIProfileFT* ft;
@@ -214,7 +214,7 @@ private:
 	GlooxStatsHandler *m_stats;
 	GlooxVCardHandler *m_vcard;
 // 	std::list <GlooxAdhocHandler *> m_adhoc_handlers;
-	AdhocHandler *m_adhoc;
+	GlooxAdhocHandler *m_adhoc;
 	
 	GIOChannel *connectIO;
 	

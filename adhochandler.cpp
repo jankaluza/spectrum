@@ -23,28 +23,31 @@
  #include "log.h"
  #include "adhocrepeater.h"
  #include "gloox/disconodehandler.h"
+ #include "gloox/adhoc.h"
  
-AdhocHandler::AdhocHandler(GlooxMessageHandler *m) {
+GlooxAdhocHandler::GlooxAdhocHandler(GlooxMessageHandler *m) {
 	main = m;
 	main->j->registerIqHandler( this, ExtAdhocCommand );
+	main->j->registerStanzaExtension( new Adhoc::Command() );
 	main->j->disco()->addFeature( XMLNS_ADHOC_COMMANDS );
 	main->j->disco()->registerNodeHandler( this, XMLNS_ADHOC_COMMANDS );
 	main->j->disco()->registerNodeHandler( this, std::string() );
 
 }
 
-AdhocHandler::~AdhocHandler() { }
+GlooxAdhocHandler::~GlooxAdhocHandler() { }
 
-StringList AdhocHandler::handleDiscoNodeFeatures (const JID &from, const std::string &node) {
+StringList GlooxAdhocHandler::handleDiscoNodeFeatures (const JID &from, const std::string &node) {
 	StringList features;
 	features.push_back( XMLNS_ADHOC_COMMANDS );
 	return features;
 }
 
-Disco::ItemList AdhocHandler::handleDiscoNodeItems( const JID &_from, const JID &_to, const std::string& node ) {
+Disco::ItemList GlooxAdhocHandler::handleDiscoNodeItems( const JID &_from, const JID &_to, const std::string& node ) {
 	Disco::ItemList lst;
 	std::string from = _from.bare();
 	std::string to = _to.bare();
+	Log().Get("GlooxAdhocHandler") << "items" << from << to;
 // 	if (node.empty()) {
 // 		lst.push_back( new Disco::Item( main->jid(), XMLNS_ADHOC_COMMANDS, "Ad-Hoc Commands" ) );
 // 	}
@@ -98,14 +101,14 @@ Disco::ItemList AdhocHandler::handleDiscoNodeItems( const JID &_from, const JID 
 	return lst;
 }
 
-Disco::IdentityList AdhocHandler::handleDiscoNodeIdentities( const JID& jid, const std::string& node ) {
+Disco::IdentityList GlooxAdhocHandler::handleDiscoNodeIdentities( const JID& jid, const std::string& node ) {
 	Disco::IdentityList l;
 	l.push_back( new Disco::Identity( "automation",node == XMLNS_ADHOC_COMMANDS ? "command-list" : "command-node",node == XMLNS_ADHOC_COMMANDS ? "Ad-Hoc Commands" : "") );
 	return l;
 }
 
-bool AdhocHandler::handleIq( const IQ &stanza ) {
-	Log().Get("AdhocHandler") << "handleIq";
+bool GlooxAdhocHandler::handleIq( const IQ &stanza ) {
+	Log().Get("GlooxAdhocHandler") << "handleIq";
 	std::string to = stanza.to().bare();
 	std::string from = stanza.from().bare();
 	Tag *tag = stanza.tag()->findChild( "command" );
@@ -183,7 +186,7 @@ bool AdhocHandler::handleIq( const IQ &stanza ) {
 	return true;
 }
 
-bool AdhocHandler::hasSession(const std::string &jid) {
+bool GlooxAdhocHandler::hasSession(const std::string &jid) {
 	std::map<std::string,AdhocRepeater *> ::iterator iter = m_sessions.begin();
 	iter = m_sessions.find(jid);
 	if(iter != m_sessions.end())
@@ -191,11 +194,11 @@ bool AdhocHandler::hasSession(const std::string &jid) {
 	return false;
 }
 
-void AdhocHandler::handleIqID( const IQ &iq, int context ) {
+void GlooxAdhocHandler::handleIqID( const IQ &iq, int context ) {
 }
 
-void AdhocHandler::handleDiscoInfo(const JID &jid, const Disco::Info &info, int context) {}
-void AdhocHandler::handleDiscoItems(const JID &jid, const Disco::Items &items, int context) {}
-void AdhocHandler::handleDiscoError(const JID &jid, const Error *error, int context) {}
+void GlooxAdhocHandler::handleDiscoInfo(const JID &jid, const Disco::Info &info, int context) {}
+void GlooxAdhocHandler::handleDiscoItems(const JID &jid, const Disco::Items &items, int context) {}
+void GlooxAdhocHandler::handleDiscoError(const JID &jid, const Error *error, int context) {}
 
 

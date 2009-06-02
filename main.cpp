@@ -483,7 +483,7 @@ GlooxMessageHandler::GlooxMessageHandler() : MessageHandler(),ConnectionListener
  	m_discoInfoHandler=new GlooxDiscoInfoHandler(this);
  	j->registerIqHandler(m_discoInfoHandler,XMLNS_DISCO_INFO);
 	
-	m_adhoc = new AdhocHandler(this);
+	m_adhoc = new GlooxAdhocHandler(this);
 	
 	ftManager = new FileTransferManager();
 	ft = new SIProfileFT(j, ftManager );
