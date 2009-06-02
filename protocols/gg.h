@@ -18,26 +18,34 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02111-1301  USA
  */
 
-#include "xpinghandler.h"
+#ifndef _HI_GG_PROTOCOL_H
+#define _HI_GG_PROTOCOL_H
 
-GlooxXPingHandler::GlooxXPingHandler(GlooxMessageHandler *parent) : IqHandler(){
-	p=parent;
-}
+#include "abstractprotocol.h"
 
-GlooxXPingHandler::~GlooxXPingHandler(){
-}
+class GlooxMessageHandler;
 
-bool GlooxXPingHandler::handleIq (const IQ &iq){
-	std::cout << "XPING\n";
-	IQ s(IQ::Result, iq.from(), iq.id());
-	std::string from;
-	from.append(p->jid());
-	s.setFrom(from);
-	Tag *tag = s.tag();
-	tag->setXmlns("urn:xmpp:ping");
-	p->j->send(tag);
-	return true;
-}
+class GGProtocol : AbstractProtocol
+{
+	public:
+		GGProtocol(GlooxMessageHandler *main);
+		~GGProtocol();
+		std::string gatewayIdentity() { return "gg"; }
+		std::string protocol() { return "prpl-gg"; }
+		bool isValidUsername(std::string &username);
+		std::string prepareUserName(std::string &username);
+		std::list<std::string> transportFeatures();
+		std::list<std::string> buddyFeatures();
+		std::string text(const std::string &key);
+		
+		std::string replace(std::string &str, const char *string_to_replace, const char *new_string);
+	
+	private:
+		GlooxMessageHandler *m_main;
+		std::list<std::string> m_transportFeatures;
+		std::list<std::string> m_buddyFeatures;
+	
+};
 
-void GlooxXPingHandler::handleIqID (const IQ &iq, int context){
-}
+#endif	
+	

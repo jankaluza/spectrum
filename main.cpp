@@ -29,6 +29,7 @@
 #include "protocols/abstractprotocol.h"
 #include "protocols/icq.h"
 #include "protocols/facebook.h"
+#include "protocols/gg.h"
 
 #include <gloox/tlsbase.h>
 #include <gloox/compressionbase.h>
@@ -501,7 +502,7 @@ GlooxMessageHandler::GlooxMessageHandler() : MessageHandler(),ConnectionListener
 	gatewayHandler = new GlooxGatewayHandler(this);
 	j->registerIqHandler(gatewayHandler,"jabber:iq:gateway");
 	m_reg = new GlooxRegisterHandler(this);
-	j->registerIqHandler(m_reg,"jabber:iq:register");
+	j->registerIqHandler(m_reg,ExtRegistration);
 	m_xping = new GlooxXPingHandler(this);
 	j->registerIqHandler(m_xping,"urn:xmpp:ping");
 	m_stats = new GlooxStatsHandler(this);
@@ -530,7 +531,8 @@ void GlooxMessageHandler::loadProtocol(){
 		m_protocol = (AbstractProtocol*) new ICQProtocol(this);
 	else if (configuration().protocol == "facebook")
 		m_protocol = (AbstractProtocol*) new FacebookProtocol(this);
-
+	else if (configuration().protocol == "gg")
+		m_protocol = (AbstractProtocol*) new GGProtocol(this);
 	
 // 	PurplePlugin *plugin = purple_find_prpl(m_protocol->protocol().c_str());
 // 	if (plugin && PURPLE_PLUGIN_HAS_ACTIONS(plugin)) {

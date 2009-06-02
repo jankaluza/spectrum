@@ -58,7 +58,7 @@ bool GlooxDiscoInfoHandler::handleIq (const IQ &stanza){
   </query>
 </iq>*/
 
-// 	std::cout << "DISCO DISCO DISCO " << stanza.xml() << "\n";
+	std::cout << "DISCO DISCO DISCO INFO\n";
 	if(stanza.subtype() == IQ::Get && stanza.to().username()!="") {
 		Tag *query = stanza.tag()->findChildWithAttrib("xmlns","http://jabber.org/protocol/disco#info");
 		if (query!=NULL){

@@ -82,6 +82,7 @@ set(hiicq_SRCS
 	adhocrepeater.cpp
 	protocols/icq.cpp
 	protocols/facebook.cpp
+	protocols/gg.cpp
 )
 
 set(hiicq_MOC_HDRS
@@ -109,6 +110,7 @@ set(hiicq_MOC_HDRS
 	protocols/abstractprotocol.h
 	protocols/icq.h
 	protocols/facebook.h
+	protocols/gg.h
 )
 
 add_executable(hiicq ${hiicq_SRCS} ${lrelease_outputs})

@@ -21,6 +21,7 @@
 #include "registerhandler.h"
 #include "main.h"
 #include <gloox/clientbase.h>
+#include <gloox/registration.h>
 #include <glib.h>
 #include "sql.h"
 #include "caps.h"
@@ -29,6 +30,7 @@
 
 GlooxRegisterHandler::GlooxRegisterHandler(GlooxMessageHandler *parent) : IqHandler(){
 	p=parent;
+	p->j->registerStanzaExtension( new Registration::Query() );
 }
 
 GlooxRegisterHandler::~GlooxRegisterHandler(){
