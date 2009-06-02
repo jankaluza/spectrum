@@ -91,7 +91,7 @@ Disco::ItemList GlooxAdhocHandler::handleDiscoNodeItems( const JID &_from, const
 
 					for(l = ll = prpl_info->blist_node_menu((PurpleBlistNode*)buddy); l; l = l->next) {
 						PurpleMenuAction *action = (PurpleMenuAction *) l->data;
-						lst.push_back( new Disco::Item( main->jid(), (std::string) action->label, (std::string) action->label ) );
+						lst.push_back( new Disco::Item( _to.bare(), (std::string) action->label, (std::string) action->label ) );
 						purple_menu_action_free(action);
 					}
 				}
@@ -152,7 +152,7 @@ bool GlooxAdhocHandler::handleIq( const IQ &stanza ) {
 				GList *l, *ll;
 				PurpleConnection *gc = purple_account_get_connection(user->account());
 				PurplePlugin *plugin = gc && PURPLE_CONNECTION_IS_CONNECTED(gc) ? gc->prpl : NULL;
-				PurplePluginProtocolInfo *prpl_info = PURPLE_PLUGIN_PROTOCOL_INFO(plugin);
+				PurplePluginProtocoilInfo *prpl_info = PURPLE_PLUGIN_PROTOCOL_INFO(plugin);
 
 				if(!prpl_info || !prpl_info->blist_node_menu)
 					return true;
@@ -167,7 +167,7 @@ bool GlooxAdhocHandler::handleIq( const IQ &stanza ) {
 							callback((PurpleBlistNode*)buddy, action->data);
 
 						IQ _s(IQ::Result, stanza.from().full(), stanza.id());
-						_s.setFrom(main->jid());
+						_s.setFrom(stanza.to());
 						Tag *s = _s.tag();
 
 						Tag *c = new Tag("command");
