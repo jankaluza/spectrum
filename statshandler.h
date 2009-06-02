@@ -30,6 +30,44 @@ class GlooxMessageHandler;
 using namespace gloox;
 
 
+class StatsExtension : public StanzaExtension
+{
+
+public:
+	/**
+	* Constructs a new object from the given Tag.
+	*/
+	StatsExtension();
+	StatsExtension(const Tag *tag);
+
+	/**
+	* Virtual Destructor.
+	*/
+	virtual ~StatsExtension();
+
+	// reimplemented from StanzaExtension
+	virtual const std::string& filterString() const;
+
+	// reimplemented from StanzaExtension
+	virtual StanzaExtension* newInstance( const Tag* tag ) const
+	{
+	return new StatsExtension(tag);
+	}
+
+	// reimplemented from StanzaExtension
+	virtual Tag* tag() const;
+
+	// reimplemented from StanzaExtension
+	virtual StanzaExtension* clone() const
+	{
+		return new StatsExtension(m_tag);
+	}
+	
+private:
+	Tag *m_tag;
+
+};
+
 class GlooxStatsHandler : public IqHandler
 {
 	public:

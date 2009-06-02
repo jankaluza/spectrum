@@ -29,10 +29,38 @@
 #include "sql.h"
 #include <sstream>
 
+StatsExtension::StatsExtension() : StanzaExtension( ExtGateway )
+{
+	m_tag = NULL;
+}
+
+StatsExtension::StatsExtension(const Tag *tag) : StanzaExtension( ExtStats )
+{
+	m_tag = tag->clone();
+}
+
+StatsExtension::~StatsExtension()
+{
+	Log().Get("StatsExtension") << "deleting StatsExtension()";
+	delete m_tag;
+}
+
+const std::string& StatsExtension::filterString() const
+{
+	static const std::string filter = "iq/query[@xmlns='http://jabber.org/protocol/stats']";
+	return filter;
+}
+
+Tag* StatsExtension::tag() const
+{
+	return m_tag->clone();
+}
+
 GlooxStatsHandler::GlooxStatsHandler(GlooxMessageHandler *parent) : IqHandler(){
 	p=parent;
 	m_messagesIn = m_messagesOut = 0;
 	m_startTime = time(NULL);
+	p->j->registerStanzaExtension( new StatsExtension() );
 }
 
 GlooxStatsHandler::~GlooxStatsHandler(){
@@ -65,36 +93,39 @@ bool GlooxStatsHandler::handleIq (const IQ &stanza){
 		_s.setFrom(from);
 
 		Tag *s = _s.tag();
-		s->setXmlns("http://jabber.org/protocol/stats");
+		Tag *query = new Tag("query");
+		query->setXmlns("http://jabber.org/protocol/stats");
 		Tag *t;
 
 		t = new Tag("stat");
 		t->addAttribute("name","uptime");
-		s->findChild("query")->addChild(t);
+		query->addChild(t);
 
 		t = new Tag("stat");
 		t->addAttribute("name","users/registered");
-		s->findChild("query")->addChild(t);
+		query->addChild(t);
 		
 		t = new Tag("stat");
 		t->addAttribute("name","users/online");
-		s->findChild("query")->addChild(t);
+		query->addChild(t);
 
 		t = new Tag("stat");
 		t->addAttribute("name","legacy-network-users/online");
-		s->findChild("query")->addChild(t);
+		query->addChild(t);
 
 		t = new Tag("stat");
 		t->addAttribute("name","legacy-network-users/registered");
-		s->findChild("query")->addChild(t);
+		query->addChild(t);
 
 		t = new Tag("stat");
 		t->addAttribute("name","messages/in");
-		s->findChild("query")->addChild(t);
+		query->addChild(t);
 
 		t = new Tag("stat");
 		t->addAttribute("name","messages/out");
-		s->findChild("query")->addChild(t);
+		query->addChild(t);
+		
+		s->addChild(query);
 
 		p->j->send( s );
 
@@ -107,7 +138,9 @@ bool GlooxStatsHandler::handleIq (const IQ &stanza){
 		_s.setFrom(from);
 
 		Tag *s = _s.tag();
-		s->setXmlns("http://jabber.org/protocol/stats");
+		Tag *query = new Tag("query");
+		query->setXmlns("http://jabber.org/protocol/stats");
+
 		Tag *t;
 		long registered = p->sql()->getRegisteredUsersCount();
 		long registeredUsers = p->sql()->getRegisteredUsersRosterCount();
@@ -123,45 +156,46 @@ bool GlooxStatsHandler::handleIq (const IQ &stanza){
 		t->addAttribute("name","uptime");
 		t->addAttribute("units","seconds");
 		t->addAttribute("value",seconds - m_startTime);
-		s->findChild("query")->addChild(t);
+		query->addChild(t);
 
 		t = new Tag("stat");
 		t->addAttribute("name","users/registered");
 		t->addAttribute("units","users");
 		t->addAttribute("value",out.str());
-		s->findChild("query")->addChild(t);
+		query->addChild(t);
 
 		t = new Tag("stat");
 		t->addAttribute("name","users/online");
 		t->addAttribute("units","users");
 		t->addAttribute("value",p->userManager()->userCount());
-		s->findChild("query")->addChild(t);
+		query->addChild(t);
 
 		t = new Tag("stat");
 		t->addAttribute("name","legacy-network-users/registered");
 		t->addAttribute("units","users");
 		t->addAttribute("value",registeredUsers);
-		s->findChild("query")->addChild(t);
+		query->addChild(t);
 
 		t = new Tag("stat");
 		t->addAttribute("name","legacy-network-users/online");
 		t->addAttribute("units","users");
 		t->addAttribute("value",users);
-		s->findChild("query")->addChild(t);
+		query->addChild(t);
 		
 
 		t = new Tag("stat");
 		t->addAttribute("name","messages/in");
 		t->addAttribute("units","messages");
 		t->addAttribute("value",m_messagesIn);
-		s->findChild("query")->addChild(t);
+		query->addChild(t);
 
 		t = new Tag("stat");
 		t->addAttribute("name","messages/out");
 		t->addAttribute("units","messages");
 		t->addAttribute("value",m_messagesOut);
-		s->findChild("query")->addChild(t);
+		query->addChild(t);
 
+		s->addChild(query);
 
 		p->j->send(s);
 

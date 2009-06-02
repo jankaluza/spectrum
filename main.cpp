@@ -503,10 +503,11 @@ GlooxMessageHandler::GlooxMessageHandler() : MessageHandler(),ConnectionListener
 	j->registerIqHandler(gatewayHandler,ExtGateway);
 	m_reg = new GlooxRegisterHandler(this);
 	j->registerIqHandler(m_reg,ExtRegistration);
-	m_xping = new GlooxXPingHandler(this);
-	j->registerIqHandler(m_xping,"urn:xmpp:ping");
+	// PING is now implemented in Gloox
+// 	m_xping = new GlooxXPingHandler(this);
+// 	j->registerIqHandler(m_xping,"urn:xmpp:ping");
 	m_stats = new GlooxStatsHandler(this);
-	j->registerIqHandler(m_stats,"http://jabber.org/protocol/stats");
+	j->registerIqHandler(m_stats,ExtStats);
 	m_vcard = new GlooxVCardHandler(this);
 	j->registerIqHandler(m_vcard,"vcard-temp");
 	j->registerPresenceHandler(this);
