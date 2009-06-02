@@ -21,6 +21,7 @@
 #include "vcardhandler.h"
 #include "usermanager.h"
 #include "log.h"
+#include "gloox/vcard.h"
 
 void base64encode(const unsigned char * input, int len, std::string & out)
 {
@@ -84,6 +85,7 @@ void base64encode(const unsigned char * input, int len, std::string & out)
 
 GlooxVCardHandler::GlooxVCardHandler(GlooxMessageHandler *parent) : IqHandler(){
 	p=parent;
+	p->j->registerStanzaExtension( new VCard() );
 }
 
 GlooxVCardHandler::~GlooxVCardHandler(){

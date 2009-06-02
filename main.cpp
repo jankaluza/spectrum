@@ -509,7 +509,7 @@ GlooxMessageHandler::GlooxMessageHandler() : MessageHandler(),ConnectionListener
 	m_stats = new GlooxStatsHandler(this);
 	j->registerIqHandler(m_stats,ExtStats);
 	m_vcard = new GlooxVCardHandler(this);
-	j->registerIqHandler(m_vcard,"vcard-temp");
+	j->registerIqHandler(m_vcard,ExtVCard);
 	j->registerPresenceHandler(this);
 	j->registerSubscriptionHandler(this);
 	j->connect(false);
