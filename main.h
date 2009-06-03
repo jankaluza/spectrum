@@ -61,7 +61,7 @@
 #include <locale.h>
 
 #define HIICQ_UI "hiicq"
-#define _(STRING)    gettext(STRING)
+#define _(lang,STRING)    localization.translate(lang,STRING)
 
 #include "registerhandler.h"
 #include "discoinfohandler.h"
@@ -75,9 +75,12 @@
 #include "filetransfermanager.h"
 #include <sys/stat.h>
 #include <sys/types.h>
+#include "localization.h"
 
 
 using namespace gloox;
+
+extern Localization localization;
 
 class GlooxDiscoHandler;
 class GlooxDiscoInfoHandler;

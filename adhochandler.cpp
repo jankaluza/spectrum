@@ -152,7 +152,7 @@ bool GlooxAdhocHandler::handleIq( const IQ &stanza ) {
 				GList *l, *ll;
 				PurpleConnection *gc = purple_account_get_connection(user->account());
 				PurplePlugin *plugin = gc && PURPLE_CONNECTION_IS_CONNECTED(gc) ? gc->prpl : NULL;
-				PurplePluginProtocoilInfo *prpl_info = PURPLE_PLUGIN_PROTOCOL_INFO(plugin);
+				PurplePluginProtocolInfo *prpl_info = PURPLE_PLUGIN_PROTOCOL_INFO(plugin);
 
 				if(!prpl_info || !prpl_info->blist_node_menu)
 					return true;

@@ -25,6 +25,14 @@ find_package(purple REQUIRED)
 set(glib_DIR ${CMAKE_MODULE_PATH})
 find_package(glib REQUIRED)
 
+FIND_LIBRARY(GETTEXTPO_LIBRARY NAMES gettextpo)
+
+if(GETTEXTPO_LIBRARY)
+	message(STATUS "libgettextpo found OK")
+else(GETTEXTPO_LIBRARY)
+	message(FATAL_ERROR "no libgettextpo")
+endif(GETTEXTPO_LIBRARY)
+
 if(GLOOX_FOUND)
 	message(STATUS "gloox found OK")
 	include_directories(${GLOOX_INCLUDE_DIRS})
@@ -80,6 +88,7 @@ set(hiicq_SRCS
 	usermanager.cpp
 	adhochandler.cpp
 	adhocrepeater.cpp
+	localization.cpp
 	protocols/icq.cpp
 	protocols/facebook.cpp
 	protocols/gg.cpp
@@ -107,6 +116,7 @@ set(hiicq_MOC_HDRS
 	usermanager.h
 	adhocrepeater.h
 	adhochandler.h
+	localization.h
 	protocols/abstractprotocol.h
 	protocols/icq.h
 	protocols/facebook.h
@@ -117,7 +127,7 @@ add_executable(hiicq ${hiicq_SRCS} ${lrelease_outputs})
 
 FIND_LIBRARY(MYSQL_LIBRARY NAMES mysqlpp)
 
-target_link_libraries(hiicq ${GLOOX_LIBRARIES} ${MYSQL_LIBRARY} ${PURPLE_LIBRARIES} ${GLIB2_LIBRARIES} -export-dynamic)
+target_link_libraries(hiicq ${GLOOX_LIBRARIES} ${MYSQL_LIBRARY} ${PURPLE_LIBRARIES} ${GLIB2_LIBRARIES} ${GETTEXTPO_LIBRARY} -export-dynamic)
 
 # install(FILES
 # 	${CMAKE_CURRENT_SOURCE_DIR}/data/LICENSE.txt
