@@ -163,7 +163,7 @@ static void * requestInput(const char *title, const char *primary,const char *se
 		else {
 			if (primaryString=="Authorization Request Message:") {
 				Log().Get("purple") << "accepting this authorization request";
-				((PurpleRequestInputCb) ok_cb)(user_data,"Please authorize me.");
+				((PurpleRequestInputCb) ok_cb)(user_data,tr(user->getLang(),_("Please authorize me.")));
 			}
 			else if ( primaryString == "Set your Facebook status" ) {
 				Log().Get("purple") << "set facebook status";

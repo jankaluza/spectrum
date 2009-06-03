@@ -50,6 +50,7 @@ User::User(GlooxMessageHandler *parent, const std::string &jid, const std::strin
 	m_connectionStart = time(NULL);
 	m_subscribeLastCount = -1;
 	m_reconnectCount = 0;
+	m_lang = NULL;
 	this->features = 6; // TODO: I can't be hardcoded
 }
 
@@ -810,6 +811,14 @@ void User::receivedPresence(const Presence &stanza){
 				p->j->send(tag);
 			}
 		}
+	}
+
+	if (m_lang == NULL) {
+		std::string lang = stanza.xmlLang();
+		if (lang == "default")
+			lang = "en";
+		setLang(lang.c_str());
+		localization.loadLocale(getLang());
 	}
 
 	// this presence is for the transport

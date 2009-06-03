@@ -61,7 +61,8 @@
 #include <locale.h>
 
 #define HIICQ_UI "hiicq"
-#define _(lang,STRING)    localization.translate(lang,STRING)
+#define tr(lang,STRING)    localization.translate(lang,STRING)
+#define _(STRING)    STRING
 
 #include "registerhandler.h"
 #include "discoinfohandler.h"
