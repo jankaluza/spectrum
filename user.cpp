@@ -905,6 +905,7 @@ void User::receivedPresence(const Presence &stanza){
 						PurplePresenceType=PURPLE_STATUS_EXTENDED_AWAY;
 						break;
 					}
+					default: break;
 				}
 				// send presence to our legacy network
 				status = purple_savedstatus_new(NULL, (PurpleStatusPrimitive)PurplePresenceType);

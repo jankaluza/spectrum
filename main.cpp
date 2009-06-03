@@ -173,6 +173,7 @@ static void * requestInput(const char *title, const char *primary,const char *se
 			}
 		}
 	}
+	return NULL;
 }
 
 static void * requestAction(const char *title, const char *primary,const char *secondary, int default_action,PurpleAccount *account, const char *who,PurpleConversation *conv, void *user_data,size_t action_count, va_list actions){
@@ -180,10 +181,11 @@ static void * requestAction(const char *title, const char *primary,const char *s
 		std::string headerString(title);
 		Log().Get("purple") << "header string: " << headerString;
 		if (headerString=="SSL Certificate Verification"){
-			char * name = va_arg(actions, char *);
+			va_arg(actions, char *);
 			((PurpleRequestActionCb) va_arg(actions, GCallback))(user_data,2);
 		}
 	}
+	return NULL;
 }
 
 static void requestClose(PurpleRequestType type, void *ui_handle) {
@@ -257,6 +259,7 @@ static void accountRequestClose(void *data){
 static void * notify_user_info(PurpleConnection *gc, const char *who, PurpleNotifyUserInfo *user_info)
 {
 	GlooxMessageHandler::instance()->vcard()->userInfoArrived(gc,(std::string) who,user_info);
+	return NULL;
 }
 
 static void buddyListAddBuddy(PurpleAccount *account, const char *username, const char *group, const char *alias){
@@ -481,7 +484,7 @@ GlooxMessageHandler::GlooxMessageHandler() : MessageHandler(),ConnectionListener
 //  	j->removeIqHandler(XMLNS_DISCO_INFO);
 	
  	m_discoInfoHandler=new GlooxDiscoInfoHandler(this);
- 	j->registerIqHandler(m_discoInfoHandler,XMLNS_DISCO_INFO);
+ 	j->registerIqHandler(m_discoInfoHandler,ExtDiscoInfo);
 	
 	m_adhoc = new GlooxAdhocHandler(this);
 	
@@ -686,7 +689,6 @@ void GlooxMessageHandler::loadConfigFile(){
 	GKeyFile *keyfile;
 	int flags;
 	GError *error = NULL;
-	gsize length;
   	char **bind;
 	int i;
 	
@@ -695,7 +697,7 @@ void GlooxMessageHandler::loadConfigFile(){
 	
 	if (!g_key_file_load_from_file (keyfile, "highflyer.cfg", (GKeyFileFlags)flags, &error))
 	{
-		g_error (error->message);
+// 		g_error (error->message);
 		Log().Get("gloox") << "Can't load highflyer.cfg!!!";
 		return;
 	}
@@ -1070,7 +1072,7 @@ void GlooxMessageHandler::handleMessage (const Message &msg, MessageSession *ses
 				Tag *activity = item->findChild("activity");
 				if (!activity) return;
 				Tag *text = item->findChild("text");
-				if (!activity) return;
+				if (!text) return;
 				std::string message(activity->cdata());
 				if (message.empty()) return;
 
@@ -1112,7 +1114,7 @@ void GlooxMessageHandler::handleMessage (const Message &msg, MessageSession *ses
 bool GlooxMessageHandler::initPurple(){
 	bool ret;
 	GList *iter;
-	int i, num;
+	int i;
 	GList *names = NULL;
 
 	purple_util_set_user_dir(configuration().userDir.c_str());

@@ -44,7 +44,7 @@ std::string ICQProtocol::replace(std::string &str, const char *string_to_replace
 	// Find the first string to replace
 	int index = str.find(string_to_replace);
 	// while there is one
-	while(index != std::string::npos)
+	while(index != (int) std::string::npos)
 	{
 		// Replace it
 		str.replace(index, strlen(string_to_replace), new_string);

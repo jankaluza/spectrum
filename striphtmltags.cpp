@@ -32,7 +32,6 @@ std::string& replaceAll(std::string& context, const std::string& from, const std
 
 std::string& stripHTMLTags(std::string& s) {
 	static bool inTag = false;
-	bool done = false;
 
 	std::string::iterator input;
 	std::string::iterator output;

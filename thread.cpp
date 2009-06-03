@@ -53,7 +53,7 @@ Thread::~Thread() {
 
 void Thread::run() {
 #ifdef HAVE_PTHREADS
-        int status = pthread_create(&m_id, NULL, thread_thread, this);
+        /*int status = */pthread_create(&m_id, NULL, thread_thread, this);
 #elif WIN32
     ResumeThread(m_handle);
 #endif
