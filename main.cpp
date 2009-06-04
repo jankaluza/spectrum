@@ -30,6 +30,7 @@
 #include "protocols/icq.h"
 #include "protocols/facebook.h"
 #include "protocols/gg.h"
+#include "blistsaving.h"
 
 #include <gloox/tlsbase.h>
 #include <gloox/compressionbase.h>
@@ -1142,7 +1143,7 @@ bool GlooxMessageHandler::initPurple(){
 		}
 		
 		purple_set_blist(purple_blist_new());
-		purple_blist_load();
+// 		purple_blist_load();
 		
 		purple_signal_connect(purple_conversations_get_handle(), "received-im-msg", &conversation_handle, PURPLE_CALLBACK(newMessageReceived), NULL);
 		purple_signal_connect(purple_conversations_get_handle(), "buddy-typing", &conversation_handle, PURPLE_CALLBACK(buddyTyping), NULL);

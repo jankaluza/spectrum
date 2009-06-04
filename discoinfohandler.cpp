@@ -63,27 +63,27 @@ bool GlooxDiscoInfoHandler::handleIq (const IQ &stanza){
 		Tag *query = stanza.tag()->findChildWithAttrib("xmlns","http://jabber.org/protocol/disco#info");
 		if (query!=NULL){
 			IQ _s(IQ::Result, stanza.from(), stanza.id());
-			std::string from;
-			from.append(stanza.to().full());
-			_s.setFrom(from);
-			
+			_s.setFrom(stanza.to().full());
 			Tag *s = _s.tag();
-			s->setXmlns("http://jabber.org/protocol/disco#info");
-			s->addAttribute("node",query->findAttribute("node"));
+			Tag *query2 = new Tag("query");
+			query2->setXmlns("http://jabber.org/protocol/disco#info");
+			query2->addAttribute("node",query->findAttribute("node"));
+			
 			Tag *t;
 			t = new Tag("identity");
 			t->addAttribute("category","gateway");
 			t->addAttribute("name","High Flyer Transport");
 			t->addAttribute("type",p->protocol()->gatewayIdentity());
-			s->findChild("query")->addChild(t);
+			query2->addChild(t);
 
 			std::list<std::string> features = p->protocol()->transportFeatures();
 			for(std::list<std::string>::iterator it = features.begin(); it != features.end(); it++) {
 				t = new Tag("feature");
 				t->addAttribute("var",*it);
-				s->findChild("query")->addChild(t);
+				query2->addChild(t);
 			}
 
+			s->addChild(query2);
 			p->j->send( s );
 
 			return true;
