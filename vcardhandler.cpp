@@ -22,6 +22,7 @@
 #include "usermanager.h"
 #include "log.h"
 #include "gloox/vcard.h"
+#include "protocols/abstractprotocol.h"
 
 void base64encode(const unsigned char * input, int len, std::string & out)
 {
@@ -125,9 +126,7 @@ bool GlooxVCardHandler::hasVCardRequest(const std::string &name){
 
 void GlooxVCardHandler::userInfoArrived(PurpleConnection *gc,std::string who, PurpleNotifyUserInfo *user_info){
 	GList *vcardEntries = purple_notify_user_info_get_entries(user_info);
-	std::string label;
 	User *user = p->userManager()->getUserByAccount(purple_connection_get_account(gc));
-	PurpleNotifyUserInfoEntry *vcardEntry;
 
 	if (user!=NULL){
 		if (!user->isConnected())
@@ -140,14 +139,14 @@ void GlooxVCardHandler::userInfoArrived(PurpleConnection *gc,std::string who, Pu
 		reply->addAttribute( "type", "result" );
 		reply->addAttribute( "to", vcardRequests[who].back() );
 		reply->addAttribute( "from", who+"@"+p->jid() );
-		Tag *vcard = new Tag( "vCard" );
-		vcard->addAttribute( "xmlns", "vcard-temp" );
-		Tag *N = new Tag("N");
-		Tag *head = new Tag("ADR");
+
+		Tag *vcard = p->protocol()->getVCardTag(user, vcardEntries);
+		if (!vcard) {
+			Tag *vcard = new Tag( "vCard" );
+			vcard->addAttribute( "xmlns", "vcard-temp" );
+		}
+
 		Tag *photo = new Tag("PHOTO");
-		std::string firstName;
-		std::string lastName;
-		std::string header;
 
 		PurpleBuddy *buddy = purple_find_buddy(purple_connection_get_account(gc), who.c_str());
 		if (buddy){
@@ -169,83 +168,6 @@ void GlooxVCardHandler::userInfoArrived(PurpleConnection *gc,std::string who, Pu
 			}
 		}
 
-
-		while (vcardEntries) {
-			vcardEntry = (PurpleNotifyUserInfoEntry *)(vcardEntries->data);
-			if (purple_notify_user_info_entry_get_label(vcardEntry) && purple_notify_user_info_entry_get_value(vcardEntry)){
-				label=(std::string)purple_notify_user_info_entry_get_label(vcardEntry);
-				Log().Get("vcard label") << label << " => " << (std::string)purple_notify_user_info_entry_get_value(vcardEntry);
-				if (label=="First Name"){
-					N->addChild( new Tag("GIVEN", (std::string)purple_notify_user_info_entry_get_value(vcardEntry)));
-					firstName = (std::string)purple_notify_user_info_entry_get_value(vcardEntry);
-				}
-				else if (label=="Last Name"){
-					N->addChild( new Tag("FAMILY", (std::string)purple_notify_user_info_entry_get_value(vcardEntry)));
-					lastName = (std::string)purple_notify_user_info_entry_get_value(vcardEntry);
-				}
-				else if (label=="Gender"){
-					vcard->addChild( new Tag("GENDER", (std::string)purple_notify_user_info_entry_get_value(vcardEntry)));
-				}
-				else if (label=="Nick"){
-					vcard->addChild( new Tag("NICKNAME", (std::string)purple_notify_user_info_entry_get_value(vcardEntry)));
-				}
-				else if (label=="Birthday"){
-					vcard->addChild( new Tag("BDAY", (std::string)purple_notify_user_info_entry_get_value(vcardEntry)));
-				}
-				else if (label=="UIN"){
-					vcard->addChild( new Tag("UID", (std::string)purple_notify_user_info_entry_get_value(vcardEntry)));
-				}
-				else if (label=="City"){
-					head->addChild( new Tag("LOCALITY", (std::string)purple_notify_user_info_entry_get_value(vcardEntry)));
-				}
-				else if (label=="State"){
-					head->addChild( new Tag("CTRY", (std::string)purple_notify_user_info_entry_get_value(vcardEntry)));
-				}
-				else if (label=="Company"){
-					head->addChild( new Tag("ORGNAME", (std::string)purple_notify_user_info_entry_get_value(vcardEntry)));
-				}
-				else if (label=="Division"){
-					head->addChild( new Tag("ORGUNIT", (std::string)purple_notify_user_info_entry_get_value(vcardEntry)));
-				}
-				else if (label=="Position"){
-					vcard->addChild( new Tag("TITLE", (std::string)purple_notify_user_info_entry_get_value(vcardEntry)));
-				}
-				else if (label=="Personal Web Page"){
-					std::string page = (std::string)purple_notify_user_info_entry_get_value(vcardEntry);
-					
-// 					vcard->addChild( new Tag("URL", stripHTMLTags(page)));
-// 					vcard->addChild( new Tag("URL", page));
-				}
-			}
-			else if (purple_notify_user_info_entry_get_type(vcardEntry)==PURPLE_NOTIFY_USER_INFO_ENTRY_SECTION_HEADER){
-				header = (std::string)purple_notify_user_info_entry_get_label(vcardEntry);
-				if (head)
-					if (!head->children().empty())
-						vcard->addChild(head);
-				if (header=="Home Address"){
-					head = new Tag("ADR");
-					head->addChild(new Tag("HOME"));
-				}
-				if (header=="Work Address"){
-					head = new Tag("ADR");
-					head->addChild(new Tag("WORK"));
-				}
-				if (header=="Work Information"){
-					head = new Tag("ORG");
-				}
-			}
-			vcardEntries = vcardEntries->next;
-		}
-		// add last head if any
-		if (head)
-			if (!head->children().empty())
-				vcard->addChild(head);
-		// combine first name and last name to full name
-		if (!firstName.empty() || !lastName.empty())
-			vcard->addChild( new Tag("FN", firstName + " " + lastName));
-		// add photo ant N if any
-		if(!N->children().empty())
-			vcard->addChild(N);
 		if(!photo->children().empty())
 			vcard->addChild(photo);
 

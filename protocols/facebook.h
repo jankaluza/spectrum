@@ -24,6 +24,7 @@
 #include "abstractprotocol.h"
 
 class GlooxMessageHandler;
+extern Localization localization;
 
 class FacebookProtocol : AbstractProtocol
 {
@@ -37,6 +38,7 @@ class FacebookProtocol : AbstractProtocol
 		std::list<std::string> transportFeatures();
 		std::list<std::string> buddyFeatures();
 		std::string text(const std::string &key);
+		Tag *getVCardTag(User *user, GList *vcardEntries);
 		
 		std::string replace(std::string &str, const char *string_to_replace, const char *new_string);
 	

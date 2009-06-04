@@ -98,3 +98,73 @@ std::string FacebookProtocol::text(const std::string &key) {
 		return "Enter your Facebook email and password:";
 	return "not defined";
 }
+
+Tag *FacebookProtocol::getVCardTag(User *user, GList *vcardEntries) {
+	PurpleNotifyUserInfoEntry *vcardEntry;
+	std::string firstName;
+	std::string lastName;
+	std::string header;
+	std::string label;
+	std::string description("");
+
+	Tag *vcard = new Tag( "vCard" );
+	vcard->addAttribute( "xmlns", "vcard-temp" );
+
+	while (vcardEntries) {
+		vcardEntry = (PurpleNotifyUserInfoEntry *)(vcardEntries->data);
+		if (purple_notify_user_info_entry_get_label(vcardEntry) && purple_notify_user_info_entry_get_value(vcardEntry)){
+			label = (std::string) purple_notify_user_info_entry_get_label(vcardEntry);
+			Log().Get("vcard label") << label << " => " << (std::string)purple_notify_user_info_entry_get_value(vcardEntry);
+			if (label==tr(user->getLang(),"Gender")){
+				vcard->addChild( new Tag("GENDER", (std::string)purple_notify_user_info_entry_get_value(vcardEntry)));
+			}
+			else if (label==tr(user->getLang(),"Name")){
+				vcard->addChild( new Tag("FN", (std::string)purple_notify_user_info_entry_get_value(vcardEntry)));
+			}
+			else if (label==tr(user->getLang(),"Birthday")){
+				vcard->addChild( new Tag("BDAY", (std::string)purple_notify_user_info_entry_get_value(vcardEntry)));
+			}
+			else if (label==tr(user->getLang(),"Mobile")) {
+				Tag *tel = new Tag("TEL");
+				tel->addChild ( new Tag("CELL") );
+				tel->addChild ( new Tag("NUMBER", (std::string)purple_notify_user_info_entry_get_value(vcardEntry)) );
+				vcard->addChild(tel);
+			}
+			else {
+				std::string k(purple_notify_user_info_entry_get_value(vcardEntry));
+				if (!k.empty()) {
+					description+= label + ": " + k + "\n\n";
+				}
+			}
+		}
+		else if (purple_notify_user_info_entry_get_type(vcardEntry)==PURPLE_NOTIFY_USER_INFO_ENTRY_SECTION_HEADER){
+			header = (std::string)purple_notify_user_info_entry_get_label(vcardEntry);
+			Log().Get("vcard header") << header;
+// 			if (head)
+// 				if (!head->children().empty())
+// 					vcard->addChild(head);
+// 			if (header=="Home Address"){
+// 				head = new Tag("ADR");
+// 				head->addChild(new Tag("HOME"));
+// 			}
+// 			if (header=="Work Address"){
+// 				head = new Tag("ADR");
+// 				head->addChild(new Tag("WORK"));
+// 			}
+// 			if (header=="Work Information"){
+// 				head = new Tag("ORG");
+// 			}
+		}
+		vcardEntries = vcardEntries->next;
+	}
+	
+	// add last head if any
+// 	if (head)
+// 		if (!head->children().empty())
+// 			vcard->addChild(head);
+	vcard->addChild( new Tag("DESC", description));
+	
+
+	return vcard;
+}
+

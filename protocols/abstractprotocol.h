@@ -23,6 +23,11 @@
 
 #include <string>
 #include <list>
+#include "glib.h"
+#include "gloox/tag.h"
+#include "../user.h"
+
+using namespace gloox;
 
 class AbstractProtocol
 {
@@ -56,6 +61,10 @@ class AbstractProtocol
 		 * Returns pregenerated text according to key
 		 */
 		virtual std::string text(const std::string &key) = 0;
+		/*
+		 * Returns VCard Tag*
+		 */
+		virtual Tag *getVCardTag(User *user, GList *vcardEntries) = 0;
 };
 
 #endif
