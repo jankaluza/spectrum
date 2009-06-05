@@ -159,6 +159,7 @@ void User::sendRosterX()
 	while(it != m_subscribeCache.end()) {
 		PurpleBuddy *buddy = (*it).second;
 		std::string name(purple_buddy_get_name(buddy));
+		std::for_each( name.begin(), name.end(), replaceBadJidCharacters() );
 		if (!name.empty()){
 			RosterRow user;
 			std::string alias;                                                                                                                                          
@@ -201,7 +202,9 @@ void User::syncContacts()
 	PurpleBuddy *buddy;
 	Log().Get(m_jid) << "Syncing contacts with legacy network.";
 	for(std::map<std::string, RosterRow>::iterator u = m_roster.begin(); u != m_roster.end() ; u++){
-		buddy = purple_find_buddy(m_account, (*u).second.uin.c_str());
+		std::string name((*u).second.uin);
+		std::for_each( name.begin(), name.end(), replaceJidCharacters() );
+		buddy = purple_find_buddy(m_account, name.c_str());
 		// buddy is not in blist, so it's not on server
 		if (!buddy) {
 			// add buddy to server
@@ -226,6 +229,7 @@ Tag *User::generatePresenceStanza(PurpleBuddy *buddy){
 		alias = (std::string) purple_buddy_get_alias(buddy);
 
 	std::string name(purple_buddy_get_name(buddy));
+	std::for_each( name.begin(), name.end(), replaceBadJidCharacters() );
 	PurplePresence *pres = purple_buddy_get_presence(buddy);
 	if (pres==NULL)
 		return NULL;
@@ -339,6 +343,7 @@ void User::purpleReauthorizeBuddy(PurpleBuddy *buddy){
 		return;
 	GList *l, *ll;
 	std::string name(purple_buddy_get_name(buddy));
+	std::for_each( name.begin(), name.end(), replaceBadJidCharacters() );	
 	if (purple_account_get_connection(m_account)){
 		PurplePluginProtocolInfo *prpl_info = PURPLE_PLUGIN_PROTOCOL_INFO(purple_account_get_connection(m_account)->prpl);
 		if(prpl_info && prpl_info->blist_node_menu){
@@ -373,6 +378,7 @@ void User::purpleBuddyChanged(PurpleBuddy *buddy){
 		alias = (std::string) purple_buddy_get_alias(buddy);
 
 	std::string name(purple_buddy_get_name(buddy));
+	std::for_each( name.begin(), name.end(), replaceBadJidCharacters() );
 	PurplePresence *pres = purple_buddy_get_presence(buddy);
 	if (pres==NULL)
 		return;
@@ -449,6 +455,7 @@ void User::purpleBuddyChanged(PurpleBuddy *buddy){
 void User::purpleBuddyRemoved(PurpleBuddy *buddy) {
 	// we should remove pointer to buddy from subscribCache
 	std::string name(purple_buddy_get_name(buddy));
+	std::for_each( name.begin(), name.end(), replaceBadJidCharacters() );
 	m_subscribeCache.erase(name);
 }
 
@@ -677,7 +684,9 @@ void User::receivedSubscription(const Subscription &subscription) {
 				m_authRequests.erase(subscription.to().username());
 			}
 			// subscribed user is not in roster, so we must add him/her there.
-			PurpleBuddy *buddy = purple_find_buddy(m_account, subscription.to().username().c_str());
+			std::string name(subscription.to().username());
+			std::for_each( name.begin(), name.end(), replaceJidCharacters() );
+			PurpleBuddy *buddy = purple_find_buddy(m_account, name.c_str());
 			if(!isInRoster(subscription.to().username(),"both")) {
 				if(!buddy) {
 					Log().Get(m_jid) << "user is not in legacy network contact lists => nothing to be subscribed";
@@ -713,7 +722,9 @@ void User::receivedSubscription(const Subscription &subscription) {
 			return;
 		}
 		else if(subscription.subtype() == Subscription::Subscribe) {
-			PurpleBuddy *b = purple_find_buddy(m_account, subscription.to().username().c_str());
+			std::string name(subscription.to().username());
+			std::for_each( name.begin(), name.end(), replaceJidCharacters() );
+			PurpleBuddy *b = purple_find_buddy(m_account, name.c_str());
 			if (b){
 				purpleReauthorizeBuddy(b);
 			}
@@ -744,7 +755,9 @@ void User::receivedSubscription(const Subscription &subscription) {
 			}
 			return;
 		} else if(subscription.subtype() == Subscription::Unsubscribe || subscription.subtype() == Subscription::Unsubscribed) {
-			PurpleBuddy *buddy = purple_find_buddy(m_account, subscription.to().username().c_str());
+			std::string name(subscription.to().username());
+			std::for_each( name.begin(), name.end(), replaceJidCharacters() );
+			PurpleBuddy *buddy = purple_find_buddy(m_account, name.c_str());
 			if(subscription.subtype() == Subscription::Unsubscribed) {
 				// user respond to auth request from legacy network and deny it
 				if (hasAuthRequest((std::string)subscription.to().username())){
@@ -793,7 +806,9 @@ void User::receivedPresence(const Presence &stanza){
 	
 		// respond to probe presence
 		if (stanza.subtype() == Presence::Probe && stanza.to().username()!=""){
-			PurpleBuddy *buddy = purple_find_buddy(m_account, stanza.to().username().c_str());
+			std::string name(stanza.to().username());
+			std::for_each( name.begin(), name.end(), replaceJidCharacters() );
+			PurpleBuddy *buddy = purple_find_buddy(m_account, name.c_str());
 			if (buddy){
 				Tag *probe = generatePresenceStanza(buddy);
 				if (probe){
@@ -814,11 +829,15 @@ void User::receivedPresence(const Presence &stanza){
 	}
 
 	if (m_lang == NULL) {
-		std::string lang = stanza.xmlLang();
-		if (lang == "default")
+		Tag *tag = stanza.tag();
+		std::string lang = tag->findAttribute("xml:lang");
+		Log().Get("LANG") << tag->xml();
+		delete tag;
+		if (lang == "")
 			lang = "en";
 		setLang(lang.c_str());
 		localization.loadLocale(getLang());
+		Log().Get("LANG") << lang << " " << lang.c_str();
 	}
 
 	// this presence is for the transport

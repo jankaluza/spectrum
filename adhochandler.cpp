@@ -67,7 +67,7 @@ Disco::ItemList GlooxAdhocHandler::handleDiscoNodeItems( const JID &_from, const
 						for (l = actions; l != NULL; l = l->next) {
 							if (l->data) {
 								action = (PurplePluginAction *) l->data;
-								lst.push_back( new Disco::Item( main->jid(), (std::string) action->label, (std::string) action->label ) );
+								lst.push_back( new Disco::Item( main->jid(), (std::string) tr(user->getLang(), action->label), (std::string) action->label ) );
 								purple_plugin_action_free(action);
 							}
 						}
@@ -79,6 +79,7 @@ Disco::ItemList GlooxAdhocHandler::handleDiscoNodeItems( const JID &_from, const
 			User *user = main->userManager()->getUserByJID(from);
 			if (user) {
 				if (user->isConnected() && purple_account_get_connection(user->account())) {
+					Log().Get("GlooxAdhocHandler") << user->getLang();
 					GList *l, *ll;
 					PurpleConnection *gc = purple_account_get_connection(user->account());
 					PurplePlugin *plugin = gc && PURPLE_CONNECTION_IS_CONNECTED(gc) ? gc->prpl : NULL;
@@ -86,12 +87,13 @@ Disco::ItemList GlooxAdhocHandler::handleDiscoNodeItems( const JID &_from, const
 
 					if(!prpl_info || !prpl_info->blist_node_menu)
 						return lst;
-
-					PurpleBuddy *buddy = purple_find_buddy(user->account(), JID(to).username().c_str());
+					std::string name(JID(to).username());
+					std::for_each( name.begin(), name.end(), replaceJidCharacters() );
+					PurpleBuddy *buddy = purple_find_buddy(user->account(), name.c_str());
 
 					for(l = ll = prpl_info->blist_node_menu((PurpleBlistNode*)buddy); l; l = l->next) {
 						PurpleMenuAction *action = (PurpleMenuAction *) l->data;
-						lst.push_back( new Disco::Item( _to.bare(), (std::string) action->label, (std::string) action->label ) );
+						lst.push_back( new Disco::Item( _to.bare(), (std::string) tr(user->getLang(), action->label), (std::string) action->label ) );
 						purple_menu_action_free(action);
 					}
 				}
@@ -156,7 +158,9 @@ bool GlooxAdhocHandler::handleIq( const IQ &stanza ) {
 
 				if(!prpl_info || !prpl_info->blist_node_menu)
 					return true;
-				PurpleBuddy *buddy = purple_find_buddy(user->account(), JID(to).username().c_str());
+				std::string name(JID(to).username());
+				std::for_each( name.begin(), name.end(), replaceJidCharacters() );
+				PurpleBuddy *buddy = purple_find_buddy(user->account(), name.c_str());
 
 				for(l = ll = prpl_info->blist_node_menu((PurpleBlistNode*)buddy); l; l = l->next) {
 					PurpleMenuAction *action = (PurpleMenuAction *) l->data;

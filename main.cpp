@@ -30,6 +30,7 @@
 #include "protocols/icq.h"
 #include "protocols/facebook.h"
 #include "protocols/gg.h"
+#include "protocols/msn.h"
 #include "blistsaving.h"
 
 #include <gloox/tlsbase.h>
@@ -259,7 +260,9 @@ static void accountRequestClose(void *data){
  */
 static void * notify_user_info(PurpleConnection *gc, const char *who, PurpleNotifyUserInfo *user_info)
 {
-	GlooxMessageHandler::instance()->vcard()->userInfoArrived(gc,(std::string) who,user_info);
+	std::string name(who);
+	std::for_each( name.begin(), name.end(), replaceBadJidCharacters() );
+	GlooxMessageHandler::instance()->vcard()->userInfoArrived(gc, name, user_info);
 	return NULL;
 }
 
@@ -538,7 +541,8 @@ void GlooxMessageHandler::loadProtocol(){
 		m_protocol = (AbstractProtocol*) new FacebookProtocol(this);
 	else if (configuration().protocol == "gg")
 		m_protocol = (AbstractProtocol*) new GGProtocol(this);
-	
+	else if (configuration().protocol == "msn")
+		m_protocol = (AbstractProtocol*) new MSNProtocol(this);
 // 	PurplePlugin *plugin = purple_find_prpl(m_protocol->protocol().c_str());
 // 	if (plugin && PURPLE_PLUGIN_HAS_ACTIONS(plugin)) {
 // 		PurplePluginAction *action = NULL;
@@ -581,7 +585,7 @@ void GlooxMessageHandler::purpleConnectionError(PurpleConnection *gc,PurpleConne
 			m_userManager->removeUserTimer(user);
 		}
 		else{
-			if (user->reconnectCount()==1){
+			if (user->reconnectCount() > 0){
 				if (text){
 					Message s(Message::Chat, user->jid(), (std::string)text);
 					std::string from;
@@ -594,7 +598,7 @@ void GlooxMessageHandler::purpleConnectionError(PurpleConnection *gc,PurpleConne
 				m_userManager->removeUserTimer(user);
 			}
 			else{
-
+				user->disconnected();
 				g_timeout_add(5000,&reconnect,g_strdup(user->jid().c_str()));
 			}
 		}

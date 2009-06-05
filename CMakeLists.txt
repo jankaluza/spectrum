@@ -92,6 +92,7 @@ set(hiicq_SRCS
 	protocols/icq.cpp
 	protocols/facebook.cpp
 	protocols/gg.cpp
+	protocols/msn.cpp
 )
 
 set(hiicq_MOC_HDRS
@@ -121,6 +122,7 @@ set(hiicq_MOC_HDRS
 	protocols/icq.h
 	protocols/facebook.h
 	protocols/gg.h
+	protocols/msn.h
 )
 
 add_executable(hiicq ${hiicq_SRCS} ${lrelease_outputs})

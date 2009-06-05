@@ -102,6 +102,13 @@ struct User;
 struct UserRow;
 struct authData;
 
+struct replaceBadJidCharacters {
+	void operator()(char& c) { if(c == '@') c = '%'; }
+};
+
+struct replaceJidCharacters {
+	void operator()(char& c) { if(c == '%') c = '@'; }
+};
 
 typedef enum { 	TRANSPORT_FEATURE_TYPING_NOTIFY = 2,
 				TRANSPORT_FEATURE_AVATARS = 4,
