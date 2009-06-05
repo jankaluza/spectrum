@@ -33,6 +33,7 @@ struct UserRow {
 	std::string jid;
 	std::string uin;
 	std::string password;
+	std::string language;
 	int category;
 };
 
@@ -54,10 +55,10 @@ class SQLClass
 public:
 	SQLClass(GlooxMessageHandler *parent);
 // 	~SQLClass();
-	void addUser(const std::string &jid,const std::string &uin,const std::string &password);
+	void addUser(const std::string &jid,const std::string &uin,const std::string &password, const std::string &language);
 	void addDownload(const std::string &filename,const std::string &vip);
 	void removeUser(const std::string &jid);
-	void updateUserPassword(const std::string &jid,const std::string &password);
+	void updateUserPassword(const std::string &jid,const std::string &password, const std::string &language);
 	void removeUserFromRoster(const std::string &jid);
 	void addUserToRoster(const std::string &jid,const std::string &uin,const std::string subscription);
 	void updateUserRosterSubscription(const std::string &jid,const std::string &uin,const std::string subscription);

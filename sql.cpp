@@ -114,9 +114,9 @@ long SQLClass::getRegisteredUsersRosterCount(){
 	
 }
 
-void SQLClass::updateUserPassword(const std::string &jid,const std::string &password) {
+void SQLClass::updateUserPassword(const std::string &jid,const std::string &password,const std::string &language) {
 	mysqlpp::Query query = sql->query();
-	query << "UPDATE "<< p->configuration().sqlPrefix <<"users SET password=\"" << password <<"\" WHERE jid=\"" << jid << "\";";
+	query << "UPDATE "<< p->configuration().sqlPrefix <<"users SET password=\"" << password <<"\", language=\""<< language <<"\" WHERE jid=\"" << jid << "\";";
 	query.execute();
 }
 
@@ -144,9 +144,9 @@ void SQLClass::addDownload(const std::string &filename,const std::string &vip){
 	query.execute();
 }
 
-void SQLClass::addUser(const std::string &jid,const std::string &uin,const std::string &password){
+void SQLClass::addUser(const std::string &jid,const std::string &uin,const std::string &password,const std::string &language){
 	mysqlpp::Query query = sql->query();
-	query << "INSERT INTO "<< p->configuration().sqlPrefix <<"users " << "(id, jid, uin, password) VALUES (\"\",\"" << jid << "\",\"" << uin << "\", \"" << password << "\")";
+	query << "INSERT INTO "<< p->configuration().sqlPrefix <<"users " << "(id, jid, uin, password, language) VALUES (\"\",\"" << jid << "\",\"" << uin << "\", \"" << password << "\", \"" << language << "\")";
 	query.execute();
 }
 

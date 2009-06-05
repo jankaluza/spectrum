@@ -3,6 +3,7 @@ CREATE TABLE `users` (
   `jid` varchar(255) collate utf8_bin NOT NULL,
   `uin` varchar(255) collate utf8_bin NOT NULL,
   `password` varchar(255) collate utf8_bin NOT NULL,
+  `language` varchar(5) collate utf8_bin NOT NULL,
   `group` int(11) NOT NULL default '0',
   PRIMARY KEY  (`id`),
   KEY `jid` (`jid`),

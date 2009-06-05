@@ -61,6 +61,7 @@ bool GlooxRegisterHandler::handleIq (const IQ &iq){
 			query->addChild( new Tag("instructions", p->protocol()->text("instructions")) );
 			query->addChild( new Tag("username") );
 			query->addChild( new Tag("password") );
+			query->addChild( new Tag("language", "cs") );
 		}
 		else {
 			std::cout << "* sending registration form; user is registered\n";
@@ -68,6 +69,7 @@ bool GlooxRegisterHandler::handleIq (const IQ &iq){
 			query->addChild( new Tag("registered") );
 			query->addChild( new Tag("username",res.uin));
 			query->addChild( new Tag("password"));
+			query->addChild( new Tag("language", res.language) );
 		}
 		
 		reply->addChild(query);
@@ -161,8 +163,14 @@ bool GlooxRegisterHandler::handleIq (const IQ &iq){
 		std::string jid = iq.from().bare();
 		Tag *usernametag = query->findChild("username");
 		Tag *passwordtag = query->findChild("password");
+		Tag *languagetag = query->findChild("password");
 		std::string username("");
 		std::string password("");
+		std::string language("");
+		
+		if (languagetag)
+			language = languagetag->cdata();
+		
 		bool e = false;
 		if (usernametag==NULL || passwordtag==NULL)
 			e=true;
@@ -224,12 +232,12 @@ bool GlooxRegisterHandler::handleIq (const IQ &iq){
 // 		} else {
 	
 			std::cout << "* adding new user: "<< jid << ", " << username << ", " << password <<"\n";
-			p->sql()->addUser(jid,username,password);
+			p->sql()->addUser(jid,username,password,language);
 			sendsubscribe = true;
 		} else {
 			// change password
 			std::cout << "* changing user password: "<< jid << ", " << username << ", " << password <<"\n";
-			p->sql()->updateUserPassword(iq.from().bare(),password);
+			p->sql()->updateUserPassword(iq.from().bare(),password,language);
 		}
 		Tag *reply = new Tag( "iq" );
 		reply->addAttribute( "id", iq.id() );
