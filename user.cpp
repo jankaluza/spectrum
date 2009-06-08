@@ -428,6 +428,9 @@ void User::purpleBuddyChanged(PurpleBuddy *buddy){
 				tag->addAttribute("type", "subscribe" );
 				tag->addAttribute("from", name + "@" + p->jid());
 				tag->addAttribute("to", m_jid);
+				Tag *nick = new Tag("nick", alias);
+				nick->addAttribute("xmlns","http://jabber.org/protocol/nick");
+				tag->addChild(nick);
 				p->j->send(tag);
 			}
 		}
@@ -617,6 +620,13 @@ void User::purpleAuthorizeReceived(PurpleAccount *account,const char *remote_use
 	tag->addAttribute("type", "subscribe" );
 	tag->addAttribute("from", (std::string)remote_user + "@" + p->jid());
 	tag->addAttribute("to", m_jid);
+
+	if (alias) {
+		Tag *nick = new Tag("nick", (std::string) alias);
+		nick->addAttribute("xmlns","http://jabber.org/protocol/nick");
+		tag->addChild(nick);
+	}
+
 	std::cout << tag->xml() << "\n";
 	p->j->send(tag);
 
