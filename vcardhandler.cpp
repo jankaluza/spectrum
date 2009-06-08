@@ -94,7 +94,7 @@ GlooxVCardHandler::~GlooxVCardHandler(){
 
 bool GlooxVCardHandler::handleIq (const IQ &stanza){
 
-	if (stanza.from().username()=="")
+	if (stanza.to().username()=="")
 		return false;
 
 	User *user = p->userManager()->getUserByJID(stanza.from().bare());
