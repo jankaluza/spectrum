@@ -34,6 +34,7 @@ class AdhocRepeater
 {
 	public:
 		AdhocRepeater(GlooxMessageHandler *m, User *user, const std::string &title, const std::string &primaryString, const std::string &secondaryString, const std::string &value, gboolean multiline, gboolean masked, GCallback ok_cb, GCallback cancel_cb, void * user_data);
+		AdhocRepeater(GlooxMessageHandler *m, User *user, const std::string &title, const std::string &primaryString, const std::string &secondaryString, int default_action, void * user_data, size_t action_count, va_list actions);
 		~AdhocRepeater();
 		bool handleIq(const IQ &iq);
 		void setType(PurpleRequestType t) { m_type = t; }
@@ -48,6 +49,7 @@ class AdhocRepeater
 		GCallback m_cancel_cb;
 		PurpleRequestType m_type;
 		std::string m_from;
+		std::map<int, GCallback> m_actions;
 };
 
 #endif

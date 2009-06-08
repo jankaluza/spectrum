@@ -155,7 +155,6 @@ static void * requestInput(const char *title, const char *primary,const char *se
 		if (!user) return NULL;
 		if (!user->adhocData().id.empty()) {
 			AdhocRepeater *repeater = new AdhocRepeater(GlooxMessageHandler::instance(), user, title ? std::string(title):std::string(), primaryString, secondary ? std::string(secondary):std::string(), default_value ? std::string(default_value):std::string(), multiline, masked, ok_cb, cancel_cb, user_data);
-			repeater->setType(PURPLE_REQUEST_INPUT);
 			GlooxMessageHandler::instance()->adhoc()->registerSession(user->adhocData().from, repeater);
 			AdhocData data;
 			data.id="";
@@ -179,7 +178,16 @@ static void * requestInput(const char *title, const char *primary,const char *se
 }
 
 static void * requestAction(const char *title, const char *primary,const char *secondary, int default_action,PurpleAccount *account, const char *who,PurpleConversation *conv, void *user_data,size_t action_count, va_list actions){
-	if (title){
+	User *user = GlooxMessageHandler::instance()->userManager()->getUserByAccount(account);
+	if (user && !user->adhocData().id.empty()) {
+		AdhocRepeater *repeater = new AdhocRepeater(GlooxMessageHandler::instance(), user, title ? std::string(title):std::string(), primary ? std::string(primary):std::string(), secondary ? std::string(secondary):std::string(), default_action, user_data, action_count, actions);
+		GlooxMessageHandler::instance()->adhoc()->registerSession(user->adhocData().from, repeater);
+		AdhocData data;
+		data.id="";
+		user->setAdhocData(data);
+		return repeater;
+	}
+	else if (title){
 		std::string headerString(title);
 		Log().Get("purple") << "header string: " << headerString;
 		if (headerString=="SSL Certificate Verification"){
