@@ -181,7 +181,9 @@ bool AdhocRepeater::handleIq(const IQ &stanza) {
 			int index;
 			i >> index;
 			if (m_actions.find(index) != m_actions.end()) {
-				((PurpleRequestActionCb) m_actions[index])(m_requestData,index);
+				PurpleRequestActionCb callback = (PurpleRequestActionCb) m_actions[index];
+				if (callback)
+					(callback)(m_requestData,index);
 			}
 		}
 
