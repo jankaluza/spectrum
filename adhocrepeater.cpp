@@ -118,6 +118,9 @@ bool AdhocRepeater::handleIq(const IQ &stanza) {
 		c->addAttribute("node","configuration");
 		c->addAttribute("status","completed");
 		main->j->send(s);
+		
+		g_timeout_add(0,&removeRepeater,this);
+		
 	}
 
 
