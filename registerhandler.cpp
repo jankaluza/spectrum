@@ -71,6 +71,14 @@ bool GlooxRegisterHandler::handleIq (const IQ &iq){
 			query->addChild( new Tag("password"));
 			query->addChild( new Tag("language", res.language) );
 		}
+	
+// 		Tag *x = new Tag("x");
+// 		x->addAttribute("xmlns", "jabber:x:data");
+// 		x->addAttribute("type", "form");
+// 		x->addChild( new Tag("title","Registration") )
+// 		x->addChild( new Tag("instructions", p->protocol()->text("instructions")) );
+// 		<field type='text-single' label='The name of your bot' var='botname'/>
+		
 		
 		reply->addChild(query);
 		p->j->send( reply );

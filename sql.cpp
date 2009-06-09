@@ -346,7 +346,7 @@ void SQLClass::getSetting(const std::string &jid, const std::string &key) {
 	
 }
 
-void SQLClass::getSettings(const std::string &jid) {
+GHashTable * SQLClass::getSettings(const std::string &jid) {
 	GHashTable *settings = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
     mysqlpp::Query query = sql->query();
 #if MYSQLPP_HEADER_VERSION < 0x030000
@@ -360,18 +360,21 @@ void SQLClass::getSettings(const std::string &jid) {
 
     res = query.store();
 #if MYSQLPP_HEADER_VERSION < 0x030000
-    if (res) {
-        if (row = res.fetch_row()) {
-            status = (std::string)row["reklama"];
-        }
-    }
+	if (res) {
+		mysqlpp::Row row;
+		while(row = res.fetch_row()){
+			g_hash_table_replace(settings, g_strdup(row["var"]), g_strdup(row["value"]));
+		}
+	}
 #else
-    if (res.num_rows() > 0) {
-        if (row = res[0]) {
-            status = (std::string)row["reklama"];
-        }
-    }
+	mysqlpp::StoreQueryResult::size_type i;
+	mysqlpp::Row row;
+	for (i = 0; i < res.num_rows(); ++i) {
+		row = res[i];
+		g_hash_table_replace(settings, g_strdup(row["var"]), g_strdup(row["value"]));
+	}
 #endif
+	return settings;
 }
 			
 // SQLClass::~SQLClass(){
