@@ -38,6 +38,7 @@ class MSNProtocol : AbstractProtocol
 		std::list<std::string> buddyFeatures();
 		std::string text(const std::string &key);
 		Tag *getVCardTag(User *user, GList *vcardEntries) { return NULL; }
+		bool isMUC(User *user, const std::string &jid) { return false; }
 		
 		std::string replace(std::string &str, const char *string_to_replace, const char *new_string);
 	

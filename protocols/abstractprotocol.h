@@ -65,6 +65,10 @@ class AbstractProtocol
 		 * Returns VCard Tag*
 		 */
 		virtual Tag *getVCardTag(User *user, GList *vcardEntries) = 0;
+		/*
+		 * Returns true if this jid is jid of MUC
+		 */
+		virtual bool isMUC(User *user, const std::string &jid) = 0 ;
 };
 
 #endif

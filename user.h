@@ -151,7 +151,8 @@ class User {
 		std::string m_resource;		// active resource
 		std::string m_capsVersion;	// caps version of client which connected as first (TODO: this should be changed with active resource)
 		const char *m_lang;			// xml:lang
-		time_t m_connectionStart;		// connection start timestamp
+		time_t m_connectionStart;	// connection start timestamp
+		GHashTable *m_mucs;			// MUCs
 		std::map<std::string,RosterRow> m_roster;	// jabber roster of this user
 		std::map<std::string,int> m_resources;	// list of all resources which are connected to the transport
 		std::map<std::string,authRequest> m_authRequests;	// list of authorization requests (holds callbacks and user data)

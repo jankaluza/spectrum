@@ -89,10 +89,12 @@ set(hiicq_SRCS
 	adhochandler.cpp
 	adhocrepeater.cpp
 	localization.cpp
+	muchandler.cpp
 	protocols/icq.cpp
 	protocols/facebook.cpp
 	protocols/gg.cpp
 	protocols/msn.cpp
+	protocols/irc.cpp
 )
 
 set(hiicq_MOC_HDRS
@@ -118,11 +120,13 @@ set(hiicq_MOC_HDRS
 	adhocrepeater.h
 	adhochandler.h
 	localization.h
+	muchandler.h
 	protocols/abstractprotocol.h
 	protocols/icq.h
 	protocols/facebook.h
 	protocols/gg.h
 	protocols/msn.h
+	protocols/irc.h
 )
 
 add_executable(hiicq ${hiicq_SRCS} ${lrelease_outputs})

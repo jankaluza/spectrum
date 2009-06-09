@@ -24,6 +24,7 @@
 #include "protocols/abstractprotocol.h"
 #include "usermanager.h"
 #include "gloox/chatstate.h"
+#include "muchandler.h"
 
 /*
  * Called when contact list has been received from legacy network.
@@ -52,6 +53,7 @@ User::User(GlooxMessageHandler *parent, const std::string &jid, const std::strin
 	m_reconnectCount = 0;
 	m_lang = NULL;
 	this->features = 6; // TODO: I can't be hardcoded
+	m_mucs = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
 }
 
 bool User::syncCallback() {
@@ -812,6 +814,26 @@ void User::receivedSubscription(const Subscription &subscription) {
  */
 void User::receivedPresence(const Presence &stanza){
 	// we're connected
+
+	Tag *stanzaTag = stanza.tag();
+
+	if (stanza.to().username()!="" && stanzaTag->hasChild ("x", "xmlns", "http://jabber.org/protocol/muc")) {
+		MUCHandler *muc = (MUCHandler*) g_hash_table_lookup(m_mucs, stanza.to().bare().c_str());
+		if (muc) {
+			Tag * ret = muc->handlePresence(stanza);
+			if (ret)
+				p->j->send(ret);
+		}
+		else if (p->protocol()->isMUC(this, stanza.to().bare())) {
+			MUCHandler *muc = new MUCHandler(this, stanza.to().full());
+			g_hash_table_replace(m_mucs, g_strdup(stanza.to().bare().c_str()), muc);
+			Tag * ret = muc->handlePresence(stanza);
+			if (ret)
+				p->j->send(ret);
+		}
+	}
+	delete stanzaTag;
+
 	if (m_connected){
 	
 		// respond to probe presence
