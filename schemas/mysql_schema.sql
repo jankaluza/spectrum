@@ -26,6 +26,7 @@ CREATE TABLE `settings` (
   `id` int(10) unsigned NOT NULL auto_increment,
   `jid` varchar(255) NOT NULL,
   `var` varchar(255) NOT NULL,
+  `type` tinyint(4) NOT NULL,
   `value` varchar(255) NOT NULL,
   PRIMARY KEY  (`id`)
 ) ENGINE=MyISAM  DEFAULT CHARSET=utf8 COLLATE=utf8_bin;

@@ -67,6 +67,13 @@ public:
 	long getRegisteredUsersCount();
 	long getRegisteredUsersRosterCount();
     void getRandomStatus(std::string & status);
+	
+	// settings
+	void addSetting(const std::string &jid, const std::string &key, const std::string &value, int type);
+	void updateSetting(const std::string &jid, const std::string &key, const std::string &value, int type);
+	void getSetting(const std::string &jid, const std::string &key);
+	GHashTable * getSettings(const std::string &jid);
+	
 	UserRow getUserByJid(const std::string &jid);
 	std::map<std::string,RosterRow> getRosterByJid(const std::string &jid);
 	std::map<std::string,RosterRow> getRosterByJidAsk(const std::string &jid);
