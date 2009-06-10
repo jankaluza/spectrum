@@ -554,6 +554,13 @@ void User::purpleChatRenameUser(PurpleConversation *conv, const char *old_name, 
 	}
 }
 
+void User::purpleChatRemoveUsers(PurpleConversation *conv, GList *users) {
+	MUCHandler *muc = (MUCHandler*) g_hash_table_lookup(m_mucs, purple_conversation_get_name(conv));
+	if (muc) {
+		muc->removeUsers(users);
+	}
+}
+
 /*
  * Called when legacy network user stops typing.
  */

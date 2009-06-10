@@ -120,6 +120,10 @@ static void conv_chat_rename_user(PurpleConversation *conv, const char *old_name
 	GlooxMessageHandler::instance()->purpleChatRenameUser(conv, old_name, new_name, new_alias);
 }
 
+static void conv_chat_remove_users(PurpleConversation *conv, GList *users) {
+	GlooxMessageHandler::instance()->purpleChatRemoveUsers(conv, users);
+}
+
 /*
  * Called when user is logged in...
  */
@@ -392,7 +396,7 @@ static PurpleConversationUiOps conversation_ui_ops =
 	NULL,//pidgin_conv_write_conv,           /* write_conv           */
 	conv_chat_add_users,       /* chat_add_users       */
 	conv_chat_rename_user,     /* chat_rename_user     */
-	NULL,//pidgin_conv_chat_remove_users,    /* chat_remove_users    */
+	conv_chat_remove_users,    /* chat_remove_users    */
 	NULL,//pidgin_conv_chat_update_user,     /* chat_update_user     */
 	NULL,//pidgin_conv_present_conversation, /* present              */
 	NULL,//pidgin_conv_has_focus,            /* has_focus            */
@@ -912,6 +916,16 @@ void GlooxMessageHandler::purpleChatRenameUser(PurpleConversation *conv, const c
 	if (user) {
 		if (user->isConnected()){
 			user->purpleChatRenameUser(conv, old_name, new_name, new_alias);
+		}
+	}
+}
+
+void GlooxMessageHandler::purpleChatRemoveUsers(PurpleConversation *conv, GList *users) {
+	PurpleAccount *account = purple_conversation_get_account(conv);
+	User *user = userManager()->getUserByAccount(account);
+	if (user) {
+		if (user->isConnected()){
+			user->purpleChatRemoveUsers(conv, users);
 		}
 	}
 }

@@ -40,6 +40,7 @@ class MUCHandler
 		void addUsers(GList *cbuddies);
 		void messageReceived(const char *who, const char *msg, PurpleMessageFlags flags, time_t mtime);
 		void renameUser(const char *old_name, const char *new_name, const char *new_alias);
+		void removeUsers(GList *users);
 	
 	private:
 		User *m_user;

@@ -140,3 +140,25 @@ void MUCHandler::renameUser(const char *old_name, const char *new_name, const ch
 
 }
 
+void MUCHandler::removeUsers(GList *users) {
+	GList *l;
+	for (l = users; l != NULL; l = l->next) {
+		std::string user((char *)l->data);
+		Tag *tag = new Tag("presence");
+		tag->addAttribute("from", m_jid + "/" + user);
+		tag->addAttribute("to", m_userJid);
+		tag->addAttribute("type", "unavailable");
+		
+		Tag *x = new Tag("x");
+		x->addAttribute("xmlns", "http://jabber.org/protocol/muc#user");
+		
+		Tag *item = new Tag("item");
+		item->addAttribute("affiliation", "member");
+		item->addAttribute("role", "participant");
+		
+		x->addChild(item);
+		tag->addChild(x);
+		m_user->p->j->send(tag);
+	}
+}
+
