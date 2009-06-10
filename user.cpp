@@ -25,6 +25,7 @@
 #include "usermanager.h"
 #include "gloox/chatstate.h"
 #include "muchandler.h"
+#include "cmds.h"
 
 /*
  * Called when contact list has been received from legacy network.
@@ -643,13 +644,23 @@ void User::receivedMessage(const Message& msg){
 	else{
 		conv = m_conversations[msg.to().username()];
 	}
+	
+	std::string body = msg.body();
+	
+	if (body.find("/transport ") == 0) {
+		PurpleCmdStatus status;
+		char *error;
+		body.erase(0,11);
+		status = purple_cmd_do_command(conv, body.c_str(), body.c_str(), &error);
+	}
+	
 	// send this message
 	if (purple_conversation_get_type(conv) == PURPLE_CONV_TYPE_IM) {
 		PurpleConvIm *im = purple_conversation_get_im_data(conv);
-		purple_conv_im_send(im,msg.body().c_str());
+		purple_conv_im_send(im,body.c_str());
 	}
 	else if (purple_conversation_get_type(conv) == PURPLE_CONV_TYPE_CHAT) {
-		purple_conv_chat_send(PURPLE_CONV_CHAT(conv), msg.body().c_str());
+		purple_conv_chat_send(PURPLE_CONV_CHAT(conv), body.c_str());
 	}
 }
 
