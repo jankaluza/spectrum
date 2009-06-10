@@ -476,6 +476,22 @@ void User::purpleMessageReceived(PurpleAccount* account,char * name,char *msg,Pu
 	}
 }
 
+void User::purpleConversationWriteChat(PurpleConversation *conv, const char *who, const char *msg, PurpleMessageFlags flags, time_t mtime) {
+	if (who == NULL)
+		return;
+
+	std::string name(who);
+
+	if (!isOpenedConversation(name)) {
+			m_conversations[name] = conv;
+	}
+
+	MUCHandler *muc = (MUCHandler*) g_hash_table_lookup(m_mucs, purple_conversation_get_name(conv));
+	if (muc) {
+		muc->messageReceived(who, msg, flags, mtime);
+	}
+}
+
 void User::purpleConversationWriteIM(PurpleConversation *conv, const char *who, const char *msg, PurpleMessageFlags flags, time_t mtime) {
 	if (who == NULL)
 		return;
@@ -518,6 +534,17 @@ void User::purpleConversationWriteIM(PurpleConversation *conv, const char *who, 
 	}
 
 	p->j->send( s );
+}
+
+void User::purpleChatAddUsers(PurpleConversation *conv, GList *cbuddies, gboolean new_arrivals) {
+	std::string name(purple_conversation_get_name(conv));
+	if (!isOpenedConversation(name)) {
+		m_conversations[name] = conv;
+	}
+	MUCHandler *muc = (MUCHandler*) g_hash_table_lookup(m_mucs, name.c_str());
+	if (muc) {
+		muc->addUsers(cbuddies);
+	}
 }
 
 /*
@@ -603,8 +630,13 @@ void User::receivedMessage(const Message& msg){
 		conv = m_conversations[msg.to().username()];
 	}
 	// send this message
-	PurpleConvIm *im = purple_conversation_get_im_data(conv);
-	purple_conv_im_send(im,msg.body().c_str());
+	if (purple_conversation_get_type(conv) == PURPLE_CONV_TYPE_IM) {
+		PurpleConvIm *im = purple_conversation_get_im_data(conv);
+		purple_conv_im_send(im,msg.body().c_str());
+	}
+	else if (purple_conversation_get_type(conv) == PURPLE_CONV_TYPE_CHAT) {
+		purple_conv_chat_send(PURPLE_CONV_CHAT(conv), msg.body().c_str());
+	}
 }
 
 /*
@@ -815,24 +847,21 @@ void User::receivedSubscription(const Subscription &subscription) {
 void User::receivedPresence(const Presence &stanza){
 	// we're connected
 
-	Tag *stanzaTag = stanza.tag();
-
-	if (stanza.to().username()!="" && stanzaTag->hasChild ("x", "xmlns", "http://jabber.org/protocol/muc")) {
-		MUCHandler *muc = (MUCHandler*) g_hash_table_lookup(m_mucs, stanza.to().bare().c_str());
+	if (stanza.to().username()!="") {
+		MUCHandler *muc = (MUCHandler*) g_hash_table_lookup(m_mucs, stanza.to().username().c_str());
 		if (muc) {
 			Tag * ret = muc->handlePresence(stanza);
 			if (ret)
 				p->j->send(ret);
 		}
 		else if (p->protocol()->isMUC(this, stanza.to().bare())) {
-			MUCHandler *muc = new MUCHandler(this, stanza.to().full());
-			g_hash_table_replace(m_mucs, g_strdup(stanza.to().bare().c_str()), muc);
+			MUCHandler *muc = new MUCHandler(this, stanza.to().bare(), stanza.from().full());
+			g_hash_table_replace(m_mucs, g_strdup(stanza.to().username().c_str()), muc);
 			Tag * ret = muc->handlePresence(stanza);
 			if (ret)
 				p->j->send(ret);
 		}
 	}
-	delete stanzaTag;
 
 	if (m_connected){
 	

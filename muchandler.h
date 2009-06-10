@@ -24,6 +24,7 @@
 #include "localization.h"
 #include "gloox/tag.h"
 #include "gloox/presence.h"
+#include "conversation.h"
 
 class User;
 extern Localization localization;
@@ -33,13 +34,16 @@ using namespace gloox;
 class MUCHandler
 {
 	public:
-		MUCHandler(User *user,const std::string &jid);
+		MUCHandler(User *user,const std::string &jid, const std::string &userJid);
 		~MUCHandler();
 		Tag * handlePresence(const Presence &stanza);
+		void addUsers(GList *cbuddies);
+		void messageReceived(const char *who, const char *msg, PurpleMessageFlags flags, time_t mtime);
 	
 	private:
 		User *m_user;
 		std::string m_jid;
+		std::string m_userJid;
 };
 
 #endif	

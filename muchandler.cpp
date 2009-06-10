@@ -22,9 +22,10 @@
 #include "main.h"
 #include "user.h"
 
-MUCHandler::MUCHandler(User *user, const std::string &jid){
+MUCHandler::MUCHandler(User *user, const std::string &jid, const std::string &userJid){
 	m_user = user;
 	m_jid = jid;
+	m_userJid = userJid;
 }
 	
 MUCHandler::~MUCHandler() {}
@@ -34,5 +35,60 @@ Tag * MUCHandler::handlePresence(const Presence &stanza) {
 // 	tag.setFrom(p->jid());
 
 // 	return tag.tag();
+	GHashTable *comps = NULL;
+	std::string name = stanza.to().username();
+	PurpleConnection *gc = purple_account_get_connection(m_user->account());
+	if (PURPLE_PLUGIN_PROTOCOL_INFO(gc->prpl)->chat_info_defaults != NULL)
+		comps = PURPLE_PLUGIN_PROTOCOL_INFO(gc->prpl)->chat_info_defaults(gc, name.c_str());
+	if (comps) {
+		serv_join_chat(gc, comps);
+	}
 	return NULL;
 }
+
+void MUCHandler::addUsers(GList *cbuddies) {
+	GList *l = cbuddies;
+	while (l != NULL) {
+		PurpleConvChatBuddy *cb = (PurpleConvChatBuddy *)l->data;
+// 		std::string alias(cb->alias ? cb->alias: "");
+		std::string name(cb->name);
+		int flags = GPOINTER_TO_INT(cb->flags);
+// 		PURPLE_CBFLAGS_OP
+// 		<presence
+// 		from='darkcave@chat.shakespeare.lit/firstwitch'
+// 		to='hag66@shakespeare.lit/pda'>
+// 		<x xmlns='http://jabber.org/protocol/muc#user'>
+// 		<item affiliation='member' role='participant'/>
+// 		</x>
+// 		</presence>
+		Tag *tag = new Tag("presence");
+		tag->addAttribute("from", m_jid + "/" + name);
+		tag->addAttribute("to", m_userJid);
+		
+		Tag *x = new Tag("x");
+		x->addAttribute("xmlns", "http://jabber.org/protocol/muc#user");
+		
+		Tag *item = new Tag("item");
+		item->addAttribute("affiliation", "member");
+		item->addAttribute("role", "participant");
+		
+		x->addChild(item);
+		tag->addChild(x);
+		std::cout << tag->xml() << "\n";
+		m_user->p->j->send(tag);
+		
+		l = l->next;
+	}
+}
+
+void MUCHandler::messageReceived(const char *who, const char *msg, PurpleMessageFlags flags, time_t mtime) {
+	std::string name(who);
+
+	// send message to user
+	std::string message(purple_unescape_html(msg));
+	Message s(Message::Groupchat, m_userJid, message);
+	s.setFrom(m_jid + "/" + name);
+
+	m_user->p->j->send( s );
+}
+

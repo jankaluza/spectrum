@@ -31,6 +31,7 @@
 #include "protocols/facebook.h"
 #include "protocols/gg.h"
 #include "protocols/msn.h"
+#include "protocols/irc.h"
 #include "blistsaving.h"
 
 #include <gloox/tlsbase.h>
@@ -96,7 +97,7 @@ namespace gloox {
  */
 static void newMessageReceived(PurpleAccount* account,char * name,char *msg,PurpleConversation *conv,PurpleMessageFlags flags)
 {
-        GlooxMessageHandler::instance()->purpleMessageReceived(account,name,msg,conv,flags);
+	GlooxMessageHandler::instance()->purpleMessageReceived(account,name,msg,conv,flags);
 }
 
 /*
@@ -104,7 +105,15 @@ static void newMessageReceived(PurpleAccount* account,char * name,char *msg,Purp
  */
 static void conv_write_im(PurpleConversation *conv, const char *who, const char *message, PurpleMessageFlags flags, time_t mtime)
 {
-        GlooxMessageHandler::instance()->purpleConversationWriteIM(conv,who,message,flags,mtime);
+	GlooxMessageHandler::instance()->purpleConversationWriteIM(conv,who,message,flags,mtime);
+}
+
+static void conv_write_chat(PurpleConversation *conv, const char *who, const char *message, PurpleMessageFlags flags, time_t mtime) {
+	GlooxMessageHandler::instance()->purpleConversationWriteChat(conv,who,message,flags,mtime);
+}
+
+static void conv_chat_add_users(PurpleConversation *conv, GList *cbuddies, gboolean new_arrivals) {
+	GlooxMessageHandler::instance()->purpleChatAddUsers(conv, cbuddies, new_arrivals);
 }
 
 /*
@@ -374,10 +383,10 @@ static PurpleConversationUiOps conversation_ui_ops =
 {
 	NULL,//pidgin_conv_new,
 	NULL,//pidgin_conv_destroy,              /* destroy_conversation */
-	NULL,                              /* write_chat           */
+	conv_write_chat,                              /* write_chat           */
 	conv_write_im,             /* write_im             */
 	NULL,//pidgin_conv_write_conv,           /* write_conv           */
-	NULL,//pidgin_conv_chat_add_users,       /* chat_add_users       */
+	conv_chat_add_users,       /* chat_add_users       */
 	NULL,//pidgin_conv_chat_rename_user,     /* chat_rename_user     */
 	NULL,//pidgin_conv_chat_remove_users,    /* chat_remove_users    */
 	NULL,//pidgin_conv_chat_update_user,     /* chat_update_user     */
@@ -551,6 +560,8 @@ void GlooxMessageHandler::loadProtocol(){
 		m_protocol = (AbstractProtocol*) new GGProtocol(this);
 	else if (configuration().protocol == "msn")
 		m_protocol = (AbstractProtocol*) new MSNProtocol(this);
+	else if (configuration().protocol == "irc")
+		m_protocol = (AbstractProtocol*) new IRCProtocol(this);
 // 	PurplePlugin *plugin = purple_find_prpl(m_protocol->protocol().c_str());
 // 	if (plugin && PURPLE_PLUGIN_HAS_ACTIONS(plugin)) {
 // 		PurplePluginAction *action = NULL;
@@ -862,6 +873,34 @@ void GlooxMessageHandler::purpleConversationWriteIM(PurpleConversation *conv, co
 	}
 }
 
+void GlooxMessageHandler::purpleConversationWriteChat(PurpleConversation *conv, const char *who, const char *message, PurpleMessageFlags flags, time_t mtime){
+	if (who==NULL)
+		return;
+	PurpleAccount *account = purple_conversation_get_account(conv);
+	User *user = userManager()->getUserByAccount(account);
+	if (user) {
+		if (user->isConnected()){
+			m_stats->messageFromLegacy();
+			user->purpleConversationWriteChat(conv,who,message,flags,mtime);
+		}
+		else {
+			Log().Get(user->jid()) << "purpleConversationWriteIM called for unconnected user...";
+		}
+	}
+	else {
+		Log().Get("purple") << "purpleConversationWriteIM called, but user does not exist!!!";
+	}
+}
+
+void GlooxMessageHandler::purpleChatAddUsers(PurpleConversation *conv, GList *cbuddies, gboolean new_arrivals) {
+	PurpleAccount *account = purple_conversation_get_account(conv);
+	User *user = userManager()->getUserByAccount(account);
+	if (user) {
+		if (user->isConnected()){
+			user->purpleChatAddUsers(conv, cbuddies, new_arrivals);
+		}
+	}
+}
 
 void GlooxMessageHandler::purpleBuddyChanged(PurpleBuddy* buddy){
 	if (buddy!=NULL){
