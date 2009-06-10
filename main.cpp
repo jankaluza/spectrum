@@ -116,6 +116,10 @@ static void conv_chat_add_users(PurpleConversation *conv, GList *cbuddies, gbool
 	GlooxMessageHandler::instance()->purpleChatAddUsers(conv, cbuddies, new_arrivals);
 }
 
+static void conv_chat_rename_user(PurpleConversation *conv, const char *old_name, const char *new_name, const char *new_alias) {
+	GlooxMessageHandler::instance()->purpleChatRenameUser(conv, old_name, new_name, new_alias);
+}
+
 /*
  * Called when user is logged in...
  */
@@ -387,7 +391,7 @@ static PurpleConversationUiOps conversation_ui_ops =
 	conv_write_im,             /* write_im             */
 	NULL,//pidgin_conv_write_conv,           /* write_conv           */
 	conv_chat_add_users,       /* chat_add_users       */
-	NULL,//pidgin_conv_chat_rename_user,     /* chat_rename_user     */
+	conv_chat_rename_user,     /* chat_rename_user     */
 	NULL,//pidgin_conv_chat_remove_users,    /* chat_remove_users    */
 	NULL,//pidgin_conv_chat_update_user,     /* chat_update_user     */
 	NULL,//pidgin_conv_present_conversation, /* present              */
@@ -898,6 +902,16 @@ void GlooxMessageHandler::purpleChatAddUsers(PurpleConversation *conv, GList *cb
 	if (user) {
 		if (user->isConnected()){
 			user->purpleChatAddUsers(conv, cbuddies, new_arrivals);
+		}
+	}
+}
+
+void GlooxMessageHandler::purpleChatRenameUser(PurpleConversation *conv, const char *old_name, const char *new_name, const char *new_alias) {
+	PurpleAccount *account = purple_conversation_get_account(conv);
+	User *user = userManager()->getUserByAccount(account);
+	if (user) {
+		if (user->isConnected()){
+			user->purpleChatRenameUser(conv, old_name, new_name, new_alias);
 		}
 	}
 }

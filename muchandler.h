@@ -39,6 +39,7 @@ class MUCHandler
 		Tag * handlePresence(const Presence &stanza);
 		void addUsers(GList *cbuddies);
 		void messageReceived(const char *who, const char *msg, PurpleMessageFlags flags, time_t mtime);
+		void renameUser(const char *old_name, const char *new_name, const char *new_alias);
 	
 	private:
 		User *m_user;

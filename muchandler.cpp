@@ -74,7 +74,6 @@ void MUCHandler::addUsers(GList *cbuddies) {
 		
 		x->addChild(item);
 		tag->addChild(x);
-		std::cout << tag->xml() << "\n";
 		m_user->p->j->send(tag);
 		
 		l = l->next;
@@ -90,5 +89,54 @@ void MUCHandler::messageReceived(const char *who, const char *msg, PurpleMessage
 	s.setFrom(m_jid + "/" + name);
 
 	m_user->p->j->send( s );
+}
+
+void MUCHandler::renameUser(const char *old_name, const char *new_name, const char *new_alias) {
+// <presence
+// from='darkcave@chat.shakespeare.lit/oldhag'
+// to='wiccarocks@shakespeare.lit/laptop'>
+// <x xmlns='http://jabber.org/protocol/muc#user'>
+// <item affiliation='member' role='participant'/>
+// </x>
+// </presence>
+	std::string oldName(old_name);
+	std::string newName(new_name);
+	Tag *tag = new Tag("presence");
+	tag->addAttribute("from", m_jid + "/" + oldName);
+	tag->addAttribute("to", m_userJid);
+	tag->addAttribute("type", "unavailable");
+	
+	Tag *x = new Tag("x");
+	x->addAttribute("xmlns", "http://jabber.org/protocol/muc#user");
+	
+	Tag *item = new Tag("item");
+	item->addAttribute("affiliation", "member");
+	item->addAttribute("role", "participant");
+	item->addAttribute("nick", newName);
+	
+	Tag *status = new Tag("status");
+	status->addAttribute("code","303");
+	
+	x->addChild(item);
+	x->addChild(status);
+	tag->addChild(x);
+	m_user->p->j->send(tag);
+
+
+	tag = new Tag("presence");
+	tag->addAttribute("from", m_jid + "/" + newName);
+	tag->addAttribute("to", m_userJid);
+	
+	x = new Tag("x");
+	x->addAttribute("xmlns", "http://jabber.org/protocol/muc#user");
+	
+	item = new Tag("item");
+	item->addAttribute("affiliation", "member");
+	item->addAttribute("role", "participant");
+	
+	x->addChild(item);
+	tag->addChild(x);
+	m_user->p->j->send(tag);
+
 }
 
