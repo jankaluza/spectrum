@@ -82,10 +82,14 @@ void GlooxDiscoHandler::handleDiscoInfo(const JID &jid, const Disco::Info &info,
 		std::cout << "no user?! wtf...";
 	}
 	else{
+		std::cout << "1" << "\n";
 		if (user->capsVersion().empty()){
+			std::cout << "2" << "\n";
 			user->setCapsVersion(versions[context]);
-			if (user->readyForConnect())
+			if (user->readyForConnect()) {
+				std::cout << "3" << "\n";
 				user->connect();
+			}
 		}
 	}
 	// TODO: CACHE CAPS IN DATABASE ACCORDING TO VERSION

@@ -33,6 +33,7 @@
 #include "protocols/msn.h"
 #include "protocols/irc.h"
 #include "blistsaving.h"
+#include "cmds.h"
 
 #include <gloox/tlsbase.h>
 #include <gloox/compressionbase.h>
@@ -92,6 +93,51 @@ namespace gloox {
     };
 };
 
+static PurpleCmdRet help_command_cb(PurpleConversation *conv, const char *cmd, char **args, char **error, void *data) {
+	GList *l, *text;
+	GString *s;
+	User *user = GlooxMessageHandler::instance()->userManager()->getUserByAccount(purple_conversation_get_account(conv));
+	if (!user)
+		return PURPLE_CMD_RET_OK;
+
+	if (args[0] != NULL) {
+		s = g_string_new("Transport: ");
+		text = purple_cmd_help(conv, args[0]);
+
+		if (text) {
+			for (l = text; l; l = l->next)
+				if (l->next)
+					g_string_append_printf(s, "%s\n", tr(user->getLang(),(char *)l->data));
+				else
+					g_string_append_printf(s, "%s", tr(user->getLang(),(char *)l->data));
+		} else {
+			g_string_append(s, tr(user->getLang(),_("No such command (in this context).")));
+		}
+	} else {
+		s = g_string_new(tr(user->getLang(),_("Use \"/transport help &lt;command&gt;\" for help on a specific command.\n"
+											 "The following commands are available in this context:\n")));
+
+		text = purple_cmd_list(conv);
+		for (l = text; l; l = l->next)
+			if (l->next)
+				g_string_append_printf(s, "%s, ", tr(user->getLang(),(char *)l->data));
+			else
+				g_string_append_printf(s, "%s.", tr(user->getLang(),(char *)l->data));
+		g_list_free(text);
+	}
+
+	if (purple_conversation_get_type(conv) == PURPLE_CONV_TYPE_IM) {
+		purple_conv_im_write(PURPLE_CONV_IM(conv), purple_conversation_get_name(conv), s->str, PURPLE_MESSAGE_RECV, time(NULL));
+	}
+	else if (purple_conversation_get_type(conv) == PURPLE_CONV_TYPE_CHAT) {
+		purple_conv_chat_write(PURPLE_CONV_CHAT(conv), "transport", s->str, PURPLE_MESSAGE_RECV, time(NULL));
+	}
+	g_string_free(s, TRUE);
+
+	return PURPLE_CMD_RET_OK;
+}
+
+
 /*
  * New message from legacy network received (we can create conversation here)
  */
@@ -110,6 +156,15 @@ static void conv_write_im(PurpleConversation *conv, const char *who, const char 
 
 static void conv_write_chat(PurpleConversation *conv, const char *who, const char *message, PurpleMessageFlags flags, time_t mtime) {
 	GlooxMessageHandler::instance()->purpleConversationWriteChat(conv,who,message,flags,mtime);
+}
+
+static void conv_write_conv(PurpleConversation *conv, const char *who, const char *alias,const char *message, PurpleMessageFlags flags, time_t mtime) {
+	if (purple_conversation_get_type(conv) == PURPLE_CONV_TYPE_IM) {
+		conv_write_im(conv, who, message, flags, mtime);
+	}
+	else if (purple_conversation_get_type(conv) == PURPLE_CONV_TYPE_CHAT) {
+		conv_write_chat(conv, who, message, flags, mtime);
+	}
 }
 
 static void conv_chat_add_users(PurpleConversation *conv, GList *cbuddies, gboolean new_arrivals) {
@@ -393,7 +448,7 @@ static PurpleConversationUiOps conversation_ui_ops =
 	NULL,//pidgin_conv_destroy,              /* destroy_conversation */
 	conv_write_chat,                              /* write_chat           */
 	conv_write_im,             /* write_im             */
-	NULL,//pidgin_conv_write_conv,           /* write_conv           */
+	conv_write_conv,           /* write_conv           */
 	conv_chat_add_users,       /* chat_add_users       */
 	conv_chat_rename_user,     /* chat_rename_user     */
 	conv_chat_remove_users,    /* chat_remove_users    */
@@ -1230,15 +1285,9 @@ bool GlooxMessageHandler::initPurple(){
 		purple_signal_connect(purple_xfers_get_handle(), "file-recv-request", &xfer_handle, PURPLE_CALLBACK(newXfer), NULL);
 		purple_signal_connect(purple_xfers_get_handle(), "file-recv-complete", &xfer_handle, PURPLE_CALLBACK(XferComplete), NULL);
 		purple_signal_connect(purple_connections_get_handle(), "signed-on", &conn_handle,PURPLE_CALLBACK(signed_on), NULL);
-		purple_signal_connect(purple_blist_get_handle(), "buddy-removed", &blist_handle,PURPLE_CALLBACK(buddyRemoved), NULL);
-// 		purple_signal_connect(purple_connections_get_handle(), "connection-error", &conn_handle,PURPLE_CALLBACK(connection_error_cb), NULL);
-// 		base64Dir = std::string(g_build_filename(userDir.c_str(), "base64", NULL));
-// 		if (!g_file_test(base64Dir.c_str(), G_FILE_TEST_IS_DIR))
-// 		{
-// 			if (mkdir(base64Dir.c_str(), S_IRUSR | S_IWUSR | S_IXUSR) == -1){
-// 				std::cout << "!!! Can't make base64 cache dir\n";
-// 			}
-// 		}
+		purple_signal_connect(purple_blist_get_handle(), "buddy-removed", &blist_handle,PURPLE_CALLBACK(buddyRemoved), NULL);				
+
+		purple_cmd_register("help", "w", PURPLE_CMD_P_DEFAULT, (PurpleCmdFlag) (PURPLE_CMD_FLAG_CHAT | PURPLE_CMD_FLAG_IM | PURPLE_CMD_FLAG_ALLOW_WRONG_ARGS), NULL, help_command_cb, _("help &lt;command&gt;:  Help on a specific command."), NULL);
 
 	}
 	return ret;

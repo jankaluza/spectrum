@@ -649,9 +649,38 @@ void User::receivedMessage(const Message& msg){
 	
 	if (body.find("/transport ") == 0) {
 		PurpleCmdStatus status;
-		char *error;
+		char *error = NULL;
 		body.erase(0,11);
 		status = purple_cmd_do_command(conv, body.c_str(), body.c_str(), &error);
+
+		switch (status) {
+			case PURPLE_CMD_STATUS_OK:
+				break;
+			case PURPLE_CMD_STATUS_NOT_FOUND:
+				{
+					purple_conversation_write(conv, "transport", tr(getLang(),_("Transport: Unknown command.")), PURPLE_MESSAGE_RECV, time(NULL));
+					break;
+				}
+			case PURPLE_CMD_STATUS_WRONG_ARGS:
+				purple_conversation_write(conv, "transport", tr(getLang(),_("Syntax Error:  You typed the wrong number of arguments to that command.")), PURPLE_MESSAGE_RECV, time(NULL));
+				break;
+			case PURPLE_CMD_STATUS_FAILED:
+				purple_conversation_write(conv, "transport", tr(getLang(),error ? error : _("Your command failed for an unknown reason.")), PURPLE_MESSAGE_RECV, time(NULL));
+				break;
+			case PURPLE_CMD_STATUS_WRONG_TYPE:
+				if(purple_conversation_get_type(conv) == PURPLE_CONV_TYPE_IM)
+					purple_conversation_write(conv, "transport", tr(getLang(),_("That command only works in Groupchats, not IMs.")), PURPLE_MESSAGE_RECV, time(NULL));
+				else
+					purple_conversation_write(conv, "transport", tr(getLang(),_("That command only works in IMs, not Groupchats.")), PURPLE_MESSAGE_RECV, time(NULL));
+				break;
+			case PURPLE_CMD_STATUS_WRONG_PRPL:
+				purple_conversation_write(conv, "transport", tr(getLang(),_("That command doesn't work on this protocol.")), PURPLE_MESSAGE_RECV, time(NULL));
+				break;
+		}
+
+		if (error)
+			g_free(error);
+		return;
 	}
 	
 	// send this message
@@ -959,7 +988,7 @@ void User::receivedPresence(const Presence &stanza){
 					purple_account_disconnect(m_account);
 				}
 			}
-		} else if(stanza.subtype() == Presence::Available) {
+		} else {
 			m_resource=stanza.from().resource();
 			std::map<std::string,int> ::iterator iter = m_resources.begin();
 			iter = m_resources.find(m_resource);
