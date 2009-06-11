@@ -26,6 +26,7 @@ MUCHandler::MUCHandler(User *user, const std::string &jid, const std::string &us
 	m_user = user;
 	m_jid = jid;
 	m_userJid = userJid;
+	m_connected = false;
 }
 	
 MUCHandler::~MUCHandler() {}
@@ -35,18 +36,24 @@ Tag * MUCHandler::handlePresence(const Presence &stanza) {
 // 	tag.setFrom(p->jid());
 
 // 	return tag.tag();
-	GHashTable *comps = NULL;
-	std::string name = stanza.to().username();
-	PurpleConnection *gc = purple_account_get_connection(m_user->account());
-	if (PURPLE_PLUGIN_PROTOCOL_INFO(gc->prpl)->chat_info_defaults != NULL)
-		comps = PURPLE_PLUGIN_PROTOCOL_INFO(gc->prpl)->chat_info_defaults(gc, name.c_str());
-	if (comps) {
-		serv_join_chat(gc, comps);
+	if (stanza.presence() != Presence::Unavailable) {
+		GHashTable *comps = NULL;
+		std::string name = stanza.to().username();
+		PurpleConnection *gc = purple_account_get_connection(m_user->account());
+		if (PURPLE_PLUGIN_PROTOCOL_INFO(gc->prpl)->chat_info_defaults != NULL)
+			comps = PURPLE_PLUGIN_PROTOCOL_INFO(gc->prpl)->chat_info_defaults(gc, name.c_str());
+		if (comps) {
+			serv_join_chat(gc, comps);
+		}
+	}
+	else if (m_connected) {
+		purple_conversation_destroy(m_conv);
 	}
 	return NULL;
 }
 
 void MUCHandler::addUsers(GList *cbuddies) {
+	m_connected = true;
 	GList *l = cbuddies;
 	while (l != NULL) {
 		PurpleConvChatBuddy *cb = (PurpleConvChatBuddy *)l->data;

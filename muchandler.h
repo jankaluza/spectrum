@@ -41,11 +41,15 @@ class MUCHandler
 		void messageReceived(const char *who, const char *msg, PurpleMessageFlags flags, time_t mtime);
 		void renameUser(const char *old_name, const char *new_name, const char *new_alias);
 		void removeUsers(GList *users);
+		bool isConnected() { return m_connected; }
+		void setConversation(PurpleConversation *conv) { m_conv = conv; }
 	
 	private:
 		User *m_user;
 		std::string m_jid;
 		std::string m_userJid;
+		bool m_connected;
+		PurpleConversation *m_conv;
 };
 
 #endif	

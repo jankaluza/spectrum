@@ -539,13 +539,14 @@ void User::purpleConversationWriteIM(PurpleConversation *conv, const char *who, 
 
 void User::purpleChatAddUsers(PurpleConversation *conv, GList *cbuddies, gboolean new_arrivals) {
 	std::string name(purple_conversation_get_name(conv));
+	MUCHandler *muc = (MUCHandler*) g_hash_table_lookup(m_mucs, name.c_str());
+	if (!muc)
+		return;
 	if (!isOpenedConversation(name)) {
 		m_conversations[name] = conv;
+		muc->setConversation(conv);
 	}
-	MUCHandler *muc = (MUCHandler*) g_hash_table_lookup(m_mucs, name.c_str());
-	if (muc) {
-		muc->addUsers(cbuddies);
-	}
+	muc->addUsers(cbuddies);
 }
 
 void User::purpleChatRenameUser(PurpleConversation *conv, const char *old_name, const char *new_name, const char *new_alias) {
@@ -901,24 +902,31 @@ void User::receivedSubscription(const Subscription &subscription) {
 void User::receivedPresence(const Presence &stanza){
 	// we're connected
 
-	if (stanza.to().username()!="") {
-		MUCHandler *muc = (MUCHandler*) g_hash_table_lookup(m_mucs, stanza.to().username().c_str());
-		if (muc) {
-			Tag * ret = muc->handlePresence(stanza);
-			if (ret)
-				p->j->send(ret);
-		}
-		else if (p->protocol()->isMUC(this, stanza.to().bare())) {
-			MUCHandler *muc = new MUCHandler(this, stanza.to().bare(), stanza.from().full());
-			g_hash_table_replace(m_mucs, g_strdup(stanza.to().username().c_str()), muc);
-			Tag * ret = muc->handlePresence(stanza);
-			if (ret)
-				p->j->send(ret);
-		}
-	}
+
 
 	if (m_connected){
-	
+
+		if (stanza.to().username()!="") {
+			MUCHandler *muc = (MUCHandler*) g_hash_table_lookup(m_mucs, stanza.to().username().c_str());
+			if (muc) {
+				Tag * ret = muc->handlePresence(stanza);
+				if (ret)
+					p->j->send(ret);
+				if (stanza.presence() == Presence::Unavailable) {
+					g_hash_table_remove(m_mucs, stanza.to().username().c_str());
+					m_conversations.erase(stanza.to().username());
+					delete muc;
+				}
+			}
+			else if (p->protocol()->isMUC(this, stanza.to().bare()) && stanza.presence() != Presence::Unavailable) {
+				MUCHandler *muc = new MUCHandler(this, stanza.to().bare(), stanza.from().full());
+				g_hash_table_replace(m_mucs, g_strdup(stanza.to().username().c_str()), muc);
+				Tag * ret = muc->handlePresence(stanza);
+				if (ret)
+					p->j->send(ret);
+			}
+		}
+
 		// respond to probe presence
 		if (stanza.subtype() == Presence::Probe && stanza.to().username()!=""){
 			std::string name(stanza.to().username());
