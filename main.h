@@ -159,6 +159,7 @@ public:
 	void purpleMessageReceived(PurpleAccount* account,char * name,char *msg,PurpleConversation *conv,PurpleMessageFlags flags);
 	void purpleConversationWriteIM(PurpleConversation *conv, const char *who, const char *message, PurpleMessageFlags flags, time_t mtime);
 	void purpleConversationWriteChat(PurpleConversation *conv, const char *who, const char *message, PurpleMessageFlags flags, time_t mtime);
+	void purpleChatTopicChanged(PurpleConversation *conv, const char *who, const char *topic);
 	void purpleChatAddUsers(PurpleConversation *conv, GList *cbuddies, gboolean new_arrivals);
 	void purpleChatRenameUser(PurpleConversation *conv, const char *old_name, const char *new_name, const char *new_alias);
 	void purpleChatRemoveUsers(PurpleConversation *conv, GList *users);

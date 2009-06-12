@@ -167,6 +167,10 @@ static void conv_write_conv(PurpleConversation *conv, const char *who, const cha
 	}
 }
 
+static void conv_chat_topic_changed(PurpleConversation *chat, const char *who, const char *topic) {
+	GlooxMessageHandler::instance()->purpleChatTopicChanged(chat, who, topic);
+}
+
 static void conv_chat_add_users(PurpleConversation *conv, GList *cbuddies, gboolean new_arrivals) {
 	GlooxMessageHandler::instance()->purpleChatAddUsers(conv, cbuddies, new_arrivals);
 }
@@ -955,6 +959,16 @@ void GlooxMessageHandler::purpleConversationWriteChat(PurpleConversation *conv, 
 	}
 }
 
+void GlooxMessageHandler::purpleChatTopicChanged(PurpleConversation *conv, const char *who, const char *topic) {
+	PurpleAccount *account = purple_conversation_get_account(conv);
+	User *user = userManager()->getUserByAccount(account);
+	if (user) {
+		if (user->isConnected()){
+			user->purpleChatTopicChanged(conv, who, topic);
+		}
+	}
+}
+
 void GlooxMessageHandler::purpleChatAddUsers(PurpleConversation *conv, GList *cbuddies, gboolean new_arrivals) {
 	PurpleAccount *account = purple_conversation_get_account(conv);
 	User *user = userManager()->getUserByAccount(account);
@@ -1286,6 +1300,7 @@ bool GlooxMessageHandler::initPurple(){
 		purple_signal_connect(purple_xfers_get_handle(), "file-recv-complete", &xfer_handle, PURPLE_CALLBACK(XferComplete), NULL);
 		purple_signal_connect(purple_connections_get_handle(), "signed-on", &conn_handle,PURPLE_CALLBACK(signed_on), NULL);
 		purple_signal_connect(purple_blist_get_handle(), "buddy-removed", &blist_handle,PURPLE_CALLBACK(buddyRemoved), NULL);				
+		purple_signal_connect(purple_conversations_get_handle(), "chat-topic-changed", &conversation_handle, PURPLE_CALLBACK(conv_chat_topic_changed), NULL);
 
 		purple_cmd_register("help", "w", PURPLE_CMD_P_DEFAULT, (PurpleCmdFlag) (PURPLE_CMD_FLAG_CHAT | PURPLE_CMD_FLAG_IM | PURPLE_CMD_FLAG_ALLOW_WRONG_ARGS), NULL, help_command_cb, _("help &lt;command&gt;:  Help on a specific command."), NULL);
 

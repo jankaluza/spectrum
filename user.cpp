@@ -482,12 +482,14 @@ void User::purpleConversationWriteChat(PurpleConversation *conv, const char *who
 		return;
 
 	std::string name(who);
-
+	MUCHandler *muc = (MUCHandler*) g_hash_table_lookup(m_mucs, purple_conversation_get_name(conv));
 	if (!isOpenedConversation(name)) {
-			m_conversations[name] = conv;
+		m_conversations[name] = conv;
+		if (muc)
+			muc->setConversation(conv);
 	}
 
-	MUCHandler *muc = (MUCHandler*) g_hash_table_lookup(m_mucs, purple_conversation_get_name(conv));
+	
 	if (muc) {
 		muc->messageReceived(who, msg, flags, mtime);
 	}
@@ -535,6 +537,13 @@ void User::purpleConversationWriteIM(PurpleConversation *conv, const char *who, 
 	}
 
 	p->j->send( s );
+}
+
+void User::purpleChatTopicChanged(PurpleConversation *conv, const char *who, const char *topic) {
+	MUCHandler *muc = (MUCHandler*) g_hash_table_lookup(m_mucs, purple_conversation_get_name(conv));
+	if (muc) {
+		muc->topicChanged(who, topic);
+	}
 }
 
 void User::purpleChatAddUsers(PurpleConversation *conv, GList *cbuddies, gboolean new_arrivals) {

@@ -27,6 +27,8 @@ MUCHandler::MUCHandler(User *user, const std::string &jid, const std::string &us
 	m_jid = jid;
 	m_userJid = userJid;
 	m_connected = false;
+	m_topic = "";
+	m_topicUser = "";
 }
 	
 MUCHandler::~MUCHandler() {}
@@ -53,7 +55,6 @@ Tag * MUCHandler::handlePresence(const Presence &stanza) {
 }
 
 void MUCHandler::addUsers(GList *cbuddies) {
-	m_connected = true;
 	GList *l = cbuddies;
 	while (l != NULL) {
 		PurpleConvChatBuddy *cb = (PurpleConvChatBuddy *)l->data;
@@ -76,8 +77,20 @@ void MUCHandler::addUsers(GList *cbuddies) {
 		x->addAttribute("xmlns", "http://jabber.org/protocol/muc#user");
 		
 		Tag *item = new Tag("item");
-		item->addAttribute("affiliation", "member");
-		item->addAttribute("role", "participant");
+		
+		
+		if (flags & PURPLE_CBFLAGS_OP) {
+			item->addAttribute("affiliation", "admin");
+			item->addAttribute("role", "moderator");
+		}
+		else if (PURPLE_CBFLAGS_FOUNDER) {
+			item->addAttribute("affiliation", "owner");
+			item->addAttribute("role", "moderator");
+		}
+		else {
+			item->addAttribute("affiliation", "member");
+			item->addAttribute("role", "participant");
+		}
 		
 		x->addChild(item);
 		tag->addChild(x);
@@ -85,6 +98,10 @@ void MUCHandler::addUsers(GList *cbuddies) {
 		
 		l = l->next;
 	}
+	if (!m_connected && !m_topic.empty()) {
+		sendTopic();
+	}
+	m_connected = true;
 }
 
 void MUCHandler::messageReceived(const char *who, const char *msg, PurpleMessageFlags flags, time_t mtime) {
@@ -167,5 +184,28 @@ void MUCHandler::removeUsers(GList *users) {
 		tag->addChild(x);
 		m_user->p->j->send(tag);
 	}
+}
+
+void MUCHandler::sendTopic() {
+	Tag *m = new Tag("message");
+	m->addAttribute("from", m_jid + "/" + m_topicUser);
+	m->addAttribute("to", m_userJid);
+	m->addAttribute("type", "groupchat");
+	m->addChild( new Tag("subject", m_topic) );
+
+	m_user->p->j->send(m);
+}
+
+void MUCHandler::topicChanged(const char *who, const char *topic) {
+// <message
+// from='wiccarocks@shakespeare.lit/laptop'
+// to='darkcave@chat.shakespeare.lit'
+// type='groupchat'>
+// <subject>Fire Burn and Cauldron Bubble!</subject>
+// </message>
+	m_topic = std::string(topic);
+	m_topicUser = std::string(who ? who : "transport");
+	if (m_connected)
+		sendTopic();
 }
 
