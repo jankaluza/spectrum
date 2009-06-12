@@ -47,6 +47,7 @@ class UserManager
 		GlooxMessageHandler *main;
 		GHashTable *m_users;	// key = JID; value = User*
 		long m_onlineBuddies;
+		User *m_cachedUser;
 	
 };
 

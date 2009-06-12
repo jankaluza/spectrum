@@ -33,6 +33,7 @@ static gboolean deleteUser(gpointer data){
 UserManager::UserManager(GlooxMessageHandler *m){
 	main = m;
 	m_users = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
+	m_cachedUser = NULL;
 }
 
 UserManager::~UserManager(){
@@ -40,7 +41,11 @@ UserManager::~UserManager(){
 }
 
 User *UserManager::getUserByJID(std::string barejid){
+	if (m_cachedUser && barejid == m_cachedUser->jid()) {
+		return m_cachedUser;
+	}
 	User *user = (User*) g_hash_table_lookup(m_users, barejid.c_str());
+	m_cachedUser = user;
 	return user;
 }
 
@@ -53,6 +58,9 @@ User *UserManager::getUserByAccount(PurpleAccount * account){
 void UserManager::removeUser(User *user){
 	Log().Get("logout") << "removing user";
 	g_hash_table_remove(m_users, user->jid().c_str());
+	if (m_cachedUser && user->jid() == m_cachedUser->jid()) {
+		m_cachedUser = NULL;
+	}
 	delete user;
 	Log().Get("logout") << "delete user; called => user is sucesfully removed";
 }
@@ -60,6 +68,9 @@ void UserManager::removeUser(User *user){
 void UserManager::removeUserTimer(User *user){
 	Log().Get("logout") << "removing user by timer";
 	g_hash_table_remove(m_users, user->jid().c_str());
+	if (m_cachedUser && user->jid() == m_cachedUser->jid()) {
+		m_cachedUser = NULL;
+	}
 	// this will be called by gloop after all
 	g_timeout_add(0,&deleteUser,user);
 }
