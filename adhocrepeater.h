@@ -26,11 +26,12 @@
 #include "user.h"
 #include "glib.h"
 #include "request.h"
+#include "adhoccommandhandler.h"
 
 class GlooxMessageHandler;
 class User;
 
-class AdhocRepeater
+class AdhocRepeater : public AdhocCommandHandler
 {
 	public:
 		AdhocRepeater(GlooxMessageHandler *m, User *user, const std::string &title, const std::string &primaryString, const std::string &secondaryString, const std::string &value, gboolean multiline, gboolean masked, GCallback ok_cb, GCallback cancel_cb, void * user_data);

@@ -121,6 +121,7 @@ set(hiicq_MOC_HDRS
 	adhochandler.h
 	localization.h
 	muchandler.h
+	adhoccommandhandler.h
 	protocols/abstractprotocol.h
 	protocols/icq.h
 	protocols/facebook.h

@@ -191,7 +191,7 @@ bool GlooxAdhocHandler::handleIq( const IQ &stanza ) {
 }
 
 bool GlooxAdhocHandler::hasSession(const std::string &jid) {
-	std::map<std::string,AdhocRepeater *> ::iterator iter = m_sessions.begin();
+	std::map<std::string,AdhocCommandHandler *> ::iterator iter = m_sessions.begin();
 	iter = m_sessions.find(jid);
 	if(iter != m_sessions.end())
 		return true;

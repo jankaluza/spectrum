@@ -26,9 +26,16 @@
 #include "user.h"
 #include "glib.h"
 #include "gloox/disconodehandler.h"
+#include "adhoccommandhandler.h"
 
 class GlooxMessageHandler;
 class AdhocRepeater;
+
+struct adhocCommand {
+	std::string name;
+	std::string node;
+	AdhocCommandHandler (*createHandler)(GlooxMessageHandler *m, User *user);
+};
 
 class GlooxAdhocHandler : public DiscoNodeHandler, public DiscoHandler, public IqHandler
 {
@@ -43,13 +50,13 @@ class GlooxAdhocHandler : public DiscoNodeHandler, public DiscoHandler, public I
 		void handleDiscoInfo(const JID &jid, const Disco::Info &info, int context);
 		void handleDiscoItems(const JID &jid, const Disco::Items &items, int context);
 		void handleDiscoError(const JID &jid, const Error *error, int context);
-		void registerSession(const std::string &jid, AdhocRepeater *repeater) {std::cout << jid << "\n"; m_sessions[jid] = repeater; }
+		void registerSession(const std::string &jid, AdhocCommandHandler *handler) {m_sessions[jid] = handler; }
 		void unregisterSession(std::string &jid) { m_sessions.erase(jid); }
 		bool hasSession(const std::string &jid);
 
 	private:
 		GlooxMessageHandler *main;
-		std::map<std::string, AdhocRepeater *> m_sessions;
+		std::map<std::string, AdhocCommandHandler *> m_sessions;
 
 };
 
