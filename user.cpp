@@ -45,6 +45,7 @@ User::User(GlooxMessageHandler *parent, const std::string &jid, const std::strin
 	m_connected = false;
 	m_roster = p->sql()->getRosterByJid(m_jid);
 	m_vip = p->sql()->isVIP(m_jid);
+	m_settings = p->sql()->getSettings(m_jid);
 	m_syncTimer = 0;
 	m_readyForConnect = false;
 	m_rosterXCalled = false;
@@ -55,6 +56,15 @@ User::User(GlooxMessageHandler *parent, const std::string &jid, const std::strin
 	m_lang = NULL;
 	this->features = 6; // TODO: I can't be hardcoded
 	m_mucs = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
+	std::string setting;
+	
+	// check default settings
+	setting = getSetting("enable_transport");
+	if (setting.empty()) {
+		p->sql()->addSetting(m_jid, "enable_transport", "1", SETTING_BOOLEAN);
+		g_hash_table_replace(m_settings, g_strdup("enable_transport"), g_strdup("1"));
+	}
+	
 }
 
 bool User::syncCallback() {
@@ -570,6 +580,18 @@ void User::purpleChatRemoveUsers(PurpleConversation *conv, GList *users) {
 	if (muc) {
 		muc->removeUsers(users);
 	}
+}
+
+std::string User::getSetting(const char *key) {
+	char *value = (char *) g_hash_table_lookup(m_settings, key);
+	if (!value)
+		return std::string("");
+	return std::string(value);
+}
+
+void User::updateSetting(const std::string &key, const std::string &value) {
+	p->sql()->updateSetting(m_jid, key, value);
+	g_hash_table_replace(m_settings, g_strdup(key.c_str()), g_strdup(value.c_str()));
 }
 
 /*

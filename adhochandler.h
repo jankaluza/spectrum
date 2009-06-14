@@ -33,8 +33,7 @@ class AdhocRepeater;
 
 struct adhocCommand {
 	std::string name;
-	std::string node;
-	AdhocCommandHandler (*createHandler)(GlooxMessageHandler *m, User *user);
+	AdhocCommandHandler * (*createHandler)(GlooxMessageHandler *m, User *user, const std::string &from, const std::string &id);
 };
 
 class GlooxAdhocHandler : public DiscoNodeHandler, public DiscoHandler, public IqHandler
@@ -57,6 +56,7 @@ class GlooxAdhocHandler : public DiscoNodeHandler, public DiscoHandler, public I
 	private:
 		GlooxMessageHandler *main;
 		std::map<std::string, AdhocCommandHandler *> m_sessions;
+		std::map<std::string, adhocCommand> m_handlers;	// m_handlers[node] = handler
 
 };
 

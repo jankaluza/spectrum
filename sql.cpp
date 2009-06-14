@@ -330,13 +330,13 @@ void SQLClass::getRandomStatus(std::string & status)
 
 // settings
 
-void SQLClass::addSetting(const std::string &jid, const std::string &key, const std::string &value, int type) {
+void SQLClass::addSetting(const std::string &jid, const std::string &key, const std::string &value, SettingType type) {
 	mysqlpp::Query query = sql->query();
 	query << "INSERT INTO "<< p->configuration().sqlPrefix <<"settings " << "(jid, var, type, value) VALUES (\"" << jid << "\",\"" << key << "\", \"" << type << "\", \"" << value << "\")";
 	query.execute();
 }
 
-void SQLClass::updateSetting(const std::string &jid, const std::string &key, const std::string &value, int type) {
+void SQLClass::updateSetting(const std::string &jid, const std::string &key, const std::string &value) {
 	mysqlpp::Query query = sql->query();
 	query << "UPDATE "<< p->configuration().sqlPrefix <<"settings SET value=\"" << value <<"\" WHERE jid=\"" << jid << "\" AND var=\"" << key << "\";";
 	query.execute();

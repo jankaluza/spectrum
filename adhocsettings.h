@@ -17,25 +17,31 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02111-1301  USA
  */
-#ifndef _HI_LOCALIZATION_HANDLER_H
-#define _HI_LOCALIZATION_HANDLER_H
+ 
+#ifndef _HI_ADHOC_SETTINGS_H
+#define _HI_ADHOC_SETTINGS_H
 
 #include <string>
-#include <map>
+#include "account.h"
+#include "user.h"
 #include "glib.h"
-#include <gettext-po.h>
+#include "request.h"
+#include "adhoccommandhandler.h"
 
-class Localization {
+class GlooxMessageHandler;
+class User;
+
+class AdhocSettings : public AdhocCommandHandler
+{
 	public:
-		Localization();
-		~Localization();
-		
-		bool loadLocale(const std::string &lang);
-		const char * translate(const char *lang, const char *key);
-		const char * translate(const char *lang, std::string key) { return translate(lang, key.c_str()); }
-		
+		AdhocSettings(GlooxMessageHandler *m, User *user, const std::string &from, const std::string &id);
+		~AdhocSettings();
+		bool handleIq(const IQ &iq);
+	
 	private:
-		GHashTable *m_locales;		// xml_lang, hash table with localizations
+		GlooxMessageHandler *main;
+		User *m_user;
 };
 
 #endif
+ 

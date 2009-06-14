@@ -18,12 +18,18 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02111-1301  USA
  */
  
- #include "adhochandler.h"
- #include "usermanager.h"
- #include "log.h"
- #include "adhocrepeater.h"
- #include "gloox/disconodehandler.h"
- #include "gloox/adhoc.h"
+#include "adhochandler.h"
+#include "usermanager.h"
+#include "log.h"
+#include "adhocrepeater.h"
+#include "adhocsettings.h"
+#include "gloox/disconodehandler.h"
+#include "gloox/adhoc.h"
+ 
+static AdhocCommandHandler * createSettingsHandler(GlooxMessageHandler *m, User *user, const std::string &from, const std::string &id) {
+	AdhocCommandHandler *handler = new AdhocSettings(m, user, from, id);
+	return handler;
+}
  
 GlooxAdhocHandler::GlooxAdhocHandler(GlooxMessageHandler *m) {
 	main = m;
@@ -32,7 +38,9 @@ GlooxAdhocHandler::GlooxAdhocHandler(GlooxMessageHandler *m) {
 	main->j->disco()->addFeature( XMLNS_ADHOC_COMMANDS );
 	main->j->disco()->registerNodeHandler( this, XMLNS_ADHOC_COMMANDS );
 	main->j->disco()->registerNodeHandler( this, std::string() );
-
+	
+	m_handlers["transport_settings"].name = "Transport settings";
+	m_handlers["transport_settings"].createHandler = createSettingsHandler;
 }
 
 GlooxAdhocHandler::~GlooxAdhocHandler() { }
@@ -55,6 +63,9 @@ Disco::ItemList GlooxAdhocHandler::handleDiscoNodeItems( const JID &_from, const
 		if (to == main->jid()) {
 			User *user = main->userManager()->getUserByJID(from);
 			if (user) {
+				for(std::map<std::string, adhocCommand>::iterator u = m_handlers.begin(); u != m_handlers.end() ; u++) {
+					lst.push_back( new Disco::Item( main->jid(),(*u).first, (std::string) tr(user->getLang(),(*u).second.name) ) );
+				}
 				if (user->isConnected() && purple_account_get_connection(user->account())) {
 					PurpleConnection *gc = purple_account_get_connection(user->account());
 					PurplePlugin *plugin = gc && PURPLE_CONNECTION_IS_CONNECTED(gc) ? gc->prpl : NULL;
@@ -119,11 +130,21 @@ bool GlooxAdhocHandler::handleIq( const IQ &stanza ) {
 
 	User *user = main->userManager()->getUserByJID(from);
 	if (user) {
-		if (user->isConnected() && purple_account_get_connection(user->account())) {
-			if (hasSession(stanza.from().full())) {
-				return m_sessions[stanza.from().full()]->handleIq(stanza);
+		if (hasSession(stanza.from().full())) {
+			if( m_sessions[stanza.from().full()]->handleIq(stanza) ) {
+				std::string jid = stanza.from().full();
+				delete m_sessions[jid];
+				unregisterSession(jid);
 			}
-			else if (to == main->jid()) {
+			return true;
+		}
+		else if (m_handlers.find(node) != m_handlers.end()) {
+			AdhocCommandHandler *handler = m_handlers[node].createHandler(main, user, stanza.from().full(), stanza.id());
+			registerSession(stanza.from().full(), handler);
+			return true;
+		}
+		if (user->isConnected() && purple_account_get_connection(user->account())) {
+			if (to == main->jid()) {
 				PurpleConnection *gc = purple_account_get_connection(user->account());
 				PurplePlugin *plugin = gc && PURPLE_CONNECTION_IS_CONNECTED(gc) ? gc->prpl : NULL;
 				if (plugin && PURPLE_PLUGIN_HAS_ACTIONS(plugin)) {

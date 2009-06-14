@@ -109,6 +109,10 @@ class User {
 		// Connected
 		bool isConnected() { return m_connected; }
 
+		// Settings
+		std::string getSetting(const char *key);
+		void updateSetting(const std::string &key, const std::string &value);
+
 		// Entity Capabilities
 		std::string capsVersion() { return m_capsVersion; }
 		void setCapsVersion(const std::string &capsVersion) { m_capsVersion = capsVersion; }
@@ -163,6 +167,7 @@ class User {
 		std::map<std::string,authRequest> m_authRequests;	// list of authorization requests (holds callbacks and user data)
 		std::map<std::string,PurpleConversation *> m_conversations; // list of opened conversations
 		std::map<std::string,PurpleBuddy *> m_subscribeCache;	// cache for contacts for roster X
+		GHashTable *m_settings;		// user settings
 };
 
 #endif

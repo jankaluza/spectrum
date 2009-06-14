@@ -160,7 +160,7 @@ bool AdhocRepeater::handleIq(const IQ &stanza) {
 
 		g_timeout_add(0,&removeRepeater,this);
 
-		return true;
+		return false;
 	}
 	
 	Tag *x = tag->findChildWithAttrib("xmlns","jabber:x:data");
@@ -203,6 +203,6 @@ bool AdhocRepeater::handleIq(const IQ &stanza) {
 	}
 
 
-	return true;
+	return false;
 }
 
