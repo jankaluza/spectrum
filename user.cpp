@@ -786,7 +786,7 @@ void User::connect(){
 	if (!m_username.empty()){
 		valid = p->protocol()->isValidUsername(m_username);
 	}
-	if (valid){
+	if (valid && purple_value_get_boolean(getSetting("enable_transport"))){
 		purple_account_set_enabled(m_account, HIICQ_UI, TRUE);
 		purple_account_connect(m_account);
 	}
