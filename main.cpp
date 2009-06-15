@@ -952,18 +952,20 @@ void GlooxMessageHandler::notifyEmail(PurpleConnection *gc,const char *subject, 
 	PurpleAccount *account = purple_connection_get_account(gc);
 	User *user = userManager()->getUserByAccount(account);
 	if (user!=NULL) {
-		std::string text;
-		if (subject)
-			text+=std::string(subject) + " ";
-		if (from)
-			text+=std::string(from) + " ";
-		if (to)
-			text+=std::string(to) + " ";
-		if (url)
-			text+=std::string(url) + " ";
-		Message s(Message::Chat, user->jid(), text);
-		s.setFrom(protocol()->notifyUsername()+"@"+jid()+"/bot");
-		j->send(s);
+		if (purple_value_get_boolean(user->getSetting("enable_notify_email"))) {
+			std::string text;
+			if (subject)
+				text+=std::string(subject) + " ";
+			if (from)
+				text+=std::string(from) + " ";
+			if (to)
+				text+=std::string(to) + " ";
+			if (url)
+				text+=std::string(url) + " ";
+			Message s(Message::Chat, user->jid(), text);
+			s.setFrom(protocol()->notifyUsername()+"@"+jid()+"/bot");
+			j->send(s);
+		}
 	}
 }
 

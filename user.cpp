@@ -65,7 +65,12 @@ User::User(GlooxMessageHandler *parent, const std::string &jid, const std::strin
 		purple_value_set_boolean(value, true);
 		g_hash_table_replace(m_settings, g_strdup("enable_transport"), value);
 	}
-	
+	if ( (value = getSetting("enable_notify_email")) == NULL ) {
+		p->sql()->addSetting(m_jid, "enable_notify_email", "1", PURPLE_TYPE_BOOLEAN);
+		value = purple_value_new(PURPLE_TYPE_BOOLEAN);
+		purple_value_set_boolean(value, true);
+		g_hash_table_replace(m_settings, g_strdup("enable_transport"), value);
+	}
 }
 
 bool User::syncCallback() {

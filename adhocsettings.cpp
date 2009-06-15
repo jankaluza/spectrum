@@ -27,6 +27,7 @@ AdhocSettings::AdhocSettings(GlooxMessageHandler *m, User *user, const std::stri
 	main = m;
 	m_user = user;
 	PurpleValue *value;
+	Tag *field;
 	
 	IQ _response(IQ::Result, from, id);
 	Tag *response = _response.tag();
@@ -49,7 +50,7 @@ AdhocSettings::AdhocSettings(GlooxMessageHandler *m, User *user, const std::stri
 	xdata->addChild(new Tag("title","Transport settings"));
 	xdata->addChild(new Tag("instructions","Change your transport settings here."));
 
-	Tag *field = new Tag("field");
+	field = new Tag("field");
 	field->addAttribute("type","boolean");
 	field->addAttribute("label","Enable transport");
 	field->addAttribute("var","enable_transport");
@@ -58,7 +59,17 @@ AdhocSettings::AdhocSettings(GlooxMessageHandler *m, User *user, const std::stri
 		field->addChild(new Tag("value","1"));
 	else
 		field->addChild(new Tag("value","0"));
-		
+	xdata->addChild(field);
+
+	field = new Tag("field");
+	field->addAttribute("type","boolean");
+	field->addAttribute("label","Enable network notification");
+	field->addAttribute("var","enable_notify_email");
+	value = m_user->getSetting("enable_notify_email");
+	if (purple_value_get_boolean(value))
+		field->addChild(new Tag("value","1"));
+	else
+		field->addChild(new Tag("value","0"));
 	xdata->addChild(field);
 
 	c->addChild(xdata);
