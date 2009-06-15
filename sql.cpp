@@ -330,7 +330,7 @@ void SQLClass::getRandomStatus(std::string & status)
 
 // settings
 
-void SQLClass::addSetting(const std::string &jid, const std::string &key, const std::string &value, SettingType type) {
+void SQLClass::addSetting(const std::string &jid, const std::string &key, const std::string &value, PurpleType type) {
 	mysqlpp::Query query = sql->query();
 	query << "INSERT INTO "<< p->configuration().sqlPrefix <<"settings " << "(jid, var, type, value) VALUES (\"" << jid << "\",\"" << key << "\", \"" << type << "\", \"" << value << "\")";
 	query.execute();
@@ -347,7 +347,9 @@ void SQLClass::getSetting(const std::string &jid, const std::string &key) {
 }
 
 GHashTable * SQLClass::getSettings(const std::string &jid) {
-	GHashTable *settings = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
+	GHashTable *settings = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, (GDestroyNotify) purple_value_destroy);
+	PurpleType type;
+	PurpleValue *value;
     mysqlpp::Query query = sql->query();
 #if MYSQLPP_HEADER_VERSION < 0x030000
 	mysqlpp::Result res;
@@ -359,21 +361,27 @@ GHashTable * SQLClass::getSettings(const std::string &jid) {
     query << "SELECT * FROM "<< p->configuration().sqlPrefix <<"settings WHERE jid=\"" << jid << "\";";
 
     res = query.store();
-#if MYSQLPP_HEADER_VERSION < 0x030000
 	if (res) {
+#if MYSQLPP_HEADER_VERSION < 0x030000
 		mysqlpp::Row row;
-		while(row = res.fetch_row()){
-			g_hash_table_replace(settings, g_strdup(row["var"]), g_strdup(row["value"]));
+		while(row = res.fetch_row()) {
+#else
+		mysqlpp::StoreQueryResult::size_type i;
+		mysqlpp::Row row;
+		for (i = 0; i < res.num_rows(); ++i) {
+			row = res[i];
+#endif
+			type = (PurpleType) atoi(row["type"]);
+			if (type == PURPLE_TYPE_BOOLEAN) {
+				value = purple_value_new(PURPLE_TYPE_BOOLEAN);
+				purple_value_set_boolean(value, atoi(row["value"]));
+			}
+			g_hash_table_replace(settings, g_strdup(row["var"]), value);
 		}
 	}
-#else
-	mysqlpp::StoreQueryResult::size_type i;
-	mysqlpp::Row row;
-	for (i = 0; i < res.num_rows(); ++i) {
-		row = res[i];
-		g_hash_table_replace(settings, g_strdup(row["var"]), g_strdup(row["value"]));
-	}
-#endif
+
+
+
 	return settings;
 }
 			

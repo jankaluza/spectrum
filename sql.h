@@ -28,9 +28,6 @@ class GlooxMessageHandler;
 #include "main.h"
 using namespace gloox;
 
-typedef enum { 	SETTING_BOOLEAN = 2,
-				} SettingType;
-
 struct UserRow {
 	long id;
 	std::string jid;
@@ -72,7 +69,7 @@ public:
     void getRandomStatus(std::string & status);
 	
 	// settings
-	void addSetting(const std::string &jid, const std::string &key, const std::string &value, SettingType type);
+	void addSetting(const std::string &jid, const std::string &key, const std::string &value, PurpleType type);
 	void updateSetting(const std::string &jid, const std::string &key, const std::string &value);
 	void getSetting(const std::string &jid, const std::string &key);
 	GHashTable * getSettings(const std::string &jid);

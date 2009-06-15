@@ -26,7 +26,7 @@
 AdhocSettings::AdhocSettings(GlooxMessageHandler *m, User *user, const std::string &from, const std::string &id) {
 	main = m;
 	m_user = user;
-	std::string setting;
+	PurpleValue *value;
 	
 	IQ _response(IQ::Result, from, id);
 	Tag *response = _response.tag();
@@ -53,11 +53,12 @@ AdhocSettings::AdhocSettings(GlooxMessageHandler *m, User *user, const std::stri
 	field->addAttribute("type","boolean");
 	field->addAttribute("label","Enable transport");
 	field->addAttribute("var","enable_transport");
-	setting = m_user->getSetting("enable_transport");
-	if (setting.empty() || setting == "0")
-		field->addChild(new Tag("value","0"));
-	else
+	value = m_user->getSetting("enable_transport");
+	if (purple_value_get_boolean(value))
 		field->addChild(new Tag("value","1"));
+	else
+		field->addChild(new Tag("value","0"));
+		
 	xdata->addChild(field);
 
 	c->addChild(xdata);
@@ -94,16 +95,22 @@ bool AdhocSettings::handleIq(const IQ &stanza) {
 			std::string key = (*it)->findAttribute("var");
 			if (key.empty()) continue;
 			
-			std::string savedValue = m_user->getSetting(key.c_str());
-			if (savedValue.empty()) continue;
+			PurpleValue * savedValue = m_user->getSetting(key.c_str());
+			if (!savedValue) continue;
 			
 			Tag *v =(*it)->findChild("value");
 			if (!v) continue;
 			
-			std::string value = v->cdata();
-			if (savedValue == value) continue;
-			
-			m_user->updateSetting(key, value);
+			PurpleValue *value;
+			if (purple_value_get_type(savedValue) == PURPLE_TYPE_BOOLEAN) {
+				value = purple_value_new(PURPLE_TYPE_BOOLEAN);
+				purple_value_set_boolean(value, atoi(v->cdata().c_str()));
+				if (purple_value_get_boolean(savedValue) == purple_value_get_boolean(value)) {
+					purple_value_destroy(value);
+					continue;
+				}
+				m_user->updateSetting(key, value);
+			}
 		}
 
 		IQ _s(IQ::Result, stanza.from().full(), stanza.id());

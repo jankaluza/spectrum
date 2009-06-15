@@ -56,13 +56,14 @@ User::User(GlooxMessageHandler *parent, const std::string &jid, const std::strin
 	m_lang = NULL;
 	this->features = 6; // TODO: I can't be hardcoded
 	m_mucs = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
-	std::string setting;
+	PurpleValue *value;
 	
 	// check default settings
-	setting = getSetting("enable_transport");
-	if (setting.empty()) {
-		p->sql()->addSetting(m_jid, "enable_transport", "1", SETTING_BOOLEAN);
-		g_hash_table_replace(m_settings, g_strdup("enable_transport"), g_strdup("1"));
+	if ( (value = getSetting("enable_transport")) == NULL ) {
+		p->sql()->addSetting(m_jid, "enable_transport", "1", PURPLE_TYPE_BOOLEAN);
+		value = purple_value_new(PURPLE_TYPE_BOOLEAN);
+		purple_value_set_boolean(value, true);
+		g_hash_table_replace(m_settings, g_strdup("enable_transport"), value);
 	}
 	
 }
@@ -582,16 +583,19 @@ void User::purpleChatRemoveUsers(PurpleConversation *conv, GList *users) {
 	}
 }
 
-std::string User::getSetting(const char *key) {
-	char *value = (char *) g_hash_table_lookup(m_settings, key);
-	if (!value)
-		return std::string("");
-	return std::string(value);
+PurpleValue * User::getSetting(const char *key) {
+	PurpleValue *value = (PurpleValue *) g_hash_table_lookup(m_settings, key);
+	return value;
 }
 
-void User::updateSetting(const std::string &key, const std::string &value) {
-	p->sql()->updateSetting(m_jid, key, value);
-	g_hash_table_replace(m_settings, g_strdup(key.c_str()), g_strdup(value.c_str()));
+void User::updateSetting(const std::string &key, PurpleValue *value) {
+	if (purple_value_get_type(value) == PURPLE_TYPE_BOOLEAN) {
+		if (purple_value_get_boolean(value))
+			p->sql()->updateSetting(m_jid, key, "1");
+		else
+			p->sql()->updateSetting(m_jid, key, "0");
+	}
+	g_hash_table_replace(m_settings, g_strdup(key.c_str()), value);
 }
 
 /*

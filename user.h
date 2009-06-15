@@ -110,8 +110,8 @@ class User {
 		bool isConnected() { return m_connected; }
 
 		// Settings
-		std::string getSetting(const char *key);
-		void updateSetting(const std::string &key, const std::string &value);
+		PurpleValue *getSetting(const char *key);
+		void updateSetting(const std::string &key, PurpleValue *value);
 
 		// Entity Capabilities
 		std::string capsVersion() { return m_capsVersion; }
