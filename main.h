@@ -170,6 +170,7 @@ public:
 	void purpleAuthorizeClose(void *data);
 	void purpleFileReceiveRequest(PurpleXfer *xfer);
 	void purpleFileReceiveComplete(PurpleXfer *xfer);
+	void notifyEmail(PurpleConnection *gc,const char *subject, const char *from,const char *to, const char *url);
 
 	// MessageHandler
 	void handleMessage (const Message &msg, MessageSession *session=0);

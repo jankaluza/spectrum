@@ -350,6 +350,12 @@ static void * notify_user_info(PurpleConnection *gc, const char *who, PurpleNoti
 	return NULL;
 }
 
+static void * notifyEmail(PurpleConnection *gc, const char *subject, const char *from, const char *to, const char *url)
+{
+	GlooxMessageHandler::instance()->notifyEmail(gc, subject, from, to, url);
+	return NULL;
+}
+
 static void buddyListAddBuddy(PurpleAccount *account, const char *username, const char *group, const char *alias){
 	std::cout << "BUDDY LIST ADD BUDDY REQUEST\n";
 }
@@ -361,7 +367,7 @@ static void buddyListAddBuddy(PurpleAccount *account, const char *username, cons
 static PurpleNotifyUiOps notifyUiOps =
 {
 		NULL,
-		NULL,
+		notifyEmail,
 		NULL,
 		NULL,
 		NULL,
@@ -939,6 +945,28 @@ void GlooxMessageHandler::purpleConversationWriteIM(PurpleConversation *conv, co
 		Log().Get("purple") << "purpleConversationWriteIM called, but user does not exist!!!";
 	}
 }
+
+void GlooxMessageHandler::notifyEmail(PurpleConnection *gc,const char *subject, const char *from,const char *to, const char *url) {
+	if (protocol()->notifyUsername().empty())
+		return;
+	PurpleAccount *account = purple_connection_get_account(gc);
+	User *user = userManager()->getUserByAccount(account);
+	if (user!=NULL) {
+		std::string text;
+		if (subject)
+			text+=std::string(subject) + " ";
+		if (from)
+			text+=std::string(from) + " ";
+		if (to)
+			text+=std::string(to) + " ";
+		if (url)
+			text+=std::string(url) + " ";
+		Message s(Message::Chat, user->jid(), text);
+		s.setFrom(protocol()->notifyUsername()+"@"+jid()+"/bot");
+		j->send(s);
+	}
+}
+
 
 void GlooxMessageHandler::purpleConversationWriteChat(PurpleConversation *conv, const char *who, const char *message, PurpleMessageFlags flags, time_t mtime){
 	if (who==NULL)
