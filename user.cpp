@@ -77,6 +77,12 @@ User::User(GlooxMessageHandler *parent, const std::string &jid, const std::strin
 		purple_value_set_boolean(value, true);
 		g_hash_table_replace(m_settings, g_strdup("enable_avatars"), value);
 	}
+	if ( (value = getSetting("enable_chatstate")) == NULL ) {
+		p->sql()->addSetting(m_jid, "enable_chatstate", "1", PURPLE_TYPE_BOOLEAN);
+		value = purple_value_new(PURPLE_TYPE_BOOLEAN);
+		purple_value_set_boolean(value, true);
+		g_hash_table_replace(m_settings, g_strdup("enable_chatstate"), value);
+	}
 }
 
 bool User::syncCallback() {
@@ -546,9 +552,11 @@ void User::purpleConversationWriteIM(PurpleConversation *conv, const char *who, 
 	s.setFrom(from);
 
 	// chatstates
-	if (hasFeature(GLOOX_FEATURE_CHATSTATES)) {
-		ChatState *c = new ChatState(ChatStateActive);
-		s.addExtension(c);
+	if (purple_value_get_boolean(getSetting("enable_chatstate"))) {
+		if (hasFeature(GLOOX_FEATURE_CHATSTATES)) {
+			ChatState *c = new ChatState(ChatStateActive);
+			s.addExtension(c);
+		}
 	}
 	
 	// Delayed messages, we have to count with some delay
@@ -617,6 +625,8 @@ void User::updateSetting(const std::string &key, PurpleValue *value) {
 void User::purpleBuddyTypingStopped(const std::string &uin){
 	if (!hasFeature(GLOOX_FEATURE_CHATSTATES))
 		return;
+	if (!purple_value_get_boolean(getSetting("enable_chatstate")))
+		return;
 	Log().Get(m_jid) << uin << " stopped typing";
 	
 
@@ -643,6 +653,8 @@ void User::purpleBuddyTypingStopped(const std::string &uin){
  */
 void User::purpleBuddyTyping(const std::string &uin){
 	if (!hasFeature(GLOOX_FEATURE_CHATSTATES))
+		return;
+	if (!purple_value_get_boolean(getSetting("enable_chatstate")))
 		return;
 	Log().Get(m_jid) << uin << " is typing";
 
