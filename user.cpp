@@ -71,6 +71,12 @@ User::User(GlooxMessageHandler *parent, const std::string &jid, const std::strin
 		purple_value_set_boolean(value, true);
 		g_hash_table_replace(m_settings, g_strdup("enable_transport"), value);
 	}
+	if ( (value = getSetting("enable_avatars")) == NULL ) {
+		p->sql()->addSetting(m_jid, "enable_avatars", "1", PURPLE_TYPE_BOOLEAN);
+		value = purple_value_new(PURPLE_TYPE_BOOLEAN);
+		purple_value_set_boolean(value, true);
+		g_hash_table_replace(m_settings, g_strdup("enable_avatars"), value);
+	}
 }
 
 bool User::syncCallback() {
@@ -310,29 +316,31 @@ Tag *User::generatePresenceStanza(PurpleBuddy *buddy){
 		Log().Get(m_jid) << "avatarHash";
 	}
 
-	Tag *x = new Tag("x");
-	x->addAttribute("xmlns","vcard-temp:x:update");
-	if (avatarHash != NULL) {
-		Log().Get(m_jid) << "Got avatar hash";
-		// Check if it's patched libpurple which saved icons to directories
-		char *hash = rindex(avatarHash,'/');
-		std::string h;
-		if (hash) {
-			char *dot;
-			hash++;
-			dot = strchr(hash, '.');
-			if (dot)
-				*dot = '\0';
-			x->addChild(new Tag("photo",(std::string) hash));
+	if (purple_value_get_boolean(getSetting("enable_avatars"))){
+		Tag *x = new Tag("x");
+		x->addAttribute("xmlns","vcard-temp:x:update");
+		if (avatarHash != NULL) {
+			Log().Get(m_jid) << "Got avatar hash";
+			// Check if it's patched libpurple which saved icons to directories
+			char *hash = rindex(avatarHash,'/');
+			std::string h;
+			if (hash) {
+				char *dot;
+				hash++;
+				dot = strchr(hash, '.');
+				if (dot)
+					*dot = '\0';
+				x->addChild(new Tag("photo",(std::string) hash));
+			}
+			else
+				x->addChild(new Tag("photo",(std::string) avatarHash));
 		}
-		else
-			x->addChild(new Tag("photo",(std::string) avatarHash));
+		else{
+			Log().Get(m_jid) << "no avatar hash";
+			x->addChild(new Tag("photo"));
+		}
+		tag->addChild(x);
 	}
-	else{
-		Log().Get(m_jid) << "no avatar hash";
-		x->addChild(new Tag("photo"));
-	}
-	tag->addChild(x);
 
 	// update stats...
 	if (s==PURPLE_STATUS_OFFLINE){

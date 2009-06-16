@@ -146,30 +146,34 @@ void GlooxVCardHandler::userInfoArrived(PurpleConnection *gc,std::string who, Pu
 			vcard->addAttribute( "xmlns", "vcard-temp" );
 		}
 
-		Tag *photo = new Tag("PHOTO");
+		if (purple_value_get_boolean(user->getSetting("enable_avatars"))) {
+			Tag *photo = new Tag("PHOTO");
 
-		PurpleBuddy *buddy = purple_find_buddy(purple_connection_get_account(gc), who.c_str());
-		if (buddy){
-			std::cout << "found buddy " << who << "\n";
-			gsize len;
-			PurpleBuddyIcon *icon = NULL;
-			icon = purple_buddy_icons_find(purple_connection_get_account(gc), who.c_str());
-			if(icon!=NULL) {
-				std::cout << "found icon\n";
-				const gchar * data = (gchar*)purple_buddy_icon_get_data(icon, &len);
-				if (data!=NULL){
-					std::cout << "making avatar " << len <<"\n";
-					std::string avatarData((char *)data,len);
-                    base64encode((unsigned char *)data, len, avatarData);
-					photo->addChild( new Tag("BINVAL", avatarData));
-					std::cout << "avatar made\n";
-// 					std::cout << photo->xml() << "\n";
+			PurpleBuddy *buddy = purple_find_buddy(purple_connection_get_account(gc), who.c_str());
+			if (buddy){
+				std::cout << "found buddy " << who << "\n";
+				gsize len;
+				PurpleBuddyIcon *icon = NULL;
+				icon = purple_buddy_icons_find(purple_connection_get_account(gc), who.c_str());
+				if(icon!=NULL) {
+					std::cout << "found icon\n";
+					const gchar * data = (gchar*)purple_buddy_icon_get_data(icon, &len);
+					if (data!=NULL){
+						std::cout << "making avatar " << len <<"\n";
+						std::string avatarData((char *)data,len);
+						base64encode((unsigned char *)data, len, avatarData);
+						photo->addChild( new Tag("BINVAL", avatarData));
+						std::cout << "avatar made\n";
+	// 					std::cout << photo->xml() << "\n";
+					}
 				}
 			}
-		}
 
-		if(!photo->children().empty())
-			vcard->addChild(photo);
+			if(!photo->children().empty())
+				vcard->addChild(photo);
+			else 
+				delete photo;
+		}
 
 		reply->addChild(vcard);
 		std::cout << reply->xml() << "\n";
