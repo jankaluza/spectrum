@@ -1274,6 +1274,7 @@ void GlooxMessageHandler::handleMessage (const Message &msg, MessageSession *ses
 								if ((std::string) action->label == "Set Facebook status...") {
 									action->callback(action);
 								}
+								purple_plugin_action_free(action);
 							}
 						}
 					}
