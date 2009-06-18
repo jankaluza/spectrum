@@ -131,6 +131,7 @@ struct Configuration {
 	int port;				// server port
 	
 	bool onlyForVIP;		// true if transport is only for users in VIP users database
+	std::list <std::string> allowedServers;
 	std::map<int,std::string> bindIPs;	// IP address to which libpurple should bind connections
 	
 	std::string userDir;	// directory used as .tmp directory for avatars and other libpurple stuff

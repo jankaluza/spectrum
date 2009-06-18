@@ -156,6 +156,7 @@ bool AdhocRepeater::handleIq(const IQ &stanza) {
 		c->addAttribute("sessionid",tag->findAttribute("sessionid"));
 		c->addAttribute("node","configuration");
 		c->addAttribute("status","canceled");
+		response->addChild(c);
 		main->j->send(response);
 
 		g_timeout_add(0,&removeRepeater,this);
@@ -196,6 +197,7 @@ bool AdhocRepeater::handleIq(const IQ &stanza) {
 		c->addAttribute("sessionid",tag->findAttribute("sessionid"));
 		c->addAttribute("node","configuration");
 		c->addAttribute("status","completed");
+		s->addChild(c);
 		main->j->send(s);
 		
 		g_timeout_add(0,&removeRepeater,this);

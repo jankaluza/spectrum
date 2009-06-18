@@ -829,6 +829,13 @@ void GlooxMessageHandler::loadConfigFile(){
 		m_configuration.bindIPs[i] = (std::string)bind[i];
 	}
 	g_strfreev (bind);
+	
+	bind = g_key_file_get_string_list(keyfile, "service", "allowed_servers", NULL, NULL);
+	for (i = 0; bind[i]; i++){
+		m_configuration.allowedServers.push_back((std::string) bind[i]);
+	}
+	g_strfreev (bind);
+
 	g_key_file_free(keyfile);
 }
 
@@ -1139,7 +1146,7 @@ void GlooxMessageHandler::handlePresence(const Presence &stanza){
 			}
 			else {
 				bool isVip = sql()->isVIP(stanza.from().bare());
-				if (configuration().onlyForVIP && !isVip){
+				if (configuration().onlyForVIP && !isVip && std::find(configuration().allowedServers.begin(), configuration().allowedServers.end(), stanza.from().server()) == configuration().allowedServers.end()){
 					Log().Get(stanza.from().full()) << "This user is not VIP, can't login...";
 					return;
 				}
