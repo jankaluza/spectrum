@@ -114,7 +114,7 @@ class User {
 		void updateSetting(const std::string &key, PurpleValue *value);
 
 		// Entity Capabilities
-		std::string capsVersion() { return m_capsVersion; }
+		std::string & capsVersion() { return m_capsVersion; }
 		void setCapsVersion(const std::string &capsVersion) { m_capsVersion = capsVersion; }
 		
 		// Authorization requests
@@ -128,16 +128,16 @@ class User {
 		time_t connectionStart() { return m_connectionStart; }
 		
 		PurpleAccount *account() { return m_account; }
-		std::map<std::string,int> resources() { return m_resources; }
+		std::map<std::string,int> & resources() { return m_resources; }
 		int reconnectCount() { return m_reconnectCount; }
 		bool isVIP() { return m_vip; }
 		bool readyForConnect() { return m_readyForConnect; }
-		std::string username() { return m_username; }
-		std::string jid() { return m_jid; }
-		std::string resource() { return m_resource; }
-		AdhocData adhocData() { return m_adhocData; }
+		std::string & username() { return m_username; }
+		std::string & jid() { return m_jid; }
+		std::string & resource() { return m_resource; }
+		AdhocData & adhocData() { return m_adhocData; }
 		void setAdhocData(AdhocData data) { m_adhocData = data; }
-		std::map<std::string,RosterRow> roster() { return m_roster; }
+		std::map<std::string,RosterRow> & roster() { return m_roster; }
 		const char *getLang() { return m_lang; }
 		void setLang(const char *lang) { m_lang = lang; }
 		

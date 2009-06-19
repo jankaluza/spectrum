@@ -1146,7 +1146,8 @@ void GlooxMessageHandler::handlePresence(const Presence &stanza){
 			}
 			else {
 				bool isVip = sql()->isVIP(stanza.from().bare());
-				if (configuration().onlyForVIP && !isVip && std::find(configuration().allowedServers.begin(), configuration().allowedServers.end(), stanza.from().server()) == configuration().allowedServers.end()){
+				std::list<std::string> const &x = configuration().allowedServers;
+				if (configuration().onlyForVIP && !isVip && std::find(x.begin(), x.end(), stanza.from().server()) == x.end()){
 					Log().Get(stanza.from().full()) << "This user is not VIP, can't login...";
 					return;
 				}

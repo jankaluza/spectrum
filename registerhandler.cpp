@@ -41,7 +41,8 @@ bool GlooxRegisterHandler::handleIq (const IQ &iq){
 	User *user = p->userManager()->getUserByJID(iq.from().bare());
 	if (p->configuration().onlyForVIP){
 		bool isVIP = p->sql()->isVIP(iq.from().bare());
-		if (!isVIP)
+		std::list<std::string> const &x = p->configuration().allowedServers;
+		if (!isVIP && std::find(x.begin(), x.end(), iq.from().server()) == x.end())
 			return false;
 	}
 	

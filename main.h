@@ -194,8 +194,8 @@ public:
 	
 	UserManager *userManager() { return m_userManager; }
 	GlooxStatsHandler *stats() { return m_stats; }
-	Configuration configuration() { return m_configuration; }
-	std::string jid() { return m_configuration.jid; } // just to create shortcut and because of historical reasons
+	Configuration & configuration() { return m_configuration; }
+	std::string & jid() { return m_configuration.jid; } // just to create shortcut and because of historical reasons
 	SQLClass *sql() { return m_sql; }
 	GlooxVCardHandler *vcard() { return m_vcard; }
 	AbstractProtocol *protocol() { return m_protocol; }
