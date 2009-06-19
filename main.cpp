@@ -1224,7 +1224,7 @@ void GlooxMessageHandler::onDisconnect(ConnectionError e){
 	Log().Get("gloox") << "!!!!!!!!!! DISCONNECTED FROM JABBER SERVER !!!!!!!!!!!";
 	Log().Get("gloox") << j->streamError();
 	Log().Get("gloox") << j->streamErrorText("default text");
-	if (j->streamError()==0){
+	if (j->streamError()==0 || j->streamError()==24){
         	j->connect(false);
 		int mysock = dynamic_cast<ConnectionTCPClient*>( j->connectionImpl() )->socket();
 		connectIO = g_io_channel_unix_new(mysock);
