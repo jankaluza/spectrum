@@ -830,11 +830,13 @@ void GlooxMessageHandler::loadConfigFile(){
 	}
 	g_strfreev (bind);
 	
-	bind = g_key_file_get_string_list(keyfile, "service", "allowed_servers", NULL, NULL);
-	for (i = 0; bind[i]; i++){
-		m_configuration.allowedServers.push_back((std::string) bind[i]);
+	if(g_key_file_has_key(keyfile,"service","allowed_servers",NULL)) {
+		bind = g_key_file_get_string_list(keyfile, "service", "allowed_servers", NULL, NULL);
+		for (i = 0; bind[i]; i++){
+			m_configuration.allowedServers.push_back((std::string) bind[i]);
+		}
+		g_strfreev (bind);
 	}
-	g_strfreev (bind);
 
 	g_key_file_free(keyfile);
 }
