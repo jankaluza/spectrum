@@ -222,7 +222,10 @@ bool GlooxAdhocHandler::hasSession(const std::string &jid) {
 void GlooxAdhocHandler::handleIqID( const IQ &iq, int context ) {
 }
 
-void GlooxAdhocHandler::handleDiscoInfo(const JID &jid, const Disco::Info &info, int context) {}
+void GlooxAdhocHandler::handleDiscoInfo(const JID &jid, const Disco::Info &info, int context) {
+	Log().Get("handle disco info adhoc") << jid.full();
+}
+
 void GlooxAdhocHandler::handleDiscoItems(const JID &jid, const Disco::Items &items, int context) {}
 void GlooxAdhocHandler::handleDiscoError(const JID &jid, const Error *error, int context) {}
 

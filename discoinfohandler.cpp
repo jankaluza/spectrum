@@ -89,7 +89,7 @@ bool GlooxDiscoInfoHandler::handleIq (const IQ &stanza){
 			return true;
 		}
 	}
-	return p->j->disco()->handleIq(stanza);
+	return true;
 }
 
 void GlooxDiscoInfoHandler::handleIqID (const IQ &stanza, int context){
