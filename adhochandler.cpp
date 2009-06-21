@@ -64,7 +64,7 @@ Disco::ItemList GlooxAdhocHandler::handleDiscoNodeItems( const JID &_from, const
 			User *user = main->userManager()->getUserByJID(from);
 			if (user) {
 				for(std::map<std::string, adhocCommand>::iterator u = m_handlers.begin(); u != m_handlers.end() ; u++) {
-					lst.push_back( new Disco::Item( main->jid(),(*u).first, (std::string) tr(user->getLang(),(*u).second.name) ) );
+					lst.push_back( new Disco::Item( main->jid(),(*u).first, (std::string) tr(user->getLang(), "transport_" + (*u).second.name) ) );
 				}
 				if (user->isConnected() && purple_account_get_connection(user->account())) {
 					PurpleConnection *gc = purple_account_get_connection(user->account());
@@ -78,7 +78,7 @@ Disco::ItemList GlooxAdhocHandler::handleDiscoNodeItems( const JID &_from, const
 						for (l = actions; l != NULL; l = l->next) {
 							if (l->data) {
 								action = (PurplePluginAction *) l->data;
-								lst.push_back( new Disco::Item( main->jid(), (std::string) tr(user->getLang(), action->label), (std::string) action->label ) );
+								lst.push_back( new Disco::Item( main->jid(), (std::string) tr(user->getLang(), action->label), "transport_" + (std::string) action->label ) );
 								purple_plugin_action_free(action);
 							}
 						}
@@ -104,7 +104,7 @@ Disco::ItemList GlooxAdhocHandler::handleDiscoNodeItems( const JID &_from, const
 
 					for(l = ll = prpl_info->blist_node_menu((PurpleBlistNode*)buddy); l; l = l->next) {
 						PurpleMenuAction *action = (PurpleMenuAction *) l->data;
-						lst.push_back( new Disco::Item( _to.bare(), (std::string) tr(user->getLang(), action->label), (std::string) action->label ) );
+						lst.push_back( new Disco::Item( _to.bare(), (std::string) tr(user->getLang(), action->label), "transport_" + (std::string) action->label ) );
 						purple_menu_action_free(action);
 					}
 				}
@@ -156,7 +156,7 @@ bool GlooxAdhocHandler::handleIq( const IQ &stanza ) {
 					for (l = actions; l != NULL; l = l->next) {
 						if (l->data) {
 							action = (PurplePluginAction *) l->data;
-							if (node == (std::string) action->label) {
+							if (node == "transport_" + (std::string) action->label) {
 								AdhocData data;
 								data.id = stanza.id();
 								data.from = stanza.from().full();
@@ -185,7 +185,7 @@ bool GlooxAdhocHandler::handleIq( const IQ &stanza ) {
 
 				for(l = ll = prpl_info->blist_node_menu((PurpleBlistNode*)buddy); l; l = l->next) {
 					PurpleMenuAction *action = (PurpleMenuAction *) l->data;
-					if (node == (std::string) action->label) {
+					if (node == "transport_" + (std::string) action->label) {
 						void (*callback)(PurpleBlistNode *, gpointer);
 						callback = (void (*)(PurpleBlistNode *, gpointer))action->callback;
 						if (callback)

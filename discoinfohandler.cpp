@@ -89,6 +89,51 @@ bool GlooxDiscoInfoHandler::handleIq (const IQ &stanza){
 			return true;
 		}
 	}
+	else if (stanza.subtype() == IQ::Get) {
+		Tag *tag = stanza.tag();
+		Tag *query = tag->findChildWithAttrib("xmlns","http://jabber.org/protocol/disco#info");
+		std::string node = query->findAttribute("node");
+		if (node.find("transport_") == 0) {
+// 			<iq type='result'
+// 				to='requester@domain'
+// 				from='responder@domain'>
+// 			<query xmlns='http://jabber.org/protocol/disco#info'
+// 					node='config'>
+// 				<identity name='Configure Service'
+// 						category='automation'
+// 						type='command-node'/>
+// 				<feature var='http://jabber.org/protocol/commands'/>
+// 				<feature var='jabber:x:data'/>
+// 			</query>
+// 			</iq>
+			IQ _s(IQ::Result, stanza.from(), stanza.id());
+			_s.setFrom(stanza.to().full());
+			Tag *s = _s.tag();
+			Tag *query2 = new Tag("query");
+			query2->setXmlns("http://jabber.org/protocol/disco#info");
+			query2->addAttribute("node",node);
+			
+			Tag *t;
+			t = new Tag("identity");
+			t->addAttribute("category","gateway");
+// 			t->addAttribute("name","High Flyer Transport");
+			t->addAttribute("type",p->protocol()->gatewayIdentity());
+			query2->addChild(t);
+
+			t = new Tag("feature");
+			t->addAttribute("var","http://jabber.org/protocol/commands");
+			query2->addChild(t);
+
+			t = new Tag("feature");
+			t->addAttribute("var","jabber:x:data");
+			query2->addChild(t);
+
+			s->addChild(query2);
+			p->j->send( s );
+		}
+		delete tag;
+	}
+	
 	return true;
 }
 
