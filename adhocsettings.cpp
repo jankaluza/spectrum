@@ -103,7 +103,8 @@ AdhocSettings::AdhocSettings(GlooxMessageHandler *m, User *user, const std::stri
 AdhocSettings::~AdhocSettings() {}
 
 bool AdhocSettings::handleIq(const IQ &stanza) {
-	Tag *tag = stanza.tag()->findChild( "command" );
+	Tag *stanzaTag = stanza.tag();
+	Tag *tag = stanzaTag->findChild( "command" );
 	if (tag->hasAttribute("action","cancel")){
 		IQ _response(IQ::Result, stanza.from().full(), stanza.id());
 		_response.setFrom(main->jid());
@@ -118,7 +119,7 @@ bool AdhocSettings::handleIq(const IQ &stanza) {
 		main->j->send(response);
 
 // 		g_timeout_add(0,&removeHandler,this);
-
+		delete stanzaTag;
 		return true;
 	}
 	
@@ -159,11 +160,10 @@ bool AdhocSettings::handleIq(const IQ &stanza) {
 		s->addChild(c);
 		main->j->send(s);
 		
-// 		g_timeout_add(0,&removeRepeater,this);
-		
+// 		g_timeout_add(0,&removeRepeater,this);		
 	}
 
-
+	delete stanzaTag;
 	return true;
 }
 

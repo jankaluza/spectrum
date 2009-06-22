@@ -1097,7 +1097,9 @@ void GlooxMessageHandler::handlePresence(const Presence &stanza){
 	Log().Get(stanza.from().full()) << "Presence received (" << stanza.subtype() << ") for: " << stanza.to().full();
 
 	if (stanza.presence() != Presence::Unavailable && stanza.to().username() == ""){
-		Tag *c = stanza.tag()->findChildWithAttrib("xmlns","http://jabber.org/protocol/caps");
+		Tag *stanzaTag = stanza.tag();
+		if (!stanzaTag) return;
+		Tag *c = stanzaTag->findChildWithAttrib("xmlns","http://jabber.org/protocol/caps");
 		// presence has caps
 		if (c!=NULL){
 			// caps is not chached
@@ -1126,6 +1128,7 @@ void GlooxMessageHandler::handlePresence(const Presence &stanza){
 			j->disco()->getDiscoInfo(stanza.from(),"",m_discoHandler,m_discoHandler->version,id);
 			m_discoHandler->version++;
 		}
+		delete stanzaTag;
 	}
 
 	User *user = userManager()->getUserByJID(stanza.from().bare());
@@ -1242,17 +1245,19 @@ void GlooxMessageHandler::handleMessage (const Message &msg, MessageSession *ses
 	User *user = userManager()->getUserByJID(msg.from().bare());
 	if (user!=NULL){
 		if (user->isConnected()){
-			Tag *chatstates = msg.tag()->findChildWithAttrib("xmlns","http://jabber.org/protocol/chatstates");
+			Tag *msgTag = msg.tag();
+			if (!msgTag) return;
+			Tag *chatstates = msgTag->findChildWithAttrib("xmlns","http://jabber.org/protocol/chatstates");
 			if (chatstates!=NULL){
 				user->receivedChatState(msg.to().username(),chatstates->name());
 			}
-			if(msg.tag()->findChild("body")!=NULL) {
+			if(msgTag->findChild("body")!=NULL) {
 				m_stats->messageFromJabber();
 				user->receivedMessage(msg);
 			}
 			else {
 				// handle activity; TODO: move me to another function or better file
-				Tag *event = msg.tag()->findChild("event");
+				Tag *event = msgTag->findChild("event");
 				if (!event) return;
 				Tag *items = event->findChildWithAttrib("node","http://jabber.org/protocol/activity");
 				if (!items) return;
@@ -1290,6 +1295,7 @@ void GlooxMessageHandler::handleMessage (const Message &msg, MessageSession *ses
 					}
 				}
 			}
+			delete msgTag;
 		}
 		else{
 			Log().Get(msg.from().bare()) << "New message received, but we're not connected yet";

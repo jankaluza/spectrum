@@ -145,7 +145,9 @@ AdhocRepeater::AdhocRepeater(GlooxMessageHandler *m, User *user, const std::stri
 AdhocRepeater::~AdhocRepeater() {}
 
 bool AdhocRepeater::handleIq(const IQ &stanza) {
-	Tag *tag = stanza.tag()->findChild( "command" );
+	Tag *stanzaTag = stanza.tag();
+	if (!stanzaTag) return false;
+	Tag *tag = stanzaTag->findChild( "command" );
 	if (tag->hasAttribute("action","cancel")){
 		IQ _response(IQ::Result, stanza.from().full(), stanza.id());
 		_response.setFrom(main->jid());
@@ -160,7 +162,7 @@ bool AdhocRepeater::handleIq(const IQ &stanza) {
 		main->j->send(response);
 
 		g_timeout_add(0,&removeRepeater,this);
-
+		delete stanzaTag;
 		return false;
 	}
 	
@@ -204,7 +206,7 @@ bool AdhocRepeater::handleIq(const IQ &stanza) {
 		
 	}
 
-
+	delete stanzaTag;
 	return false;
 }
 

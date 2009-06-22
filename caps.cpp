@@ -56,8 +56,10 @@ void GlooxDiscoHandler::handleDiscoInfo(const JID &jid, const Disco::Info &info,
 	//if (query->findChild("identity") && query->findChild("identity")->findChild("category") && !query->findChild("identity")->findChildWithAttrib("category","client"))
 		//return;
 	Tag *query = info.tag();
-	if (query->findChild("identity") && !query->findChildWithAttrib("category","client"))
+	if (query->findChild("identity") && !query->findChildWithAttrib("category","client")) {
+		delete query;
 		return;
+	}
 	int feature=0;
 	std::list<Tag*> features = query->findChildren("feature");
 		for (std::list<Tag*>::const_iterator it = features.begin(); it != features.end(); ++it) {
@@ -94,6 +96,7 @@ void GlooxDiscoHandler::handleDiscoInfo(const JID &jid, const Disco::Info &info,
 	}
 	// TODO: CACHE CAPS IN DATABASE ACCORDING TO VERSION
 	versions.erase(context);
+	delete query;
 }
 
 void GlooxDiscoHandler::handleDiscoItems(const JID &jid, const Disco::Items &items, int context){

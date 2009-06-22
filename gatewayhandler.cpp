@@ -99,8 +99,9 @@ bool GlooxGatewayHandler::handleIq (const IQ &stanza){
 		return true;
 	}
 	else if(stanza.subtype() == IQ::Set){
-		Log().Get("tag") << stanza.tag()->xml();
-		Tag *query = stanza.tag()->findChild("query");
+		Tag *stanzaTag = stanza.tag();
+		Log().Get("tag") << stanzaTag->xml();
+		Tag *query = stanzaTag->findChild("query");
 		if (query==NULL)
 			return false;
 		Tag *prompt = query->findChild("prompt");
@@ -124,6 +125,7 @@ bool GlooxGatewayHandler::handleIq (const IQ &stanza){
 		s->addChild(query);
 		
 		p->j->send( s );
+		delete stanzaTag;
 		return true;
 	}
 

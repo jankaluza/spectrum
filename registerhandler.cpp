@@ -87,7 +87,8 @@ bool GlooxRegisterHandler::handleIq (const IQ &iq){
 	}
 	else if(iq.subtype() == IQ::Set) {
 		bool sendsubscribe = false;
-		Tag *query = iq.tag()->findChild( "query" );
+		Tag *iqTag = iq.tag();
+		Tag *query = iqTag->findChild( "query" );
 
 		if (!query) return true;
 
@@ -164,6 +165,8 @@ bool GlooxRegisterHandler::handleIq (const IQ &iq){
 			reply->addAttribute( "to", iq.from().full() );
 			reply->addAttribute( "from", p->jid() );
 			p->j->send( reply );
+			
+			delete iqTag;
 			return true;
 		}
 	
@@ -218,6 +221,7 @@ bool GlooxRegisterHandler::handleIq (const IQ &iq){
 		    
 		    p->j->send(iq2);
 		    
+			delete iqTag;
 		    return true;
 		}
 
@@ -259,12 +263,13 @@ bool GlooxRegisterHandler::handleIq (const IQ &iq){
 		p->j->send( reply );
 		
 		if(sendsubscribe) {
-		reply = new Tag("presence");
-		reply->addAttribute( "from", p->jid() );
-		reply->addAttribute( "to", iq.from().bare() );
-		reply->addAttribute( "type", "subscribe" );
-		p->j->send( reply );
+			reply = new Tag("presence");
+			reply->addAttribute( "from", p->jid() );
+			reply->addAttribute( "to", iq.from().bare() );
+			reply->addAttribute( "type", "subscribe" );
+			p->j->send( reply );
 		}
+		delete iqTag;
 		return true;
 	}
 	return false;

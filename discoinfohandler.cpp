@@ -60,7 +60,9 @@ bool GlooxDiscoInfoHandler::handleIq (const IQ &stanza){
 
 	std::cout << "DISCO DISCO DISCO INFO\n";
 	if(stanza.subtype() == IQ::Get && stanza.to().username()!="") {
-		Tag *query = stanza.tag()->findChildWithAttrib("xmlns","http://jabber.org/protocol/disco#info");
+		Tag *stanzaTag = stanza.tag();
+		if (!stanzaTag) return true;
+		Tag *query = stanzaTag->findChildWithAttrib("xmlns","http://jabber.org/protocol/disco#info");
 		if (query!=NULL){
 			IQ _s(IQ::Result, stanza.from(), stanza.id());
 			_s.setFrom(stanza.to().full());
@@ -86,6 +88,7 @@ bool GlooxDiscoInfoHandler::handleIq (const IQ &stanza){
 			s->addChild(query2);
 			p->j->send( s );
 
+			delete stanzaTag;
 			return true;
 		}
 	}

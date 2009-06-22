@@ -80,9 +80,12 @@ bool GlooxStatsHandler::handleIq (const IQ &stanza){
 //                 </iq>
 //       
 
-	Tag *query = stanza.tag()->findChild("query");
-	if (query==NULL)
+	Tag *stanzaTag = stanza.tag();
+	Tag *query = stanzaTag->findChild("query");
+	if (query==NULL) {
+		delete stanzaTag;
 		return true;
+	}
 	std::cout << "*** "<< stanza.from().full() << ": received stats request\n";
 	std::list<Tag*> stats = query->children();
 	if (stats.empty()){
@@ -201,6 +204,7 @@ bool GlooxStatsHandler::handleIq (const IQ &stanza){
 
 	}
 
+	delete stanzaTag;
 	return true;
 }
 

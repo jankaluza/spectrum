@@ -124,9 +124,14 @@ bool GlooxAdhocHandler::handleIq( const IQ &stanza ) {
 	Log().Get("GlooxAdhocHandler") << "handleIq";
 	std::string to = stanza.to().bare();
 	std::string from = stanza.from().bare();
-	Tag *tag = stanza.tag()->findChild( "command" );
+	Tag *stanzaTag = stanza.tag();
+	if (!stanzaTag) return false;
+	Tag *tag = stanzaTag->findChild( "command" );
 	const std::string& node = tag->findAttribute( "node" );
-	if (node.empty()) return false;
+	if (node.empty()) {
+		delete stanzaTag;
+		return false;
+	}
 
 	User *user = main->userManager()->getUserByJID(from);
 	if (user) {
@@ -136,11 +141,13 @@ bool GlooxAdhocHandler::handleIq( const IQ &stanza ) {
 				delete m_sessions[jid];
 				unregisterSession(jid);
 			}
+			delete stanzaTag;
 			return true;
 		}
 		else if (m_handlers.find(node) != m_handlers.end()) {
 			AdhocCommandHandler *handler = m_handlers[node].createHandler(main, user, stanza.from().full(), stanza.id());
 			registerSession(stanza.from().full(), handler);
+			delete stanzaTag;
 			return true;
 		}
 		if (user->isConnected() && purple_account_get_connection(user->account())) {
@@ -208,6 +215,7 @@ bool GlooxAdhocHandler::handleIq( const IQ &stanza ) {
 			}
 		}
 	}
+	delete stanzaTag;
 	return true;
 }
 
