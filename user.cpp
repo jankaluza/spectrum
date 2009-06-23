@@ -802,6 +802,10 @@ void User::purpleAuthorizeReceived(PurpleAccount *account,const char *remote_use
  * Called when we're ready to connect (we know caps)
  */
 void User::connect(){
+	if (!m_readyForConnect) {
+		Log().Get(m_jid) << "We are not ready for connect";
+		return;
+	}
 	Log().Get(m_jid) << "Connecting with caps: " << m_capsVersion;
 	if (purple_accounts_find(m_username.c_str(), this->p->protocol()->protocol().c_str()) != NULL){
 		Log().Get(m_jid) << "this account already exists";
