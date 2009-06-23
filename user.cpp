@@ -806,6 +806,10 @@ void User::connect(){
 		Log().Get(m_jid) << "We are not ready for connect";
 		return;
 	}
+	if (m_account) {
+		Log().Get(m_jid) << "connect() has been called before";
+		return;
+	}
 	Log().Get(m_jid) << "Connecting with caps: " << m_capsVersion;
 	if (purple_accounts_find(m_username.c_str(), this->p->protocol()->protocol().c_str()) != NULL){
 		Log().Get(m_jid) << "this account already exists";
