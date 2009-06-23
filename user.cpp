@@ -543,7 +543,10 @@ void User::purpleConversationWriteIM(PurpleConversation *conv, const char *who, 
 	Log().Get(m_jid) <<  "purpleConversationWriteIM:" << name;
 
 	// send message to user
-	std::string message(purple_unescape_html(msg));
+	char *newline = purple_strdup_withhtml(msg);
+	char *strip = purple_markup_strip_html(newline);
+
+	std::string message(strip);
 	Message s(Message::Chat, m_jid, message);
 	std::string from;
 	from.append(name);
@@ -568,7 +571,21 @@ void User::purpleConversationWriteIM(PurpleConversation *conv, const char *who, 
 		s.addExtension(d);
 	}
 
-	p->j->send( s );
+	Tag *stanzaTag = s.tag();
+
+	if (hasFeature(GLOOX_FEATURE_XHTML_IM)) {
+		Tag *html = new Tag("html");
+		html->addAttribute("xmlns", "http://jabber.org/protocol/xhtml-im");
+		Tag *body = new Tag("body", (std::string) msg);
+		body->addAttribute("xmlns", "http://www.w3.org/1999/xhtml");
+		html->addChild(body);
+		stanzaTag->addChild(html);
+	}
+
+	p->j->send( stanzaTag );
+	
+	g_free(newline);
+	g_free(strip);
 }
 
 void User::purpleChatTopicChanged(PurpleConversation *conv, const char *who, const char *topic) {
