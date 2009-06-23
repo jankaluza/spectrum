@@ -18,24 +18,27 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02111-1301  USA
  */
 
-#ifndef _HI_ADHOC_COMMAND_HANDLER_H
-#define _HI_ADHOC_COMMAND_HANDLER_H
+#ifndef _HI_ABSTRACT_PURPLE_REQUEST_H
+#define _HI_ABSTRACT_PURPLE_REQUEST_H
 
 #include <string>
 #include <list>
-#include "glib.h"
-#include "gloox/iq.h"
-#include "abstractpurplerequest.h"
+#include "user.h"
 
 using namespace gloox;
 
-class AdhocCommandHandler : public AbstractPurpleRequest
+class AbstractPurpleRequest
 {
 	public:
-		virtual ~AdhocCommandHandler() {}
+		virtual ~AbstractPurpleRequest() {}
 
-		virtual bool handleIq(const IQ &iq) = 0;
-		virtual std::string & from() = 0;
+		void setRequestType(AdhocDataCallerType type) { m_rtype = type; }
+		AdhocDataCallerType & requestType() { return m_rtype; }
+		
+	private:
+		AdhocDataCallerType m_rtype;
+	
+	
 };
 
 #endif

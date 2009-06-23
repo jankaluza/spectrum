@@ -73,6 +73,14 @@ class AbstractProtocol
 		 * Returns the username of contact from which notifications will be sent
 		 */
 		virtual std::string notifyUsername() { return ""; }
+		/*
+		 * Returns the name of protocol actions for user search or empty string if there is not any
+		 */
+		virtual std::string userSearchAction() { return ""; }
+		/*
+		 * Returns ID of column used for UIN/name/ID of founded users in searchresults
+		 */
+		virtual std::string userSearchColumn() { return ""; }
 };
 
 #endif

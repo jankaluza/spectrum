@@ -168,6 +168,7 @@ bool GlooxAdhocHandler::handleIq( const IQ &stanza ) {
 								data.id = stanza.id();
 								data.from = stanza.from().full();
 								data.node = node;
+								data.callerType = CALLER_ADHOC;
 								user->setAdhocData(data);
 								action->plugin = plugin;
 								action->context = gc;

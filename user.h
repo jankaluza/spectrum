@@ -35,10 +35,15 @@ class RosterRow;
 
 using namespace gloox;
 
+typedef enum { 	CALLER_ADHOC,
+				CALLER_SEARCH
+				} AdhocDataCallerType;
+
 struct AdhocData {
 	std::string id;
 	std::string from;
 	std::string node;
+	AdhocDataCallerType callerType;
 };
 
 struct authData{

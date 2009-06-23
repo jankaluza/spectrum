@@ -26,6 +26,8 @@
 #include "usermanager.h"
 #include "adhochandler.h"
 #include "adhocrepeater.h"
+#include "searchhandler.h"
+#include "searchrepeater.h"
 #include "protocols/abstractprotocol.h"
 #include "protocols/icq.h"
 #include "protocols/facebook.h"
@@ -230,12 +232,23 @@ static void * requestInput(const char *title, const char *primary,const char *se
 		User *user = GlooxMessageHandler::instance()->userManager()->getUserByAccount(account);
 		if (!user) return NULL;
 		if (!user->adhocData().id.empty()) {
-			AdhocRepeater *repeater = new AdhocRepeater(GlooxMessageHandler::instance(), user, title ? std::string(title):std::string(), primaryString, secondary ? std::string(secondary):std::string(), default_value ? std::string(default_value):std::string(), multiline, masked, ok_cb, cancel_cb, user_data);
-			GlooxMessageHandler::instance()->adhoc()->registerSession(user->adhocData().from, repeater);
-			AdhocData data;
-			data.id="";
-			user->setAdhocData(data);
-			return repeater;
+			if (user->adhocData().callerType == CALLER_ADHOC) {
+				AdhocRepeater *repeater = new AdhocRepeater(GlooxMessageHandler::instance(), user, title ? std::string(title):std::string(), primaryString, secondary ? std::string(secondary):std::string(), default_value ? std::string(default_value):std::string(), multiline, masked, ok_cb, cancel_cb, user_data);
+				GlooxMessageHandler::instance()->adhoc()->registerSession(user->adhocData().from, repeater);
+				AdhocData data;
+				data.id="";
+				user->setAdhocData(data);
+				return repeater;
+			}
+			else if (user->adhocData().callerType == CALLER_SEARCH) {
+				SearchRepeater *repeater = new SearchRepeater(GlooxMessageHandler::instance(), user, title ? std::string(title):std::string(), primaryString, secondary ? std::string(secondary):std::string(), default_value ? std::string(default_value):std::string(), multiline, masked, ok_cb, cancel_cb, user_data);
+				GlooxMessageHandler::instance()->searchHandler()->registerSession(user->adhocData().from, repeater);
+// 				AdhocData data;
+// 				data.id="";
+// 				user->setAdhocData(data);
+				return repeater;
+			}
+
 		}
 		else {
 			if (primaryString=="Authorization Request Message:") {
@@ -248,6 +261,20 @@ static void * requestInput(const char *title, const char *primary,const char *se
 					((PurpleRequestInputCb) ok_cb)(user_data,user->actionData.c_str());
 				}
 			}
+		}
+	}
+	return NULL;
+}
+
+static void * notifySearchResults(PurpleConnection *gc, const char *title, const char *primary, const char *secondary, PurpleNotifySearchResults *results, gpointer user_data) {
+	User *user = GlooxMessageHandler::instance()->userManager()->getUserByAccount(purple_connection_get_account(gc));
+	if (!user) return NULL;
+	if (!user->adhocData().id.empty()) {
+		if (user->adhocData().callerType == CALLER_SEARCH) {
+			GlooxMessageHandler::instance()->searchHandler()->searchResultsArrived(user->adhocData().from, results);
+			AdhocData data;
+			data.id="";
+			user->setAdhocData(data);
 		}
 	}
 	return NULL;
@@ -276,10 +303,19 @@ static void * requestAction(const char *title, const char *primary,const char *s
 
 static void requestClose(PurpleRequestType type, void *ui_handle) {
 	if (type == PURPLE_REQUEST_INPUT) {
-		AdhocRepeater *repeater = (AdhocRepeater *) ui_handle;
-		std::string from = repeater->from();
-		GlooxMessageHandler::instance()->adhoc()->unregisterSession(from);
-		delete repeater;
+		AbstractPurpleRequest *r = (AbstractPurpleRequest *) ui_handle;
+		if (r->requestType() == CALLER_ADHOC) {
+			AdhocCommandHandler * repeater = (AdhocCommandHandler *) r;
+			std::string from = repeater->from();
+			GlooxMessageHandler::instance()->adhoc()->unregisterSession(from);
+			delete repeater;
+		}
+		else if (r->requestType() == CALLER_SEARCH) {
+			SearchRepeater * repeater = (SearchRepeater *) r;
+			std::string from = repeater->from();
+			GlooxMessageHandler::instance()->searchHandler()->unregisterSession(from);
+			delete repeater;
+		}
 	}
 }
 
@@ -370,7 +406,7 @@ static PurpleNotifyUiOps notifyUiOps =
 		notifyEmail,
 		NULL,
 		NULL,
-		NULL,
+		notifySearchResults,
 		NULL,
 		notify_user_info,
 		NULL,
@@ -570,6 +606,7 @@ GlooxMessageHandler::GlooxMessageHandler() : MessageHandler(),ConnectionListener
 
 	m_sql = new SQLClass(this);
 	m_userManager = new UserManager(this);
+	m_searchHandler = NULL;
 
 	initPurple();
 	loadProtocol();
@@ -635,21 +672,10 @@ void GlooxMessageHandler::loadProtocol(){
 		m_protocol = (AbstractProtocol*) new MSNProtocol(this);
 	else if (configuration().protocol == "irc")
 		m_protocol = (AbstractProtocol*) new IRCProtocol(this);
-// 	PurplePlugin *plugin = purple_find_prpl(m_protocol->protocol().c_str());
-// 	if (plugin && PURPLE_PLUGIN_HAS_ACTIONS(plugin)) {
-// 		PurplePluginAction *action = NULL;
-// 		GList *actions, *l;
-// 
-// 		actions = PURPLE_PLUGIN_ACTIONS(plugin, gc);
-// 
-// 		for (l = actions; l != NULL; l = l->next) {
-// 			if (l->data) {
-// 				action = (PurplePluginAction *) l->data;
-// 				m_adhoc->registerAdhocCommandProvider(adhocProvider, (std::string) action->label ,(std::string) action->label);
-// 				purple_plugin_action_free(action);
-// 			}
-// 		}
-// 	}
+	if (!m_protocol->userSearchAction().empty()) {
+		m_searchHandler = new GlooxSearchHandler(this);
+		j->registerIqHandler(m_searchHandler, ExtSearch);
+	}
 }
 
 void GlooxMessageHandler::onSessionCreateError (SessionCreateError error){

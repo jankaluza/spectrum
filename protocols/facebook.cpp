@@ -29,6 +29,7 @@ FacebookProtocol::FacebookProtocol(GlooxMessageHandler *main){
 	m_transportFeatures.push_back("http://jabber.org/protocol/chatstates");
 	m_transportFeatures.push_back("http://jabber.org/protocol/activity+notify");
 	m_transportFeatures.push_back("http://jabber.org/protocol/commands");
+	m_transportFeatures.push_back("jabber:iq:search");
 	
 	m_buddyFeatures.push_back("http://jabber.org/protocol/disco#info");
 	m_buddyFeatures.push_back("http://jabber.org/protocol/caps");

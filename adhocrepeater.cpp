@@ -39,6 +39,7 @@ AdhocRepeater::AdhocRepeater(GlooxMessageHandler *m, User *user, const std::stri
 	m_from = data.from;
 	
 	setType(PURPLE_REQUEST_INPUT);
+	setRequestType(CALLER_ADHOC);
 	
 	IQ _response(IQ::Result, data.from, data.id);
 	Tag *response = _response.tag();
@@ -84,6 +85,7 @@ AdhocRepeater::AdhocRepeater(GlooxMessageHandler *m, User *user, const std::stri
 	m_requestData = user_data;
 	AdhocData data = user->adhocData();
 	m_from = data.from;
+	setRequestType(CALLER_ADHOC);
 //       <field type='list-single'
 //              label='Maximum number of subscribers'
 //              var='maxsubs'>

@@ -18,26 +18,26 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02111-1301  USA
  */
  
-#ifndef _HI_ADHOC_REPEATER_H
-#define _HI_ADHOC_REPEATER_H
+#ifndef _HI_SEARCH_REPEATER_H
+#define _HI_SEARCH_REPEATER_H
 
 #include <string>
 #include "account.h"
 #include "user.h"
 #include "glib.h"
 #include "request.h"
-#include "adhoccommandhandler.h"
+#include "abstractpurplerequest.h"
 
 class GlooxMessageHandler;
 class User;
 
-class AdhocRepeater : public AdhocCommandHandler
+class SearchRepeater : public AbstractPurpleRequest
 {
 	public:
-		AdhocRepeater(GlooxMessageHandler *m, User *user, const std::string &title, const std::string &primaryString, const std::string &secondaryString, const std::string &value, gboolean multiline, gboolean masked, GCallback ok_cb, GCallback cancel_cb, void * user_data);
-		AdhocRepeater(GlooxMessageHandler *m, User *user, const std::string &title, const std::string &primaryString, const std::string &secondaryString, int default_action, void * user_data, size_t action_count, va_list actions);
-		~AdhocRepeater();
+		SearchRepeater(GlooxMessageHandler *m, User *user, const std::string &title, const std::string &primaryString, const std::string &secondaryString, const std::string &value, gboolean multiline, gboolean masked, GCallback ok_cb, GCallback cancel_cb, void * user_data);
+		~SearchRepeater();
 		bool handleIq(const IQ &iq);
+		void sendSearchResults(PurpleNotifySearchResults *results);
 		void setType(PurpleRequestType t) { m_type = t; }
 		PurpleRequestType type() { return m_type; }
 		std::string & from() { return m_from; }
@@ -45,6 +45,7 @@ class AdhocRepeater : public AdhocCommandHandler
 	private:
 		GlooxMessageHandler *main;
 		User *m_user;
+		Tag *m_lastTag;
 		void *m_requestData;
 		GCallback m_ok_cb;
 		GCallback m_cancel_cb;

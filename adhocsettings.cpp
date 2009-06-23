@@ -28,6 +28,8 @@ AdhocSettings::AdhocSettings(GlooxMessageHandler *m, User *user, const std::stri
 	m_user = user;
 	PurpleValue *value;
 	Tag *field;
+	m_from = std::string(from);
+	setRequestType(CALLER_ADHOC);
 	
 	IQ _response(IQ::Result, from, id);
 	Tag *response = _response.tag();

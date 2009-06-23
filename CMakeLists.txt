@@ -91,6 +91,8 @@ set(hiicq_SRCS
 	localization.cpp
 	muchandler.cpp
 	adhocsettings.cpp
+	searchhandler.cpp
+	searchrepeater.cpp
 	protocols/icq.cpp
 	protocols/facebook.cpp
 	protocols/gg.cpp
@@ -124,6 +126,9 @@ set(hiicq_MOC_HDRS
 	muchandler.h
 	adhoccommandhandler.h
 	adhocsettings.h
+	searchhandler.h
+	searchrepeater.h
+	abstractpurplerequest.h
 	protocols/abstractprotocol.h
 	protocols/icq.h
 	protocols/facebook.h

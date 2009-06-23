@@ -97,6 +97,7 @@ class UserManager;
 class AbstractProtocol;
 // class AdhocHandler;
 class AdhocRepeater;
+class GlooxSearchHandler;
 
 struct User;
 struct UserRow;
@@ -200,6 +201,7 @@ public:
 	GlooxVCardHandler *vcard() { return m_vcard; }
 	AbstractProtocol *protocol() { return m_protocol; }
 	GlooxAdhocHandler *adhoc() { return m_adhoc; }
+	GlooxSearchHandler *searchHandler() { return m_searchHandler; }
 	
 	FileTransferManager* ftManager;
 	SIProfileFT* ft;
@@ -231,6 +233,7 @@ private:
 	GlooxXPingHandler *m_xping;
 	GlooxStatsHandler *m_stats;
 	GlooxVCardHandler *m_vcard;
+	GlooxSearchHandler *m_searchHandler;
 // 	std::list <GlooxAdhocHandler *> m_adhoc_handlers;
 	GlooxAdhocHandler *m_adhoc;
 	

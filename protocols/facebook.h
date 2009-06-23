@@ -31,7 +31,7 @@ class FacebookProtocol : AbstractProtocol
 	public:
 		FacebookProtocol(GlooxMessageHandler *main);
 		~FacebookProtocol();
-		std::string gatewayIdentity() { return "fb"; }
+		std::string gatewayIdentity() { return "facebook"; }
 		std::string protocol() { return "prpl-bigbrownchunx-facebookim"; }
 		bool isValidUsername(std::string &username);
 		std::string prepareUserName(std::string &username);
@@ -41,8 +41,10 @@ class FacebookProtocol : AbstractProtocol
 		Tag *getVCardTag(User *user, GList *vcardEntries);
 		bool isMUC(User *user, const std::string &jid) { return false; }
 		std::string notifyUsername() { return "info"; }
+		std::string userSearchAction() { return "Search for buddies..."; }
 		
 		std::string replace(std::string &str, const char *string_to_replace, const char *new_string);
+		std::string userSearchColumn() { return "ID"; }
 	
 	private:
 		GlooxMessageHandler *m_main;

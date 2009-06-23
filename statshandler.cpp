@@ -29,7 +29,7 @@
 #include "sql.h"
 #include <sstream>
 
-StatsExtension::StatsExtension() : StanzaExtension( ExtGateway )
+StatsExtension::StatsExtension() : StanzaExtension( ExtStats )
 {
 	m_tag = NULL;
 }
