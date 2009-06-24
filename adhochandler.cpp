@@ -127,6 +127,7 @@ bool GlooxAdhocHandler::handleIq( const IQ &stanza ) {
 	Tag *stanzaTag = stanza.tag();
 	if (!stanzaTag) return false;
 	Tag *tag = stanzaTag->findChild( "command" );
+	if (!tag) { Log().Get("GlooxAdhocHandler") << "No Node!"; return false; }
 	const std::string& node = tag->findAttribute( "node" );
 	if (node.empty()) {
 		delete stanzaTag;

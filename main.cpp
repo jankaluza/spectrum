@@ -392,6 +392,18 @@ static void * notifyEmail(PurpleConnection *gc, const char *subject, const char 
 	return NULL;
 }
 
+static void * notifyMessage(PurpleNotifyMsgType type, const char *title, const char *primary, const char *secondary) {
+// 	User *user = GlooxMessageHandler::instance()->userManager()->getUserByAccount(account);
+// 	if (user && !user->adhocData().id.empty()) {
+// 		AdhocRepeater *repeater = new AdhocRepeater(GlooxMessageHandler::instance(), user, title ? std::string(title):std::string(), primary ? std::string(primary):std::string(), secondary ? std::string(secondary):std::string(), default_action, user_data, action_count, actions);
+// 		GlooxMessageHandler::instance()->adhoc()->registerSession(user->adhocData().from, repeater);
+// 		AdhocData data;
+// 		data.id="";
+// 		user->setAdhocData(data);
+// 		return repeater;
+// 	}
+}
+
 static void buddyListAddBuddy(PurpleAccount *account, const char *username, const char *group, const char *alias){
 	std::cout << "BUDDY LIST ADD BUDDY REQUEST\n";
 }
@@ -402,7 +414,7 @@ static void buddyListAddBuddy(PurpleAccount *account, const char *username, cons
 
 static PurpleNotifyUiOps notifyUiOps =
 {
-		NULL,
+		notifyMessage,
 		notifyEmail,
 		NULL,
 		NULL,
@@ -1004,7 +1016,6 @@ void GlooxMessageHandler::notifyEmail(PurpleConnection *gc,const char *subject, 
 		}
 	}
 }
-
 
 void GlooxMessageHandler::purpleConversationWriteChat(PurpleConversation *conv, const char *who, const char *message, PurpleMessageFlags flags, time_t mtime){
 	if (who==NULL)
