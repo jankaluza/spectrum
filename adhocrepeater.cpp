@@ -21,6 +21,7 @@
 #include "adhocrepeater.h"
 #include "gloox/stanza.h"
 #include "log.h"
+#include "dataforms.h"
  
 static gboolean removeRepeater(gpointer data){
 	AdhocRepeater *repeater = (AdhocRepeater*) data;
@@ -56,23 +57,7 @@ AdhocRepeater::AdhocRepeater(GlooxMessageHandler *m, User *user, const std::stri
 	actions->addChild(new Tag("complete"));
 	c->addChild(actions);
 
-	Tag *xdata = new Tag("x");
-	xdata->addAttribute("xmlns","jabber:x:data");
-	xdata->addAttribute("type","form");
-	xdata->addChild(new Tag("title",title));
-	xdata->addChild(new Tag("instructions",primaryString));
-
-	Tag *field = new Tag("field");
-	if (multiline)
-		field->addAttribute("type","text-multi");
-	else
-		field->addAttribute("type","text-single");
-	field->addAttribute("label","Field:");
-	field->addAttribute("var","result");
-	field->addChild(new Tag("value",value));
-	xdata->addChild(field);
-
-	c->addChild(xdata);
+	c->addChild( xdataFromRequestInput(title, primaryString, value, multiline) );
 	response->addChild(c);
 	main->j->send(response);
 
@@ -113,32 +98,10 @@ AdhocRepeater::AdhocRepeater(GlooxMessageHandler *m, User *user, const std::stri
 	actions->addChild(new Tag("complete"));
 	c->addChild(actions);
 
-	Tag *xdata = new Tag("x");
-	xdata->addAttribute("xmlns","jabber:x:data");
-	xdata->addAttribute("type","form");
-	xdata->addChild(new Tag("title",title));
-	xdata->addChild(new Tag("instructions",primaryString));
-
-	Tag *field = new Tag("field");
-	field->addAttribute("type","list-single");
-	field->addAttribute("label","Actions");
-	for (unsigned int i = 0; i < action_count; i++) {
-		Tag *option;
-		std::ostringstream os;
-		os << i;
-		std::string name(va_arg(acts, char *));
-		if (i == 0)
-			field->addChild(new Tag("value",os.str()));
+	for (unsigned int i = 0; i < action_count; i++)
 		m_actions[i] = va_arg(acts, GCallback);
-		option = new Tag("option");
-		option->addAttribute("label",name);
-		option->addChild( new Tag("value",os.str()) );
-		field->addChild(option);
-	}
-	field->addAttribute("var","result");
-	xdata->addChild(field);
 
-	c->addChild(xdata);
+	c->addChild( xdataFromRequestAction(title, primaryString, action_count, acts) );
 	response->addChild(c);
 	main->j->send(response);
 

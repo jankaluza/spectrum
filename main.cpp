@@ -822,6 +822,7 @@ void GlooxMessageHandler::loadConfigFile(){
 	{
 // 		g_error (error->message);
 		Log().Get("gloox") << "Can't load highflyer.cfg!!!";
+		g_key_file_free(keyfile);
 		return;
 	}
 	

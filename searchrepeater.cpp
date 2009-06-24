@@ -22,6 +22,7 @@
 #include "gloox/stanza.h"
 #include "log.h"
 #include "protocols/abstractprotocol.h"
+#include "dataforms.h"
  
 static gboolean removeRepeater(gpointer data){
 	SearchRepeater *repeater = (SearchRepeater*) data;
@@ -73,23 +74,8 @@ SearchRepeater::SearchRepeater(GlooxMessageHandler *m, User *user, const std::st
 	query->addAttribute("xmlns", "jabber:iq:search");
 	query->addChild( new Tag("instructions", "<instructions>You need an x:data capable client to search</instructions>") );
 	
-	Tag *xdata = new Tag("x");
-	xdata->addAttribute("xmlns","jabber:x:data");
-	xdata->addAttribute("type","form");
-	xdata->addChild(new Tag("title",title));
-	xdata->addChild(new Tag("instructions",primaryString));
+	query->addChild( xdataFromRequestInput(title, primaryString, value, multiline) );
 
-	Tag *field = new Tag("field");
-	if (multiline)
-		field->addAttribute("type","text-multi");
-	else
-		field->addAttribute("type","text-single");
-	field->addAttribute("label","Search field");
-	field->addAttribute("var","result");
-	field->addChild(new Tag("value",value));
-	
-	xdata->addChild(field);
-	query->addChild(xdata);
 	response->addChild(query);
 	main->j->send(response);
 }
