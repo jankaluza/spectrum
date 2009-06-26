@@ -57,6 +57,7 @@ bool GlooxRegisterHandler::handleIq (const IQ &iq){
 		Tag *query = new Tag( "query" );
 		query->addAttribute( "xmlns", "jabber:iq:register" );
 		UserRow res = p->sql()->getUserByJid(iq.from().bare());
+
 		if(res.id==-1) {
 			std::cout << "* sending registration form; user is not registered\n";
 			query->addChild( new Tag("instructions", p->protocol()->text("instructions")) );
@@ -72,14 +73,50 @@ bool GlooxRegisterHandler::handleIq (const IQ &iq){
 			query->addChild( new Tag("password"));
 			query->addChild( new Tag("language", res.language) );
 		}
-	
-// 		Tag *x = new Tag("x");
-// 		x->addAttribute("xmlns", "jabber:x:data");
-// 		x->addAttribute("type", "form");
-// 		x->addChild( new Tag("title","Registration") )
-// 		x->addChild( new Tag("instructions", p->protocol()->text("instructions")) );
-// 		<field type='text-single' label='The name of your bot' var='botname'/>
 		
+		Tag *x = new Tag("x");
+		x->addAttribute("xmlns", "jabber:x:data");
+		x->addAttribute("type", "form");
+		x->addChild( new Tag("title", "Registration") );
+		x->addChild( new Tag("instructions", p->protocol()->text("instructions")) );
+		
+		Tag *field = new Tag("field");
+		field->addAttribute("type", "hidden");
+		field->addAttribute("var", "FORM_TYPE");
+		field->addChild( new Tag("value", "jabber:iq:register") );
+		
+		field = new Tag("field");
+		field->addAttribute("type", "text-single");
+		field->addAttribute("var", "username");
+		field->addAttribute("label", "Network username");
+		field->addChild( new Tag("required") );
+		if (res.id!=-1)
+			field->addChild( new Tag("value", res.uin) );
+
+		field = new Tag("field");
+		field->addAttribute("type", "text-private");
+		field->addAttribute("var", "password");
+		field->addAttribute("label", "Password");
+		field->addChild( new Tag("required") );
+
+		field = new Tag("field");
+		field->addAttribute("type", "list-single");
+		field->addAttribute("var", "language");
+		field->addAttribute("label", "Language");
+		if (res.id!=-1)
+			field->addChild( new Tag("value", res.language) );
+		
+		Tag *option = new Tag("option");
+		option->addAttribute("label", "Cesky");
+		option->addChild( new Tag("value", "cs") );
+		
+		if (res.id!=1) {
+			field = new Tag("field");
+			field->addAttribute("type", "boolean");
+			field->addAttribute("var", "unregister");
+			field->addAttribute("label", "Unregister transport");
+			field->addChild( new Tag("value", "0") );
+		}
 		
 		reply->addChild(query);
 		p->j->send( reply );
@@ -87,13 +124,62 @@ bool GlooxRegisterHandler::handleIq (const IQ &iq){
 	}
 	else if(iq.subtype() == IQ::Set) {
 		bool sendsubscribe = false;
+		bool remove = false;
 		Tag *iqTag = iq.tag();
 		Tag *query = iqTag->findChild( "query" );
+		Tag *usernametag;
+		Tag *passwordtag;
+		Tag *languagetag;
+		std::string username("");
+		std::string password("");
+		std::string language("");
+		bool e = false;
 
 		if (!query) return true;
 
+		Tag *xdata = query->findChild("x", "xmlns", "jabber:x:data");
+		
+		if (xdata) {
+			if(query->hasChild( "remove" ))
+				remove = true;
+			for(std::list<Tag*>::const_iterator it = xdata->children().begin(); it != xdata->children().end(); ++it){
+				std::string key = (*it)->findAttribute("var");
+				if (key.empty()) continue;
+
+				Tag *v =(*it)->findChild("value");
+				if (!v) continue;
+
+				if (key == "username")
+					username = v->cdata();
+				else if (key == "password")
+					password = v->cdata();
+				else if (key == "language")
+					language = v->cdata();
+				else if (key == "unregister")
+					remove = atoi(v->cdata().c_str());
+			}
+		}
+		else {
+			if(query->hasChild( "remove" ))
+				remove = true;
+			usernametag = query->findChild("username");
+			passwordtag = query->findChild("password");
+			languagetag = query->findChild("language");
+			
+			if (languagetag)
+				language = languagetag->cdata();
+			else
+				language = "cs";
+
+			if (usernametag==NULL || passwordtag==NULL)
+				e=true;
+			else {
+				username = usernametag->cdata();
+				password = passwordtag->cdata();
+			}
+		}
 		// someone wants to be removed
-		if(query->hasChild( "remove" )) {
+		if (remove) {
 			std::cout << "* removing user from database and disconnecting from legacy network\n";
 			if (user!=NULL){
 				if (user->isConnected()==true){
@@ -173,23 +259,6 @@ bool GlooxRegisterHandler::handleIq (const IQ &iq){
 		// Register or change password
 	
 		std::string jid = iq.from().bare();
-		Tag *usernametag = query->findChild("username");
-		Tag *passwordtag = query->findChild("password");
-		Tag *languagetag = query->findChild("password");
-		std::string username("");
-		std::string password("");
-		std::string language("");
-		
-		if (languagetag)
-			language = languagetag->cdata();
-		
-		bool e = false;
-		if (usernametag==NULL || passwordtag==NULL)
-			e=true;
-		else {
-			username = usernametag->cdata();
-			password = passwordtag->cdata();
-		}
 
 		if (username.empty() || password.empty())
 			e=true;
@@ -244,11 +313,11 @@ bool GlooxRegisterHandler::handleIq (const IQ &iq){
 // 			comp->j->send( r );
 // 		} else {
 	
-			std::cout << "* adding new user: "<< jid << ", " << username << ", " << password <<"\n";
+			std::cout << "* adding new user: "<< jid << ", " << username << ", " << password << ", " << language <<"\n";
 			p->sql()->addUser(jid,username,password,language);
 			sendsubscribe = true;
 		} else {
-			// change password
+			// change passwordhttp://soumar.jabbim.cz/phpmyadmin/index.php
 			std::cout << "* changing user password: "<< jid << ", " << username << ", " << password <<"\n";
 			p->sql()->updateUserPassword(iq.from().bare(),password,language);
 		}
