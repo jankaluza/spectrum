@@ -105,11 +105,17 @@ bool GlooxRegisterHandler::handleIq (const IQ &iq){
 		field->addAttribute("label", "Language");
 		if (res.id!=-1)
 			field->addChild( new Tag("value", res.language) );
-		
+		else
+			field->addChild( new Tag("value", "cs") );
+
 		Tag *option = new Tag("option");
 		option->addAttribute("label", "Cesky");
 		option->addChild( new Tag("value", "cs") );
-		
+
+		option = new Tag("option");
+		option->addAttribute("label", "English");
+		option->addChild( new Tag("value", "en") );
+
 		if (res.id!=1) {
 			field = new Tag("field");
 			field->addAttribute("type", "boolean");

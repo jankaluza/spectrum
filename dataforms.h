@@ -23,10 +23,12 @@
 
 #include <glib.h>
 #include "gloox/tag.h"
+#include "request.h"
 
 using namespace gloox;
 
 Tag * xdataFromRequestInput(const std::string &title, const std::string &primaryString, const std::string &value, gboolean multiline);
 Tag * xdataFromRequestAction(const std::string &title, const std::string &primaryString, size_t action_count, va_list acts);
+Tag * xdataFromRequestFields(const std::string &title, const std::string &primaryString, PurpleRequestFields *fields);
 
 #endif

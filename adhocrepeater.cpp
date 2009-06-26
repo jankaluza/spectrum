@@ -107,6 +107,35 @@ AdhocRepeater::AdhocRepeater(GlooxMessageHandler *m, User *user, const std::stri
 
 }
 
+AdhocRepeater::AdhocRepeater(GlooxMessageHandler *m, User *user, const std::string &title, const std::string &primaryString, const std::string &secondaryString, PurpleRequestFields *fields, GCallback ok_cb, GCallback cancel_cb, void * user_data) {
+	setType(PURPLE_REQUEST_FIELDS);
+	main = m;
+	m_user = user;
+	m_requestData = user_data;
+	AdhocData data = user->adhocData();
+	m_from = data.from;
+	setRequestType(CALLER_ADHOC);
+	
+	IQ _response(IQ::Result, data.from, data.id);
+	Tag *response = _response.tag();
+	response->addAttribute("from",main->jid());
+
+	Tag *c = new Tag("command");
+	c->addAttribute("xmlns","http://jabber.org/protocol/commands");
+	c->addAttribute("sessionid",main->j->getID());
+	c->addAttribute("node",data.node);
+	c->addAttribute("status","executing");
+
+	Tag *actions = new Tag("actions");
+	actions->addAttribute("execute","complete");
+	actions->addChild(new Tag("complete"));
+	c->addChild(actions);
+	
+	c->addChild( xdataFromRequestFields(title, primaryString, fields) );
+	response->addChild(c);
+	main->j->send(response);
+}
+
 AdhocRepeater::~AdhocRepeater() {}
 
 bool AdhocRepeater::handleIq(const IQ &stanza) {
@@ -133,25 +162,30 @@ bool AdhocRepeater::handleIq(const IQ &stanza) {
 	
 	Tag *x = tag->findChildWithAttrib("xmlns","jabber:x:data");
 	if (x) {
-		std::string result("");
-		for(std::list<Tag*>::const_iterator it = x->children().begin(); it != x->children().end(); ++it){
-			if ((*it)->hasAttribute("var","result")){
-				result = (*it)->findChild("value")->cdata();
-				break;
+		if (m_type == PURPLE_REQUEST_FIELDS) {
+			// TODO :) too tired to do it now... it's just typing... nothing to think about
+		}
+		else {
+			std::string result("");
+			for(std::list<Tag*>::const_iterator it = x->children().begin(); it != x->children().end(); ++it){
+				if ((*it)->hasAttribute("var","result")){
+					result = (*it)->findChild("value")->cdata();
+					break;
+				}
 			}
-		}
 
-		if (m_type == PURPLE_REQUEST_INPUT) {
-			((PurpleRequestInputCb) m_ok_cb)(m_requestData, result.c_str());
-		}
-		else if (m_type == PURPLE_REQUEST_ACTION) {
-			std::istringstream i(result);
-			int index;
-			i >> index;
-			if (m_actions.find(index) != m_actions.end()) {
-				PurpleRequestActionCb callback = (PurpleRequestActionCb) m_actions[index];
-				if (callback)
-					(callback)(m_requestData,index);
+			if (m_type == PURPLE_REQUEST_INPUT) {
+				((PurpleRequestInputCb) m_ok_cb)(m_requestData, result.c_str());
+			}
+			else if (m_type == PURPLE_REQUEST_ACTION) {
+				std::istringstream i(result);
+				int index;
+				i >> index;
+				if (m_actions.find(index) != m_actions.end()) {
+					PurpleRequestActionCb callback = (PurpleRequestActionCb) m_actions[index];
+					if (callback)
+						(callback)(m_requestData,index);
+				}
 			}
 		}
 
