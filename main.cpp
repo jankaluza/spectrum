@@ -28,6 +28,7 @@
 #include "adhocrepeater.h"
 #include "searchhandler.h"
 #include "searchrepeater.h"
+#include "parser.h"
 #include "protocols/abstractprotocol.h"
 #include "protocols/icq.h"
 #include "protocols/facebook.h"
@@ -636,8 +637,6 @@ GlooxMessageHandler::GlooxMessageHandler() : MessageHandler(),ConnectionListener
 	Log().Get("gloox") << "connecting to: " << m_configuration.server << " as " << m_configuration.jid << " with password " << m_configuration.password;
 	j = new HiComponent("jabber:component:accept",m_configuration.server,m_configuration.jid,m_configuration.password,m_configuration.port);
 
-	parser = new Parser(this);
-
 	GMainLoop *loop = g_main_loop_new(NULL, FALSE);
 	signal(SIGCHLD, SIG_IGN);
 
@@ -655,6 +654,7 @@ GlooxMessageHandler::GlooxMessageHandler() : MessageHandler(),ConnectionListener
  	j->registerIqHandler(m_discoInfoHandler,ExtDiscoInfo);
 	
 	m_adhoc = new GlooxAdhocHandler(this);
+	m_parser = new GlooxParser();
 	
 	ftManager = new FileTransferManager();
 	ft = new SIProfileFT(j, ftManager );
@@ -693,6 +693,7 @@ GlooxMessageHandler::GlooxMessageHandler() : MessageHandler(),ConnectionListener
 
 GlooxMessageHandler::~GlooxMessageHandler(){
 	delete m_userManager;
+	delete m_parser;
 	delete j;
 	j=NULL;
 	purple_core_quit();
@@ -1304,10 +1305,6 @@ void GlooxMessageHandler::onDisconnect(ConnectionError e){
 
 bool GlooxMessageHandler::onTLSConnect(const CertInfo & info){
 	return false;
-}
-
-void GlooxMessageHandler::handleTag (Tag *tag) {
-	m_handleTagCallback(tag, m_userdata);
 }
 
 void GlooxMessageHandler::handleMessage (const Message &msg, MessageSession *session) {

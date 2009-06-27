@@ -26,6 +26,7 @@
 #include "gloox/chatstate.h"
 #include "muchandler.h"
 #include "cmds.h"
+#include "parser.h"
 
 /*
  * Called when contact list has been received from legacy network.
@@ -595,11 +596,7 @@ void User::purpleConversationWriteIM(PurpleConversation *conv, const char *who, 
 	}
 	Log().Get("TEST") << m << " " << message;
 	if (hasFeature(GLOOX_FEATURE_XHTML_IM) && m != message) {
-		p->m_userdata = stanzaTag;
-		p->m_handleTagCallback = sendXhtmlTag;
-		
-		p->parser->cleanup();
-		p->parser->feed(m);
+		p->parser()->getTag(m, sendXhtmlTag, stanzaTag);
 		g_free(newline);
 		g_free(strip);
 		return;
