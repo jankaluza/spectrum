@@ -80,6 +80,38 @@ SearchRepeater::SearchRepeater(GlooxMessageHandler *m, User *user, const std::st
 	main->j->send(response);
 }
 
+SearchRepeater::SearchRepeater(GlooxMessageHandler *m, User *user, const std::string &title, const std::string &primaryString, const std::string &secondaryString, PurpleRequestFields *fields, GCallback ok_cb, GCallback cancel_cb, void * user_data) {
+	setType(PURPLE_REQUEST_FIELDS);
+	main = m;
+	m_user = user;
+	m_ok_cb = ok_cb;
+	m_cancel_cb = cancel_cb;
+	m_fields = fields;
+	m_requestData = user_data;
+	AdhocData data = user->adhocData();
+	m_from = data.from;
+	setRequestType(CALLER_SEARCH);
+	
+	IQ _response(IQ::Result, data.from, data.id);
+	Tag *response = _response.tag();
+	response->addAttribute("from",main->jid());
+
+	Tag *c = new Tag("command");
+	c->addAttribute("xmlns","http://jabber.org/protocol/commands");
+	c->addAttribute("sessionid",main->j->getID());
+	c->addAttribute("node",data.node);
+	c->addAttribute("status","executing");
+
+	Tag *actions = new Tag("actions");
+	actions->addAttribute("execute","complete");
+	actions->addChild(new Tag("complete"));
+	c->addChild(actions);
+	
+	c->addChild( xdataFromRequestFields(title, primaryString, fields) );
+	response->addChild(c);
+	main->j->send(response);
+}
+
 SearchRepeater::~SearchRepeater() {
 	if (m_lastTag)
 		delete m_lastTag;
@@ -167,18 +199,21 @@ bool SearchRepeater::handleIq(const IQ &stanza) {
 
 	Tag *x = tag->findChildWithAttrib("xmlns","jabber:x:data");
 	if (x) {
-		std::string result("");
-		for(std::list<Tag*>::const_iterator it = x->children().begin(); it != x->children().end(); ++it){
-			if ((*it)->hasAttribute("var","result")){
-				result = (*it)->findChild("value")->cdata();
-				break;
+		if (m_type == PURPLE_REQUEST_FIELDS) {
+			setRequestFields(m_fields, x);
+			((PurpleRequestFieldsCb) m_ok_cb) (m_requestData, m_fields);
+		}
+		else if (m_type == PURPLE_REQUEST_INPUT) {
+			std::string result("");
+			for(std::list<Tag*>::const_iterator it = x->children().begin(); it != x->children().end(); ++it){
+				if ((*it)->hasAttribute("var","result")){
+					result = (*it)->findChild("value")->cdata();
+					break;
+				}
 			}
-		}
 
-		if (m_type == PURPLE_REQUEST_INPUT) {
 			((PurpleRequestInputCb) m_ok_cb)(m_requestData, result.c_str());
-		}
-				
+		}	
 	}
 
 	m_lastTag = stanzaTag;

@@ -283,12 +283,19 @@ static void * notifySearchResults(PurpleConnection *gc, const char *title, const
 static void *requestFields(const char *title, const char *primary, const char *secondary, PurpleRequestFields *fields, const char *ok_text, GCallback ok_cb, const char *cancel_text, GCallback cancel_cb, PurpleAccount *account, const char *who, PurpleConversation *conv, void *user_data) {
 	User *user = GlooxMessageHandler::instance()->userManager()->getUserByAccount(account);
 	if (user && !user->adhocData().id.empty()) {
-		AdhocRepeater *repeater = new AdhocRepeater(GlooxMessageHandler::instance(), user, title ? std::string(title):std::string(), primary ? std::string(primary):std::string(), secondary ? std::string(secondary):std::string(), fields, ok_cb, cancel_cb, user_data);
-		GlooxMessageHandler::instance()->adhoc()->registerSession(user->adhocData().from, repeater);
-		AdhocData data;
-		data.id="";
-		user->setAdhocData(data);
-		return repeater;
+		if (user->adhocData().callerType == CALLER_ADHOC) {
+			AdhocRepeater *repeater = new AdhocRepeater(GlooxMessageHandler::instance(), user, title ? std::string(title):std::string(), primary ? std::string(primary):std::string(), secondary ? std::string(secondary):std::string(), fields, ok_cb, cancel_cb, user_data);
+			GlooxMessageHandler::instance()->adhoc()->registerSession(user->adhocData().from, repeater);
+			AdhocData data;
+			data.id="";
+			user->setAdhocData(data);
+			return repeater;
+		}
+		else if (user->adhocData().callerType == CALLER_SEARCH) {
+			SearchRepeater *repeater = new SearchRepeater(GlooxMessageHandler::instance(), user, title ? std::string(title):std::string(), primary ? std::string(primary):std::string(), secondary ? std::string(secondary):std::string(), fields, ok_cb, cancel_cb, user_data);
+			GlooxMessageHandler::instance()->searchHandler()->registerSession(user->adhocData().from, repeater);
+			return repeater;
+		}
 	}
 
 	return NULL;

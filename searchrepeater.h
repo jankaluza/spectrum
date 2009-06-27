@@ -34,7 +34,10 @@ class User;
 class SearchRepeater : public AbstractPurpleRequest
 {
 	public:
+		// Request input
 		SearchRepeater(GlooxMessageHandler *m, User *user, const std::string &title, const std::string &primaryString, const std::string &secondaryString, const std::string &value, gboolean multiline, gboolean masked, GCallback ok_cb, GCallback cancel_cb, void * user_data);
+		// Request fields
+		SearchRepeater(GlooxMessageHandler *m, User *user, const std::string &title, const std::string &primaryString, const std::string &secondaryString, PurpleRequestFields *fields, GCallback ok_cb, GCallback cancel_cb, void * user_data);
 		~SearchRepeater();
 		bool handleIq(const IQ &iq);
 		void sendSearchResults(PurpleNotifySearchResults *results);
@@ -52,6 +55,7 @@ class SearchRepeater : public AbstractPurpleRequest
 		PurpleRequestType m_type;
 		std::string m_from;
 		std::map<int, GCallback> m_actions;
+		PurpleRequestFields *m_fields;
 };
 
 #endif
