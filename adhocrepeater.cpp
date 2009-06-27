@@ -176,42 +176,7 @@ bool AdhocRepeater::handleIq(const IQ &stanza) {
 	Tag *x = tag->findChildWithAttrib("xmlns","jabber:x:data");
 	if (x) {
 		if (m_type == PURPLE_REQUEST_FIELDS) {
-			for(std::list<Tag*>::const_iterator it = x->children().begin(); it != x->children().end(); ++it){
-				std::string key = (*it)->findAttribute("var");
-				if (key.empty()) continue;
-				
-				PurpleRequestField * fld = purple_request_fields_get_field(m_fields, key.c_str());
-				if (!fld) continue;
-				PurpleRequestFieldType type;
-				type = purple_request_field_get_type(fld);
-				
-				Tag *v =(*it)->findChild("value");
-				if (!v) continue;
-				
-				std::string val = v->cdata();
-				if (val.empty() && type != PURPLE_REQUEST_FIELD_STRING)
-					continue;
-				
-				if (type == PURPLE_REQUEST_FIELD_STRING) {
-					purple_request_field_string_set_value(fld, (val.empty() ? NULL : val.c_str()));
-				}
-				else if (type == PURPLE_REQUEST_FIELD_INTEGER) {
-					purple_request_field_int_set_value(fld, atoi(val.c_str()));
-				}
-				else if (type == PURPLE_REQUEST_FIELD_BOOLEAN) {
-					purple_request_field_bool_set_value(fld, atoi(val.c_str()));
-				}
-				else if (type == PURPLE_REQUEST_FIELD_CHOICE) {
-					purple_request_field_choice_set_value(fld, atoi(val.c_str()));
-				}
-				else if (type == PURPLE_REQUEST_FIELD_LIST) {
-					for(std::list<Tag*>::const_iterator it2 = (*it)->children().begin(); it2 != (*it)->children().end(); ++it2) {
-						val = (*it2)->cdata();
-						if (!val.empty())
-							purple_request_field_list_add_selected(fld, val.c_str());
-					}
-				}
-			}
+			setRequestFields(m_fields, x);
 			((PurpleRequestFieldsCb) m_ok_cb) (m_requestData, m_fields);
 		}
 		else {
