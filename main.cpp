@@ -34,6 +34,7 @@
 #include "protocols/gg.h"
 #include "protocols/msn.h"
 #include "protocols/irc.h"
+#include "protocols/xmpp.h"
 #include "blistsaving.h"
 #include "cmds.h"
 
@@ -706,6 +707,8 @@ void GlooxMessageHandler::loadProtocol(){
 		m_protocol = (AbstractProtocol*) new MSNProtocol(this);
 	else if (configuration().protocol == "irc")
 		m_protocol = (AbstractProtocol*) new IRCProtocol(this);
+	else if (configuration().protocol == "xmpp")
+		m_protocol = (AbstractProtocol*) new XMPPProtocol(this);
 	if (!m_protocol->userSearchAction().empty()) {
 		m_searchHandler = new GlooxSearchHandler(this);
 		j->registerIqHandler(m_searchHandler, ExtSearch);
