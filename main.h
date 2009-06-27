@@ -104,7 +104,7 @@ struct UserRow;
 struct authData;
 
 struct replaceBadJidCharacters {
-	void operator()(char& c) { if(c == '@') c = '%'; }
+	void operator()(char& c) { if(c == '@') c = '%';}
 };
 
 struct replaceJidCharacters {
@@ -146,7 +146,7 @@ struct Configuration {
 	std::string sqlPrefix;	// mysql prefix used for tables
 };
 
-class GlooxMessageHandler : public MessageHandler,ConnectionListener,PresenceHandler,SubscriptionHandler
+class GlooxMessageHandler : public MessageHandler,ConnectionListener,PresenceHandler,SubscriptionHandler, TagHandler
 {
 
 public:
@@ -174,6 +174,9 @@ public:
 	void purpleFileReceiveComplete(PurpleXfer *xfer);
 	void notifyEmail(PurpleConnection *gc,const char *subject, const char *from,const char *to, const char *url);
 
+	// TagHandler
+	void handleTag (Tag *tag);
+
 	// MessageHandler
 	void handleMessage (const Message &msg, MessageSession *session=0);
 
@@ -192,6 +195,8 @@ public:
 	// maybe we should move it to something like UserManager
 	bool hasCaps(const std::string &name);
 	void removeUser(User *user);
+	
+	Parser *parser;
 	
 	UserManager *userManager() { return m_userManager; }
 	GlooxStatsHandler *stats() { return m_stats; }
@@ -215,7 +220,10 @@ public:
 	
 	GlooxGatewayHandler *gatewayHandler;
 	SOCKS5BytestreamServer* ftServer;
-	
+
+	void (*m_handleTagCallback)(Tag *tag, Tag *user_data);
+	Tag *m_userdata;
+
 private:
 // 	bool callback(GIOCondition condition);
 	bool initPurple();

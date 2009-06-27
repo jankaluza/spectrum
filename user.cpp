@@ -36,6 +36,16 @@ static gboolean sync_cb(gpointer data)
 	d = (User*) data;
 	return d->syncCallback();
 }
+static void sendXhtmlTag(Tag *tag, Tag *stanzaTag) {
+	Tag *html = new Tag("html");
+	html->addAttribute("xmlns", "http://jabber.org/protocol/xhtml-im");
+	Tag *body = new Tag("body");
+	body->addAttribute("xmlns", "http://www.w3.org/1999/xhtml");
+	body->addChild(tag->clone());
+	html->addChild(body);
+	stanzaTag->addChild(html);
+	GlooxMessageHandler::instance()->j->send(stanzaTag);
+}
 
 User::User(GlooxMessageHandler *parent, const std::string &jid, const std::string &username, const std::string &password){
 	p = parent;
@@ -533,14 +543,19 @@ void User::purpleConversationWriteIM(PurpleConversation *conv, const char *who, 
 		return;
 	
 	std::string name = (std::string) purple_conversation_get_name(conv);
+	
+	int pos = name.find("/");
+	name.erase(pos, name.length() - pos);
+	
 	if (name.empty())
 		return;
+	std::for_each( name.begin(), name.end(), replaceBadJidCharacters() );
 	// new message from legacy network has been received
 	if (!isOpenedConversation(name)) {
 			m_conversations[name] = conv;
 	}
 
-	Log().Get(m_jid) <<  "purpleConversationWriteIM:" << name;
+	Log().Get(m_jid) <<  "purpleConversationWriteIM:" << name << msg;
 
 	// send message to user
 	char *newline = purple_strdup_withhtml(msg);
@@ -573,17 +588,26 @@ void User::purpleConversationWriteIM(PurpleConversation *conv, const char *who, 
 
 	Tag *stanzaTag = s.tag();
 
-	if (hasFeature(GLOOX_FEATURE_XHTML_IM)) {
-		Tag *html = new Tag("html");
-		html->addAttribute("xmlns", "http://jabber.org/protocol/xhtml-im");
-		Tag *body = new Tag("body", (std::string) msg);
-		body->addAttribute("xmlns", "http://www.w3.org/1999/xhtml");
-		html->addChild(body);
-		stanzaTag->addChild(html);
+	std::string m(msg);
+	if (m.find("<body>") == 0) {
+		m.erase(0,6);
+		m.erase(m.length() - 7, 7);
+	}
+	Log().Get("TEST") << m << " " << message;
+	if (hasFeature(GLOOX_FEATURE_XHTML_IM) && m != message) {
+		p->m_userdata = stanzaTag;
+		p->m_handleTagCallback = sendXhtmlTag;
+		
+		p->parser->cleanup();
+		p->parser->feed(m);
+		g_free(newline);
+		g_free(strip);
+		return;
 	}
 
+	Log().Get("STANZATAG") << stanzaTag->xml();
+
 	p->j->send( stanzaTag );
-	
 	g_free(newline);
 	g_free(strip);
 }
@@ -645,6 +669,8 @@ void User::purpleBuddyTypingStopped(const std::string &uin){
 	if (!purple_value_get_boolean(getSetting("enable_chatstate")))
 		return;
 	Log().Get(m_jid) << uin << " stopped typing";
+	std::string username(uin);
+	std::for_each( username.begin(), username.end(), replaceBadJidCharacters() );
 	
 
 	Tag *s = new Tag("message");
@@ -652,7 +678,7 @@ void User::purpleBuddyTypingStopped(const std::string &uin){
 	s->addAttribute("type","chat");
 	
 	std::string from;
-	from.append(uin);
+	from.append(username);
 	from.append("@");
 	from.append(p->jid()+"/bot");
 	s->addAttribute("from",from);
@@ -674,13 +700,15 @@ void User::purpleBuddyTyping(const std::string &uin){
 	if (!purple_value_get_boolean(getSetting("enable_chatstate")))
 		return;
 	Log().Get(m_jid) << uin << " is typing";
+	std::string username(uin);
+	std::for_each( username.begin(), username.end(), replaceBadJidCharacters() );
 
 	Tag *s = new Tag("message");
 	s->addAttribute("to",m_jid);
 	s->addAttribute("type","chat");
 	
 	std::string from;
-	from.append(uin);
+	from.append(username);
 	from.append("@");
 	from.append(p->jid()+"/bot");
 	s->addAttribute("from",from);
@@ -714,13 +742,15 @@ void User::receivedChatState(const std::string &uin,const std::string &state){
  */
 void User::receivedMessage(const Message& msg){
 	PurpleConversation * conv;
+	std::string username = msg.to().username();
+	std::for_each( username.begin(), username.end(), replaceJidCharacters() );
 	// open new conversation or get the opened one
-	if (!isOpenedConversation(msg.to().username())){
-		conv = purple_conversation_new(PURPLE_CONV_TYPE_IM,m_account,msg.to().username().c_str());
-		m_conversations[msg.to().username()]=conv;
+	if (!isOpenedConversation(username)){
+		conv = purple_conversation_new(PURPLE_CONV_TYPE_IM,m_account,username.c_str());
+		m_conversations[username]=conv;
 	}
 	else{
-		conv = m_conversations[msg.to().username()];
+		conv = m_conversations[username];
 	}
 	
 	std::string body = msg.body();

@@ -636,6 +636,8 @@ GlooxMessageHandler::GlooxMessageHandler() : MessageHandler(),ConnectionListener
 	Log().Get("gloox") << "connecting to: " << m_configuration.server << " as " << m_configuration.jid << " with password " << m_configuration.password;
 	j = new HiComponent("jabber:component:accept",m_configuration.server,m_configuration.jid,m_configuration.password,m_configuration.port);
 
+	parser = new Parser(this);
+
 	GMainLoop *loop = g_main_loop_new(NULL, FALSE);
 	signal(SIGCHLD, SIG_IGN);
 
@@ -1304,7 +1306,13 @@ bool GlooxMessageHandler::onTLSConnect(const CertInfo & info){
 	return false;
 }
 
+void GlooxMessageHandler::handleTag (Tag *tag) {
+	m_handleTagCallback(tag, m_userdata);
+}
+
 void GlooxMessageHandler::handleMessage (const Message &msg, MessageSession *session) {
+	if (msg.from().bare() == msg.to().bare())
+		return;
 	User *user = userManager()->getUserByJID(msg.from().bare());
 	if (user!=NULL){
 		if (user->isConnected()){
@@ -1312,7 +1320,9 @@ void GlooxMessageHandler::handleMessage (const Message &msg, MessageSession *ses
 			if (!msgTag) return;
 			Tag *chatstates = msgTag->findChildWithAttrib("xmlns","http://jabber.org/protocol/chatstates");
 			if (chatstates!=NULL){
-				user->receivedChatState(msg.to().username(),chatstates->name());
+				std::string username;
+				std::for_each( username.begin(), username.end(), replaceJidCharacters() );
+				user->receivedChatState(username,chatstates->name());
 			}
 			if(msgTag->findChild("body")!=NULL) {
 				m_stats->messageFromJabber();
