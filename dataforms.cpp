@@ -122,8 +122,8 @@ Tag * xdataFromRequestFields(const std::string &title, const std::string &primar
 					field->addAttribute("type","text-single");
 				else
 					field->addAttribute("type","text-multi");
-				field->addAttribute("label",(std::string) field_label);
-				field->addAttribute("var",(std::string) field_label);
+				field->addAttribute("label", field_label ? (std::string) field_label : (std::string) purple_request_field_get_id(fld));
+				field->addAttribute("var",(std::string) purple_request_field_get_id(fld));
 				if (v)
 					field->addChild(new Tag("value", (std::string) v));
 				xdata->addChild(field);
@@ -132,8 +132,8 @@ Tag * xdataFromRequestFields(const std::string &title, const std::string &primar
 				int v = purple_request_field_int_get_default_value(fld);
 				field = new Tag("field");
 				field->addAttribute("type","text-single");
-				field->addAttribute("label",(std::string) field_label);
-				field->addAttribute("var",(std::string) field_label);
+				field->addAttribute("label", field_label ? (std::string) field_label : (std::string) purple_request_field_get_id(fld));
+				field->addAttribute("var",(std::string) purple_request_field_get_id(fld));
 				if (v!=0) {
 					std::ostringstream os;
 					os << v;
@@ -144,8 +144,8 @@ Tag * xdataFromRequestFields(const std::string &title, const std::string &primar
 			else if (type == PURPLE_REQUEST_FIELD_BOOLEAN) {
 				field = new Tag("field");
 				field->addAttribute("type","boolean");
-				field->addAttribute("label",(std::string) field_label);
-				field->addAttribute("var",(std::string) field_label);
+				field->addAttribute("label", field_label ? (std::string) field_label : (std::string) purple_request_field_get_id(fld));
+				field->addAttribute("var",(std::string) purple_request_field_get_id(fld));
 				if (purple_request_field_bool_get_default_value(fld))
 					field->addChild(new Tag("value", "1"));
 				else
@@ -158,8 +158,8 @@ Tag * xdataFromRequestFields(const std::string &title, const std::string &primar
 				GList *l;
 				field = new Tag("field");
 				field->addAttribute("type","list-single");
-				field->addAttribute("label",(std::string) field_label);
-				field->addAttribute("var",(std::string) field_label);
+				field->addAttribute("label", field_label ? (std::string) field_label : (std::string) purple_request_field_get_id(fld));
+				field->addAttribute("var",(std::string) purple_request_field_get_id(fld));
 
 				for (l = labels; l != NULL; l = l->next, i++) {
 					Tag *option;
@@ -184,19 +184,17 @@ Tag * xdataFromRequestFields(const std::string &title, const std::string &primar
 					field->addAttribute("type","list-multi");
 				else
 					field->addAttribute("type","list-single");
-				field->addAttribute("label",(std::string) field_label);
-				field->addAttribute("var",(std::string) field_label);
+				field->addAttribute("label", field_label ? (std::string) field_label : (std::string) purple_request_field_get_id(fld));
+				field->addAttribute("var",(std::string) purple_request_field_get_id(fld));
 				
 				for (l = purple_request_field_list_get_items(fld); l != NULL; l = l->next, i++) {
 					Tag *option;
-					std::ostringstream os;
-					os << i;
 					std::string name((char *) l->data);
 					if (i == 0)
-						field->addChild(new Tag("value",os.str()));
+						field->addChild(new Tag("value",name));
 					option = new Tag("option");
 					option->addAttribute("label",name);
-					option->addChild( new Tag("value",os.str()) );
+					option->addChild( new Tag("value",name) );
 					field->addChild(option);
 				}
 				field->addAttribute("var","result");

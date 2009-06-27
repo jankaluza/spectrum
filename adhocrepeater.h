@@ -55,6 +55,8 @@ class AdhocRepeater : public AdhocCommandHandler
 		PurpleRequestType m_type;
 		std::string m_from;
 		std::map<int, GCallback> m_actions;
+		PurpleRequestFields *m_fields;
+		std::string m_defaultString;
 };
 
 #endif
