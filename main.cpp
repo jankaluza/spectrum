@@ -890,7 +890,12 @@ void GlooxMessageHandler::loadConfigFile(){
 		m_configuration.onlyForVIP=g_key_file_get_boolean(keyfile, "service","only_for_vip", NULL);
 	else
 		m_configuration.onlyForVIP=false;
-	
+
+	if(g_key_file_has_key(keyfile,"service","use_proxy",NULL))
+		m_configuration.useProxy=g_key_file_get_boolean(keyfile, "service","use_proxy", NULL);
+	else
+		m_configuration.useProxy = false;
+
 	bind = g_key_file_get_string_list (keyfile,"purple","bind",NULL, NULL);
 	for (i = 0; bind[i]; i++){
 		m_configuration.bindIPs[i] = (std::string)bind[i];

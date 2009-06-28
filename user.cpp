@@ -27,6 +27,7 @@
 #include "muchandler.h"
 #include "cmds.h"
 #include "parser.h"
+#include "proxy.h"
 
 /*
  * Called when contact list has been received from legacy network.
@@ -858,6 +859,15 @@ void User::connect(){
 	purple_account_set_password(m_account,m_password.c_str());
 	Log().Get(m_jid) << "UIN:" << m_username << " PASSWORD:" << m_password;
 
+	if (p->configuration->useProxy) {
+		PurpleProxyInfo *info = purple_proxy_info_new();
+		purple_proxy_info_set_type(info, PURPLE_PROXY_USE_ENVVAR);
+		info->username = NULL;
+		info->password = NULL;
+		purple_account_set_proxy_info(m_account, info);
+	}
+
+
 	// check if it's valid uin
 	bool valid = false;
 	if (!m_username.empty()){
@@ -1065,6 +1075,8 @@ void User::receivedPresence(const Presence &stanza){
 
 	if (m_lang == NULL) {
 		Tag *tag = stanza.tag();
+		if (!tag)
+			return;
 		std::string lang = tag->findAttribute("xml:lang");
 		Log().Get("LANG") << tag->xml();
 		delete tag;
