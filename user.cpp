@@ -884,6 +884,8 @@ void User::connect(){
  */
 void User::disconnected() {
 	m_connected = false;
+	m_account = NULL;
+	m_readyForConnect = true;
 	m_reconnectCount += 1;
 }
 
