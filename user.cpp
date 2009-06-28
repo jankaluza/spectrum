@@ -41,9 +41,8 @@ static gboolean sync_cb(gpointer data)
 static void sendXhtmlTag(Tag *tag, Tag *stanzaTag) {
 	Tag *html = new Tag("html");
 	html->addAttribute("xmlns", "http://jabber.org/protocol/xhtml-im");
-	Tag *body = new Tag("body");
+	Tag *body = tag->clone();
 	body->addAttribute("xmlns", "http://www.w3.org/1999/xhtml");
-	body->addChild(tag->clone());
 	html->addChild(body);
 	stanzaTag->addChild(html);
 	GlooxMessageHandler::instance()->j->send(stanzaTag);
@@ -546,8 +545,9 @@ void User::purpleConversationWriteIM(PurpleConversation *conv, const char *who, 
 	
 	std::string name = (std::string) purple_conversation_get_name(conv);
 	
-	int pos = name.find("/");
-	name.erase(pos, name.length() - pos);
+	size_t pos = name.find("/");
+	if (pos != std::string::npos)
+		name.erase((int) pos, name.length() - (int) pos);
 	
 	if (name.empty())
 		return;
@@ -597,7 +597,7 @@ void User::purpleConversationWriteIM(PurpleConversation *conv, const char *who, 
 	}
 	Log().Get("TEST") << m << " " << message;
 	if (hasFeature(GLOOX_FEATURE_XHTML_IM) && m != message) {
-		p->parser()->getTag(m, sendXhtmlTag, stanzaTag);
+		p->parser()->getTag("<body>" + m + "</body>", sendXhtmlTag, stanzaTag);
 		g_free(newline);
 		g_free(strip);
 		return;
@@ -859,7 +859,7 @@ void User::connect(){
 	purple_account_set_password(m_account,m_password.c_str());
 	Log().Get(m_jid) << "UIN:" << m_username << " PASSWORD:" << m_password;
 
-	if (p->configuration->useProxy) {
+	if (p->configuration().useProxy) {
 		PurpleProxyInfo *info = purple_proxy_info_new();
 		purple_proxy_info_set_type(info, PURPLE_PROXY_USE_ENVVAR);
 		info->username = NULL;

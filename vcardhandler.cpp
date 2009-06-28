@@ -142,7 +142,7 @@ void GlooxVCardHandler::userInfoArrived(PurpleConnection *gc,std::string who, Pu
 
 		Tag *vcard = p->protocol()->getVCardTag(user, vcardEntries);
 		if (!vcard) {
-			Tag *vcard = new Tag( "vCard" );
+			vcard = new Tag( "vCard" );
 			vcard->addAttribute( "xmlns", "vcard-temp" );
 		}
 

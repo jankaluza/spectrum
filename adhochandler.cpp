@@ -64,7 +64,7 @@ Disco::ItemList GlooxAdhocHandler::handleDiscoNodeItems( const JID &_from, const
 			User *user = main->userManager()->getUserByJID(from);
 			if (user) {
 				for(std::map<std::string, adhocCommand>::iterator u = m_handlers.begin(); u != m_handlers.end() ; u++) {
-					lst.push_back( new Disco::Item( main->jid(),"transport_" + (*u).first, (std::string) tr(user->getLang(), (*u).second.name) ) );
+					lst.push_back( new Disco::Item( main->jid(), (*u).first, (std::string) tr(user->getLang(), (*u).second.name) ) );
 				}
 				if (user->isConnected() && purple_account_get_connection(user->account())) {
 					PurpleConnection *gc = purple_account_get_connection(user->account());
