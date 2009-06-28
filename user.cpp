@@ -582,7 +582,7 @@ void User::purpleConversationWriteIM(PurpleConversation *conv, const char *who, 
 	// Delayed messages, we have to count with some delay
 	if (int(time(NULL))-10>int(mtime)) {
 		char buf[80];
-		strftime(buf, sizeof(buf), "%Y%m%dT%H:%M:%S", localtime(&mtime));
+		strftime(buf, sizeof(buf), "%Y-%m-%dT%H:%M:%SZ", gmtime(&mtime));
 		std::string timestamp(buf);
 		DelayedDelivery *d = new DelayedDelivery(from, timestamp);
 		s.addExtension(d);
