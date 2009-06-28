@@ -19,6 +19,7 @@
  */
 
 #include "sql.h"
+#include "parser.h"
 
 SQLClass::SQLClass(GlooxMessageHandler *parent){
 	p=parent;
@@ -384,7 +385,44 @@ GHashTable * SQLClass::getSettings(const std::string &jid) {
 
 	return settings;
 }
-			
+
+bool SQLClass::getVCard(const std::string &name, void (*handleTagCallback)(Tag *tag, Tag *user_data), Tag *user_data) {
+    mysqlpp::Query query = sql->query();
+#if MYSQLPP_HEADER_VERSION < 0x030000
+	mysqlpp::Result res;
+#else
+	mysqlpp::StoreQueryResult res;
+#endif
+    mysqlpp::Row row;
+
+    query << "SELECT vcard FROM "<< p->configuration().sqlPrefix <<"vcards WHERE username=\"" +name+ "\" AND DATE_ADD(timestamp, INTERVAL 1 DAY);";
+
+    res = query.store();
+	if (res) {
+#if MYSQLPP_HEADER_VERSION < 0x030000
+		mysqlpp::Row row;
+		row = res.fetch_row();
+		if (row) {
+#else
+		mysqlpp::StoreQueryResult::size_type i;
+		mysqlpp::Row row;
+		if (res.num_rows()!=0) {
+			row = res[0];
+#endif
+			std::string vcardTag = (std::string) row["vcard"];
+			p->parser()->getTag(vcardTag, handleTagCallback, user_data);
+			return true;
+		}
+	}
+	return false;
+}
+
+void SQLClass::updateVCard(const std::string &name, const std::string &vcard) {
+	mysqlpp::Query query = sql->query();
+	query << "INSERT INTO "<< p->configuration().sqlPrefix <<"vcards (username, vcard) VALUES (\"" << name <<"\",\"" << vcard <<"\") ON DUPLICATE KEY UPDATE vcard=\""+ vcard +"\";";
+	query.execute();
+}
+
 // SQLClass::~SQLClass(){
 //  	delete(sql);
 //  	sql=NULL;

@@ -48,6 +48,10 @@ struct RosterRow {
 	std::string lastPresence;
 };
 
+struct GlooxVCard {
+	Tag *vcard;
+	time_t created;
+};
 
 class SQLClass
 {
@@ -73,7 +77,11 @@ public:
 	void updateSetting(const std::string &jid, const std::string &key, const std::string &value);
 	void getSetting(const std::string &jid, const std::string &key);
 	GHashTable * getSettings(const std::string &jid);
-	
+
+	// vcards
+	bool getVCard(const std::string &name, void (*handleTagCallback)(Tag *tag, Tag *user_data), Tag *user_data);
+	void updateVCard(const std::string &name, const std::string &vcard);
+
 	UserRow getUserByJid(const std::string &jid);
 	std::map<std::string,RosterRow> getRosterByJid(const std::string &jid);
 	std::map<std::string,RosterRow> getRosterByJidAsk(const std::string &jid);

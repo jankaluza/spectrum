@@ -84,6 +84,16 @@ void base64encode(const unsigned char * input, int len, std::string & out)
     }
 }   
 
+static void sendVCardTag(Tag *tag, Tag *stanzaTag) {
+	std::string id = stanzaTag->findAttribute("id");
+	std::string from = stanzaTag->findAttribute("from");
+	Tag *vcard = tag->clone();
+	vcard->addAttribute("id",id);
+	vcard->addAttribute("to",from);
+	GlooxMessageHandler::instance()->j->send(vcard);
+	delete stanzaTag;
+}
+
 GlooxVCardHandler::GlooxVCardHandler(GlooxMessageHandler *parent) : IqHandler(){
 	p=parent;
 	p->j->registerStanzaExtension( new VCard() );
@@ -105,12 +115,16 @@ bool GlooxVCardHandler::handleIq (const IQ &stanza){
 	}
 
 	if(stanza.subtype() == IQ::Get) {
-		std::list<std::string> temp;
-		temp.push_back((std::string)stanza.id());
-		temp.push_back((std::string)stanza.from().full());
-		vcardRequests[(std::string)stanza.to().username()]=temp;
+		Tag *stanzaTag = stanza.tag();
 		
-		serv_get_info(purple_account_get_connection(user->account()), stanza.to().username().c_str());
+		if (!p->sql()->getVCard(stanza.to().username(), sendVCardTag, stanzaTag)) {
+			std::list<std::string> temp;
+			temp.push_back((std::string)stanza.id());
+			temp.push_back((std::string)stanza.from().full());
+			vcardRequests[(std::string)stanza.to().username()]=temp;
+			delete stanzaTag;
+			serv_get_info(purple_account_get_connection(user->account()), stanza.to().username().c_str());
+		}
 	}
 
 	return true;
@@ -176,7 +190,7 @@ void GlooxVCardHandler::userInfoArrived(PurpleConnection *gc,std::string who, Pu
 		}
 
 		reply->addChild(vcard);
-		std::cout << reply->xml() << "\n";
+		p->sql()->updateVCard(who, reply->xml());
 		p->j->send(reply);
 		vcardRequests.erase(who);
 	}
