@@ -1284,7 +1284,7 @@ void GlooxMessageHandler::handlePresence(const Presence &stanza){
 
 void GlooxMessageHandler::onConnect(){
 	Log().Get("gloox") << "CONNECTED!";
-	j->disco()->setIdentity("gateway",protocol()->gatewayIdentity());
+	j->disco()->setIdentity("gateway",protocol()->gatewayIdentity(),configuration().discoName);
 	j->disco()->setVersion(configuration().discoName,"0.1","");
 	std::list<std::string> features = protocol()->transportFeatures();
 	for(std::list<std::string>::iterator it = features.begin(); it != features.end(); it++) {
