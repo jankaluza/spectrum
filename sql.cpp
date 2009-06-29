@@ -395,7 +395,7 @@ bool SQLClass::getVCard(const std::string &name, void (*handleTagCallback)(Tag *
 #endif
     mysqlpp::Row row;
 
-    query << "SELECT vcard FROM "<< p->configuration().sqlPrefix <<"vcards WHERE username=\"" +name+ "\" AND DATE_ADD(timestamp, INTERVAL 1 DAY);";
+    query << "SELECT vcard FROM "<< p->configuration().sqlPrefix <<"vcards WHERE username=\"" +name+ "\" AND NOW() < DATE_ADD(timestamp, INTERVAL 1 DAY);";
 
     res = query.store();
 	if (res) {
