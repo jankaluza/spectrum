@@ -48,9 +48,12 @@ static void sendXhtmlTag(Tag *tag, Tag *stanzaTag) {
 	GlooxMessageHandler::instance()->j->send(stanzaTag);
 }
 
-User::User(GlooxMessageHandler *parent, const std::string &jid, const std::string &username, const std::string &password){
+User::User(GlooxMessageHandler *parent, JID jid, const std::string &username, const std::string &password){
 	p = parent;
-	m_jid = jid;
+	m_jid = jid.bare();
+	Resource r;
+	m_resources[jid.resource()] = r;
+	m_resource = jid.resource();
 	m_username = username;
 	m_password = password;
 	m_connected = false;
@@ -114,10 +117,13 @@ bool User::syncCallback() {
  * Returns true if main JID for this User has feature `feature`,
  * otherwise returns false.
  */
-bool User::hasFeature(int feature){
-	if (m_capsVersion.empty())
+bool User::hasFeature(int feature, std::string resource){
+	if (resource.empty())
+		resource = m_resource;
+	std::string caps = m_resources[resource].capsVersion;
+	if (caps.empty())
 		return false;
-	if (p->capsCache[m_capsVersion]&feature)
+	if (p->capsCache[caps]&feature)
 		return true;
 	return false;
 }
@@ -167,7 +173,7 @@ void User::removeAuthRequest(const std::string &name) {
  * Returns true if exists opened conversation with user with uin `name`.
  */
 bool User::isOpenedConversation(const std::string &name){
-	std::map<std::string,PurpleConversation *>::iterator iter = m_conversations.begin();
+	std::map<std::string, Conversation>::iterator iter = m_conversations.begin();
 	iter = m_conversations.find(name);
 	if(iter != m_conversations.end())
 		return true;
@@ -514,7 +520,7 @@ void User::purpleMessageReceived(PurpleAccount* account,char * name,char *msg,Pu
 	if (conv==NULL){
 		// make conversation if it doesn't exist
 		conv = purple_conversation_new(PURPLE_CONV_TYPE_IM,account,name);
-		m_conversations[(std::string)name]=conv;
+		m_conversations[(std::string)name].conv = conv;
 	}
 }
 
@@ -525,7 +531,7 @@ void User::purpleConversationWriteChat(PurpleConversation *conv, const char *who
 	std::string name(who);
 	MUCHandler *muc = (MUCHandler*) g_hash_table_lookup(m_mucs, purple_conversation_get_name(conv));
 	if (!isOpenedConversation(name)) {
-		m_conversations[name] = conv;
+		m_conversations[name].conv = conv;
 		if (muc)
 			muc->setConversation(conv);
 	}
@@ -554,7 +560,7 @@ void User::purpleConversationWriteIM(PurpleConversation *conv, const char *who, 
 	std::for_each( name.begin(), name.end(), replaceBadJidCharacters() );
 	// new message from legacy network has been received
 	if (!isOpenedConversation(name)) {
-			m_conversations[name] = conv;
+			m_conversations[name].conv = conv;
 	}
 
 	Log().Get(m_jid) <<  "purpleConversationWriteIM:" << name << msg;
@@ -564,7 +570,12 @@ void User::purpleConversationWriteIM(PurpleConversation *conv, const char *who, 
 	char *strip = purple_markup_strip_html(newline);
 
 	std::string message(strip);
-	Message s(Message::Chat, m_jid, message);
+	std::string to;
+	if (m_conversations[name].resource.empty())
+		to = m_jid;
+	else
+		to = m_jid + "/" + m_conversations[name].resource;
+	Message s(Message::Chat, to, message);
 	std::string from;
 	from.append(name);
 	from.append("@");
@@ -623,7 +634,7 @@ void User::purpleChatAddUsers(PurpleConversation *conv, GList *cbuddies, gboolea
 	if (!muc)
 		return;
 	if (!isOpenedConversation(name)) {
-		m_conversations[name] = conv;
+		m_conversations[name].conv = conv;
 		muc->setConversation(conv);
 	}
 	muc->addUsers(cbuddies);
@@ -745,10 +756,12 @@ void User::receivedMessage(const Message& msg){
 	// open new conversation or get the opened one
 	if (!isOpenedConversation(username)){
 		conv = purple_conversation_new(PURPLE_CONV_TYPE_IM,m_account,username.c_str());
-		m_conversations[username]=conv;
+		m_conversations[username].conv = conv;
+		m_conversations[username].resource = msg.from().resource();
 	}
 	else{
-		conv = m_conversations[username];
+		conv = m_conversations[username].conv;
+		m_conversations[username].resource = msg.from().resource();
 	}
 	
 	std::string body = msg.body();
@@ -837,8 +850,7 @@ void User::connect(){
 	if (m_account) {
 		Log().Get(m_jid) << "connect() has been called before";
 		return;
-	}
-	Log().Get(m_jid) << "Connecting with caps: " << m_capsVersion;
+	};
 	if (purple_accounts_find(m_username.c_str(), this->p->protocol()->protocol().c_str()) != NULL){
 		Log().Get(m_jid) << "this account already exists";
 		m_account = purple_accounts_find(m_username.c_str(), this->p->protocol()->protocol().c_str());
@@ -1075,13 +1087,11 @@ void User::receivedPresence(const Presence &stanza){
 		}
 	}
 
+	Tag *stanzaTag = stanza.tag();
+	if (!stanzaTag)
+		return;
 	if (m_lang == NULL) {
-		Tag *tag = stanza.tag();
-		if (!tag)
-			return;
-		std::string lang = tag->findAttribute("xml:lang");
-		Log().Get("LANG") << tag->xml();
-		delete tag;
+		std::string lang = stanzaTag->findAttribute("xml:lang");
 		if (lang == "")
 			lang = "en";
 		setLang(lang.c_str());
@@ -1093,11 +1103,16 @@ void User::receivedPresence(const Presence &stanza){
 	if(stanza.to().username() == ""){
 		if(stanza.presence() == Presence::Unavailable) {
 			// disconnect from legacy network if we are connected
-			std::map<std::string,int> ::iterator iter = m_resources.begin();
+			std::map<std::string,Resource> ::iterator iter = m_resources.begin();
 			if ((m_connected==false && int(time(NULL))>int(m_connectionStart)+10) || m_connected==true){
 				iter = m_resources.find(stanza.from().resource());
 				if(iter != m_resources.end()){
 					m_resources.erase(stanza.from().resource());
+					for(std::map<std::string, Conversation>::iterator u = m_conversations.begin(); u != m_conversations.end() ; u++){
+						if ((*u).second.resource == stanza.from().resource()){
+							m_conversations[(*u).first].resource = "";
+						}
+					}
 				}
 			}
 			if (m_connected){
@@ -1123,20 +1138,29 @@ void User::receivedPresence(const Presence &stanza){
 				}
 			}
 		} else {
-			m_resource=stanza.from().resource();
-			std::map<std::string,int> ::iterator iter = m_resources.begin();
-			iter = m_resources.find(m_resource);
+			std::string resource=stanza.from().resource();
+			std::map<std::string,Resource> ::iterator iter = m_resources.begin();
+			iter = m_resources.find(resource);
 			if(iter == m_resources.end()){
-				m_resources[m_resource]=stanza.priority();
+				m_resources[resource].priority = stanza.priority();
+				Tag *c = stanzaTag->findChildWithAttrib("xmlns","http://jabber.org/protocol/caps");
+				// presence has caps
+				if (c!=NULL){
+					if (p->hasCaps(c->findAttribute("ver"))){
+						m_resources[resource].capsVersion = c->findAttribute("ver");
+					}
+				}
+				if (m_resources[resource].priority > m_resources[m_resource].priority)
+					m_resource = resource;
 			}
 
 			Log().Get(m_jid) << "resource: " << m_resource;
 			if (!m_connected){
 				// we are not connected to legacy network, so we should do it when disco#info arrive :)
-				Log().Get(m_jid) << "connecting: capsVersion=" << m_capsVersion;
+				Log().Get(m_jid) << "connecting: resource=" << m_resource;
 				if (m_readyForConnect==false){
 					m_readyForConnect=true;
-					if (m_capsVersion.empty()){
+					if (m_resources[m_resource].capsVersion.empty()){
 						// caps not arrived yet, so we can't connect just now and we have to wait for caps
 					}
 					else{
@@ -1193,7 +1217,6 @@ void User::receivedPresence(const Presence &stanza){
 			}
 			
 		}
-		
 		// send presence about tranport status to user
 		if(m_connected || m_readyForConnect) {
 			Presence tag(stanza.presence(), m_jid, stanza.status());
@@ -1208,6 +1231,7 @@ void User::receivedPresence(const Presence &stanza){
 				p->j->send( tag );
 			}
 		}
+	delete stanzaTag;
 	}
 }
 

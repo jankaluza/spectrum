@@ -63,9 +63,19 @@ struct subscribeContact {
 	std::string	group;
 };
 
+struct Resource {
+	int priority;
+	std::string capsVersion;
+};
+
+struct Conversation {
+	PurpleConversation *conv;
+	std::string resource;
+};
+
 class User {
 	public:
-		User(GlooxMessageHandler *parent, const std::string &jid, const std::string &username, const std::string &password);
+		User(GlooxMessageHandler *parent, JID jid, const std::string &username, const std::string &password);
 		~User();
 
 		void connect();
@@ -77,7 +87,7 @@ class User {
 		bool syncCallback();
 		bool isInRoster(const std::string &name,const std::string &subscription);
 		bool isOpenedConversation(const std::string &name);
-		bool hasFeature(int feature);
+		bool hasFeature(int feature, std::string resource = "");
 		
 		// XMPP stuff
 		Tag *generatePresenceStanza(PurpleBuddy *buddy);
@@ -118,10 +128,6 @@ class User {
 		PurpleValue *getSetting(const char *key);
 		void updateSetting(const std::string &key, PurpleValue *value);
 
-		// Entity Capabilities
-		std::string & capsVersion() { return m_capsVersion; }
-		void setCapsVersion(const std::string &capsVersion) { m_capsVersion = capsVersion; }
-		
 		// Authorization requests
 		bool hasAuthRequest(const std::string &name);
 		void removeAuthRequest(const std::string &name);
@@ -132,8 +138,15 @@ class User {
 		// connection start
 		time_t connectionStart() { return m_connectionStart; }
 		
+		void setResource(const std::string resource, int priority = -256, const std::string caps = "") {
+			if (priority != -256) m_resources[resource].priority = priority;
+			if (!caps.empty()) m_resources[resource].capsVersion = caps;
+		}
+		bool hasResource(const std::string r) {return m_resources.find(r) == m_resources.end(); }
+		Resource & getResource(const std::string r) { return m_resources[r];}
+		
 		PurpleAccount *account() { return m_account; }
-		std::map<std::string,int> & resources() { return m_resources; }
+		std::map<std::string,Resource> & resources() { return m_resources; }
 		int reconnectCount() { return m_reconnectCount; }
 		bool isVIP() { return m_vip; }
 		bool readyForConnect() { return m_readyForConnect; }
@@ -163,14 +176,13 @@ class User {
 		std::string m_username;		// legacy network user name
 		std::string m_jid;			// Jabber ID of this user
 		std::string m_resource;		// active resource
-		std::string m_capsVersion;	// caps version of client which connected as first (TODO: this should be changed with active resource)
 		const char *m_lang;			// xml:lang
 		time_t m_connectionStart;	// connection start timestamp
 		GHashTable *m_mucs;			// MUCs
 		std::map<std::string,RosterRow> m_roster;	// jabber roster of this user
-		std::map<std::string,int> m_resources;	// list of all resources which are connected to the transport
+		std::map<std::string,Resource> m_resources;	// list of all resources which are connected to the transport
 		std::map<std::string,authRequest> m_authRequests;	// list of authorization requests (holds callbacks and user data)
-		std::map<std::string,PurpleConversation *> m_conversations; // list of opened conversations
+		std::map<std::string,Conversation> m_conversations; // list of opened conversations
 		std::map<std::string,PurpleBuddy *> m_subscribeCache;	// cache for contacts for roster X
 		GHashTable *m_settings;		// user settings
 };

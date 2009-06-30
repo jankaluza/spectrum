@@ -84,13 +84,15 @@ void GlooxDiscoHandler::handleDiscoInfo(const JID &jid, const Disco::Info &info,
 		std::cout << "no user?! wtf...";
 	}
 	else{
-		std::cout << "1" << "\n";
-		if (user->capsVersion().empty()){
-			std::cout << "2" << "\n";
-			user->setCapsVersion(versions[context]);
-			if (user->readyForConnect()) {
-				std::cout << "3" << "\n";
-				user->connect();
+		if (user->hasResource(jid.resource())) {
+			std::cout << "1" << "\n";
+			if (user->getResource(jid.resource()).capsVersion.empty()){
+				std::cout << "2" << "\n";
+				user->setResource(jid.resource(), -256, versions[context]);
+				if (user->readyForConnect()) {
+					std::cout << "3" << "\n";
+					user->connect();
+				}
 			}
 		}
 	}

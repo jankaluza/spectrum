@@ -1229,10 +1229,10 @@ void GlooxMessageHandler::handlePresence(const Presence &stanza){
 				}
 
 				Log().Get(stanza.from().full()) << "Creating new User instance";
-				user = new User(this, stanza.from().bare(), res.uin, res.password);
+				user = new User(this, stanza.from(), res.uin, res.password);
 				if (c!=NULL)
 					if(hasCaps(c->findAttribute("ver")))
-						user->setCapsVersion(c->findAttribute("ver"));
+						user->setResource(stanza.from().resource(), stanza.priority(), c->findAttribute("ver"));
 // 				if (!isVip)
 // 					user->features=features0;
 // 				else
