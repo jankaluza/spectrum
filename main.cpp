@@ -325,6 +325,8 @@ static void * requestAction(const char *title, const char *primary,const char *s
 }
 
 static void requestClose(PurpleRequestType type, void *ui_handle) {
+	if (!ui_handle)
+		return;
 	if (type == PURPLE_REQUEST_INPUT) {
 		AbstractPurpleRequest *r = (AbstractPurpleRequest *) ui_handle;
 		if (r->requestType() == CALLER_ADHOC) {
