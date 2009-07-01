@@ -1383,7 +1383,7 @@ void GlooxMessageHandler::handleMessage (const Message &msg, MessageSession *ses
 	}
 	else {
 		Message s(Message::Chat, msg.from().full(), "This message couldn't be sent, because you are not connected to legacy network. You will be automatically reconnected soon.");
-		s.setFrom(jid());
+		s.setFrom(msg.to().full());
 		j->send(s);
 		Tag *stanza = new Tag("presence");
 		stanza->addAttribute( "to", msg.from().bare());
