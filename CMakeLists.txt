@@ -101,6 +101,7 @@ set(hiicq_SRCS
 	protocols/msn.cpp
 	protocols/irc.cpp
 	protocols/xmpp.cpp
+	protocols/myspace.cpp
 )
 
 set(hiicq_MOC_HDRS
@@ -141,6 +142,7 @@ set(hiicq_MOC_HDRS
 	protocols/msn.h
 	protocols/irc.h
 	protocols/xmpp.h
+	protocols/myspace.h
 )
 
 add_executable(hiicq ${hiicq_SRCS} ${lrelease_outputs})
