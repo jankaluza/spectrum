@@ -1381,8 +1381,15 @@ void GlooxMessageHandler::handleMessage (const Message &msg, MessageSession *ses
 			Log().Get(msg.from().bare()) << "New message received, but we're not connected yet";
 		}
 	}
-	else{
-		Log().Get(msg.from().bare()) << "New message received, but we're not connected to legacy network";
+	else {
+		Message s(Message::Chat, msg.from().full(), "This message couldn't be sent, because you are not connected to legacy network. You will be automatically reconnected soon.");
+		s.setFrom(jid());
+		j->send(s);
+		Tag *stanza = new Tag("presence");
+		stanza->addAttribute( "to", msg.from().bare());
+		stanza->addAttribute( "type", "probe");
+		stanza->addAttribute( "from", jid());
+		j->send(stanza);
 	}
 
 }
