@@ -584,7 +584,7 @@ void User::purpleConversationWriteIM(PurpleConversation *conv, const char *who, 
 
 	// chatstates
 	if (purple_value_get_boolean(getSetting("enable_chatstate"))) {
-		if (hasFeature(GLOOX_FEATURE_CHATSTATES)) {
+		if (hasFeature(GLOOX_FEATURE_CHATSTATES, m_conversations[name].resource)) {
 			ChatState *c = new ChatState(ChatStateActive);
 			s.addExtension(c);
 		}
@@ -607,7 +607,7 @@ void User::purpleConversationWriteIM(PurpleConversation *conv, const char *who, 
 		m.erase(m.length() - 7, 7);
 	}
 	Log().Get("TEST") << m << " " << message;
-	if (hasFeature(GLOOX_FEATURE_XHTML_IM) && m != message) {
+	if (hasFeature(GLOOX_FEATURE_XHTML_IM, m_conversations[name].resource)) && m != message) {
 		p->parser()->getTag("<body>" + m + "</body>", sendXhtmlTag, stanzaTag);
 		g_free(newline);
 		g_free(strip);
