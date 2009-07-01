@@ -607,7 +607,8 @@ void User::purpleConversationWriteIM(PurpleConversation *conv, const char *who, 
 		m.erase(m.length() - 7, 7);
 	}
 	Log().Get("TEST") << m << " " << message;
-	if (hasFeature(GLOOX_FEATURE_XHTML_IM, m_conversations[name].resource)) && m != message) {
+	std::string res = m_conversations[name].resource;
+	if (hasFeature(GLOOX_FEATURE_XHTML_IM, res) && m != message) {
 		p->parser()->getTag("<body>" + m + "</body>", sendXhtmlTag, stanzaTag);
 		g_free(newline);
 		g_free(strip);
