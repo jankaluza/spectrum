@@ -142,7 +142,7 @@ class User {
 			if (priority != -256) m_resources[resource].priority = priority;
 			if (!caps.empty()) m_resources[resource].capsVersion = caps;
 		}
-		bool hasResource(const std::string r) {return m_resources.find(r) == m_resources.end(); }
+		bool hasResource(const std::string r) {return m_resources.find(r) != m_resources.end(); }
 		Resource & getResource(const std::string r) { return m_resources[r];}
 		
 		PurpleAccount *account() { return m_account; }
