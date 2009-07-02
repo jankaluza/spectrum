@@ -162,10 +162,12 @@ bool AdhocRepeater::handleIq(const IQ &stanza) {
 		main->j->send(response);
 
 		if (m_type == PURPLE_REQUEST_FIELDS) {
-			((PurpleRequestFieldsCb) m_cancel_cb) (m_requestData, m_fields);
+			if (m_cancel_cb)
+				((PurpleRequestFieldsCb) m_cancel_cb) (m_requestData, m_fields);
 		}
 		else if (m_type == PURPLE_REQUEST_INPUT) {
-			((PurpleRequestInputCb) m_cancel_cb)(m_requestData, m_defaultString.c_str());
+			if (m_cancel_cb)
+				((PurpleRequestInputCb) m_cancel_cb)(m_requestData, m_defaultString.c_str());
 		}
 
 		g_timeout_add(0,&removeRepeater,this);
