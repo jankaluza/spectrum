@@ -128,7 +128,7 @@ bool AdhocSettings::handleIq(const IQ &stanza) {
 	Tag *x = tag->findChildWithAttrib("xmlns","jabber:x:data");
 	if (x) {
 		std::string result("");
-		for(std::list<Tag*>::const_iterator it = x->children().begin(); it != x->children().end(); ++it){
+		for(std::list<Tag*>::const_iterator it = x->children().begin(); it != x->children().end(); ++it) {
 			std::string key = (*it)->findAttribute("var");
 			if (key.empty()) continue;
 			

@@ -95,6 +95,7 @@ set(hiicq_SRCS
 	searchrepeater.cpp
 	dataforms.cpp
 	parser.cpp
+	commands.cpp
 	protocols/icq.cpp
 	protocols/facebook.cpp
 	protocols/gg.cpp
@@ -138,6 +139,7 @@ set(hiicq_MOC_HDRS
 	abstractpurplerequest.h
 	dataforms.h
 	parser.h
+	commands.h
 	protocols/abstractprotocol.h
 	protocols/icq.h
 	protocols/facebook.h

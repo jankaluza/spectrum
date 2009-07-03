@@ -158,6 +158,7 @@ class User {
 		std::map<std::string,RosterRow> & roster() { return m_roster; }
 		const char *getLang() { return m_lang; }
 		void setLang(const char *lang) { m_lang = lang; }
+		GHashTable *settings() { return m_settings; }
 		
 		GlooxMessageHandler *p;
 	

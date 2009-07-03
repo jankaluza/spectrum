@@ -29,6 +29,7 @@
 #include "searchhandler.h"
 #include "searchrepeater.h"
 #include "parser.h"
+#include "commands.h"
 #include "protocols/abstractprotocol.h"
 #include "protocols/icq.h"
 #include "protocols/facebook.h"
@@ -99,51 +100,6 @@ namespace gloox {
         }
     };
 };
-
-static PurpleCmdRet help_command_cb(PurpleConversation *conv, const char *cmd, char **args, char **error, void *data) {
-	GList *l, *text;
-	GString *s;
-	User *user = GlooxMessageHandler::instance()->userManager()->getUserByAccount(purple_conversation_get_account(conv));
-	if (!user)
-		return PURPLE_CMD_RET_OK;
-
-	if (args[0] != NULL) {
-		s = g_string_new("Transport: ");
-		text = purple_cmd_help(conv, args[0]);
-
-		if (text) {
-			for (l = text; l; l = l->next)
-				if (l->next)
-					g_string_append_printf(s, "%s\n", tr(user->getLang(),(char *)l->data));
-				else
-					g_string_append_printf(s, "%s", tr(user->getLang(),(char *)l->data));
-		} else {
-			g_string_append(s, tr(user->getLang(),_("No such command (in this context).")));
-		}
-	} else {
-		s = g_string_new(tr(user->getLang(),_("Use \"/transport help &lt;command&gt;\" for help on a specific command.\n"
-											 "The following commands are available in this context:\n")));
-
-		text = purple_cmd_list(conv);
-		for (l = text; l; l = l->next)
-			if (l->next)
-				g_string_append_printf(s, "%s, ", tr(user->getLang(),(char *)l->data));
-			else
-				g_string_append_printf(s, "%s.", tr(user->getLang(),(char *)l->data));
-		g_list_free(text);
-	}
-
-	if (purple_conversation_get_type(conv) == PURPLE_CONV_TYPE_IM) {
-		purple_conv_im_write(PURPLE_CONV_IM(conv), purple_conversation_get_name(conv), s->str, PURPLE_MESSAGE_RECV, time(NULL));
-	}
-	else if (purple_conversation_get_type(conv) == PURPLE_CONV_TYPE_CHAT) {
-		purple_conv_chat_write(PURPLE_CONV_CHAT(conv), "transport", s->str, PURPLE_MESSAGE_RECV, time(NULL));
-	}
-	g_string_free(s, TRUE);
-
-	return PURPLE_CMD_RET_OK;
-}
-
 
 /*
  * New message from legacy network received (we can create conversation here)
@@ -1441,8 +1397,8 @@ bool GlooxMessageHandler::initPurple(){
 		purple_signal_connect(purple_connections_get_handle(), "signed-on", &conn_handle,PURPLE_CALLBACK(signed_on), NULL);
 		purple_signal_connect(purple_blist_get_handle(), "buddy-removed", &blist_handle,PURPLE_CALLBACK(buddyRemoved), NULL);				
 		purple_signal_connect(purple_conversations_get_handle(), "chat-topic-changed", &conversation_handle, PURPLE_CALLBACK(conv_chat_topic_changed), NULL);
-
-		purple_cmd_register("help", "w", PURPLE_CMD_P_DEFAULT, (PurpleCmdFlag) (PURPLE_CMD_FLAG_CHAT | PURPLE_CMD_FLAG_IM | PURPLE_CMD_FLAG_ALLOW_WRONG_ARGS), NULL, help_command_cb, _("help &lt;command&gt;:  Help on a specific command."), NULL);
+	
+		purple_commands_init();
 
 	}
 	return ret;
