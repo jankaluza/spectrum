@@ -41,7 +41,7 @@ UserManager::~UserManager(){
 }
 
 User *UserManager::getUserByJID(std::string barejid){
-	if (m_cachedUser && barejid == m_cachedUser->jid()) {
+	if (m_cachedUser && barejid == m_cachedUser->userKey()) {
 		return m_cachedUser;
 	}
 	User *user = (User*) g_hash_table_lookup(m_users, barejid.c_str());
@@ -57,8 +57,8 @@ User *UserManager::getUserByAccount(PurpleAccount * account){
 
 void UserManager::removeUser(User *user){
 	Log().Get("logout") << "removing user";
-	g_hash_table_remove(m_users, user->jid().c_str());
-	if (m_cachedUser && user->jid() == m_cachedUser->jid()) {
+	g_hash_table_remove(m_users, user->userKey().c_str());
+	if (m_cachedUser && user->userKey() == m_cachedUser->userKey()) {
 		m_cachedUser = NULL;
 	}
 	delete user;
@@ -67,8 +67,8 @@ void UserManager::removeUser(User *user){
 
 void UserManager::removeUserTimer(User *user){
 	Log().Get("logout") << "removing user by timer";
-	g_hash_table_remove(m_users, user->jid().c_str());
-	if (m_cachedUser && user->jid() == m_cachedUser->jid()) {
+	g_hash_table_remove(m_users, user->userKey().c_str());
+	if (m_cachedUser && user->userKey() == m_cachedUser->userKey()) {
 		m_cachedUser = NULL;
 	}
 	// this will be called by gloop after all

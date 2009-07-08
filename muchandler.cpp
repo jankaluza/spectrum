@@ -42,8 +42,11 @@ Tag * MUCHandler::handlePresence(const Presence &stanza) {
 		GHashTable *comps = NULL;
 		std::string name = stanza.to().username();
 		PurpleConnection *gc = purple_account_get_connection(m_user->account());
-		if (PURPLE_PLUGIN_PROTOCOL_INFO(gc->prpl)->chat_info_defaults != NULL)
+		if (PURPLE_PLUGIN_PROTOCOL_INFO(gc->prpl)->chat_info_defaults != NULL) {
+			if (name.find("%") != std::string::npos)
+				name = name.substr(0, name.find("%"));
 			comps = PURPLE_PLUGIN_PROTOCOL_INFO(gc->prpl)->chat_info_defaults(gc, name.c_str());
+		}
 		if (comps) {
 			serv_join_chat(gc, comps);
 		}

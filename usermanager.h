@@ -35,7 +35,7 @@ class UserManager
 		~UserManager();
 		User *getUserByJID(std::string barejid);
 		User *getUserByAccount(PurpleAccount *account);
-		void addUser(User *user) { g_hash_table_replace(m_users, g_strdup(user->jid().c_str()), user); }
+		void addUser(User *user) { g_hash_table_replace(m_users, g_strdup(user->userKey().c_str()), user); }
 		void removeUser(User *user);
 		void removeUserTimer(User *user);
 		void buddyOnline();

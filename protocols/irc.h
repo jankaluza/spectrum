@@ -39,8 +39,8 @@ class IRCProtocol : AbstractProtocol
 		std::list<std::string> buddyFeatures();
 		std::string text(const std::string &key);
 		Tag *getVCardTag(User *user, GList *vcardEntries);
-		bool isMUC(User *user, const std::string &jid) { return jid.find("#") == 0; }
-		
+		bool isMUC(User *user, const std::string &jid) { return jid.find("#") == 0 && jid.find("%") != std::string::npos; }
+		bool tempAccountsAllowed() { return true; }
 	
 	private:
 		GlooxMessageHandler *m_main;

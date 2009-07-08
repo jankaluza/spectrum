@@ -75,7 +75,7 @@ struct Conversation {
 
 class User {
 	public:
-		User(GlooxMessageHandler *parent, JID jid, const std::string &username, const std::string &password);
+		User(GlooxMessageHandler *parent, JID jid, const std::string &username, const std::string &password, const std::string &userKey);
 		~User();
 
 		void connect();
@@ -161,9 +161,13 @@ class User {
 		GHashTable *settings() { return m_settings; }
 		
 		GlooxMessageHandler *p;
+		std::string & userKey() { return m_userKey; }
 	
 	private:
+		std::string m_userKey;
 		PurpleAccount *m_account;	// PurpleAccount to which this user is connected
+		GHashTable *m_tempAccounts;	// temp accounts for MUC (need to have them because of connection to more network)
+		std::list <Tag *> m_autoConnectRooms;
 		guint m_syncTimer;			// timer used for syncing purple buddy list and roster
 		int m_subscribeLastCount;	// number of buddies which was in subscribeCache in previous iteration of m_syncTimer
 		bool m_vip;					// true if the user is VIP

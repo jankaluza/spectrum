@@ -81,6 +81,10 @@ class AbstractProtocol
 		 * Returns ID of column used for UIN/name/ID of founded users in searchresults
 		 */
 		virtual std::string userSearchColumn() { return ""; }
+		/*
+		 * Returns true if temporary accounts for MUC are allows (this is useful for IRC, if you want to connect more network from one account)
+		 */
+		virtual bool tempAccountsAllowed() { return false; }
 };
 
 #endif

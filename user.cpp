@@ -48,7 +48,7 @@ static void sendXhtmlTag(Tag *tag, Tag *stanzaTag) {
 	GlooxMessageHandler::instance()->j->send(stanzaTag);
 }
 
-User::User(GlooxMessageHandler *parent, JID jid, const std::string &username, const std::string &password){
+User::User(GlooxMessageHandler *parent, JID jid, const std::string &username, const std::string &password, const std::string &userKey){
 	p = parent;
 	m_jid = jid.bare();
 	Resource r;
@@ -56,6 +56,7 @@ User::User(GlooxMessageHandler *parent, JID jid, const std::string &username, co
 	m_resource = jid.resource();
 	m_username = username;
 	m_password = password;
+	m_userKey = userKey;
 	m_connected = false;
 	m_roster = p->sql()->getRosterByJid(m_jid);
 	m_vip = p->sql()->isVIP(m_jid);
@@ -70,6 +71,7 @@ User::User(GlooxMessageHandler *parent, JID jid, const std::string &username, co
 	m_lang = NULL;
 	this->features = 6; // TODO: I can't be hardcoded
 	m_mucs = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
+	m_tempAccounts = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
 	PurpleValue *value;
 	
 	// check default settings
@@ -528,8 +530,10 @@ void User::purpleConversationWriteChat(PurpleConversation *conv, const char *who
 	if (who == NULL)
 		return;
 
-	std::string name(who);
-	MUCHandler *muc = (MUCHandler*) g_hash_table_lookup(m_mucs, purple_conversation_get_name(conv));
+// 	std::string name(who);
+	std::string name(purple_conversation_get_name(conv));
+	name = name + "%" + JID(m_username).server();
+	MUCHandler *muc = (MUCHandler*) g_hash_table_lookup(m_mucs, name.c_str());
 	if (!isOpenedConversation(name)) {
 		m_conversations[name].conv = conv;
 		if (muc)
@@ -631,6 +635,7 @@ void User::purpleChatTopicChanged(PurpleConversation *conv, const char *who, con
 
 void User::purpleChatAddUsers(PurpleConversation *conv, GList *cbuddies, gboolean new_arrivals) {
 	std::string name(purple_conversation_get_name(conv));
+	name = name + "%" + JID(m_username).server();
 	MUCHandler *muc = (MUCHandler*) g_hash_table_lookup(m_mucs, name.c_str());
 	if (!muc)
 		return;
@@ -642,14 +647,18 @@ void User::purpleChatAddUsers(PurpleConversation *conv, GList *cbuddies, gboolea
 }
 
 void User::purpleChatRenameUser(PurpleConversation *conv, const char *old_name, const char *new_name, const char *new_alias) {
-	MUCHandler *muc = (MUCHandler*) g_hash_table_lookup(m_mucs, purple_conversation_get_name(conv));
+	std::string name(purple_conversation_get_name(conv));
+	name = name + "%" + JID(m_username).server();
+	MUCHandler *muc = (MUCHandler*) g_hash_table_lookup(m_mucs, name.c_str());
 	if (muc) {
 		muc->renameUser(old_name, new_name, new_alias);
 	}
 }
 
 void User::purpleChatRemoveUsers(PurpleConversation *conv, GList *users) {
-	MUCHandler *muc = (MUCHandler*) g_hash_table_lookup(m_mucs, purple_conversation_get_name(conv));
+	std::string name(purple_conversation_get_name(conv));
+	name = name + "%" + JID(m_username).server();
+	MUCHandler *muc = (MUCHandler*) g_hash_table_lookup(m_mucs, name.c_str());
 	if (muc) {
 		muc->removeUsers(users);
 	}
@@ -753,7 +762,8 @@ void User::receivedChatState(const std::string &uin,const std::string &state){
 void User::receivedMessage(const Message& msg){
 	PurpleConversation * conv;
 	std::string username = msg.to().username();
-	std::for_each( username.begin(), username.end(), replaceJidCharacters() );
+	if (!p->protocol()->isMUC(this, username))
+		std::for_each( username.begin(), username.end(), replaceJidCharacters() );
 	// open new conversation or get the opened one
 	if (!isOpenedConversation(username)){
 		conv = purple_conversation_new(PURPLE_CONV_TYPE_IM,m_account,username.c_str());
@@ -764,7 +774,6 @@ void User::receivedMessage(const Message& msg){
 		conv = m_conversations[username].conv;
 		m_conversations[username].resource = msg.from().resource();
 	}
-	
 	std::string body = msg.body();
 	
 	if (body.find("/transport ") == 0) {
@@ -868,7 +877,7 @@ void User::connect(){
 	m_connectionStart = time(NULL);
 	m_readyForConnect = false;
 	purple_account_set_string(m_account,"bind",std::string(m_bindIP).c_str());
-	purple_account_set_string(m_account,"lastUsedJid",std::string(m_jid +"/"+m_resource).c_str());
+	purple_account_set_string(m_account,"lastUsedJid",m_userKey.c_str());
 	purple_account_set_password(m_account,m_password.c_str());
 	Log().Get(m_jid) << "UIN:" << m_username << " PASSWORD:" << m_password;
 
@@ -908,6 +917,16 @@ void User::disconnected() {
 void User::connected() {
 	m_connected = true;
 	m_reconnectCount = 0;
+	for (std::list <Tag*>::iterator it = m_autoConnectRooms.begin(); it != m_autoConnectRooms.end() ; it++ ) {
+		Presence stanza((*it));
+		MUCHandler *muc = new MUCHandler(this, stanza.to().bare(), stanza.from().full());
+		g_hash_table_replace(m_mucs, g_strdup(stanza.to().username().c_str()), muc);
+		Tag * ret = muc->handlePresence(stanza);
+		if (ret)
+			p->j->send(ret);
+		delete (*it);
+	};
+	
 }
 
 void User::receivedSubscription(const Subscription &subscription) {
@@ -1037,32 +1056,34 @@ void User::receivedSubscription(const Subscription &subscription) {
  * Received jabber presence...
  */
 void User::receivedPresence(const Presence &stanza){
-	// we're connected
 
-
-
-	if (m_connected){
-
-		if (stanza.to().username()!="") {
-			MUCHandler *muc = (MUCHandler*) g_hash_table_lookup(m_mucs, stanza.to().username().c_str());
-			if (muc) {
-				Tag * ret = muc->handlePresence(stanza);
-				if (ret)
-					p->j->send(ret);
-				if (stanza.presence() == Presence::Unavailable) {
-					g_hash_table_remove(m_mucs, stanza.to().username().c_str());
-					m_conversations.erase(stanza.to().username());
-					delete muc;
-				}
+	if (stanza.to().username()!="") {
+		MUCHandler *muc = (MUCHandler*) g_hash_table_lookup(m_mucs, stanza.to().username().c_str());
+		if (muc) {
+			Tag * ret = muc->handlePresence(stanza);
+			if (ret)
+				p->j->send(ret);
+			if (stanza.presence() == Presence::Unavailable) {
+				g_hash_table_remove(m_mucs, stanza.to().username().c_str());
+				m_conversations.erase(stanza.to().username());
+				delete muc;
 			}
-			else if (p->protocol()->isMUC(this, stanza.to().bare()) && stanza.presence() != Presence::Unavailable) {
+		}
+		else if (p->protocol()->isMUC(this, stanza.to().bare()) && stanza.presence() != Presence::Unavailable) {
+			if (m_connected) {
 				MUCHandler *muc = new MUCHandler(this, stanza.to().bare(), stanza.from().full());
 				g_hash_table_replace(m_mucs, g_strdup(stanza.to().username().c_str()), muc);
 				Tag * ret = muc->handlePresence(stanza);
 				if (ret)
 					p->j->send(ret);
 			}
+			else {
+				m_autoConnectRooms.push_back(stanza.tag());
+			}
 		}
+	}
+
+	if (m_connected){
 
 		// respond to probe presence
 		if (stanza.subtype() == Presence::Probe && stanza.to().username()!=""){
@@ -1101,7 +1122,7 @@ void User::receivedPresence(const Presence &stanza){
 	}
 
 	// this presence is for the transport
-	if(stanza.to().username() == ""){
+	if(stanza.to().username() == ""  || ((!p->protocol()->tempAccountsAllowed()) || p->protocol()->isMUC(NULL, stanza.to().bare()))){
 		if(stanza.presence() == Presence::Unavailable) {
 			// disconnect from legacy network if we are connected
 			std::map<std::string,Resource> ::iterator iter = m_resources.begin();
@@ -1281,6 +1302,9 @@ User::~User(){
 	m_roster.clear();
 	m_conversations.clear();
 	m_authRequests.clear();
+	g_hash_table_destroy(m_mucs);
+	g_hash_table_destroy(m_tempAccounts);
+	g_hash_table_destroy(m_settings);
 }
 
 
