@@ -1232,8 +1232,8 @@ void User::receivedPresence(const Presence &stanza){
 				p->j->send( tag );
 			}
 		}
-	delete stanzaTag;
 	}
+	delete stanzaTag;
 }
 
 User::~User(){
