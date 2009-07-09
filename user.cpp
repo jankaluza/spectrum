@@ -71,7 +71,6 @@ User::User(GlooxMessageHandler *parent, JID jid, const std::string &username, co
 	m_lang = NULL;
 	this->features = 6; // TODO: I can't be hardcoded
 	m_mucs = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
-	m_tempAccounts = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
 	PurpleValue *value;
 	
 	// check default settings
@@ -1126,24 +1125,26 @@ void User::receivedPresence(const Presence &stanza){
 		if(stanza.presence() == Presence::Unavailable) {
 			// disconnect from legacy network if we are connected
 			std::map<std::string,Resource> ::iterator iter = m_resources.begin();
-			if ((m_connected==false && int(time(NULL))>int(m_connectionStart)+10) || m_connected==true){
-				iter = m_resources.find(stanza.from().resource());
-				if(iter != m_resources.end()){
-					m_resources.erase(stanza.from().resource());
-					for(std::map<std::string, Conversation>::iterator u = m_conversations.begin(); u != m_conversations.end() ; u++){
-						if ((*u).second.resource == stanza.from().resource()){
-							m_conversations[(*u).first].resource = "";
+			if (stanza.to().username() == "") {
+				if ((m_connected==false && int(time(NULL))>int(m_connectionStart)+10) || m_connected==true){
+					iter = m_resources.find(stanza.from().resource());
+					if(iter != m_resources.end()){
+						m_resources.erase(stanza.from().resource());
+						for(std::map<std::string, Conversation>::iterator u = m_conversations.begin(); u != m_conversations.end() ; u++){
+							if ((*u).second.resource == stanza.from().resource()){
+								m_conversations[(*u).first].resource = "";
+							}
 						}
 					}
 				}
 			}
 			if (m_connected){
-				if (m_resources.empty()){
+				if (m_resources.empty() || (p->protocol()->tempAccountsAllowed() && g_hash_table_size(m_mucs) == 0)){
 					Log().Get(m_jid) << "disconecting";
 					purple_account_disconnect(m_account);
+					p->userManager()->removeUserTimer(this);
 				}
-				else{
-
+				else {
 					iter = m_resources.begin();
 					m_resource=(*iter).first;
 				}
@@ -1303,7 +1304,6 @@ User::~User(){
 	m_conversations.clear();
 	m_authRequests.clear();
 	g_hash_table_destroy(m_mucs);
-	g_hash_table_destroy(m_tempAccounts);
 	g_hash_table_destroy(m_settings);
 }
 

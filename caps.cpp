@@ -24,6 +24,7 @@
 #include "main.h"
 #include "sql.h"
 #include "usermanager.h"
+#include "protocols/abstractprotocol.h"
 
 GlooxDiscoHandler::GlooxDiscoHandler(GlooxMessageHandler *parent) : DiscoHandler(){
 	p=parent;
@@ -34,7 +35,7 @@ GlooxDiscoHandler::~GlooxDiscoHandler(){
 }
 
 bool GlooxDiscoHandler::hasVersion(int name){
-	std::map<int,std::string> ::iterator iter = versions.begin();
+	std::map<int,Version> ::iterator iter = versions.begin();
 	iter = versions.find(name);
 	if(iter != versions.end())
 		return true;
@@ -78,8 +79,16 @@ void GlooxDiscoHandler::handleDiscoInfo(const JID &jid, const Disco::Info &info,
 			}
 		}
 	std::cout << "*** FEATURES ARRIVED: " << feature << "\n";
-	p->capsCache[versions[context]]=feature;
-	User *user = p->userManager()->getUserByJID(jid.bare());
+	p->capsCache[versions[context].version]=feature;
+	User *user;
+	JID j(versions[context].jid);
+	if (p->protocol()->isMUC(NULL, j.bare())) {
+		std::string server = j.username().substr(j.username().find("%") + 1, j.username().length() - j.username().find("%"));
+		user = p->userManager()->getUserByJID(jid.bare() + server);
+	}
+	else {
+		User *user = p->userManager()->getUserByJID(jid.bare());
+	}
 	if (user==NULL){
 		std::cout << "no user?! wtf...";
 	}
@@ -88,7 +97,7 @@ void GlooxDiscoHandler::handleDiscoInfo(const JID &jid, const Disco::Info &info,
 			std::cout << "1" << "\n";
 			if (user->getResource(jid.resource()).capsVersion.empty()){
 				std::cout << "2" << "\n";
-				user->setResource(jid.resource(), -256, versions[context]);
+				user->setResource(jid.resource(), -256, versions[context].version);
 				if (user->readyForConnect()) {
 					std::cout << "3" << "\n";
 					user->connect();

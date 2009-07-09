@@ -166,7 +166,6 @@ class User {
 	private:
 		std::string m_userKey;
 		PurpleAccount *m_account;	// PurpleAccount to which this user is connected
-		GHashTable *m_tempAccounts;	// temp accounts for MUC (need to have them because of connection to more network)
 		std::list <Tag *> m_autoConnectRooms;
 		guint m_syncTimer;			// timer used for syncing purple buddy list and roster
 		int m_subscribeLastCount;	// number of buddies which was in subscribeCache in previous iteration of m_syncTimer

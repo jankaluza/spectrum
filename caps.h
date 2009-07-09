@@ -35,6 +35,10 @@ typedef enum { 	GLOOX_FEATURE_ROSTERX = 2,
 
 using namespace gloox;
 
+struct Version {
+	std::string version;
+	std::string jid;
+};
 
 class GlooxDiscoHandler : public DiscoHandler
 {
@@ -50,7 +54,7 @@ public:
 	void handleDiscoError(const JID &jid, const Error *error, int context);
 	bool hasVersion(int i);
 	GlooxMessageHandler *p;
-	std::map<int,std::string> versions;
+	std::map<int,Version> versions;
 	int version;
 };
 

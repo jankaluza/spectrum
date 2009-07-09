@@ -1152,7 +1152,8 @@ void GlooxMessageHandler::handlePresence(const Presence &stanza){
 				// ask for caps
 				std::string id = j->getID();
 				Log().Get(stanza.from().full()) << "asking for caps with ID: " << id;
-				m_discoHandler->versions[m_discoHandler->version]=c->findAttribute("ver");
+				m_discoHandler->versions[m_discoHandler->version].version=c->findAttribute("ver");
+				m_discoHandler->versions[m_discoHandler->version].jid=stanza.to().full();
 				std::string node;
 				node = c->findAttribute("node")+std::string("#")+c->findAttribute("ver");
 				j->disco()->getDiscoInfo(stanza.from(),node,m_discoHandler,m_discoHandler->version,id);
@@ -1161,7 +1162,8 @@ void GlooxMessageHandler::handlePresence(const Presence &stanza){
 			else {
 				std::string id = j->getID();
 				Log().Get(stanza.from().full()) << "asking for disco#info with ID: " << id;
-				m_discoHandler->versions[m_discoHandler->version]=stanza.from().full();
+				m_discoHandler->versions[m_discoHandler->version].version=stanza.from().full();
+				m_discoHandler->versions[m_discoHandler->version].jid=stanza.to().full();
 				j->disco()->getDiscoInfo(stanza.from(),"",m_discoHandler,m_discoHandler->version,id);
 				m_discoHandler->version++;
 			}
@@ -1169,7 +1171,8 @@ void GlooxMessageHandler::handlePresence(const Presence &stanza){
 		else {
 			std::string id = j->getID();
 			Log().Get(stanza.from().full()) << "asking for disco#info with ID: " << id;
-			m_discoHandler->versions[m_discoHandler->version]=stanza.from().full();
+			m_discoHandler->versions[m_discoHandler->version].version=stanza.from().full();
+			m_discoHandler->versions[m_discoHandler->version].jid=stanza.to().full();
 			j->disco()->getDiscoInfo(stanza.from(),"",m_discoHandler,m_discoHandler->version,id);
 			m_discoHandler->version++;
 		}
