@@ -60,7 +60,7 @@ User::User(GlooxMessageHandler *parent, JID jid, const std::string &username, co
 	m_connected = false;
 	m_roster = p->sql()->getRosterByJid(m_jid);
 	m_vip = p->sql()->isVIP(m_jid);
-	m_settings = p->sql()->getSettings(m_jid);
+	m_settings = p->sql()->getSettings(userKey);
 	m_syncTimer = 0;
 	m_readyForConnect = false;
 	m_rosterXCalled = false;
@@ -75,25 +75,25 @@ User::User(GlooxMessageHandler *parent, JID jid, const std::string &username, co
 	
 	// check default settings
 	if ( (value = getSetting("enable_transport")) == NULL ) {
-		p->sql()->addSetting(m_jid, "enable_transport", "1", PURPLE_TYPE_BOOLEAN);
+		p->sql()->addSetting(m_userKey, "enable_transport", "1", PURPLE_TYPE_BOOLEAN);
 		value = purple_value_new(PURPLE_TYPE_BOOLEAN);
 		purple_value_set_boolean(value, true);
 		g_hash_table_replace(m_settings, g_strdup("enable_transport"), value);
 	}
 	if ( (value = getSetting("enable_notify_email")) == NULL ) {
-		p->sql()->addSetting(m_jid, "enable_notify_email", "0", PURPLE_TYPE_BOOLEAN);
+		p->sql()->addSetting(m_userKey, "enable_notify_email", "0", PURPLE_TYPE_BOOLEAN);
 		value = purple_value_new(PURPLE_TYPE_BOOLEAN);
 		purple_value_set_boolean(value, false);
 		g_hash_table_replace(m_settings, g_strdup("enable_notify_email"), value);
 	}
 	if ( (value = getSetting("enable_avatars")) == NULL ) {
-		p->sql()->addSetting(m_jid, "enable_avatars", "1", PURPLE_TYPE_BOOLEAN);
+		p->sql()->addSetting(m_userKey, "enable_avatars", "1", PURPLE_TYPE_BOOLEAN);
 		value = purple_value_new(PURPLE_TYPE_BOOLEAN);
 		purple_value_set_boolean(value, true);
 		g_hash_table_replace(m_settings, g_strdup("enable_avatars"), value);
 	}
 	if ( (value = getSetting("enable_chatstate")) == NULL ) {
-		p->sql()->addSetting(m_jid, "enable_chatstate", "1", PURPLE_TYPE_BOOLEAN);
+		p->sql()->addSetting(m_userKey, "enable_chatstate", "1", PURPLE_TYPE_BOOLEAN);
 		value = purple_value_new(PURPLE_TYPE_BOOLEAN);
 		purple_value_set_boolean(value, true);
 		g_hash_table_replace(m_settings, g_strdup("enable_chatstate"), value);
@@ -671,9 +671,9 @@ PurpleValue * User::getSetting(const char *key) {
 void User::updateSetting(const std::string &key, PurpleValue *value) {
 	if (purple_value_get_type(value) == PURPLE_TYPE_BOOLEAN) {
 		if (purple_value_get_boolean(value))
-			p->sql()->updateSetting(m_jid, key, "1");
+			p->sql()->updateSetting(m_userKey, key, "1");
 		else
-			p->sql()->updateSetting(m_jid, key, "0");
+			p->sql()->updateSetting(m_userKey, key, "0");
 	}
 	g_hash_table_replace(m_settings, g_strdup(key.c_str()), value);
 }
@@ -863,13 +863,11 @@ void User::connect(){
 	if (purple_accounts_find(m_username.c_str(), this->p->protocol()->protocol().c_str()) != NULL){
 		Log().Get(m_jid) << "this account already exists";
 		m_account = purple_accounts_find(m_username.c_str(), this->p->protocol()->protocol().c_str());
-		purple_account_set_ui_bool(m_account,"hiicq","auto-login",false);
 	}
 	else{
 		Log().Get(m_jid) << "creating new account";
 		m_account = purple_account_new(m_username.c_str(), this->p->protocol()->protocol().c_str());
 		purple_account_set_string(m_account,"encoding","windows-1250");
-		purple_account_set_ui_bool(m_account,"hiicq","auto-login",false);
 
 		purple_accounts_add(m_account);
 	}
@@ -897,6 +895,7 @@ void User::connect(){
 	if (valid && purple_value_get_boolean(getSetting("enable_transport"))){
 		purple_account_set_enabled(m_account, HIICQ_UI, TRUE);
 		purple_account_connect(m_account);
+		purple_account_set_ui_bool(m_account,"hiicq","auto-login",false);
 	}
 }
 
