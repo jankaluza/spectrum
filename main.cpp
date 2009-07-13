@@ -1310,6 +1310,8 @@ bool GlooxMessageHandler::onTLSConnect(const CertInfo & info){
 void GlooxMessageHandler::handleMessage (const Message &msg, MessageSession *session) {
 	if (msg.from().bare() == msg.to().bare())
 		return;
+	if (msg.subtype() == Message::Error || msg.subtype() == Message::Invalid)
+		return;
 	User *user;
 	if (protocol()->isMUC(NULL, msg.to().bare())) {
 		std::string server = msg.to().username().substr(msg.to().username().find("%") + 1, msg.to().username().length() - msg.to().username().find("%"));

@@ -42,14 +42,15 @@ endif(GLOOX_FOUND)
 
 include_directories("/usr/include/mysql++")
 include_directories("/usr/include/mysql")
+include_directories("/usr/local/include/libpurple")
 
-if(PURPLE_FOUND)
-	message(STATUS "PURPLE found OK")
-	include_directories(${PURPLE_INCLUDE_DIRS})
-	message(STATUS ${PURPLE_LIBRARIES})
-else(PURPLE_FOUND)
-	message(FATAL_ERROR "No PURPLE")
-endif(PURPLE_FOUND)
+#if(PURPLE_FOUND)
+#	message(STATUS "PURPLE found OK")
+#	include_directories(${PURPLE_INCLUDE_DIRS})
+#	message(STATUS ${PURPLE_LIBRARIES})
+#else(PURPLE_FOUND)
+#	message(FATAL_ERROR "No PURPLE")
+#endif(PURPLE_FOUND)
 
 if(GLIB2_FOUND)
 	message(STATUS "GLIB2 found OK")
@@ -157,7 +158,7 @@ add_executable(hiicq ${hiicq_SRCS} ${lrelease_outputs})
 
 FIND_LIBRARY(MYSQL_LIBRARY NAMES mysqlpp)
 
-target_link_libraries(hiicq ${GLOOX_LIBRARIES} ${MYSQL_LIBRARY} ${PURPLE_LIBRARIES} ${GLIB2_LIBRARIES} ${GETTEXTPO_LIBRARY} -export-dynamic)
+target_link_libraries(hiicq ${GLOOX_LIBRARIES} ${MYSQL_LIBRARY} -lpurple ${GLIB2_LIBRARIES} ${GETTEXTPO_LIBRARY} -export-dynamic)
 
 # install(FILES
 # 	${CMAKE_CURRENT_SOURCE_DIR}/data/LICENSE.txt
