@@ -561,6 +561,7 @@ void User::purpleConversationWriteIM(PurpleConversation *conv, const char *who, 
 	if (name.empty())
 		return;
 	std::for_each( name.begin(), name.end(), replaceBadJidCharacters() );
+	std::transform(name.begin(), name.end(), name.begin(),(int(*)(int)) std::tolower);
 	// new message from legacy network has been received
 	if (!isOpenedConversation(name)) {
 			m_conversations[name].conv = conv;
@@ -761,15 +762,18 @@ void User::receivedChatState(const std::string &uin,const std::string &state){
 void User::receivedMessage(const Message& msg){
 	PurpleConversation * conv;
 	std::string username = msg.to().username();
-	if (!p->protocol()->isMUC(this, username))
+	if (!p->protocol()->isMUC(this, username)) {
 		std::for_each( username.begin(), username.end(), replaceJidCharacters() );
+	}
+	else if (!msg.to().resource().empty())
+		username = msg.to().resource();
 	// open new conversation or get the opened one
 	if (!isOpenedConversation(username)){
 		conv = purple_conversation_new(PURPLE_CONV_TYPE_IM,m_account,username.c_str());
 		m_conversations[username].conv = conv;
 		m_conversations[username].resource = msg.from().resource();
 	}
-	else{
+	else {
 		conv = m_conversations[username].conv;
 		m_conversations[username].resource = msg.from().resource();
 	}
