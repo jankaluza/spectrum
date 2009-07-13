@@ -87,7 +87,7 @@ void GlooxDiscoHandler::handleDiscoInfo(const JID &jid, const Disco::Info &info,
 		user = p->userManager()->getUserByJID(jid.bare() + server);
 	}
 	else {
-		User *user = p->userManager()->getUserByJID(jid.bare());
+		user = p->userManager()->getUserByJID(jid.bare());
 	}
 	if (user==NULL){
 		std::cout << "no user?! wtf...";
