@@ -20,6 +20,7 @@
 
 #include "irc.h"
 #include "../main.h"
+#include "../muchandler.h"
 
 IRCProtocol::IRCProtocol(GlooxMessageHandler *main){
 	m_main = main;
@@ -68,14 +69,62 @@ void IRCProtocol::onUserCreated(User *user) {
 		purple_value_set_string(value, "");
 		g_hash_table_replace(user->settings(), g_strdup("nickserv"), value);
 	}
+	user->setProtocolData(new IRCProtocolData());
 }
 
 void IRCProtocol::onConnected(User *user) {
+	IRCProtocolData *data = (IRCProtocolData *) user->protocolData();
 	std::string nickserv(purple_value_get_string(user->getSetting("nickserv")));
 	if (!nickserv.empty()) {
 		Message msg(Message::Chat, JID("NickServ@server.cz"), "identify " + nickserv);
 		msg.setFrom(user->jid());
 		user->receivedMessage(msg);
 	}
+
+	for (std::list <Tag*>::iterator it = data->autoConnectRooms.begin(); it != data->autoConnectRooms.end() ; it++ ) {
+		Presence stanza((*it));
+		MUCHandler *muc = new MUCHandler(user, stanza.to().bare(), stanza.from().full());
+		g_hash_table_replace(user->mucs(), g_strdup(stanza.to().username().c_str()), muc);
+		Tag * ret = muc->handlePresence(stanza);
+		if (ret)
+			m_main->j->send(ret);
+		delete (*it);
+	};
+}
+
+bool IRCProtocol::onPresenceReceived(User *user, const Presence &stanza) {
+	if (stanza.to().username()!="") {
+		IRCProtocolData *data = (IRCProtocolData *) user->protocolData();
+		GHashTable *m_mucs = user->mucs();
+		MUCHandler *muc = (MUCHandler*) g_hash_table_lookup(m_mucs, stanza.to().username().c_str());
+		if (muc) {
+			Tag * ret = muc->handlePresence(stanza);
+			if (ret)
+				m_main->j->send(ret);
+			if (stanza.presence() == Presence::Unavailable) {
+				g_hash_table_remove(m_mucs, stanza.to().username().c_str());
+				user->conversations().erase(stanza.to().username());
+				delete muc;
+			}
+		}
+		else if (isMUC(user, stanza.to().bare()) && stanza.presence() != Presence::Unavailable) {
+			if (user->isConnected()) {
+				MUCHandler *muc = new MUCHandler(user, stanza.to().bare(), stanza.from().full());
+				g_hash_table_replace(m_mucs, g_strdup(stanza.to().username().c_str()), muc);
+				Tag * ret = muc->handlePresence(stanza);
+				if (ret)
+					m_main->j->send(ret);
+			}
+			else {
+				data->autoConnectRooms.push_back(stanza.tag());
+			}
+		}
+	}
+	return false;
+}
+
+
+void IRCProtocol::onDestroy(User *user) {
+	delete user->protocolData();
 }
 

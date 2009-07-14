@@ -96,6 +96,14 @@ class AbstractProtocol
 		 * Called when user gets connected
 		 */
 		virtual void onConnected(User *user) { }
+		/*
+		 * Called when user class is getting destroyed
+		 */
+		virtual void onDestroy(User *user) { }
+		/*
+		 * Presence Received. Returns true if the presence was handled.
+		 */
+		virtual bool onPresenceReceived(User *user, const Presence &stanza) { return false; }
 };
 
 #endif

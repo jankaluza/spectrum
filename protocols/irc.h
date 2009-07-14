@@ -26,6 +26,14 @@
 class GlooxMessageHandler;
 extern Localization localization;
 
+class IRCProtocolData {
+	public:
+		IRCProtocolData() {}
+		~IRCProtocolData() {}
+		
+		std::list <Tag *> autoConnectRooms;
+};
+
 class IRCProtocol : AbstractProtocol
 {
 	public:
@@ -46,6 +54,8 @@ class IRCProtocol : AbstractProtocol
 		
 		void onUserCreated(User *user);
 		void onConnected(User *user);
+		void onDestroy(User *user);
+		bool onPresenceReceived(User *user, const Presence &stanza);
 	
 	private:
 		GlooxMessageHandler *m_main;

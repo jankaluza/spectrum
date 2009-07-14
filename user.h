@@ -162,11 +162,15 @@ class User {
 		
 		GlooxMessageHandler *p;
 		std::string & userKey() { return m_userKey; }
+		void setProtocolData(void *protocolData) { m_protocolData = protocolData; }
+		void *protocolData() { return m_protocolData; }
+		GHashTable *mucs() { return m_mucs; }
+		std::map<std::string,Conversation> conversations() { return m_conversations; }
 	
 	private:
 		std::string m_userKey;
 		PurpleAccount *m_account;	// PurpleAccount to which this user is connected
-		std::list <Tag *> m_autoConnectRooms;
+		void *m_protocolData;
 		guint m_syncTimer;			// timer used for syncing purple buddy list and roster
 		int m_subscribeLastCount;	// number of buddies which was in subscribeCache in previous iteration of m_syncTimer
 		bool m_vip;					// true if the user is VIP

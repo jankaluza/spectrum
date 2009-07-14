@@ -923,17 +923,6 @@ void User::connected() {
 	m_connected = true;
 	m_reconnectCount = 0;
 	p->protocol()->onConnected(this);
-	// TODO: move me to IRCProtocol
-	for (std::list <Tag*>::iterator it = m_autoConnectRooms.begin(); it != m_autoConnectRooms.end() ; it++ ) {
-		Presence stanza((*it));
-		MUCHandler *muc = new MUCHandler(this, stanza.to().bare(), stanza.from().full());
-		g_hash_table_replace(m_mucs, g_strdup(stanza.to().username().c_str()), muc);
-		Tag * ret = muc->handlePresence(stanza);
-		if (ret)
-			p->j->send(ret);
-		delete (*it);
-	};
-	
 }
 
 void User::receivedSubscription(const Subscription &subscription) {
@@ -1064,31 +1053,8 @@ void User::receivedSubscription(const Subscription &subscription) {
  */
 void User::receivedPresence(const Presence &stanza){
 
-	if (stanza.to().username()!="") {
-		MUCHandler *muc = (MUCHandler*) g_hash_table_lookup(m_mucs, stanza.to().username().c_str());
-		if (muc) {
-			Tag * ret = muc->handlePresence(stanza);
-			if (ret)
-				p->j->send(ret);
-			if (stanza.presence() == Presence::Unavailable) {
-				g_hash_table_remove(m_mucs, stanza.to().username().c_str());
-				m_conversations.erase(stanza.to().username());
-				delete muc;
-			}
-		}
-		else if (p->protocol()->isMUC(this, stanza.to().bare()) && stanza.presence() != Presence::Unavailable) {
-			if (m_connected) {
-				MUCHandler *muc = new MUCHandler(this, stanza.to().bare(), stanza.from().full());
-				g_hash_table_replace(m_mucs, g_strdup(stanza.to().username().c_str()), muc);
-				Tag * ret = muc->handlePresence(stanza);
-				if (ret)
-					p->j->send(ret);
-			}
-			else {
-				m_autoConnectRooms.push_back(stanza.tag());
-			}
-		}
-	}
+	if (p->protocol()->onPresenceReceived(this, stanza))
+		return;
 
 	if (m_connected){
 
@@ -1313,6 +1279,8 @@ User::~User(){
 	m_authRequests.clear();
 	g_hash_table_destroy(m_mucs);
 	g_hash_table_destroy(m_settings);
+	
+	p->protocol()->onDestroy(this);
 }
 
 
