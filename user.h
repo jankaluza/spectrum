@@ -142,14 +142,16 @@ class User {
 			if (priority != -256) m_resources[resource].priority = priority;
 			if (!caps.empty()) m_resources[resource].capsVersion = caps;
 		}
+		void setActiveResource(std::string resource) { m_resource = resource; }
 		bool hasResource(const std::string r) {return m_resources.find(r) != m_resources.end(); }
-		Resource & getResource(const std::string r) { return m_resources[r];}
+		Resource & getResource(const std::string r = "") { if (r.empty()) return m_resources[m_resource]; else return m_resources[r];}
 		
 		PurpleAccount *account() { return m_account; }
 		std::map<std::string,Resource> & resources() { return m_resources; }
 		int reconnectCount() { return m_reconnectCount; }
 		bool isVIP() { return m_vip; }
 		bool readyForConnect() { return m_readyForConnect; }
+		void setReadyForConnect(bool ready) { m_readyForConnect = ready; }
 		std::string & username() { return m_username; }
 		std::string & jid() { return m_jid; }
 		std::string & resource() { return m_resource; }

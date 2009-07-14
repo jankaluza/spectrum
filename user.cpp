@@ -1053,8 +1053,18 @@ void User::receivedSubscription(const Subscription &subscription) {
  */
 void User::receivedPresence(const Presence &stanza){
 
-	if (p->protocol()->onPresenceReceived(this, stanza))
+
+	Tag *stanzaTag = stanza.tag();
+	if (!stanzaTag)
 		return;
+	if (m_lang == NULL) {
+		std::string lang = stanzaTag->findAttribute("xml:lang");
+		if (lang == "")
+			lang = "en";
+		setLang(lang.c_str());
+		localization.loadLocale(getLang());
+		Log().Get("LANG") << lang << " " << lang.c_str();
+	}
 
 	if (m_connected){
 
@@ -1082,16 +1092,9 @@ void User::receivedPresence(const Presence &stanza){
 		}
 	}
 
-	Tag *stanzaTag = stanza.tag();
-	if (!stanzaTag)
+	if (p->protocol()->onPresenceReceived(this, stanza)) {
+		delete stanzaTag;
 		return;
-	if (m_lang == NULL) {
-		std::string lang = stanzaTag->findAttribute("xml:lang");
-		if (lang == "")
-			lang = "en";
-		setLang(lang.c_str());
-		localization.loadLocale(getLang());
-		Log().Get("LANG") << lang << " " << lang.c_str();
 	}
 
 	// this presence is for the transport

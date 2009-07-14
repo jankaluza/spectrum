@@ -21,6 +21,7 @@
 #include "irc.h"
 #include "../main.h"
 #include "../muchandler.h"
+#include "../usermanager.h"
 
 IRCProtocol::IRCProtocol(GlooxMessageHandler *main){
 	m_main = main;
@@ -93,6 +94,7 @@ void IRCProtocol::onConnected(User *user) {
 }
 
 bool IRCProtocol::onPresenceReceived(User *user, const Presence &stanza) {
+	Tag *stanzaTag = stanza.tag();
 	if (stanza.to().username()!="") {
 		IRCProtocolData *data = (IRCProtocolData *) user->protocolData();
 		GHashTable *m_mucs = user->mucs();
@@ -120,11 +122,121 @@ bool IRCProtocol::onPresenceReceived(User *user, const Presence &stanza) {
 			}
 		}
 	}
-	return false;
+	
+	// this presence is for the transport
+	if ( !tempAccountsAllowed() || isMUC(NULL, stanza.to().bare()) ){
+		if(stanza.presence() == Presence::Unavailable) {
+			// disconnect from legacy network if we are connected
+			if (user->isConnected()) {
+				if (g_hash_table_size(user->mucs()) == 0) {
+					Log().Get(user->jid()) << "disconecting";
+					purple_account_disconnect(user->account());
+					m_main->userManager()->removeUserTimer(user);
+				}
+// 				else {
+// 					iter = m_resources.begin();
+// 					m_resource=(*iter).first;
+// 				}
+			}
+			else {
+				if (!user->resources().empty() && int(time(NULL))>int(user->connectionStart())+10){
+					std::map<std::string,Resource> ::iterator iter = user->resources().begin();
+					iter = user->resources().begin();
+					std::string res = (*iter).first;
+					user->setActiveResource(res);
+				}
+				else if (user->account()){
+					Log().Get(user->jid()) << "disconecting2";
+					purple_account_disconnect(user->account());
+				}
+			}
+		} else {
+			std::string resource = stanza.from().resource();
+			std::map<std::string,Resource> ::iterator iter = user->resources().begin();
+			iter = user->resources().find(resource);
+			if(iter == user->resources().end()){
+				user->resources()[resource].priority = stanza.priority();
+				Tag *c = stanzaTag->findChildWithAttrib("xmlns","http://jabber.org/protocol/caps");
+				// presence has caps
+				if (c!=NULL){
+					if (m_main->hasCaps(c->findAttribute("ver"))){
+						user->resources()[resource].capsVersion = c->findAttribute("ver");
+					}
+				}
+				if (user->resources()[resource].priority > user->resources()[user->resource()].priority)
+					user->setActiveResource(resource);
+			}
+
+			Log().Get(user->jid()) << "resource: " << user->resource();
+			if (!user->isConnected()) {
+				// we are not connected to legacy network, so we should do it when disco#info arrive :)
+				Log().Get(user->jid()) << "connecting: resource=" << user->resource();
+				if (user->readyForConnect()==false){
+					user->setReadyForConnect(true);
+					if (user->getResource().capsVersion.empty()){
+						// caps not arrived yet, so we can't connect just now and we have to wait for caps
+					}
+					else{
+						user->connect();
+					}
+				}
+			}
+			else {
+				Log().Get(user->jid()) << "mirroring presence to legacy network";
+				// we are already connected so we have to change status
+				PurpleSavedStatus *status;
+				int PurplePresenceType;
+				std::string statusMessage;
+				
+				// mirror presence types
+				switch(stanza.presence()) {
+					case Presence::Available: {
+						PurplePresenceType=PURPLE_STATUS_AVAILABLE;
+						break;
+					}
+					case Presence::Chat: {
+						PurplePresenceType=PURPLE_STATUS_AVAILABLE;
+						break;
+					}
+					case Presence::Away: {
+						PurplePresenceType=PURPLE_STATUS_AWAY;
+						break;
+					}
+					case Presence::DND: {
+						PurplePresenceType=PURPLE_STATUS_UNAVAILABLE;
+						break;
+					}
+					case Presence::XA: {
+						PurplePresenceType=PURPLE_STATUS_EXTENDED_AWAY;
+						break;
+					}
+					default: break;
+				}
+				// send presence to our legacy network
+				status = purple_savedstatus_new(NULL, (PurpleStatusPrimitive)PurplePresenceType);
+
+				statusMessage.clear();
+
+				if (user->hasTransportFeature(TRANSPORT_MANGLE_STATUS)) {
+					m_main->sql()->getRandomStatus(statusMessage);
+                    statusMessage.append(" - ");
+				}
+
+				statusMessage.append(stanza.status());
+
+				if (!statusMessage.empty())
+					purple_savedstatus_set_message(status,statusMessage.c_str());
+				purple_savedstatus_activate_for_account(status,user->account());
+			}
+		}
+	}
+	delete stanzaTag;
+	return true;
 }
 
 
 void IRCProtocol::onDestroy(User *user) {
-	delete user->protocolData();
+	IRCProtocolData *data = (IRCProtocolData *) user->protocolData();
+	delete data;
 }
 
