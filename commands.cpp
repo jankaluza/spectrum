@@ -41,10 +41,15 @@ static PurpleCmdRet settings_command_cb(PurpleConversation *conv, const char *cm
 			g_hash_table_iter_init (&iter, settings);
 			while (g_hash_table_iter_next (&iter, &key, &v)) {
 				PurpleValue *value = (PurpleValue *) v;
-				if (purple_value_get_boolean(value))
-					g_string_append_printf(s, "%s = True \n", (char *) key);
-				else
-					g_string_append_printf(s, "%s = False \n", (char *) key);
+				if (purple_value_get_type(value) == PURPLE_TYPE_BOOLEAN) {
+					if (purple_value_get_boolean(value))
+						g_string_append_printf(s, "%s = True \n", (char *) key);
+					else
+						g_string_append_printf(s, "%s = False \n", (char *) key);
+				}
+				else if (purple_value_get_type(value) == PURPLE_TYPE_STRING) {
+					g_string_append_printf(s, "%s = %s \n", (char *) key, purple_value_get_string(value));
+				}
 			}
 		}
 		else if (cmd == "set") {
@@ -60,6 +65,12 @@ static PurpleCmdRet settings_command_cb(PurpleConversation *conv, const char *cm
 							g_string_append_printf(s, "%s is now True \n", args[1]);
 						else
 							g_string_append_printf(s, "%s is now False \n", args[1]);
+					}
+					else if (purple_value_get_type(value) == PURPLE_TYPE_STRING) {
+						value = purple_value_new(PURPLE_TYPE_STRING);
+						purple_value_set_string(value, args[2]);
+						user->updateSetting(args[1], value);
+						g_string_append_printf(s, "%s is now \"%s\" \n", args[1], args[2]);
 					}
 				}
 				else {
