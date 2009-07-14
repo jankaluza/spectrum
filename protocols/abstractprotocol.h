@@ -85,6 +85,17 @@ class AbstractProtocol
 		 * Returns true if temporary accounts for MUC are allows (this is useful for IRC, if you want to connect more network from one account)
 		 */
 		virtual bool tempAccountsAllowed() { return false; }
+		
+		// SIGNALS
+		
+		/*
+		 * Called when new user is created
+		 */
+		virtual void onUserCreated(User *user) { }
+		/*
+		 * Called when user gets connected
+		 */
+		virtual void onConnected(User *user) { }
 };
 
 #endif

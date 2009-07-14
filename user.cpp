@@ -98,6 +98,9 @@ User::User(GlooxMessageHandler *parent, JID jid, const std::string &username, co
 		purple_value_set_boolean(value, true);
 		g_hash_table_replace(m_settings, g_strdup("enable_chatstate"), value);
 	}
+	
+	p->protocol()->onUserCreated(this);
+	
 }
 
 bool User::syncCallback() {
@@ -919,6 +922,8 @@ void User::disconnected() {
 void User::connected() {
 	m_connected = true;
 	m_reconnectCount = 0;
+	p->protocol()->onConnected(this);
+	// TODO: move me to IRCProtocol
 	for (std::list <Tag*>::iterator it = m_autoConnectRooms.begin(); it != m_autoConnectRooms.end() ; it++ ) {
 		Presence stanza((*it));
 		MUCHandler *muc = new MUCHandler(this, stanza.to().bare(), stanza.from().full());

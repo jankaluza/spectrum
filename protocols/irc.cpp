@@ -52,11 +52,30 @@ std::string IRCProtocol::text(const std::string &key) {
 }
 
 Tag *IRCProtocol::getVCardTag(User *user, GList *vcardEntries) {
-	PurpleNotifyUserInfoEntry *vcardEntry;
+// 	PurpleNotifyUserInfoEntry *vcardEntry;
 
 	Tag *vcard = new Tag( "vCard" );
 	vcard->addAttribute( "xmlns", "vcard-temp" );
 
 	return vcard;
+}
+
+void IRCProtocol::onUserCreated(User *user) {
+	PurpleValue *value;
+	if ( (value = user->getSetting("nickserv")) == NULL ) {
+		m_main->sql()->addSetting(user->userKey(), "nickserv", "", PURPLE_TYPE_STRING);
+		value = purple_value_new(PURPLE_TYPE_STRING);
+		purple_value_set_string(value, "");
+		g_hash_table_replace(user->settings(), g_strdup("nickserv"), value);
+	}
+}
+
+void IRCProtocol::onConnected(User *user) {
+	std::string nickserv(purple_value_get_string(user->getSetting("nickserv")));
+	if (!nickserv.empty()) {
+		Message msg(Message::Chat, JID("NickServ@server.cz"), "identify " + nickserv);
+		msg.setFrom(user->jid());
+		user->receivedMessage(msg);
+	}
 }
 

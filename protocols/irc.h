@@ -41,6 +41,11 @@ class IRCProtocol : AbstractProtocol
 		Tag *getVCardTag(User *user, GList *vcardEntries);
 		bool isMUC(User *user, const std::string &jid) { return jid.find("#") == 0 && jid.find("%") != std::string::npos; }
 		bool tempAccountsAllowed() { return true; }
+		
+		// SIGNALS
+		
+		void onUserCreated(User *user);
+		void onConnected(User *user);
 	
 	private:
 		GlooxMessageHandler *m_main;
