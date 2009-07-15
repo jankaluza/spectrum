@@ -377,6 +377,10 @@ GHashTable * SQLClass::getSettings(const std::string &jid) {
 				value = purple_value_new(PURPLE_TYPE_BOOLEAN);
 				purple_value_set_boolean(value, atoi(row["value"]));
 			}
+			if (type == PURPLE_TYPE_STRING) {
+				value = purple_value_new(PURPLE_TYPE_STRING);
+				purple_value_set_string(value, row["value"]);
+			}
 			g_hash_table_replace(settings, g_strdup(row["var"]), value);
 		}
 	}

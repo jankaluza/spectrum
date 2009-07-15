@@ -75,9 +75,11 @@ void IRCProtocol::onUserCreated(User *user) {
 
 void IRCProtocol::onConnected(User *user) {
 	IRCProtocolData *data = (IRCProtocolData *) user->protocolData();
-	std::string nickserv(purple_value_get_string(user->getSetting("nickserv")));
+	const char *n = purple_value_get_string(user->getSetting("nickserv"));
+	std::string nickserv(n ? n : "");
 	if (!nickserv.empty()) {
-		Message msg(Message::Chat, JID("NickServ@server.cz"), "identify " + nickserv);
+		// receivedMessage will send PM according to resource, so it doesn't matter what's before it... :)
+		Message msg(Message::Chat, JID("#test%test@server.cz/NickServ"), "identify " + nickserv);
 		msg.setFrom(user->jid());
 		user->receivedMessage(msg);
 	}

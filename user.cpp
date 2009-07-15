@@ -679,6 +679,9 @@ void User::updateSetting(const std::string &key, PurpleValue *value) {
 		else
 			p->sql()->updateSetting(m_userKey, key, "0");
 	}
+	else if (purple_value_get_type(value) == PURPLE_TYPE_STRING) {
+		p->sql()->updateSetting(m_userKey, key, purple_value_get_string(value));
+	}
 	g_hash_table_replace(m_settings, g_strdup(key.c_str()), value);
 }
 
@@ -768,8 +771,9 @@ void User::receivedMessage(const Message& msg){
 	if (!p->protocol()->isMUC(this, username)) {
 		std::for_each( username.begin(), username.end(), replaceJidCharacters() );
 	}
-	else if (!msg.to().resource().empty())
+	else if (!msg.to().resource().empty()) {
 		username = msg.to().resource();
+	}
 	// open new conversation or get the opened one
 	if (!isOpenedConversation(username)){
 		conv = purple_conversation_new(PURPLE_CONV_TYPE_IM,m_account,username.c_str());
