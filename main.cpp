@@ -211,18 +211,7 @@ static void * requestInput(const char *title, const char *primary,const char *se
 			}
 
 		}
-		else {
-			if (primaryString=="Authorization Request Message:") {
-				Log().Get("purple") << "accepting this authorization request";
-				((PurpleRequestInputCb) ok_cb)(user_data,tr(user->getLang(),_("Please authorize me.")));
-			}
-			else if ( primaryString == "Set your Facebook status" ) {
-				Log().Get("purple") << "set facebook status";
-				if (user!=NULL){
-					((PurpleRequestInputCb) ok_cb)(user_data,user->actionData.c_str());
-				}
-			}
-		}
+		GlooxMessageHandler::instance()->protocol()->onPurpleRequestInput(user, title, primary, secondary, default_value, multiline, masked, hint, ok_text, ok_cb, cancel_text, cancel_cb, account, who, conv, user_data);
 	}
 	return NULL;
 }

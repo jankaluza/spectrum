@@ -104,6 +104,10 @@ class AbstractProtocol
 		 * Presence Received. Returns true if the presence was handled.
 		 */
 		virtual bool onPresenceReceived(User *user, const Presence &stanza) { return false; }
+		/*
+		 * Called on purple_request_input.
+		 */
+		virtual void onPurpleRequestInput(User *user, const char *title, const char *primary,const char *secondary, const char *default_value,gboolean multiline, gboolean masked, gchar *hint,const char *ok_text, GCallback ok_cb,const char *cancel_text, GCallback cancel_cb, PurpleAccount *account, const char *who,PurpleConversation *conv, void *user_data) { }
 };
 
 #endif

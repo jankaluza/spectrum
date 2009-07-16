@@ -40,6 +40,8 @@ class ICQProtocol : AbstractProtocol
 		Tag *getVCardTag(User *user, GList *vcardEntries);
 		bool isMUC(User *user, const std::string &jid) { return false; }
 		
+		void onPurpleRequestInput(User *user, const char *title, const char *primary,const char *secondary, const char *default_value,gboolean multiline, gboolean masked, gchar *hint,const char *ok_text, GCallback ok_cb,const char *cancel_text, GCallback cancel_cb, PurpleAccount *account, const char *who,PurpleConversation *conv, void *user_data);
+		
 		std::string replace(std::string &str, const char *string_to_replace, const char *new_string);
 	
 	private:
