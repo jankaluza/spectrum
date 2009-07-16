@@ -313,20 +313,9 @@ static void XferComplete(PurpleXfer *xfer){
  */
 static void buddyListUpdate(PurpleBuddyList *blist, PurpleBlistNode *node){
 	if (node != NULL) {
-		switch(node->type) {
-			case PURPLE_BLIST_GROUP_NODE:
-				break;
-			
-			case PURPLE_BLIST_CONTACT_NODE:
-				break;
-
-			case PURPLE_BLIST_BUDDY_NODE: {
-				PurpleBuddy* buddy = (PurpleBuddy*)node;
-				GlooxMessageHandler::instance()->purpleBuddyChanged(buddy);
-				break;
-			}
-			default:
-				break;
+		if (node->type == PURPLE_BLIST_BUDDY_NODE) {
+			PurpleBuddy* buddy = (PurpleBuddy*)node;
+			GlooxMessageHandler::instance()->purpleBuddyChanged(buddy);
 		}
 	}
 }
@@ -713,7 +702,7 @@ void GlooxMessageHandler::purpleConnectionError(PurpleConnection *gc,PurpleConne
 			}
 			else{
 				user->disconnected();
-				g_timeout_add(5000,&reconnect,g_strdup(user->jid().c_str()));
+				g_timeout_add_seconds(5,&reconnect,g_strdup(user->jid().c_str()));
 			}
 		}
 // 		}
@@ -918,7 +907,7 @@ void GlooxMessageHandler::purpleFileReceiveComplete(PurpleXfer *xfer){
 					data->from=remote_user+"@"+jid()+"/bot";
 					data->filename=localname;
 					data->name=filename;
-					g_timeout_add(1000,&sendFileToJabber,data);
+					g_timeout_add_seconds(1,&sendFileToJabber,data);
 					sql()->addDownload(basename,"1");
 				}
 				else {
@@ -1232,10 +1221,10 @@ void GlooxMessageHandler::handlePresence(const Presence &stanza){
 				if (protocol()->isMUC(NULL, stanza.to().bare())) {
 					std::string server = stanza.to().username().substr(stanza.to().username().find("%") + 1, stanza.to().username().length() - stanza.to().username().find("%"));
 					server = stanza.from().bare() + server;
-					g_timeout_add(15000,&connectUser,g_strdup(server.c_str()));
+					g_timeout_add_seconds(15,&connectUser,g_strdup(server.c_str()));
 				}
 				else
-					g_timeout_add(15000,&connectUser,g_strdup(stanza.from().bare().c_str()));
+					g_timeout_add_seconds(15,&connectUser,g_strdup(stanza.from().bare().c_str()));
 			}
 		}
 		if (stanza.presence() == Presence::Unavailable && stanza.to().username() == ""){
@@ -1285,7 +1274,7 @@ void GlooxMessageHandler::onDisconnect(ConnectionError e){
 	Log().Get("gloox") << j->streamError();
 	Log().Get("gloox") << j->streamErrorText("default text");
 	if (j->streamError()==0 || j->streamError()==24){
-        	j->connect(false);
+		j->connect(false);
 		int mysock = dynamic_cast<ConnectionTCPClient*>( j->connectionImpl() )->socket();
 		connectIO = g_io_channel_unix_new(mysock);
 		g_io_add_watch(connectIO,(GIOCondition) READ_COND,&iter,NULL);

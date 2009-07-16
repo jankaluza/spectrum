@@ -93,11 +93,7 @@ static PurpleEventLoopUiOps eventLoopOps =
 	input_add,
 	g_source_remove,
 	NULL,
-#if GLIB_CHECK_VERSION(2,14,0)
 	g_timeout_add_seconds,
-#else
-	NULL,
-#endif
 	NULL,
 	NULL,
 	NULL
