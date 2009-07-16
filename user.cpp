@@ -598,7 +598,7 @@ void User::purpleConversationWriteIM(PurpleConversation *conv, const char *who, 
 	}
 	
 	// Delayed messages, we have to count with some delay
-	if (int(time(NULL))-10>int(mtime)) {
+	if ((unsigned long) time(NULL)-10 > (unsigned long) mtime && (unsigned long) time(NULL) - 31536000 > (unsigned long) mtime) {
 		char buf[80];
 		strftime(buf, sizeof(buf), "%Y-%m-%dT%H:%M:%SZ", gmtime(&mtime));
 		std::string timestamp(buf);
