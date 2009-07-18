@@ -168,6 +168,8 @@ class User {
 		void *protocolData() { return m_protocolData; }
 		GHashTable *mucs() { return m_mucs; }
 		std::map<std::string,Conversation> conversations() { return m_conversations; }
+		
+		guint removeTimer;
 	
 	private:
 		std::string m_userKey;

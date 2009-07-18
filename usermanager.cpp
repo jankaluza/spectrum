@@ -61,6 +61,8 @@ void UserManager::removeUser(User *user){
 	if (m_cachedUser && user->userKey() == m_cachedUser->userKey()) {
 		m_cachedUser = NULL;
 	}
+	if (user->removeTimer != 0)
+		purple_timeout_remove(user->removeTimer);
 	delete user;
 	Log().Get("logout") << "delete user; called => user is sucesfully removed";
 }
@@ -72,7 +74,7 @@ void UserManager::removeUserTimer(User *user){
 		m_cachedUser = NULL;
 	}
 	// this will be called by gloop after all
-	g_timeout_add(0,&deleteUser,user);
+	user->removeTimer = purple_timeout_add(0,&deleteUser,user);
 }
 
 void UserManager::buddyOnline() {

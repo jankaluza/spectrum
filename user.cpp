@@ -62,6 +62,7 @@ User::User(GlooxMessageHandler *parent, JID jid, const std::string &username, co
 	m_vip = p->sql()->isVIP(m_jid);
 	m_settings = p->sql()->getSettings(userKey);
 	m_syncTimer = 0;
+	removeTimer = 0;
 	m_readyForConnect = false;
 	m_rosterXCalled = false;
 	m_account = NULL;
