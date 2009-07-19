@@ -1,0 +1,472 @@
+Index: clientbase.h
+===================================================================
+--- clientbase.h	(revision 4022)
++++ clientbase.h	(working copy)
+@@ -399,6 +399,7 @@
+        * @param ext The extension to register.
+        */
+       void registerStanzaExtension( StanzaExtension* ext );
++	StanzaExtensionFactory * stanzaExtensionFactory( ) { return m_seFactory; }
+ 
+       /**
+        * Removes the given StanzaExtension type from the StanzaExtensionFactory.
+Index: sihandler.h
+===================================================================
+--- sihandler.h	(revision 4022)
++++ sihandler.h	(working copy)
+@@ -52,7 +52,7 @@
+        * @param sid The stream ID.
+        * @param si The request's complete SI.
+        */
+-      virtual void handleSIRequestResult( const JID& from, const std::string& sid,
++      virtual void handleSIRequestResult( const JID& from, const JID& to, const std::string& sid,
+                                           const SIManager::SI& si ) = 0;
+ 
+       /**
+Index: siprofileft.h
+===================================================================
+--- siprofileft.h	(revision 4022)
++++ siprofileft.h	(working copy)
+@@ -196,7 +196,7 @@
+        * @return The requested stream's ID (SID). Empty if conditions above (file name, size)
+        * are not met.
+        */
+-      const std::string requestFT( const JID& to, const std::string& name, long size,
++      const std::string requestFT( const JID& to, const JID& from, const std::string& name, long size,
+                                    const std::string& hash = EmptyString,
+                                    const std::string& desc = EmptyString,
+                                    const std::string& date = EmptyString,
+@@ -211,7 +211,7 @@
+        * @param type The desired stream type to use for this file transfer. Defaults to
+        * SOCKS5 Bytestream. You should not use @c FTTypeAll here.
+        */
+-      void acceptFT( const JID& to, const std::string& sid,
++      void acceptFT( const JID& to, const JID& from, const std::string& sid,
+                      StreamType type = FTTypeS5B );
+ 
+       /**
+@@ -282,11 +282,11 @@
+         { if( m_socks5Manager ) m_socks5Manager->removeSOCKS5BytestreamServer(); }
+ 
+       // reimplemented from SIProfileHandler
+-      virtual void handleSIRequest( const JID& from, const std::string& id,
++      virtual void handleSIRequest( const JID& from, const JID& to, const std::string& id,
+                                     const SIManager::SI& si );
+ 
+       // reimplemented from SIHandler
+-      virtual void handleSIRequestResult( const JID& from, const std::string& sid,
++      virtual void handleSIRequestResult( const JID& from, const JID& to, const std::string& sid,
+                                           const SIManager::SI& si );
+ 
+       // reimplemented from SIHandler
+Index: capabilities.cpp
+===================================================================
+--- capabilities.cpp	(revision 4022)
++++ capabilities.cpp	(working copy)
+@@ -126,7 +126,7 @@
+     return ret;
+   }
+ 
+-  Disco::ItemList Capabilities::handleDiscoNodeItems( const JID&, const std::string& )
++  Disco::ItemList Capabilities::handleDiscoNodeItems( const JID&, const JID&, const std::string& )
+   {
+     return Disco::ItemList();
+   }
+Index: stanzaextension.h
+===================================================================
+--- stanzaextension.h	(revision 4022)
++++ stanzaextension.h	(working copy)
+@@ -86,9 +86,11 @@
+                                      * (XEP-0060) */
+     ExtSHIM,                        /**< An extension dealing with Stanza Headers and Internet Metadata (XEP-0131). */
+     ExtAttention,                   /**< An extension dealing with Attention (XEP-0224). */
+-    ExtUser                         /**< User-supplied extensions must use IDs above this. Do
++    ExtUser,                        /**< User-supplied extensions must use IDs above this. Do
+                                      * not hard-code ExtUser's value anywhere, it is subject
+                                      * to change. */
++    ExtGateway,
++    ExtStats
+   };
+ 
+   /**
+Index: presence.h
+===================================================================
+--- presence.h	(revision 4022)
++++ presence.h	(working copy)
+@@ -138,7 +138,7 @@
+ 
+       // reimplemented from Stanza
+       virtual Tag* tag() const;
+-
++      Presence( Tag* tag );
+     private:
+ #ifdef PRESENCE_TEST
+     public:
+@@ -147,8 +147,8 @@
+        * Creates a Presence request from the given Tag. The original Tag will be ripped off.
+        * @param tag The Tag to parse.
+        */
+-      Presence( Tag* tag );
+ 
++
+       PresenceType m_subtype;
+       StringMap* m_stati;
+       std::string m_status;
+Index: simanager.h
+===================================================================
+--- simanager.h	(revision 4022)
++++ simanager.h	(working copy)
+@@ -158,7 +158,7 @@
+        * @note The SIManager claims ownership of the Tags supplied to this function, and will
+        * delete them after use.
+        */
+-      const std::string requestSI( SIHandler* sih, const JID& to, const std::string& profile, Tag* child1,
++      const std::string requestSI( SIHandler* sih, const JID& to, const JID& from, const std::string& profile, Tag* child1,
+                                    Tag* child2 = 0, const std::string& mimetype = "binary/octet-stream" );
+ 
+       /**
+@@ -172,7 +172,7 @@
+        * @note The SIManager claims ownership of the Tags supplied to this function, and will
+        * delete them after use.
+        */
+-      void acceptSI( const JID& to, const std::string& id, Tag* child1, Tag* child2 = 0 );
++      void acceptSI( const JID& to, const JID& from, const std::string& id, Tag* child1, Tag* child2 = 0 );
+ 
+       /**
+        * Call this function to decline an SI request previously announced by means of
+Index: adhoc.cpp
+===================================================================
+--- adhoc.cpp	(revision 4022)
++++ adhoc.cpp	(working copy)
+@@ -246,7 +246,7 @@
+ //    return StringList( 1, XMLNS_ADHOC_COMMANDS );
+   }
+ 
+-  Disco::ItemList Adhoc::handleDiscoNodeItems( const JID& from, const std::string& node )
++  Disco::ItemList Adhoc::handleDiscoNodeItems( const JID& from, const JID& to, const std::string& node )
+   {
+     Disco::ItemList l;
+     if( node.empty() )
+Index: capabilities.h
+===================================================================
+--- capabilities.h	(revision 4022)
++++ capabilities.h	(working copy)
+@@ -98,7 +98,7 @@
+                                                              const std::string& node );
+ 
+       // reimplemented from DiscoNodeHandler
+-      virtual Disco::ItemList handleDiscoNodeItems( const JID& from,
++      virtual Disco::ItemList handleDiscoNodeItems( const JID& from, const JID& to,
+                                                     const std::string& node = EmptyString );
+ 
+     private:
+Index: disco.cpp
+===================================================================
+--- disco.cpp	(revision 4022)
++++ disco.cpp	(working copy)
+@@ -265,6 +265,7 @@
+       case IQ::Get:
+       {
+         IQ re( IQ::Result, iq.from(), iq.id() );
++        re.setFrom(iq.to());
+ 
+         const SoftwareVersion* sv = iq.findExtension<SoftwareVersion>( ExtVersion );
+         if( sv )
+@@ -344,7 +345,7 @@
+               DiscoNodeHandlerList::const_iterator in = (*it).second.begin();
+               for( ; in != (*it).second.end(); ++in )
+               {
+-                ItemList il = (*in)->handleDiscoNodeItems( iq.from(), items->node() );
++                ItemList il = (*in)->handleDiscoNodeItems( iq.from(), iq.to(), items->node() );
+                 itemlist.merge( il );
+               }
+               i->setItems( itemlist );
+Index: disconodehandler.h
+===================================================================
+--- disconodehandler.h	(revision 4022)
++++ disconodehandler.h	(working copy)
+@@ -70,7 +70,7 @@
+        * @param node The node this handler is supposed to handle.
+        * @return A list of items supported by this node.
+        */
+-      virtual Disco::ItemList handleDiscoNodeItems( const JID& from,
++      virtual Disco::ItemList handleDiscoNodeItems( const JID& from, const JID& to,
+                                                     const std::string& node = EmptyString ) = 0;
+ 
+   };
+Index: siprofileft.cpp
+===================================================================
+--- siprofileft.cpp	(revision 4022)
++++ siprofileft.cpp	(working copy)
+@@ -60,7 +60,7 @@
+       delete m_socks5Manager;
+   }
+ 
+-  const std::string SIProfileFT::requestFT( const JID& to, const std::string& name, long size,
++  const std::string SIProfileFT::requestFT( const JID& to, const JID& from, const std::string& name, long size,
+                                             const std::string& hash, const std::string& desc,
+                                             const std::string& date, const std::string& mimetype,
+                                             int streamTypes )
+@@ -93,10 +93,10 @@
+     dff->setOptions( sm );
+     feature->addChild( df.tag() );
+ 
+-    return m_manager->requestSI( this, to, XMLNS_SI_FT, file, feature, mimetype );
++    return m_manager->requestSI( this, to, from, XMLNS_SI_FT, file, feature, mimetype );
+   }
+ 
+-  void SIProfileFT::acceptFT( const JID& to, const std::string& sid, StreamType type )
++  void SIProfileFT::acceptFT( const JID& to, const JID& from, const std::string& sid, StreamType type )
+   {
+     if( !m_manager )
+       return;
+@@ -119,7 +119,7 @@
+         if( m_handler )
+         {
+           InBandBytestream* ibb = new InBandBytestream( m_parent, m_parent->logInstance(), to,
+-                                                        m_parent->jid(), sid );
++                                                        from, sid );
+           m_handler->handleFTBytestream( ibb );
+         }
+         break;
+@@ -166,7 +166,7 @@
+       m_socks5Manager->addStreamHost( jid, host, port );
+   }
+ 
+-  void SIProfileFT::handleSIRequest( const JID& from, const std::string& id,
++  void SIProfileFT::handleSIRequest( const JID& from, const JID& to, const std::string& id,
+                                      const SIManager::SI& si )
+   {
+     if( si.profile() != XMLNS_SI_FT || !si.tag1() )
+@@ -214,7 +214,7 @@
+ 
+       const std::string& sid = si.id();
+       m_id2sid[sid] = id;
+-      m_handler->handleFTRequest( from, sid, si.tag1()->findAttribute( "name" ),
++      m_handler->handleFTRequest( from, to, sid, si.tag1()->findAttribute( "name" ),
+                                   atol( si.tag1()->findAttribute( "size" ).c_str() ),
+                                         si.tag1()->findAttribute( "hash" ),
+                                             si.tag1()->findAttribute( "date" ),
+@@ -223,7 +223,7 @@
+     }
+   }
+ 
+-  void SIProfileFT::handleSIRequestResult( const JID& from, const std::string& sid,
++  void SIProfileFT::handleSIRequestResult( const JID& from, const JID& to, const std::string& sid,
+                                            const SIManager::SI& si )
+   {
+     if( si.tag2() )
+@@ -236,24 +236,25 @@
+         if( m_socks5Manager && dff->value() == XMLNS_BYTESTREAMS )
+         {
+           // check return value:
+-          m_socks5Manager->requestSOCKS5Bytestream( from, SOCKS5BytestreamManager::S5BTCP, sid );
++          m_socks5Manager->requestSOCKS5Bytestream( from, to, SOCKS5BytestreamManager::S5BTCP, sid );
+         }
+         else if( m_handler )
+         {
+           if( dff->value() == XMLNS_IBB )
+           {
+             InBandBytestream* ibb = new InBandBytestream( m_parent, m_parent->logInstance(),
+-                                                          m_parent->jid(), from, sid );
++                                                          to, from, sid );
+ 
+             m_handler->handleFTBytestream( ibb );
+           }
+           else if( dff->value() == XMLNS_IQ_OOB )
+           {
+-            const std::string& url = m_handler->handleOOBRequestResult( from, sid );
++            const std::string& url = m_handler->handleOOBRequestResult( from, to, sid );
+             if( !url.empty() )
+             {
+               const std::string& id = m_parent->getID();
+               IQ iq( IQ::Set, from, id );
++			  iq.setFrom(to);
+               iq.addExtension( new OOB( url, EmptyString, true ) );
+               m_parent->send( iq, this, OOBSent );
+             }
+Index: siprofilehandler.h
+===================================================================
+--- siprofilehandler.h	(revision 4022)
++++ siprofilehandler.h	(working copy)
+@@ -52,7 +52,7 @@
+        * SIManager::acceptSI() or SIManager::declineSI().
+        * @param si The request's complete SI.
+        */
+-      virtual void handleSIRequest( const JID& from, const std::string& id, const SIManager::SI& si ) = 0;
++      virtual void handleSIRequest( const JID& from, const JID& to, const std::string& id, const SIManager::SI& si ) = 0;
+ 
+   };
+ 
+Index: siprofilefthandler.h
+===================================================================
+--- siprofilefthandler.h	(revision 4022)
++++ siprofilefthandler.h	(working copy)
+@@ -61,7 +61,7 @@
+        * @param length The number of bytes to send, starting from the given offset. A value of -1
+        * indicates that the entire file is to be transmitted (taking the offset into account).
+        */
+-      virtual void handleFTRequest( const JID& from, const std::string& sid,
++      virtual void handleFTRequest( const JID& from, const JID& to, const std::string& sid,
+                                     const std::string& name, long size, const std::string& hash,
+                                     const std::string& date, const std::string& mimetype,
+                                     const std::string& desc, int stypes, long offset, long length ) = 0;
+@@ -96,7 +96,7 @@
+        * @param sid The stream's ID.
+        * @return The file's URL.
+        */
+-      virtual const std::string handleOOBRequestResult( const JID& from, const std::string& sid ) = 0;
++      virtual const std::string handleOOBRequestResult( const JID& from, const JID& to, const std::string& sid ) = 0;
+ 
+   };
+ 
+Index: socks5bytestreammanager.cpp
+===================================================================
+--- socks5bytestreammanager.cpp	(revision 4022)
++++ socks5bytestreammanager.cpp	(working copy)
+@@ -175,7 +175,7 @@
+     m_hosts.push_back( sh );
+   }
+ 
+-  bool SOCKS5BytestreamManager::requestSOCKS5Bytestream( const JID& to, S5BMode mode,
++  bool SOCKS5BytestreamManager::requestSOCKS5Bytestream( const JID& to, const JID& from, S5BMode mode,
+                                                          const std::string& sid )
+   {
+     if( !m_parent )
+@@ -192,12 +192,13 @@
+     const std::string& id = m_parent->getID();
+     IQ iq( IQ::Set, to, id );
+     iq.addExtension( new Query( msid, mode, m_hosts ) );
++	iq.setFrom(from);
+ 
+     if( m_server )
+     {
+       SHA sha;
+       sha.feed( msid );
+-      sha.feed( m_parent->jid().full() );
++      sha.feed( from.full() );
+       sha.feed( to.full() );
+       m_server->registerHash( sha.hex() );
+     }
+@@ -414,18 +415,18 @@
+                 {
+                   SHA sha;
+                   sha.feed( (*it).second );
+-                  sha.feed( m_parent->jid().full() );
++                  sha.feed( iq.to().full() );
+                   sha.feed( iq.from().full() );
+                   s5b = new SOCKS5Bytestream( this, m_server->getConnection( sha.hex() ),
+                                               m_parent->logInstance(),
+-                                                  m_parent->jid(), iq.from(),
++                                                  iq.to(), iq.from(),
+                                                       (*it).second );
+                 }
+                 else
+                 {
+                   s5b = new SOCKS5Bytestream( this, m_parent->connectionImpl()->newInstance(),
+                                               m_parent->logInstance(),
+-                                                  m_parent->jid(), iq.from(),
++                                                  iq.to(), iq.from(),
+                                                       (*it).second );
+                   s5b->setStreamHosts( StreamHostList( 1, *sh ) );
+                 }
+Index: simanager.cpp
+===================================================================
+--- simanager.cpp	(revision 4022)
++++ simanager.cpp	(working copy)
+@@ -109,7 +109,7 @@
+     }
+   }
+ 
+-  const std::string SIManager::requestSI( SIHandler* sih, const JID& to, const std::string& profile,
++  const std::string SIManager::requestSI( SIHandler* sih, const JID& to, const JID& from, const std::string& profile,
+                                           Tag* child1, Tag* child2, const std::string& mimetype )
+   {
+     if( !m_parent || !sih )
+@@ -120,6 +120,7 @@
+ 
+     IQ iq( IQ::Set, to, id );
+     iq.addExtension( new SI( child1, child2, id2, mimetype, profile ) );
++	iq.setFrom(from);
+ 
+     TrackStruct t;
+     t.sid = id2;
+@@ -131,10 +132,11 @@
+     return id2;
+   }
+ 
+-  void SIManager::acceptSI( const JID& to, const std::string& id, Tag* child1, Tag* child2 )
++  void SIManager::acceptSI( const JID& to, const JID& from, const std::string& id, Tag* child1, Tag* child2 )
+   {
+     IQ iq( IQ::Result, to, id );
+     iq.addExtension( new SI( child1, child2 ) );
++	iq.setFrom(from);
+     m_parent->send( iq );
+   }
+ 
+@@ -198,7 +200,7 @@
+     if( it != m_handlers.end() && (*it).second )
+     {
+       // FIXME: don't pass si->tag()!
+-      (*it).second->handleSIRequest( iq.from(), iq.id(), *si );
++      (*it).second->handleSIRequest( iq.from(), iq.to(), iq.id(), *si );
+       return true;
+     }
+ 
+@@ -230,7 +232,7 @@
+ 
+             // FIXME: remove above commented code and
+             // check corectness of last 3 params!
+-            (*it).second.sih->handleSIRequestResult( iq.from(), (*it).second.sid, *si );
++            (*it).second.sih->handleSIRequestResult( iq.from(), iq.to(), (*it).second.sid, *si );
+             m_track.erase( it );
+           }
+         }
+Index: clientbase.cpp
+===================================================================
+--- clientbase.cpp	(revision 4022)
++++ clientbase.cpp	(working copy)
+@@ -1294,13 +1294,15 @@
+     bool res = false;
+ 
+     // FIXME remove for 1.1
+-//     typedef IqHandlerMapXmlns::const_iterator IQciXmlns;
+-//     std::pair<IQciXmlns, IQciXmlns> g = m_iqNSHandlers.equal_range( iq.xmlns() );
++//     typedef IqHandlerMapXmlns::const_iterator IQciXmlns
++//     Tag *tag = iq.tag()->xmlns();
++//     std::pair<IQciXmlns, IQciXmlns> g = m_iqNSHandlers.equal_range( tag->xmlns() );
+ //     for( IQciXmlns it = g.first; it != g.second; ++it )
+ //     {
+ //       if( (*it).second->handleIq( iq ) )
+ //         res = true;
+ //     }
++//     delete tag;
+ 
+     typedef IqHandlerMap::const_iterator IQci;
+     const StanzaExtensionList& sel = iq.extensions();
+Index: socks5bytestreammanager.h
+===================================================================
+--- socks5bytestreammanager.h	(revision 4022)
++++ socks5bytestreammanager.h	(working copy)
+@@ -106,7 +106,7 @@
+        * @b not indicate that the bytestream has been opened. This is announced by means of the
+        * BytestreamHandler.
+        */
+-      bool requestSOCKS5Bytestream( const JID& to, S5BMode mode, const std::string& sid = EmptyString );
++      bool requestSOCKS5Bytestream( const JID& to, const JID& from, S5BMode mode, const std::string& sid = EmptyString );
+ 
+       /**
+        * To get rid of a bytestream (i.e., close and delete it), call this function. You
+Index: adhoc.h
+===================================================================
+--- adhoc.h	(revision 4022)
++++ adhoc.h	(working copy)
+@@ -432,7 +432,7 @@
+           const std::string& node );
+ 
+       // reimplemented from DiscoNodeHandler
+-      virtual Disco::ItemList handleDiscoNodeItems( const JID& from, const std::string& node );
++      virtual Disco::ItemList handleDiscoNodeItems( const JID& from, const JID& to, const std::string& node );
+ 
+       // reimplemented from IqHandler
+       virtual bool handleIq( const IQ& iq );
