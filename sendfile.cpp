@@ -20,12 +20,12 @@
 
 #include "sendfile.h"
 
-SendFile::SendFile(gloox::SOCKS5Bytestream *stream, std::string filename, int size, MyMutex *mutex, FileTransferManager *manager) {
+SendFile::SendFile(gloox::Bytestream *stream, std::string filename, int size, MyMutex *mutex, FileTransferManager *manager) {
     std::cout << "SendFile::SendFile" << " Constructor.\n";
     m_stream = stream;
     m_filename = filename;
     m_size = size;
-//     m_stream->registerSOCKS5BytestreamDataHandler(this);
+//     m_stream->registerBytestreamBytestreamDataHandler(this);
 	m_mutex = mutex;
 	m_parent = manager;
 	if (m_stream->connect())
@@ -65,18 +65,18 @@ void SendFile::exec() {
     delete this;
 }
 
-void SendFile::handleSOCKS5Data(gloox::SOCKS5Bytestream *s5b, const std::string &data) {
+void SendFile::handleBytestreamData(gloox::Bytestream *s5b, const std::string &data) {
 	std::cout << "socks stream data\n";
 }
 
-void SendFile::handleSOCKS5Error(gloox::SOCKS5Bytestream *s5b, gloox::Stanza *stanza) {
+void SendFile::handleBytestreamError(gloox::Bytestream *s5b, const gloox::IQ &iq) {
 
 }
 
-void SendFile::handleSOCKS5Open(gloox::SOCKS5Bytestream *s5b) {
+void SendFile::handleBytestreamOpen(gloox::Bytestream *s5b) {
 	std::cout << "socks stream open\n";
 }
 
-void SendFile::handleSOCKS5Close(gloox::SOCKS5Bytestream *s5b) {
+void SendFile::handleBytestreamClose(gloox::Bytestream *s5b) {
 	std::cout << "socks stream error\n";
 }

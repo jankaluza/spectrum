@@ -25,55 +25,38 @@ void FileTransferManager::setSIProfileFT(gloox::SIProfileFT *sipft,GlooxMessageH
 	p = parent;
 	mutex = new MyMutex();
 }
-/*
-void FileTransferManager::handleFTRequest( const gloox::JID &from,const gloox::JID &to, const std::string &id, const std::string &sid,
-                                             const std::string &name, long size, const std::string &hash,
-                                             const std::string &date, const std::string &mimetype,
-                                             const std::string &desc, int stypes, long offset, long length) {
-     std::cout << "Received file transfer request from " << from.full() << ".\n";
-     m_info[sid].filename = name;
-     m_info[sid].size = size;
-     m_sip->acceptFT( from, to, id, gloox::SIProfileFT::FTTypeS5B );
+
+void FileTransferManager::handleFTRequest (const JID &from, const JID &to, const std::string &sid, const std::string &name, long size, const std::string &hash, const std::string &date, const std::string &mimetype, const std::string &desc, int stypes, long offset, long length) {
+	std::cout << "Received file transfer request from " << from.full() << ".\n";
+	m_info[sid].filename = name;
+	m_info[sid].size = size;
+	m_sip->acceptFT(from, to, sid);
 }
 
-void FileTransferManager::handleFTRequestError(gloox::Stanza *stanza, const std::string &sid) {
-//     Log::i().log(LogStageError, "FileTransferManager::handleFTRequestError", "Received file transfer error from " + stanza->findAttribute("from") + ".");
-//     Log::i().log(LogStageError, "FileTransferManager::handleFTRequestError", stanza->xml());
-}
 
-void FileTransferManager::handleFTSOCKS5Bytestream(gloox::SOCKS5Bytestream *s5b) {
-//     Log::i().log(LogStageDebug, "FileTransferManager::handleFTSOCKS5Bytestream", "Incomming Bytestream.");
-
-
-	if (std::find(m_sendlist.begin(), m_sendlist.end(), s5b->target().full()) == m_sendlist.end()) {
-
-
-		std::string filename = m_info[s5b->sid()].filename;
-		
-// 		std::string filename;
-	
-// 		filename.resize(tempname.size());
-	
+void FileTransferManager::handleFTBytestream (Bytestream *bs) {
+	if (std::find(m_sendlist.begin(), m_sendlist.end(), bs->target().full()) == m_sendlist.end()) {
+		std::string filename = m_info[bs->sid()].filename;
 		// replace invalid characters
 		for (std::string::iterator it = filename.begin(); it != filename.end(); ++it) {
 			if (*it == '\\' || *it == '&' || *it == '/' || *it == '?' || *it == '*' || *it == ':') {
 				*it = '_';
 			}
 		} 
-		filename=p->configuration().filetransferCache+"/"+s5b->target().username()+"-"+p->j->getID()+"-"+filename;
+		filename=p->configuration().filetransferCache+"/"+bs->target().username()+"-"+p->j->getID()+"-"+filename;
 		
 		mutex->lock();
-		m_progress[s5b->sid()].filename=filename;
-		m_progress[s5b->sid()].incoming=true;
-		m_progress[s5b->sid()].state=0;
-		m_progress[s5b->sid()].user=s5b->from().bare();
-		m_progress[s5b->sid()].to=s5b->from();
-		m_progress[s5b->sid()].from=s5b->target();
-		m_progress[s5b->sid()].stream=s5b;
-		std::cout << "FROM:" << s5b->initiator().full();
+		m_progress[bs->sid()].filename=filename;
+		m_progress[bs->sid()].incoming=true;
+		m_progress[bs->sid()].state=0;
+		m_progress[bs->sid()].user=bs->initiator().bare();
+		m_progress[bs->sid()].to=bs->initiator();
+		m_progress[bs->sid()].from=bs->target();
+		m_progress[bs->sid()].stream=bs;
+		std::cout << "FROM:" << bs->initiator().full() << " TO:" << bs->target().full();
 		
 		mutex->unlock();
-        new ReceiveFile(s5b,filename, m_info[s5b->sid()].size,mutex,this);
+		new ReceiveFile(bs,filename, m_info[bs->sid()].size,mutex,this);
     } else {
 		// zatim to nepotrebujem u odchozich filu
 // 		mutex->lock();
@@ -81,10 +64,10 @@ void FileTransferManager::handleFTSOCKS5Bytestream(gloox::SOCKS5Bytestream *s5b)
 // 		m_progress[s5b->sid()].incoming=false;
 // 		m_progress[s5b->sid()].state=0;
 // 		mutex->unlock();
-        new SendFile(s5b, m_info[s5b->sid()].filename, m_info[s5b->sid()].size,mutex,this);
-        m_sendlist.erase(std::find(m_sendlist.begin(), m_sendlist.end(), s5b->target().full()));
+        new SendFile(bs, m_info[bs->sid()].filename, m_info[bs->sid()].size,mutex,this);
+        m_sendlist.erase(std::find(m_sendlist.begin(), m_sendlist.end(), bs->target().full()));
     }
-    m_info.erase(s5b->sid());
+    m_info.erase(bs->sid());
 }
 
 void FileTransferManager::sendFile(std::string jid, std::string from, std::string name, std::string file) {
@@ -98,11 +81,11 @@ void FileTransferManager::sendFile(std::string jid, std::string from, std::strin
             return;
         }
 		std::cout << "requesting filetransfer " << jid <<" " << file <<" as " << name << " " << info.st_size << "\n";
-        std::string sid = m_sip->requestFT(jid,from,name, file, info.st_size);
+        std::string sid = m_sip->requestFT(jid, from, /*name,*/ file, info.st_size);
         m_info[sid].filename = file;
         m_info[sid].size = info.st_size;
         f.close();
     } else {
         std::cout << "FileTransferManager::sendFile" << " Couldn't open the file " << file << "!\n";
     }
-}*/
+}

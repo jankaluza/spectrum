@@ -67,7 +67,7 @@ static gboolean transferFinished(gpointer data){
 	return FALSE;
 }
 
-ReceiveFile::ReceiveFile(gloox::SOCKS5Bytestream *stream, std::string filename, int size, MyMutex *mutex, FileTransferManager *manager) {
+ReceiveFile::ReceiveFile(gloox::Bytestream *stream, std::string filename, int size, MyMutex *mutex, FileTransferManager *manager) {
     m_stream = stream;
     m_size = size;
     m_filename = filename;
@@ -107,20 +107,20 @@ void ReceiveFile::exec() {
 //     m_finished = true;
 }
 
-void ReceiveFile::handleSOCKS5Data(gloox::SOCKS5Bytestream *s5b, const std::string &data) {
+void ReceiveFile::handleBytestreamData(gloox::Bytestream *s5b, const std::string &data) {
     m_file.write(data.c_str(), data.size());
 }
 
-void ReceiveFile::handleSOCKS5Error(gloox::SOCKS5Bytestream *s5b, gloox::Stanza *stanza) {
+void ReceiveFile::handleBytestreamError(gloox::Bytestream *s5b, const gloox::IQ &iq) {
 	Log().Get(m_filename) << "STREAM ERROR!";
 // 	Log().Get(m_filename) << stanza->xml();
 }
 
-void ReceiveFile::handleSOCKS5Open(gloox::SOCKS5Bytestream *s5b) {
+void ReceiveFile::handleBytestreamOpen(gloox::Bytestream *s5b) {
     Log().Get(m_filename) << "stream opened...";
 }
 
-void ReceiveFile::handleSOCKS5Close(gloox::SOCKS5Bytestream *s5b) {
+void ReceiveFile::handleBytestreamClose(gloox::Bytestream *s5b) {
     if (m_finished){
 		Log().Get(m_filename) << "Transfer finished and we're already finished => deleting receiveFile thread";
 // 		delete this;

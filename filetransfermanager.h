@@ -43,7 +43,7 @@ struct progress {
 	gloox::JID from;
 	gloox::JID to;
 	std::string user;
-	gloox::SOCKS5Bytestream *stream;
+	gloox::Bytestream *stream;
 	
 };
 
@@ -73,11 +73,11 @@ class FileTransferManager : public gloox::SIProfileFTHandler {
 // 		void handleFTRequestError(gloox::Stanza *stanza, const std::string &sid);
 
 // 		void handleFTSOCKS5Bytestream(gloox::SOCKS5Bytestream *s5b);
-		void handleFTRequest (const JID &from, const std::string &sid, const std::string &name, long size, const std::string &hash, const std::string &date, const std::string &mimetype, const std::string &desc, int stypes, long offset, long length) {}
+		void handleFTRequest (const JID &from, const JID &to, const std::string &sid, const std::string &name, long size, const std::string &hash, const std::string &date, const std::string &mimetype, const std::string &desc, int stypes, long offset, long length);
 		void handleFTRequestError (const IQ &iq, const std::string &sid) {}
-		void handleFTBytestream (Bytestream *bs) {}
-		const std::string handleOOBRequestResult (const JID &from, const std::string &sid) { return ""; }
+		void handleFTBytestream (Bytestream *bs);
+		const std::string handleOOBRequestResult (const JID &from, const JID &to, const std::string &sid) { return ""; }
 
-		void sendFile(std::string jid,std::string from,std::string name, std::string file) {}
+		void sendFile(std::string jid,std::string from,std::string name, std::string file);
 	};
 #endif
