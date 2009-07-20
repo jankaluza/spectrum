@@ -23,6 +23,19 @@ Index: sihandler.h
                                            const SIManager::SI& si ) = 0;
  
        /**
+Index: mucroom.cpp
+===================================================================
+--- mucroom.cpp	(revision 4022)
++++ mucroom.cpp	(working copy)
+@@ -1243,7 +1243,7 @@
+     }
+   }
+ 
+-  void MUCRoom::handleDiscoItems( const JID& /*from*/, const Disco::Items& items, int context )
++  void MUCRoom::handleDiscoItems( const JID& /*from*/, const JID& /*to*/, const Disco::Items& items, int context )
+   {
+     if( !m_roomHandler )
+       return;
 Index: siprofileft.h
 ===================================================================
 --- siprofileft.h	(revision 4022)
@@ -59,6 +72,19 @@ Index: siprofileft.h
                                            const SIManager::SI& si );
  
        // reimplemented from SIHandler
+Index: mucroom.h
+===================================================================
+--- mucroom.h	(revision 4022)
++++ mucroom.h	(working copy)
+@@ -736,7 +736,7 @@
+ 
+       // reimplemented from DiscoHandler
+       // reimplemented from DiscoHandler
+-      virtual void handleDiscoItems( const JID& from, const Disco::Items& items, int context );
++      virtual void handleDiscoItems( const JID& from, const JID& to, const Disco::Items& items, int context );
+ 
+       // reimplemented from DiscoHandler
+       virtual void handleDiscoError( const JID& from, const Error* error, int context );
 Index: capabilities.cpp
 ===================================================================
 --- capabilities.cpp	(revision 4022)
