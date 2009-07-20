@@ -6,17 +6,8 @@ if(COMMAND cmake_policy)
 endif(COMMAND cmake_policy)
 
 
-set(CMAKE_MODULE_PATH cmake_modules)
+set(CMAKE_MODULE_PATH "cmake_modules")
 include_directories(src)
-
-ADD_CUSTOM_TARGET(uninstall
-	COMMAND ${CMAKE_COMMAND} -E echo Use 'xargs rm < install_manifest.txt' to uninstall this program
-	)
-
-# if(WITH_EVERYTHING)
-# 
-# 	set(WITH_JABBER ON)
-# endif(WITH_EVERYTHING)
 
 set(gloox_DIR ${CMAKE_MODULE_PATH})
 find_package(gloox REQUIRED)
@@ -24,6 +15,8 @@ set(purple_DIR ${CMAKE_MODULE_PATH})
 find_package(purple REQUIRED)
 set(glib_DIR ${CMAKE_MODULE_PATH})
 find_package(glib REQUIRED)
+set(mysql_DIR ${CMAKE_MODULE_PATH})
+find_package(mysql REQUIRED)
 
 FIND_LIBRARY(GETTEXTPO_LIBRARY NAMES gettextpo)
 
@@ -33,38 +26,25 @@ else(GETTEXTPO_LIBRARY)
 	message(FATAL_ERROR "no libgettextpo")
 endif(GETTEXTPO_LIBRARY)
 
-if(GLOOX_FOUND)
-	message(STATUS "gloox found OK")
-	include_directories(${GLOOX_INCLUDE_DIRS})
-else(GLOOX_FOUND)
-	message(FATAL_ERROR "No gloox")
-endif(GLOOX_FOUND)
-
-include_directories("/usr/include/mysql++")
-include_directories("/usr/include/mysql")
+include_directories(${GLOOX_INCLUDE_DIR})
 include_directories("/usr/local/include/libpurple")
+include_directories("/usr/include/libpurple")
 
-#if(PURPLE_FOUND)
-#	message(STATUS "PURPLE found OK")
-#	include_directories(${PURPLE_INCLUDE_DIRS})
-#	message(STATUS ${PURPLE_LIBRARIES})
-#else(PURPLE_FOUND)
-#	message(FATAL_ERROR "No PURPLE")
-#endif(PURPLE_FOUND)
+include_directories(${MySQLpp_INCLUDE_DIR})
+include_directories(${MYSQL_INCLUDE_DIR})
 
-if(GLIB2_FOUND)
-	message(STATUS "GLIB2 found OK")
-	include_directories(${GLIB2_INCLUDE_DIRS})
-else(GLIB2_FOUND)
+if(GLIB_FOUND)
+	include_directories(${GLIB_INCLUDE_DIRS})
+else(GLIB_FOUND)
 	message(FATAL_ERROR "No GLIB2")
-endif(GLIB2_FOUND)
+endif(GLIB_FOUND)
 
 
-#if(CMAKE_BUILD_TYPE MATCHES Debug)
+if(CMAKE_BUILD_TYPE MATCHES Debug)
 	ADD_DEFINITIONS(-ggdb)
 	ADD_DEFINITIONS(-DDEBUG)
 	ADD_DEFINITIONS(-Wall)
-#endif(CMAKE_BUILD_TYPE MATCHES Debug)
+endif(CMAKE_BUILD_TYPE MATCHES Debug)
 
 #CONFIGURE_FILE(config.h.in config.h)
 
@@ -158,9 +138,7 @@ set(hiicq_MOC_HDRS
 
 add_executable(hiicq ${hiicq_SRCS} ${lrelease_outputs})
 
-FIND_LIBRARY(MYSQL_LIBRARY NAMES mysqlpp)
-
-target_link_libraries(hiicq ${GLOOX_LIBRARIES} ${MYSQL_LIBRARY} -lpurple ${GLIB2_LIBRARIES} ${GETTEXTPO_LIBRARY} -export-dynamic)
+target_link_libraries(hiicq ${GLOOX_LIBRARIES} ${MySQLpp_LIBRARY} ${PURPLE_LIBRARY} ${GLIB_LIBRARIES} ${GETTEXTPO_LIBRARY} -export-dynamic)
 
 # install(FILES
 # 	${CMAKE_CURRENT_SOURCE_DIR}/data/LICENSE.txt

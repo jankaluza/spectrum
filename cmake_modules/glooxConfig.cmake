@@ -1,28 +1,23 @@
-FIND_PATH(GLOOX_INCLUDE_DIR NAMES gloox/client.h)
-MARK_AS_ADVANCED(GLOOX_INCLUDE_DIR)
+# - Try to find GLOOX
+# Find GLOOX headers, libraries and the answer to all questions.
+#
+#  GLOOX_FOUND               True if gloox got found
+#  GLOOX_INCLUDE_DIR        Location of gloox headers 
+#  GLOOX_LIBRARIES           List of libaries to use gloox 
+#
+# Copyright (c) 2009 Nigmatullin Ruslan <euroelessar@gmail.com>
+#
+#  Redistribution and use is allowed according to the terms of the New
+#  BSD license.
+#  For details see the accompanying COPYING-CMAKE-SCRIPTS file.
+#
 
-FIND_LIBRARY(GLOOX_LIBRARY NAMES gloox)
-MARK_AS_ADVANCED(GLOOX_LIBRARY)
+FIND_PATH( GLOOX_INCLUDE_DIR "gloox/gloox.h" )
+FIND_LIBRARY( GLOOX_LIBRARIES gloox )
 
-IF(GLOOX_INCLUDE_DIR AND GLOOX_LIBRARY)
-  SET(GLOOX_FOUND 1)
-  SET(GLOOX_LIBRARIES ${GLOOX_LIBRARY})
-  SET(GLOOX_INCLUDE_DIRS ${GLOOX_INCLUDE_DIR})
-ELSE(GLOOX_INCLUDE_DIR AND GLOOX_LIBRARY)
-  SET(GLOOX_FOUND 0)
-  SET(GLOOX_LIBRARIES)
-  SET(GLOOX_INCLUDE_DIRS)
-ENDIF(GLOOX_INCLUDE_DIR AND GLOOX_LIBRARY)
-
-# Report the results.
-IF(NOT GLOOX_FOUND)
-  SET(GLOOX_DIR_MESSAGE
-      "GLOOX was not found. Make sure GLOOX_LIBRARY and GLOOX_INCLUDE_DIR are set.")
-  IF(NOT GLOOX_FIND_QUIETLY)
-    MESSAGE(STATUS "${GLOOX_DIR_MESSAGE}")
-  ELSE(NOT GLOOX_FIND_QUIETLY)
-    IF(GLOOX_FIND_REQUIRED)
-      MESSAGE(FATAL_ERROR "${GLOOX_DIR_MESSAGE}")
-    ENDIF(GLOOX_FIND_REQUIRED)
-  ENDIF(NOT GLOOX_FIND_QUIETLY)
-ENDIF(NOT GLOOX_FOUND)
+if( GLOOX_LIBRARIES AND GLOOX_INCLUDE_DIR )
+	message( STATUS "Found gloox: ${GLOOX_LIBRARIES}" )
+	set( GLOOX_FOUND 1 )
+else( GLOOX_LIBRARIES AND GLOOX_INCLUDE_DIR )
+	message( FATAL_ERROR "Could NOT find gloox" )
+endif( GLOOX_LIBRARIES AND GLOOX_INCLUDE_DIR )
