@@ -40,6 +40,7 @@
 #include "protocols/myspace.h"
 #include "protocols/qq.h"
 #include "protocols/simple.h"
+#include "protocols/aim.h"
 #include "blistsaving.h"
 #include "cmds.h"
 
@@ -657,6 +658,8 @@ void GlooxMessageHandler::loadProtocol(){
 		m_protocol = (AbstractProtocol*) new QQProtocol(this);
 	else if (configuration().protocol == "simple")
 		m_protocol = (AbstractProtocol*) new SimpleProtocol(this);
+	else if (configuration().protocol == "aim")
+		m_protocol = (AbstractProtocol*) new AIMProtocol(this);
 	if (!m_protocol->userSearchAction().empty()) {
 		m_searchHandler = new GlooxSearchHandler(this);
 		j->registerIqHandler(m_searchHandler, ExtSearch);
