@@ -149,6 +149,10 @@ INSTALL(FILES
 	DESTINATION /etc/highflyer/
     )
 
+INSTALL(FILES
+    ${CMAKE_CURRENT_SOURCE_DIR}/locales/cs.po
+	DESTINATION share/highflyer/locales
+    )
 
 # install(FILES
 # 	${CMAKE_CURRENT_SOURCE_DIR}/data/LICENSE.txt

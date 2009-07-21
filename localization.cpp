@@ -55,7 +55,9 @@ bool Localization::loadLocale(const std::string &lang) {
 	if (g_hash_table_lookup(m_locales, lang.c_str()))
 		return true;
 
-	pofile = po_file_read (std::string("locales/" + lang + ".po").c_str(), error_handle);
+	pofile = po_file_read (std::string("/usr/share/highflyer/locales/" + lang + ".po").c_str(), error_handle);
+	if (pofile == NULL)
+		pofile = po_file_read (std::string("/usr/local/share/highflyer/locales/" + lang + ".po").c_str(), error_handle);
 	if (pofile != NULL) {
 		GHashTable *locale = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
 		Log().Get("Localization") << lang  << " locale found";
