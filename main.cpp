@@ -1428,7 +1428,6 @@ bool GlooxMessageHandler::initPurple(){
 
 GlooxMessageHandler* GlooxMessageHandler::m_pInstance = NULL;
 int main( int argc, char* argv[] ) {
-	std::cout << INSTALL_DIR << "\n";
 	if (argc != 2)
 		std::cout << "Usage: " << std::string(argv[0]) << " config_file_name\n";
 	else {
