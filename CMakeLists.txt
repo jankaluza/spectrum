@@ -140,6 +140,16 @@ add_executable(hiicq ${hiicq_SRCS} ${lrelease_outputs})
 
 target_link_libraries(hiicq ${GLOOX_LIBRARIES} ${MySQLpp_LIBRARY} ${PURPLE_LIBRARY} ${GLIB_LIBRARIES} ${GETTEXTPO_LIBRARY} -export-dynamic)
 
+INSTALL(TARGETS hiicq
+    RUNTIME DESTINATION bin
+    )
+
+INSTALL(FILES
+    ${CMAKE_CURRENT_SOURCE_DIR}/highflyer.cfg
+	DESTINATION /etc/highflyer/
+    )
+
+
 # install(FILES
 # 	${CMAKE_CURRENT_SOURCE_DIR}/data/LICENSE.txt
 # 	${CMAKE_CURRENT_SOURCE_DIR}/data/TRANSLATIONS.txt

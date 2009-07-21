@@ -566,13 +566,13 @@ static gboolean iter(GIOChannel *source,GIOCondition condition,gpointer data){
 	return TRUE;
 }
 
-GlooxMessageHandler::GlooxMessageHandler() : MessageHandler(),ConnectionListener(),PresenceHandler(),SubscriptionHandler() {
+GlooxMessageHandler::GlooxMessageHandler(const std::string &config) : MessageHandler(),ConnectionListener(),PresenceHandler(),SubscriptionHandler() {
 	m_pInstance = this;
 	m_firstConnection = true;
 	lastIP=0;
 	capsCache["_default"]=0;
 	
-	loadConfigFile();
+	loadConfigFile(config);
 	
 	Log().Get("gloox") << "connecting to: " << m_configuration.server << " as " << m_configuration.jid << " with password " << m_configuration.password;
 	j = new HiComponent("jabber:component:accept",m_configuration.server,m_configuration.jid,m_configuration.password,m_configuration.port);
@@ -796,7 +796,7 @@ void * GlooxMessageHandler::purpleAuthorizeReceived(PurpleAccount *account,const
 /*
  * Load config file and parses it and save result to m_configuration
  */
-void GlooxMessageHandler::loadConfigFile(){
+void GlooxMessageHandler::loadConfigFile(const std::string &config){
 	GKeyFile *keyfile;
 	int flags;
 	GError *error = NULL;
@@ -806,10 +806,10 @@ void GlooxMessageHandler::loadConfigFile(){
 	keyfile = g_key_file_new ();
 	flags = G_KEY_FILE_KEEP_COMMENTS | G_KEY_FILE_KEEP_TRANSLATIONS;
 	
-	if (!g_key_file_load_from_file (keyfile, "highflyer.cfg", (GKeyFileFlags)flags, &error))
+	if (!g_key_file_load_from_file (keyfile, std::string("/etc/highflyer/" + config + ".cfg").c_str(), (GKeyFileFlags)flags, &error))
 	{
 // 		g_error (error->message);
-		Log().Get("gloox") << "Can't load highflyer.cfg!!!";
+		Log().Get("gloox") << "Can't load config file!!!";
 		g_key_file_free(keyfile);
 		return;
 	}
@@ -1425,6 +1425,11 @@ bool GlooxMessageHandler::initPurple(){
 
 GlooxMessageHandler* GlooxMessageHandler::m_pInstance = NULL;
 int main( int argc, char* argv[] ) {
-	GlooxMessageHandler t;
+	if (argc != 2)
+		std::cout << "Usage: " << std::string(argv[1]) << " config_file_name\n";
+	else {
+		std::string config(argv[1]);
+		GlooxMessageHandler t(config);
+	}
 }
 

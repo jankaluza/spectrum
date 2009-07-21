@@ -152,7 +152,7 @@ class GlooxMessageHandler : public MessageHandler,ConnectionListener,PresenceHan
 {
 
 public:
-	GlooxMessageHandler();
+	GlooxMessageHandler(const std::string &config);
 	~GlooxMessageHandler();
 	
 	static GlooxMessageHandler *instance() { return m_pInstance; }
@@ -222,7 +222,7 @@ public:
 private:
 // 	bool callback(GIOCondition condition);
 	bool initPurple();
-	void loadConfigFile();
+	void loadConfigFile(const std::string &config);
 	void loadProtocol();
 	
 	Configuration m_configuration;
