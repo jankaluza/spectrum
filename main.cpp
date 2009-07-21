@@ -811,6 +811,7 @@ void GlooxMessageHandler::loadConfigFile(const std::string &config){
 // 		g_error (error->message);
 		Log().Get("gloox") << "Can't load config file!!!";
 		g_key_file_free(keyfile);
+		exit(0);
 		return;
 	}
 	
@@ -1426,7 +1427,7 @@ bool GlooxMessageHandler::initPurple(){
 GlooxMessageHandler* GlooxMessageHandler::m_pInstance = NULL;
 int main( int argc, char* argv[] ) {
 	if (argc != 2)
-		std::cout << "Usage: " << std::string(argv[1]) << " config_file_name\n";
+		std::cout << "Usage: " << std::string(argv[0]) << " config_file_name\n";
 	else {
 		std::string config(argv[1]);
 		GlooxMessageHandler t(config);
