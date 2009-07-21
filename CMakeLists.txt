@@ -140,6 +140,9 @@ add_executable(hiicq ${hiicq_SRCS} ${lrelease_outputs})
 
 target_link_libraries(hiicq ${GLOOX_LIBRARIES} ${MySQLpp_LIBRARY} ${PURPLE_LIBRARY} ${GLIB_LIBRARIES} ${GETTEXTPO_LIBRARY} -export-dynamic)
 
+message(STATUS "Transport will be installed into: " ${CMAKE_INSTALL_PREFIX})
+file(WRITE transport_config.h "#define INSTALL_DIR \"" ${CMAKE_INSTALL_PREFIX} "\"\n")
+
 INSTALL(TARGETS hiicq
     RUNTIME DESTINATION bin
     )

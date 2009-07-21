@@ -77,6 +77,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include "localization.h"
+#include "transport_config.h"
 
 
 using namespace gloox;
