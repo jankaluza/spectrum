@@ -885,7 +885,8 @@ void User::connect(){
 	}
 	m_connectionStart = time(NULL);
 	m_readyForConnect = false;
-	purple_account_set_string(m_account,"bind",std::string(m_bindIP).c_str());
+	if (!m_bindIP.empty())
+		purple_account_set_string(m_account,"bind",std::string(m_bindIP).c_str());
 	purple_account_set_string(m_account,"lastUsedJid",m_userKey.c_str());
 	purple_account_set_password(m_account,m_password.c_str());
 	Log().Get(m_jid) << "UIN:" << m_username << " PASSWORD:" << m_password;

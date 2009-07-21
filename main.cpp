@@ -845,11 +845,13 @@ void GlooxMessageHandler::loadConfigFile(const std::string &config){
 	else
 		m_configuration.useProxy = false;
 
-	bind = g_key_file_get_string_list (keyfile,"purple","bind",NULL, NULL);
-	for (i = 0; bind[i]; i++){
-		m_configuration.bindIPs[i] = (std::string)bind[i];
+	if(g_key_file_has_key(keyfile,"purple","bind",NULL)) {
+		bind = g_key_file_get_string_list (keyfile,"purple","bind",NULL, NULL);
+		for (i = 0; bind[i]; i++){
+			m_configuration.bindIPs[i] = (std::string)bind[i];
+		}
+		g_strfreev (bind);
 	}
-	g_strfreev (bind);
 	
 	if(g_key_file_has_key(keyfile,"service","allowed_servers",NULL)) {
 		bind = g_key_file_get_string_list(keyfile, "service", "allowed_servers", NULL, NULL);

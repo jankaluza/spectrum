@@ -27,7 +27,7 @@ void FileTransferManager::setSIProfileFT(gloox::SIProfileFT *sipft,GlooxMessageH
 }
 
 void FileTransferManager::handleFTRequest (const JID &from, const JID &to, const std::string &sid, const std::string &name, long size, const std::string &hash, const std::string &date, const std::string &mimetype, const std::string &desc, int stypes, long offset, long length) {
-	std::cout << "Received file transfer request from " << from.full() << ".\n";
+	std::cout << "Received file transfer request from " << from.full() << " " << to.full() << " " << sid << ".\n";
 	m_info[sid].filename = name;
 	m_info[sid].size = size;
 	m_sip->acceptFT(from, to, sid);
