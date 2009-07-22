@@ -840,6 +840,11 @@ void GlooxMessageHandler::loadConfigFile(const std::string &config){
 	else
 		m_configuration.onlyForVIP=false;
 
+	if(g_key_file_has_key(keyfile,"service","vip_mode",NULL))
+		m_configuration.VIPEnabled=g_key_file_get_boolean(keyfile, "service","vip_mode", NULL);
+	else
+		m_configuration.VIPEnabled=false;
+
 	if(g_key_file_has_key(keyfile,"service","use_proxy",NULL))
 		m_configuration.useProxy=g_key_file_get_boolean(keyfile, "service","use_proxy", NULL);
 	else

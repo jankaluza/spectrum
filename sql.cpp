@@ -28,21 +28,29 @@ SQLClass::SQLClass(GlooxMessageHandler *parent){
 		std::cout << "SQL CONNECTION FAILED\n";
 	vipSQL = new mysqlpp::Connection(false);
 	if (!vipSQL->connect("platby",p->configuration().sqlHost.c_str(),p->configuration().sqlUser.c_str(),p->configuration().sqlPassword.c_str()))
-		std::cout << "SQL CONNECTION to VIP database FAILED\n";
+		std::cout << "Can't connect to SQL-VIP database, using built-in.\n";
 }
 
 bool SQLClass::isVIP(const std::string &jid){
-	if (!vipSQL->connected())
+	if (!p->configuration().VIPEnabled)
 		return true;
-	mysqlpp::Query query = vipSQL->query();
 #if MYSQLPP_HEADER_VERSION < 0x030000
 	mysqlpp::Result res;
 #else
 	mysqlpp::StoreQueryResult res;
 #endif
 	mysqlpp::Row myrow;
-	query << "SELECT COUNT(jid) as is_vip FROM `users` WHERE jid='"<< jid <<"' and expire>NOW();";
-	res = query.store();
+	if (vipSQL->connected()) {
+		mysqlpp::Query query = vipSQL->query();
+		
+		query << "SELECT COUNT(jid) as is_vip FROM `users` WHERE jid='"<< jid <<"' and expire>NOW();";
+		res = query.store();
+	}
+	else {
+		mysqlpp::Query query = sql->query();
+		query << "SELECT COUNT(jid) as is_vip FROM `vips` WHERE jid='"<< jid <<"'";
+		res = query.store();
+	}
 #if MYSQLPP_HEADER_VERSION < 0x030000
 	myrow = res.fetch_row();
 	if (int(myrow.at(0))==0)

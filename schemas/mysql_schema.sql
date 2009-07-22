@@ -31,6 +31,11 @@ CREATE TABLE `settings` (
   PRIMARY KEY  (`id`)
 ) ENGINE=MyISAM  DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 
+CREATE TABLE `vips` (
+  `jid` VARCHAR(255) NOT NULL,
+  PRIMARY KEY (`jid`)
+) ENGINE=MYISAM  DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+
 CREATE TABLE IF NOT EXISTS `vcards` (
   `username` varchar(250) NOT NULL,
   `vcard` text NOT NULL,
