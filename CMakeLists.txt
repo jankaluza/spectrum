@@ -157,6 +157,11 @@ INSTALL(FILES
 	DESTINATION share/highflyer/locales
     )
 
+INSTALL(FILES
+    ${CMAKE_CURRENT_SOURCE_DIR}/certificates/facebook.pem
+	DESTINATION share/highflyer/certificates
+    )
+
 # install(FILES
 # 	${CMAKE_CURRENT_SOURCE_DIR}/data/LICENSE.txt
 # 	${CMAKE_CURRENT_SOURCE_DIR}/data/TRANSLATIONS.txt
