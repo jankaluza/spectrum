@@ -5,6 +5,7 @@
 #
 # This file is distributed under the same license as the Pidgin package.
 #
+
 msgid ""
 msgstr ""
 "Project-Id-Version: pidgin VERSION\n"
@@ -18,6 +19,34 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=3; plural=n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%"
 "10<=4 && (n%100<10 || n%100>=20) ? 1 : 2;\n"
+
+#: main.cpp:929 main.cpp:934
+msgid "User is sending you file '"
+msgstr "Uživatel Vám posílá soubor '"
+
+#: main.cpp:929
+msgid "'. It will be resend to you right after we receive it."
+msgstr "'. Bude Vám přeposlán jakmile jej obdržíme."
+
+#: main.cpp:934
+msgid "'. We will send you link to the file right when we receive it."
+msgstr "'. Pošleme Vám na něj odkaz jakmile jej obdržíme."
+
+#: main.cpp:963 main.cpp:974
+msgid "File '"
+msgstr "Soubor '"
+
+#: main.cpp:963 main.cpp:974
+msgid "' was received. You can download it here: "
+msgstr "' byl přijat. Můžete jej stáhnout zde: "
+
+#: main.cpp:1406
+msgid ""
+"This message couldn't be sent, because you are not connected to legacy "
+"network. You will be automatically reconnected soon."
+msgstr ""
+"Tato zpráva nemohla být poslána, protože nejsme připojeni k síti. "
+"Budete automaticky připojeni. Prosím pošlete pak zprávu znovu."
 
 #. Translators may want to transliterate the name.
 #. It is not to be translated.

@@ -680,7 +680,7 @@ void GlooxMessageHandler::purpleConnectionError(PurpleConnection *gc,PurpleConne
 		// fatal error => account will be disconnected, so we have to remove it
 		if (reason!=0){
 			if (text){
-				Message s(Message::Chat, user->jid(), (std::string)text);
+				Message s(Message::Chat, user->jid(), tr(user->getLang(), text));
 				std::string from;
 				s.setFrom(jid());
 				j->send(s);
@@ -693,7 +693,7 @@ void GlooxMessageHandler::purpleConnectionError(PurpleConnection *gc,PurpleConne
 		else{
 			if (user->reconnectCount() > 0){
 				if (text){
-					Message s(Message::Chat, user->jid(), (std::string)text);
+					Message s(Message::Chat, user->jid(), tr(user->getLang(),text));
 					std::string from;
 					s.setFrom(jid());
 					j->send(s);
@@ -858,6 +858,8 @@ void GlooxMessageHandler::loadConfigFile(const std::string &config){
 				m_configuration.transportFeatures = m_configuration.transportFeatures | TRANSPORT_FEATURE_AVATARS;
 			else if (feature == "chatstate")
 				m_configuration.transportFeatures = m_configuration.transportFeatures | TRANSPORT_FEATURE_TYPING_NOTIFY;
+			else if (feature == "filetransfer")
+				m_configuration.transportFeatures = m_configuration.transportFeatures | TRANSPORT_FEATURE_FILETRANSFER;
 		}
 		g_strfreev (bind);
 	}
@@ -872,6 +874,8 @@ void GlooxMessageHandler::loadConfigFile(const std::string &config){
 				m_configuration.VIPFeatures = m_configuration.VIPFeatures | TRANSPORT_FEATURE_AVATARS;
 			else if (feature == "chatstate")
 				m_configuration.VIPFeatures = m_configuration.VIPFeatures | TRANSPORT_FEATURE_TYPING_NOTIFY;
+			else if (feature == "filetransfer")
+				m_configuration.transportFeatures = m_configuration.transportFeatures | TRANSPORT_FEATURE_FILETRANSFER;
 		}
 		g_strfreev (bind);
 	}
@@ -922,12 +926,12 @@ void GlooxMessageHandler::purpleFileReceiveRequest(PurpleXfer *xfer){
 	User *user = userManager()->getUserByAccount(purple_xfer_get_account(xfer));
 	if (user!=NULL){
 		if(user->hasFeature(GLOOX_FEATURE_FILETRANSFER)){
-			Message s(Message::Chat, user->jid(), "Uzivatel vam posila soubor '"+filename+"'. Ihned po doruceni na nas server vam bude preposlan.");
+			Message s(Message::Chat, user->jid(), tr(user->getLang(),_("User is sending you file '"))+filename+tr(user->getLang(),_("'. It will be resend to you right after we receive it.")));
 			s.setFrom(remote_user+"@"+jid()+"/bot");
 			j->send(s);
 		}
 		else{
-			Message s(Message::Chat, user->jid(), "Uzivatel vam posila soubor '"+filename+"'. Ihned po doruceni na nas server vam bude preposlan odkaz umoznujici stazeni souboru.");
+			Message s(Message::Chat, user->jid(), tr(user->getLang(),_("User is sending you file '"))+filename+tr(user->getLang(),_("'. We will send you link to the file right when we receive it.")));
 			s.setFrom(remote_user+"@"+jid()+"/bot");
 			j->send(s);
 		}
@@ -944,7 +948,7 @@ void GlooxMessageHandler::purpleFileReceiveComplete(PurpleXfer *xfer){
 		if (user->isConnected()){
 			Log().Get(user->jid()) << "Trying to send file " << filename;
 			if(user->hasFeature(GLOOX_FEATURE_FILETRANSFER)){
-				if (user->isVIP()){
+				if (user->hasTransportFeature(TRANSPORT_FEATURE_FILETRANSFER)){
 					fileTransferData *data = new fileTransferData;
 					data->to=user->jid() + "/" + user->resource();
 					data->from=remote_user+"@"+jid()+"/bot";
@@ -956,7 +960,7 @@ void GlooxMessageHandler::purpleFileReceiveComplete(PurpleXfer *xfer){
 				else {
 					sql()->addDownload(basename,"0");
 				}
-				Message s(Message::Chat, user->jid(), "Soubor '"+filename+"' byl prijat. Muzete jej stahnout z adresy http://soumar.jabbim.cz/icq/" + basename +" .");
+				Message s(Message::Chat, user->jid(), tr(user->getLang(),_("File '"))+filename+tr(user->getLang(),_("' was received. You can download it here: ")) + "http://soumar.jabbim.cz/icq/" + basename +" .");
 				s.setFrom(remote_user+"@"+jid()+"/bot");
 				j->send(s);
 			}
@@ -967,7 +971,7 @@ void GlooxMessageHandler::purpleFileReceiveComplete(PurpleXfer *xfer){
 				else {
 					sql()->addDownload(basename,"0");
 				}
-				Message s(Message::Chat, user->jid(), "Soubor '"+filename+"' byl prijat. Muzete jej stahnout z adresy http://soumar.jabbim.cz/icq/" + basename +" .");
+				Message s(Message::Chat, user->jid(), tr(user->getLang(),_("File '"))+filename+tr(user->getLang(),_("' was received. You can download it here: ")) + "http://soumar.jabbim.cz/icq/" + basename +" .");
 				s.setFrom(remote_user+"@"+jid()+"/bot");
 				j->send(s);
 			}
@@ -1399,7 +1403,7 @@ void GlooxMessageHandler::handleMessage (const Message &msg, MessageSession *ses
 		}
 	}
 	else {
-		Message s(Message::Chat, msg.from().full(), "This message couldn't be sent, because you are not connected to legacy network. You will be automatically reconnected soon.");
+		Message s(Message::Chat, msg.from().full(), tr(configuration().language.c_str(),_("This message couldn't be sent, because you are not connected to legacy network. You will be automatically reconnected soon.")));
 		s.setFrom(msg.to().full());
 		j->send(s);
 		Tag *stanza = new Tag("presence");

@@ -116,6 +116,7 @@ struct replaceJidCharacters {
 typedef enum { 	TRANSPORT_FEATURE_TYPING_NOTIFY = 2,
 				TRANSPORT_FEATURE_AVATARS = 4,
                 TRANSPORT_MANGLE_STATUS = 8,
+				TRANSPORT_FEATURE_FILETRANSFER = 16
 				} TransportFeatures;
 
 struct fileTransferData{
