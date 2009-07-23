@@ -70,7 +70,7 @@ User::User(GlooxMessageHandler *parent, JID jid, const std::string &username, co
 	m_subscribeLastCount = -1;
 	m_reconnectCount = 0;
 	m_lang = NULL;
-	this->features = 6; // TODO: I can't be hardcoded
+	m_features = 0;
 	m_mucs = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
 	PurpleValue *value;
 	
@@ -138,7 +138,7 @@ bool User::hasFeature(int feature, std::string resource){
  * otherwise returns false.
  */
 bool User::hasTransportFeature(int feature){
-	if (this->features&feature)
+	if (m_features & feature)
 		return true;
 	return false;
 }
@@ -336,38 +336,40 @@ Tag *User::generatePresenceStanza(PurpleBuddy *buddy){
 	c->addAttribute("ver","Q543534fdsfsdsssT/WM94uAlu0=");
 	tag->addChild(c);
 	
-	// vcard-temp:x:update
-	char *avatarHash = NULL;
-	PurpleBuddyIcon *icon = purple_buddy_icons_find(m_account, name.c_str());
-	if (icon != NULL) {
-		avatarHash = purple_buddy_icon_get_full_path(icon);
-		Log().Get(m_jid) << "avatarHash";
-	}
+	if (hasTransportFeature(TRANSPORT_FEATURE_AVATARS)) {
+		// vcard-temp:x:update
+		char *avatarHash = NULL;
+		PurpleBuddyIcon *icon = purple_buddy_icons_find(m_account, name.c_str());
+		if (icon != NULL) {
+			avatarHash = purple_buddy_icon_get_full_path(icon);
+			Log().Get(m_jid) << "avatarHash";
+		}
 
-	if (purple_value_get_boolean(getSetting("enable_avatars"))){
-		Tag *x = new Tag("x");
-		x->addAttribute("xmlns","vcard-temp:x:update");
-		if (avatarHash != NULL) {
-			Log().Get(m_jid) << "Got avatar hash";
-			// Check if it's patched libpurple which saved icons to directories
-			char *hash = rindex(avatarHash,'/');
-			std::string h;
-			if (hash) {
-				char *dot;
-				hash++;
-				dot = strchr(hash, '.');
-				if (dot)
-					*dot = '\0';
-				x->addChild(new Tag("photo",(std::string) hash));
+		if (purple_value_get_boolean(getSetting("enable_avatars"))){
+			Tag *x = new Tag("x");
+			x->addAttribute("xmlns","vcard-temp:x:update");
+			if (avatarHash != NULL) {
+				Log().Get(m_jid) << "Got avatar hash";
+				// Check if it's patched libpurple which saves icons to directories
+				char *hash = rindex(avatarHash,'/');
+				std::string h;
+				if (hash) {
+					char *dot;
+					hash++;
+					dot = strchr(hash, '.');
+					if (dot)
+						*dot = '\0';
+					x->addChild(new Tag("photo",(std::string) hash));
+				}
+				else
+					x->addChild(new Tag("photo",(std::string) avatarHash));
 			}
-			else
-				x->addChild(new Tag("photo",(std::string) avatarHash));
+			else{
+				Log().Get(m_jid) << "no avatar hash";
+				x->addChild(new Tag("photo"));
+			}
+			tag->addChild(x);
 		}
-		else{
-			Log().Get(m_jid) << "no avatar hash";
-			x->addChild(new Tag("photo"));
-		}
-		tag->addChild(x);
 	}
 
 	// update stats...
@@ -690,7 +692,7 @@ void User::updateSetting(const std::string &key, PurpleValue *value) {
  * Called when legacy network user stops typing.
  */
 void User::purpleBuddyTypingStopped(const std::string &uin){
-	if (!hasFeature(GLOOX_FEATURE_CHATSTATES))
+	if (!hasFeature(GLOOX_FEATURE_CHATSTATES) || !hasTransportFeature(TRANSPORT_FEATURE_TYPING_NOTIFY))
 		return;
 	if (!purple_value_get_boolean(getSetting("enable_chatstate")))
 		return;
@@ -721,7 +723,7 @@ void User::purpleBuddyTypingStopped(const std::string &uin){
  * Called when legacy network user starts typing.
  */
 void User::purpleBuddyTyping(const std::string &uin){
-	if (!hasFeature(GLOOX_FEATURE_CHATSTATES))
+	if (!hasFeature(GLOOX_FEATURE_CHATSTATES) || !hasTransportFeature(TRANSPORT_FEATURE_TYPING_NOTIFY))
 		return;
 	if (!purple_value_get_boolean(getSetting("enable_chatstate")))
 		return;
@@ -751,7 +753,7 @@ void User::purpleBuddyTyping(const std::string &uin){
  * Received Chatstate notification from jabber user :).
  */
 void User::receivedChatState(const std::string &uin,const std::string &state){
-	if (!hasFeature(GLOOX_FEATURE_CHATSTATES))
+	if (!hasFeature(GLOOX_FEATURE_CHATSTATES) || !hasTransportFeature(TRANSPORT_FEATURE_TYPING_NOTIFY))
 		return;
 	Log().Get(m_jid) << "Sending " << state << " message to " << uin;
 	if (state=="composing")

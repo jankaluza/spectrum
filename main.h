@@ -135,6 +135,9 @@ struct Configuration {
 	
 	bool onlyForVIP;		// true if transport is only for users in VIP users database
 	bool VIPEnabled;
+	int transportFeatures;
+	std::string language;
+	int VIPFeatures;
 	bool useProxy;
 	std::list <std::string> allowedServers;
 	std::map<int,std::string> bindIPs;	// IP address to which libpurple should bind connections

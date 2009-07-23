@@ -833,7 +833,11 @@ void GlooxMessageHandler::loadConfigFile(const std::string &config){
 // 	features1 = (int)g_key_file_get_integer(keyfile, "category1","features", NULL);
 
 	m_configuration.userDir = (std::string)g_key_file_get_string(keyfile, "purple","userdir", NULL);
-	
+
+	if(g_key_file_has_key(keyfile,"service","language",NULL))
+		m_configuration.language=g_key_file_get_string(keyfile, "service","language", NULL);
+	else
+		m_configuration.language = "en";
 	
 	if(g_key_file_has_key(keyfile,"service","only_for_vip",NULL))
 		m_configuration.onlyForVIP=g_key_file_get_boolean(keyfile, "service","only_for_vip", NULL);
@@ -844,6 +848,34 @@ void GlooxMessageHandler::loadConfigFile(const std::string &config){
 		m_configuration.VIPEnabled=g_key_file_get_boolean(keyfile, "service","vip_mode", NULL);
 	else
 		m_configuration.VIPEnabled=false;
+
+	if(g_key_file_has_key(keyfile,"service","transport_features",NULL)) {
+		bind = g_key_file_get_string_list (keyfile,"service","transport_features",NULL, NULL);
+		m_configuration.transportFeatures = 0;
+		for (i = 0; bind[i]; i++){
+			std::string feature(bind[i]);
+			if (feature == "avatars")
+				m_configuration.transportFeatures = m_configuration.transportFeatures | TRANSPORT_FEATURE_AVATARS;
+			else if (feature == "chatstate")
+				m_configuration.transportFeatures = m_configuration.transportFeatures | TRANSPORT_FEATURE_TYPING_NOTIFY;
+		}
+		g_strfreev (bind);
+	}
+	else m_configuration.transportFeatures = 256;
+	
+	if(g_key_file_has_key(keyfile,"service","vip_features",NULL)) {
+		bind = g_key_file_get_string_list (keyfile,"service","vip_features",NULL, NULL);
+		m_configuration.VIPFeatures = 0;
+		for (i = 0; bind[i]; i++){
+			std::string feature(bind[i]);
+			if (feature == "avatars")
+				m_configuration.VIPFeatures = m_configuration.VIPFeatures | TRANSPORT_FEATURE_AVATARS;
+			else if (feature == "chatstate")
+				m_configuration.VIPFeatures = m_configuration.VIPFeatures | TRANSPORT_FEATURE_TYPING_NOTIFY;
+		}
+		g_strfreev (bind);
+	}
+	else m_configuration.VIPFeatures = 256;
 
 	if(g_key_file_has_key(keyfile,"service","use_proxy",NULL))
 		m_configuration.useProxy=g_key_file_get_boolean(keyfile, "service","use_proxy", NULL);
@@ -1208,13 +1240,10 @@ void GlooxMessageHandler::handlePresence(const Presence &stanza){
 				}
 				else
 					user = new User(this, stanza.from(), res.uin, res.password, stanza.from().bare());
+				user->setFeatures(isVip ? configuration().VIPFeatures : configuration().transportFeatures);
 				if (c!=NULL)
 					if(hasCaps(c->findAttribute("ver")))
 						user->setResource(stanza.from().resource(), stanza.priority(), c->findAttribute("ver"));
-// 				if (!isVip)
-// 					user->features=features0;
-// 				else
-// 					user->features=features1;
 
 				std::map<int,std::string> ::iterator iter = configuration().bindIPs.begin();
 				iter = configuration().bindIPs.find(lastIP);

@@ -63,7 +63,7 @@ bool GlooxRegisterHandler::handleIq (const IQ &iq){
 			query->addChild( new Tag("instructions", p->protocol()->text("instructions")) );
 			query->addChild( new Tag("username") );
 			query->addChild( new Tag("password") );
-			query->addChild( new Tag("language", "cs") );
+			query->addChild( new Tag("language", p->configuration().language) );
 		}
 		else {
 			std::cout << "* sending registration form; user is registered\n";
@@ -106,7 +106,7 @@ bool GlooxRegisterHandler::handleIq (const IQ &iq){
 		if (res.id!=-1)
 			field->addChild( new Tag("value", res.language) );
 		else
-			field->addChild( new Tag("value", "cs") );
+			field->addChild( new Tag("value", p->configuration().language) );
 
 		Tag *option = new Tag("option");
 		option->addAttribute("label", "Cesky");
@@ -175,7 +175,7 @@ bool GlooxRegisterHandler::handleIq (const IQ &iq){
 			if (languagetag)
 				language = languagetag->cdata();
 			else
-				language = "cs";
+				language = p->configuration().language;
 
 			if (usernametag==NULL || passwordtag==NULL)
 				e=true;

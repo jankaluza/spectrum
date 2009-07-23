@@ -119,7 +119,6 @@ class User {
 
 
 		std::string actionData;
-		int features;
 
 		// Connected
 		bool isConnected() { return m_connected; }
@@ -168,6 +167,7 @@ class User {
 		void *protocolData() { return m_protocolData; }
 		GHashTable *mucs() { return m_mucs; }
 		std::map<std::string,Conversation> conversations() { return m_conversations; }
+		void setFeatures(int f) { m_features = f; }
 		
 		guint removeTimer;
 	
@@ -189,6 +189,7 @@ class User {
 		std::string m_jid;			// Jabber ID of this user
 		std::string m_resource;		// active resource
 		const char *m_lang;			// xml:lang
+		int m_features;
 		time_t m_connectionStart;	// connection start timestamp
 		GHashTable *m_mucs;			// MUCs
 		std::map<std::string,RosterRow> m_roster;	// jabber roster of this user
