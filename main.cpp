@@ -806,15 +806,16 @@ void GlooxMessageHandler::loadConfigFile(const std::string &config){
 	keyfile = g_key_file_new ();
 	flags = G_KEY_FILE_KEEP_COMMENTS | G_KEY_FILE_KEEP_TRANSLATIONS;
 	
-	if (!g_key_file_load_from_file (keyfile, std::string("/etc/highflyer/" + config + ".cfg").c_str(), (GKeyFileFlags)flags, &error))
-	{
-// 		g_error (error->message);
-		Log().Get("gloox") << "Can't load config file!!!";
-		g_key_file_free(keyfile);
-		exit(0);
-		return;
+	if (!g_key_file_load_from_file (keyfile, config.c_str(), (GKeyFileFlags)flags, &error)) {
+		if (!g_key_file_load_from_file (keyfile, std::string("/etc/highflyer/" + config + ".cfg").c_str(), (GKeyFileFlags)flags, &error))
+		{
+			Log().Get("gloox") << "Can't load config file!!!";
+			g_key_file_free(keyfile);
+			exit(0);
+			return;
+		}
 	}
-	
+
 	m_configuration.discoName = (std::string)g_key_file_get_string(keyfile, "service","name", NULL);
 	m_configuration.protocol = (std::string)g_key_file_get_string(keyfile, "service","protocol", NULL);
 	m_configuration.server = (std::string)g_key_file_get_string(keyfile, "service","server", NULL);
@@ -1467,7 +1468,7 @@ bool GlooxMessageHandler::initPurple(){
 GlooxMessageHandler* GlooxMessageHandler::m_pInstance = NULL;
 int main( int argc, char* argv[] ) {
 	if (argc != 2)
-		std::cout << "Usage: " << std::string(argv[0]) << " config_file_name\n";
+		std::cout << "Usage: " << std::string(argv[0]) << " config_file_name or profile name\n";
 	else {
 		std::string config(argv[1]);
 		GlooxMessageHandler t(config);
