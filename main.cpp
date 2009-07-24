@@ -876,7 +876,7 @@ void GlooxMessageHandler::loadConfigFile(const std::string &config){
 			else if (feature == "chatstate")
 				m_configuration.VIPFeatures = m_configuration.VIPFeatures | TRANSPORT_FEATURE_TYPING_NOTIFY;
 			else if (feature == "filetransfer")
-				m_configuration.transportFeatures = m_configuration.transportFeatures | TRANSPORT_FEATURE_FILETRANSFER;
+				m_configuration.VIPFeatures = m_configuration.VIPFeatures | TRANSPORT_FEATURE_FILETRANSFER;
 		}
 		g_strfreev (bind);
 	}
