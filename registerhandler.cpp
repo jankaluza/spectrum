@@ -63,7 +63,7 @@ bool GlooxRegisterHandler::handleIq (const IQ &iq){
 			query->addChild( new Tag("instructions", p->protocol()->text("instructions")) );
 			query->addChild( new Tag("username") );
 			query->addChild( new Tag("password") );
-			query->addChild( new Tag("language", p->configuration().language) );
+// 			query->addChild( new Tag("language", p->configuration().language) );
 		}
 		else {
 			std::cout << "* sending registration form; user is registered\n";
@@ -71,7 +71,7 @@ bool GlooxRegisterHandler::handleIq (const IQ &iq){
 			query->addChild( new Tag("registered") );
 			query->addChild( new Tag("username",res.uin));
 			query->addChild( new Tag("password"));
-			query->addChild( new Tag("language", res.language) );
+// 			query->addChild( new Tag("language", res.language) );
 		}
 		
 		Tag *x = new Tag("x");
@@ -84,6 +84,7 @@ bool GlooxRegisterHandler::handleIq (const IQ &iq){
 		field->addAttribute("type", "hidden");
 		field->addAttribute("var", "FORM_TYPE");
 		field->addChild( new Tag("value", "jabber:iq:register") );
+		x->addChild(field);
 		
 		field = new Tag("field");
 		field->addAttribute("type", "text-single");
@@ -92,12 +93,14 @@ bool GlooxRegisterHandler::handleIq (const IQ &iq){
 		field->addChild( new Tag("required") );
 		if (res.id!=-1)
 			field->addChild( new Tag("value", res.uin) );
+		x->addChild(field);
 
 		field = new Tag("field");
 		field->addAttribute("type", "text-private");
 		field->addAttribute("var", "password");
 		field->addAttribute("label", "Password");
 		field->addChild( new Tag("required") );
+		x->addChild(field);
 
 		field = new Tag("field");
 		field->addAttribute("type", "list-single");
@@ -107,23 +110,28 @@ bool GlooxRegisterHandler::handleIq (const IQ &iq){
 			field->addChild( new Tag("value", res.language) );
 		else
 			field->addChild( new Tag("value", p->configuration().language) );
+		x->addChild(field);
 
 		Tag *option = new Tag("option");
 		option->addAttribute("label", "Cesky");
 		option->addChild( new Tag("value", "cs") );
+		field->addChild(option);
 
 		option = new Tag("option");
 		option->addAttribute("label", "English");
 		option->addChild( new Tag("value", "en") );
+		field->addChild(option);
 
-		if (res.id!=1) {
+		if (res.id!=-1) {
 			field = new Tag("field");
 			field->addAttribute("type", "boolean");
 			field->addAttribute("var", "unregister");
 			field->addAttribute("label", "Unregister transport");
 			field->addChild( new Tag("value", "0") );
+			x->addChild(field);
 		}
 		
+		query->addChild(x);
 		reply->addChild(query);
 		p->j->send( reply );
 		return true;

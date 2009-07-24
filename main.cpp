@@ -628,11 +628,9 @@ GlooxMessageHandler::GlooxMessageHandler(const std::string &config) : MessageHan
 	j->registerIqHandler(m_vcard,ExtVCard);
 	j->registerPresenceHandler(this);
 	j->registerSubscriptionHandler(this);
-	j->connect(false);
-	int mysock = dynamic_cast<ConnectionTCPClient*>( j->connectionImpl() )->socket();
-	connectIO = g_io_channel_unix_new(mysock);
-	g_io_add_watch(connectIO,(GIOCondition) READ_COND,&iter,NULL);
-
+	
+	transportConnect();
+	
  	g_main_loop_run(loop);
 }
 
