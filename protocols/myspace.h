@@ -44,6 +44,7 @@ class MyspaceProtocol : AbstractProtocol
 // 		std::string userSearchAction() { return "Search for buddies..."; }
 		
 		std::string replace(std::string &str, const char *string_to_replace, const char *new_string);
+		void onConnected(User *user);
 // 		std::string userSearchColumn() { return "ID"; }
 	
 	private:

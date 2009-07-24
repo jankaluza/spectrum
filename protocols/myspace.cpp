@@ -81,3 +81,28 @@ std::string MyspaceProtocol::text(const std::string &key) {
 		return "Enter your Myspace name and password:";
 	return "not defined";
 }
+
+void MyspaceProtocol::onConnected(User *user) {
+	if (purple_account_get_connection(user->account())) {
+		PurpleConnection *gc = purple_account_get_connection(user->account());
+		PurplePlugin *plugin = gc && PURPLE_CONNECTION_IS_CONNECTED(gc) ? gc->prpl : NULL;
+		if (plugin && PURPLE_PLUGIN_HAS_ACTIONS(plugin)) {
+			PurplePluginAction *action = NULL;
+			GList *actions, *l;
+
+			actions = PURPLE_PLUGIN_ACTIONS(plugin, gc);
+
+			for (l = actions; l != NULL; l = l->next) {
+				if (l->data) {
+					action = (PurplePluginAction *) l->data;
+					action->plugin = plugin;
+					action->context = gc;
+					if ((std::string) action->label == "Add friends from MySpace.com") {
+						action->callback(action);
+					}
+					purple_plugin_action_free(action);
+				}
+			}
+		}
+	}
+}
