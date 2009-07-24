@@ -311,22 +311,7 @@ bool GlooxRegisterHandler::handleIq (const IQ &iq){
 
 
 		UserRow res = p->sql()->getUserByJid(iq.from().bare());
-		if(res.id==-1) {
-	
-// 			if(false) {
-// 			XDEBUG(( "User already exists .. :( \n" ));
-// 			Stanza *r = new Stanza(stanza);//->clone();
-// 			Tag *error = new Tag("error");
-// 			error->addAttribute( "code", "409" );
-// 			error->addAttribute( "type", "cancel" );
-// 			Tag *conflict = new Tag("conflict");
-// 			conflict->addAttribute( "xmlns", "urn:ietf:params:xml:ns:xmpp-stanzas" );
-// 			conflict->setCData( "Someone else already registered with this xfire username (" + user->jid + ")" );
-// 			error->addChild( conflict );
-// 			r->addChild( error );
-// 			comp->j->send( r );
-// 		} else {
-	
+		if(res.id==-1) {	
 			std::cout << "* adding new user: "<< jid << ", " << username << ", " << password << ", " << language <<"\n";
 			p->sql()->addUser(jid,username,password,language);
 			sendsubscribe = true;

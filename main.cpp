@@ -802,17 +802,18 @@ void * GlooxMessageHandler::purpleAuthorizeReceived(PurpleAccount *account,const
 void GlooxMessageHandler::loadConfigFile(const std::string &config){
 	GKeyFile *keyfile;
 	int flags;
-	GError *error = NULL;
   	char **bind;
 	int i;
 	
 	keyfile = g_key_file_new ();
 	flags = G_KEY_FILE_KEEP_COMMENTS | G_KEY_FILE_KEEP_TRANSLATIONS;
 	
-	if (!g_key_file_load_from_file (keyfile, config.c_str(), (GKeyFileFlags)flags, &error)) {
-		if (!g_key_file_load_from_file (keyfile, std::string("/etc/highflyer/" + config + ".cfg").c_str(), (GKeyFileFlags)flags, &error))
+	if (!g_key_file_load_from_file (keyfile, config.c_str(), (GKeyFileFlags)flags, NULL)) {
+		if (!g_key_file_load_from_file (keyfile, std::string("/etc/highflyer/" + config + ".cfg").c_str(), (GKeyFileFlags)flags, NULL))
 		{
-			Log().Get("gloox") << "Can't load config file!!!";
+			Log().Get("gloox") << "Can't load config file!";
+			Log().Get("gloox") << std::string("/etc/highflyer/" + config + ".cfg") << " or ./" << config;
+			
 			g_key_file_free(keyfile);
 			exit(0);
 			return;
