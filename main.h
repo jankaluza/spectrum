@@ -195,6 +195,7 @@ public:
 	void handlePresence(const Presence &presence);
 	void handleSubscription(const Subscription &stanza);
 	void signedOn(PurpleConnection *gc,gpointer unused);
+	void transportConnect();
 	
 	// User related
 	// maybe we should move it to something like UserManager

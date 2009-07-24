@@ -557,6 +557,11 @@ static gboolean iter3(gpointer data){
 
 }
 
+static gboolean transportReconnect(gpointer data) {
+	GlooxMessageHandler::instance()->transportConnect();
+	return FALSE;
+}
+
 /*
  * Called by notifier when new data can be received from socket
  * TODO: rename me!
@@ -1319,8 +1324,15 @@ void GlooxMessageHandler::onDisconnect(ConnectionError e){
 	Log().Get("gloox") << j->streamError();
 	Log().Get("gloox") << j->streamErrorText("default text");
 	if (j->streamError()==0 || j->streamError()==24){
-		j->connect(false);
-		int mysock = dynamic_cast<ConnectionTCPClient*>( j->connectionImpl() )->socket();
+		Log().Get("gloox") << j->streamErrorText("trying to reconnect after 3 seconds");
+		g_timeout_add_seconds(3,&transportReconnect, NULL);
+	}
+}
+
+void GlooxMessageHandler::transportConnect() {
+	j->connect(false);
+	int mysock = dynamic_cast<ConnectionTCPClient*>( j->connectionImpl() )->socket();
+	if (mysock > 0) {
 		connectIO = g_io_channel_unix_new(mysock);
 		g_io_add_watch(connectIO,(GIOCondition) READ_COND,&iter,NULL);
 	}
