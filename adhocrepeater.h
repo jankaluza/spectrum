@@ -31,6 +31,9 @@
 class GlooxMessageHandler;
 class User;
 
+/*
+ * Handler for PURPLE_REQUESTs. It handles different requests and resends them as Ad-Hoc commands.
+ */
 class AdhocRepeater : public AdhocCommandHandler
 {
 	public:
@@ -42,21 +45,22 @@ class AdhocRepeater : public AdhocCommandHandler
 		AdhocRepeater(GlooxMessageHandler *m, User *user, const std::string &title, const std::string &primaryString, const std::string &secondaryString, PurpleRequestFields *fields, GCallback ok_cb, GCallback cancel_cb, void * user_data);
 		~AdhocRepeater();
 		bool handleIq(const IQ &iq);
+		
 		void setType(PurpleRequestType t) { m_type = t; }
 		PurpleRequestType type() { return m_type; }
 		std::string & from() { return m_from; }
 	
 	private:
-		GlooxMessageHandler *main;
-		User *m_user;
-		void *m_requestData;
-		GCallback m_ok_cb;
-		GCallback m_cancel_cb;
-		PurpleRequestType m_type;
-		std::string m_from;
-		std::map<int, GCallback> m_actions;
-		PurpleRequestFields *m_fields;
-		std::string m_defaultString;
+		GlooxMessageHandler *main;				// client
+		User *m_user;							// User to which Ad-Hoc are sent
+		void *m_requestData;					// user_data from PURPLE_REQUEST
+		GCallback m_ok_cb;						// callback which is called when user accepts the dialog
+		GCallback m_cancel_cb;					// callback which is called when user rejects the dialog
+		PurpleRequestType m_type;				// type of request
+		std::string m_from;						// full jid from which initial IQ-get was sent
+		std::map<int, GCallback> m_actions;		// callbacks for PURPLE_REQUEST_ACTION
+		PurpleRequestFields *m_fields;			// fields for PURPLE_REQUEST_FIELDS
+		std::string m_defaultString;			// default value of PURPLE_REQUEST_INPUT
 };
 
 #endif

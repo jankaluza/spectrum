@@ -51,69 +51,77 @@ StringList GlooxAdhocHandler::handleDiscoNodeFeatures (const JID &from, const st
 	return features;
 }
 
+/*
+ * Returns ItemList which contains list of available commands
+ */
 Disco::ItemList GlooxAdhocHandler::handleDiscoNodeItems( const JID &_from, const JID &_to, const std::string& node ) {
 	Disco::ItemList lst;
 	std::string from = _from.bare();
 	std::string to = _to.bare();
 	Log().Get("GlooxAdhocHandler") << "items" << from << to;
-// 	if (node.empty()) {
-// 		lst.push_back( new Disco::Item( main->jid(), XMLNS_ADHOC_COMMANDS, "Ad-Hoc Commands" ) );
-// 	}
-// 	else if (node == XMLNS_ADHOC_COMMANDS) {
-		if (to == main->jid()) {
-			User *user = main->userManager()->getUserByJID(from);
-			if (user) {
-				for(std::map<std::string, adhocCommand>::iterator u = m_handlers.begin(); u != m_handlers.end() ; u++) {
-					lst.push_back( new Disco::Item( main->jid(), (*u).first, (std::string) tr(user->getLang(), (*u).second.name) ) );
-				}
-				if (user->isConnected() && purple_account_get_connection(user->account())) {
-					PurpleConnection *gc = purple_account_get_connection(user->account());
-					PurplePlugin *plugin = gc && PURPLE_CONNECTION_IS_CONNECTED(gc) ? gc->prpl : NULL;
-					if (plugin && PURPLE_PLUGIN_HAS_ACTIONS(plugin)) {
-						PurplePluginAction *action = NULL;
-						GList *actions, *l;
 
-						actions = PURPLE_PLUGIN_ACTIONS(plugin, gc);
+	// it's adhoc request for transport
+	if (to == main->jid()) {
+		User *user = main->userManager()->getUserByJID(from);
+		if (user) {
+			// add internal commands from m_handlers
+			for(std::map<std::string, adhocCommand>::iterator u = m_handlers.begin(); u != m_handlers.end() ; u++) {
+				lst.push_back( new Disco::Item( main->jid(), (*u).first, (std::string) tr(user->getLang(), (*u).second.name) ) );
+			}
+			// add commands from libpurple
+			if (user->isConnected() && purple_account_get_connection(user->account())) {
+				PurpleConnection *gc = purple_account_get_connection(user->account());
+				PurplePlugin *plugin = gc && PURPLE_CONNECTION_IS_CONNECTED(gc) ? gc->prpl : NULL;
+				if (plugin && PURPLE_PLUGIN_HAS_ACTIONS(plugin)) {
+					PurplePluginAction *action = NULL;
+					GList *actions, *l;
 
-						for (l = actions; l != NULL; l = l->next) {
-							if (l->data) {
-								action = (PurplePluginAction *) l->data;
-								lst.push_back( new Disco::Item( main->jid(), "transport_" + (std::string) action->label,(std::string) tr(user->getLang(), action->label) ) );
-								purple_plugin_action_free(action);
-							}
+					actions = PURPLE_PLUGIN_ACTIONS(plugin, gc);
+
+					for (l = actions; l != NULL; l = l->next) {
+						if (l->data) {
+							action = (PurplePluginAction *) l->data;
+							// we are using "transport_" prefix here to identify command in disco#info handler
+							// it's ugly and we're bastards, but it's the easy solution
+							lst.push_back( new Disco::Item( main->jid(), "transport_" + (std::string) action->label,(std::string) tr(user->getLang(), action->label) ) );
+							purple_plugin_action_free(action);
 						}
 					}
 				}
 			}
 		}
-		else {
-			User *user = main->userManager()->getUserByJID(from);
-			if (user) {
-				if (user->isConnected() && purple_account_get_connection(user->account())) {
-					Log().Get("GlooxAdhocHandler") << user->getLang();
-					GList *l, *ll;
-					PurpleConnection *gc = purple_account_get_connection(user->account());
-					PurplePlugin *plugin = gc && PURPLE_CONNECTION_IS_CONNECTED(gc) ? gc->prpl : NULL;
-					PurplePluginProtocolInfo *prpl_info = PURPLE_PLUGIN_PROTOCOL_INFO(plugin);
+	}
+	// it's request for some PurpleBuddy
+	else {
+		User *user = main->userManager()->getUserByJID(from);
+		if (user) {
+			if (user->isConnected() && purple_account_get_connection(user->account())) {
+				Log().Get("GlooxAdhocHandler") << user->getLang();
+				GList *l, *ll;
+				PurpleConnection *gc = purple_account_get_connection(user->account());
+				PurplePlugin *plugin = gc && PURPLE_CONNECTION_IS_CONNECTED(gc) ? gc->prpl : NULL;
+				PurplePluginProtocolInfo *prpl_info = PURPLE_PLUGIN_PROTOCOL_INFO(plugin);
 
-					if(!prpl_info || !prpl_info->blist_node_menu)
-						return lst;
-					std::string name(JID(to).username());
-					std::for_each( name.begin(), name.end(), replaceJidCharacters() );
-					PurpleBuddy *buddy = purple_find_buddy(user->account(), name.c_str());
+				if(!prpl_info || !prpl_info->blist_node_menu)
+					return lst;
+				std::string name(JID(to).username());
+				std::for_each( name.begin(), name.end(), replaceJidCharacters() );
+				PurpleBuddy *buddy = purple_find_buddy(user->account(), name.c_str());
 
-					for(l = ll = prpl_info->blist_node_menu((PurpleBlistNode*)buddy); l; l = l->next) {
-						PurpleMenuAction *action = (PurpleMenuAction *) l->data;
-						lst.push_back( new Disco::Item( _to.bare(), "transport_" + (std::string) action->label, (std::string) tr(user->getLang(), action->label) ) );
-						purple_menu_action_free(action);
-					}
+				for(l = ll = prpl_info->blist_node_menu((PurpleBlistNode*)buddy); l; l = l->next) {
+					PurpleMenuAction *action = (PurpleMenuAction *) l->data;
+					lst.push_back( new Disco::Item( _to.bare(), "transport_" + (std::string) action->label, (std::string) tr(user->getLang(), action->label) ) );
+					purple_menu_action_free(action);
 				}
 			}
 		}
-// 	}
+	}
 	return lst;
 }
 
+/*
+ * Returns IdentityList (copied from Gloox :) )
+ */
 Disco::IdentityList GlooxAdhocHandler::handleDiscoNodeIdentities( const JID& jid, const std::string& node ) {
 	Disco::IdentityList l;
 	l.push_back( new Disco::Identity( "automation",node == XMLNS_ADHOC_COMMANDS ? "command-list" : "command-node",node == XMLNS_ADHOC_COMMANDS ? "Ad-Hoc Commands" : "") );
@@ -136,8 +144,10 @@ bool GlooxAdhocHandler::handleIq( const IQ &stanza ) {
 
 	User *user = main->userManager()->getUserByJID(from);
 	if (user) {
+		// check if we have existing session for this jid
 		if (hasSession(stanza.from().full())) {
 			if( m_sessions[stanza.from().full()]->handleIq(stanza) ) {
+				// AdhocCommandHandler returned true, so we should remove it
 				std::string jid = stanza.from().full();
 				delete m_sessions[jid];
 				unregisterSession(jid);
@@ -145,12 +155,14 @@ bool GlooxAdhocHandler::handleIq( const IQ &stanza ) {
 			delete stanzaTag;
 			return true;
 		}
+		// check if we have registered handler for this node and create AdhocCommandHandler class
 		else if (m_handlers.find(node) != m_handlers.end()) {
 			AdhocCommandHandler *handler = m_handlers[node].createHandler(main, user, stanza.from().full(), stanza.id());
 			registerSession(stanza.from().full(), handler);
 			delete stanzaTag;
 			return true;
 		}
+		// if it's PurpleAction, so we don't have handler for it, we have to execute the action here.
 		if (user->isConnected() && purple_account_get_connection(user->account())) {
 			if (to == main->jid()) {
 				PurpleConnection *gc = purple_account_get_connection(user->account());
@@ -229,8 +241,7 @@ bool GlooxAdhocHandler::hasSession(const std::string &jid) {
 	return false;
 }
 
-void GlooxAdhocHandler::handleIqID( const IQ &iq, int context ) {
-}
+void GlooxAdhocHandler::handleIqID( const IQ &iq, int context ) {}
 
 void GlooxAdhocHandler::handleDiscoInfo(const JID &jid, const Disco::Info &info, int context) {
 	Log().Get("handle disco info adhoc") << jid.full();

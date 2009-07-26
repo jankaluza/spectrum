@@ -31,6 +31,9 @@
 class GlooxMessageHandler;
 class User;
 
+/*
+ * AdhocCommandHandler for Transport Settings node
+ */
 class AdhocSettings : public AdhocCommandHandler
 {
 	public:
@@ -40,9 +43,9 @@ class AdhocSettings : public AdhocCommandHandler
 		std::string & from() { return m_from; }
 	
 	private:
-		GlooxMessageHandler *main;
-		std::string m_from;
-		User *m_user;
+		GlooxMessageHandler *main;		// client
+		std::string m_from;				// full jid
+		User *m_user;					// User class
 };
 
 #endif

@@ -22,7 +22,7 @@
 #include "gloox/stanza.h"
 #include "log.h"
 #include "dataforms.h"
- 
+
 static gboolean removeRepeater(gpointer data){
 	AdhocRepeater *repeater = (AdhocRepeater*) data;
 	purple_request_close(repeater->type(),repeater);
@@ -42,6 +42,7 @@ AdhocRepeater::AdhocRepeater(GlooxMessageHandler *m, User *user, const std::stri
 	setType(PURPLE_REQUEST_INPUT);
 	setRequestType(CALLER_ADHOC);
 	
+	// generate IQ-result for IQ-get (that IQ-get is handled in AdhocHandler class)
 	IQ _response(IQ::Result, data.from, data.id);
 	Tag *response = _response.tag();
 	response->addAttribute("from",main->jid());
@@ -63,7 +64,6 @@ AdhocRepeater::AdhocRepeater(GlooxMessageHandler *m, User *user, const std::stri
 	
 	response->addChild(c);
 	main->j->send(response);
-
 }
 
 AdhocRepeater::AdhocRepeater(GlooxMessageHandler *m, User *user, const std::string &title, const std::string &primaryString, const std::string &secondaryString, int default_action, void * user_data, size_t action_count, va_list acts) {
@@ -86,6 +86,7 @@ AdhocRepeater::AdhocRepeater(GlooxMessageHandler *m, User *user, const std::stri
 //         <option label='None'><value>none</value></option>
 //       </field>
 
+	// generate IQ-result for IQ-get (that IQ-get is handled in AdhocHandler class)
 	IQ _response(IQ::Result, data.from, data.id);
 	Tag *response = _response.tag();
 	response->addAttribute("from",main->jid());
@@ -101,6 +102,7 @@ AdhocRepeater::AdhocRepeater(GlooxMessageHandler *m, User *user, const std::stri
 	actions->addChild(new Tag("complete"));
 	c->addChild(actions);
 
+	// save action to m_actions; only keys will be saved
 	for (unsigned int i = 0; i < action_count; i++)
 		m_actions[i] = va_arg(acts, GCallback);
 
@@ -122,6 +124,7 @@ AdhocRepeater::AdhocRepeater(GlooxMessageHandler *m, User *user, const std::stri
 	m_from = data.from;
 	setRequestType(CALLER_ADHOC);
 	
+	// generate IQ-result for IQ-get (that IQ-get is handled in AdhocHandler class)
 	IQ _response(IQ::Result, data.from, data.id);
 	Tag *response = _response.tag();
 	response->addAttribute("from",main->jid());
@@ -148,6 +151,8 @@ bool AdhocRepeater::handleIq(const IQ &stanza) {
 	Tag *stanzaTag = stanza.tag();
 	if (!stanzaTag) return false;
 	Tag *tag = stanzaTag->findChild( "command" );
+	
+	// check if user canceled request
 	if (tag->hasAttribute("action","cancel")){
 		IQ _response(IQ::Result, stanza.from().full(), stanza.id());
 		_response.setFrom(main->jid());

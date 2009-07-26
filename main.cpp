@@ -48,58 +48,50 @@
 #include <gloox/compressionbase.h>
 
 namespace gloox {
-    class HiComponent : public Component {
-    public:
-        HiComponent(const std::string & ns, const std::string & server,
-                    const std::string & component, const std::string & password,
-                    int port = 5347)
-            : Component(ns, server, component, password, port)
-        {
-        };
+	class HiComponent : public Component {
+		public:
+			HiComponent(const std::string & ns, const std::string & server, const std::string & component, const std::string & password, int port = 5347) : Component(ns, server, component, password, port) {};
 
-        virtual ~HiComponent() {};
+			virtual ~HiComponent() {};
 
-        virtual void send(Tag *tag) // unfortunately we can't override const std::string variant
-        {
-            std::string tagxml;
-            std::string outxml;
-            if (!tag)
-             return;
+			// unfortunately we can't override const std::string variant
+			virtual void send(Tag *tag) {
+				std::string tagxml;
+				std::string outxml;
+				if (!tag)
+					return;
 
-            try {
-                tagxml = tag->xml();
-                outxml.resize(tagxml.size(), 0);
+				try {
+					tagxml = tag->xml();
+					outxml.resize(tagxml.size(), 0);
 
-                // replace invalid utf-8 characters
-                utf8::replace_invalid(tagxml.begin(), tagxml.end(), outxml.begin(), '?');
+					// replace invalid utf-8 characters
+					utf8::replace_invalid(tagxml.begin(), tagxml.end(), outxml.begin(), '?');
 
-                // replace invalid xml characters
-                for (std::string::iterator it = outxml.begin(); it != outxml.end(); ++it) {
-                    if (((unsigned char)*it) < 0x20 && (*it != 0x09 && *it != 0x0A && *it != 0x0D)) {
-                        *it = '?';
-                    }
-                }
-//                 std::cout << outxml << "\n\n";
-                send(outxml);
-            } catch (...) {     // replace_invalid can throw exception? wtf!
-            }
+					// replace invalid xml characters
+					for (std::string::iterator it = outxml.begin(); it != outxml.end(); ++it) {
+						if (((unsigned char)*it) < 0x20 && (*it != 0x09 && *it != 0x0A && *it != 0x0D)) {
+							*it = '?';
+						}
+					}
+					send(outxml);
+				} catch (...) {     // replace_invalid can throw exception? wtf!
+				}
 
-            delete tag;
-        }
-    protected:
-        void send( const std::string & xml)    // copied from ClientBase::send(std::string), why have private function which handles protected data ??
-        {
-            if( m_connection && m_connection->state() == StateConnected )
-            {
-                if( m_compression && m_compressionActive )
-                    m_compression->compress( xml );
-                else if( m_encryption && m_encryptionActive )
-                    m_encryption->encrypt( xml );
-                else
-                    m_connection->send( xml );
-            }                                                       
-        }
-    };
+				delete tag;
+			}
+		protected:
+			void send( const std::string & xml) {    // copied from ClientBase::send(std::string), why have private function which handles protected data ??
+				if( m_connection && m_connection->state() == StateConnected ) {
+					if( m_compression && m_compressionActive )
+						m_compression->compress( xml );
+					else if( m_encryption && m_encryptionActive )
+						m_encryption->encrypt( xml );
+					else
+						m_connection->send( xml );
+				}
+			}
+	};
 };
 
 /*
@@ -111,17 +103,23 @@ static void newMessageReceived(PurpleAccount* account,char * name,char *msg,Purp
 }
 
 /*
- * Called when message from legacy network arrived (we have to resend message)
+ * Called when libpurple wants to write some message to Chat
  */
 static void conv_write_im(PurpleConversation *conv, const char *who, const char *message, PurpleMessageFlags flags, time_t mtime)
 {
 	GlooxMessageHandler::instance()->purpleConversationWriteIM(conv,who,message,flags,mtime);
 }
 
+/*
+ * Called when libpurple wants to write some message to Groupchat
+ */
 static void conv_write_chat(PurpleConversation *conv, const char *who, const char *message, PurpleMessageFlags flags, time_t mtime) {
 	GlooxMessageHandler::instance()->purpleConversationWriteChat(conv,who,message,flags,mtime);
 }
 
+/*
+ * Called when libpurple wants to write some message to Conversation
+ */
 static void conv_write_conv(PurpleConversation *conv, const char *who, const char *alias,const char *message, PurpleMessageFlags flags, time_t mtime) {
 	if (purple_conversation_get_type(conv) == PURPLE_CONV_TYPE_IM) {
 		conv_write_im(conv, who, message, flags, mtime);
@@ -131,18 +129,30 @@ static void conv_write_conv(PurpleConversation *conv, const char *who, const cha
 	}
 }
 
+/*
+ * Called when chat topic was changed
+ */
 static void conv_chat_topic_changed(PurpleConversation *chat, const char *who, const char *topic) {
 	GlooxMessageHandler::instance()->purpleChatTopicChanged(chat, who, topic);
 }
 
+/*
+ * Called when there are new users added
+ */
 static void conv_chat_add_users(PurpleConversation *conv, GList *cbuddies, gboolean new_arrivals) {
 	GlooxMessageHandler::instance()->purpleChatAddUsers(conv, cbuddies, new_arrivals);
 }
 
+/*
+ * Called when user is renamed
+ */
 static void conv_chat_rename_user(PurpleConversation *conv, const char *old_name, const char *new_name, const char *new_alias) {
 	GlooxMessageHandler::instance()->purpleChatRenameUser(conv, old_name, new_name, new_alias);
 }
 
+/*
+ * Called when there are is removed
+ */
 static void conv_chat_remove_users(PurpleConversation *conv, GList *users) {
 	GlooxMessageHandler::instance()->purpleChatRemoveUsers(conv, users);
 }
@@ -184,15 +194,16 @@ void connection_report_disconnect(PurpleConnection *gc,PurpleConnectionError rea
 }
 
 /*
- * Called when purple wants to some input from transport. Showed as input box in Pidgin.
+ * Called when purple wants to some input from transport.
  */
 static void * requestInput(const char *title, const char *primary,const char *secondary, const char *default_value,gboolean multiline, gboolean masked, gchar *hint,const char *ok_text, GCallback ok_cb,const char *cancel_text, GCallback cancel_cb,PurpleAccount *account, const char *who,PurpleConversation *conv, void *user_data){
 	Log().Get("purple") << "new requestInput";
-	if (primary){
+	if (primary) {
 		std::string primaryString(primary);
 		Log().Get("purple") << "primary string: " << primaryString;
 		User *user = GlooxMessageHandler::instance()->userManager()->getUserByAccount(account);
 		if (!user) return NULL;
+		// Check if there is some adhocData. If it's there, this request will be handled by some handler registered to this data.
 		if (!user->adhocData().id.empty()) {
 			if (user->adhocData().callerType == CALLER_ADHOC) {
 				AdhocRepeater *repeater = new AdhocRepeater(GlooxMessageHandler::instance(), user, title ? std::string(title):std::string(), primaryString, secondary ? std::string(secondary):std::string(), default_value ? std::string(default_value):std::string(), multiline, masked, ok_cb, cancel_cb, user_data);
@@ -210,8 +221,8 @@ static void * requestInput(const char *title, const char *primary,const char *se
 // 				user->setAdhocData(data);
 				return repeater;
 			}
-
 		}
+		// emit protocol signal
 		GlooxMessageHandler::instance()->protocol()->onPurpleRequestInput(user, title, primary, secondary, default_value, multiline, masked, hint, ok_text, ok_cb, cancel_text, cancel_cb, account, who, conv, user_data);
 	}
 	return NULL;
@@ -228,6 +239,7 @@ static void * notifySearchResults(PurpleConnection *gc, const char *title, const
 			user->setAdhocData(data);
 		}
 	}
+
 	return NULL;
 }
 
@@ -356,6 +368,9 @@ static void * notifyEmail(PurpleConnection *gc, const char *subject, const char 
 }
 
 static void * notifyMessage(PurpleNotifyMsgType type, const char *title, const char *primary, const char *secondary) {
+	// TODO: We have to patch libpurple to be able to identify from which account the message came from...
+	// without this the function is quite useles...
+	
 // 	User *user = GlooxMessageHandler::instance()->userManager()->getUserByAccount(account);
 // 	if (user && !user->adhocData().id.empty()) {
 // 		AdhocRepeater *repeater = new AdhocRepeater(GlooxMessageHandler::instance(), user, title ? std::string(title):std::string(), primary ? std::string(primary):std::string(), secondary ? std::string(secondary):std::string(), default_action, user_data, action_count, actions);
