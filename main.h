@@ -147,11 +147,12 @@ struct Configuration {
 	std::string filetransferCache;	// directory where files are saved
 	std::string base64Dir;	// TODO: I'm depracted, remove me
 
-	std::string sqlHost;	// mysql host
-	std::string sqlPassword;	// mysql password
-	std::string sqlUser;	// mysql user
-	std::string sqlDb;		// mysql database
-	std::string sqlPrefix;	// mysql prefix used for tables
+	std::string sqlHost;	// database host
+	std::string sqlPassword;	// database password
+	std::string sqlUser;	// database user
+	std::string sqlDb;		// database database
+	std::string sqlPrefix;	// database prefix used for tables
+	std::string sqlType;	// database type
 };
 
 class GlooxMessageHandler : public MessageHandler,ConnectionListener,PresenceHandler,SubscriptionHandler

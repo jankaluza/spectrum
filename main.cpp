@@ -828,11 +828,12 @@ void GlooxMessageHandler::loadConfigFile(const std::string &config){
 	m_configuration.port = (int)g_key_file_get_integer(keyfile, "service","port", NULL);
 	m_configuration.filetransferCache = (std::string)g_key_file_get_string(keyfile, "service","filetransfer_cache", NULL);
 	
-	m_configuration.sqlHost = (std::string)g_key_file_get_string(keyfile, "mysql","host", NULL);
-	m_configuration.sqlPassword = (std::string)g_key_file_get_string(keyfile, "mysql","password", NULL);
-	m_configuration.sqlUser = (std::string)g_key_file_get_string(keyfile, "mysql","user", NULL);
-	m_configuration.sqlDb = (std::string)g_key_file_get_string(keyfile, "mysql","database", NULL);
-	m_configuration.sqlPrefix = (std::string)g_key_file_get_string(keyfile, "mysql","prefix", NULL);
+	m_configuration.sqlType = (std::string)g_key_file_get_string(keyfile, "database","type", NULL);
+	m_configuration.sqlHost = (std::string)g_key_file_get_string(keyfile, "database","host", NULL);
+	m_configuration.sqlPassword = (std::string)g_key_file_get_string(keyfile, "database","password", NULL);
+	m_configuration.sqlUser = (std::string)g_key_file_get_string(keyfile, "database","user", NULL);
+	m_configuration.sqlDb = (std::string)g_key_file_get_string(keyfile, "database","database", NULL);
+	m_configuration.sqlPrefix = (std::string)g_key_file_get_string(keyfile, "database","prefix", NULL);
 	
 // 	features0 = (int)g_key_file_get_integer(keyfile, "category0","features", NULL);
 // 	features1 = (int)g_key_file_get_integer(keyfile, "category1","features", NULL);
