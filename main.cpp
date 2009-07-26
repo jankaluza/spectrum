@@ -1132,21 +1132,6 @@ void GlooxMessageHandler::purpleBuddyChanged(PurpleBuddy* buddy){
 	
 }
 
-// bool GlooxMessageHandler::callback(GIOCondition condition)
-// {
-//         ConnectionError ce = ConnNoError;
-// 
-//         if ( ce == ConnNoError) {
-//                 ce = j->recv(1000); // microseconds, not milliseconds
-//         }
-// 
-//         //DLOG("recv return %d\n", ce);
-// 
-//         return true;
-// }
-
-
-
 bool GlooxMessageHandler::hasCaps(const std::string &name){
 	std::map<std::string,int> ::iterator iter = capsCache.begin();
 	iter = capsCache.find(name);
