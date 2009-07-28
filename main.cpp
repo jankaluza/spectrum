@@ -825,10 +825,10 @@ void GlooxMessageHandler::loadConfigFile(const std::string &config) {
 	flags = G_KEY_FILE_KEEP_COMMENTS | G_KEY_FILE_KEEP_TRANSLATIONS;
 	
 	if (!g_key_file_load_from_file (keyfile, config.c_str(), (GKeyFileFlags)flags, NULL)) {
-		if (!g_key_file_load_from_file (keyfile, std::string("/etc/highflyer/" + config + ".cfg").c_str(), (GKeyFileFlags)flags, NULL))
+		if (!g_key_file_load_from_file (keyfile, std::string("/etc/spectrum/" + config + ".cfg").c_str(), (GKeyFileFlags)flags, NULL))
 		{
 			Log().Get("gloox") << "Can't load config file!";
-			Log().Get("gloox") << std::string("/etc/highflyer/" + config + ".cfg") << " or ./" << config;
+			Log().Get("gloox") << std::string("/etc/spectrum/" + config + ".cfg") << " or ./" << config;
 			
 			g_key_file_free(keyfile);
 			exit(0);
