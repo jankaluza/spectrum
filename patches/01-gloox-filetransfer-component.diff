@@ -1,8 +1,8 @@
 Index: clientbase.h
 ===================================================================
---- clientbase.h	(revision 4022)
+--- clientbase.h	(revision 4023)
 +++ clientbase.h	(working copy)
-@@ -399,6 +399,7 @@
+@@ -365,6 +365,7 @@
         * @param ext The extension to register.
         */
        void registerStanzaExtension( StanzaExtension* ext );
@@ -12,7 +12,7 @@ Index: clientbase.h
         * Removes the given StanzaExtension type from the StanzaExtensionFactory.
 Index: sihandler.h
 ===================================================================
---- sihandler.h	(revision 4022)
+--- sihandler.h	(revision 4023)
 +++ sihandler.h	(working copy)
 @@ -52,7 +52,7 @@
         * @param sid The stream ID.
@@ -23,22 +23,9 @@ Index: sihandler.h
                                            const SIManager::SI& si ) = 0;
  
        /**
-Index: mucroom.cpp
-===================================================================
---- mucroom.cpp	(revision 4022)
-+++ mucroom.cpp	(working copy)
-@@ -1243,7 +1243,7 @@
-     }
-   }
- 
--  void MUCRoom::handleDiscoItems( const JID& /*from*/, const Disco::Items& items, int context )
-+  void MUCRoom::handleDiscoItems( const JID& /*from*/, const JID& /*to*/, const Disco::Items& items, int context )
-   {
-     if( !m_roomHandler )
-       return;
 Index: siprofileft.h
 ===================================================================
---- siprofileft.h	(revision 4022)
+--- siprofileft.h	(revision 4023)
 +++ siprofileft.h	(working copy)
 @@ -196,7 +196,7 @@
         * @return The requested stream's ID (SID). Empty if conditions above (file name, size)
@@ -72,52 +59,80 @@ Index: siprofileft.h
                                            const SIManager::SI& si );
  
        // reimplemented from SIHandler
-Index: mucroom.h
+Index: examples/ft_send.cpp
 ===================================================================
---- mucroom.h	(revision 4022)
-+++ mucroom.h	(working copy)
-@@ -736,7 +736,7 @@
+--- examples/ft_send.cpp	(revision 4023)
++++ examples/ft_send.cpp	(working copy)
+@@ -124,7 +124,7 @@
+     virtual void onConnect()
+     {
+       printf( "connected!!!\n" );
+-      f->requestFT( m_to, m_file, m_size );
++      f->requestFT( m_to, j->jid(), m_file, m_size );
+     }
  
-       // reimplemented from DiscoHandler
-       // reimplemented from DiscoHandler
--      virtual void handleDiscoItems( const JID& from, const Disco::Items& items, int context );
-+      virtual void handleDiscoItems( const JID& from, const JID& to, const Disco::Items& items, int context );
+     virtual void onDisconnect( ConnectionError e )
+@@ -152,7 +152,7 @@
+       printf("log: level: %d, area: %d, %s\n", level, area, message.c_str() );
+     }
  
-       // reimplemented from DiscoHandler
-       virtual void handleDiscoError( const JID& from, const Error* error, int context );
-Index: capabilities.cpp
+-    virtual void handleFTRequest( const JID& from, const std::string& sid,
++    virtual void handleFTRequest( const JID& from, const JID& to, const std::string& sid,
+                                   const std::string& name, long size, const std::string& hash,
+                                   const std::string& date, const std::string& mimetype,
+                                   const std::string& desc, int /*stypes*/, long /*offset*/, long /*length*/ )
+@@ -161,7 +161,7 @@
+               "desc: %s\n",
+               from.full().c_str(), name.c_str(), size, sid.c_str(), hash.c_str(), date.c_str(),
+               mimetype.c_str(), desc.c_str() );
+-      f->acceptFT( from, sid, SIProfileFT::FTTypeS5B );
++      f->acceptFT( from, to, sid, SIProfileFT::FTTypeS5B );
+     }
+ 
+ //     virtual void handleFTRequestResult( const JID& /*from*/, const std::string& /*sid*/ )
+@@ -188,7 +188,7 @@
+       }
+     }
+ 
+-    virtual const std::string handleOOBRequestResult( const JID& /*from*/, const std::string& /*sid*/ )
++    virtual const std::string handleOOBRequestResult( const JID& /*from*/, const JID& /*to*/, const std::string& /*sid*/ )
+     {
+       return std::string();
+     };
+Index: examples/ft_recv.cpp
 ===================================================================
---- capabilities.cpp	(revision 4022)
-+++ capabilities.cpp	(working copy)
-@@ -126,7 +126,7 @@
-     return ret;
-   }
+--- examples/ft_recv.cpp	(revision 4023)
++++ examples/ft_recv.cpp	(working copy)
+@@ -99,7 +99,7 @@
+       printf("log: level: %d, area: %d, %s\n", level, area, message.c_str() );
+     }
  
--  Disco::ItemList Capabilities::handleDiscoNodeItems( const JID&, const std::string& )
-+  Disco::ItemList Capabilities::handleDiscoNodeItems( const JID&, const JID&, const std::string& )
-   {
-     return Disco::ItemList();
-   }
-Index: stanzaextension.h
-===================================================================
---- stanzaextension.h	(revision 4022)
-+++ stanzaextension.h	(working copy)
-@@ -86,9 +86,11 @@
-                                      * (XEP-0060) */
-     ExtSHIM,                        /**< An extension dealing with Stanza Headers and Internet Metadata (XEP-0131). */
-     ExtAttention,                   /**< An extension dealing with Attention (XEP-0224). */
--    ExtUser                         /**< User-supplied extensions must use IDs above this. Do
-+    ExtUser,                        /**< User-supplied extensions must use IDs above this. Do
-                                      * not hard-code ExtUser's value anywhere, it is subject
-                                      * to change. */
-+    ExtGateway,
-+    ExtStats
-   };
+-    virtual void handleFTRequest( const JID& from, const std::string& sid,
++    virtual void handleFTRequest( const JID& from, const JID& to, const std::string& sid,
+                                   const std::string& name, long size, const std::string& hash,
+                                   const std::string& date, const std::string& mimetype,
+                                   const std::string& desc, int /*stypes*/, long /*offset*/, long /*length*/ )
+@@ -108,7 +108,7 @@
+               "desc: %s\n",
+               from.full().c_str(), name.c_str(), size, sid.c_str(), hash.c_str(), date.c_str(),
+               mimetype.c_str(), desc.c_str() );
+-      f->acceptFT( from, sid, SIProfileFT::FTTypeIBB );
++      f->acceptFT( from, to, sid, SIProfileFT::FTTypeIBB );
+     }
  
-   /**
+ //     virtual void handleFTRequestResult( const JID& /*from*/, const std::string& /*sid*/ )
+@@ -134,7 +134,7 @@
+       }
+     }
+ 
+-    virtual const std::string handleOOBRequestResult( const JID& /*from*/, const std::string& /*sid*/ )
++    virtual const std::string handleOOBRequestResult( const JID& /*from*/, const JID& /*to*/, const std::string& /*sid*/ )
+     {
+       return std::string();
+     };
 Index: presence.h
 ===================================================================
---- presence.h	(revision 4022)
+--- presence.h	(revision 4023)
 +++ presence.h	(working copy)
 @@ -138,7 +138,7 @@
  
@@ -140,7 +155,7 @@ Index: presence.h
        std::string m_status;
 Index: simanager.h
 ===================================================================
---- simanager.h	(revision 4022)
+--- simanager.h	(revision 4023)
 +++ simanager.h	(working copy)
 @@ -158,7 +158,7 @@
         * @note The SIManager claims ownership of the Tags supplied to this function, and will
@@ -160,35 +175,9 @@ Index: simanager.h
  
        /**
         * Call this function to decline an SI request previously announced by means of
-Index: adhoc.cpp
-===================================================================
---- adhoc.cpp	(revision 4022)
-+++ adhoc.cpp	(working copy)
-@@ -246,7 +246,7 @@
- //    return StringList( 1, XMLNS_ADHOC_COMMANDS );
-   }
- 
--  Disco::ItemList Adhoc::handleDiscoNodeItems( const JID& from, const std::string& node )
-+  Disco::ItemList Adhoc::handleDiscoNodeItems( const JID& from, const JID& to, const std::string& node )
-   {
-     Disco::ItemList l;
-     if( node.empty() )
-Index: capabilities.h
-===================================================================
---- capabilities.h	(revision 4022)
-+++ capabilities.h	(working copy)
-@@ -98,7 +98,7 @@
-                                                              const std::string& node );
- 
-       // reimplemented from DiscoNodeHandler
--      virtual Disco::ItemList handleDiscoNodeItems( const JID& from,
-+      virtual Disco::ItemList handleDiscoNodeItems( const JID& from, const JID& to,
-                                                     const std::string& node = EmptyString );
- 
-     private:
 Index: disco.cpp
 ===================================================================
---- disco.cpp	(revision 4022)
+--- disco.cpp	(revision 4023)
 +++ disco.cpp	(working copy)
 @@ -265,6 +265,7 @@
        case IQ::Get:
@@ -198,31 +187,9 @@ Index: disco.cpp
  
          const SoftwareVersion* sv = iq.findExtension<SoftwareVersion>( ExtVersion );
          if( sv )
-@@ -344,7 +345,7 @@
-               DiscoNodeHandlerList::const_iterator in = (*it).second.begin();
-               for( ; in != (*it).second.end(); ++in )
-               {
--                ItemList il = (*in)->handleDiscoNodeItems( iq.from(), items->node() );
-+                ItemList il = (*in)->handleDiscoNodeItems( iq.from(), iq.to(), items->node() );
-                 itemlist.merge( il );
-               }
-               i->setItems( itemlist );
-Index: disconodehandler.h
-===================================================================
---- disconodehandler.h	(revision 4022)
-+++ disconodehandler.h	(working copy)
-@@ -70,7 +70,7 @@
-        * @param node The node this handler is supposed to handle.
-        * @return A list of items supported by this node.
-        */
--      virtual Disco::ItemList handleDiscoNodeItems( const JID& from,
-+      virtual Disco::ItemList handleDiscoNodeItems( const JID& from, const JID& to,
-                                                     const std::string& node = EmptyString ) = 0;
- 
-   };
 Index: siprofileft.cpp
 ===================================================================
---- siprofileft.cpp	(revision 4022)
+--- siprofileft.cpp	(revision 4023)
 +++ siprofileft.cpp	(working copy)
 @@ -60,7 +60,7 @@
        delete m_socks5Manager;
@@ -311,9 +278,48 @@ Index: siprofileft.cpp
                iq.addExtension( new OOB( url, EmptyString, true ) );
                m_parent->send( iq, this, OOBSent );
              }
+Index: tests/simanager/simanager_test.cpp
+===================================================================
+--- tests/simanager/simanager_test.cpp	(revision 4023)
++++ tests/simanager/simanager_test.cpp	(working copy)
+@@ -48,10 +48,10 @@
+       void registerStanzaExtension( StanzaExtension* ext );
+       void removeStanzaExtension( int ext );
+       void removeIDHandler( IqHandler* ) {}
+-      virtual void handleSIRequestResult( const JID& from, const std::string& sid,
++      virtual void handleSIRequestResult( const JID& from, const JID& to, const std::string& sid,
+                                           const SIManager::SI& si );
+       virtual void handleSIRequestError( const IQ& iq, const std::string& /*sid*/ );
+-      virtual void handleSIRequest( const JID& from, const std::string& id, const SIManager::SI& si );
++      virtual void handleSIRequest( const JID& from, const JID& to, const std::string& id, const SIManager::SI& si );
+       void setTest( int test );
+       bool ok();
+     private:
+@@ -85,10 +85,10 @@
+   void ClientBase::registerIqHandler( IqHandler*, int ) {}
+   void ClientBase::registerStanzaExtension( StanzaExtension* se ) { delete se; }
+   void ClientBase::removeStanzaExtension( int ) {}
+-  void ClientBase::handleSIRequestResult( const JID& /*from*/, const std::string& /*sid*/,
++  void ClientBase::handleSIRequestResult( const JID& /*from*/, const JID& /*to*/, const std::string& /*sid*/,
+                                           const SIManager::SI& /*si*/ ) {}
+   void ClientBase::handleSIRequestError( const IQ& /*iq*/, const std::string& /*sid*/ ) {}
+-  void ClientBase::handleSIRequest( const JID& /*from*/, const std::string& /*id*/,
++  void ClientBase::handleSIRequest( const JID& /*from*/, const JID& /*to*/, const std::string& /*id*/,
+                                     const SIManager::SI& /*si*/ ) {}
+   void ClientBase::setTest( int test ) { m_test = test; }
+   bool ClientBase::ok() { bool t = m_ok; m_ok = false; return t; }
+@@ -119,7 +119,7 @@
+   // -------
+   name = "request si";
+   cb->setTest( 1 );
+-  sim->requestSI( cb, to, g_profile, t1->clone(), t2->clone() );
++  sim->requestSI( cb, to, gloox::JID("abcd@def.gh/test"), g_profile, t1->clone(), t2->clone() );
+   if( !cb->ok() )
+   {
+     ++fail;
 Index: siprofilehandler.h
 ===================================================================
---- siprofilehandler.h	(revision 4022)
+--- siprofilehandler.h	(revision 4023)
 +++ siprofilehandler.h	(working copy)
 @@ -52,7 +52,7 @@
         * SIManager::acceptSI() or SIManager::declineSI().
@@ -326,7 +332,7 @@ Index: siprofilehandler.h
  
 Index: siprofilefthandler.h
 ===================================================================
---- siprofilefthandler.h	(revision 4022)
+--- siprofilefthandler.h	(revision 4023)
 +++ siprofilefthandler.h	(working copy)
 @@ -61,7 +61,7 @@
         * @param length The number of bytes to send, starting from the given offset. A value of -1
@@ -348,7 +354,7 @@ Index: siprofilefthandler.h
  
 Index: socks5bytestreammanager.cpp
 ===================================================================
---- socks5bytestreammanager.cpp	(revision 4022)
+--- socks5bytestreammanager.cpp	(revision 4023)
 +++ socks5bytestreammanager.cpp	(working copy)
 @@ -175,7 +175,7 @@
      m_hosts.push_back( sh );
@@ -398,7 +404,7 @@ Index: socks5bytestreammanager.cpp
                  }
 Index: simanager.cpp
 ===================================================================
---- simanager.cpp	(revision 4022)
+--- simanager.cpp	(revision 4023)
 +++ simanager.cpp	(working copy)
 @@ -109,7 +109,7 @@
      }
@@ -450,9 +456,9 @@ Index: simanager.cpp
          }
 Index: clientbase.cpp
 ===================================================================
---- clientbase.cpp	(revision 4022)
+--- clientbase.cpp	(revision 4023)
 +++ clientbase.cpp	(working copy)
-@@ -1294,13 +1294,15 @@
+@@ -1249,13 +1249,15 @@
      bool res = false;
  
      // FIXME remove for 1.1
@@ -472,7 +478,7 @@ Index: clientbase.cpp
      const StanzaExtensionList& sel = iq.extensions();
 Index: socks5bytestreammanager.h
 ===================================================================
---- socks5bytestreammanager.h	(revision 4022)
+--- socks5bytestreammanager.h	(revision 4023)
 +++ socks5bytestreammanager.h	(working copy)
 @@ -106,7 +106,7 @@
         * @b not indicate that the bytestream has been opened. This is announced by means of the
@@ -483,16 +489,3 @@ Index: socks5bytestreammanager.h
  
        /**
         * To get rid of a bytestream (i.e., close and delete it), call this function. You
-Index: adhoc.h
-===================================================================
---- adhoc.h	(revision 4022)
-+++ adhoc.h	(working copy)
-@@ -432,7 +432,7 @@
-           const std::string& node );
- 
-       // reimplemented from DiscoNodeHandler
--      virtual Disco::ItemList handleDiscoNodeItems( const JID& from, const std::string& node );
-+      virtual Disco::ItemList handleDiscoNodeItems( const JID& from, const JID& to, const std::string& node );
- 
-       // reimplemented from IqHandler
-       virtual bool handleIq( const IQ& iq );
