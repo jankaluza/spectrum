@@ -789,8 +789,8 @@ void * GlooxMessageHandler::purpleAuthorizeReceived(PurpleAccount *account,const
 	if (account==NULL)
 		return NULL;
 	User *user = userManager()->getUserByAccount(account);
-	if (user!=NULL){
-		if (user->isConnected()){
+	if (user!=NULL) {
+		if (user->isConnected()) {
 			user->purpleAuthorizeReceived(account,remote_user,id,alias,message,on_list,authorize_cb,deny_cb,user_data);
 			authData *data = new authData;
 			data->account = account;
@@ -801,7 +801,7 @@ void * GlooxMessageHandler::purpleAuthorizeReceived(PurpleAccount *account,const
 			Log().Get(user->jid()) << "purpleAuthorizeReceived called for unconnected user...";
 		}
 	}
-	else{
+	else {
 		Log().Get("purple") << "purpleAuthorizeReceived called, but user does not exist!!!";
 	}
 	return NULL;
@@ -813,7 +813,7 @@ void * GlooxMessageHandler::purpleAuthorizeReceived(PurpleAccount *account,const
 /*
  * Load config file and parses it and save result to m_configuration
  */
-void GlooxMessageHandler::loadConfigFile(const std::string &config){
+void GlooxMessageHandler::loadConfigFile(const std::string &config) {
 	GKeyFile *keyfile;
 	int flags;
   	char **bind;
@@ -848,9 +848,6 @@ void GlooxMessageHandler::loadConfigFile(const std::string &config){
 	m_configuration.sqlUser = (std::string)g_key_file_get_string(keyfile, "database","user", NULL);
 	m_configuration.sqlDb = (std::string)g_key_file_get_string(keyfile, "database","database", NULL);
 	m_configuration.sqlPrefix = (std::string)g_key_file_get_string(keyfile, "database","prefix", NULL);
-	
-// 	features0 = (int)g_key_file_get_integer(keyfile, "category0","features", NULL);
-// 	features1 = (int)g_key_file_get_integer(keyfile, "category1","features", NULL);
 
 	m_configuration.userDir = (std::string)g_key_file_get_string(keyfile, "purple","userdir", NULL);
 
@@ -925,7 +922,7 @@ void GlooxMessageHandler::loadConfigFile(const std::string &config){
 	g_key_file_free(keyfile);
 }
 
-void GlooxMessageHandler::purpleFileReceiveRequest(PurpleXfer *xfer){
+void GlooxMessageHandler::purpleFileReceiveRequest(PurpleXfer *xfer) {
 	std::string tempname(purple_xfer_get_filename(xfer));
 	std::string remote_user(purple_xfer_get_remote_user(xfer));
 
@@ -958,17 +955,17 @@ void GlooxMessageHandler::purpleFileReceiveRequest(PurpleXfer *xfer){
 	}
 }
 
-void GlooxMessageHandler::purpleFileReceiveComplete(PurpleXfer *xfer){
+void GlooxMessageHandler::purpleFileReceiveComplete(PurpleXfer *xfer) {
 	std::string filename(purple_xfer_get_filename(xfer));
 	std::string remote_user(purple_xfer_get_remote_user(xfer));
 	std::string localname(purple_xfer_get_local_filename(xfer));
 	std::string basename(g_path_get_basename(purple_xfer_get_local_filename(xfer)));
 	User *user = userManager()->getUserByAccount(purple_xfer_get_account(xfer));
-	if (user!=NULL){
-		if (user->isConnected()){
+	if (user!=NULL) {
+		if (user->isConnected()) {
 			Log().Get(user->jid()) << "Trying to send file " << filename;
-			if(user->hasFeature(GLOOX_FEATURE_FILETRANSFER)){
-				if (user->hasTransportFeature(TRANSPORT_FEATURE_FILETRANSFER)){
+			if(user->hasFeature(GLOOX_FEATURE_FILETRANSFER)) {
+				if (user->hasTransportFeature(TRANSPORT_FEATURE_FILETRANSFER)) {
 					fileTransferData *data = new fileTransferData;
 					data->to=user->jid() + "/" + user->resource();
 					data->from=remote_user+"@"+jid()+"/bot";
@@ -1085,7 +1082,7 @@ void GlooxMessageHandler::purpleChatTopicChanged(PurpleConversation *conv, const
 	PurpleAccount *account = purple_conversation_get_account(conv);
 	User *user = userManager()->getUserByAccount(account);
 	if (user) {
-		if (user->isConnected()){
+		if (user->isConnected()) {
 			user->purpleChatTopicChanged(conv, who, topic);
 		}
 	}
@@ -1442,7 +1439,7 @@ bool GlooxMessageHandler::initPurple(){
 	purple_eventloop_set_ui_ops(getEventLoopUiOps());
 
 	ret = purple_core_init(HIICQ_UI);
-	if (ret){
+	if (ret) {
 		static int conversation_handle;
 		static int conn_handle;
 		static int xfer_handle;

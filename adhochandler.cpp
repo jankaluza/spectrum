@@ -23,11 +23,17 @@
 #include "log.h"
 #include "adhocrepeater.h"
 #include "adhocsettings.h"
+#include "adhocadmin.h"
 #include "gloox/disconodehandler.h"
 #include "gloox/adhoc.h"
  
 static AdhocCommandHandler * createSettingsHandler(GlooxMessageHandler *m, User *user, const std::string &from, const std::string &id) {
 	AdhocCommandHandler *handler = new AdhocSettings(m, user, from, id);
+	return handler;
+}
+
+static AdhocCommandHandler * createAdminHandler(GlooxMessageHandler *m, User *user, const std::string &from, const std::string &id) {
+	AdhocCommandHandler *handler = new AdhocAdmin(m, user, from, id);
 	return handler;
 }
  
@@ -41,6 +47,9 @@ GlooxAdhocHandler::GlooxAdhocHandler(GlooxMessageHandler *m) {
 	
 	m_handlers["transport_settings"].name = "Transport settings";
 	m_handlers["transport_settings"].createHandler = createSettingsHandler;
+	
+	m_handlers["transport_admin"].name = "Transport administration";
+	m_handlers["transport_admin"].createHandler = createAdminHandler;
 }
 
 GlooxAdhocHandler::~GlooxAdhocHandler() { }

@@ -72,6 +72,7 @@ set(hiicq_SRCS
 	localization.cpp
 	muchandler.cpp
 	adhocsettings.cpp
+	adhocadmin.cpp
 	searchhandler.cpp
 	searchrepeater.cpp
 	dataforms.cpp
@@ -116,6 +117,7 @@ set(hiicq_MOC_HDRS
 	muchandler.h
 	adhoccommandhandler.h
 	adhocsettings.h
+	adhocadmin.h
 	searchhandler.h
 	searchrepeater.h
 	abstractpurplerequest.h
