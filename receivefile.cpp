@@ -71,7 +71,7 @@ ReceiveFile::ReceiveFile(gloox::Bytestream *stream, std::string filename, int si
     m_stream = stream;
     m_size = size;
     m_filename = filename;
-//     m_stream->registerSOCKS5BytestreamDataHandler(this);
+	m_stream->registerBytestreamDataHandler (this);
     m_finished = false;
 	m_mutex = mutex;
 	m_parent = manager;

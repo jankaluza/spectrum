@@ -25,7 +25,7 @@ SendFile::SendFile(gloox::Bytestream *stream, std::string filename, int size, My
     m_stream = stream;
     m_filename = filename;
     m_size = size;
-//     m_stream->registerBytestreamBytestreamDataHandler(this);
+	m_stream->registerBytestreamDataHandler (this);
 	m_mutex = mutex;
 	m_parent = manager;
 	if (m_stream->connect())
