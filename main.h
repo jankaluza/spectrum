@@ -119,6 +119,10 @@ typedef enum { 	TRANSPORT_FEATURE_TYPING_NOTIFY = 2,
 				TRANSPORT_FEATURE_FILETRANSFER = 16
 				} TransportFeatures;
 
+typedef enum {	ExtGateway = 1024,
+				ExtStats = 1025
+} MyStanzaExtensions;
+
 struct fileTransferData{
 	std::string from;
 	std::string to;
@@ -155,13 +159,18 @@ struct Configuration {
 	std::string sqlType;	// database type
 };
 
-class GlooxMessageHandler : public MessageHandler,ConnectionListener,PresenceHandler,SubscriptionHandler
+class GlooxMessageHandler : public MessageHandler,ConnectionListener,PresenceHandler,SubscriptionHandler, LogHandler
 {
 
 public:
 	GlooxMessageHandler(const std::string &config);
 	~GlooxMessageHandler();
-	
+
+    virtual void handleLog( LogLevel level, LogArea area, const std::string& message )
+    {
+      printf("log: level: %d, area: %d, %s\n", level, area, message.c_str() );
+    }
+
 	static GlooxMessageHandler *instance() { return m_pInstance; }
 	
 	// Purple related

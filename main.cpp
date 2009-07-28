@@ -54,42 +54,42 @@ namespace gloox {
 			virtual ~HiComponent() {};
 
 			// unfortunately we can't override const std::string variant
-			virtual void send(Tag *tag) {
-				std::string tagxml;
-				std::string outxml;
-				if (!tag)
-					return;
-
-				try {
-					tagxml = tag->xml();
-					outxml.resize(tagxml.size(), 0);
-
-					// replace invalid utf-8 characters
-					utf8::replace_invalid(tagxml.begin(), tagxml.end(), outxml.begin(), '?');
-
-					// replace invalid xml characters
-					for (std::string::iterator it = outxml.begin(); it != outxml.end(); ++it) {
-						if (((unsigned char)*it) < 0x20 && (*it != 0x09 && *it != 0x0A && *it != 0x0D)) {
-							*it = '?';
-						}
-					}
-					send(outxml);
-				} catch (...) {     // replace_invalid can throw exception? wtf!
-				}
-
-				delete tag;
-			}
-		protected:
-			void send( const std::string & xml) {    // copied from ClientBase::send(std::string), why have private function which handles protected data ??
-				if( m_connection && m_connection->state() == StateConnected ) {
-					if( m_compression && m_compressionActive )
-						m_compression->compress( xml );
-					else if( m_encryption && m_encryptionActive )
-						m_encryption->encrypt( xml );
-					else
-						m_connection->send( xml );
-				}
-			}
+// 			virtual void send(Tag *tag) {
+// 				std::string tagxml;
+// 				std::string outxml;
+// 				if (!tag)
+// 					return;
+// 
+// 				try {
+// 					tagxml = tag->xml();
+// 					outxml.resize(tagxml.size(), 0);
+// 
+// 					// replace invalid utf-8 characters
+// 					utf8::replace_invalid(tagxml.begin(), tagxml.end(), outxml.begin(), '?');
+// 
+// 					// replace invalid xml characters
+// 					for (std::string::iterator it = outxml.begin(); it != outxml.end(); ++it) {
+// 						if (((unsigned char)*it) < 0x20 && (*it != 0x09 && *it != 0x0A && *it != 0x0D)) {
+// 							*it = '?';
+// 						}
+// 					}
+// 					send(outxml);
+// 				} catch (...) {     // replace_invalid can throw exception? wtf!
+// 				}
+// 
+// 				delete tag;
+// 			}
+// 		protected:
+// 			void send( const std::string & xml) {    // copied from ClientBase::send(std::string), why have private function which handles protected data ??
+// 				if( m_connection && m_connection->state() == StateConnected ) {
+// 					if( m_compression && m_compressionActive )
+// 						m_compression->compress( xml );
+// 					else if( m_encryption && m_encryptionActive )
+// 						m_encryption->encrypt( xml );
+// 					else
+// 						m_connection->send( xml );
+// 				}
+// 			}
 	};
 };
 
@@ -595,6 +595,8 @@ GlooxMessageHandler::GlooxMessageHandler(const std::string &config) : MessageHan
 	
 	Log().Get("gloox") << "connecting to: " << m_configuration.server << " as " << m_configuration.jid << " with password " << m_configuration.password;
 	j = new HiComponent("jabber:component:accept",m_configuration.server,m_configuration.jid,m_configuration.password,m_configuration.port);
+
+	j->logInstance().registerLogHandler( LogLevelDebug, LogAreaAll, this );
 
 	GMainLoop *loop = g_main_loop_new(NULL, FALSE);
 	signal(SIGCHLD, SIG_IGN);

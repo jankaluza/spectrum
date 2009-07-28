@@ -222,6 +222,15 @@ Index: siprofileft.cpp
            m_handler->handleFTBytestream( ibb );
          }
          break;
+@@ -131,7 +131,7 @@
+     df.addField( dff );
+     feature->addChild( df.tag() );
+ 
+-    m_manager->acceptSI( to, id, 0, feature );
++    m_manager->acceptSI( to, from, id, 0, feature );
+   }
+ 
+   void SIProfileFT::declineFT( const JID& to, const std::string& sid, SIManager::SIError reason,
 @@ -166,7 +166,7 @@
        m_socks5Manager->addStreamHost( jid, host, port );
    }
