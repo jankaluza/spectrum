@@ -1,4 +1,4 @@
-project(hiicq)
+project(spectrum)
 
 cmake_minimum_required(VERSION 2.6.0 FATAL_ERROR)
 if(COMMAND cmake_policy)
@@ -48,7 +48,7 @@ endif(CMAKE_BUILD_TYPE MATCHES Debug)
 
 #CONFIGURE_FILE(config.h.in config.h)
 
-set(hiicq_SRCS
+set(spectrum_SRCS
 	main.cpp
 	registerhandler.cpp
 	sql.cpp
@@ -91,7 +91,7 @@ set(hiicq_SRCS
 	protocols/aim.cpp
 )
 
-set(hiicq_MOC_HDRS
+set(spectrum_MOC_HDRS
 	main.h
 	registerhandler.h
 	sql.h
@@ -138,30 +138,30 @@ set(hiicq_MOC_HDRS
 	protocols/aim.h
 )
 
-add_executable(hiicq ${hiicq_SRCS} ${lrelease_outputs})
+add_executable(spectrum ${spectrum_SRCS} ${lrelease_outputs})
 
-target_link_libraries(hiicq ${GLOOX_LIBRARIES} ${MySQLpp_LIBRARY} ${PURPLE_LIBRARY} ${GLIB_LIBRARIES} ${GETTEXTPO_LIBRARY} -export-dynamic)
+target_link_libraries(spectrum ${GLOOX_LIBRARIES} ${MySQLpp_LIBRARY} ${PURPLE_LIBRARY} ${GLIB_LIBRARIES} ${GETTEXTPO_LIBRARY} -export-dynamic)
 
 message(STATUS "Transport will be installed into: " ${CMAKE_INSTALL_PREFIX})
 file(WRITE transport_config.h "#define INSTALL_DIR \"" ${CMAKE_INSTALL_PREFIX} "\"\n")
 
-INSTALL(TARGETS hiicq
+INSTALL(TARGETS spectrum
     RUNTIME DESTINATION bin
     )
 
 INSTALL(FILES
-    ${CMAKE_CURRENT_SOURCE_DIR}/highflyer.cfg
-	DESTINATION /etc/highflyer/
+    ${CMAKE_CURRENT_SOURCE_DIR}/spectrum.cfg
+	DESTINATION /etc/spectrum/
     )
 
 INSTALL(FILES
     ${CMAKE_CURRENT_SOURCE_DIR}/locales/cs.po
-	DESTINATION share/highflyer/locales
+	DESTINATION share/spectrum/locales
     )
 
 INSTALL(FILES
     ${CMAKE_CURRENT_SOURCE_DIR}/certificates/facebook.pem
-	DESTINATION share/highflyer/certificates
+	DESTINATION share/spectrum/certificates
     )
 
 # install(FILES
