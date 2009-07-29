@@ -1179,8 +1179,8 @@ void User::receivedPresence(const Presence &stanza){
 			else {
 				Log().Get(m_jid) << "mirroring presence to legacy network";
 				// we are already connected so we have to change status
-				PurpleSavedStatus *status;
 				int PurplePresenceType;
+				const PurpleStatusType *status_type;
 				std::string statusMessage;
 				
 				// mirror presence types
@@ -1207,21 +1207,26 @@ void User::receivedPresence(const Presence &stanza){
 					}
 					default: break;
 				}
-				// send presence to our legacy network
-				status = purple_savedstatus_new(NULL, (PurpleStatusPrimitive)PurplePresenceType);
+				
+				status_type = purple_account_get_status_type_with_primitive(m_account, (PurpleStatusPrimitive)PurplePresenceType);
+				if (status_type != NULL) {
+					// send presence to legacy network
+					statusMessage.clear();
 
-				statusMessage.clear();
+					if (hasTransportFeature(TRANSPORT_MANGLE_STATUS)) {
+						p->sql()->getRandomStatus(statusMessage);
+						statusMessage.append(" - ");
+					}
 
-				if (hasTransportFeature(TRANSPORT_MANGLE_STATUS)) {
-					p->sql()->getRandomStatus(statusMessage);
-                    statusMessage.append(" - ");
+					statusMessage.append(stanza.status());
+
+					if (!statusMessage.empty()) {
+						purple_account_set_status(m_account, purple_status_type_get_id(status_type), TRUE, "message", statusMessage.c_str(), NULL);
+					}
+					else {
+						purple_account_set_status(m_account, purple_status_type_get_id(status_type), TRUE, NULL);
+					}
 				}
-
-				statusMessage.append(stanza.status());
-
-				if (!statusMessage.empty())
-					purple_savedstatus_set_message(status,statusMessage.c_str());
-				purple_savedstatus_activate_for_account(status,m_account);
 			}
 			
 		}
