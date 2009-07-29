@@ -910,7 +910,6 @@ void User::connect(){
 	if (valid && purple_value_get_boolean(getSetting("enable_transport"))){
 		purple_account_set_enabled(m_account, HIICQ_UI, TRUE);
 		purple_account_connect(m_account);
-		purple_account_set_ui_bool(m_account,"hiicq","auto-login",false);
 	}
 }
 
@@ -1249,6 +1248,8 @@ void User::receivedPresence(const Presence &stanza){
 }
 
 User::~User(){
+
+	purple_account_set_enabled(m_account, HIICQ_UI, TRUE);
 
 	// send unavailable to online users
 	Tag *tag;
