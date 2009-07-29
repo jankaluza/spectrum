@@ -531,7 +531,9 @@ static PurpleCoreUiOps coreUiOps =
  */
 static gboolean sendFileToJabber(gpointer data){
 	fileTransferData *d = (fileTransferData*) data;
+	std::cout << "SENDING FILE 1\n";
 	if (d){
+		std::cout << "SENDING FILE\n";
 		GlooxMessageHandler::instance()->ftManager->sendFile(d->to,d->from,d->name,d->filename);
 	}
 	return FALSE;
@@ -596,7 +598,7 @@ GlooxMessageHandler::GlooxMessageHandler(const std::string &config) : MessageHan
 	Log().Get("gloox") << "connecting to: " << m_configuration.server << " as " << m_configuration.jid << " with password " << m_configuration.password;
 	j = new HiComponent("jabber:component:accept",m_configuration.server,m_configuration.jid,m_configuration.password,m_configuration.port);
 
-	j->logInstance().registerLogHandler( LogLevelDebug, LogAreaAll, this );
+// 	j->logInstance().registerLogHandler( LogLevelDebug, LogAreaAll, this );
 
 	GMainLoop *loop = g_main_loop_new(NULL, FALSE);
 	signal(SIGCHLD, SIG_IGN);
@@ -882,7 +884,7 @@ void GlooxMessageHandler::loadConfigFile(const std::string &config) {
 		}
 		g_strfreev (bind);
 	}
-	else m_configuration.transportFeatures = 256;
+	else m_configuration.transportFeatures = 255;
 	
 	if(g_key_file_has_key(keyfile,"service","vip_features",NULL)) {
 		bind = g_key_file_get_string_list (keyfile,"service","vip_features",NULL, NULL);
@@ -898,7 +900,7 @@ void GlooxMessageHandler::loadConfigFile(const std::string &config) {
 		}
 		g_strfreev (bind);
 	}
-	else m_configuration.VIPFeatures = 256;
+	else m_configuration.VIPFeatures = 255;
 
 	if(g_key_file_has_key(keyfile,"service","use_proxy",NULL))
 		m_configuration.useProxy=g_key_file_get_boolean(keyfile, "service","use_proxy", NULL);
@@ -968,6 +970,7 @@ void GlooxMessageHandler::purpleFileReceiveComplete(PurpleXfer *xfer) {
 			Log().Get(user->jid()) << "Trying to send file " << filename;
 			if(user->hasFeature(GLOOX_FEATURE_FILETRANSFER)) {
 				if (user->hasTransportFeature(TRANSPORT_FEATURE_FILETRANSFER)) {
+					Log().Get(user->jid()) << "Trying to send file got feature";
 					fileTransferData *data = new fileTransferData;
 					data->to=user->jid() + "/" + user->resource();
 					data->from=remote_user+"@"+jid()+"/bot";
