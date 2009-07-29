@@ -1106,7 +1106,7 @@ void User::receivedPresence(const Presence &stanza){
 	}
 
 	// this presence is for the transport
-	if(stanza.to().username() == ""  || ((!p->protocol()->tempAccountsAllowed()) || p->protocol()->isMUC(NULL, stanza.to().bare()))){
+	if(stanza.to().username() == ""  || ((p->protocol()->tempAccountsAllowed()) || p->protocol()->isMUC(NULL, stanza.to().bare()))){
 		if(stanza.presence() == Presence::Unavailable) {
 			// disconnect from legacy network if we are connected
 			std::map<std::string,Resource> ::iterator iter = m_resources.begin();
