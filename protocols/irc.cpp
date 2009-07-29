@@ -85,9 +85,9 @@ void IRCProtocol::onConnected(User *user) {
 	}
 
 	for (std::list <Tag*>::iterator it = data->autoConnectRooms.begin(); it != data->autoConnectRooms.end() ; it++ ) {
-		Presence stanza((*it));
-		MUCHandler *muc = new MUCHandler(user, stanza.to().bare(), stanza.from().full());
-		g_hash_table_replace(user->mucs(), g_strdup(stanza.to().username().c_str()), muc);
+		Tag *stanza = (*it);
+		MUCHandler *muc = new MUCHandler(user, JID(stanza->findAttribute("to")).bare(), JID(stanza->findAttribute("from")).full());
+		g_hash_table_replace(user->mucs(), g_strdup(JID(stanza->findAttribute("to")).username().c_str()), muc);
 		Tag * ret = muc->handlePresence(stanza);
 		if (ret)
 			m_main->j->send(ret);

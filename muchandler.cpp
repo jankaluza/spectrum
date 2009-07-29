@@ -34,13 +34,17 @@ MUCHandler::MUCHandler(User *user, const std::string &jid, const std::string &us
 MUCHandler::~MUCHandler() {}
 
 Tag * MUCHandler::handlePresence(const Presence &stanza) {
-// 	Presence tag(stanza.presence(), m_jid, stanza.status());
-// 	tag.setFrom(p->jid());
+	Tag *ret;
+	Tag *stanzaTag = stanza.tag();
+	ret = handlePresence(stanzaTag);
+	delete stanzaTag;
+	return ret;
+}
 
-// 	return tag.tag();
-	if (stanza.presence() != Presence::Unavailable) {
+Tag * MUCHandler::handlePresence(Tag *stanza) {
+	if (stanza->findAttribute("type") != "unavailable") {
 		GHashTable *comps = NULL;
-		std::string name = stanza.to().username();
+		std::string name = JID(stanza->findAttribute("to")).username();
 		PurpleConnection *gc = purple_account_get_connection(m_user->account());
 		if (PURPLE_PLUGIN_PROTOCOL_INFO(gc->prpl)->chat_info_defaults != NULL) {
 			if (name.find("%") != std::string::npos)

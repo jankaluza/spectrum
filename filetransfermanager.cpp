@@ -30,7 +30,7 @@ void FileTransferManager::handleFTRequest (const JID &from, const JID &to, const
 	std::cout << "Received file transfer request from " << from.full() << " " << to.full() << " " << sid << ".\n";
 	m_info[sid].filename = name;
 	m_info[sid].size = size;
-	m_sip->acceptFT(from, to, sid);
+	m_sip->acceptFT(from, sid, SIProfileFT::FTTypeS5B, to);
 }
 
 
@@ -81,7 +81,7 @@ void FileTransferManager::sendFile(std::string jid, std::string from, std::strin
             return;
         }
 		std::cout << "requesting filetransfer " << jid <<" " << file <<" as " << name << " " << info.st_size << "\n";
-        std::string sid = m_sip->requestFT(jid, from, name, info.st_size);
+        std::string sid = m_sip->requestFT(jid, name, info.st_size, EmptyString, EmptyString, EmptyString, EmptyString, SIProfileFT::FTTypeAll, from);
         m_info[sid].filename = file;
         m_info[sid].size = info.st_size;
         f.close();

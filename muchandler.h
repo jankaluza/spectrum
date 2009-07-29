@@ -37,6 +37,7 @@ class MUCHandler
 		MUCHandler(User *user,const std::string &jid, const std::string &userJid);
 		~MUCHandler();
 		Tag * handlePresence(const Presence &stanza);
+		Tag * handlePresence(Tag *stanza);
 		void addUsers(GList *cbuddies);
 		void messageReceived(const char *who, const char *msg, PurpleMessageFlags flags, time_t mtime);
 		void renameUser(const char *old_name, const char *new_name, const char *new_alias);
