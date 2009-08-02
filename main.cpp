@@ -382,6 +382,20 @@ static void * notifyMessage(PurpleNotifyMsgType type, const char *title, const c
 	return NULL;
 }
 
+static size_t ui_read_fnc(guchar *buffer, size_t size, PurpleXfer *xfer) {
+	return size;
+}
+
+static void XferCreated(PurpleXfer *xfer) {
+	purple_xfer_set_ui_read_fnc(xfer, ui_read_fnc);
+// 	xfer->ui_data = new 
+}
+
+static void fileSendStart(PurpleXfer *xfer) {
+// 	GlooxMessageHandler::instance()->ft->acceptFT(from, sid, SIProfileFT::FTTypeS5B, to);
+}
+
+
 static void buddyListAddBuddy(PurpleAccount *account, const char *username, const char *group, const char *alias){
 	std::cout << "BUDDY LIST ADD BUDDY REQUEST\n";
 }
@@ -455,7 +469,7 @@ static PurpleRequestUiOps requestUiOps =
 
 static PurpleXferUiOps xferUiOps =
 {
-	NULL,
+	XferCreated,
 	NULL,
 	NULL,
 	NULL,
@@ -1465,6 +1479,7 @@ bool GlooxMessageHandler::initPurple(){
 		purple_signal_connect(purple_conversations_get_handle(), "received-im-msg", &conversation_handle, PURPLE_CALLBACK(newMessageReceived), NULL);
 		purple_signal_connect(purple_conversations_get_handle(), "buddy-typing", &conversation_handle, PURPLE_CALLBACK(buddyTyping), NULL);
 		purple_signal_connect(purple_conversations_get_handle(), "buddy-typing-stopped", &conversation_handle, PURPLE_CALLBACK(buddyTypingStopped), NULL);
+		purple_signal_connect(purple_xfers_get_handle(), "file-send-start", &xfer_handle, PURPLE_CALLBACK(fileSendStart), NULL);
 		purple_signal_connect(purple_xfers_get_handle(), "file-recv-request", &xfer_handle, PURPLE_CALLBACK(newXfer), NULL);
 		purple_signal_connect(purple_xfers_get_handle(), "file-recv-complete", &xfer_handle, PURPLE_CALLBACK(XferComplete), NULL);
 		purple_signal_connect(purple_connections_get_handle(), "signed-on", &conn_handle,PURPLE_CALLBACK(signed_on), NULL);
