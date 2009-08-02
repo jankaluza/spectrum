@@ -28,6 +28,7 @@
 #include "cmds.h"
 #include "parser.h"
 #include "proxy.h"
+#include "filetransferrepeater.h"
 
 /*
  * Called when contact list has been received from legacy network.
@@ -72,6 +73,7 @@ User::User(GlooxMessageHandler *parent, JID jid, const std::string &username, co
 	m_lang = NULL;
 	m_features = 0;
 	m_mucs = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
+	m_filetransfers = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
 	PurpleValue *value;
 	
 	// check default settings
@@ -1247,6 +1249,11 @@ void User::receivedPresence(const Presence &stanza){
 	delete stanzaTag;
 }
 
+void User::addFiletransfer( const JID& to, const std::string& sid, SIProfileFT::StreamType type, const JID& from ) {
+	FiletransferRepeater *ft = new FiletransferRepeater(p, to, sid, type, from);
+	g_hash_table_replace(m_filetransfers, g_strdup(to.bare() == m_jid ? from.username().c_str() : to.username().c_str()), ft);
+}
+
 User::~User(){
 
 	purple_account_set_enabled(m_account, HIICQ_UI, TRUE);
@@ -1296,6 +1303,7 @@ User::~User(){
 	m_authRequests.clear();
 	g_hash_table_destroy(m_mucs);
 	g_hash_table_destroy(m_settings);
+	g_hash_table_destroy(m_filetransfers);
 	
 	p->protocol()->onDestroy(this);
 }

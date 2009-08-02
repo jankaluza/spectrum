@@ -28,6 +28,7 @@
 #include "adhocrepeater.h"
 #include "searchhandler.h"
 #include "searchrepeater.h"
+#include "filetransferrepeater.h"
 #include "parser.h"
 #include "commands.h"
 #include "protocols/abstractprotocol.h"
@@ -387,7 +388,18 @@ static size_t ui_read_fnc(guchar *buffer, size_t size, PurpleXfer *xfer) {
 }
 
 static void XferCreated(PurpleXfer *xfer) {
-	purple_xfer_set_ui_read_fnc(xfer, ui_read_fnc);
+	std::string remote_user(purple_xfer_get_remote_user(xfer));
+
+	User *user = GlooxMessageHandler::instance()->userManager()->getUserByAccount(purple_xfer_get_account(xfer));
+	if (!user) return;
+	
+	FiletransferRepeater *repeater = user->removeFiletransfer(remote_user);
+	if (!repeater) return;
+	
+	repeater->registerXfer(xfer);
+	
+// 	purple_xfer_set_ui_read_fnc(xfer, ui_read_fnc);
+	
 // 	xfer->ui_data = new 
 }
 

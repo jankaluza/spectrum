@@ -24,8 +24,10 @@
 #include <time.h>
 #include <gloox/clientbase.h>
 #include <gloox/messagesession.h>
+#include <gloox/siprofileft.h>
 #include <glib.h>
 class GlooxMessageHandler;
+class FiletransferRepeater;
 
 #include "main.h"
 #include "sql.h"
@@ -117,6 +119,9 @@ class User {
 		void connected();
 		void disconnected();
 
+		// Filetransfers
+		void addFiletransfer( const JID& to, const std::string& sid, SIProfileFT::StreamType type, const JID& from );
+		FiletransferRepeater* removeFiletransfer(std::string &from) { FiletransferRepeater *repeater = (FiletransferRepeater *) g_hash_table_lookup(m_filetransfers, from.c_str()); if (repeater) g_hash_table_remove(m_filetransfers, from.c_str()); return repeater; }
 
 		std::string actionData;
 
@@ -192,6 +197,7 @@ class User {
 		int m_features;
 		time_t m_connectionStart;	// connection start timestamp
 		GHashTable *m_mucs;			// MUCs
+		GHashTable *m_filetransfers;
 		std::map<std::string,RosterRow> m_roster;	// jabber roster of this user
 		std::map<std::string,Resource> m_resources;	// list of all resources which are connected to the transport
 		std::map<std::string,authRequest> m_authRequests;	// list of authorization requests (holds callbacks and user data)

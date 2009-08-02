@@ -60,6 +60,7 @@ set(spectrum_SRCS
 	caps.cpp
 	discoinfohandler.cpp
 	filetransfermanager.cpp
+	filetransferrepeater.cpp
 	sendfile.cpp
 	thread.cpp
 	gatewayhandler.cpp
@@ -103,6 +104,7 @@ set(spectrum_MOC_HDRS
 	caps.h
 	discoinfohandler.h
 	filetransfermanager.h
+	filetransferrepeater.h
 	sendfile.h
 	thread.h
 	gatewayhandler.h

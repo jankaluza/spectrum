@@ -19,6 +19,7 @@
  */
 
 #include "filetransfermanager.h"
+#include "usermanager.h"
 
 void FileTransferManager::setSIProfileFT(gloox::SIProfileFT *sipft,GlooxMessageHandler *parent) {
 	m_sip = sipft;
@@ -30,7 +31,6 @@ void FileTransferManager::handleFTRequest (const JID &from, const JID &to, const
 	std::cout << "Received file transfer request from " << from.full() << " " << to.full() << " " << sid << ".\n";
 	m_info[sid].filename = name;
 	m_info[sid].size = size;
-	void serv_send_file(PurpleConnection *gc, const char *who, const char *file)
 
 	User *user = p->userManager()->getUserByJID(from.username());
 	if (user) {
@@ -38,6 +38,8 @@ void FileTransferManager::handleFTRequest (const JID &from, const JID &to, const
 			if (user->isConnected()){
 				Log().Get(user->jid()) << "sending file";
 				serv_send_file(purple_account_get_connection(user->account()),to.username().c_str(), name.c_str());
+				// 	GlooxMessageHandler::instance()->ft->acceptFT(from, sid, SIProfileFT::FTTypeS5B, to);
+				user->addFiletransfer(from, sid, SIProfileFT::FTTypeS5B, to);
 			}
 		}
 	}
