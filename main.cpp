@@ -383,28 +383,24 @@ static void * notifyMessage(PurpleNotifyMsgType type, const char *title, const c
 	return NULL;
 }
 
-static size_t ui_read_fnc(guchar *buffer, size_t size, PurpleXfer *xfer) {
-	return size;
-}
-
 static void XferCreated(PurpleXfer *xfer) {
 	std::string remote_user(purple_xfer_get_remote_user(xfer));
 
 	User *user = GlooxMessageHandler::instance()->userManager()->getUserByAccount(purple_xfer_get_account(xfer));
 	if (!user) return;
 	
-	FiletransferRepeater *repeater = user->removeFiletransfer(remote_user);
+	FiletransferRepeater *repeater = user->getFiletransfer(remote_user);
+	Log().Get(user->jid()) << "get filetransferRepeater" << remote_user;
 	if (!repeater) return;
-	
+	Log().Get(user->jid()) << "registerXfer";
 	repeater->registerXfer(xfer);
-	
-// 	purple_xfer_set_ui_read_fnc(xfer, ui_read_fnc);
-	
-// 	xfer->ui_data = new 
+
 }
 
 static void fileSendStart(PurpleXfer *xfer) {
-// 	GlooxMessageHandler::instance()->ft->acceptFT(from, sid, SIProfileFT::FTTypeS5B, to);
+	FiletransferRepeater *repeater = (FiletransferRepeater *) xfer->ui_data;
+	repeater->fileSendStart();
+	Log().Get("filesend") << "fileSendStart()";
 }
 
 
@@ -624,7 +620,7 @@ GlooxMessageHandler::GlooxMessageHandler(const std::string &config) : MessageHan
 	Log().Get("gloox") << "connecting to: " << m_configuration.server << " as " << m_configuration.jid << " with password " << m_configuration.password;
 	j = new HiComponent("jabber:component:accept",m_configuration.server,m_configuration.jid,m_configuration.password,m_configuration.port);
 
-// 	j->logInstance().registerLogHandler( LogLevelDebug, LogAreaAll, this );
+	j->logInstance().registerLogHandler( LogLevelDebug, LogAreaAll, this );
 
 	GMainLoop *loop = g_main_loop_new(NULL, FALSE);
 	signal(SIGCHLD, SIG_IGN);

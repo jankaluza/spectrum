@@ -20,6 +20,7 @@
 
 #include "filetransfermanager.h"
 #include "usermanager.h"
+#include "filetransferrepeater.h"
 
 void FileTransferManager::setSIProfileFT(gloox::SIProfileFT *sipft,GlooxMessageHandler *parent) {
 	m_sip = sipft;
@@ -32,14 +33,15 @@ void FileTransferManager::handleFTRequest (const JID &from, const JID &to, const
 	m_info[sid].filename = name;
 	m_info[sid].size = size;
 
-	User *user = p->userManager()->getUserByJID(from.username());
+	User *user = p->userManager()->getUserByJID(from.bare());
 	if (user) {
+		Log().Get(user->jid()) << "has user";
 		if (user->account()){
+			Log().Get(user->jid()) << "has account";
 			if (user->isConnected()){
 				Log().Get(user->jid()) << "sending file";
+				user->addFiletransfer(from, sid, SIProfileFT::FTTypeS5B, to, size);
 				serv_send_file(purple_account_get_connection(user->account()),to.username().c_str(), name.c_str());
-				// 	GlooxMessageHandler::instance()->ft->acceptFT(from, sid, SIProfileFT::FTTypeS5B, to);
-				user->addFiletransfer(from, sid, SIProfileFT::FTTypeS5B, to);
 			}
 		}
 	}
@@ -47,28 +49,39 @@ void FileTransferManager::handleFTRequest (const JID &from, const JID &to, const
 
 
 void FileTransferManager::handleFTBytestream (Bytestream *bs) {
+	Log().Get("a") << "handleFTBytestream";
 	if (std::find(m_sendlist.begin(), m_sendlist.end(), bs->target().full()) == m_sendlist.end()) {
-		std::string filename = m_info[bs->sid()].filename;
-		// replace invalid characters
-		for (std::string::iterator it = filename.begin(); it != filename.end(); ++it) {
-			if (*it == '\\' || *it == '&' || *it == '/' || *it == '?' || *it == '*' || *it == ':') {
-				*it = '_';
-			}
-		} 
-		filename=p->configuration().filetransferCache+"/"+bs->target().username()+"-"+p->j->getID()+"-"+filename;
+// 		std::string filename = m_info[bs->sid()].filename;
+// 		// replace invalid characters
+// 		for (std::string::iterator it = filename.begin(); it != filename.end(); ++it) {
+// 			if (*it == '\\' || *it == '&' || *it == '/' || *it == '?' || *it == '*' || *it == ':') {
+// 				*it = '_';
+// 			}
+// 		} 
+// 		filename=p->configuration().filetransferCache+"/"+bs->target().username()+"-"+p->j->getID()+"-"+filename;
+// 		
+// 		mutex->lock();
+// 		m_progress[bs->sid()].filename=filename;
+// 		m_progress[bs->sid()].incoming=true;
+// 		m_progress[bs->sid()].state=0;
+// 		m_progress[bs->sid()].user=bs->initiator().bare();
+// 		m_progress[bs->sid()].to=bs->initiator();
+// 		m_progress[bs->sid()].from=bs->target();
+// 		m_progress[bs->sid()].stream=bs;
+// 		std::cout << "FROM:" << bs->initiator().full() << " TO:" << bs->target().full();
+// 		
+// 		mutex->unlock();
+// 		new ReceiveFile(bs,filename, m_info[bs->sid()].size,mutex,this);
+
+		User *user = p->userManager()->getUserByJID(bs->initiator().bare());
+		Log().Get("a") << "wants user" << bs->initiator().bare();
+		if (!user) return;
+		Log().Get("a") << "wants repeater" << bs->target().username();
+		FiletransferRepeater *repeater = user->removeFiletransfer(bs->target().username());
+		if (!repeater) return;
 		
-		mutex->lock();
-		m_progress[bs->sid()].filename=filename;
-		m_progress[bs->sid()].incoming=true;
-		m_progress[bs->sid()].state=0;
-		m_progress[bs->sid()].user=bs->initiator().bare();
-		m_progress[bs->sid()].to=bs->initiator();
-		m_progress[bs->sid()].from=bs->target();
-		m_progress[bs->sid()].stream=bs;
-		std::cout << "FROM:" << bs->initiator().full() << " TO:" << bs->target().full();
-		
-		mutex->unlock();
-		new ReceiveFile(bs,filename, m_info[bs->sid()].size,mutex,this);
+		repeater->handleFTReceiveBytestream(bs);
+
     } else {
 		// zatim to nepotrebujem u odchozich filu
 // 		mutex->lock();

@@ -428,7 +428,7 @@ void User::purpleReauthorizeBuddy(PurpleBuddy *buddy){
  * Called when something related to this buddy changed...
  */
 void User::purpleBuddyChanged(PurpleBuddy *buddy){
-	if (buddy==NULL || m_connected == false)
+	if (buddy==NULL /*|| m_connected == false*/)
 		return;
 	std::string alias;
 	if (purple_buddy_get_server_alias(buddy))
@@ -1249,9 +1249,10 @@ void User::receivedPresence(const Presence &stanza){
 	delete stanzaTag;
 }
 
-void User::addFiletransfer( const JID& to, const std::string& sid, SIProfileFT::StreamType type, const JID& from ) {
-	FiletransferRepeater *ft = new FiletransferRepeater(p, to, sid, type, from);
+void User::addFiletransfer( const JID& to, const std::string& sid, SIProfileFT::StreamType type, const JID& from, long size ) {
+	FiletransferRepeater *ft = new FiletransferRepeater(p, to, sid, type, from, size);
 	g_hash_table_replace(m_filetransfers, g_strdup(to.bare() == m_jid ? from.username().c_str() : to.username().c_str()), ft);
+	Log().Get("filetransfer") << "adding FT Class as jid:" << std::string(to.bare() == m_jid ? from.username() : to.username());
 }
 
 User::~User(){

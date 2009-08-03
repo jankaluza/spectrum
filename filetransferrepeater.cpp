@@ -21,8 +21,83 @@
 #include "filetransferrepeater.h"
 #include "main.h"
 
-FiletransferRepeater::FiletransferRepeater(GlooxMessageHandler *main, const JID& to, const std::string& sid, SIProfileFT::StreamType type, const JID& from) {
+
+ReceiveFileStraight::ReceiveFileStraight(gloox::Bytestream *stream, int size, FiletransferRepeater *manager) {
+    m_stream = stream;
+    m_size = size;
+	m_stream->registerBytestreamDataHandler (this);
+    m_finished = false;
+	m_parent = manager;
+    if(!m_stream->connect()) {
+        Log().Get("ReceiveFileStraight") << "connection can't be established!";
+        return;
+    }
+    run();
+}
+
+ReceiveFileStraight::~ReceiveFileStraight() {
+
+}
+
+void ReceiveFileStraight::exec() {
+	Log().Get("ReceiveFileStraight") << "starting receiveFile thread";
+// 	m_stream->handleConnect(m_stream->connectionImpl());
+	Log().Get("ReceiveFileStraight") << "begin receiving this file";
+	while (!m_finished) {
+		m_stream->recv();
+	}
+}
+
+void ReceiveFileStraight::handleBytestreamData(gloox::Bytestream *s5b, const std::string &data) {
+	getMutex()->lock();
+	m_parent->gotData(data);
+	getMutex()->unlock();
+}
+
+void ReceiveFileStraight::handleBytestreamError(gloox::Bytestream *s5b, const gloox::IQ &iq) {
+	Log().Get("ReceiveFileStraight") << "STREAM ERROR!";
+// 	Log().Get("ReceiveFileStraight") << stanza->xml();
+}
+
+void ReceiveFileStraight::handleBytestreamOpen(gloox::Bytestream *s5b) {
+	Log().Get("ReceiveFileStraight") << "stream opened...";
+}
+
+void ReceiveFileStraight::handleBytestreamClose(gloox::Bytestream *s5b) {
+    if (m_finished){
+		Log().Get("ReceiveFileStraight") << "Transfer finished and we're already finished => deleting receiveFile thread";
+		delete this;
+	}
+	else{
+		Log().Get("ReceiveFileStraight") << "Transfer finished";
+		m_finished = true;
+	}
+}
+
+
+
+
+
+static size_t ui_read_fnc(guchar *buffer, size_t size, PurpleXfer *xfer) {
+	FiletransferRepeater *repeater = (FiletransferRepeater *) xfer->ui_data;
+	repeater->getResender()->getMutex()->lock();
+	if (repeater->getBuffer().empty()) {
+		repeater->wantsData();
+		buffer = (guchar*) g_strdup("");
+		repeater->getResender()->getMutex()->unlock();
+		return 0;
+	}
+	else {
+		buffer = (guchar*) g_strdup(repeater->getBuffer().c_str());
+		size_t s = repeater->getBuffer().size();
+		repeater->getResender()->getMutex()->unlock();
+		return s;
+	}
+}
+
+FiletransferRepeater::FiletransferRepeater(GlooxMessageHandler *main, const JID& to, const std::string& sid, SIProfileFT::StreamType type, const JID& from, long size) {
 	m_main = main;
+	m_size = size;
 	m_to = to;
 	m_sid = sid;
 	m_type = type;
@@ -32,6 +107,28 @@ FiletransferRepeater::FiletransferRepeater(GlooxMessageHandler *main, const JID&
 void FiletransferRepeater::registerXfer(PurpleXfer *xfer) {
 	m_xfer = xfer;
 	
+	purple_xfer_set_ui_read_fnc(m_xfer, ui_read_fnc);
+// 	purple_xfer_set_local_filename(xfer, filename);
+	purple_xfer_set_size(xfer, m_size);
+	m_xfer->ui_data = this;
+}
+
+void FiletransferRepeater::fileSendStart() {
+	Log().Get("ReceiveFileStraight") << "fileSendStart!" << m_from.full() << " " << m_to.full();
+	m_main->ft->acceptFT(m_to, m_sid, m_type, m_from.resource().empty() ? std::string(m_from.bare() + "/bot") : m_from);
+}
+
+void FiletransferRepeater::handleFTReceiveBytestream(Bytestream *bs) {
+	Log().Get("ReceiveFileStraight") << "new!";
+	m_resender = new ReceiveFileStraight(bs, 0, this);
+}
+
+void FiletransferRepeater::gotData(const std::string &data) {
+	m_buffer = data;
+	if (m_wantsData) {
+		m_wantsData = false;
+		purple_xfer_ui_got_data(m_xfer);
+	}
 }
 
 

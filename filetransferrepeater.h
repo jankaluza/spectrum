@@ -25,8 +25,11 @@
 #include "gloox/tag.h"
 #include "gloox/presence.h"
 #include "gloox/siprofileft.h"
+#include "gloox/bytestream.h"
+#include "gloox/bytestreamdatahandler.h"
 #include "conversation.h"
 #include "ft.h"
+#include "thread.h"
 
 class User;
 extern Localization localization;
@@ -35,13 +38,54 @@ class GlooxMessageHandler;
 
 using namespace gloox;
 
+class FiletransferRepeater;
+
+class AbstractResendClass {
+	public:
+		AbstractResendClass() { m_mutex = new MyMutex(); }
+		~AbstractResendClass() { delete m_mutex; }
+		
+		MyMutex *getMutex() { return m_mutex; }
+	
+	private:
+		MyMutex *m_mutex;
+};
+
+class ReceiveFileStraight : public AbstractResendClass, public BytestreamDataHandler, public Thread {
+	public:
+		ReceiveFileStraight(Bytestream *stream, int size, FiletransferRepeater *manager);
+		~ReceiveFileStraight();
+
+		void exec();
+		void handleBytestreamData(Bytestream *s5b, const std::string &data);
+		void handleBytestreamError(Bytestream *s5b, const IQ &iq);
+		void handleBytestreamOpen(Bytestream *s5b);
+		void handleBytestreamClose(Bytestream *s5b);
+		
+		void gotData(const std::string &data);
+	
+	private:
+		Bytestream *m_stream;
+		std::string m_filename;
+		int m_size;
+		bool m_finished;
+		FiletransferRepeater *m_parent;
+};
+
 class FiletransferRepeater {
 	
 	public:
-		FiletransferRepeater(GlooxMessageHandler *main, const JID& to, const std::string& sid, SIProfileFT::StreamType type, const JID& from);
+		FiletransferRepeater(GlooxMessageHandler *main, const JID& to, const std::string& sid, SIProfileFT::StreamType type, const JID& from, long size);
 		~FiletransferRepeater() {}
 		
 		void registerXfer(PurpleXfer *xfer);
+		void fileSendStart();
+		void handleFTReceiveBytestream(Bytestream *bs);
+		void gotData(const std::string &data);
+		
+		std::string & getBuffer() { return m_buffer; }
+		AbstractResendClass *getResender() { return m_resender; }
+		void wantsData() { m_wantsData = true; }
 	
 	private:
 		GlooxMessageHandler *m_main;
@@ -49,7 +93,12 @@ class FiletransferRepeater {
 		std::string m_sid;
 		SIProfileFT::StreamType m_type;
 		JID m_from;
+		long m_size;
 		PurpleXfer *m_xfer;
+		
+		std::string m_buffer;
+		AbstractResendClass *m_resender;
+		bool m_wantsData;
 	
 };
 

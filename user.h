@@ -120,9 +120,9 @@ class User {
 		void disconnected();
 
 		// Filetransfers
-		void addFiletransfer( const JID& to, const std::string& sid, SIProfileFT::StreamType type, const JID& from );
-		FiletransferRepeater* removeFiletransfer(std::string &from) { FiletransferRepeater *repeater = (FiletransferRepeater *) g_hash_table_lookup(m_filetransfers, from.c_str()); if (repeater) g_hash_table_remove(m_filetransfers, from.c_str()); return repeater; }
-
+		void addFiletransfer( const JID& to, const std::string& sid, SIProfileFT::StreamType type, const JID& from, long size );
+		FiletransferRepeater* removeFiletransfer(std::string from) { FiletransferRepeater *repeater = (FiletransferRepeater *) g_hash_table_lookup(m_filetransfers, from.c_str()); if (repeater) g_hash_table_remove(m_filetransfers, from.c_str()); return repeater; }
+		FiletransferRepeater* getFiletransfer(std::string from) { FiletransferRepeater *repeater = (FiletransferRepeater *) g_hash_table_lookup(m_filetransfers, from.c_str()); return repeater; }
 		std::string actionData;
 
 		// Connected
