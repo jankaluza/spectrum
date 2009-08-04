@@ -1254,6 +1254,10 @@ void User::addFiletransfer( const JID& to, const std::string& sid, SIProfileFT::
 	g_hash_table_replace(m_filetransfers, g_strdup(to.bare() == m_jid ? from.username().c_str() : to.username().c_str()), ft);
 	Log().Get("filetransfer") << "adding FT Class as jid:" << std::string(to.bare() == m_jid ? from.username() : to.username());
 }
+void User::addFiletransfer( const JID& to ) {
+	FiletransferRepeater *ft = new FiletransferRepeater(p, to, m_jid + "/" + m_resource);
+	g_hash_table_replace(m_filetransfers, g_strdup(to.username().c_str()), ft);
+}
 
 User::~User(){
 

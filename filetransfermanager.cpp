@@ -80,7 +80,10 @@ void FileTransferManager::handleFTBytestream (Bytestream *bs) {
 		FiletransferRepeater *repeater = user->removeFiletransfer(bs->target().username());
 		if (!repeater) return;
 		
-		repeater->handleFTReceiveBytestream(bs);
+		if (repeater->isSending())
+			repeater->handleFTSendBytestream(bs);
+		else
+			repeater->handleFTReceiveBytestream(bs);
 
     } else {
 		// zatim to nepotrebujem u odchozich filu

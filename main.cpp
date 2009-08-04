@@ -282,6 +282,16 @@ static void * requestAction(const char *title, const char *primary,const char *s
 			((PurpleRequestActionCb) va_arg(actions, GCallback))(user_data,2);
 		}
 	}
+	if (primary) {
+		std::string primaryString(primary);
+		if (primaryString.find("Accept file transfer") == 0) {
+			FiletransferRepeater *repeater = user->getFiletransfer((std::string) who);
+			repeater->requestFT();
+			
+// 			std::string sid = m_sip->requestFT(jid, name, info.st_size, EmptyString, EmptyString, EmptyString, EmptyString, SIProfileFT::FTTypeAll, from);
+		}
+	}
+	
 	return NULL;
 }
 
@@ -391,9 +401,13 @@ static void XferCreated(PurpleXfer *xfer) {
 	
 	FiletransferRepeater *repeater = user->getFiletransfer(remote_user);
 	Log().Get(user->jid()) << "get filetransferRepeater" << remote_user;
-	if (!repeater) return;
-	Log().Get(user->jid()) << "registerXfer";
-	repeater->registerXfer(xfer);
+	if (repeater) {
+		Log().Get(user->jid()) << "registerXfer";
+		repeater->registerXfer(xfer);
+	}
+	else {
+		user->addFiletransfer(std::string(xfer->who) + "@" + GlooxMessageHandler::instance()->jid() + "/bot");
+	}
 
 }
 
@@ -401,6 +415,12 @@ static void fileSendStart(PurpleXfer *xfer) {
 	FiletransferRepeater *repeater = (FiletransferRepeater *) xfer->ui_data;
 	repeater->fileSendStart();
 	Log().Get("filesend") << "fileSendStart()";
+}
+
+static void fileRecvStart(PurpleXfer *xfer) {
+	FiletransferRepeater *repeater = (FiletransferRepeater *) xfer->ui_data;
+	repeater->fileRecvStart();
+	Log().Get("filesend") << "fileRecvStart()";
 }
 
 
@@ -965,19 +985,21 @@ void GlooxMessageHandler::purpleFileReceiveRequest(PurpleXfer *xfer) {
         }
     }
 
-	purple_xfer_request_accepted(xfer, std::string(configuration().filetransferCache+"/"+remote_user+"-"+j->getID()+"-"+filename).c_str());
+// 	purple_xfer_request_accepted(xfer, std::string(configuration().filetransferCache+"/"+remote_user+"-"+j->getID()+"-"+filename).c_str());
 	User *user = userManager()->getUserByAccount(purple_xfer_get_account(xfer));
 	if (user!=NULL){
-		if(user->hasFeature(GLOOX_FEATURE_FILETRANSFER)){
-			Message s(Message::Chat, user->jid(), tr(user->getLang(),_("User is sending you file '"))+filename+tr(user->getLang(),_("'. It will be resend to you right after we receive it.")));
-			s.setFrom(remote_user+"@"+jid()+"/bot");
-			j->send(s);
-		}
-		else{
-			Message s(Message::Chat, user->jid(), tr(user->getLang(),_("User is sending you file '"))+filename+tr(user->getLang(),_("'. We will send you link to the file right when we receive it.")));
-			s.setFrom(remote_user+"@"+jid()+"/bot");
-			j->send(s);
-		}
+		// 		std::string sid = GlooxMessageHandler::instance()->ft->requestFT(jid, name, info.st_size, EmptyString, EmptyString, EmptyString, EmptyString, SIProfileFT::FTTypeAll, from);
+// 		purple_xfer_request_accepted(xfer, std::string(filename).c_str());
+// 		if(user->hasFeature(GLOOX_FEATURE_FILETRANSFER)){
+// 			Message s(Message::Chat, user->jid(), tr(user->getLang(),_("User is sending you file '"))+filename+tr(user->getLang(),_("'. It will be resend to you right after we receive it.")));
+// 			s.setFrom(remote_user+"@"+jid()+"/bot");
+// 			j->send(s);
+// 		}
+// 		else{
+// 			Message s(Message::Chat, user->jid(), tr(user->getLang(),_("User is sending you file '"))+filename+tr(user->getLang(),_("'. We will send you link to the file right when we receive it.")));
+// 			s.setFrom(remote_user+"@"+jid()+"/bot");
+// 			j->send(s);
+// 		}
 	}
 }
 
@@ -1488,6 +1510,7 @@ bool GlooxMessageHandler::initPurple(){
 		purple_signal_connect(purple_conversations_get_handle(), "buddy-typing", &conversation_handle, PURPLE_CALLBACK(buddyTyping), NULL);
 		purple_signal_connect(purple_conversations_get_handle(), "buddy-typing-stopped", &conversation_handle, PURPLE_CALLBACK(buddyTypingStopped), NULL);
 		purple_signal_connect(purple_xfers_get_handle(), "file-send-start", &xfer_handle, PURPLE_CALLBACK(fileSendStart), NULL);
+		purple_signal_connect(purple_xfers_get_handle(), "file-recv-start", &xfer_handle, PURPLE_CALLBACK(fileRecvStart), NULL);
 		purple_signal_connect(purple_xfers_get_handle(), "file-recv-request", &xfer_handle, PURPLE_CALLBACK(newXfer), NULL);
 		purple_signal_connect(purple_xfers_get_handle(), "file-recv-complete", &xfer_handle, PURPLE_CALLBACK(XferComplete), NULL);
 		purple_signal_connect(purple_connections_get_handle(), "signed-on", &conn_handle,PURPLE_CALLBACK(signed_on), NULL);
