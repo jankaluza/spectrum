@@ -74,24 +74,45 @@ void ReceiveFileStraight::handleBytestreamClose(gloox::Bytestream *s5b) {
 	}
 }
 
+static gboolean ui_got_data(gpointer data){
+	PurpleXfer *xfer = (PurpleXfer*) data;
+	purple_xfer_ui_got_data(xfer);
+	return FALSE;
+}
 
 
 
-
-static size_t ui_read_fnc(guchar *buffer, size_t size, PurpleXfer *xfer) {
+static size_t ui_read_fnc(guchar **buffer, size_t size, PurpleXfer *xfer) {
+	Log().Get("REPEATER") << "ui_read";
 	FiletransferRepeater *repeater = (FiletransferRepeater *) xfer->ui_data;
+	if (!repeater->getResender()) {
+		repeater->wantsData();
+		(*buffer) = (guchar*) g_strdup("");
+		return 0;
+	}
 	repeater->getResender()->getMutex()->lock();
 	if (repeater->getBuffer().empty()) {
+		Log().Get("REPEATER") << "buffer is empty, setting wantsData = true";
 		repeater->wantsData();
-		buffer = (guchar*) g_strdup("");
+		(*buffer) = (guchar*) g_strdup("");
 		repeater->getResender()->getMutex()->unlock();
 		return 0;
 	}
 	else {
-		buffer = (guchar*) g_strdup(repeater->getBuffer().c_str());
+		std::string data;
+		if (repeater->getBuffer().size() > size) {
+			data = repeater->getBuffer().substr(0, size);
+			repeater->getBuffer().erase(0, size);
+		}
+		else {
+			data = repeater->getBuffer();
+			repeater->getBuffer().erase();
+		}
+		(*buffer) = (guchar*) g_strdup(data.c_str());
 		size_t s = repeater->getBuffer().size();
+		Log().Get("REPEATER") << "GOT BUFFER, SIZE=" << s;
 		repeater->getResender()->getMutex()->unlock();
-		return s;
+		return size;
 	}
 }
 
@@ -102,6 +123,9 @@ FiletransferRepeater::FiletransferRepeater(GlooxMessageHandler *main, const JID&
 	m_sid = sid;
 	m_type = type;
 	m_from = from;
+	m_buffer = "";
+	m_wantsData = false;
+	m_resender = NULL;
 }
 
 void FiletransferRepeater::registerXfer(PurpleXfer *xfer) {
@@ -124,10 +148,11 @@ void FiletransferRepeater::handleFTReceiveBytestream(Bytestream *bs) {
 }
 
 void FiletransferRepeater::gotData(const std::string &data) {
-	m_buffer = data;
+	m_buffer.append(data);
+	Log().Get("ReceiveFileStraight") << "Got DATA! " << m_wantsData;
 	if (m_wantsData) {
 		m_wantsData = false;
-		purple_xfer_ui_got_data(m_xfer);
+		purple_timeout_add(0,&ui_got_data,m_xfer);
 	}
 }
 

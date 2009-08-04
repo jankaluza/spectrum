@@ -385,7 +385,7 @@ static void * notifyMessage(PurpleNotifyMsgType type, const char *title, const c
 
 static void XferCreated(PurpleXfer *xfer) {
 	std::string remote_user(purple_xfer_get_remote_user(xfer));
-
+	Log().Get("xfercreated") << "get user " << remote_user;
 	User *user = GlooxMessageHandler::instance()->userManager()->getUserByAccount(purple_xfer_get_account(xfer));
 	if (!user) return;
 	
