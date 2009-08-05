@@ -32,7 +32,8 @@ void FileTransferManager::handleFTRequest (const JID &from, const JID &to, const
 	std::cout << "Received file transfer request from " << from.full() << " " << to.full() << " " << sid << ".\n";
 	m_info[sid].filename = name;
 	m_info[sid].size = size;
-
+	std::string uname = to.username();
+	std::for_each( uname.begin(), uname.end(), replaceBadJidCharacters() );
 	User *user = p->userManager()->getUserByJID(from.bare());
 	if (user) {
 		Log().Get(user->jid()) << "has user";
@@ -41,7 +42,7 @@ void FileTransferManager::handleFTRequest (const JID &from, const JID &to, const
 			if (user->isConnected()){
 				Log().Get(user->jid()) << "sending file";
 				user->addFiletransfer(from, sid, SIProfileFT::FTTypeS5B, to, size);
-				serv_send_file(purple_account_get_connection(user->account()),to.username().c_str(), name.c_str());
+				serv_send_file(purple_account_get_connection(user->account()), uname.c_str(), name.c_str());
 			}
 		}
 	}
@@ -75,10 +76,19 @@ void FileTransferManager::handleFTBytestream (Bytestream *bs) {
 
 		User *user = p->userManager()->getUserByJID(bs->initiator().bare());
 		Log().Get("a") << "wants user" << bs->initiator().bare();
-		if (!user) return;
-		Log().Get("a") << "wants repeater" << bs->target().username();
-		FiletransferRepeater *repeater = user->removeFiletransfer(bs->target().username());
-		if (!repeater) return;
+		FiletransferRepeater *repeater = NULL;
+		if (user) {
+			Log().Get("a") << "wants repeater" << bs->target().username();
+			repeater = user->removeFiletransfer(bs->target().username());
+			if (!repeater) return;
+		}
+		else {
+			User *user = p->userManager()->getUserByJID(bs->target().bare());
+			if (!user)
+				return;
+			repeater = user->removeFiletransfer(bs->initiator().username());
+			if (!repeater) return;
+		}
 		
 		if (repeater->isSending())
 			repeater->handleFTSendBytestream(bs);

@@ -282,15 +282,17 @@ static void * requestAction(const char *title, const char *primary,const char *s
 			((PurpleRequestActionCb) va_arg(actions, GCallback))(user_data,2);
 		}
 	}
-	if (primary) {
-		std::string primaryString(primary);
-		if (primaryString.find("Accept file transfer") == 0) {
-			FiletransferRepeater *repeater = user->getFiletransfer((std::string) who);
-			repeater->requestFT();
-			
-// 			std::string sid = m_sip->requestFT(jid, name, info.st_size, EmptyString, EmptyString, EmptyString, EmptyString, SIProfileFT::FTTypeAll, from);
-		}
-	}
+// 	Log().Get("purple") << "blablabla " << (std::string) who;
+// 	if (primary) {
+// 		std::string primaryString(primary);
+// 		Log().Get("purple") << primaryString;
+// 		if (primaryString.find("wants to send you") != std::string::npos) {
+// 			FiletransferRepeater *repeater = user->getFiletransfer((std::string) who);
+// 			repeater->requestFT();
+// 			
+// // 			std::string sid = m_sip->requestFT(jid, name, info.st_size, EmptyString, EmptyString, EmptyString, EmptyString, SIProfileFT::FTTypeAll, from);
+// 		}
+// 	}
 	
 	return NULL;
 }
@@ -406,7 +408,14 @@ static void XferCreated(PurpleXfer *xfer) {
 		repeater->registerXfer(xfer);
 	}
 	else {
-		user->addFiletransfer(std::string(xfer->who) + "@" + GlooxMessageHandler::instance()->jid() + "/bot");
+		std::string name(xfer->who);
+		std::for_each( name.begin(), name.end(), replaceBadJidCharacters() );
+		size_t pos = name.find("/");
+		if (pos != std::string::npos)
+			name.erase((int) pos, name.length() - (int) pos);
+		user->addFiletransfer(name + "@" + GlooxMessageHandler::instance()->jid() + "/bot");
+		FiletransferRepeater *repeater = user->getFiletransfer(name);
+		repeater->registerXfer(xfer);
 	}
 
 }
@@ -988,6 +997,8 @@ void GlooxMessageHandler::purpleFileReceiveRequest(PurpleXfer *xfer) {
 // 	purple_xfer_request_accepted(xfer, std::string(configuration().filetransferCache+"/"+remote_user+"-"+j->getID()+"-"+filename).c_str());
 	User *user = userManager()->getUserByAccount(purple_xfer_get_account(xfer));
 	if (user!=NULL){
+		FiletransferRepeater *repeater = (FiletransferRepeater *) xfer->ui_data;
+		repeater->requestFT();
 		// 		std::string sid = GlooxMessageHandler::instance()->ft->requestFT(jid, name, info.st_size, EmptyString, EmptyString, EmptyString, EmptyString, SIProfileFT::FTTypeAll, from);
 // 		purple_xfer_request_accepted(xfer, std::string(filename).c_str());
 // 		if(user->hasFeature(GLOOX_FEATURE_FILETRANSFER)){
@@ -1006,48 +1017,50 @@ void GlooxMessageHandler::purpleFileReceiveRequest(PurpleXfer *xfer) {
 void GlooxMessageHandler::purpleFileReceiveComplete(PurpleXfer *xfer) {
 	std::string filename(purple_xfer_get_filename(xfer));
 	std::string remote_user(purple_xfer_get_remote_user(xfer));
-	std::string localname(purple_xfer_get_local_filename(xfer));
-	std::string basename(g_path_get_basename(purple_xfer_get_local_filename(xfer)));
-	User *user = userManager()->getUserByAccount(purple_xfer_get_account(xfer));
-	if (user!=NULL) {
-		if (user->isConnected()) {
-			Log().Get(user->jid()) << "Trying to send file " << filename;
-			if(user->hasFeature(GLOOX_FEATURE_FILETRANSFER)) {
-				if (user->hasTransportFeature(TRANSPORT_FEATURE_FILETRANSFER)) {
-					Log().Get(user->jid()) << "Trying to send file got feature";
-					fileTransferData *data = new fileTransferData;
-					data->to=user->jid() + "/" + user->resource();
-					data->from=remote_user+"@"+jid()+"/bot";
-					data->filename=localname;
-					data->name=filename;
-					g_timeout_add_seconds(1,&sendFileToJabber,data);
-					sql()->addDownload(basename,"1");
+	if (purple_xfer_get_local_filename(xfer)) {
+		std::string localname(purple_xfer_get_local_filename(xfer));
+		std::string basename(g_path_get_basename(purple_xfer_get_local_filename(xfer)));
+		User *user = userManager()->getUserByAccount(purple_xfer_get_account(xfer));
+		if (user!=NULL) {
+			if (user->isConnected()) {
+				Log().Get(user->jid()) << "Trying to send file " << filename;
+				if(user->hasFeature(GLOOX_FEATURE_FILETRANSFER)) {
+					if (user->hasTransportFeature(TRANSPORT_FEATURE_FILETRANSFER)) {
+						Log().Get(user->jid()) << "Trying to send file got feature";
+						fileTransferData *data = new fileTransferData;
+						data->to=user->jid() + "/" + user->resource();
+						data->from=remote_user+"@"+jid()+"/bot";
+						data->filename=localname;
+						data->name=filename;
+						g_timeout_add_seconds(1,&sendFileToJabber,data);
+						sql()->addDownload(basename,"1");
+					}
+					else {
+						sql()->addDownload(basename,"0");
+					}
+					Message s(Message::Chat, user->jid(), tr(user->getLang(),_("File '"))+filename+tr(user->getLang(),_("' was received. You can download it here: ")) + "http://soumar.jabbim.cz/icq/" + basename +" .");
+					s.setFrom(remote_user+"@"+jid()+"/bot");
+					j->send(s);
 				}
-				else {
-					sql()->addDownload(basename,"0");
+				else{
+					if (user->isVIP()){
+						sql()->addDownload(basename,"1");
+					}
+					else {
+						sql()->addDownload(basename,"0");
+					}
+					Message s(Message::Chat, user->jid(), tr(user->getLang(),_("File '"))+filename+tr(user->getLang(),_("' was received. You can download it here: ")) + "http://soumar.jabbim.cz/icq/" + basename +" .");
+					s.setFrom(remote_user+"@"+jid()+"/bot");
+					j->send(s);
 				}
-				Message s(Message::Chat, user->jid(), tr(user->getLang(),_("File '"))+filename+tr(user->getLang(),_("' was received. You can download it here: ")) + "http://soumar.jabbim.cz/icq/" + basename +" .");
-				s.setFrom(remote_user+"@"+jid()+"/bot");
-				j->send(s);
 			}
 			else{
-				if (user->isVIP()){
-					sql()->addDownload(basename,"1");
-				}
-				else {
-					sql()->addDownload(basename,"0");
-				}
-				Message s(Message::Chat, user->jid(), tr(user->getLang(),_("File '"))+filename+tr(user->getLang(),_("' was received. You can download it here: ")) + "http://soumar.jabbim.cz/icq/" + basename +" .");
-				s.setFrom(remote_user+"@"+jid()+"/bot");
-				j->send(s);
+				Log().Get(user->jid()) << "purpleFileReceiveComplete called for unconnected user...";
 			}
 		}
-		else{
-			Log().Get(user->jid()) << "purpleFileReceiveComplete called for unconnected user...";
-		}
+		else
+			Log().Get("purple") << "purpleFileReceiveComplete called, but user does not exist!!!";
 	}
-	else
-		Log().Get("purple") << "purpleFileReceiveComplete called, but user does not exist!!!";
 }
 
 

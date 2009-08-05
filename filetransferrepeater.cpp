@@ -43,7 +43,7 @@ void SendFileStraight::exec() {
 	bool empty;
     while (true) {
 		if (m_stream->isOpen()){
-			std::cout << "sending...\n";
+// 			std::cout << "sending...\n";
 			std::string data;
 // 			if (getBuffer().size() > size) {
 // 				data = repeater->getBuffer().substr(0, size);
@@ -60,7 +60,8 @@ void SendFileStraight::exec() {
 				empty = true;
 			else {
 				empty = false;
-				t = std::string(m_parent->getBuffer(), m_parent->getBuffer().size());
+				t = std::string(m_parent->getBuffer());
+				m_parent->getBuffer().erase();
 			}
 			getMutex()->unlock();
 			if (!empty) {
@@ -168,6 +169,7 @@ static size_t ui_write_fnc(const guchar *buffer, size_t size, PurpleXfer *xfer) 
 	repeater->gotData(d);
 	if (repeater->getResender())
 		repeater->getResender()->getMutex()->unlock();
+	return size;
 }
 
 static size_t ui_read_fnc(guchar **buffer, size_t size, PurpleXfer *xfer) {
@@ -263,6 +265,7 @@ void FiletransferRepeater::handleFTReceiveBytestream(Bytestream *bs) {
 
 void FiletransferRepeater::handleFTSendBytestream(Bytestream *bs) {
 	Log().Get("SendFileStraight") << "new!";
+	purple_xfer_request_accepted(m_xfer, NULL);
 	m_resender = new SendFileStraight(bs, 0, this);
 }
 
