@@ -60,7 +60,7 @@
 #include <libintl.h>
 #include <locale.h>
 
-#define HIICQ_UI "hiicq"
+#define PURPLE_UI "spectrum"
 #define tr(lang,STRING)    localization.translate(lang,STRING)
 #define _(STRING)    STRING
 

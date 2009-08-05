@@ -1500,7 +1500,7 @@ bool GlooxMessageHandler::initPurple(){
 	purple_core_set_ui_ops(&coreUiOps);
 	purple_eventloop_set_ui_ops(getEventLoopUiOps());
 
-	ret = purple_core_init(HIICQ_UI);
+	ret = purple_core_init(PURPLE_UI);
 	if (ret) {
 		static int conversation_handle;
 		static int conn_handle;
