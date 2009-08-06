@@ -437,6 +437,53 @@ static void buddyListAddBuddy(PurpleAccount *account, const char *username, cons
 	std::cout << "BUDDY LIST ADD BUDDY REQUEST\n";
 }
 
+static size_t XferWrite(PurpleXfer *xfer, const guchar *buffer, size_t size) {
+	FiletransferRepeater *repeater = (FiletransferRepeater *) xfer->ui_data;
+	std::string d((char *)buffer, size);
+	if (repeater->getResender())
+		repeater->getResender()->getMutex()->lock();	
+	repeater->gotData(d);
+	if (repeater->getResender())
+		repeater->getResender()->getMutex()->unlock();
+	return size;
+}
+
+static size_t XferRead(PurpleXfer *xfer, guchar **buffer, size_t size) {
+// 	Log().Get("REPEATER") << "ui_read";
+	FiletransferRepeater *repeater = (FiletransferRepeater *) xfer->ui_data;
+	if (!repeater->getResender()) {
+		repeater->wantsData();
+		(*buffer) = (guchar*) g_strdup("");
+		return 0;
+	}
+	repeater->getResender()->getMutex()->lock();
+	if (repeater->getBuffer().empty()) {
+		Log().Get("REPEATER") << "buffer is empty, setting wantsData = true";
+		repeater->wantsData();
+		(*buffer) = (guchar*) g_strdup("");
+		repeater->getResender()->getMutex()->unlock();
+		return 0;
+	}
+	else {
+		std::string data;
+		if (repeater->getBuffer().size() > size) {
+			data = repeater->getBuffer().substr(0, size);
+			repeater->getBuffer().erase(0, size);
+		}
+		else {
+			data = repeater->getBuffer();
+			repeater->getBuffer().erase();
+		}
+// 		(*buffer) = (guchar*) g_strndup(data.c_str(), data.size());
+		memcpy((*buffer), data.c_str(), data.size());
+		size_t s = repeater->getBuffer().size();
+		Log().Get("REPEATER") << "GOT BUFFER, BUFFER SIZE=" << s;
+		repeater->getResender()->getMutex()->unlock();
+		return data.size();
+	}
+}
+
+
 /*
  * Ops....
  */
@@ -511,6 +558,9 @@ static PurpleXferUiOps xferUiOps =
 	NULL,
 	NULL,
 	NULL,
+	NULL,
+	XferWrite,
+	XferRead,
 	NULL
 };
 

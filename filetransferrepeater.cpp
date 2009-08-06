@@ -161,52 +161,6 @@ static gboolean ui_got_data(gpointer data){
 	return FALSE;
 }
 
-static size_t ui_write_fnc(const guchar *buffer, size_t size, PurpleXfer *xfer) {
-	FiletransferRepeater *repeater = (FiletransferRepeater *) xfer->ui_data;
-	std::string d((char *)buffer, size);
-	if (repeater->getResender())
-		repeater->getResender()->getMutex()->lock();	
-	repeater->gotData(d);
-	if (repeater->getResender())
-		repeater->getResender()->getMutex()->unlock();
-	return size;
-}
-
-static size_t ui_read_fnc(guchar **buffer, size_t size, PurpleXfer *xfer) {
-// 	Log().Get("REPEATER") << "ui_read";
-	FiletransferRepeater *repeater = (FiletransferRepeater *) xfer->ui_data;
-	if (!repeater->getResender()) {
-		repeater->wantsData();
-		(*buffer) = (guchar*) g_strdup("");
-		return 0;
-	}
-	repeater->getResender()->getMutex()->lock();
-	if (repeater->getBuffer().empty()) {
-		Log().Get("REPEATER") << "buffer is empty, setting wantsData = true";
-		repeater->wantsData();
-		(*buffer) = (guchar*) g_strdup("");
-		repeater->getResender()->getMutex()->unlock();
-		return 0;
-	}
-	else {
-		std::string data;
-		if (repeater->getBuffer().size() > size) {
-			data = repeater->getBuffer().substr(0, size);
-			repeater->getBuffer().erase(0, size);
-		}
-		else {
-			data = repeater->getBuffer();
-			repeater->getBuffer().erase();
-		}
-// 		(*buffer) = (guchar*) g_strndup(data.c_str(), data.size());
-		memcpy((*buffer), data.c_str(), data.size());
-		size_t s = repeater->getBuffer().size();
-		Log().Get("REPEATER") << "GOT BUFFER, BUFFER SIZE=" << s;
-		repeater->getResender()->getMutex()->unlock();
-		return data.size();
-	}
-}
-
 FiletransferRepeater::FiletransferRepeater(GlooxMessageHandler *main, const JID& to, const std::string& sid, SIProfileFT::StreamType type, const JID& from, long size) {
 	m_main = main;
 	m_size = size;
@@ -235,8 +189,6 @@ FiletransferRepeater::FiletransferRepeater(GlooxMessageHandler *main, const JID&
 void FiletransferRepeater::registerXfer(PurpleXfer *xfer) {
 	m_xfer = xfer;
 	
-	purple_xfer_set_ui_read_fnc(m_xfer, ui_read_fnc);
-	purple_xfer_set_ui_write_fnc(m_xfer, ui_write_fnc);
 // 	purple_xfer_set_local_filename(xfer, filename);
 	if (m_size != -1)
 		purple_xfer_set_size(xfer, m_size);
