@@ -66,7 +66,6 @@ void SendFileStraight::exec() {
 			getMutex()->unlock();
 			if (!empty) {
 				ret = m_stream->send(t);
-				std::cout << ret << "\n";
 				if(ret<1){
 					std::cout << "error in sending or sending probably finished\n";
 					break;
@@ -184,6 +183,7 @@ FiletransferRepeater::FiletransferRepeater(GlooxMessageHandler *main, const JID&
 	m_resender = NULL;
 	m_size = -1;
 	m_send = true;
+	m_wantsData = false;
 }
 
 void FiletransferRepeater::registerXfer(PurpleXfer *xfer) {

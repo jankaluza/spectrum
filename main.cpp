@@ -441,7 +441,7 @@ static size_t XferWrite(PurpleXfer *xfer, const guchar *buffer, size_t size) {
 	FiletransferRepeater *repeater = (FiletransferRepeater *) xfer->ui_data;
 	std::string d((char *)buffer, size);
 	if (repeater->getResender())
-		repeater->getResender()->getMutex()->lock();	
+		repeater->getResender()->getMutex()->lock();
 	repeater->gotData(d);
 	if (repeater->getResender())
 		repeater->getResender()->getMutex()->unlock();
