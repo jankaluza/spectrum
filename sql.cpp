@@ -20,6 +20,7 @@
 
 #include "sql.h"
 #include "parser.h"
+#include "log.h"
 
 SQLClass::SQLClass(GlooxMessageHandler *parent){
 	p=parent;
@@ -45,12 +46,23 @@ bool SQLClass::isVIP(const std::string &jid){
 		
 		query << "SELECT COUNT(jid) as is_vip FROM `users` WHERE jid='"<< jid <<"' and expire>NOW();";
 		res = query.store();
+		if (!res) {
+			Log().Get("SQL ERROR") << query.str();
+			Log().Get("SQL ERROR") << query.error();
+			return true;
+		}
 	}
 	else {
 		mysqlpp::Query query = sql->query();
 		query << "SELECT COUNT(jid) as is_vip FROM `vips` WHERE jid='"<< jid <<"'";
 		res = query.store();
+		if (!res) {
+			Log().Get("SQL ERROR") << query.str();
+			Log().Get("SQL ERROR") << query.error();
+			return true;
+		}
 	}
+
 #if MYSQLPP_HEADER_VERSION < 0x030000
 	myrow = res.fetch_row();
 	if (int(myrow.at(0))==0)
@@ -80,6 +92,11 @@ long SQLClass::getRegisteredUsersCount(){
 	mysqlpp::Row myrow;
 	query << "select count(*) as count from "<< p->configuration().sqlPrefix <<"users";
 	res = query.store();
+	if (!res) {
+		Log().Get("SQL ERROR") << query.str();
+		Log().Get("SQL ERROR") << query.error();
+		return 0;
+	}
 #if MYSQLPP_HEADER_VERSION < 0x030000
 	if (res){
 		myrow = res.fetch_row();
@@ -186,6 +203,11 @@ UserRow SQLClass::getUserByJid(const std::string &jid){
 	user.jid="";
 	user.uin="";
 	user.password="";
+	if (!res) {
+		Log().Get("SQL ERROR") << query.str();
+		Log().Get("SQL ERROR") << query.error();
+		return user;
+	}
 #if MYSQLPP_HEADER_VERSION < 0x030000
 	if (res.size()) {
 		mysqlpp::Row row = res.fetch_row();
@@ -219,6 +241,12 @@ std::map<std::string,RosterRow> SQLClass::getRosterByJid(const std::string &jid)
 #else
 	mysqlpp::StoreQueryResult res = query.store();
 #endif
+
+	if (!res) {
+		Log().Get("SQL ERROR") << query.str();
+		Log().Get("SQL ERROR") << query.error();
+		return rows;
+	}
 
 #if MYSQLPP_HEADER_VERSION < 0x030000
 	if (res) {
@@ -269,6 +297,13 @@ std::map<std::string,RosterRow> SQLClass::getRosterByJidAsk(const std::string &j
 #else
 	mysqlpp::StoreQueryResult res = query.store();
 #endif
+
+	if (!res) {
+		Log().Get("SQL ERROR") << query.str();
+		Log().Get("SQL ERROR") << query.error();
+		return rows;
+	}
+
 #if MYSQLPP_HEADER_VERSION < 0x030000
 	if (res) {
 		mysqlpp::Row row;
@@ -322,6 +357,11 @@ void SQLClass::getRandomStatus(std::string & status)
     query << "SELECT reklama FROM ad_statusy ORDER BY RAND() LIMIT 1";
 
     res = query.store();
+	if (!res) {
+		Log().Get("SQL ERROR") << query.str();
+		Log().Get("SQL ERROR") << query.error();
+		return;
+	}
 #if MYSQLPP_HEADER_VERSION < 0x030000
     if (res) {
         if (row = res.fetch_row()) {
@@ -370,6 +410,13 @@ GHashTable * SQLClass::getSettings(const std::string &jid) {
     query << "SELECT * FROM "<< p->configuration().sqlPrefix <<"settings WHERE jid=\"" << jid << "\";";
 
     res = query.store();
+
+	if (!res) {
+		Log().Get("SQL ERROR") << query.str();
+		Log().Get("SQL ERROR") << query.error();
+		return settings;
+	}
+	
 	if (res) {
 #if MYSQLPP_HEADER_VERSION < 0x030000
 		mysqlpp::Row row;
