@@ -41,7 +41,7 @@ void FileTransferManager::handleFTRequest (const JID &from, const JID &to, const
 				bool send = false;
 				PurplePlugin *prpl = NULL;
 				PurplePluginProtocolInfo *prpl_info = NULL;
-				PurpleConnection *gc = purple_account_get_connection(account);
+				PurpleConnection *gc = purple_account_get_connection(user->account());
 
 				if(gc)
 					prpl = purple_connection_get_prpl(gc);
@@ -50,16 +50,19 @@ void FileTransferManager::handleFTRequest (const JID &from, const JID &to, const
 					prpl_info = PURPLE_PLUGIN_PROTOCOL_INFO(prpl);
 
 				if (prpl_info && prpl_info->send_file) {
-					if (!prpl_info->can_receive_file || prpl_info->can_receive_file(gc, who)) {
+					if (!prpl_info->can_receive_file || prpl_info->can_receive_file(gc, uname.c_str())) {
 						send = true;
 					}
 				}
 				if (send) {
 					user->addFiletransfer(from, sid, SIProfileFT::FTTypeS5B, to, size);
 					serv_send_file(purple_account_get_connection(user->account()), uname.c_str(), name.c_str());
+					m_info[sid].straight = true;
 				}
-				else
-					m_sip->acceptFT( from, to, id, gloox::SIProfileFT::FTTypeS5B );
+				else {
+					m_sip->acceptFT(from, sid, SIProfileFT::FTTypeS5B, to);
+					m_info[sid].straight = false;
+				}
 			}
 		}
 	}
@@ -69,49 +72,51 @@ void FileTransferManager::handleFTRequest (const JID &from, const JID &to, const
 void FileTransferManager::handleFTBytestream (Bytestream *bs) {
 	Log().Get("a") << "handleFTBytestream";
 	if (std::find(m_sendlist.begin(), m_sendlist.end(), bs->target().full()) == m_sendlist.end()) {
-// 		std::string filename = m_info[bs->sid()].filename;
-// 		// replace invalid characters
-// 		for (std::string::iterator it = filename.begin(); it != filename.end(); ++it) {
-// 			if (*it == '\\' || *it == '&' || *it == '/' || *it == '?' || *it == '*' || *it == ':') {
-// 				*it = '_';
-// 			}
-// 		} 
-// 		filename=p->configuration().filetransferCache+"/"+bs->target().username()+"-"+p->j->getID()+"-"+filename;
-// 		
-// 		mutex->lock();
-// 		m_progress[bs->sid()].filename=filename;
-// 		m_progress[bs->sid()].incoming=true;
-// 		m_progress[bs->sid()].state=0;
-// 		m_progress[bs->sid()].user=bs->initiator().bare();
-// 		m_progress[bs->sid()].to=bs->initiator();
-// 		m_progress[bs->sid()].from=bs->target();
-// 		m_progress[bs->sid()].stream=bs;
-// 		std::cout << "FROM:" << bs->initiator().full() << " TO:" << bs->target().full();
-// 		
-// 		mutex->unlock();
-// 		new ReceiveFile(bs,filename, m_info[bs->sid()].size,mutex,this);
-
-		User *user = p->userManager()->getUserByJID(bs->initiator().bare());
-		Log().Get("a") << "wants user" << bs->initiator().bare();
-		FiletransferRepeater *repeater = NULL;
-		if (user) {
-			Log().Get("a") << "wants repeater" << bs->target().username();
-			repeater = user->removeFiletransfer(bs->target().username());
-			if (!repeater) return;
+		if (m_info[bs->sid()].straight == false){
+			std::string filename = m_info[bs->sid()].filename;
+			// replace invalid characters
+			for (std::string::iterator it = filename.begin(); it != filename.end(); ++it) {
+				if (*it == '\\' || *it == '&' || *it == '/' || *it == '?' || *it == '*' || *it == ':') {
+					*it = '_';
+				}
+			} 
+			filename=p->configuration().filetransferCache+"/"+bs->target().username()+"-"+p->j->getID()+"-"+filename;
+			
+			mutex->lock();
+			m_progress[bs->sid()].filename=filename;
+			m_progress[bs->sid()].incoming=true;
+			m_progress[bs->sid()].state=0;
+			m_progress[bs->sid()].user=bs->initiator().bare();
+			m_progress[bs->sid()].to=bs->initiator();
+			m_progress[bs->sid()].from=bs->target();
+			m_progress[bs->sid()].stream=bs;
+			std::cout << "FROM:" << bs->initiator().full() << " TO:" << bs->target().full();
+			
+			mutex->unlock();
+			new ReceiveFile(bs,filename, m_info[bs->sid()].size,mutex,this);
 		}
 		else {
-			User *user = p->userManager()->getUserByJID(bs->target().bare());
-			if (!user)
-				return;
-			repeater = user->removeFiletransfer(bs->initiator().username());
-			if (!repeater) return;
+			User *user = p->userManager()->getUserByJID(bs->initiator().bare());
+			Log().Get("a") << "wants user" << bs->initiator().bare();
+			FiletransferRepeater *repeater = NULL;
+			if (user) {
+				Log().Get("a") << "wants repeater" << bs->target().username();
+				repeater = user->removeFiletransfer(bs->target().username());
+				if (!repeater) return;
+			}
+			else {
+				User *user = p->userManager()->getUserByJID(bs->target().bare());
+				if (!user)
+					return;
+				repeater = user->removeFiletransfer(bs->initiator().username());
+				if (!repeater) return;
+			}
+			
+			if (repeater->isSending())
+				repeater->handleFTSendBytestream(bs);
+			else
+				repeater->handleFTReceiveBytestream(bs);
 		}
-		
-		if (repeater->isSending())
-			repeater->handleFTSendBytestream(bs);
-		else
-			repeater->handleFTReceiveBytestream(bs);
-
     } else {
 		// zatim to nepotrebujem u odchozich filu
 // 		mutex->lock();

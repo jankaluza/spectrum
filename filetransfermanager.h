@@ -51,6 +51,7 @@ class FileTransferManager : public gloox::SIProfileFTHandler {
 	struct Info {
 		std::string filename;
 		int size;
+		bool straight;
 	};
 
 	std::map<std::string, Info> m_info;
