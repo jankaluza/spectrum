@@ -64,7 +64,6 @@ set(spectrum_SRCS
 	sendfile.cpp
 	thread.cpp
 	gatewayhandler.cpp
-	receivefile.cpp
 	geventloop.cpp
 	autoconnectloop.cpp
 	usermanager.cpp
@@ -108,7 +107,6 @@ set(spectrum_MOC_HDRS
 	sendfile.h
 	thread.h
 	gatewayhandler.h
-	receivefile.h
 	log.h
 	geventloop.h
 	autoconnectloop.h

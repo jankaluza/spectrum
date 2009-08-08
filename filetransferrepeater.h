@@ -52,6 +52,33 @@ class AbstractResendClass {
 		MyMutex *m_mutex;
 };
 
+class ReceiveFile : public AbstractResendClass, public BytestreamDataHandler, public Thread {
+	public:
+		ReceiveFile(Bytestream *stream, int size, const std::string &filename, User *user, FiletransferRepeater *manager);
+		~ReceiveFile();
+
+		void exec();
+		void handleBytestreamData(Bytestream *s5b, const std::string &data);
+		void handleBytestreamError(Bytestream *s5b, const IQ &iq);
+		void handleBytestreamOpen(Bytestream *s5b);
+		void handleBytestreamClose(Bytestream *s5b);
+		
+		std::string &filename() { return m_filename; }
+		User *user () { return m_user; }
+		std::string &target() { return m_target; }
+		void dispose();
+	
+	private:
+		Bytestream *m_stream;
+		std::string m_filename;
+		std::string m_target;
+		int m_size;
+		bool m_finished;
+		User *m_user;
+		FiletransferRepeater *m_parent;
+		std::ofstream m_file;
+};
+
 class ReceiveFileStraight : public AbstractResendClass, public BytestreamDataHandler, public Thread {
 	public:
 		ReceiveFileStraight(Bytestream *stream, int size, FiletransferRepeater *manager);
@@ -102,8 +129,8 @@ class FiletransferRepeater {
 		void registerXfer(PurpleXfer *xfer);
 		void fileSendStart();
 		void fileRecvStart();
-		void handleFTReceiveBytestream(Bytestream *bs);
-		void handleFTSendBytestream(Bytestream *bs);
+		void handleFTReceiveBytestream(Bytestream *bs, const std::string &filename = "");
+		void handleFTSendBytestream(Bytestream *bs, const std::string &filename = "");
 		void gotData(const std::string &data);
 		void requestFT();
 		
@@ -113,6 +140,7 @@ class FiletransferRepeater {
 		AbstractResendClass *getResender() { return m_resender; }
 		void wantsData() { m_wantsData = true; }
 		std::ofstream m_file;
+		GlooxMessageHandler *parent() { return m_main; }
 	
 	private:
 		GlooxMessageHandler *m_main;

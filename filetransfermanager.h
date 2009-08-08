@@ -22,7 +22,6 @@
 #define FILETRANSFERMANAGER_H
 
 #include "sendfile.h"
-#include "receivefile.h"
 #include "thread.h"
 
 #include <sys/stat.h>

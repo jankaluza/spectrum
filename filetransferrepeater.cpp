@@ -20,6 +20,7 @@
  
 #include "filetransferrepeater.h"
 #include "main.h"
+#include "usermanager.h"
 
 SendFileStraight::SendFileStraight(Bytestream *stream, int size, FiletransferRepeater *manager) {
     std::cout << "SendFileStraight::SendFileStraight" << " Constructor.\n";
@@ -93,6 +94,90 @@ void SendFileStraight::handleBytestreamClose(gloox::Bytestream *s5b) {
 	std::cout << "socks stream error\n";
 }
 
+static gboolean transferFinished(gpointer data) {
+	ReceiveFile *receive = (ReceiveFile *) data;
+	User *user = receive->user();
+	std::string filename = receive->filename();
+	Log().Get(user->jid()) << "trying to send file "<< filename;
+	if (user->account()){
+		if (user->isConnected()){
+			Log().Get(user->jid()) << "sending download message";
+			std::string basename(g_path_get_basename(filename.c_str()));
+			if (user->isVIP()) {
+				user->p->sql()->addDownload(basename,"1");
+			}
+			else {
+				user->p->sql()->addDownload(basename,"0");
+			}
+			Message s(Message::Chat, receive->target(), "Uzivatel Vam poslal soubor '"+basename+"'. Muzete jej stahnout z adresy http://soumar.jabbim.cz/icq/" + basename +" .");
+			s.setFrom(user->jid());
+			user->receivedMessage(s);
+		}
+	}
+	receive->dispose();
+}
+
+ReceiveFile::ReceiveFile(gloox::Bytestream *stream, int size, const std::string &filename, User *user, FiletransferRepeater *manager) {
+    m_stream = stream;
+    m_size = size;
+	m_filename = filename;
+	m_user = user;
+	m_stream->registerBytestreamDataHandler (this);
+	m_target = stream->target().bare();
+    m_finished = false;
+	m_parent = manager;
+    if(!m_stream->connect()) {
+        Log().Get("ReceiveFile") << "connection can't be established!";
+        return;
+    }
+    run();
+}
+
+ReceiveFile::~ReceiveFile() {
+
+}
+
+void ReceiveFile::dispose() {
+	m_parent->parent()->ft->dispose(m_stream);
+}
+
+void ReceiveFile::exec() {
+	Log().Get("ReceiveFile") << "starting receiveFile thread";
+    m_file.open(m_filename.c_str(), std::ios_base::out | std::ios_base::binary );
+    if (!m_file) {
+        Log().Get(m_filename) << "can't create this file!";
+        return;
+    }
+	while (!m_finished) {
+		m_stream->recv();
+	}
+	m_file.close();
+	g_timeout_add(1000,&transferFinished,this);
+}
+
+void ReceiveFile::handleBytestreamData(gloox::Bytestream *s5b, const std::string &data) {
+	m_file.write(data.c_str(), data.size());
+}
+
+void ReceiveFile::handleBytestreamError(gloox::Bytestream *s5b, const gloox::IQ &iq) {
+	Log().Get("ReceiveFile") << "STREAM ERROR!";
+// 	Log().Get("ReceiveFile") << stanza->xml();
+}
+
+void ReceiveFile::handleBytestreamOpen(gloox::Bytestream *s5b) {
+	Log().Get("ReceiveFile") << "stream opened...";
+}
+
+void ReceiveFile::handleBytestreamClose(gloox::Bytestream *s5b) {
+    if (m_finished){
+		Log().Get("ReceiveFile") << "Transfer finished and we're already finished => deleting receiveFile thread";
+		delete this;
+	}
+	else{
+		Log().Get("ReceiveFile") << "Transfer finished";
+		m_finished = true;
+	}
+}
 
 
 ReceiveFileStraight::ReceiveFileStraight(gloox::Bytestream *stream, int size, FiletransferRepeater *manager) {
@@ -210,12 +295,17 @@ void FiletransferRepeater::requestFT() {
 	m_sid = m_main->ft->requestFT(m_to, filename, purple_xfer_get_size(m_xfer), EmptyString, EmptyString, EmptyString, EmptyString, SIProfileFT::FTTypeAll, m_from);
 }
 
-void FiletransferRepeater::handleFTReceiveBytestream(Bytestream *bs) {
+void FiletransferRepeater::handleFTReceiveBytestream(Bytestream *bs, const std::string &filename) {
 	Log().Get("ReceiveFileStraight") << "new!";
-	m_resender = new ReceiveFileStraight(bs, 0, this);
+	if (filename.empty())
+		m_resender = new ReceiveFileStraight(bs, 0, this);
+	else {
+		User *user = m_main->userManager()->getUserByJID(bs->initiator().bare());
+		m_resender = new ReceiveFile(bs, 0, filename, user, this);
+	}
 }
 
-void FiletransferRepeater::handleFTSendBytestream(Bytestream *bs) {
+void FiletransferRepeater::handleFTSendBytestream(Bytestream *bs, const std::string &filename) {
 	Log().Get("SendFileStraight") << "new!";
 	purple_xfer_request_accepted(m_xfer, NULL);
 	m_resender = new SendFileStraight(bs, 0, this);
