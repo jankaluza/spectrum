@@ -36,13 +36,30 @@ void FileTransferManager::handleFTRequest (const JID &from, const JID &to, const
 	std::for_each( uname.begin(), uname.end(), replaceBadJidCharacters() );
 	User *user = p->userManager()->getUserByJID(from.bare());
 	if (user) {
-		Log().Get(user->jid()) << "has user";
 		if (user->account()){
-			Log().Get(user->jid()) << "has account";
 			if (user->isConnected()){
-				Log().Get(user->jid()) << "sending file";
-				user->addFiletransfer(from, sid, SIProfileFT::FTTypeS5B, to, size);
-				serv_send_file(purple_account_get_connection(user->account()), uname.c_str(), name.c_str());
+				bool send = false;
+				PurplePlugin *prpl = NULL;
+				PurplePluginProtocolInfo *prpl_info = NULL;
+				PurpleConnection *gc = purple_account_get_connection(account);
+
+				if(gc)
+					prpl = purple_connection_get_prpl(gc);
+
+				if(prpl)
+					prpl_info = PURPLE_PLUGIN_PROTOCOL_INFO(prpl);
+
+				if (prpl_info && prpl_info->send_file) {
+					if (!prpl_info->can_receive_file || prpl_info->can_receive_file(gc, who)) {
+						send = true;
+					}
+				}
+				if (send) {
+					user->addFiletransfer(from, sid, SIProfileFT::FTTypeS5B, to, size);
+					serv_send_file(purple_account_get_connection(user->account()), uname.c_str(), name.c_str());
+				}
+				else
+					m_sip->acceptFT( from, to, id, gloox::SIProfileFT::FTTypeS5B );
 			}
 		}
 	}
