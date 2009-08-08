@@ -73,6 +73,7 @@
 #include "caps.h"
 #include "sql.h"
 #include "user.h"
+class FileTransferManager;
 #include "filetransfermanager.h"
 #include <sys/stat.h>
 #include <sys/types.h>

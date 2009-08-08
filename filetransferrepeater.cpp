@@ -22,6 +22,92 @@
 #include "main.h"
 #include "usermanager.h"
 
+
+SendFile::SendFile(Bytestream *stream, int size, const std::string &filename, User *user, FiletransferRepeater *manager) {
+    std::cout << "SendFile::SendFile" << " Constructor.\n";
+    m_stream = stream;
+    m_size = size;
+	m_filename = filename;
+	m_user = user;
+	m_stream->registerBytestreamDataHandler (this);
+	m_parent = manager;
+	if (m_stream->connect())
+		std::cout << "stream connected\n";
+    run();
+}
+
+SendFile::~SendFile() {
+
+}
+
+void SendFile::exec() {
+    std::cout << "SendFile::exec Starting transfer.\n";
+    char input[200024];
+	int ret;
+	bool empty;
+    m_file.open(m_filename.c_str(), std::ios_base::out | std::ios_base::binary );
+    if (!m_file) {
+        Log().Get(m_filename) << "can't create this file!";
+        return;
+    }
+    while (true) {
+		if (m_stream->isOpen()){
+// 			std::cout << "sending...\n";
+			std::string data;
+// 			if (getBuffer().size() > size) {
+// 				data = repeater->getBuffer().substr(0, size);
+// 				repeater->getBuffer().erase(0, size);
+// 			}
+// 			else {
+// 			getBuffer();
+// 			getBuffer().erase();
+// 			}
+// 			m_file.read(input, 200024);
+			getMutex()->lock();
+			std::string t;
+			if (m_parent->getBuffer().empty())
+				empty = true;
+			else {
+				empty = false;
+				t = std::string(m_parent->getBuffer());
+				m_parent->getBuffer().erase();
+			}
+			getMutex()->unlock();
+			if (!empty) {
+				m_file.write(t.c_str(), t.size());
+				if(ret<1){
+					std::cout << "error in sending or sending probably finished\n";
+					break;
+				};
+			}
+		}
+		m_stream->recv(200);
+    }
+	m_file.close();
+	dispose();
+    delete this;
+}
+
+void SendFile::dispose() {
+	m_parent->parent()->ft->dispose(m_stream);
+}
+
+void SendFile::handleBytestreamData(gloox::Bytestream *s5b, const std::string &data) {
+	std::cout << "socks stream data\n";
+}
+
+void SendFile::handleBytestreamError(gloox::Bytestream *s5b, const gloox::IQ &iq) {
+
+}
+
+void SendFile::handleBytestreamOpen(gloox::Bytestream *s5b) {
+	std::cout << "socks stream open\n";
+}
+
+void SendFile::handleBytestreamClose(gloox::Bytestream *s5b) {
+	std::cout << "socks stream error\n";
+}
+
 SendFileStraight::SendFileStraight(Bytestream *stream, int size, FiletransferRepeater *manager) {
     std::cout << "SendFileStraight::SendFileStraight" << " Constructor.\n";
     m_stream = stream;
@@ -289,10 +375,14 @@ void FiletransferRepeater::fileRecvStart() {
 	Log().Get("SendFileStraight") << "fileRecvStart!" << m_from.full() << " " << m_to.full();
 }
 
-void FiletransferRepeater::requestFT() {
+std::string FiletransferRepeater::requestFT() {
 // 	purple_xfer_request_accepted(xfer, std::string(filename).c_str());
 	std::string filename(purple_xfer_get_filename(m_xfer));
 	m_sid = m_main->ft->requestFT(m_to, filename, purple_xfer_get_size(m_xfer), EmptyString, EmptyString, EmptyString, EmptyString, SIProfileFT::FTTypeAll, m_from);
+	m_main->ftManager->m_info[m_sid].filename = filename;
+	m_main->ftManager->m_info[m_sid].size = purple_xfer_get_size(m_xfer);
+	m_main->ftManager->m_info[m_sid].straight = true;
+	return m_sid;
 }
 
 void FiletransferRepeater::handleFTReceiveBytestream(Bytestream *bs, const std::string &filename) {
@@ -308,7 +398,12 @@ void FiletransferRepeater::handleFTReceiveBytestream(Bytestream *bs, const std::
 void FiletransferRepeater::handleFTSendBytestream(Bytestream *bs, const std::string &filename) {
 	Log().Get("SendFileStraight") << "new!";
 	purple_xfer_request_accepted(m_xfer, NULL);
-	m_resender = new SendFileStraight(bs, 0, this);
+	if (filename.empty())
+		m_resender = new SendFileStraight(bs, 0, this);
+	else {
+		User *user = m_main->userManager()->getUserByJID(bs->initiator().bare());
+		m_resender = new SendFile(bs, 0, filename, user, this);
+	}
 }
 
 void FiletransferRepeater::gotData(const std::string &data) {

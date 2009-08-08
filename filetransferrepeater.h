@@ -101,6 +101,30 @@ class ReceiveFileStraight : public AbstractResendClass, public BytestreamDataHan
 		std::ofstream m_file;
 };
 
+class SendFile : public AbstractResendClass, public BytestreamDataHandler, public Thread {
+	public:
+		SendFile(Bytestream *stream, int size, const std::string &filename, User *user, FiletransferRepeater *manager);
+		~SendFile();
+
+		void exec();
+		void handleBytestreamData(Bytestream *s5b, const std::string &data);
+		void handleBytestreamError(Bytestream *s5b, const IQ &iq);
+		void handleBytestreamOpen(Bytestream *s5b);
+		void handleBytestreamClose(Bytestream *s5b);
+
+		std::string &filename() { return m_filename; }
+		User *user() { return m_user; }
+		void dispose();
+		
+	private:
+		Bytestream *m_stream;
+		std::string m_filename;
+		User *m_user;
+		int m_size;
+		FiletransferRepeater *m_parent;
+		std::ofstream m_file;
+};
+
 class SendFileStraight : public AbstractResendClass, public BytestreamDataHandler, public Thread {
 	public:
 		SendFileStraight(Bytestream *stream, int size, FiletransferRepeater *manager);
@@ -132,7 +156,7 @@ class FiletransferRepeater {
 		void handleFTReceiveBytestream(Bytestream *bs, const std::string &filename = "");
 		void handleFTSendBytestream(Bytestream *bs, const std::string &filename = "");
 		void gotData(const std::string &data);
-		void requestFT();
+		std::string requestFT();
 		
 		bool isSending() { return m_send; }
 		

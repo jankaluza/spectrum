@@ -1048,7 +1048,13 @@ void GlooxMessageHandler::purpleFileReceiveRequest(PurpleXfer *xfer) {
 	User *user = userManager()->getUserByAccount(purple_xfer_get_account(xfer));
 	if (user!=NULL){
 		FiletransferRepeater *repeater = (FiletransferRepeater *) xfer->ui_data;
-		repeater->requestFT();
+		if(user->hasFeature(GLOOX_FEATURE_FILETRANSFER)){
+			repeater->requestFT();
+		}
+		else {
+			purple_xfer_request_accepted(xfer, std::string(configuration().filetransferCache+"/"+remote_user+"-"+j->getID()+"-"+filename).c_str());
+		}
+
 		// 		std::string sid = GlooxMessageHandler::instance()->ft->requestFT(jid, name, info.st_size, EmptyString, EmptyString, EmptyString, EmptyString, SIProfileFT::FTTypeAll, from);
 // 		purple_xfer_request_accepted(xfer, std::string(filename).c_str());
 // 		if(user->hasFeature(GLOOX_FEATURE_FILETRANSFER)){
@@ -1073,36 +1079,15 @@ void GlooxMessageHandler::purpleFileReceiveComplete(PurpleXfer *xfer) {
 		User *user = userManager()->getUserByAccount(purple_xfer_get_account(xfer));
 		if (user!=NULL) {
 			if (user->isConnected()) {
-				Log().Get(user->jid()) << "Trying to send file " << filename;
-				if(user->hasFeature(GLOOX_FEATURE_FILETRANSFER)) {
-					if (user->hasTransportFeature(TRANSPORT_FEATURE_FILETRANSFER)) {
-						Log().Get(user->jid()) << "Trying to send file got feature";
-						fileTransferData *data = new fileTransferData;
-						data->to=user->jid() + "/" + user->resource();
-						data->from=remote_user+"@"+jid()+"/bot";
-						data->filename=localname;
-						data->name=filename;
-						g_timeout_add_seconds(1,&sendFileToJabber,data);
-						sql()->addDownload(basename,"1");
-					}
-					else {
-						sql()->addDownload(basename,"0");
-					}
-					Message s(Message::Chat, user->jid(), tr(user->getLang(),_("File '"))+filename+tr(user->getLang(),_("' was received. You can download it here: ")) + "http://soumar.jabbim.cz/icq/" + basename +" .");
-					s.setFrom(remote_user+"@"+jid()+"/bot");
-					j->send(s);
+				if (user->isVIP()){
+					sql()->addDownload(basename,"1");
 				}
-				else{
-					if (user->isVIP()){
-						sql()->addDownload(basename,"1");
-					}
-					else {
-						sql()->addDownload(basename,"0");
-					}
-					Message s(Message::Chat, user->jid(), tr(user->getLang(),_("File '"))+filename+tr(user->getLang(),_("' was received. You can download it here: ")) + "http://soumar.jabbim.cz/icq/" + basename +" .");
-					s.setFrom(remote_user+"@"+jid()+"/bot");
-					j->send(s);
+				else {
+					sql()->addDownload(basename,"0");
 				}
+				Message s(Message::Chat, user->jid(), tr(user->getLang(),_("File '"))+filename+tr(user->getLang(),_("' was received. You can download it here: ")) + "http://soumar.jabbim.cz/icq/" + basename +" .");
+				s.setFrom(remote_user+"@"+jid()+"/bot");
+				j->send(s);
 			}
 			else{
 				Log().Get(user->jid()) << "purpleFileReceiveComplete called for unconnected user...";

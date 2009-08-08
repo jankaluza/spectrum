@@ -72,30 +72,6 @@ void FileTransferManager::handleFTRequest (const JID &from, const JID &to, const
 void FileTransferManager::handleFTBytestream (Bytestream *bs) {
 	Log().Get("a") << "handleFTBytestream";
 	if (std::find(m_sendlist.begin(), m_sendlist.end(), bs->target().full()) == m_sendlist.end()) {
-// 		if (m_info[bs->sid()].straight == false){
-// 			std::string filename = m_info[bs->sid()].filename;
-// 			// replace invalid characters
-// 			for (std::string::iterator it = filename.begin(); it != filename.end(); ++it) {
-// 				if (*it == '\\' || *it == '&' || *it == '/' || *it == '?' || *it == '*' || *it == ':') {
-// 					*it = '_';
-// 				}
-// 			} 
-// 			filename=p->configuration().filetransferCache+"/"+bs->target().username()+"-"+p->j->getID()+"-"+filename;
-// 			
-// 			mutex->lock();
-// 			m_progress[bs->sid()].filename=filename;
-// 			m_progress[bs->sid()].incoming=true;
-// 			m_progress[bs->sid()].state=0;
-// 			m_progress[bs->sid()].user=bs->initiator().bare();
-// 			m_progress[bs->sid()].to=bs->initiator();
-// 			m_progress[bs->sid()].from=bs->target();
-// 			m_progress[bs->sid()].stream=bs;
-// 			std::cout << "FROM:" << bs->initiator().full() << " TO:" << bs->target().full();
-// 			
-// 			mutex->unlock();
-// 			new ReceiveFile(bs,filename, m_info[bs->sid()].size,mutex,this);
-// 		}
-// 		else {
 		std::string filename = "";
 		if (m_info[bs->sid()].straight == false) {
 			filename = m_info[bs->sid()].filename;
@@ -135,7 +111,7 @@ void FileTransferManager::handleFTBytestream (Bytestream *bs) {
 // 		m_progress[s5b->sid()].incoming=false;
 // 		m_progress[s5b->sid()].state=0;
 // 		mutex->unlock();
-        new SendFile(bs, m_info[bs->sid()].filename, m_info[bs->sid()].size,mutex,this);
+//         new SendFile(bs, m_info[bs->sid()].filename, m_info[bs->sid()].size,mutex,this);
         m_sendlist.erase(std::find(m_sendlist.begin(), m_sendlist.end(), bs->target().full()));
     }
     m_info.erase(bs->sid());

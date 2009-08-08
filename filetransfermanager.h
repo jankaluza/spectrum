@@ -21,7 +21,7 @@
 #ifndef FILETRANSFERMANAGER_H
 #define FILETRANSFERMANAGER_H
 
-#include "sendfile.h"
+// #include "sendfile.h"
 #include "thread.h"
 
 #include <sys/stat.h>
@@ -47,19 +47,17 @@ struct progress {
 };
 
 class FileTransferManager : public gloox::SIProfileFTHandler {
-	struct Info {
-		std::string filename;
-		int size;
-		bool straight;
-	};
-
-	std::map<std::string, Info> m_info;
-	
-	std::list<std::string> m_sendlist;
-	
-	
-	
 	public:
+		struct Info {
+			std::string filename;
+			int size;
+			bool straight;
+		};
+
+		std::map<std::string, Info> m_info;
+
+		std::list<std::string> m_sendlist;
+
 		GlooxMessageHandler *p;
 		gloox::SIProfileFT *m_sip;
 		MyMutex *mutex;

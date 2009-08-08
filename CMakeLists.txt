@@ -61,7 +61,6 @@ set(spectrum_SRCS
 	discoinfohandler.cpp
 	filetransfermanager.cpp
 	filetransferrepeater.cpp
-	sendfile.cpp
 	thread.cpp
 	gatewayhandler.cpp
 	geventloop.cpp
@@ -104,7 +103,6 @@ set(spectrum_MOC_HDRS
 	discoinfohandler.h
 	filetransfermanager.h
 	filetransferrepeater.h
-	sendfile.h
 	thread.h
 	gatewayhandler.h
 	log.h
