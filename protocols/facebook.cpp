@@ -47,7 +47,7 @@ FacebookProtocol::FacebookProtocol(GlooxMessageHandler *main){
 		x509 = purple_certificate_pool_get_scheme(tls_peers);
 
 		/* Now load the certificate from disk */
-		char *c = g_build_filename(INSTALL_DIR, "share", "highflyer", "certificates", "facebook.pem", NULL);
+		char *c = g_build_filename(INSTALL_DIR, "share", "spectrum", "certificates", "facebook.pem", NULL);
 		crt = purple_certificate_import(x509, c);
 		g_free(c);
 		purple_certificate_pool_store(tls_peers, "login.facebook.com", crt);
