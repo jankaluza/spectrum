@@ -60,6 +60,7 @@ void FileTransferManager::handleFTRequest (const JID &from, const JID &to, const
 					m_info[sid].straight = true;
 				}
 				else {
+					user->addFiletransfer(from, sid, SIProfileFT::FTTypeS5B, to, size);
 					m_sip->acceptFT(from, sid, SIProfileFT::FTTypeS5B, to);
 					m_info[sid].straight = false;
 				}

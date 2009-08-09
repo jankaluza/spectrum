@@ -183,7 +183,7 @@ void SendFileStraight::handleBytestreamClose(gloox::Bytestream *s5b) {
 static gboolean transferFinished(gpointer data) {
 	ReceiveFile *receive = (ReceiveFile *) data;
 	User *user = receive->user();
-	std::string filename = receive->filename();
+	std::string filename(receive->filename());
 	Log().Get(user->jid()) << "trying to send file "<< filename;
 	if (user->account()){
 		if (user->isConnected()){
@@ -201,6 +201,7 @@ static gboolean transferFinished(gpointer data) {
 		}
 	}
 	receive->dispose();
+	return FALSE;
 }
 
 ReceiveFile::ReceiveFile(gloox::Bytestream *stream, int size, const std::string &filename, User *user, FiletransferRepeater *manager) {
