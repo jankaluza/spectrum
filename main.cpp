@@ -32,16 +32,17 @@
 #include "parser.h"
 #include "commands.h"
 #include "protocols/abstractprotocol.h"
-#include "protocols/icq.h"
+#include "protocols/aim.h"
 #include "protocols/facebook.h"
 #include "protocols/gg.h"
-#include "protocols/msn.h"
+#include "protocols/icq.h"
 #include "protocols/irc.h"
-#include "protocols/xmpp.h"
+#include "protocols/msn.h"
 #include "protocols/myspace.h"
 #include "protocols/qq.h"
 #include "protocols/simple.h"
-#include "protocols/aim.h"
+#include "protocols/xmpp.h"
+#include "protocols/yahoo.h"
 #include "cmds.h"
 
 #include <gloox/tlsbase.h>
@@ -782,6 +783,8 @@ void GlooxMessageHandler::loadProtocol(){
 		m_protocol = (AbstractProtocol*) new SimpleProtocol(this);
 	else if (configuration().protocol == "aim")
 		m_protocol = (AbstractProtocol*) new AIMProtocol(this);
+	else if (configuration().protocol == "yahoo")
+		m_protocol = (AbstractProtocol*) new YahooProtocol(this);
 	if (!m_protocol->userSearchAction().empty()) {
 		m_searchHandler = new GlooxSearchHandler(this);
 		j->registerIqHandler(m_searchHandler, ExtSearch);
