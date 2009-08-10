@@ -240,8 +240,8 @@ public:
 private:
 // 	bool callback(GIOCondition condition);
 	bool initPurple();
-	void loadConfigFile(const std::string &config);
-	void loadProtocol();
+	bool loadConfigFile(const std::string &config);
+	bool loadProtocol();
 	
 	Configuration m_configuration;
 	AbstractProtocol *m_protocol;
