@@ -328,7 +328,7 @@ void ReceiveFileStraight::handleBytestreamClose(gloox::Bytestream *s5b) {
 
 static gboolean ui_got_data(gpointer data){
 	PurpleXfer *xfer = (PurpleXfer*) data;
-	purple_xfer_ui_got_data(xfer);
+	purple_xfer_ui_ready(xfer);
 	return FALSE;
 }
 
@@ -409,7 +409,6 @@ void FiletransferRepeater::handleFTSendBytestream(Bytestream *bs, const std::str
 
 void FiletransferRepeater::gotData(const std::string &data) {
 	m_buffer.append(std::string(data));
-// 	Log().Get("ReceiveFileStraight") << "Got DATA! " << m_wantsData;
 	if (m_wantsData) {
 		m_wantsData = false;
 		purple_timeout_add(0,&ui_got_data,m_xfer);
