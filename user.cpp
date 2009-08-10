@@ -30,6 +30,8 @@
 #include "proxy.h"
 #include "filetransferrepeater.h"
 
+Resource DummyResource;
+
 /*
  * Called when contact list has been received from legacy network.
  */
@@ -135,6 +137,14 @@ bool User::hasFeature(int feature, std::string resource){
 	return false;
 }
 
+Resource & User::findResourceWithFeature(int feature) {
+	for(std::map<std::string, Resource>::iterator u = m_resources.begin(); u != m_resources.end() ; u++){
+		if (hasFeature(feature, (*u).first))
+			return getResource((*u).first);
+	}
+	return DummyResource;
+}
+
 /*
  * Returns true if transport has feature `feature` for this user,
  * otherwise returns false.
@@ -199,7 +209,10 @@ void User::sendRosterX()
 		return;
 	Log().Get(m_jid) << "Sending rosterX";
 	Tag *tag = new Tag("iq");
-	tag->addAttribute( "to", m_jid +"/"+m_resource);
+	Resource res = findResourceWithFeature(GLOOX_FEATURE_ROSTERX);
+	if (!res)
+		return;
+	tag->addAttribute( "to", m_jid + "/" + res.name);
 	tag->addAttribute( "type", "set");
 	tag->addAttribute( "id",p->j->getID());
 	std::string from;
@@ -461,38 +474,31 @@ void User::purpleBuddyChanged(PurpleBuddy *buddy){
 // 	}
 
 	if (!inRoster) {
-		if (!m_rosterXCalled && hasFeature(GLOOX_FEATURE_ROSTERX)){
-// 			subscribeContact c;
-// 			c.uin = name;
-// 			c.alias = alias;
-// 			c.group = (std::string) purple_group_get_name(purple_buddy_get_group(buddy));
-			m_subscribeCache[name] = buddy;
-			Log().Get(m_jid) << "Not in roster => adding to rosterX cache";
-		}
-		else {
-			if (hasFeature(GLOOX_FEATURE_ROSTERX)) {
+		if (findResourceWithFeature(GLOOX_FEATURE_ROSTERX)) {
+			if (!m_rosterXCalled){
+				m_subscribeCache[name] = buddy;
+				Log().Get(m_jid) << "Not in roster => adding to rosterX cache";
+			}
+			else {
 				Log().Get(m_jid) << "Not in roster => sending rosterx";
 				if (m_syncTimer==0){
 					m_syncTimer = purple_timeout_add_seconds(4, sync_cb, this);
 				}
-// 				subscribeContact c;
-// 				c.uin = name;
-// 				c.alias = alias;
-// 				c.group = (std::string) purple_group_get_name(purple_buddy_get_group(buddy));
 				m_subscribeCache[name] = buddy;
 			}
-			else {
-				Log().Get(m_jid) << "Not in roster => sending subscribe";
-				Tag *tag = new Tag("presence");
-				tag->addAttribute("type", "subscribe" );
-				tag->addAttribute("from", name + "@" + p->jid());
-				tag->addAttribute("to", m_jid);
-				Tag *nick = new Tag("nick", alias);
-				nick->addAttribute("xmlns","http://jabber.org/protocol/nick");
-				tag->addChild(nick);
-				p->j->send(tag);
-			}
 		}
+		else {
+			Log().Get(m_jid) << "Not in roster => sending subscribe";
+			Tag *tag = new Tag("presence");
+			tag->addAttribute("type", "subscribe" );
+			tag->addAttribute("from", name + "@" + p->jid());
+			tag->addAttribute("to", m_jid);
+			Tag *nick = new Tag("nick", alias);
+			nick->addAttribute("xmlns","http://jabber.org/protocol/nick");
+			tag->addChild(nick);
+			p->j->send(tag);
+		}
+		
 	}
 	else {
 		Tag *tag = generatePresenceStanza(buddy);

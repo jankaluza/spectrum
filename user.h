@@ -68,6 +68,10 @@ struct subscribeContact {
 struct Resource {
 	int priority;
 	std::string capsVersion;
+	std::string name;
+	operator bool() const {
+		return name.empty();
+	}
 };
 
 struct Conversation {
@@ -146,10 +150,12 @@ class User {
 		void setResource(const std::string resource, int priority = -256, const std::string caps = "") {
 			if (priority != -256) m_resources[resource].priority = priority;
 			if (!caps.empty()) m_resources[resource].capsVersion = caps;
+			m_resources[resource].name = resource;
 		}
 		void setActiveResource(std::string resource) { m_resource = resource; }
 		bool hasResource(const std::string r) {return m_resources.find(r) != m_resources.end(); }
 		Resource & getResource(const std::string r = "") { if (r.empty()) return m_resources[m_resource]; else return m_resources[r];}
+		Resource & findResourceWithFeature(int feature);
 		
 		PurpleAccount *account() { return m_account; }
 		std::map<std::string,Resource> & resources() { return m_resources; }
