@@ -474,7 +474,6 @@ static gssize XferRead(PurpleXfer *xfer, guchar **buffer, gssize size) {
 		}
 		(*buffer) = (guchar *) g_malloc0(data.size());
 		memcpy((*buffer), data.c_str(), data.size());
-		size_t s = repeater->getBuffer().size();
 		repeater->getResender()->getMutex()->unlock();
 		return data.size();
 	}
@@ -690,8 +689,12 @@ GlooxMessageHandler::GlooxMessageHandler(const std::string &config) : MessageHan
 	m_firstConnection = true;
 	lastIP=0;
 	capsCache["_default"]=0;
+	m_parser = NULL;
 	
-	loadConfigFile(config);
+	bool loaded = true;
+	
+	if (loaded && !loadConfigFile(config))
+		loaded = false;
 	
 	Log().Get("gloox") << "connecting to: " << m_configuration.server << " as " << m_configuration.jid << " with password " << m_configuration.password;
 	j = new HiComponent("jabber:component:accept",m_configuration.server,m_configuration.jid,m_configuration.password,m_configuration.port);
@@ -705,60 +708,66 @@ GlooxMessageHandler::GlooxMessageHandler(const std::string &config) : MessageHan
 	m_userManager = new UserManager(this);
 	m_searchHandler = NULL;
 
-	initPurple();
-	loadProtocol();
+	if (loaded && !initPurple())
+		loaded = false;
+		
+	if (loaded && !loadProtocol())
+		loaded = false;
 
-	m_discoHandler=new GlooxDiscoHandler(this);
-//  	j->removeIqHandler(XMLNS_DISCO_INFO);
-	
- 	m_discoInfoHandler=new GlooxDiscoInfoHandler(this);
- 	j->registerIqHandler(m_discoInfoHandler,ExtDiscoInfo);
-	
-	m_adhoc = new GlooxAdhocHandler(this);
-	m_parser = new GlooxParser();
-	
-	ftManager = new FileTransferManager();
-	ft = new SIProfileFT(j, ftManager );
-	ftManager->setSIProfileFT(ft,this);
- 	ftServer = new SOCKS5BytestreamServer(j->logInstance(), 8000,configuration().bindIPs[0]);
-	if( ftServer->listen() != ConnNoError )
-		printf( "port in use\n" );
-	ft->addStreamHost( j->jid(), configuration().bindIPs[0], 8000 );
-	ft->registerSOCKS5BytestreamServer( ftServer );
-	g_timeout_add(10,&iter3,NULL);
-// 	ft->addStreamHost(gloox::JID("proxy.jabbim.cz"), "88.86.102.51", 7777);
-	
-	
-	j->registerMessageHandler( this );
-	j->registerConnectionListener(this);
-	gatewayHandler = new GlooxGatewayHandler(this);
-	j->registerIqHandler(gatewayHandler,ExtGateway);
-	m_reg = new GlooxRegisterHandler(this);
-	j->registerIqHandler(m_reg,ExtRegistration);
-	// PING is now implemented in Gloox
-// 	m_xping = new GlooxXPingHandler(this);
-// 	j->registerIqHandler(m_xping,"urn:xmpp:ping");
-	m_stats = new GlooxStatsHandler(this);
-	j->registerIqHandler(m_stats,ExtStats);
-	m_vcard = new GlooxVCardHandler(this);
-	j->registerIqHandler(m_vcard,ExtVCard);
-	j->registerPresenceHandler(this);
-	j->registerSubscriptionHandler(this);
-	
-	transportConnect();
-	
- 	g_main_loop_run(loop);
+	if (loaded) {
+		
+		m_discoHandler=new GlooxDiscoHandler(this);
+		
+		m_discoInfoHandler=new GlooxDiscoInfoHandler(this);
+		j->registerIqHandler(m_discoInfoHandler,ExtDiscoInfo);
+		
+		m_adhoc = new GlooxAdhocHandler(this);
+		m_parser = new GlooxParser();
+		
+		ftManager = new FileTransferManager();
+		ft = new SIProfileFT(j, ftManager );
+		ftManager->setSIProfileFT(ft,this);
+		ftServer = new SOCKS5BytestreamServer(j->logInstance(), 8000,configuration().bindIPs[0]);
+		if( ftServer->listen() != ConnNoError )
+			printf( "port in use\n" );
+		ft->addStreamHost( j->jid(), configuration().bindIPs[0], 8000 );
+		ft->registerSOCKS5BytestreamServer( ftServer );
+		g_timeout_add(10,&iter3,NULL);
+	// 	ft->addStreamHost(gloox::JID("proxy.jabbim.cz"), "88.86.102.51", 7777);
+		
+		
+		j->registerMessageHandler( this );
+		j->registerConnectionListener(this);
+		gatewayHandler = new GlooxGatewayHandler(this);
+		j->registerIqHandler(gatewayHandler,ExtGateway);
+		m_reg = new GlooxRegisterHandler(this);
+		j->registerIqHandler(m_reg,ExtRegistration);
+		// PING is now implemented in Gloox
+	// 	m_xping = new GlooxXPingHandler(this);
+	// 	j->registerIqHandler(m_xping,"urn:xmpp:ping");
+		m_stats = new GlooxStatsHandler(this);
+		j->registerIqHandler(m_stats,ExtStats);
+		m_vcard = new GlooxVCardHandler(this);
+		j->registerIqHandler(m_vcard,ExtVCard);
+		j->registerPresenceHandler(this);
+		j->registerSubscriptionHandler(this);
+		
+		transportConnect();
+		
+		g_main_loop_run(loop);
+	}
 }
 
 GlooxMessageHandler::~GlooxMessageHandler(){
 	delete m_userManager;
-	delete m_parser;
+	if (m_parser)
+		delete m_parser;
+	delete m_sql;
 	delete j;
-	j=NULL;
 	purple_core_quit();
 }
 
-void GlooxMessageHandler::loadProtocol(){
+bool GlooxMessageHandler::loadProtocol(){
 	if (configuration().protocol == "icq")
 		m_protocol = (AbstractProtocol*) new ICQProtocol(this);
 	else if (configuration().protocol == "facebook")
@@ -781,10 +790,22 @@ void GlooxMessageHandler::loadProtocol(){
 		m_protocol = (AbstractProtocol*) new AIMProtocol(this);
 	else if (configuration().protocol == "yahoo")
 		m_protocol = (AbstractProtocol*) new YahooProtocol(this);
+	else {
+		Log().Get("loadProtocol") << "Protocol \"" << configuration().protocol << "\" does not exist.";
+		Log().Get("loadProtocol") << "Protocol has to be one of: facebook, gg, msn, irc, xmpp, myspace, qq, simple, aim, yahoo.";
+		return false;
+	}
+	
+	if (!purple_find_prpl(m_protocol->protocol().c_str())) {
+		Log().Get("loadProtocol") << "There is no libpurple plugin installed for protocol \"" << configuration().protocol << "\"";
+		return false;
+	}
+	
 	if (!m_protocol->userSearchAction().empty()) {
 		m_searchHandler = new GlooxSearchHandler(this);
 		j->registerIqHandler(m_searchHandler, ExtSearch);
 	}
+	return true;
 }
 
 void GlooxMessageHandler::onSessionCreateError (SessionCreateError error){
@@ -917,7 +938,7 @@ void * GlooxMessageHandler::purpleAuthorizeReceived(PurpleAccount *account,const
 /*
  * Load config file and parses it and save result to m_configuration
  */
-void GlooxMessageHandler::loadConfigFile(const std::string &config) {
+bool GlooxMessageHandler::loadConfigFile(const std::string &config) {
 	GKeyFile *keyfile;
 	int flags;
   	char **bind;
@@ -933,13 +954,12 @@ void GlooxMessageHandler::loadConfigFile(const std::string &config) {
 			Log().Get("gloox") << std::string("/etc/spectrum/" + config + ".cfg") << " or ./" << config;
 			
 			g_key_file_free(keyfile);
-			exit(0);
-			return;
+			return false;
 		}
 	}
 
-	m_configuration.discoName = (std::string)g_key_file_get_string(keyfile, "service","name", NULL);
-	m_configuration.protocol = (std::string)g_key_file_get_string(keyfile, "service","protocol", NULL);
+	m_configuration.protocol = (std::string) g_key_file_get_string(keyfile, "service","protocol", NULL);
+	m_configuration.discoName = (std::string) g_key_file_get_string(keyfile, "service","name", NULL);
 	m_configuration.server = (std::string)g_key_file_get_string(keyfile, "service","server", NULL);
 	m_configuration.password = (std::string)g_key_file_get_string(keyfile, "service","password", NULL);
 	m_configuration.jid = (std::string)g_key_file_get_string(keyfile, "service","jid", NULL);
@@ -955,7 +975,7 @@ void GlooxMessageHandler::loadConfigFile(const std::string &config) {
 
 	m_configuration.userDir = (std::string)g_key_file_get_string(keyfile, "purple","userdir", NULL);
 
-	if(g_key_file_has_key(keyfile,"service","language",NULL))
+	if (g_key_file_has_key(keyfile,"service","language",NULL))
 		m_configuration.language=g_key_file_get_string(keyfile, "service","language", NULL);
 	else
 		m_configuration.language = "en";
@@ -1024,6 +1044,7 @@ void GlooxMessageHandler::loadConfigFile(const std::string &config) {
 	}
 
 	g_key_file_free(keyfile);
+	return true;
 }
 
 void GlooxMessageHandler::purpleFileReceiveRequest(PurpleXfer *xfer) {
@@ -1522,14 +1543,10 @@ void GlooxMessageHandler::handleMessage (const Message &msg, MessageSession *ses
 
 bool GlooxMessageHandler::initPurple(){
 	bool ret;
-	GList *iter;
-	int i;
-	GList *names = NULL;
 
 	purple_util_set_user_dir(configuration().userDir.c_str());
 
-
-	purple_debug_set_enabled(true);
+// 	purple_debug_set_enabled(true);
 
 	purple_core_set_ui_ops(&coreUiOps);
 	purple_eventloop_set_ui_ops(getEventLoopUiOps());
@@ -1540,16 +1557,7 @@ bool GlooxMessageHandler::initPurple(){
 		static int conn_handle;
 		static int xfer_handle;
 		static int blist_handle;
-		iter = purple_plugins_get_protocols();
-		for (i = 0; iter; iter = iter->next) {
-			PurplePlugin *plugin = (PurplePlugin *)iter->data;
-			PurplePluginInfo *info = (PurplePluginInfo *)plugin->info;
-			if (info && info->name) {
-				printf("\t%d: %s\n", i++, info->name);
-				names = g_list_append(names, info->id);
-			}
-		}
-		
+
 		purple_set_blist(purple_blist_new());
 		purple_blist_load();
 		
