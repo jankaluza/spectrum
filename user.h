@@ -70,7 +70,7 @@ struct Resource {
 	std::string capsVersion;
 	std::string name;
 	operator bool() const {
-		return name.empty();
+		return !name.empty();
 	}
 };
 

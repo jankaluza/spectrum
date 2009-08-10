@@ -441,7 +441,7 @@ void User::purpleReauthorizeBuddy(PurpleBuddy *buddy){
  * Called when something related to this buddy changed...
  */
 void User::purpleBuddyChanged(PurpleBuddy *buddy){
-	if (buddy==NULL /*|| m_connected == false*/)
+	if (buddy==NULL || m_connected == false)
 		return;
 	std::string alias;
 	if (purple_buddy_get_server_alias(buddy))
