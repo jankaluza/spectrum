@@ -768,26 +768,26 @@ GlooxMessageHandler::~GlooxMessageHandler(){
 }
 
 bool GlooxMessageHandler::loadProtocol(){
-	if (configuration().protocol == "icq")
-		m_protocol = (AbstractProtocol*) new ICQProtocol(this);
+	if (configuration().protocol == "aim")
+		m_protocol = (AbstractProtocol*) new AIMProtocol(this);
 	else if (configuration().protocol == "facebook")
 		m_protocol = (AbstractProtocol*) new FacebookProtocol(this);
 	else if (configuration().protocol == "gg")
 		m_protocol = (AbstractProtocol*) new GGProtocol(this);
-	else if (configuration().protocol == "msn")
-		m_protocol = (AbstractProtocol*) new MSNProtocol(this);
+	else if (configuration().protocol == "icq")
+		m_protocol = (AbstractProtocol*) new ICQProtocol(this);
 	else if (configuration().protocol == "irc")
 		m_protocol = (AbstractProtocol*) new IRCProtocol(this);
-	else if (configuration().protocol == "xmpp")
-		m_protocol = (AbstractProtocol*) new XMPPProtocol(this);
+	else if (configuration().protocol == "msn")
+		m_protocol = (AbstractProtocol*) new MSNProtocol(this);
 	else if (configuration().protocol == "myspace")
 		m_protocol = (AbstractProtocol*) new MyspaceProtocol(this);
 	else if (configuration().protocol == "qq")
 		m_protocol = (AbstractProtocol*) new QQProtocol(this);
 	else if (configuration().protocol == "simple")
 		m_protocol = (AbstractProtocol*) new SimpleProtocol(this);
-	else if (configuration().protocol == "aim")
-		m_protocol = (AbstractProtocol*) new AIMProtocol(this);
+	else if (configuration().protocol == "xmpp")
+		m_protocol = (AbstractProtocol*) new XMPPProtocol(this);
 	else if (configuration().protocol == "yahoo")
 		m_protocol = (AbstractProtocol*) new YahooProtocol(this);
 	else {
