@@ -66,7 +66,6 @@
 
 #include "registerhandler.h"
 #include "discoinfohandler.h"
-#include "xpinghandler.h"
 #include "statshandler.h"
 #include "vcardhandler.h"
 #include "gatewayhandler.h"
@@ -251,7 +250,6 @@ private:
 	GlooxDiscoHandler *m_discoHandler;
 	GlooxDiscoInfoHandler *m_discoInfoHandler;
  	GlooxRegisterHandler *m_reg;
-	GlooxXPingHandler *m_xping;
 	GlooxStatsHandler *m_stats;
 	GlooxVCardHandler *m_vcard;
 	GlooxSearchHandler *m_searchHandler;

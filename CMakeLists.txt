@@ -53,7 +53,6 @@ set(spectrum_SRCS
 	registerhandler.cpp
 	sql.cpp
 	user.cpp
-	xpinghandler.cpp
 	statshandler.cpp
 	vcardhandler.cpp
 	striphtmltags.cpp
@@ -95,7 +94,6 @@ set(spectrum_MOC_HDRS
 	registerhandler.h
 	sql.h
 	user.h
-	xpinghandler.h
 	statshandler.h
 	vcardhandler.h
 	striphtmltags.h
