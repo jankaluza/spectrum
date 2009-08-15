@@ -24,7 +24,6 @@
 
 Localization::Localization() {
 	m_locales = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, (GDestroyNotify)g_hash_table_destroy);
-	loadLocale("cs");
 }
 
 Localization::~Localization() {
@@ -34,7 +33,11 @@ Localization::~Localization() {
 const char * Localization::translate(const char *lang, const char *key) {
 	const char *ret = key;
 	GHashTable *l;
-	if ((l = (GHashTable*) g_hash_table_lookup(m_locales, lang))) {
+	if (!(l = (GHashTable*) g_hash_table_lookup(m_locales, lang))) {
+		loadLocale(lang);
+		l = (GHashTable*) g_hash_table_lookup(m_locales, lang);
+	}
+	if (l) {
 		char *col = g_utf8_collate_key(key, -1);
 		if (!(ret = (const char *) g_hash_table_lookup(l, col))) {
 			ret = key;
@@ -55,7 +58,8 @@ bool Localization::loadLocale(const std::string &lang) {
 	// Already loaded
 	if (g_hash_table_lookup(m_locales, lang.c_str()))
 		return true;
-	char *l = g_build_filename(INSTALL_DIR, "share", "highflyer", "locales", std::string(lang + ".po").c_str(), NULL);
+	g_hash_table_replace(m_locales, g_strdup(lang.c_str()), g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free));
+	char *l = g_build_filename(INSTALL_DIR, "share", "spectrum", "locales", std::string(lang + ".po").c_str(), NULL);
 	pofile = po_file_read (l, error_handle);
 	g_free(l);
 	if (pofile != NULL) {
@@ -84,7 +88,7 @@ bool Localization::loadLocale(const std::string &lang) {
 			}
 			po_message_iterator_free (iterator);
 		}
-		g_hash_table_replace(m_locales, g_strdup("cs"), locale);
+		g_hash_table_replace(m_locales, g_strdup(lang.c_str()), locale);
 		po_file_free(pofile);
 		return true;
 	}
