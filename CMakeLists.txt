@@ -49,91 +49,91 @@ endif(CMAKE_BUILD_TYPE MATCHES Debug)
 #CONFIGURE_FILE(config.h.in config.h)
 
 set(spectrum_SRCS
-	main.cpp
-	registerhandler.cpp
-	sql.cpp
-	user.cpp
-	statshandler.cpp
-	vcardhandler.cpp
-	striphtmltags.cpp
+	adhocadmin.cpp
+	adhochandler.cpp
+	adhocrepeater.cpp
+	adhocsettings.cpp
+	autoconnectloop.cpp
 	caps.cpp
+	commands.cpp
+	dataforms.cpp
 	discoinfohandler.cpp
 	filetransfermanager.cpp
 	filetransferrepeater.cpp
-	thread.cpp
 	gatewayhandler.cpp
 	geventloop.cpp
-	autoconnectloop.cpp
-	usermanager.cpp
-	adhochandler.cpp
-	adhocrepeater.cpp
 	localization.cpp
+	main.cpp
 	muchandler.cpp
-	adhocsettings.cpp
-	adhocadmin.cpp
+	parser.cpp
+	registerhandler.cpp
 	searchhandler.cpp
 	searchrepeater.cpp
-	dataforms.cpp
-	parser.cpp
-	commands.cpp
 	spectrum_util.cpp
-	protocols/icq.cpp
+	statshandler.cpp
+	striphtmltags.cpp
+	sql.cpp
+	thread.cpp
+	user.cpp
+	usermanager.cpp
+	vcardhandler.cpp
+	protocols/aim.cpp
 	protocols/facebook.cpp
 	protocols/gg.cpp
-	protocols/msn.cpp
+	protocols/icq.cpp
 	protocols/irc.cpp
-	protocols/xmpp.cpp
+	protocols/msn.cpp
 	protocols/myspace.cpp
 	protocols/qq.cpp
 	protocols/simple.cpp
+	protocols/xmpp.cpp
 	protocols/yahoo.cpp
-	protocols/aim.cpp
 )
 
 set(spectrum_MOC_HDRS
-	main.h
-	registerhandler.h
-	sql.h
-	user.h
-	statshandler.h
-	vcardhandler.h
-	striphtmltags.h
+	abstractpurplerequest.h
+	adhocadmin.h
+	adhoccommandhandler.h
+	adhochandler.h
+	adhocrepeater.h
+	adhocsettings.h
+	autoconnectloop.h
 	caps.h
+	commands.h
+	dataforms.h
 	discoinfohandler.h
 	filetransfermanager.h
 	filetransferrepeater.h
-	thread.h
 	gatewayhandler.h
-	log.h
 	geventloop.h
-	autoconnectloop.h
-	usermanager.h
-	adhocrepeater.h
-	adhochandler.h
 	localization.h
+	log.h
+	main.h
 	muchandler.h
-	adhoccommandhandler.h
-	adhocsettings.h
-	adhocadmin.h
+	parser.h
+	registerhandler.h
 	searchhandler.h
 	searchrepeater.h
-	abstractpurplerequest.h
-	dataforms.h
-	parser.h
-	commands.h
 	spectrum_util.h
+	statshandler.h
+	striphtmltags.h
+	sql.h
+	thread.h
+	user.h
+	usermanager.h
+	vcardhandler.h
 	protocols/abstractprotocol.h
-	protocols/icq.h
+	protocols/aim.h
 	protocols/facebook.h
 	protocols/gg.h
-	protocols/msn.h
+	protocols/icq.h
 	protocols/irc.h
-	protocols/xmpp.h
+	protocols/msn.h
 	protocols/myspace.h
 	protocols/qq.h
 	protocols/simple.h
 	protocols/yahoo.h
-	protocols/aim.h
+	protocols/xmpp.h
 )
 
 add_executable(spectrum ${spectrum_SRCS} ${lrelease_outputs})
