@@ -27,7 +27,7 @@ SQLClass::SQLClass(GlooxMessageHandler *parent){
 	sql = new mysqlpp::Connection(false);
 	if (!sql->connect(p->configuration().sqlDb.c_str(),p->configuration().sqlHost.c_str(),p->configuration().sqlUser.c_str(),p->configuration().sqlPassword.c_str()))
 		std::cout << "SQL CONNECTION FAILED\n";
-// 	sql->set_option(new mysqlpp::ReconnectOption(true));
+	sql->set_option(mysqlpp::Connection::opt_reconnect, true);
 	vipSQL = new mysqlpp::Connection(false);
 	if (!vipSQL->connect("platby",p->configuration().sqlHost.c_str(),p->configuration().sqlUser.c_str(),p->configuration().sqlPassword.c_str()))
 		std::cout << "Can't connect to SQL-VIP database, using built-in.\n";
