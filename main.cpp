@@ -379,6 +379,30 @@ static void fileRecvStart(PurpleXfer *xfer) {
 static void buddyListAddBuddy(PurpleAccount *account, const char *username, const char *group, const char *alias) {
 }
 
+static void buddyListSaveNode(PurpleBlistNode *node) {
+	if (!PURPLE_BLIST_NODE_IS_BUDDY(node))
+		return;
+	PurpleBuddy *buddy = (PurpleBuddy *) node;
+	PurpleAccount *a = purple_buddy_get_account(buddy);
+	User *user = GlooxMessageHandler::instance()->userManager()->getUserByAccount(a);
+	if (user != NULL) {
+		std::string alias;
+		std::string name(purple_buddy_get_name(buddy));
+		Log().Get("buddyListSaveNode") << user->jid() << name;
+		if (purple_buddy_get_server_alias(buddy))                                                                                                                   
+			alias = (std::string) purple_buddy_get_server_alias(buddy);
+		else
+			alias = (std::string) purple_buddy_get_alias(buddy);
+		GlooxMessageHandler::instance()->sql()->addUserToRoster(user->jid(), name, "both", (std::string) purple_group_get_name(purple_buddy_get_group(buddy)), alias);
+	}
+}
+
+static void buddyListRemoveNode(PurpleBlistNode *node) {
+}
+
+static void buddyListSaveAccount(PurpleAccount *account) {
+}
+
 static gssize XferWrite(PurpleXfer *xfer, const guchar *buffer, gssize size) {
 	FiletransferRepeater *repeater = (FiletransferRepeater *) xfer->ui_data;
 	std::string d((char *) buffer, size);
@@ -466,9 +490,9 @@ static PurpleBlistUiOps blistUiOps =
 	buddyListAddBuddy,
 	NULL,
 	NULL,
-	NULL,
-	NULL,
-	NULL,
+	buddyListSaveNode,
+	buddyListRemoveNode,
+	buddyListSaveAccount,
 	NULL
 };
 
@@ -1132,7 +1156,7 @@ void GlooxMessageHandler::purpleChatRemoveUsers(PurpleConversation *conv, GList 
 
 void GlooxMessageHandler::purpleBuddyChanged(PurpleBuddy* buddy) {
 	if (buddy != NULL) {
-		PurpleAccount *a=purple_buddy_get_account(buddy);
+		PurpleAccount *a = purple_buddy_get_account(buddy);
 		User *user = userManager()->getUserByAccount(a);
 		if (user != NULL)
 			user->purpleBuddyChanged(buddy);

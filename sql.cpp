@@ -177,11 +177,11 @@ void SQLClass::addUser(const std::string &jid,const std::string &uin,const std::
 	query.execute();
 }
 
-void SQLClass::addUserToRoster(const std::string &jid,const std::string &uin,const std::string subscription){
+void SQLClass::addUserToRoster(const std::string &jid,const std::string &uin,const std::string subscription, const std::string &group, const std::string &nickname) {
 	mysqlpp::Query query = sql->query();
-	query << "INSERT INTO "<< p->configuration().sqlPrefix <<"rosters " << "(id, jid, uin, subscription) VALUES (\"\",\"" << jid << "\",\"" << uin << "\", \"" << subscription << "\")";
+	query << "INSERT INTO "<< p->configuration().sqlPrefix <<"rosters " << "(id, jid, uin, subscription, g, nickname) VALUES (\"\",\"" << jid << "\",\"" << uin << "\", \"" << subscription << "\", \"" << group << "\", \"" << nickname << "\") ON DUPLICATE KEY UPDATE g=\""+ group +"\", nickname=\""+ nickname +"\";";
+	
 	query.execute();
-	std::cout << "query2!!!\n";
 }
 
 void SQLClass::updateUserRosterSubscription(const std::string &jid,const std::string &uin,const std::string subscription){
@@ -259,7 +259,7 @@ std::map<std::string,RosterRow> SQLClass::getRosterByJid(const std::string &jid)
 			user.uin=(std::string)row["uin"];
 			user.subscription=(std::string)row["subscription"];
 			user.nickname=(std::string)row["nickname"];
-			user.group=(std::string)row["group"];
+			user.group=(std::string)row["g"];
 			if (user.subscription.empty())
 				user.subscription="ask";
 			user.online=false;
@@ -278,7 +278,7 @@ std::map<std::string,RosterRow> SQLClass::getRosterByJid(const std::string &jid)
 		user.uin=(std::string)row["uin"];
 		user.subscription=(std::string)row["subscription"];
 		user.nickname=(std::string)row["nickname"];
-		user.group=(std::string)row["group"];
+		user.group=(std::string)row["g"];
 		if (user.subscription.empty())
 			user.subscription="ask";
 		user.online=false;

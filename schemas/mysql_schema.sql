@@ -12,12 +12,13 @@ CREATE TABLE `users` (
 
 CREATE TABLE `rosters` (
   `id` bigint(20) unsigned NOT NULL auto_increment,
-  `jid` varchar(255) collate utf8_bin NOT NULL,
-  `uin` varchar(255) collate utf8_bin NOT NULL,
+  `jid` varchar(100) collate utf8_bin NOT NULL,
+  `uin` varchar(100) collate utf8_bin NOT NULL,
   `subscription` varchar(10) collate utf8_bin NOT NULL,
   `nickname` varchar(255) collate utf8_bin NOT NULL,
-  `group` varchar(255) collate utf8_bin NOT NULL,
+  `g` varchar(255) collate utf8_bin NOT NULL,
   PRIMARY KEY  (`id`),
+  Unique Key `JidUin` (`jid`, `uin`),
   KEY `jid` (`jid`),
   KEY `uin` (`uin`)
 ) ENGINE=MyISAM  DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
