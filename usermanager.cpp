@@ -52,7 +52,7 @@ User *UserManager::getUserByJID(std::string barejid){
 User *UserManager::getUserByAccount(PurpleAccount * account){
 	if (account == NULL) return NULL;
 	std::string jid(purple_account_get_string(account,"lastUsedJid",""));
-	return getUserByJID(JID(jid).bare());
+	return getUserByJID(jid);
 }
 
 void UserManager::removeUser(User *user){
