@@ -30,7 +30,7 @@ MUCHandler::MUCHandler(User *user, const std::string &jid, const std::string &us
 	m_topic = "";
 	m_topicUser = "";
 }
-	
+
 MUCHandler::~MUCHandler() {}
 
 Tag * MUCHandler::handlePresence(const Presence &stanza) {
@@ -79,13 +79,13 @@ void MUCHandler::addUsers(GList *cbuddies) {
 		Tag *tag = new Tag("presence");
 		tag->addAttribute("from", m_jid + "/" + name);
 		tag->addAttribute("to", m_userJid);
-		
+
 		Tag *x = new Tag("x");
 		x->addAttribute("xmlns", "http://jabber.org/protocol/muc#user");
-		
+
 		Tag *item = new Tag("item");
-		
-		
+
+
 		if (flags & PURPLE_CBFLAGS_OP) {
 			item->addAttribute("affiliation", "admin");
 			item->addAttribute("role", "moderator");
@@ -98,11 +98,11 @@ void MUCHandler::addUsers(GList *cbuddies) {
 			item->addAttribute("affiliation", "member");
 			item->addAttribute("role", "participant");
 		}
-		
+
 		x->addChild(item);
 		tag->addChild(x);
 		m_user->p->j->send(tag);
-		
+
 		l = l->next;
 	}
 	if (!m_connected && !m_topic.empty()) {
@@ -136,18 +136,18 @@ void MUCHandler::renameUser(const char *old_name, const char *new_name, const ch
 	tag->addAttribute("from", m_jid + "/" + oldName);
 	tag->addAttribute("to", m_userJid);
 	tag->addAttribute("type", "unavailable");
-	
+
 	Tag *x = new Tag("x");
 	x->addAttribute("xmlns", "http://jabber.org/protocol/muc#user");
-	
+
 	Tag *item = new Tag("item");
 	item->addAttribute("affiliation", "member");
 	item->addAttribute("role", "participant");
 	item->addAttribute("nick", newName);
-	
+
 	Tag *status = new Tag("status");
 	status->addAttribute("code","303");
-	
+
 	x->addChild(item);
 	x->addChild(status);
 	tag->addChild(x);
@@ -157,14 +157,14 @@ void MUCHandler::renameUser(const char *old_name, const char *new_name, const ch
 	tag = new Tag("presence");
 	tag->addAttribute("from", m_jid + "/" + newName);
 	tag->addAttribute("to", m_userJid);
-	
+
 	x = new Tag("x");
 	x->addAttribute("xmlns", "http://jabber.org/protocol/muc#user");
-	
+
 	item = new Tag("item");
 	item->addAttribute("affiliation", "member");
 	item->addAttribute("role", "participant");
-	
+
 	x->addChild(item);
 	tag->addChild(x);
 	m_user->p->j->send(tag);
@@ -179,14 +179,14 @@ void MUCHandler::removeUsers(GList *users) {
 		tag->addAttribute("from", m_jid + "/" + user);
 		tag->addAttribute("to", m_userJid);
 		tag->addAttribute("type", "unavailable");
-		
+
 		Tag *x = new Tag("x");
 		x->addAttribute("xmlns", "http://jabber.org/protocol/muc#user");
-		
+
 		Tag *item = new Tag("item");
 		item->addAttribute("affiliation", "member");
 		item->addAttribute("role", "participant");
-		
+
 		x->addChild(item);
 		tag->addChild(x);
 		m_user->p->j->send(tag);

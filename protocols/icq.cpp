@@ -28,7 +28,7 @@ ICQProtocol::ICQProtocol(GlooxMessageHandler *main){
 	m_transportFeatures.push_back("http://jabber.org/protocol/caps");
 	m_transportFeatures.push_back("http://jabber.org/protocol/chatstates");
 	m_transportFeatures.push_back("http://jabber.org/protocol/commands");
-	
+
 	m_buddyFeatures.push_back("http://jabber.org/protocol/disco#info");
 	m_buddyFeatures.push_back("http://jabber.org/protocol/caps");
 	m_buddyFeatures.push_back("http://jabber.org/protocol/chatstates");
@@ -36,7 +36,7 @@ ICQProtocol::ICQProtocol(GlooxMessageHandler *main){
 	m_buddyFeatures.push_back("http://jabber.org/protocol/bytestreams");
 	m_buddyFeatures.push_back("http://jabber.org/protocol/si");
 }
-	
+
 ICQProtocol::~ICQProtocol() {}
 
 void ICQProtocol::prepareUserName(std::string &str) {
@@ -118,7 +118,7 @@ Tag *ICQProtocol::getVCardTag(User *user, GList *vcardEntries) {
 			}
 			else if (label=="Personal Web Page"){
 				std::string page = (std::string)purple_notify_user_info_entry_get_value(vcardEntry);
-				
+
 				//vcard->addChild( new Tag("URL", stripHTMLTags(page)));
 				//vcard->addChild( new Tag("URL", page));
 			}

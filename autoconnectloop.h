@@ -35,11 +35,11 @@ class AutoConnectLoop
 		~AutoConnectLoop();
 		void purpleAccountRemoved(const PurpleAccount *account);
 		bool restoreNextConnection();
-	
+
 	private:
 		GlooxMessageHandler *main;
 		GList *m_account;
-	
+
 };
 
 #endif

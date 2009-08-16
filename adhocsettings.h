@@ -17,7 +17,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02111-1301  USA
  */
- 
+
 #ifndef _HI_ADHOC_SETTINGS_H
 #define _HI_ADHOC_SETTINGS_H
 
@@ -41,7 +41,7 @@ class AdhocSettings : public AdhocCommandHandler
 		~AdhocSettings();
 		bool handleIq(const IQ &iq);
 		const std::string & from() { return m_from; }
-	
+
 	private:
 		GlooxMessageHandler *main;		// client
 		std::string m_from;				// full jid

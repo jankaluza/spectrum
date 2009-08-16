@@ -30,7 +30,7 @@ class IRCProtocolData {
 	public:
 		IRCProtocolData() {}
 		~IRCProtocolData() {}
-		
+
 		std::list <Tag *> autoConnectRooms;
 };
 
@@ -56,13 +56,13 @@ class IRCProtocol : AbstractProtocol
 		void onConnected(User *user);
 		void onDestroy(User *user);
 		bool onPresenceReceived(User *user, const Presence &stanza);
-	
+
 	private:
 		GlooxMessageHandler *m_main;
 		std::list<std::string> m_transportFeatures;
 		std::list<std::string> m_buddyFeatures;
-	
+
 };
 
-#endif	
-	
+#endif
+

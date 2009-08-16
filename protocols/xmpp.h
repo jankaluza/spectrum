@@ -41,13 +41,13 @@ class XMPPProtocol : AbstractProtocol
 		bool isMUC(User *user, const std::string &jid) { return false; }
 		const std::string userSearchAction() { return "Search for Users..."; }
 		const std::string userSearchColumn() { return "Jabber ID"; }
-		
+
 	private:
 		GlooxMessageHandler *m_main;
 		std::list<std::string> m_transportFeatures;
 		std::list<std::string> m_buddyFeatures;
-	
+
 };
 
-#endif	
-	
+#endif
+

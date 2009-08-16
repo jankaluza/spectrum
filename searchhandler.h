@@ -60,7 +60,7 @@ public:
 	{
 		return new SearchExtension(m_tag);
 	}
-	
+
 private:
 	Tag *m_tag;
 
@@ -75,7 +75,7 @@ public:
 	bool handleIq (const IQ &iq);
 	void handleIqID (const IQ &iq, int context);
 	void searchResultsArrived(const std::string &from, PurpleNotifySearchResults *results);
-	
+
 	void registerSession(const std::string &jid, SearchRepeater *handler) {m_sessions[jid] = handler; }
 	void unregisterSession(std::string &jid) { m_sessions.erase(jid); }
 	bool hasSession(const std::string &jid);

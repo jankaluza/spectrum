@@ -34,11 +34,11 @@ class AbstractPurpleRequest
 
 		void setRequestType(AdhocDataCallerType type) { m_rtype = type; }
 		AdhocDataCallerType & requestType() { return m_rtype; }
-		
+
 	private:
 		AdhocDataCallerType m_rtype;
-	
-	
+
+
 };
 
 #endif

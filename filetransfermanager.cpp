@@ -81,7 +81,7 @@ void FileTransferManager::handleFTBytestream (Bytestream *bs) {
 				if (*it == '\\' || *it == '&' || *it == '/' || *it == '?' || *it == '*' || *it == ':') {
 					*it = '_';
 				}
-			} 
+			}
 			filename = p->configuration().filetransferCache + "/" + bs->target().username() + "-" + p->j->getID() + "-" + filename;
 		}
 		User *user = p->userManager()->getUserByJID(bs->initiator().bare());
@@ -99,7 +99,7 @@ void FileTransferManager::handleFTBytestream (Bytestream *bs) {
 			repeater = user->removeFiletransfer(bs->initiator().username());
 			if (!repeater) return;
 		}
-		
+
 		if (repeater->isSending())
 			repeater->handleFTSendBytestream(bs, filename);
 		else

@@ -17,7 +17,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02111-1301  USA
  */
- 
+
 #include "adhochandler.h"
 #include "usermanager.h"
 #include "log.h"
@@ -26,7 +26,7 @@
 #include "adhocadmin.h"
 #include "gloox/disconodehandler.h"
 #include "gloox/adhoc.h"
- 
+
 static AdhocCommandHandler * createSettingsHandler(GlooxMessageHandler *m, User *user, const std::string &from, const std::string &id) {
 	AdhocCommandHandler *handler = new AdhocSettings(m, user, from, id);
 	return handler;
@@ -36,7 +36,7 @@ static AdhocCommandHandler * createAdminHandler(GlooxMessageHandler *m, User *us
 	AdhocCommandHandler *handler = new AdhocAdmin(m, user, from, id);
 	return handler;
 }
- 
+
 GlooxAdhocHandler::GlooxAdhocHandler(GlooxMessageHandler *m) {
 	main = m;
 	main->j->registerIqHandler( this, ExtAdhocCommand );
@@ -44,10 +44,10 @@ GlooxAdhocHandler::GlooxAdhocHandler(GlooxMessageHandler *m) {
 	main->j->disco()->addFeature( XMLNS_ADHOC_COMMANDS );
 	main->j->disco()->registerNodeHandler( this, XMLNS_ADHOC_COMMANDS );
 	main->j->disco()->registerNodeHandler( this, std::string() );
-	
+
 	m_handlers["transport_settings"].name = "Transport settings";
 	m_handlers["transport_settings"].createHandler = createSettingsHandler;
-	
+
 	m_handlers["transport_admin"].name = "Transport administration";
 	m_handlers["transport_admin"].createHandler = createAdminHandler;
 }

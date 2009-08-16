@@ -94,10 +94,10 @@ class User {
 		bool isInRoster(const std::string &name, const std::string &subscription);
 		bool isOpenedConversation(const std::string &name);
 		bool hasFeature(int feature, const std::string &resource = "");
-		
+
 		// XMPP stuff
 		Tag *generatePresenceStanza(PurpleBuddy *buddy);
-		
+
 		// Libpurple stuff
 		void purpleReauthorizeBuddy(PurpleBuddy *buddy);
 
@@ -140,13 +140,13 @@ class User {
 		// Authorization requests
 		bool hasAuthRequest(const std::string &name);
 		void removeAuthRequest(const std::string &name);
-		
+
 		// bind IP
 		void setBindIP(const std::string& bindIP) { m_bindIP = bindIP; }
-		
+
 		// connection start
 		time_t connectionStart() { return m_connectionStart; }
-		
+
 		void setResource(const std::string &resource, int priority = -256, const std::string &caps = "") {
 			if (priority != -256) m_resources[resource].priority = priority;
 			if (!caps.empty()) m_resources[resource].capsVersion = caps;
@@ -156,7 +156,7 @@ class User {
 		bool hasResource(const std::string &r) {return m_resources.find(r) != m_resources.end(); }
 		Resource & getResource(const std::string &r = "") { if (r.empty()) return m_resources[m_resource]; else return m_resources[r];}
 		Resource & findResourceWithFeature(int feature);
-		
+
 		PurpleAccount *account() { return m_account; }
 		std::map<std::string,Resource> & resources() { return m_resources; }
 		int reconnectCount() { return m_reconnectCount; }
@@ -172,7 +172,7 @@ class User {
 		const char *getLang() { return m_lang; }
 		void setLang(const char *lang) { m_lang = lang; }
 		GHashTable *settings() { return m_settings; }
-		
+
 		GlooxMessageHandler *p;
 		const std::string & userKey() { return m_userKey; }
 		void setProtocolData(void *protocolData) { m_protocolData = protocolData; }
@@ -180,9 +180,9 @@ class User {
 		GHashTable *mucs() { return m_mucs; }
 		std::map<std::string,Conversation> conversations() { return m_conversations; }
 		void setFeatures(int f) { m_features = f; }
-		
+
 		guint removeTimer;
-	
+
 	private:
 		std::string m_userKey;
 		PurpleAccount *m_account;	// PurpleAccount to which this user is connected

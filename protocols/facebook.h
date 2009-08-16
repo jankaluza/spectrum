@@ -42,17 +42,17 @@ class FacebookProtocol : AbstractProtocol
 		bool isMUC(User *user, const std::string &jid) { return false; }
 		const std::string notifyUsername() { return "info"; }
 		const std::string userSearchAction() { return "Search for buddies..."; }
-		
+
 		const std::string userSearchColumn() { return "ID"; }
-		
+
 		void onPurpleRequestInput(User *user, const char *title, const char *primary,const char *secondary, const char *default_value,gboolean multiline, gboolean masked, gchar *hint,const char *ok_text, GCallback ok_cb,const char *cancel_text, GCallback cancel_cb, PurpleAccount *account, const char *who,PurpleConversation *conv, void *user_data);
-	
+
 	private:
 		GlooxMessageHandler *m_main;
 		std::list<std::string> m_transportFeatures;
 		std::list<std::string> m_buddyFeatures;
-	
+
 };
 
-#endif	
-	
+#endif
+

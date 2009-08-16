@@ -71,7 +71,7 @@ public:
 	long getRegisteredUsersCount();
 	long getRegisteredUsersRosterCount();
     void getRandomStatus(std::string & status);
-	
+
 	// settings
 	void addSetting(const std::string &jid, const std::string &key, const std::string &value, PurpleType type);
 	void updateSetting(const std::string &jid, const std::string &key, const std::string &value);

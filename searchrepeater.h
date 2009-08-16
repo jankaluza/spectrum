@@ -17,7 +17,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02111-1301  USA
  */
- 
+
 #ifndef _HI_SEARCH_REPEATER_H
 #define _HI_SEARCH_REPEATER_H
 
@@ -44,7 +44,7 @@ class SearchRepeater : public AbstractPurpleRequest
 		void setType(PurpleRequestType t) { m_type = t; }
 		PurpleRequestType type() { return m_type; }
 		const std::string & from() { return m_from; }
-	
+
 	private:
 		GlooxMessageHandler *main;
 		User *m_user;
@@ -59,4 +59,4 @@ class SearchRepeater : public AbstractPurpleRequest
 };
 
 #endif
- 
+

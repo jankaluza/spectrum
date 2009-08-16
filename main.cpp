@@ -326,7 +326,7 @@ static void * notifyEmail(PurpleConnection *gc, const char *subject, const char 
 static void * notifyMessage(PurpleNotifyMsgType type, const char *title, const char *primary, const char *secondary) {
 	// TODO: We have to patch libpurple to be able to identify from which account the message came from...
 	// without this the function is quite useles...
-	
+
 	// User *user = GlooxMessageHandler::instance()->userManager()->getUserByAccount(account);
 	// if (user && !user->adhocData().id.empty()) {
 	// 	AdhocRepeater *repeater = new AdhocRepeater(GlooxMessageHandler::instance(), user, title ? std::string(title):std::string(), primary ? std::string(primary):std::string(), secondary ? std::string(secondary):std::string(), default_action, user_data, action_count, actions);
@@ -344,7 +344,7 @@ static void XferCreated(PurpleXfer *xfer) {
 	Log().Get("xfercreated") << "get user " << remote_user;
 	User *user = GlooxMessageHandler::instance()->userManager()->getUserByAccount(purple_xfer_get_account(xfer));
 	if (!user) return;
-	
+
 	FiletransferRepeater *repeater = user->getFiletransfer(remote_user);
 	Log().Get(user->jid()) << "get filetransferRepeater" << remote_user;
 	if (repeater) {
@@ -389,7 +389,7 @@ static void buddyListSaveNode(PurpleBlistNode *node) {
 		std::string alias;
 		std::string name(purple_buddy_get_name(buddy));
 		Log().Get("buddyListSaveNode") << user->jid() << name;
-		if (purple_buddy_get_server_alias(buddy))                                                                                                                   
+		if (purple_buddy_get_server_alias(buddy))
 			alias = (std::string) purple_buddy_get_server_alias(buddy);
 		else
 			alias = (std::string) purple_buddy_get_alias(buddy);
@@ -651,12 +651,12 @@ GlooxMessageHandler::GlooxMessageHandler(const std::string &config) : MessageHan
 	lastIP = 0;
 	capsCache["_default"] = 0;
 	m_parser = NULL;
-	
+
 	bool loaded = true;
-	
+
 	if (!loadConfigFile(config))
 		loaded = false;
-	
+
 	Log().Get("gloox") << "connecting to: " << m_configuration.server << " as " << m_configuration.jid << " with password " << m_configuration.password;
 	j = new HiComponent("jabber:component:accept",m_configuration.server,m_configuration.jid,m_configuration.password,m_configuration.port);
 
@@ -671,20 +671,20 @@ GlooxMessageHandler::GlooxMessageHandler(const std::string &config) : MessageHan
 
 	if (loaded && !initPurple())
 		loaded = false;
-		
+
 	if (loaded && !loadProtocol())
 		loaded = false;
 
 	if (loaded) {
-		
+
 		m_discoHandler = new GlooxDiscoHandler(this);
-		
+
 		m_discoInfoHandler = new GlooxDiscoInfoHandler(this);
 		j->registerIqHandler(m_discoInfoHandler,ExtDiscoInfo);
-		
+
 		m_adhoc = new GlooxAdhocHandler(this);
 		m_parser = new GlooxParser();
-		
+
 		ftManager = new FileTransferManager();
 		ft = new SIProfileFT(j, ftManager);
 		ftManager->setSIProfileFT(ft, this);
@@ -694,7 +694,7 @@ GlooxMessageHandler::GlooxMessageHandler(const std::string &config) : MessageHan
 		ft->registerSOCKS5BytestreamServer( ftServer );
 		g_timeout_add(10, &ftServerReceive, NULL);
 		// ft->addStreamHost(gloox::JID("proxy.jabbim.cz"), "88.86.102.51", 7777);
-		
+
 		j->registerMessageHandler(this);
 		j->registerConnectionListener(this);
 		gatewayHandler = new GlooxGatewayHandler(this);
@@ -707,9 +707,9 @@ GlooxMessageHandler::GlooxMessageHandler(const std::string &config) : MessageHan
 		j->registerIqHandler(m_vcard, ExtVCard);
 		j->registerPresenceHandler(this);
 		j->registerSubscriptionHandler(this);
-		
+
 		transportConnect();
-		
+
 		g_main_loop_run(loop);
 	}
 }
@@ -751,12 +751,12 @@ bool GlooxMessageHandler::loadProtocol(){
 		Log().Get("loadProtocol") << "Protocol has to be one of: facebook, gg, msn, irc, xmpp, myspace, qq, simple, aim, yahoo.";
 		return false;
 	}
-	
+
 	if (!purple_find_prpl(m_protocol->protocol().c_str())) {
 		Log().Get("loadProtocol") << "There is no libpurple plugin installed for protocol \"" << configuration().protocol << "\"";
 		return false;
 	}
-	
+
 	if (!m_protocol->userSearchAction().empty()) {
 		m_searchHandler = new GlooxSearchHandler(this);
 		j->registerIqHandler(m_searchHandler, ExtSearch);
@@ -886,16 +886,16 @@ bool GlooxMessageHandler::loadConfigFile(const std::string &config) {
 	int flags;
   	char **bind;
 	int i;
-	
+
 	keyfile = g_key_file_new ();
 	flags = G_KEY_FILE_KEEP_COMMENTS | G_KEY_FILE_KEEP_TRANSLATIONS;
-	
+
 	if (!g_key_file_load_from_file (keyfile, config.c_str(), (GKeyFileFlags)flags, NULL)) {
 		if (!g_key_file_load_from_file (keyfile, std::string("/etc/spectrum/" + config + ".cfg").c_str(), (GKeyFileFlags)flags, NULL))
 		{
 			Log().Get("gloox") << "Can't load config file!";
 			Log().Get("gloox") << std::string("/etc/spectrum/" + config + ".cfg") << " or ./" << config;
-			
+
 			g_key_file_free(keyfile);
 			return false;
 		}
@@ -908,7 +908,7 @@ bool GlooxMessageHandler::loadConfigFile(const std::string &config) {
 	m_configuration.jid = (std::string)g_key_file_get_string(keyfile, "service","jid", NULL);
 	m_configuration.port = (int)g_key_file_get_integer(keyfile, "service","port", NULL);
 	m_configuration.filetransferCache = (std::string)g_key_file_get_string(keyfile, "service","filetransfer_cache", NULL);
-	
+
 	m_configuration.sqlType = (std::string)g_key_file_get_string(keyfile, "database","type", NULL);
 	m_configuration.sqlHost = (std::string)g_key_file_get_string(keyfile, "database","host", NULL);
 	m_configuration.sqlPassword = (std::string)g_key_file_get_string(keyfile, "database","password", NULL);
@@ -922,7 +922,7 @@ bool GlooxMessageHandler::loadConfigFile(const std::string &config) {
 		m_configuration.language=g_key_file_get_string(keyfile, "service","language", NULL);
 	else
 		m_configuration.language = "en";
-	
+
 	if(g_key_file_has_key(keyfile,"service","only_for_vip",NULL))
 		m_configuration.onlyForVIP=g_key_file_get_boolean(keyfile, "service","only_for_vip", NULL);
 	else
@@ -948,7 +948,7 @@ bool GlooxMessageHandler::loadConfigFile(const std::string &config) {
 		g_strfreev (bind);
 	}
 	else m_configuration.transportFeatures = 255;
-	
+
 	if(g_key_file_has_key(keyfile,"service","vip_features",NULL)) {
 		bind = g_key_file_get_string_list (keyfile,"service","vip_features",NULL, NULL);
 		m_configuration.VIPFeatures = 0;
@@ -977,7 +977,7 @@ bool GlooxMessageHandler::loadConfigFile(const std::string &config) {
 		}
 		g_strfreev (bind);
 	}
-	
+
 	if(g_key_file_has_key(keyfile,"service","allowed_servers",NULL)) {
 		bind = g_key_file_get_string_list(keyfile, "service", "allowed_servers", NULL, NULL);
 		for (i = 0; bind[i]; i++){
@@ -1202,7 +1202,7 @@ void GlooxMessageHandler::handleSubscription(const Subscription &stanza) {
 	}
 	if (user)
 		user->receivedSubscription(stanza);
-	
+
 }
 
 void GlooxMessageHandler::handlePresence(const Presence &stanza){
@@ -1486,7 +1486,7 @@ bool GlooxMessageHandler::initPurple(){
 
 		purple_set_blist(purple_blist_new());
 		purple_blist_load();
-		
+
 		purple_signal_connect(purple_conversations_get_handle(), "received-im-msg", &conversation_handle, PURPLE_CALLBACK(newMessageReceived), NULL);
 		purple_signal_connect(purple_conversations_get_handle(), "buddy-typing", &conversation_handle, PURPLE_CALLBACK(buddyTyping), NULL);
 		purple_signal_connect(purple_conversations_get_handle(), "buddy-typing-stopped", &conversation_handle, PURPLE_CALLBACK(buddyTypingStopped), NULL);
@@ -1495,9 +1495,9 @@ bool GlooxMessageHandler::initPurple(){
 		purple_signal_connect(purple_xfers_get_handle(), "file-recv-request", &xfer_handle, PURPLE_CALLBACK(newXfer), NULL);
 		purple_signal_connect(purple_xfers_get_handle(), "file-recv-complete", &xfer_handle, PURPLE_CALLBACK(XferComplete), NULL);
 		purple_signal_connect(purple_connections_get_handle(), "signed-on", &conn_handle,PURPLE_CALLBACK(signed_on), NULL);
-		purple_signal_connect(purple_blist_get_handle(), "buddy-removed", &blist_handle,PURPLE_CALLBACK(buddyRemoved), NULL);				
+		purple_signal_connect(purple_blist_get_handle(), "buddy-removed", &blist_handle,PURPLE_CALLBACK(buddyRemoved), NULL);
 		purple_signal_connect(purple_conversations_get_handle(), "chat-topic-changed", &conversation_handle, PURPLE_CALLBACK(conv_chat_topic_changed), NULL);
-	
+
 		purple_commands_init();
 
 	}

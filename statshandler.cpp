@@ -78,7 +78,7 @@ bool GlooxStatsHandler::handleIq (const IQ &stanza){
 // 	            <stat name='bandwidth/packets-out'/>
 // 	          </query>
 //                 </iq>
-//       
+//
 
 	Tag *stanzaTag = stanza.tag();
 	Tag *query = stanzaTag->findChild("query");
@@ -107,7 +107,7 @@ bool GlooxStatsHandler::handleIq (const IQ &stanza){
 		t = new Tag("stat");
 		t->addAttribute("name","users/registered");
 		query->addChild(t);
-		
+
 		t = new Tag("stat");
 		t->addAttribute("name","users/online");
 		query->addChild(t);
@@ -127,7 +127,7 @@ bool GlooxStatsHandler::handleIq (const IQ &stanza){
 		t = new Tag("stat");
 		t->addAttribute("name","messages/out");
 		query->addChild(t);
-		
+
 		s->addChild(query);
 
 		p->j->send( s );
@@ -184,7 +184,7 @@ bool GlooxStatsHandler::handleIq (const IQ &stanza){
 		t->addAttribute("units","users");
 		t->addAttribute("value",users);
 		query->addChild(t);
-		
+
 
 		t = new Tag("stat");
 		t->addAttribute("name","messages/in");

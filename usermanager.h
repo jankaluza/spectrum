@@ -42,13 +42,13 @@ class UserManager
 		void buddyOffline();
 		long onlineUserCount();
 		int userCount() { return g_hash_table_size(m_users); }
-	
+
 	private:
 		GlooxMessageHandler *main;
 		GHashTable *m_users;	// key = JID; value = User*
 		long m_onlineBuddies;
 		User *m_cachedUser;
-	
+
 };
 
 #endif

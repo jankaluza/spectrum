@@ -17,7 +17,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02111-1301  USA
  */
- 
+
 #include "filetransferrepeater.h"
 #include "main.h"
 #include "usermanager.h"
@@ -360,7 +360,7 @@ FiletransferRepeater::FiletransferRepeater(GlooxMessageHandler *main, const JID&
 
 void FiletransferRepeater::registerXfer(PurpleXfer *xfer) {
 	m_xfer = xfer;
-	
+
 // 	purple_xfer_set_local_filename(xfer, filename);
 	if (m_size != -1)
 		purple_xfer_set_size(xfer, m_size);

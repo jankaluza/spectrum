@@ -43,7 +43,7 @@ struct progress {
 	gloox::JID to;
 	std::string user;
 	gloox::Bytestream *stream;
-	
+
 };
 
 class FileTransferManager : public gloox::SIProfileFTHandler {
@@ -67,7 +67,7 @@ class FileTransferManager : public gloox::SIProfileFTHandler {
 // 		void handleFTRequest(   const gloox::JID &from,const gloox::JID &to, const std::string &id, const std::string &sid, const std::string &name,
 //                              long size, const std::string &hash, const std::string &date, const std::string &mimetype,
 //                              const std::string &desc, int stypes, long offset, long length);
- 
+
 // 		void handleFTRequestError(gloox::Stanza *stanza, const std::string &sid);
 
 // 		void handleFTSOCKS5Bytestream(gloox::SOCKS5Bytestream *s5b);

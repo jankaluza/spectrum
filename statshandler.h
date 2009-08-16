@@ -62,7 +62,7 @@ public:
 	{
 		return new StatsExtension(m_tag);
 	}
-	
+
 private:
 	Tag *m_tag;
 
@@ -76,10 +76,10 @@ class GlooxStatsHandler : public IqHandler
 		bool handleIq (const IQ &iq);
 		void handleIqID (const IQ &iq, int context);
 		GlooxMessageHandler *p;
-	
+
 		void messageFromLegacy() { m_messagesOut++; }
 		void messageFromJabber() { m_messagesIn++; }
-	
+
 	private:
 		long m_messagesIn;		// messages from Jabber
 		long m_messagesOut;		// messages from legacy network

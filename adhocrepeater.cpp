@@ -17,7 +17,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02111-1301  USA
  */
- 
+
 #include "adhocrepeater.h"
 #include "gloox/stanza.h"
 #include "log.h"
@@ -29,7 +29,7 @@ static gboolean removeRepeater(gpointer data){
 	Log().Get("AdhocRepeater") << "repeater closed";
 	return FALSE;
 }
- 
+
 AdhocRepeater::AdhocRepeater(GlooxMessageHandler *m, User *user, const std::string &title, const std::string &primaryString, const std::string &secondaryString, const std::string &value, gboolean multiline, gboolean masked, GCallback ok_cb, GCallback cancel_cb, void * user_data) {
 	main = m;
 	m_user = user;
@@ -38,10 +38,10 @@ AdhocRepeater::AdhocRepeater(GlooxMessageHandler *m, User *user, const std::stri
 	m_requestData = user_data;
 	AdhocData data = user->adhocData();
 	m_from = data.from;
-	
+
 	setType(PURPLE_REQUEST_INPUT);
 	setRequestType(CALLER_ADHOC);
-	
+
 	// generate IQ-result for IQ-get (that IQ-get is handled in AdhocHandler class)
 	IQ _response(IQ::Result, data.from, data.id);
 	Tag *response = _response.tag();
@@ -59,9 +59,9 @@ AdhocRepeater::AdhocRepeater(GlooxMessageHandler *m, User *user, const std::stri
 	c->addChild(actions);
 
 	c->addChild( xdataFromRequestInput(title, primaryString, value, multiline) );
-	
+
 	m_defaultString = value;
-	
+
 	response->addChild(c);
 	main->j->send(response);
 }
@@ -123,7 +123,7 @@ AdhocRepeater::AdhocRepeater(GlooxMessageHandler *m, User *user, const std::stri
 	AdhocData data = user->adhocData();
 	m_from = data.from;
 	setRequestType(CALLER_ADHOC);
-	
+
 	// generate IQ-result for IQ-get (that IQ-get is handled in AdhocHandler class)
 	IQ _response(IQ::Result, data.from, data.id);
 	Tag *response = _response.tag();
@@ -139,7 +139,7 @@ AdhocRepeater::AdhocRepeater(GlooxMessageHandler *m, User *user, const std::stri
 	actions->addAttribute("execute","complete");
 	actions->addChild(new Tag("complete"));
 	c->addChild(actions);
-	
+
 	c->addChild( xdataFromRequestFields(title, primaryString, fields) );
 	response->addChild(c);
 	main->j->send(response);
@@ -151,7 +151,7 @@ bool AdhocRepeater::handleIq(const IQ &stanza) {
 	Tag *stanzaTag = stanza.tag();
 	if (!stanzaTag) return false;
 	Tag *tag = stanzaTag->findChild( "command" );
-	
+
 	// check if user canceled request
 	if (tag->hasAttribute("action","cancel")){
 		IQ _response(IQ::Result, stanza.from().full(), stanza.id());
@@ -179,7 +179,7 @@ bool AdhocRepeater::handleIq(const IQ &stanza) {
 		delete stanzaTag;
 		return false;
 	}
-	
+
 	Tag *x = tag->findChildWithAttrib("xmlns","jabber:x:data");
 	if (x) {
 		if (m_type == PURPLE_REQUEST_FIELDS) {
@@ -221,9 +221,9 @@ bool AdhocRepeater::handleIq(const IQ &stanza) {
 		c->addAttribute("status","completed");
 		s->addChild(c);
 		main->j->send(s);
-		
+
 		g_timeout_add(0,&removeRepeater,this);
-		
+
 	}
 
 	delete stanzaTag;

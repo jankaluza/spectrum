@@ -26,8 +26,8 @@ typedef struct _PurpleIOClosure {
 	gpointer data;
 } PurpleIOClosure;
 
-static gboolean io_invoke(GIOChannel *source, 
-										GIOCondition condition, 
+static gboolean io_invoke(GIOChannel *source,
+										GIOCondition condition,
 										gpointer data)
 {
 	PurpleIOClosure *closure = (PurpleIOClosure* )data;
@@ -55,9 +55,9 @@ static void io_destroy(gpointer data)
 	g_free(data);
 }
 
-static guint input_add(gint fd, 
-								PurpleInputCondition condition, 
-								PurpleInputFunction function, 
+static guint input_add(gint fd,
+								PurpleInputCondition condition,
+								PurpleInputFunction function,
 								gpointer data)
 {
 	PurpleIOClosure *closure = g_new0(PurpleIOClosure, 1);

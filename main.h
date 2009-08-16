@@ -138,7 +138,7 @@ struct Configuration {
 	std::string password;	// server password
 	std::string jid;		// JID of this transport
 	int port;				// server port
-	
+
 	bool onlyForVIP;		// true if transport is only for users in VIP users database
 	bool VIPEnabled;
 	int transportFeatures;
@@ -147,7 +147,7 @@ struct Configuration {
 	bool useProxy;
 	std::list <std::string> allowedServers;
 	std::map<int,std::string> bindIPs;	// IP address to which libpurple should bind connections
-	
+
 	std::string userDir;	// directory used as .tmp directory for avatars and other libpurple stuff
 	std::string filetransferCache;	// directory where files are saved
 	std::string base64Dir;	// TODO: I'm depracted, remove me
@@ -173,7 +173,7 @@ public:
     }
 
 	static GlooxMessageHandler *instance() { return m_pInstance; }
-	
+
 	// Purple related
 	void purpleBuddyChanged(PurpleBuddy* buddy);
 	void purpleConnectionError(PurpleConnection *gc,PurpleConnectionError reason,const char *text);
@@ -201,18 +201,18 @@ public:
 	void onDisconnect(ConnectionError e);
 	void onSessionCreateError  	(   	SessionCreateError   	 error);
 	bool onTLSConnect(const CertInfo & info);
-	
+
 	// Gloox handlers
 	void handlePresence(const Presence &presence);
 	void handleSubscription(const Subscription &stanza);
 	void signedOn(PurpleConnection *gc,gpointer unused);
 	void transportConnect();
-	
+
 	// User related
 	// maybe we should move it to something like UserManager
 	bool hasCaps(const std::string &name);
 	void removeUser(User *user);
-	
+
 	UserManager *userManager() { return m_userManager; }
 	GlooxStatsHandler *stats() { return m_stats; }
 	Configuration & configuration() { return m_configuration; }
@@ -223,17 +223,17 @@ public:
 	GlooxAdhocHandler *adhoc() { return m_adhoc; }
 	GlooxSearchHandler *searchHandler() { return m_searchHandler; }
 	GlooxParser *parser() { return m_parser; }
-	
+
 	FileTransferManager* ftManager;
 	SIProfileFT* ft;
-	
+
 	Component *j;
 // 	std::vector<User*> *users;
 	int lastIP;
 	std::map <std::string,int> capsCache;
-	
-	
-	
+
+
+
 	GlooxGatewayHandler *gatewayHandler;
 	SOCKS5BytestreamServer* ftServer;
 
@@ -242,12 +242,12 @@ private:
 	bool initPurple();
 	bool loadConfigFile(const std::string &config);
 	bool loadProtocol();
-	
+
 	Configuration m_configuration;
 	AbstractProtocol *m_protocol;
 
 	SQLClass *m_sql;
-	
+
 	GlooxDiscoHandler *m_discoHandler;
 	GlooxDiscoInfoHandler *m_discoInfoHandler;
  	GlooxRegisterHandler *m_reg;
@@ -257,15 +257,15 @@ private:
 // 	std::list <GlooxAdhocHandler *> m_adhoc_handlers;
 	GlooxAdhocHandler *m_adhoc;
 	GlooxParser *m_parser;
-	
+
 	GIOChannel *connectIO;
-	
+
 	UserManager *m_userManager;
 	static GlooxMessageHandler* m_pInstance;
 	bool m_firstConnection;
 
-	
-	
+
+
 };
 
 #endif

@@ -17,7 +17,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02111-1301  USA
  */
- 
+
 #ifndef _HI_ADHOC_REPEATER_H
 #define _HI_ADHOC_REPEATER_H
 
@@ -45,11 +45,11 @@ class AdhocRepeater : public AdhocCommandHandler
 		AdhocRepeater(GlooxMessageHandler *m, User *user, const std::string &title, const std::string &primaryString, const std::string &secondaryString, PurpleRequestFields *fields, GCallback ok_cb, GCallback cancel_cb, void * user_data);
 		~AdhocRepeater();
 		bool handleIq(const IQ &iq);
-		
+
 		void setType(PurpleRequestType t) { m_type = t; }
 		PurpleRequestType type() { return m_type; }
 		const std::string & from() { return m_from; }
-	
+
 	private:
 		GlooxMessageHandler *main;				// client
 		User *m_user;							// User to which Ad-Hoc are sent

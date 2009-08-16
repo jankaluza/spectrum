@@ -30,7 +30,7 @@ FacebookProtocol::FacebookProtocol(GlooxMessageHandler *main){
 	m_transportFeatures.push_back("http://jabber.org/protocol/activity+notify");
 	m_transportFeatures.push_back("http://jabber.org/protocol/commands");
 	m_transportFeatures.push_back("jabber:iq:search");
-	
+
 	m_buddyFeatures.push_back("http://jabber.org/protocol/disco#info");
 	m_buddyFeatures.push_back("http://jabber.org/protocol/caps");
 	m_buddyFeatures.push_back("http://jabber.org/protocol/chatstates");
@@ -60,7 +60,7 @@ FacebookProtocol::FacebookProtocol(GlooxMessageHandler *main){
 // 	m_buddyFeatures.push_back("http://jabber.org/protocol/bytestreams");
 // 	m_buddyFeatures.push_back("http://jabber.org/protocol/si");
 }
-	
+
 FacebookProtocol::~FacebookProtocol() {}
 
 void FacebookProtocol::prepareUserName(std::string &str) {
@@ -144,13 +144,13 @@ Tag *FacebookProtocol::getVCardTag(User *user, GList *vcardEntries) {
 		}
 		vcardEntries = vcardEntries->next;
 	}
-	
+
 	// add last head if any
 // 	if (head)
 // 		if (!head->children().empty())
 // 			vcard->addChild(head);
 	vcard->addChild( new Tag("DESC", description));
-	
+
 
 	return vcard;
 }

@@ -44,8 +44,8 @@ class GGProtocol : AbstractProtocol
 		GlooxMessageHandler *m_main;
 		std::list<std::string> m_transportFeatures;
 		std::list<std::string> m_buddyFeatures;
-	
+
 };
 
-#endif	
-	
+#endif
+

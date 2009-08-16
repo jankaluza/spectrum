@@ -30,7 +30,7 @@ SimpleProtocol::SimpleProtocol(GlooxMessageHandler *main){
 	m_transportFeatures.push_back("http://jabber.org/protocol/activity+notify");
 	m_transportFeatures.push_back("http://jabber.org/protocol/commands");
 	m_transportFeatures.push_back("jabber:iq:search");
-	
+
 	m_buddyFeatures.push_back("http://jabber.org/protocol/disco#info");
 	m_buddyFeatures.push_back("http://jabber.org/protocol/caps");
 	m_buddyFeatures.push_back("http://jabber.org/protocol/chatstates");
@@ -40,7 +40,7 @@ SimpleProtocol::SimpleProtocol(GlooxMessageHandler *main){
 // 	m_buddyFeatures.push_back("http://jabber.org/protocol/bytestreams");
 // 	m_buddyFeatures.push_back("http://jabber.org/protocol/si");
 }
-	
+
 SimpleProtocol::~SimpleProtocol() {}
 
 void SimpleProtocol::prepareUserName(std::string &str) {

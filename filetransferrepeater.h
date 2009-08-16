@@ -45,9 +45,9 @@ class AbstractResendClass {
 	public:
 		AbstractResendClass() { m_mutex = new MyMutex(); }
 		~AbstractResendClass() { delete m_mutex; }
-		
+
 		MyMutex *getMutex() { return m_mutex; }
-	
+
 	private:
 		MyMutex *m_mutex;
 };
@@ -62,12 +62,12 @@ class ReceiveFile : public AbstractResendClass, public BytestreamDataHandler, pu
 		void handleBytestreamError(Bytestream *s5b, const IQ &iq);
 		void handleBytestreamOpen(Bytestream *s5b);
 		void handleBytestreamClose(Bytestream *s5b);
-		
+
 		const std::string &filename() { return m_filename; }
 		User *user () { return m_user; }
 		const std::string &target() { return m_target; }
 		void dispose();
-	
+
 	private:
 		Bytestream *m_stream;
 		std::string m_filename;
@@ -89,9 +89,9 @@ class ReceiveFileStraight : public AbstractResendClass, public BytestreamDataHan
 		void handleBytestreamError(Bytestream *s5b, const IQ &iq);
 		void handleBytestreamOpen(Bytestream *s5b);
 		void handleBytestreamClose(Bytestream *s5b);
-		
+
 		void gotData(const std::string &data);
-	
+
 	private:
 		Bytestream *m_stream;
 		std::string m_filename;
@@ -115,7 +115,7 @@ class SendFile : public AbstractResendClass, public BytestreamDataHandler, publi
 		const std::string &filename() { return m_filename; }
 		User *user() { return m_user; }
 		void dispose();
-		
+
 	private:
 		Bytestream *m_stream;
 		std::string m_filename;
@@ -135,7 +135,7 @@ class SendFileStraight : public AbstractResendClass, public BytestreamDataHandle
 		void handleBytestreamError(Bytestream *s5b, const IQ &iq);
 		void handleBytestreamOpen(Bytestream *s5b);
 		void handleBytestreamClose(Bytestream *s5b);
-	
+
 	private:
 		Bytestream *m_stream;
 		std::string m_filename;
@@ -144,12 +144,12 @@ class SendFileStraight : public AbstractResendClass, public BytestreamDataHandle
 };
 
 class FiletransferRepeater {
-	
+
 	public:
 		FiletransferRepeater(GlooxMessageHandler *main, const JID& to, const std::string& sid, SIProfileFT::StreamType type, const JID& from, long size);
 		FiletransferRepeater(GlooxMessageHandler *main, const JID& from, const JID& to);
 		~FiletransferRepeater() {}
-		
+
 		void registerXfer(PurpleXfer *xfer);
 		void fileSendStart();
 		void fileRecvStart();
@@ -157,15 +157,15 @@ class FiletransferRepeater {
 		void handleFTSendBytestream(Bytestream *bs, const std::string &filename = "");
 		void gotData(const std::string &data);
 		std::string requestFT();
-		
+
 		bool isSending() { return m_send; }
-		
+
 		std::string & getBuffer() { return m_buffer; }
 		AbstractResendClass *getResender() { return m_resender; }
 		void wantsData() { m_wantsData = true; }
 		std::ofstream m_file;
 		GlooxMessageHandler *parent() { return m_main; }
-	
+
 	private:
 		GlooxMessageHandler *m_main;
 		JID m_to;
@@ -175,12 +175,12 @@ class FiletransferRepeater {
 		long m_size;
 		PurpleXfer *m_xfer;
 		bool m_send;
-		
-		
+
+
 		std::string m_buffer;
 		AbstractResendClass *m_resender;
 		bool m_wantsData;
-	
+
 };
 
 #endif

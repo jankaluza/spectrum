@@ -29,7 +29,7 @@ GGProtocol::GGProtocol(GlooxMessageHandler *main){
 	m_transportFeatures.push_back("http://jabber.org/protocol/chatstates");
 // 	m_transportFeatures.push_back("http://jabber.org/protocol/activity+notify");
 	m_transportFeatures.push_back("http://jabber.org/protocol/commands");
-	
+
 	m_buddyFeatures.push_back("http://jabber.org/protocol/disco#info");
 	m_buddyFeatures.push_back("http://jabber.org/protocol/caps");
 	m_buddyFeatures.push_back("http://jabber.org/protocol/chatstates");
@@ -39,7 +39,7 @@ GGProtocol::GGProtocol(GlooxMessageHandler *main){
 // 	m_buddyFeatures.push_back("http://jabber.org/protocol/bytestreams");
 // 	m_buddyFeatures.push_back("http://jabber.org/protocol/si");
 }
-	
+
 GGProtocol::~GGProtocol() {}
 
 void GGProtocol::prepareUserName(std::string &str) {

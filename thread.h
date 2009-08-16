@@ -33,9 +33,9 @@
 #else
         #error NO THREADING SUPPORT!!! THIS SOFTWARE WILL NOT RUN!
 #endif
- 
+
 class Thread;
- 
+
 #ifdef HAVE_PTHREADS
 void *thread_thread(void *v);
 #elif WIN32

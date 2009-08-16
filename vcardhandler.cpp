@@ -67,7 +67,7 @@ void base64encode(const unsigned char * input, int len, std::string & out)
             *outiter++ = b3;
             *outiter++ = b4;
             i+=2;
-            remaining -= 2; 
+            remaining -= 2;
         } else {
             octets = input[i] << 16;
 
@@ -79,10 +79,10 @@ void base64encode(const unsigned char * input, int len, std::string & out)
             *outiter++ = b3;
             *outiter++ = b4;
             i++;
-            remaining--;  
+            remaining--;
         }
     }
-}   
+}
 
 static void sendVCardTag(Tag *tag, Tag *stanzaTag) {
 	std::string id = stanzaTag->findAttribute("id");
@@ -116,7 +116,7 @@ bool GlooxVCardHandler::handleIq (const IQ &stanza){
 
 	if(stanza.subtype() == IQ::Get) {
 		Tag *stanzaTag = stanza.tag();
-		
+
 		if (!p->sql()->getVCard(stanza.to().username(), sendVCardTag, stanzaTag)) {
 			std::list<std::string> temp;
 			temp.push_back((std::string)stanza.id());
@@ -185,7 +185,7 @@ void GlooxVCardHandler::userInfoArrived(PurpleConnection *gc, const std::string 
 
 			if(!photo->children().empty())
 				vcard->addChild(photo);
-			else 
+			else
 				delete photo;
 		}
 

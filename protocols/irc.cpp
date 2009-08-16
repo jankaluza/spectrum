@@ -30,13 +30,13 @@ IRCProtocol::IRCProtocol(GlooxMessageHandler *main){
 	m_transportFeatures.push_back("http://jabber.org/protocol/caps");
 	m_transportFeatures.push_back("http://jabber.org/protocol/commands");
 	m_transportFeatures.push_back("http://jabber.org/protocol/muc");
-	
+
 	m_buddyFeatures.push_back("http://jabber.org/protocol/disco#info");
 	m_buddyFeatures.push_back("http://jabber.org/protocol/caps");
 	m_buddyFeatures.push_back("http://jabber.org/protocol/commands");
 
 }
-	
+
 IRCProtocol::~IRCProtocol() {}
 
 std::list<std::string> IRCProtocol::transportFeatures(){
@@ -124,7 +124,7 @@ bool IRCProtocol::onPresenceReceived(User *user, const Presence &stanza) {
 			}
 		}
 	}
-	
+
 	// this presence is for the transport
 	if ( !tempAccountsAllowed() || isMUC(NULL, stanza.to().bare()) ){
 		if(stanza.presence() == Presence::Unavailable) {
@@ -189,7 +189,7 @@ bool IRCProtocol::onPresenceReceived(User *user, const Presence &stanza) {
 				PurpleSavedStatus *status;
 				int PurplePresenceType;
 				std::string statusMessage;
-				
+
 				// mirror presence types
 				switch(stanza.presence()) {
 					case Presence::Available: {

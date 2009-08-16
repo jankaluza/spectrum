@@ -75,11 +75,11 @@ bool GlooxGatewayHandler::handleIq (const IQ &stanza){
 		Tag *s = _s.tag();
 		Tag *query = new Tag("query");
 		query->setXmlns("jabber:iq:gateway");
-		
+
 		query->addChild(new Tag("desc","Please enter the ICQ Number of the person you would like to contact."));
 		query->addChild(new Tag("prompt","Contact ID"));
 		s->addChild(query);
-		
+
 		p->j->send( s );
 		return true;
 	}
@@ -93,22 +93,22 @@ bool GlooxGatewayHandler::handleIq (const IQ &stanza){
 		if (prompt==NULL)
 			return false;
 		std::string uin(prompt->cdata());
-		
+
 		// TODO: rewrite to support more protocols
 		replace(uin,"-","");
 		replace(uin," ","");
-		
+
 		IQ _s(IQ::Result, stanza.from(), stanza.id());
 		_s.setFrom(p->jid());
 		Tag *s = _s.tag();
 		query = new Tag("query");
 		query->setXmlns("jabber:iq:gateway");
-		
+
 		query->addChild(new Tag("jid",uin+"@"+p->jid()));
 		query->addChild(new Tag("prompt",uin+"@"+p->jid()));
-		
+
 		s->addChild(query);
-		
+
 		p->j->send( s );
 		delete stanzaTag;
 		return true;

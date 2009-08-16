@@ -77,7 +77,7 @@ User::User(GlooxMessageHandler *parent, JID jid, const std::string &username, co
 	m_mucs = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
 	m_filetransfers = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
 	PurpleValue *value;
-	
+
 	// check default settings
 	if ( (value = getSetting("enable_transport")) == NULL ) {
 		p->sql()->addSetting(m_userKey, "enable_transport", "1", PURPLE_TYPE_BOOLEAN);
@@ -103,7 +103,7 @@ User::User(GlooxMessageHandler *parent, JID jid, const std::string &username, co
 		purple_value_set_boolean(value, true);
 		g_hash_table_replace(m_settings, g_strdup("enable_chatstate"), value);
 	}
-	
+
 	p->protocol()->onUserCreated(this);
 }
 
@@ -223,8 +223,8 @@ void User::sendRosterX()
 		std::for_each(name.begin(), name.end(), replaceBadJidCharacters());
 		if (!name.empty()) {
 			RosterRow user;
-			std::string alias;                                                                                                                                          
-			if (purple_buddy_get_server_alias(buddy))                                                                                                                   
+			std::string alias;
+			if (purple_buddy_get_server_alias(buddy))
 				alias = (std::string) purple_buddy_get_server_alias(buddy);
 			else
 				alias = (std::string) purple_buddy_get_alias(buddy);
@@ -249,7 +249,7 @@ void User::sendRosterX()
 	tag->addChild(x);
 	std::cout << tag->xml() << "\n";
 	p->j->send(tag);
-	
+
 	m_subscribeCache.clear();
 	m_subscribeLastCount = -1;
 }
@@ -309,7 +309,7 @@ Tag *User::generatePresenceStanza(PurpleBuddy *buddy) {
 		Log().Get(m_jid) << "Raw status message: " << _status;
 		tag->addChild( new Tag("status", stripHTMLTags(_status)) );
 	}
-	
+
 	switch(s) {
 		case PURPLE_STATUS_AVAILABLE: {
 			break;
@@ -331,7 +331,7 @@ Tag *User::generatePresenceStanza(PurpleBuddy *buddy) {
 			break;
 		}
 	}
-	
+
 	// caps
 	Tag *c = new Tag("c");
 	c->addAttribute("xmlns", "http://jabber.org/protocol/caps");
@@ -339,7 +339,7 @@ Tag *User::generatePresenceStanza(PurpleBuddy *buddy) {
 	c->addAttribute("node", "http://jabbim.cz/icqtransport");
 	c->addAttribute("ver", "Q543534fdsfsdsssT/WM94uAlu0=");
 	tag->addChild(c);
-	
+
 	if (hasTransportFeature(TRANSPORT_FEATURE_AVATARS)) {
 		// vcard-temp:x:update
 		char *avatarHash = NULL;
@@ -404,7 +404,7 @@ void User::purpleReauthorizeBuddy(PurpleBuddy *buddy) {
 		return;
 	GList *l, *ll;
 	std::string name(purple_buddy_get_name(buddy));
-	std::for_each( name.begin(), name.end(), replaceBadJidCharacters() );	
+	std::for_each( name.begin(), name.end(), replaceBadJidCharacters() );
 	if (purple_account_get_connection(m_account)) {
 		PurplePluginProtocolInfo *prpl_info = PURPLE_PLUGIN_PROTOCOL_INFO(purple_account_get_connection(m_account)->prpl);
 		if (prpl_info && prpl_info->blist_node_menu) {
@@ -547,16 +547,16 @@ void User::purpleConversationWriteChat(PurpleConversation *conv, const char *who
 void User::purpleConversationWriteIM(PurpleConversation *conv, const char *who, const char *msg, PurpleMessageFlags flags, time_t mtime) {
 	if (who == NULL)
 		return;
-	
+
 	if (flags & PURPLE_MESSAGE_SEND)
 		return;
-	
+
 	std::string name = (std::string) purple_conversation_get_name(conv);
-	
+
 	size_t pos = name.find("/");
 	if (pos != std::string::npos)
 		name.erase((int) pos, name.length() - (int) pos);
-	
+
 	if (name.empty())
 		return;
 	std::for_each( name.begin(), name.end(), replaceBadJidCharacters() );
@@ -588,7 +588,7 @@ void User::purpleConversationWriteIM(PurpleConversation *conv, const char *who, 
 			s.addExtension(c);
 		}
 	}
-	
+
 	// Delayed messages, we have to count with some delay
 	if ((unsigned long) time(NULL)-10 > (unsigned long) mtime && (unsigned long) time(NULL) - 31536000 > (unsigned long) mtime) {
 		char buf[80];
@@ -688,18 +688,18 @@ void User::purpleBuddyTypingStopped(const std::string &uin){
 	Log().Get(m_jid) << uin << " stopped typing";
 	std::string username(uin);
 	std::for_each( username.begin(), username.end(), replaceBadJidCharacters() );
-	
+
 
 	Tag *s = new Tag("message");
 	s->addAttribute("to",m_jid);
 	s->addAttribute("type","chat");
 	s->addAttribute("from",username + "@" + p->jid() + "/bot");
-	
+
 	// chatstates
 	Tag *active = new Tag("paused");
 	active->addAttribute("xmlns","http://jabber.org/protocol/chatstates");
 	s->addChild(active);
-	
+
 	p->j->send( s );
 }
 
@@ -719,12 +719,12 @@ void User::purpleBuddyTyping(const std::string &uin){
 	s->addAttribute("to", m_jid);
 	s->addAttribute("type", "chat");
 	s->addAttribute("from",username + "@" + p->jid() + "/bot");
-	
+
 	// chatstates
 	Tag *active = new Tag("composing");
 	active->addAttribute("xmlns","http://jabber.org/protocol/chatstates");
 	s->addChild(active);
-	
+
 	p->j->send( s );
 }
 
@@ -766,7 +766,7 @@ void User::receivedMessage(const Message& msg){
 		m_conversations[username].resource = msg.from().resource();
 	}
 	std::string body = msg.body();
-	
+
 	if (body.find("/") == 0) {
 		PurpleCmdStatus status;
 		char *error = NULL;
@@ -802,7 +802,7 @@ void User::receivedMessage(const Message& msg){
 			g_free(error);
 		return;
 	}
-	
+
 	// send this message
 	if (purple_conversation_get_type(conv) == PURPLE_CONV_TYPE_IM) {
 		PurpleConvIm *im = purple_conversation_get_im_data(conv);
@@ -862,7 +862,7 @@ void User::connect() {
 
 		purple_accounts_add(m_account);
 	}
-	
+
 	m_account->ui_data = this;
 
 	// Load roster from DB to libpurple
@@ -883,13 +883,13 @@ void User::connect() {
 		// create contact
 		PurpleContact *contact = purple_contact_new();
 		purple_blist_add_contact(contact, g, NULL);
-		
+
 		// create buddy
 		PurpleBuddy *buddy = purple_buddy_new(m_account, (*u).second.uin.c_str(), (*u).second.nickname.c_str());
 		purple_blist_add_buddy(buddy, contact, g, NULL);
 		Log().Get(m_jid) << "ADDING buddy " << (*u).second.uin << (*u).second.nickname << group;
 	}
-	
+
 	m_connectionStart = time(NULL);
 	m_readyForConnect = false;
 	if (!m_bindIP.empty())
@@ -1181,7 +1181,7 @@ void User::receivedPresence(const Presence &stanza) {
 				int PurplePresenceType;
 				const PurpleStatusType *status_type;
 				std::string statusMessage;
-				
+
 				// mirror presence types
 				switch (stanza.presence()) {
 					case Presence::Available: {
@@ -1206,7 +1206,7 @@ void User::receivedPresence(const Presence &stanza) {
 					}
 					default: break;
 				}
-				
+
 				status_type = purple_account_get_status_type_with_primitive(m_account, (PurpleStatusPrimitive) PurplePresenceType);
 				if (status_type != NULL) {
 					// send presence to legacy network
@@ -1297,7 +1297,7 @@ User::~User(){
 	g_hash_table_destroy(m_mucs);
 	g_hash_table_destroy(m_settings);
 	g_hash_table_destroy(m_filetransfers);
-	
+
 	p->protocol()->onDestroy(this);
 }
 

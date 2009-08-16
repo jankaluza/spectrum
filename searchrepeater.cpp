@@ -17,20 +17,20 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02111-1301  USA
  */
- 
+
 #include "searchrepeater.h"
 #include "gloox/stanza.h"
 #include "log.h"
 #include "protocols/abstractprotocol.h"
 #include "dataforms.h"
- 
+
 static gboolean removeRepeater(gpointer data){
 	SearchRepeater *repeater = (SearchRepeater*) data;
 	purple_request_close(repeater->type(),repeater);
 	Log().Get("SearchRepeater") << "repeater closed";
 	return FALSE;
 }
- 
+
 SearchRepeater::SearchRepeater(GlooxMessageHandler *m, User *user, const std::string &title, const std::string &primaryString, const std::string &secondaryString, const std::string &value, gboolean multiline, gboolean masked, GCallback ok_cb, GCallback cancel_cb, void * user_data) {
 	main = m;
 	m_user = user;
@@ -40,7 +40,7 @@ SearchRepeater::SearchRepeater(GlooxMessageHandler *m, User *user, const std::st
 	m_requestData = user_data;
 	AdhocData data = user->adhocData();
 	m_from = data.from;
-	
+
 	setType(PURPLE_REQUEST_INPUT);
 	setRequestType(CALLER_SEARCH);
 
@@ -73,7 +73,7 @@ SearchRepeater::SearchRepeater(GlooxMessageHandler *m, User *user, const std::st
 	Tag *query = new Tag("query");
 	query->addAttribute("xmlns", "jabber:iq:search");
 	query->addChild( new Tag("instructions", "<instructions>You need an x:data capable client to search</instructions>") );
-	
+
 	query->addChild( xdataFromRequestInput(title, primaryString, value, multiline) );
 
 	response->addChild(query);
@@ -91,7 +91,7 @@ SearchRepeater::SearchRepeater(GlooxMessageHandler *m, User *user, const std::st
 	AdhocData data = user->adhocData();
 	m_from = data.from;
 	setRequestType(CALLER_SEARCH);
-	
+
 	IQ _response(IQ::Result, data.from, data.id);
 	Tag *response = _response.tag();
 	response->addAttribute("from",main->jid());
@@ -106,7 +106,7 @@ SearchRepeater::SearchRepeater(GlooxMessageHandler *m, User *user, const std::st
 	actions->addAttribute("execute","complete");
 	actions->addChild(new Tag("complete"));
 	c->addChild(actions);
-	
+
 	c->addChild( xdataFromRequestFields(title, primaryString, fields) );
 	response->addChild(c);
 	main->j->send(response);
@@ -130,13 +130,13 @@ void SearchRepeater::sendSearchResults(PurpleNotifySearchResults *results) {
 
 	Tag *query = new Tag("query");
 	query->addAttribute("xmlns", "jabber:iq:search");
-	
+
 	Tag *xdata = new Tag("x");
 	xdata->addAttribute("xmlns","jabber:x:data");
 	xdata->addAttribute("type","result");
-	
+
 	Tag *reported = new Tag("reported");
-	
+
 	Tag *field = new Tag("field");
 	field->addAttribute("var","jid");
 	field->addAttribute("label","Jabber ID");
@@ -156,10 +156,10 @@ void SearchRepeater::sendSearchResults(PurpleNotifySearchResults *results) {
 		}
 		i++;
 	}
-	
+
 	xdata->addChild(reported);
 	std::string IDColumn = main->protocol()->userSearchColumn();
-	
+
 	for (row = results->rows; row != NULL; row = row->next) {
 		Tag *item = new Tag("item");
 		i = 0;
@@ -213,7 +213,7 @@ bool SearchRepeater::handleIq(const IQ &stanza) {
 			}
 
 			((PurpleRequestInputCb) m_ok_cb)(m_requestData, result.c_str());
-		}	
+		}
 	}
 
 	m_lastTag = stanzaTag;

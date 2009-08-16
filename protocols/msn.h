@@ -39,13 +39,13 @@ class MSNProtocol : AbstractProtocol
 		std::string text(const std::string &key);
 		Tag *getVCardTag(User *user, GList *vcardEntries) { return NULL; }
 		bool isMUC(User *user, const std::string &jid) { return false; }
-		
+
 	private:
 		GlooxMessageHandler *m_main;
 		std::list<std::string> m_transportFeatures;
 		std::list<std::string> m_buddyFeatures;
-	
+
 };
 
-#endif	
-	
+#endif
+

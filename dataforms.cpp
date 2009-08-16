@@ -69,7 +69,7 @@ Tag * xdataFromRequestAction(const std::string &title, const std::string &primar
 	}
 	field->addAttribute("var","result");
 	xdata->addChild(field);
-	
+
 	return xdata;
 }
 
@@ -151,7 +151,7 @@ Tag * xdataFromRequestFields(const std::string &title, const std::string &primar
 				else
 					field->addChild(new Tag("value", "0"));
 				xdata->addChild(field);
-			}	
+			}
 			else if (type == PURPLE_REQUEST_FIELD_CHOICE) {
 				int i = 0;
 				GList *labels = purple_request_field_choice_get_labels(fld);
@@ -186,7 +186,7 @@ Tag * xdataFromRequestFields(const std::string &title, const std::string &primar
 					field->addAttribute("type","list-single");
 				field->addAttribute("label", field_label ? (std::string) field_label : (std::string) purple_request_field_get_id(fld));
 				field->addAttribute("var",(std::string) purple_request_field_get_id(fld));
-				
+
 				for (l = purple_request_field_list_get_items(fld); l != NULL; l = l->next, i++) {
 					Tag *option;
 					std::string name((char *) l->data);
@@ -213,7 +213,7 @@ Tag * xdataFromRequestFields(const std::string &title, const std::string &primar
 		}
 	}
 
-	
+
 	return xdata;
 }
 
@@ -221,19 +221,19 @@ void setRequestFields(PurpleRequestFields *m_fields, Tag *x) {
 	for(std::list<Tag*>::const_iterator it = x->children().begin(); it != x->children().end(); ++it) {
 		std::string key = (*it)->findAttribute("var");
 		if (key.empty()) continue;
-		
+
 		PurpleRequestField * fld = purple_request_fields_get_field(m_fields, key.c_str());
 		if (!fld) continue;
 		PurpleRequestFieldType type;
 		type = purple_request_field_get_type(fld);
-		
+
 		Tag *v =(*it)->findChild("value");
 		if (!v) continue;
-		
+
 		std::string val = v->cdata();
 		if (val.empty() && type != PURPLE_REQUEST_FIELD_STRING)
 			continue;
-		
+
 		if (type == PURPLE_REQUEST_FIELD_STRING) {
 			purple_request_field_string_set_value(fld, (val.empty() ? NULL : val.c_str()));
 		}

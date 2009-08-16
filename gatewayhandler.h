@@ -60,7 +60,7 @@ public:
 	{
 		return new GatewayExtension(m_tag);
 	}
-	
+
 private:
 	Tag *m_tag;
 

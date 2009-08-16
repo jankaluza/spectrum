@@ -48,7 +48,7 @@ bool SQLClass::isVIP(const std::string &jid){
 	mysqlpp::Row myrow;
 	if (vipSQL->connected()) {
 		mysqlpp::Query query = vipSQL->query();
-		
+
 		query << "SELECT COUNT(jid) as is_vip FROM `users` WHERE jid='"<< jid <<"' and expire>NOW();";
 		res = query.store();
 		if (!res) {
@@ -142,7 +142,7 @@ long SQLClass::getRegisteredUsersRosterCount(){
 	}
 	return 0;
 #endif
-	
+
 }
 
 void SQLClass::updateUserPassword(const std::string &jid,const std::string &password,const std::string &language) {
@@ -184,7 +184,7 @@ void SQLClass::addUser(const std::string &jid,const std::string &uin,const std::
 void SQLClass::addUserToRoster(const std::string &jid,const std::string &uin,const std::string &subscription, const std::string &group, const std::string &nickname) {
 	mysqlpp::Query query = sql->query();
 	query << "INSERT INTO "<< p->configuration().sqlPrefix <<"rosters " << "(id, jid, uin, subscription, g, nickname) VALUES (\"\",\"" << jid << "\",\"" << uin << "\", \"" << subscription << "\", \"" << group << "\", \"" << nickname << "\") ON DUPLICATE KEY UPDATE g=\""+ group +"\", nickname=\""+ nickname +"\";";
-	
+
 	query.execute();
 }
 
@@ -397,7 +397,7 @@ void SQLClass::updateSetting(const std::string &jid, const std::string &key, con
 }
 
 void SQLClass::getSetting(const std::string &jid, const std::string &key) {
-	
+
 }
 
 GHashTable * SQLClass::getSettings(const std::string &jid) {
@@ -421,7 +421,7 @@ GHashTable * SQLClass::getSettings(const std::string &jid) {
 		Log().Get("SQL ERROR") << query.error();
 		return settings;
 	}
-	
+
 	if (res) {
 #if MYSQLPP_HEADER_VERSION < 0x030000
 		mysqlpp::Row row;

@@ -42,15 +42,15 @@ class QQProtocol : AbstractProtocol
 		bool isMUC(User *user, const std::string &jid) { return false; }
 // 		std::string notifyUsername() { return "info"; }
 // 		std::string userSearchAction() { return "Search for buddies..."; }
-		
+
 // 		std::string userSearchColumn() { return "ID"; }
-	
+
 	private:
 		GlooxMessageHandler *m_main;
 		std::list<std::string> m_transportFeatures;
 		std::list<std::string> m_buddyFeatures;
-	
+
 };
 
-#endif	
-	
+#endif
+

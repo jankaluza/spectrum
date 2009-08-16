@@ -45,8 +45,8 @@ bool GlooxRegisterHandler::handleIq (const IQ &iq){
 		if (!isVIP && std::find(x.begin(), x.end(), iq.from().server()) == x.end())
 			return false;
 	}
-	
-	
+
+
 	// send registration form
 	if(iq.subtype() == IQ::Get) {
 		Tag *reply = new Tag( "iq" );
@@ -73,19 +73,19 @@ bool GlooxRegisterHandler::handleIq (const IQ &iq){
 			query->addChild( new Tag("password"));
 // 			query->addChild( new Tag("language", res.language) );
 		}
-		
+
 		Tag *x = new Tag("x");
 		x->addAttribute("xmlns", "jabber:x:data");
 		x->addAttribute("type", "form");
 		x->addChild( new Tag("title", "Registration") );
 		x->addChild( new Tag("instructions", p->protocol()->text("instructions")) );
-		
+
 		Tag *field = new Tag("field");
 		field->addAttribute("type", "hidden");
 		field->addAttribute("var", "FORM_TYPE");
 		field->addChild( new Tag("value", "jabber:iq:register") );
 		x->addChild(field);
-		
+
 		field = new Tag("field");
 		field->addAttribute("type", "text-single");
 		field->addAttribute("var", "username");
@@ -130,7 +130,7 @@ bool GlooxRegisterHandler::handleIq (const IQ &iq){
 			field->addChild( new Tag("value", "0") );
 			x->addChild(field);
 		}
-		
+
 		query->addChild(x);
 		reply->addChild(query);
 		p->j->send( reply );
@@ -152,7 +152,7 @@ bool GlooxRegisterHandler::handleIq (const IQ &iq){
 		if (!query) return true;
 
 		Tag *xdata = query->findChild("x", "xmlns", "jabber:x:data");
-		
+
 		if (xdata) {
 			if(query->hasChild( "remove" ))
 				remove = true;
@@ -179,7 +179,7 @@ bool GlooxRegisterHandler::handleIq (const IQ &iq){
 			usernametag = query->findChild("username");
 			passwordtag = query->findChild("password");
 			languagetag = query->findChild("language");
-			
+
 			if (languagetag)
 				language = languagetag->cdata();
 			else
@@ -265,22 +265,22 @@ bool GlooxRegisterHandler::handleIq (const IQ &iq){
 			reply->addAttribute( "to", iq.from().full() );
 			reply->addAttribute( "from", p->jid() );
 			p->j->send( reply );
-			
+
 			delete iqTag;
 			return true;
 		}
-	
+
 		// Register or change password
-	
+
 		std::string jid = iq.from().bare();
 
 		if (username.empty() || password.empty())
 			e=true;
-		
+
 		p->protocol()->prepareUserName(username);
 		if (!p->protocol()->isValidUsername(username))
 			e = true;
-		
+
 //    <iq type='error' from='shakespeare.lit' to='bill@shakespeare.lit/globe' id='change1'>
 //        <error code='400' type='modify'>
 //    	    <bad-request xmlns='urn:ietf:params:xml:ns:xmpp-stanzas'/>
@@ -292,18 +292,18 @@ bool GlooxRegisterHandler::handleIq (const IQ &iq){
 		    iq2->addAttribute("from", p->jid());
 		    iq2->addAttribute("to", iq.from().full());
 		    iq2->addAttribute("id", iq.id());
-		    
+
 			Tag *error = new Tag("error");
 		    error->addAttribute("code",400);
 		    error->addAttribute("type","modify");
 		    Tag *bad = new Tag("bad-request");
 		    bad->addAttribute("xmlns","urn:ietf:params:xml:ns:xmpp-stanzas");
-		    
+
 		    error->addChild(bad);
 		    iq2->addChild(error);
-		    
+
 		    p->j->send(iq2);
-		    
+
 			delete iqTag;
 		    return true;
 		}
@@ -311,7 +311,7 @@ bool GlooxRegisterHandler::handleIq (const IQ &iq){
 
 
 		UserRow res = p->sql()->getUserByJid(iq.from().bare());
-		if(res.id==-1) {	
+		if(res.id==-1) {
 			std::cout << "* adding new user: "<< jid << ", " << username << ", " << password << ", " << language <<"\n";
 			p->sql()->addUser(jid,username,password,language);
 			sendsubscribe = true;
@@ -329,7 +329,7 @@ bool GlooxRegisterHandler::handleIq (const IQ &iq){
 		rquery->addAttribute( "xmlns", "jabber:iq:register" );
 		reply->addChild(rquery);
 		p->j->send( reply );
-		
+
 		if(sendsubscribe) {
 			reply = new Tag("presence");
 			reply->addAttribute( "from", p->jid() );

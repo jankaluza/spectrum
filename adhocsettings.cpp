@@ -17,12 +17,12 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02111-1301  USA
  */
- 
+
 #include "adhocsettings.h"
 #include "gloox/stanza.h"
 #include "log.h"
 
- 
+
 AdhocSettings::AdhocSettings(GlooxMessageHandler *m, User *user, const std::string &from, const std::string &id) {
 	main = m;
 	m_user = user;
@@ -30,7 +30,7 @@ AdhocSettings::AdhocSettings(GlooxMessageHandler *m, User *user, const std::stri
 	Tag *field;
 	m_from = std::string(from);
 	setRequestType(CALLER_ADHOC);
-	
+
 	IQ _response(IQ::Result, from, id);
 	Tag *response = _response.tag();
 	response->addAttribute("from",main->jid());
@@ -124,20 +124,20 @@ bool AdhocSettings::handleIq(const IQ &stanza) {
 		delete stanzaTag;
 		return true;
 	}
-	
+
 	Tag *x = tag->findChildWithAttrib("xmlns","jabber:x:data");
 	if (x) {
 		std::string result("");
 		for(std::list<Tag*>::const_iterator it = x->children().begin(); it != x->children().end(); ++it) {
 			std::string key = (*it)->findAttribute("var");
 			if (key.empty()) continue;
-			
+
 			PurpleValue * savedValue = m_user->getSetting(key.c_str());
 			if (!savedValue) continue;
-			
+
 			Tag *v =(*it)->findChild("value");
 			if (!v) continue;
-			
+
 			PurpleValue *value;
 			if (purple_value_get_type(savedValue) == PURPLE_TYPE_BOOLEAN) {
 				value = purple_value_new(PURPLE_TYPE_BOOLEAN);
@@ -161,8 +161,8 @@ bool AdhocSettings::handleIq(const IQ &stanza) {
 		c->addAttribute("status","completed");
 		s->addChild(c);
 		main->j->send(s);
-		
-// 		g_timeout_add(0,&removeRepeater,this);		
+
+// 		g_timeout_add(0,&removeRepeater,this);
 	}
 
 	delete stanzaTag;

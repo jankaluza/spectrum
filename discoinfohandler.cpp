@@ -40,13 +40,13 @@ bool GlooxDiscoInfoHandler::handleIq (const IQ &stanza){
 		temp.push_back((std::string)stanza.id());
 		temp.push_back((std::string)stanza.from().full());
 		vcardRequests[(std::string)stanza.to().username()]=temp;
-		
+
 		serv_get_info(purple_account_get_connection(user->account), stanza.to().username().c_str());
 	}*/
 /*
-<iq from='romeo@montague.lit/orchard' 
+<iq from='romeo@montague.lit/orchard'
     id='disco1'
-    to='juliet@capulet.lit/chamber' 
+    to='juliet@capulet.lit/chamber'
     type='result'>
   <query xmlns='http://jabber.org/protocol/disco#info'
          node='http://code.google.com/p/exodus#QgayPKawpkPSDYmwT/WM94uAlu0='>
@@ -70,7 +70,7 @@ bool GlooxDiscoInfoHandler::handleIq (const IQ &stanza){
 			Tag *query2 = new Tag("query");
 			query2->setXmlns("http://jabber.org/protocol/disco#info");
 			query2->addAttribute("node",query->findAttribute("node"));
-			
+
 			Tag *t;
 			t = new Tag("identity");
 			t->addAttribute("category","gateway");
@@ -115,7 +115,7 @@ bool GlooxDiscoInfoHandler::handleIq (const IQ &stanza){
 			Tag *query2 = new Tag("query");
 			query2->setXmlns("http://jabber.org/protocol/disco#info");
 			query2->addAttribute("node",node);
-			
+
 			Tag *t;
 			t = new Tag("identity");
 			t->addAttribute("category","gateway");
@@ -136,7 +136,7 @@ bool GlooxDiscoInfoHandler::handleIq (const IQ &stanza){
 		}
 		delete tag;
 	}
-	
+
 	return true;
 }
 

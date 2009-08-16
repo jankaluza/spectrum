@@ -39,7 +39,7 @@ public:
 	~GlooxRegisterHandler();
 	bool handleIq (const IQ &iq);
 	void handleIqID (const IQ &iq, int context);
-	
+
 	GlooxMessageHandler *p;
 };
 
