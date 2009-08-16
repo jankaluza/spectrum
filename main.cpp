@@ -52,70 +52,29 @@ namespace gloox {
 	class HiComponent : public Component {
 		public:
 			HiComponent(const std::string & ns, const std::string & server, const std::string & component, const std::string & password, int port = 5347) : Component(ns, server, component, password, port) {};
-
 			virtual ~HiComponent() {};
-
-			// unfortunately we can't override const std::string variant
-// 			virtual void send(Tag *tag) {
-// 				std::string tagxml;
-// 				std::string outxml;
-// 				if (!tag)
-// 					return;
-// 
-// 				try {
-// 					tagxml = tag->xml();
-// 					outxml.resize(tagxml.size(), 0);
-// 
-// 					// replace invalid utf-8 characters
-// 					utf8::replace_invalid(tagxml.begin(), tagxml.end(), outxml.begin(), '?');
-// 
-// 					// replace invalid xml characters
-// 					for (std::string::iterator it = outxml.begin(); it != outxml.end(); ++it) {
-// 						if (((unsigned char)*it) < 0x20 && (*it != 0x09 && *it != 0x0A && *it != 0x0D)) {
-// 							*it = '?';
-// 						}
-// 					}
-// 					send(outxml);
-// 				} catch (...) {     // replace_invalid can throw exception? wtf!
-// 				}
-// 
-// 				delete tag;
-// 			}
-// 		protected:
-// 			void send( const std::string & xml) {    // copied from ClientBase::send(std::string), why have private function which handles protected data ??
-// 				if( m_connection && m_connection->state() == StateConnected ) {
-// 					if( m_compression && m_compressionActive )
-// 						m_compression->compress( xml );
-// 					else if( m_encryption && m_encryptionActive )
-// 						m_encryption->encrypt( xml );
-// 					else
-// 						m_connection->send( xml );
-// 				}
-// 			}
 	};
 };
 
 /*
  * New message from legacy network received (we can create conversation here)
  */
-static void newMessageReceived(PurpleAccount* account,char * name,char *msg,PurpleConversation *conv,PurpleMessageFlags flags)
-{
-	GlooxMessageHandler::instance()->purpleMessageReceived(account,name,msg,conv,flags);
+static void newMessageReceived(PurpleAccount* account,char * name,char *msg,PurpleConversation *conv,PurpleMessageFlags flags) {
+	GlooxMessageHandler::instance()->purpleMessageReceived(account, name, msg, conv, flags);
 }
 
 /*
  * Called when libpurple wants to write some message to Chat
  */
-static void conv_write_im(PurpleConversation *conv, const char *who, const char *message, PurpleMessageFlags flags, time_t mtime)
-{
-	GlooxMessageHandler::instance()->purpleConversationWriteIM(conv,who,message,flags,mtime);
+static void conv_write_im(PurpleConversation *conv, const char *who, const char *message, PurpleMessageFlags flags, time_t mtime) {
+	GlooxMessageHandler::instance()->purpleConversationWriteIM(conv, who, message, flags, mtime);
 }
 
 /*
  * Called when libpurple wants to write some message to Groupchat
  */
 static void conv_write_chat(PurpleConversation *conv, const char *who, const char *message, PurpleMessageFlags flags, time_t mtime) {
-	GlooxMessageHandler::instance()->purpleConversationWriteChat(conv,who,message,flags,mtime);
+	GlooxMessageHandler::instance()->purpleConversationWriteChat(conv, who, message, flags, mtime);
 }
 
 /*
@@ -152,7 +111,7 @@ static void conv_chat_rename_user(PurpleConversation *conv, const char *old_name
 }
 
 /*
- * Called when there are is removed
+ * Called when users are removed from chat
  */
 static void conv_chat_remove_users(PurpleConversation *conv, GList *users) {
 	GlooxMessageHandler::instance()->purpleChatRemoveUsers(conv, users);
@@ -161,23 +120,22 @@ static void conv_chat_remove_users(PurpleConversation *conv, GList *users) {
 /*
  * Called when user is logged in...
  */
-static void signed_on(PurpleConnection *gc,gpointer unused)
-{
-	GlooxMessageHandler::instance()->signedOn(gc,unused);
+static void signed_on(PurpleConnection *gc,gpointer unused) {
+	GlooxMessageHandler::instance()->signedOn(gc, unused);
 }
 
 /*
  * Called when somebody from legacy network start typing
  */
-static void buddyTyping(PurpleAccount *account, const char *who, gpointer null){
-	GlooxMessageHandler::instance()->purpleBuddyTyping(account,who);
+static void buddyTyping(PurpleAccount *account, const char *who, gpointer null) {
+	GlooxMessageHandler::instance()->purpleBuddyTyping(account, who);
 }
 
 /*
  * Called when somebody from legacy network stops typing
  */
 static void buddyTypingStopped(PurpleAccount *account, const char *who, gpointer null){
-	GlooxMessageHandler::instance()->purpleBuddyTypingStopped(account,who);
+	GlooxMessageHandler::instance()->purpleBuddyTypingStopped(account, who);
 }
 
 /*
@@ -191,13 +149,13 @@ static void buddyRemoved(PurpleBuddy *buddy, gpointer null) {
  * Called when purple disconnects from legacy network.
  */
 void connection_report_disconnect(PurpleConnection *gc,PurpleConnectionError reason,const char *text){
-	GlooxMessageHandler::instance()->purpleConnectionError(gc,reason,text);
+	GlooxMessageHandler::instance()->purpleConnectionError(gc, reason, text);
 }
 
 /*
  * Called when purple wants to some input from transport.
  */
-static void * requestInput(const char *title, const char *primary,const char *secondary, const char *default_value,gboolean multiline, gboolean masked, gchar *hint,const char *ok_text, GCallback ok_cb,const char *cancel_text, GCallback cancel_cb,PurpleAccount *account, const char *who,PurpleConversation *conv, void *user_data){
+static void * requestInput(const char *title, const char *primary,const char *secondary, const char *default_value,gboolean multiline, gboolean masked, gchar *hint,const char *ok_text, GCallback ok_cb,const char *cancel_text, GCallback cancel_cb,PurpleAccount *account, const char *who,PurpleConversation *conv, void *user_data) {
 	Log().Get("purple") << "new requestInput";
 	if (primary) {
 		std::string primaryString(primary);
@@ -207,15 +165,15 @@ static void * requestInput(const char *title, const char *primary,const char *se
 		// Check if there is some adhocData. If it's there, this request will be handled by some handler registered to this data.
 		if (!user->adhocData().id.empty()) {
 			if (user->adhocData().callerType == CALLER_ADHOC) {
-				AdhocRepeater *repeater = new AdhocRepeater(GlooxMessageHandler::instance(), user, title ? std::string(title):std::string(), primaryString, secondary ? std::string(secondary):std::string(), default_value ? std::string(default_value):std::string(), multiline, masked, ok_cb, cancel_cb, user_data);
+				AdhocRepeater *repeater = new AdhocRepeater(GlooxMessageHandler::instance(), user, title ? std::string(title) : std::string(), primaryString, secondary ? std::string(secondary) : std::string(), default_value ? std::string(default_value) : std::string(), multiline, masked, ok_cb, cancel_cb, user_data);
 				GlooxMessageHandler::instance()->adhoc()->registerSession(user->adhocData().from, repeater);
 				AdhocData data;
-				data.id="";
+				data.id = "";
 				user->setAdhocData(data);
 				return repeater;
 			}
 			else if (user->adhocData().callerType == CALLER_SEARCH) {
-				SearchRepeater *repeater = new SearchRepeater(GlooxMessageHandler::instance(), user, title ? std::string(title):std::string(), primaryString, secondary ? std::string(secondary):std::string(), default_value ? std::string(default_value):std::string(), multiline, masked, ok_cb, cancel_cb, user_data);
+				SearchRepeater *repeater = new SearchRepeater(GlooxMessageHandler::instance(), user, title ? std::string(title) : std::string(), primaryString, secondary ? std::string(secondary) : std::string(), default_value ? std::string(default_value) : std::string(), multiline, masked, ok_cb, cancel_cb, user_data);
 				GlooxMessageHandler::instance()->searchHandler()->registerSession(user->adhocData().from, repeater);
 // 				AdhocData data;
 // 				data.id="";
@@ -236,11 +194,10 @@ static void * notifySearchResults(PurpleConnection *gc, const char *title, const
 		if (user->adhocData().callerType == CALLER_SEARCH) {
 			GlooxMessageHandler::instance()->searchHandler()->searchResultsArrived(user->adhocData().from, results);
 			AdhocData data;
-			data.id="";
+			data.id = "";
 			user->setAdhocData(data);
 		}
 	}
-
 	return NULL;
 }
 
@@ -248,15 +205,15 @@ static void *requestFields(const char *title, const char *primary, const char *s
 	User *user = GlooxMessageHandler::instance()->userManager()->getUserByAccount(account);
 	if (user && !user->adhocData().id.empty()) {
 		if (user->adhocData().callerType == CALLER_ADHOC) {
-			AdhocRepeater *repeater = new AdhocRepeater(GlooxMessageHandler::instance(), user, title ? std::string(title):std::string(), primary ? std::string(primary):std::string(), secondary ? std::string(secondary):std::string(), fields, ok_cb, cancel_cb, user_data);
+			AdhocRepeater *repeater = new AdhocRepeater(GlooxMessageHandler::instance(), user, title ? std::string(title) : std::string(), primary ? std::string(primary) : std::string(), secondary ? std::string(secondary) : std::string(), fields, ok_cb, cancel_cb, user_data);
 			GlooxMessageHandler::instance()->adhoc()->registerSession(user->adhocData().from, repeater);
 			AdhocData data;
-			data.id="";
+			data.id = "";
 			user->setAdhocData(data);
 			return repeater;
 		}
 		else if (user->adhocData().callerType == CALLER_SEARCH) {
-			SearchRepeater *repeater = new SearchRepeater(GlooxMessageHandler::instance(), user, title ? std::string(title):std::string(), primary ? std::string(primary):std::string(), secondary ? std::string(secondary):std::string(), fields, ok_cb, cancel_cb, user_data);
+			SearchRepeater *repeater = new SearchRepeater(GlooxMessageHandler::instance(), user, title ? std::string(title):std::string(), primary ? std::string(primary) : std::string(), secondary ? std::string(secondary) : std::string(), fields, ok_cb, cancel_cb, user_data);
 			GlooxMessageHandler::instance()->searchHandler()->registerSession(user->adhocData().from, repeater);
 			return repeater;
 		}
@@ -268,33 +225,21 @@ static void *requestFields(const char *title, const char *primary, const char *s
 static void * requestAction(const char *title, const char *primary,const char *secondary, int default_action,PurpleAccount *account, const char *who,PurpleConversation *conv, void *user_data,size_t action_count, va_list actions){
 	User *user = GlooxMessageHandler::instance()->userManager()->getUserByAccount(account);
 	if (user && !user->adhocData().id.empty()) {
-		AdhocRepeater *repeater = new AdhocRepeater(GlooxMessageHandler::instance(), user, title ? std::string(title):std::string(), primary ? std::string(primary):std::string(), secondary ? std::string(secondary):std::string(), default_action, user_data, action_count, actions);
+		AdhocRepeater *repeater = new AdhocRepeater(GlooxMessageHandler::instance(), user, title ? std::string(title) : std::string(), primary ? std::string(primary) : std::string(), secondary ? std::string(secondary) : std::string(), default_action, user_data, action_count, actions);
 		GlooxMessageHandler::instance()->adhoc()->registerSession(user->adhocData().from, repeater);
 		AdhocData data;
-		data.id="";
+		data.id = "";
 		user->setAdhocData(data);
 		return repeater;
 	}
-	else if (title){
+	else if (title) {
 		std::string headerString(title);
 		Log().Get("purple") << "header string: " << headerString;
-		if (headerString=="SSL Certificate Verification"){
+		if (headerString == "SSL Certificate Verification") {
 			va_arg(actions, char *);
-			((PurpleRequestActionCb) va_arg(actions, GCallback))(user_data,2);
+			((PurpleRequestActionCb) va_arg(actions, GCallback)) (user_data, 2);
 		}
 	}
-// 	Log().Get("purple") << "blablabla " << (std::string) who;
-// 	if (primary) {
-// 		std::string primaryString(primary);
-// 		Log().Get("purple") << primaryString;
-// 		if (primaryString.find("wants to send you") != std::string::npos) {
-// 			FiletransferRepeater *repeater = user->getFiletransfer((std::string) who);
-// 			repeater->requestFT();
-// 			
-// // 			std::string sid = m_sip->requestFT(jid, name, info.st_size, EmptyString, EmptyString, EmptyString, EmptyString, SIProfileFT::FTTypeAll, from);
-// 		}
-// 	}
-	
 	return NULL;
 }
 
@@ -321,7 +266,7 @@ static void requestClose(PurpleRequestType type, void *ui_handle) {
 /*
  * Called when somebody from legacy network wants to send file to us.
  */
-static void newXfer(PurpleXfer *xfer){
+static void newXfer(PurpleXfer *xfer) {
 	Log().Get("purple filetransfer") << "new file transfer request from legacy network";
 	GlooxMessageHandler::instance()->purpleFileReceiveRequest(xfer);
 }
@@ -329,7 +274,7 @@ static void newXfer(PurpleXfer *xfer){
 /*
  * Called when file from legacy network is completely received.
  */
-static void XferComplete(PurpleXfer *xfer){
+static void XferComplete(PurpleXfer *xfer) {
 	Log().Get("purple filetransfer") << "filetransfer complete";
 	GlooxMessageHandler::instance()->purpleFileReceiveComplete(xfer);
 }
@@ -337,10 +282,10 @@ static void XferComplete(PurpleXfer *xfer){
 /*
  * Called on every buddy list change. We call buddyChanged from here... :)
  */
-static void buddyListUpdate(PurpleBuddyList *blist, PurpleBlistNode *node){
+static void buddyListUpdate(PurpleBuddyList *blist, PurpleBlistNode *node) {
 	if (node != NULL) {
 		if (node->type == PURPLE_BLIST_BUDDY_NODE) {
-			PurpleBuddy* buddy = (PurpleBuddy*)node;
+			PurpleBuddy* buddy = (PurpleBuddy*) node;
 			GlooxMessageHandler::instance()->purpleBuddyChanged(buddy);
 		}
 	}
@@ -350,16 +295,14 @@ static void buddyListUpdate(PurpleBuddyList *blist, PurpleBlistNode *node){
  * Called when somebody from legacy network wants to authorize some jabber user.
  * We can return some object which will be connected with this request all the time...
  */
-static void * accountRequestAuth(PurpleAccount *account,const char *remote_user,const char *id,const char *alias,const char *message,gboolean on_list,PurpleAccountRequestAuthorizationCb authorize_cb,PurpleAccountRequestAuthorizationCb deny_cb,void *user_data){
-	Log().Get("purple") << "new AUTHORIZE REQUEST";
-	return GlooxMessageHandler::instance()->purpleAuthorizeReceived(account,remote_user,id,alias,message,on_list,authorize_cb,deny_cb,user_data);
+static void * accountRequestAuth(PurpleAccount *account, const char *remote_user, const char *id, const char *alias, const char *message, gboolean on_list, PurpleAccountRequestAuthorizationCb authorize_cb, PurpleAccountRequestAuthorizationCb deny_cb, void *user_data) {
+	return GlooxMessageHandler::instance()->purpleAuthorizeReceived(account, remote_user, id, alias, message, on_list, authorize_cb, deny_cb, user_data);
 }
 
 /*
  * Called when account is disconnecting and all requests will be closed and unreachable.
  */
 static void accountRequestClose(void *data){
-	Log().Get("purple") << "AUTHORIZE REQUEST CLOSE";
 	GlooxMessageHandler::instance()->purpleAuthorizeClose(data);
 }
 
@@ -384,15 +327,15 @@ static void * notifyMessage(PurpleNotifyMsgType type, const char *title, const c
 	// TODO: We have to patch libpurple to be able to identify from which account the message came from...
 	// without this the function is quite useles...
 	
-// 	User *user = GlooxMessageHandler::instance()->userManager()->getUserByAccount(account);
-// 	if (user && !user->adhocData().id.empty()) {
-// 		AdhocRepeater *repeater = new AdhocRepeater(GlooxMessageHandler::instance(), user, title ? std::string(title):std::string(), primary ? std::string(primary):std::string(), secondary ? std::string(secondary):std::string(), default_action, user_data, action_count, actions);
-// 		GlooxMessageHandler::instance()->adhoc()->registerSession(user->adhocData().from, repeater);
-// 		AdhocData data;
-// 		data.id="";
-// 		user->setAdhocData(data);
-// 		return repeater;
-// 	}
+	// User *user = GlooxMessageHandler::instance()->userManager()->getUserByAccount(account);
+	// if (user && !user->adhocData().id.empty()) {
+	// 	AdhocRepeater *repeater = new AdhocRepeater(GlooxMessageHandler::instance(), user, title ? std::string(title):std::string(), primary ? std::string(primary):std::string(), secondary ? std::string(secondary):std::string(), default_action, user_data, action_count, actions);
+	// 	GlooxMessageHandler::instance()->adhoc()->registerSession(user->adhocData().from, repeater);
+	// 	AdhocData data;
+	// 	data.id="";
+	// 	user->setAdhocData(data);
+	// 	return repeater;
+	// }
 	return NULL;
 }
 
@@ -418,7 +361,6 @@ static void XferCreated(PurpleXfer *xfer) {
 		FiletransferRepeater *repeater = user->getFiletransfer(name);
 		repeater->registerXfer(xfer);
 	}
-
 }
 
 static void fileSendStart(PurpleXfer *xfer) {
@@ -434,13 +376,12 @@ static void fileRecvStart(PurpleXfer *xfer) {
 }
 
 
-static void buddyListAddBuddy(PurpleAccount *account, const char *username, const char *group, const char *alias){
-	std::cout << "BUDDY LIST ADD BUDDY REQUEST\n";
+static void buddyListAddBuddy(PurpleAccount *account, const char *username, const char *group, const char *alias) {
 }
 
 static gssize XferWrite(PurpleXfer *xfer, const guchar *buffer, gssize size) {
 	FiletransferRepeater *repeater = (FiletransferRepeater *) xfer->ui_data;
-	std::string d((char *)buffer, size);
+	std::string d((char *) buffer, size);
 	if (repeater->getResender())
 		repeater->getResender()->getMutex()->lock();
 	repeater->gotData(d);
@@ -478,7 +419,6 @@ static gssize XferRead(PurpleXfer *xfer, guchar **buffer, gssize size) {
 		return data.size();
 	}
 }
-
 
 /*
  * Ops....
@@ -624,32 +564,25 @@ static PurpleCoreUiOps coreUiOps =
 };
 
 /*
- * Called when file is received from legacy network and we can send it to jabber user... :)
+ * Connect user to legacy network
  */
-static gboolean sendFileToJabber(gpointer data){
-	fileTransferData *d = (fileTransferData*) data;
-	std::cout << "SENDING FILE 1\n";
-	if (d){
-		std::cout << "SENDING FILE\n";
-		GlooxMessageHandler::instance()->ftManager->sendFile(d->to,d->from,d->name,d->filename);
-	}
-	return FALSE;
-}
-
-static gboolean connectUser(gpointer data){
+static gboolean connectUser(gpointer data) {
 	std::string name((char*)data);
 	User *user = GlooxMessageHandler::instance()->userManager()->getUserByJID(name);
-	if (user && user->readyForConnect() && !user->isConnected()){
+	if (user && user->readyForConnect() && !user->isConnected()) {
 		user->connect();
 	}
 	g_free(data);
 	return FALSE;
 }
 
-static gboolean reconnect(gpointer data){
+/*
+ * Reconnect user
+ */
+static gboolean reconnect(gpointer data) {
 	std::string name((char*)data);
 	User *user = GlooxMessageHandler::instance()->userManager()->getUserByJID(name);
-	if (user){
+	if (user) {
 		user->connect();
 	}
 	g_free(data);
@@ -658,16 +591,11 @@ static gboolean reconnect(gpointer data){
 
 /*
  * Checking new connections for our gloox proxy...
- * TODO: rename me!
  */
-static gboolean iter3(gpointer data){
-// 	g_main_context_iteration(g_main_context_default(), FALSE);
-	
-	if (GlooxMessageHandler::instance()->ftServer->recv(1)==ConnNoError);
+static gboolean ftServerReceive(gpointer data){
+	if (GlooxMessageHandler::instance()->ftServer->recv(1) == ConnNoError)
 		return TRUE;
-	std::cout << "ERROR!!!!\n";
 	return FALSE;
-
 }
 
 static gboolean transportReconnect(gpointer data) {
@@ -677,9 +605,8 @@ static gboolean transportReconnect(gpointer data) {
 
 /*
  * Called by notifier when new data can be received from socket
- * TODO: rename me!
  */
-static gboolean iter(GIOChannel *source,GIOCondition condition,gpointer data){
+static gboolean transportDataReceived(GIOChannel *source, GIOCondition condition, gpointer data) {
 	GlooxMessageHandler::instance()->j->recv(1000);
 	return TRUE;
 }
@@ -687,13 +614,13 @@ static gboolean iter(GIOChannel *source,GIOCondition condition,gpointer data){
 GlooxMessageHandler::GlooxMessageHandler(const std::string &config) : MessageHandler(),ConnectionListener(),PresenceHandler(),SubscriptionHandler() {
 	m_pInstance = this;
 	m_firstConnection = true;
-	lastIP=0;
-	capsCache["_default"]=0;
+	lastIP = 0;
+	capsCache["_default"] = 0;
 	m_parser = NULL;
 	
 	bool loaded = true;
 	
-	if (loaded && !loadConfigFile(config))
+	if (!loadConfigFile(config))
 		loaded = false;
 	
 	Log().Get("gloox") << "connecting to: " << m_configuration.server << " as " << m_configuration.jid << " with password " << m_configuration.password;
@@ -716,36 +643,34 @@ GlooxMessageHandler::GlooxMessageHandler(const std::string &config) : MessageHan
 
 	if (loaded) {
 		
-		m_discoHandler=new GlooxDiscoHandler(this);
+		m_discoHandler = new GlooxDiscoHandler(this);
 		
-		m_discoInfoHandler=new GlooxDiscoInfoHandler(this);
+		m_discoInfoHandler = new GlooxDiscoInfoHandler(this);
 		j->registerIqHandler(m_discoInfoHandler,ExtDiscoInfo);
 		
 		m_adhoc = new GlooxAdhocHandler(this);
 		m_parser = new GlooxParser();
 		
 		ftManager = new FileTransferManager();
-		ft = new SIProfileFT(j, ftManager );
-		ftManager->setSIProfileFT(ft,this);
-		ftServer = new SOCKS5BytestreamServer(j->logInstance(), 8000,configuration().bindIPs[0]);
-		if( ftServer->listen() != ConnNoError )
-			printf( "port in use\n" );
+		ft = new SIProfileFT(j, ftManager);
+		ftManager->setSIProfileFT(ft, this);
+		ftServer = new SOCKS5BytestreamServer(j->logInstance(), 8000, configuration().bindIPs[0]);
+		if( ftServer->listen() != ConnNoError ) {}
 		ft->addStreamHost( j->jid(), configuration().bindIPs[0], 8000 );
 		ft->registerSOCKS5BytestreamServer( ftServer );
-		g_timeout_add(10,&iter3,NULL);
-	// 	ft->addStreamHost(gloox::JID("proxy.jabbim.cz"), "88.86.102.51", 7777);
+		g_timeout_add(10, &ftServerReceive, NULL);
+		// ft->addStreamHost(gloox::JID("proxy.jabbim.cz"), "88.86.102.51", 7777);
 		
-		
-		j->registerMessageHandler( this );
+		j->registerMessageHandler(this);
 		j->registerConnectionListener(this);
 		gatewayHandler = new GlooxGatewayHandler(this);
-		j->registerIqHandler(gatewayHandler,ExtGateway);
+		j->registerIqHandler(gatewayHandler, ExtGateway);
 		m_reg = new GlooxRegisterHandler(this);
-		j->registerIqHandler(m_reg,ExtRegistration);
+		j->registerIqHandler(m_reg, ExtRegistration);
 		m_stats = new GlooxStatsHandler(this);
-		j->registerIqHandler(m_stats,ExtStats);
+		j->registerIqHandler(m_stats, ExtStats);
 		m_vcard = new GlooxVCardHandler(this);
-		j->registerIqHandler(m_vcard,ExtVCard);
+		j->registerIqHandler(m_vcard, ExtVCard);
 		j->registerPresenceHandler(this);
 		j->registerSubscriptionHandler(this);
 		
@@ -805,58 +730,48 @@ bool GlooxMessageHandler::loadProtocol(){
 	return true;
 }
 
-void GlooxMessageHandler::onSessionCreateError (SessionCreateError error){
+void GlooxMessageHandler::onSessionCreateError(SessionCreateError error) {
 	Log().Get("gloox") << "sessionCreateError";
 }
 
-void GlooxMessageHandler::purpleConnectionError(PurpleConnection *gc,PurpleConnectionError reason,const char *text){
+void GlooxMessageHandler::purpleConnectionError(PurpleConnection *gc,PurpleConnectionError reason,const char *text) {
 	PurpleAccount *account = purple_connection_get_account(gc);
 	User *user = userManager()->getUserByAccount(account);
-	if (user!=NULL){
-		Log().Get(user->jid()) << "Disconnected from legacy network because of error" << int(reason);
+	if (user != NULL) {
+		Log().Get(user->jid()) << "Disconnected from legacy network because of error " << int(reason);
 		if (text)
 			Log().Get(user->jid()) << std::string(text);
 		// fatal error => account will be disconnected, so we have to remove it
-		if (reason!=0){
+		if (reason != 0) {
 			if (text){
 				Message s(Message::Chat, user->jid(), tr(user->getLang(), text));
 				std::string from;
 				s.setFrom(jid());
 				j->send(s);
 			}
-// 			if (user->isConnected()==true){
-// 				user->isConnected()=false;
-// 			}
 			m_userManager->removeUserTimer(user);
 		}
-		else{
-			if (user->reconnectCount() > 0){
-				if (text){
-					Message s(Message::Chat, user->jid(), tr(user->getLang(),text));
+		else {
+			if (user->reconnectCount() > 0) {
+				if (text) {
+					Message s(Message::Chat, user->jid(), tr(user->getLang(), text));
 					std::string from;
 					s.setFrom(jid());
 					j->send(s);
 				}
-// 				if (user->isConnected()==true){
-// 					user->isConnected()=false;
-// 				}
 				m_userManager->removeUserTimer(user);
 			}
-			else{
+			else {
 				user->disconnected();
-				g_timeout_add_seconds(5,&reconnect,g_strdup(user->jid().c_str()));
+				g_timeout_add_seconds(5, &reconnect, g_strdup(user->jid().c_str()));
 			}
 		}
-// 		}
-// 		else {
-// 			std::cout << "account is not disconnected\n";
-// 		}
 	}
 }
 
 void GlooxMessageHandler::purpleBuddyTyping(PurpleAccount *account, const char *who){
 	User *user = userManager()->getUserByAccount(account);
-	if (user!=NULL){
+	if (user != NULL) {
 		user->purpleBuddyTyping((std::string)who);
 	}
 	else {
@@ -865,34 +780,34 @@ void GlooxMessageHandler::purpleBuddyTyping(PurpleAccount *account, const char *
 }
 
 void GlooxMessageHandler::purpleBuddyRemoved(PurpleBuddy *buddy) {
-	if (buddy != NULL){
+	if (buddy != NULL) {
 		PurpleAccount *a = purple_buddy_get_account(buddy);
 		User *user = userManager()->getUserByAccount(a);
-		if (user!=NULL)
+		if (user != NULL)
 			user->purpleBuddyRemoved(buddy);
 	}
 }
 
-void GlooxMessageHandler::purpleBuddyTypingStopped(PurpleAccount *account, const char *who){
+void GlooxMessageHandler::purpleBuddyTypingStopped(PurpleAccount *account, const char *who) {
 	User *user = userManager()->getUserByAccount(account);
-	if (user!=NULL){
-		user->purpleBuddyTypingStopped((std::string)who);
+	if (user != NULL) {
+		user->purpleBuddyTypingStopped((std::string) who);
 	}
-	else{
+	else {
 		Log().Get("purple") << "purpleBuddyTypingStopped called, but user does not exist!!!";
 	}
 }
 
-void GlooxMessageHandler::signedOn(PurpleConnection *gc,gpointer unused){
+void GlooxMessageHandler::signedOn(PurpleConnection *gc, gpointer unused) {
 	PurpleAccount *account = purple_connection_get_account(gc);
 	User *user = userManager()->getUserByAccount(account);
-	if (user!=NULL){
+	if (user != NULL) {
 		Log().Get(user->jid()) << "logged in to legacy network";
 		user->connected();
 	}
 }
 
-void GlooxMessageHandler::purpleAuthorizeClose(void *data){
+void GlooxMessageHandler::purpleAuthorizeClose(void *data) {
 	authData *d = (authData*) data;
 	User *user = userManager()->getUserByAccount(d->account);
 	if (user != NULL) {
@@ -902,18 +817,18 @@ void GlooxMessageHandler::purpleAuthorizeClose(void *data){
 			user->removeAuthRequest(d->who);
 		}
 	}
-	else{
+	else {
 		Log().Get("purple") << "purpleAuthorizationClose called, but user does not exist!!!";
 	}
 }
 
-void * GlooxMessageHandler::purpleAuthorizeReceived(PurpleAccount *account,const char *remote_user,const char *id,const char *alias,const char *message,gboolean on_list,PurpleAccountRequestAuthorizationCb authorize_cb,PurpleAccountRequestAuthorizationCb deny_cb,void *user_data){
+void * GlooxMessageHandler::purpleAuthorizeReceived(PurpleAccount *account, const char *remote_user, const char *id, const char *alias, const char *message, gboolean on_list, PurpleAccountRequestAuthorizationCb authorize_cb, PurpleAccountRequestAuthorizationCb deny_cb, void *user_data){
 	if (account==NULL)
 		return NULL;
 	User *user = userManager()->getUserByAccount(account);
-	if (user!=NULL) {
+	if (user != NULL) {
 		if (user->isConnected()) {
-			user->purpleAuthorizeReceived(account,remote_user,id,alias,message,on_list,authorize_cb,deny_cb,user_data);
+			user->purpleAuthorizeReceived(account, remote_user, id, alias, message, on_list, authorize_cb, deny_cb, user_data);
 			authData *data = new authData;
 			data->account = account;
 			data->who.assign(remote_user);
@@ -927,9 +842,6 @@ void * GlooxMessageHandler::purpleAuthorizeReceived(PurpleAccount *account,const
 		Log().Get("purple") << "purpleAuthorizeReceived called, but user does not exist!!!";
 	}
 	return NULL;
-// 	<presence type='subscribe'
-//           from='CapuletNurse@aim.shakespeare.lit'
-//           to='romeo@montague.lit'/>
 }
 
 /*
@@ -1061,29 +973,15 @@ void GlooxMessageHandler::purpleFileReceiveRequest(PurpleXfer *xfer) {
         }
     }
 
-// 	purple_xfer_request_accepted(xfer, std::string(configuration().filetransferCache+"/"+remote_user+"-"+j->getID()+"-"+filename).c_str());
 	User *user = userManager()->getUserByAccount(purple_xfer_get_account(xfer));
-	if (user!=NULL){
+	if (user != NULL) {
 		FiletransferRepeater *repeater = (FiletransferRepeater *) xfer->ui_data;
-		if(user->hasFeature(GLOOX_FEATURE_FILETRANSFER)){
+		if (user->hasFeature(GLOOX_FEATURE_FILETRANSFER)) {
 			repeater->requestFT();
 		}
 		else {
 			purple_xfer_request_accepted(xfer, std::string(configuration().filetransferCache+"/"+remote_user+"-"+j->getID()+"-"+filename).c_str());
 		}
-
-		// 		std::string sid = GlooxMessageHandler::instance()->ft->requestFT(jid, name, info.st_size, EmptyString, EmptyString, EmptyString, EmptyString, SIProfileFT::FTTypeAll, from);
-// 		purple_xfer_request_accepted(xfer, std::string(filename).c_str());
-// 		if(user->hasFeature(GLOOX_FEATURE_FILETRANSFER)){
-// 			Message s(Message::Chat, user->jid(), tr(user->getLang(),_("User is sending you file '"))+filename+tr(user->getLang(),_("'. It will be resend to you right after we receive it.")));
-// 			s.setFrom(remote_user+"@"+jid()+"/bot");
-// 			j->send(s);
-// 		}
-// 		else{
-// 			Message s(Message::Chat, user->jid(), tr(user->getLang(),_("User is sending you file '"))+filename+tr(user->getLang(),_("'. We will send you link to the file right when we receive it.")));
-// 			s.setFrom(remote_user+"@"+jid()+"/bot");
-// 			j->send(s);
-// 		}
 	}
 }
 
@@ -1094,16 +992,16 @@ void GlooxMessageHandler::purpleFileReceiveComplete(PurpleXfer *xfer) {
 		std::string localname(purple_xfer_get_local_filename(xfer));
 		std::string basename(g_path_get_basename(purple_xfer_get_local_filename(xfer)));
 		User *user = userManager()->getUserByAccount(purple_xfer_get_account(xfer));
-		if (user!=NULL) {
+		if (user != NULL) {
 			if (user->isConnected()) {
-				if (user->isVIP()){
+				if (user->isVIP()) {
 					sql()->addDownload(basename,"1");
 				}
 				else {
 					sql()->addDownload(basename,"0");
 				}
-				Message s(Message::Chat, user->jid(), tr(user->getLang(),_("File '"))+filename+tr(user->getLang(),_("' was received. You can download it here: ")) + "http://soumar.jabbim.cz/icq/" + basename +" .");
-				s.setFrom(remote_user+"@"+jid()+"/bot");
+				Message s(Message::Chat, user->jid(), tr(user->getLang(),_("File '"))+filename+tr(user->getLang(), _("' was received. You can download it here: ")) + "http://soumar.jabbim.cz/icq/" + basename +" .");
+				s.setFrom(remote_user + "@" + jid() + "/bot");
 				j->send(s);
 			}
 			else{
@@ -1116,30 +1014,30 @@ void GlooxMessageHandler::purpleFileReceiveComplete(PurpleXfer *xfer) {
 }
 
 
-void GlooxMessageHandler::purpleMessageReceived(PurpleAccount* account,char * name,char *msg,PurpleConversation *conv,PurpleMessageFlags flags){
+void GlooxMessageHandler::purpleMessageReceived(PurpleAccount* account, char * name, char *msg, PurpleConversation *conv, PurpleMessageFlags flags) {
 	User *user = userManager()->getUserByAccount(account);
-	if (user){
-		if (user->isConnected()){
+	if (user) {
+		if (user->isConnected()) {
 			user->purpleMessageReceived(account,name,msg,conv,flags);
 		}
 		else {
 			Log().Get(user->jid()) << "purpleMessageReceived called for unconnected user...";
 		}
 	}
-	else{
+	else {
 		Log().Get("purple") << "purpleMessageReceived called, but user does not exist!!!";
 	}
 }
 
-void GlooxMessageHandler::purpleConversationWriteIM(PurpleConversation *conv, const char *who, const char *message, PurpleMessageFlags flags, time_t mtime){
-	if (who==NULL)
+void GlooxMessageHandler::purpleConversationWriteIM(PurpleConversation *conv, const char *who, const char *message, PurpleMessageFlags flags, time_t mtime) {
+	if (who == NULL)
 		return;
 	PurpleAccount *account = purple_conversation_get_account(conv);
 	User *user = userManager()->getUserByAccount(account);
 	if (user) {
-		if (user->isConnected()){
+		if (user->isConnected()) {
 			m_stats->messageFromLegacy();
-			user->purpleConversationWriteIM(conv,who,message,flags,mtime);
+			user->purpleConversationWriteIM(conv, who, message, flags, mtime);
 		}
 		else {
 			Log().Get(user->jid()) << "purpleConversationWriteIM called for unconnected user...";
@@ -1167,21 +1065,21 @@ void GlooxMessageHandler::notifyEmail(PurpleConnection *gc,const char *subject, 
 			if (url)
 				text+=std::string(url) + " ";
 			Message s(Message::Chat, user->jid(), text);
-			s.setFrom(protocol()->notifyUsername()+"@"+jid()+"/bot");
+			s.setFrom(protocol()->notifyUsername() + "@" + jid() + "/bot");
 			j->send(s);
 		}
 	}
 }
 
-void GlooxMessageHandler::purpleConversationWriteChat(PurpleConversation *conv, const char *who, const char *message, PurpleMessageFlags flags, time_t mtime){
-	if (who==NULL)
+void GlooxMessageHandler::purpleConversationWriteChat(PurpleConversation *conv, const char *who, const char *message, PurpleMessageFlags flags, time_t mtime) {
+	if (who == NULL)
 		return;
 	PurpleAccount *account = purple_conversation_get_account(conv);
 	User *user = userManager()->getUserByAccount(account);
 	if (user) {
-		if (user->isConnected()){
+		if (user->isConnected()) {
 			m_stats->messageFromLegacy();
-			user->purpleConversationWriteChat(conv,who,message,flags,mtime);
+			user->purpleConversationWriteChat(conv, who, message, flags, mtime);
 		}
 		else {
 			Log().Get(user->jid()) << "purpleConversationWriteIM called for unconnected user...";
@@ -1206,7 +1104,7 @@ void GlooxMessageHandler::purpleChatAddUsers(PurpleConversation *conv, GList *cb
 	PurpleAccount *account = purple_conversation_get_account(conv);
 	User *user = userManager()->getUserByAccount(account);
 	if (user) {
-		if (user->isConnected()){
+		if (user->isConnected()) {
 			user->purpleChatAddUsers(conv, cbuddies, new_arrivals);
 		}
 	}
@@ -1226,23 +1124,22 @@ void GlooxMessageHandler::purpleChatRemoveUsers(PurpleConversation *conv, GList 
 	PurpleAccount *account = purple_conversation_get_account(conv);
 	User *user = userManager()->getUserByAccount(account);
 	if (user) {
-		if (user->isConnected()){
+		if (user->isConnected()) {
 			user->purpleChatRemoveUsers(conv, users);
 		}
 	}
 }
 
-void GlooxMessageHandler::purpleBuddyChanged(PurpleBuddy* buddy){
-	if (buddy!=NULL){
+void GlooxMessageHandler::purpleBuddyChanged(PurpleBuddy* buddy) {
+	if (buddy != NULL) {
 		PurpleAccount *a=purple_buddy_get_account(buddy);
 		User *user = userManager()->getUserByAccount(a);
-		if (user!=NULL)
+		if (user != NULL)
 			user->purpleBuddyChanged(buddy);
 	}
-	
 }
 
-bool GlooxMessageHandler::hasCaps(const std::string &name){
+bool GlooxMessageHandler::hasCaps(const std::string &name) {
 	std::map<std::string,int> ::iterator iter = capsCache.begin();
 	iter = capsCache.find(name);
 	if(iter != capsCache.end())
@@ -1282,39 +1179,39 @@ void GlooxMessageHandler::handlePresence(const Presence &stanza){
 	Tag *c = NULL;
 	Log().Get(stanza.from().full()) << "Presence received (" << stanza.subtype() << ") for: " << stanza.to().full();
 
-	if (stanza.presence() != Presence::Unavailable && ((stanza.to().username() == "" && !protocol()->tempAccountsAllowed()) || protocol()->isMUC(NULL, stanza.to().bare()))){
+	if (stanza.presence() != Presence::Unavailable && ((stanza.to().username() == "" && !protocol()->tempAccountsAllowed()) || protocol()->isMUC(NULL, stanza.to().bare()))) {
 		Tag *stanzaTag = stanza.tag();
 		if (!stanzaTag) return;
 		Tag *c = stanzaTag->findChildWithAttrib("xmlns","http://jabber.org/protocol/caps");
 		// presence has caps
-		if (c!=NULL){
+		if (c != NULL) {
 			// caps is not chached
-			if (!hasCaps(c->findAttribute("ver"))){
+			if (!hasCaps(c->findAttribute("ver"))) {
 				// ask for caps
 				std::string id = j->getID();
 				Log().Get(stanza.from().full()) << "asking for caps with ID: " << id;
-				m_discoHandler->versions[m_discoHandler->version].version=c->findAttribute("ver");
-				m_discoHandler->versions[m_discoHandler->version].jid=stanza.to().full();
+				m_discoHandler->versions[m_discoHandler->version].version = c->findAttribute("ver");
+				m_discoHandler->versions[m_discoHandler->version].jid = stanza.to().full();
 				std::string node;
-				node = c->findAttribute("node")+std::string("#")+c->findAttribute("ver");
-				j->disco()->getDiscoInfo(stanza.from(),node,m_discoHandler,m_discoHandler->version,id);
+				node = c->findAttribute("node") + std::string("#") + c->findAttribute("ver");
+				j->disco()->getDiscoInfo(stanza.from(), node, m_discoHandler, m_discoHandler->version, id);
 				m_discoHandler->version++;
 			}
 			else {
 				std::string id = j->getID();
 				Log().Get(stanza.from().full()) << "asking for disco#info with ID: " << id;
-				m_discoHandler->versions[m_discoHandler->version].version=stanza.from().full();
-				m_discoHandler->versions[m_discoHandler->version].jid=stanza.to().full();
-				j->disco()->getDiscoInfo(stanza.from(),"",m_discoHandler,m_discoHandler->version,id);
+				m_discoHandler->versions[m_discoHandler->version].version = stanza.from().full();
+				m_discoHandler->versions[m_discoHandler->version].jid = stanza.to().full();
+				j->disco()->getDiscoInfo(stanza.from(), "", m_discoHandler, m_discoHandler->version, id);
 				m_discoHandler->version++;
 			}
 		}
 		else {
 			std::string id = j->getID();
 			Log().Get(stanza.from().full()) << "asking for disco#info with ID: " << id;
-			m_discoHandler->versions[m_discoHandler->version].version=stanza.from().full();
-			m_discoHandler->versions[m_discoHandler->version].jid=stanza.to().full();
-			j->disco()->getDiscoInfo(stanza.from(),"",m_discoHandler,m_discoHandler->version,id);
+			m_discoHandler->versions[m_discoHandler->version].version = stanza.from().full();
+			m_discoHandler->versions[m_discoHandler->version].jid = stanza.to().full();
+			j->disco()->getDiscoInfo(stanza.from(), "", m_discoHandler, m_discoHandler->version, id);
 			m_discoHandler->version++;
 		}
 		delete stanzaTag;
@@ -1327,14 +1224,14 @@ void GlooxMessageHandler::handlePresence(const Presence &stanza){
 	else {
 		user = userManager()->getUserByJID(stanza.from().bare());
 	}
-	if (user==NULL){
+	if (user == NULL) {
 		// we are not connected and probe arrived => answer with unavailable
-		if (stanza.subtype() == Presence::Probe){
+		if (stanza.subtype() == Presence::Probe) {
 			Log().Get(stanza.from().full()) << "Answering to probe presence with unavailable presence";
 			Tag *tag = new Tag("presence");
-			tag->addAttribute("to",stanza.from().full());
-			tag->addAttribute("from",stanza.to().bare()+"/bot");
-			tag->addAttribute("type","unavailable");
+			tag->addAttribute("to", stanza.from().full());
+			tag->addAttribute("from", stanza.to().bare() + "/bot");
+			tag->addAttribute("type", "unavailable");
 			j->send(tag);
 		}
 		else if (((stanza.to().username() == "" && !protocol()->tempAccountsAllowed()) || protocol()->isMUC(NULL, stanza.to().bare())) && stanza.presence() != Presence::Unavailable){
@@ -1347,7 +1244,7 @@ void GlooxMessageHandler::handlePresence(const Presence &stanza){
 			else {
 				bool isVip = sql()->isVIP(stanza.from().bare());
 				std::list<std::string> const &x = configuration().allowedServers;
-				if (configuration().onlyForVIP && !isVip && std::find(x.begin(), x.end(), stanza.from().server()) == x.end()){
+				if (configuration().onlyForVIP && !isVip && std::find(x.begin(), x.end(), stanza.from().server()) == x.end()) {
 					Log().Get(stanza.from().full()) << "This user is not VIP, can't login...";
 					return;
 				}
@@ -1361,30 +1258,29 @@ void GlooxMessageHandler::handlePresence(const Presence &stanza){
 				else
 					user = new User(this, stanza.from(), res.uin, res.password, stanza.from().bare());
 				user->setFeatures(isVip ? configuration().VIPFeatures : configuration().transportFeatures);
-				if (c!=NULL)
-					if(hasCaps(c->findAttribute("ver")))
+				if (c != NULL)
+					if (hasCaps(c->findAttribute("ver")))
 						user->setResource(stanza.from().resource(), stanza.priority(), c->findAttribute("ver"));
 
 				std::map<int,std::string> ::iterator iter = configuration().bindIPs.begin();
 				iter = configuration().bindIPs.find(lastIP);
-				if(iter != configuration().bindIPs.end()){
+				if (iter != configuration().bindIPs.end()) {
 					user->setBindIP(configuration().bindIPs[lastIP]);
 					lastIP++;
 				}
-				else{
-					lastIP=0;
+				else {
+					lastIP = 0;
 					user->setBindIP(configuration().bindIPs[lastIP]);
 				}
-// 				user->init(this);
 				m_userManager->addUser(user);
 				user->receivedPresence(stanza);
 				if (protocol()->isMUC(NULL, stanza.to().bare())) {
 					std::string server = stanza.to().username().substr(stanza.to().username().find("%") + 1, stanza.to().username().length() - stanza.to().username().find("%"));
 					server = stanza.from().bare() + server;
-					g_timeout_add_seconds(15,&connectUser,g_strdup(server.c_str()));
+					g_timeout_add_seconds(15, &connectUser, g_strdup(server.c_str()));
 				}
 				else
-					g_timeout_add_seconds(15,&connectUser,g_strdup(stanza.from().bare().c_str()));
+					g_timeout_add_seconds(15, &connectUser, g_strdup(stanza.from().bare().c_str()));
 			}
 		}
 		if (stanza.presence() == Presence::Unavailable && stanza.to().username() == ""){
@@ -1396,46 +1292,45 @@ void GlooxMessageHandler::handlePresence(const Presence &stanza){
 			j->send( tag );
 		}
 	}
-	else{
+	else {
 		user->receivedPresence(stanza);
 	}
-	if(stanza.to().username() == "" && user!=NULL){
-		if(stanza.presence() == Presence::Unavailable && user->isConnected()==true && user->resources().empty()) {
+	if (stanza.to().username() == "" && user != NULL) {
+		if(stanza.presence() == Presence::Unavailable && user->isConnected() == true && user->resources().empty()) {
 			Log().Get(stanza.from().full()) << "Logging out";
 			m_userManager->removeUser(user);
 		}
-		else if (stanza.presence() == Presence::Unavailable && user->isConnected()==false && int(time(NULL))>int(user->connectionStart())+10 && user->resources().empty()){
+		else if (stanza.presence() == Presence::Unavailable && user->isConnected() == false && int(time(NULL)) > int(user->connectionStart()) + 10 && user->resources().empty()) {
 			Log().Get(stanza.from().full()) << "Logging out, but he's not connected...";
 			m_userManager->removeUser(user);
 		}
-		else if (stanza.presence() == Presence::Unavailable && user->isConnected()==false){
+		else if (stanza.presence() == Presence::Unavailable && user->isConnected() == false) {
 			Log().Get(stanza.from().full()) << "Can't logout because we're connecting now...";
 		}
 	}
-    
 }
 
-void GlooxMessageHandler::onConnect(){
+void GlooxMessageHandler::onConnect() {
 	Log().Get("gloox") << "CONNECTED!";
-	j->disco()->setIdentity("gateway",protocol()->gatewayIdentity(),configuration().discoName);
-	j->disco()->setVersion(configuration().discoName,"0.1","");
+	j->disco()->setIdentity("gateway", protocol()->gatewayIdentity(), configuration().discoName);
+	j->disco()->setVersion(configuration().discoName, "0.1", "");
 	std::list<std::string> features = protocol()->transportFeatures();
-	for(std::list<std::string>::iterator it = features.begin(); it != features.end(); it++) {
+	for (std::list<std::string>::iterator it = features.begin(); it != features.end(); it++) {
 		j->disco()->addFeature(*it);
 	}
-	if (m_firstConnection){
+	if (m_firstConnection) {
 		new AutoConnectLoop(this);
 		m_firstConnection = false;
 	}
 }
 
-void GlooxMessageHandler::onDisconnect(ConnectionError e){
+void GlooxMessageHandler::onDisconnect(ConnectionError e) {
 	Log().Get("gloox") << "!!!!!!!!!! DISCONNECTED FROM JABBER SERVER !!!!!!!!!!!";
 	Log().Get("gloox") << j->streamError();
 	Log().Get("gloox") << j->streamErrorText("default text");
-	if (j->streamError()==0 || j->streamError()==24){
+	if (j->streamError() == 0 || j->streamError() == 24) {
 		Log().Get("gloox") << j->streamErrorText("trying to reconnect after 3 seconds");
-		g_timeout_add_seconds(3,&transportReconnect, NULL);
+		g_timeout_add_seconds(3, &transportReconnect, NULL);
 	}
 }
 
@@ -1444,11 +1339,11 @@ void GlooxMessageHandler::transportConnect() {
 	int mysock = dynamic_cast<ConnectionTCPClient*>( j->connectionImpl() )->socket();
 	if (mysock > 0) {
 		connectIO = g_io_channel_unix_new(mysock);
-		g_io_add_watch(connectIO,(GIOCondition) READ_COND,&iter,NULL);
+		g_io_add_watch(connectIO, (GIOCondition) READ_COND, &transportDataReceived, NULL);
 	}
 }
 
-bool GlooxMessageHandler::onTLSConnect(const CertInfo & info){
+bool GlooxMessageHandler::onTLSConnect(const CertInfo & info) {
 	return false;
 }
 
@@ -1465,17 +1360,17 @@ void GlooxMessageHandler::handleMessage (const Message &msg, MessageSession *ses
 	else {
 		user = userManager()->getUserByJID(msg.from().bare());
 	}
-	if (user!=NULL){
-		if (user->isConnected()){
+	if (user!=NULL) {
+		if (user->isConnected()) {
 			Tag *msgTag = msg.tag();
 			if (!msgTag) return;
 			Tag *chatstates = msgTag->findChildWithAttrib("xmlns","http://jabber.org/protocol/chatstates");
-			if (chatstates!=NULL){
+			if (chatstates != NULL) {
 				std::string username = msg.to().username();
 				std::for_each( username.begin(), username.end(), replaceJidCharacters() );
-				user->receivedChatState(username,chatstates->name());
+				user->receivedChatState(username, chatstates->name());
 			}
-			if(msgTag->findChild("body")!=NULL) {
+			if (msgTag->findChild("body") != NULL) {
 				m_stats->messageFromJabber();
 				user->receivedMessage(msg);
 			}
@@ -1543,7 +1438,7 @@ bool GlooxMessageHandler::initPurple(){
 
 	purple_util_set_user_dir(configuration().userDir.c_str());
 
-// 	purple_debug_set_enabled(true);
+	// purple_debug_set_enabled(true);
 
 	purple_core_set_ui_ops(&coreUiOps);
 	purple_eventloop_set_ui_ops(getEventLoopUiOps());
