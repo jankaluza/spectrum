@@ -18,9 +18,24 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02111-1301  USA
  */
 
-#ifndef STRIPHTMLTAGS_H
-#define STRIPHTMLTAGS_H
-#include <string>
+#include "spectrum_util.h"
 
-std::string& stripHTMLTags(std::string& s);
-#endif
+#include <cstring>
+
+void replace(std::string &str, const char *from, const char *to)
+{
+	const size_t from_len = strlen(from);
+	const size_t to_len   = strlen(to);
+
+	// Find the first string to replace
+	int index = str.find(from);
+
+	// while there is one
+	while(index != (int) std::string::npos)
+	{
+		// Replace it
+		str.replace(index, from_len, to);
+		// Find the next one
+		index = str.find(from, index + to_len);
+	}
+}

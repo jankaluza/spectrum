@@ -18,9 +18,12 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02111-1301  USA
  */
 
-#ifndef STRIPHTMLTAGS_H
-#define STRIPHTMLTAGS_H
+#ifndef UTIL_H
+#define UTIL_H
+
 #include <string>
 
-std::string& stripHTMLTags(std::string& s);
+/* Replace all instances of from with to in string str in-place */
+void replace(std::string &str, const char *from, const char *to);
+
 #endif

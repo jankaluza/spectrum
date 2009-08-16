@@ -91,9 +91,9 @@ class User {
 
 		// Utils
 		bool syncCallback();
-		bool isInRoster(const std::string &name,const std::string &subscription);
+		bool isInRoster(const std::string &name, const std::string &subscription);
 		bool isOpenedConversation(const std::string &name);
-		bool hasFeature(int feature, std::string resource = "");
+		bool hasFeature(int feature, const std::string &resource = "");
 		
 		// XMPP stuff
 		Tag *generatePresenceStanza(PurpleBuddy *buddy);
@@ -105,7 +105,7 @@ class User {
 		void receivedPresence(const Presence &presence);
 		void receivedSubscription(const Subscription &subscription);
 		void receivedMessage(const Message& msg);
-		void receivedChatState(const std::string &uin,const std::string &state);
+		void receivedChatState(const std::string &uin, const std::string &state);
 
 		// Libpurple callbacks
 		void purpleBuddyChanged(PurpleBuddy *buddy);
@@ -126,8 +126,8 @@ class User {
 		// Filetransfers
 		void addFiletransfer( const JID& to, const std::string& sid, SIProfileFT::StreamType type, const JID& from, long size );
 		void addFiletransfer( const JID& from );
-		FiletransferRepeater* removeFiletransfer(std::string from) { FiletransferRepeater *repeater = (FiletransferRepeater *) g_hash_table_lookup(m_filetransfers, from.c_str()); if (repeater) g_hash_table_remove(m_filetransfers, from.c_str()); return repeater; }
-		FiletransferRepeater* getFiletransfer(std::string from) { FiletransferRepeater *repeater = (FiletransferRepeater *) g_hash_table_lookup(m_filetransfers, from.c_str()); return repeater; }
+		FiletransferRepeater* removeFiletransfer(const std::string &from) { FiletransferRepeater *repeater = (FiletransferRepeater *) g_hash_table_lookup(m_filetransfers, from.c_str()); if (repeater) g_hash_table_remove(m_filetransfers, from.c_str()); return repeater; }
+		FiletransferRepeater* getFiletransfer(const std::string &from) { FiletransferRepeater *repeater = (FiletransferRepeater *) g_hash_table_lookup(m_filetransfers, from.c_str()); return repeater; }
 		std::string actionData;
 
 		// Connected
@@ -147,14 +147,14 @@ class User {
 		// connection start
 		time_t connectionStart() { return m_connectionStart; }
 		
-		void setResource(const std::string resource, int priority = -256, const std::string caps = "") {
+		void setResource(const std::string &resource, int priority = -256, const std::string &caps = "") {
 			if (priority != -256) m_resources[resource].priority = priority;
 			if (!caps.empty()) m_resources[resource].capsVersion = caps;
 			m_resources[resource].name = resource;
 		}
-		void setActiveResource(std::string resource) { m_resource = resource; }
-		bool hasResource(const std::string r) {return m_resources.find(r) != m_resources.end(); }
-		Resource & getResource(const std::string r = "") { if (r.empty()) return m_resources[m_resource]; else return m_resources[r];}
+		void setActiveResource(const std::string &resource) { m_resource = resource; }
+		bool hasResource(const std::string &r) {return m_resources.find(r) != m_resources.end(); }
+		Resource & getResource(const std::string &r = "") { if (r.empty()) return m_resources[m_resource]; else return m_resources[r];}
 		Resource & findResourceWithFeature(int feature);
 		
 		PurpleAccount *account() { return m_account; }
@@ -163,9 +163,9 @@ class User {
 		bool isVIP() { return m_vip; }
 		bool readyForConnect() { return m_readyForConnect; }
 		void setReadyForConnect(bool ready) { m_readyForConnect = ready; }
-		std::string & username() { return m_username; }
-		std::string & jid() { return m_jid; }
-		std::string & resource() { return m_resource; }
+		const std::string & username() { return m_username; }
+		const std::string & jid() { return m_jid; }
+		const std::string & resource() { return m_resource; }
 		AdhocData & adhocData() { return m_adhocData; }
 		void setAdhocData(AdhocData data) { m_adhocData = data; }
 		std::map<std::string,RosterRow> & roster() { return m_roster; }
@@ -174,7 +174,7 @@ class User {
 		GHashTable *settings() { return m_settings; }
 		
 		GlooxMessageHandler *p;
-		std::string & userKey() { return m_userKey; }
+		const std::string & userKey() { return m_userKey; }
 		void setProtocolData(void *protocolData) { m_protocolData = protocolData; }
 		void *protocolData() { return m_protocolData; }
 		GHashTable *mucs() { return m_mucs; }

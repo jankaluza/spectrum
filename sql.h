@@ -64,8 +64,8 @@ public:
 	void removeUser(const std::string &jid);
 	void updateUserPassword(const std::string &jid,const std::string &password, const std::string &language);
 	void removeUserFromRoster(const std::string &jid);
-	void addUserToRoster(const std::string &jid,const std::string &uin,const std::string subscription, const std::string &group = "Buddies", const std::string &nickname = "");
-	void updateUserRosterSubscription(const std::string &jid,const std::string &uin,const std::string subscription);
+	void addUserToRoster(const std::string &jid,const std::string &uin,const std::string &subscription, const std::string &group = "Buddies", const std::string &nickname = "");
+	void updateUserRosterSubscription(const std::string &jid,const std::string &uin,const std::string &subscription);
 	void removeUINFromRoster(const std::string &jid,const std::string &uin);
 	bool isVIP(const std::string &jid);
 	long getRegisteredUsersCount();

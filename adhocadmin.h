@@ -40,7 +40,7 @@ class AdhocAdmin : public AdhocCommandHandler
 		AdhocAdmin(GlooxMessageHandler *m, User *user, const std::string &from, const std::string &id);
 		~AdhocAdmin();
 		bool handleIq(const IQ &iq);
-		std::string & from() { return m_from; }
+		const std::string & from() { return m_from; }
 	
 	private:
 		GlooxMessageHandler *main;		// client
@@ -49,4 +49,3 @@ class AdhocAdmin : public AdhocCommandHandler
 };
 
 #endif
- 

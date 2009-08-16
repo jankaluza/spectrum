@@ -19,16 +19,7 @@
  */
 
 #include "striphtmltags.h"
-
-std::string& replaceAll(std::string& context, const std::string& from, const std::string& to) {
-	size_t lookHere = 0;
-	size_t foundHere;
-	while((foundHere = context.find(from, lookHere)) != std::string::npos) {
-		context.replace(foundHere, from.size(), to);
-		lookHere = foundHere + to.size();
-	}
-	return context;
-}
+#include "spectrum_util.h"
 
 std::string& stripHTMLTags(std::string& s) {
 	static bool inTag = false;
@@ -53,11 +44,11 @@ std::string& stripHTMLTags(std::string& s) {
 	s.erase(output, s.end());
 
 	// Remove all special HTML characters
-	replaceAll(s, "&lt;", "<");
-	replaceAll(s, "&gt;", ">");
-	replaceAll(s, "&amp;", "&");
-	replaceAll(s, "&apos;", "'");
-	replaceAll(s, "&nbsp;", " ");
+	replace(s, "&lt;", "<");
+	replace(s, "&gt;", ">");
+	replace(s, "&amp;", "&");
+	replace(s, "&apos;", "'");
+	replace(s, "&nbsp;", " ");
 
     return s;
 }

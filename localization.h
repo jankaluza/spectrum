@@ -32,7 +32,7 @@ class Localization {
 		
 		bool loadLocale(const std::string &lang);
 		const char * translate(const char *lang, const char *key);
-		const char * translate(const char *lang, std::string key) { return translate(lang, key.c_str()); }
+		const char * translate(const char *lang, const std::string &key) { return translate(lang, key.c_str()); }
 		
 	private:
 		GHashTable *m_locales;		// xml_lang, hash table with localizations

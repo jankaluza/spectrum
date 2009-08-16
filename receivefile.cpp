@@ -67,7 +67,7 @@ static gboolean transferFinished(gpointer data){
 	return FALSE;
 }
 
-ReceiveFile::ReceiveFile(gloox::Bytestream *stream, std::string filename, int size, MyMutex *mutex, FileTransferManager *manager) {
+ReceiveFile::ReceiveFile(gloox::Bytestream *stream, const std::string &filename, int size, MyMutex *mutex, FileTransferManager *manager) {
     m_stream = stream;
     m_size = size;
     m_filename = filename;

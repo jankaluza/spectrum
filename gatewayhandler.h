@@ -75,7 +75,6 @@ public:
 	~GlooxGatewayHandler();
 	bool handleIq (const IQ &iq);
 	void handleIqID (const IQ &iq, int context);
-	std::string replace(std::string &str, const char *string_to_replace, const char *new_string);
 	GlooxMessageHandler *p;
 };
 

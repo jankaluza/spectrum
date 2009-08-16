@@ -31,10 +31,10 @@ class MyspaceProtocol : AbstractProtocol
 	public:
 		MyspaceProtocol(GlooxMessageHandler *main);
 		~MyspaceProtocol();
-		std::string gatewayIdentity() { return "myspace"; }
-		std::string protocol() { return "prpl-myspace"; }
-		bool isValidUsername(std::string &username);
-		std::string prepareUserName(std::string &username);
+		const std::string gatewayIdentity() { return "myspace"; }
+		const std::string protocol() { return "prpl-myspace"; }
+		bool isValidUsername(const std::string &username);
+		void prepareUserName(std::string &username);
 		std::list<std::string> transportFeatures();
 		std::list<std::string> buddyFeatures();
 		std::string text(const std::string &key);
@@ -43,7 +43,6 @@ class MyspaceProtocol : AbstractProtocol
 // 		std::string notifyUsername() { return "info"; }
 // 		std::string userSearchAction() { return "Search for buddies..."; }
 		
-		std::string replace(std::string &str, const char *string_to_replace, const char *new_string);
 		void onConnected(User *user);
 // 		std::string userSearchColumn() { return "ID"; }
 	

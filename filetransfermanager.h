@@ -76,6 +76,6 @@ class FileTransferManager : public gloox::SIProfileFTHandler {
 		void handleFTBytestream (Bytestream *bs);
 		const std::string handleOOBRequestResult (const JID &from, const JID &to, const std::string &sid) { return ""; }
 
-		void sendFile(std::string jid,std::string from,std::string name, std::string file);
+		void sendFile(const std::string &jid, const std::string &from, const std::string &name, const std::string &file);
 	};
 #endif

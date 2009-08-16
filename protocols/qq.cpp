@@ -43,27 +43,11 @@ QQProtocol::QQProtocol(GlooxMessageHandler *main){
 	
 QQProtocol::~QQProtocol() {}
 
-std::string QQProtocol::replace(std::string &str, const char *string_to_replace, const char *new_string)
-{
-	// Find the first string to replace
-	int index = str.find(string_to_replace);
-	// while there is one
-	while(index != (int) std::string::npos)
-	{
-		// Replace it
-		str.replace(index, strlen(string_to_replace), new_string);
-		// Find the next one
-		index = str.find(string_to_replace, index + strlen(new_string));
-	}
-	return str;
+void QQProtocol::prepareUserName(std::string &str){
+	replace(str," ","");
 }
 
-std::string QQProtocol::prepareUserName(std::string &str){
-	str = replace(str," ","");
-	return str;
-}
-
-bool QQProtocol::isValidUsername(std::string &str){
+bool QQProtocol::isValidUsername(const std::string &str){
 	// TODO: check valid email address
 	return true;
 }

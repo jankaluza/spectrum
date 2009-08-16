@@ -76,6 +76,7 @@ set(spectrum_SRCS
 	dataforms.cpp
 	parser.cpp
 	commands.cpp
+	spectrum_util.cpp
 	protocols/icq.cpp
 	protocols/facebook.cpp
 	protocols/gg.cpp
@@ -120,6 +121,7 @@ set(spectrum_MOC_HDRS
 	dataforms.h
 	parser.h
 	commands.h
+	spectrum_util.h
 	protocols/abstractprotocol.h
 	protocols/icq.h
 	protocols/facebook.h

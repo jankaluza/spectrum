@@ -138,7 +138,7 @@ bool GlooxVCardHandler::hasVCardRequest(const std::string &name){
 	return false;
 }
 
-void GlooxVCardHandler::userInfoArrived(PurpleConnection *gc,std::string who, PurpleNotifyUserInfo *user_info){
+void GlooxVCardHandler::userInfoArrived(PurpleConnection *gc, const std::string &who, PurpleNotifyUserInfo *user_info){
 	GList *vcardEntries = purple_notify_user_info_get_entries(user_info);
 	User *user = p->userManager()->getUserByAccount(purple_connection_get_account(gc));
 

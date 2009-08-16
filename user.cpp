@@ -125,15 +125,11 @@ bool User::syncCallback() {
  * Returns true if main JID for this User has feature `feature`,
  * otherwise returns false.
  */
-bool User::hasFeature(int feature, std::string resource) {
-	if (resource.empty())
-		resource = m_resource;
-	std::string caps = m_resources[resource].capsVersion;
-	if (caps.empty())
-		return false;
-	if (p->capsCache[caps]&feature)
-		return true;
-	return false;
+bool User::hasFeature(int feature, const std::string &resource) {
+	const std::string &caps =
+			m_resources[resource.empty() ? m_resource : resource].capsVersion;
+
+	return !caps.empty() && (p->capsCache[caps] & feature);
 }
 
 Resource & User::findResourceWithFeature(int feature) {

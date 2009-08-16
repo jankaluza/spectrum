@@ -181,14 +181,14 @@ void SQLClass::addUser(const std::string &jid,const std::string &uin,const std::
 	query.execute();
 }
 
-void SQLClass::addUserToRoster(const std::string &jid,const std::string &uin,const std::string subscription, const std::string &group, const std::string &nickname) {
+void SQLClass::addUserToRoster(const std::string &jid,const std::string &uin,const std::string &subscription, const std::string &group, const std::string &nickname) {
 	mysqlpp::Query query = sql->query();
 	query << "INSERT INTO "<< p->configuration().sqlPrefix <<"rosters " << "(id, jid, uin, subscription, g, nickname) VALUES (\"\",\"" << jid << "\",\"" << uin << "\", \"" << subscription << "\", \"" << group << "\", \"" << nickname << "\") ON DUPLICATE KEY UPDATE g=\""+ group +"\", nickname=\""+ nickname +"\";";
 	
 	query.execute();
 }
 
-void SQLClass::updateUserRosterSubscription(const std::string &jid,const std::string &uin,const std::string subscription){
+void SQLClass::updateUserRosterSubscription(const std::string &jid,const std::string &uin,const std::string &subscription){
 	mysqlpp::Query query = sql->query();
 	query << "UPDATE "<< p->configuration().sqlPrefix <<"rosters SET subscription=\"" << subscription << "\" WHERE jid=\"" << jid << "\" AND uin=\"" << uin << "\";";
 	query.execute();

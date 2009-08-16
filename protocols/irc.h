@@ -39,19 +39,19 @@ class IRCProtocol : AbstractProtocol
 	public:
 		IRCProtocol(GlooxMessageHandler *main);
 		~IRCProtocol();
-		std::string gatewayIdentity() { return "conference"; }
-		std::string protocol() { return "prpl-irc"; }
-		bool isValidUsername(std::string &username) { return true; }
-		std::string prepareUserName(std::string &username) { return username; }
+		const std::string gatewayIdentity() { return "conference"; }
+		const std::string protocol() { return "prpl-irc"; }
+		bool isValidUsername(const std::string &username) { return true; }
+		void prepareUserName(std::string &username) { }
 		std::list<std::string> transportFeatures();
 		std::list<std::string> buddyFeatures();
 		std::string text(const std::string &key);
 		Tag *getVCardTag(User *user, GList *vcardEntries);
 		bool isMUC(User *user, const std::string &jid) { return jid.find("#") == 0 && jid.find("%") != std::string::npos; }
 		bool tempAccountsAllowed() { return true; }
-		
+
 		// SIGNALS
-		
+
 		void onUserCreated(User *user);
 		void onConnected(User *user);
 		void onDestroy(User *user);

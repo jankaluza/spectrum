@@ -46,7 +46,7 @@ public:
 
     std::ofstream m_file;
 
-    ReceiveFile(gloox::Bytestream *stream, std::string filename, int size, MyMutex *mutex, FileTransferManager *manager);
+    ReceiveFile(gloox::Bytestream *stream, const std::string &filename, int size, MyMutex *mutex, FileTransferManager *manager);
 
     ~ReceiveFile();
 

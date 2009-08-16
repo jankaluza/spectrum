@@ -118,7 +118,7 @@ void FileTransferManager::handleFTBytestream (Bytestream *bs) {
     m_info.erase(bs->sid());
 }
 
-void FileTransferManager::sendFile(std::string jid, std::string from, std::string name, std::string file) {
+void FileTransferManager::sendFile(const std::string &jid, const std::string &from, const std::string &name, const std::string &file) {
     m_sendlist.push_back(jid);
     std::ifstream f;
     f.open(file.c_str(), std::ios::ate);

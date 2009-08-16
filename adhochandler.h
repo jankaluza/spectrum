@@ -55,7 +55,7 @@ class GlooxAdhocHandler : public DiscoNodeHandler, public DiscoHandler, public I
 		void handleDiscoItems(const JID &jid, const Disco::Items &items, int context);
 		void handleDiscoError(const JID &jid, const Error *error, int context);
 		void registerSession(const std::string &jid, AdhocCommandHandler *handler) {m_sessions[jid] = handler; }
-		void unregisterSession(std::string &jid) { m_sessions.erase(jid); }
+		void unregisterSession(const std::string &jid) { m_sessions.erase(jid); }
 		bool hasSession(const std::string &jid);
 
 	private:
@@ -66,4 +66,3 @@ class GlooxAdhocHandler : public DiscoNodeHandler, public DiscoHandler, public I
 };
 
 #endif
- 

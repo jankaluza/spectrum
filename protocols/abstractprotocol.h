@@ -36,19 +36,21 @@ class AbstractProtocol
 		/*
 		 * Returns gateway identity (http://xmpp.org/registrar/disco-categories.html)
 		 */
-		virtual std::string gatewayIdentity() = 0;
+		/* TODO: Make these static and return a reference */
+		virtual const std::string gatewayIdentity() = 0;
 		/*
 		 * Returns purple protocol name (for example "prpl-icq" for ICQ protocol)
 		 */
-		virtual std::string protocol() = 0;
+		/* TODO: Make these static and return a reference */
+		virtual const std::string protocol() = 0;
 		/*
 		 * Returns true if the username is valid username for this protocol
 		 */
-		virtual bool isValidUsername(std::string &username) = 0;
+		virtual bool isValidUsername(const std::string &username) = 0;
 		/*
 		 * Returns revised username (for example for ICQ where username = "123- 456-789"; return "123456789";)
 		 */
-		virtual std::string prepareUserName(std::string &username) = 0;
+		virtual void prepareUserName(std::string &username) = 0;
 		/*
 		 * Returns disco features user by transport jid
 		 */
@@ -72,15 +74,15 @@ class AbstractProtocol
 		/*
 		 * Returns the username of contact from which notifications will be sent
 		 */
-		virtual std::string notifyUsername() { return ""; }
+		virtual const std::string notifyUsername() { return gloox::EmptyString; }
 		/*
 		 * Returns the name of protocol actions for user search or empty string if there is not any
 		 */
-		virtual std::string userSearchAction() { return ""; }
+		virtual const std::string userSearchAction() { return gloox::EmptyString; }
 		/*
 		 * Returns ID of column used for UIN/name/ID of founded users in searchresults
 		 */
-		virtual std::string userSearchColumn() { return ""; }
+		virtual const std::string userSearchColumn() { return gloox::EmptyString; }
 		/*
 		 * Returns true if temporary accounts for MUC are allows (this is useful for IRC, if you want to connect more network from one account)
 		 */

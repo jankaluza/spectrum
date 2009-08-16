@@ -63,9 +63,9 @@ class ReceiveFile : public AbstractResendClass, public BytestreamDataHandler, pu
 		void handleBytestreamOpen(Bytestream *s5b);
 		void handleBytestreamClose(Bytestream *s5b);
 		
-		std::string &filename() { return m_filename; }
+		const std::string &filename() { return m_filename; }
 		User *user () { return m_user; }
-		std::string &target() { return m_target; }
+		const std::string &target() { return m_target; }
 		void dispose();
 	
 	private:
@@ -112,7 +112,7 @@ class SendFile : public AbstractResendClass, public BytestreamDataHandler, publi
 		void handleBytestreamOpen(Bytestream *s5b);
 		void handleBytestreamClose(Bytestream *s5b);
 
-		std::string &filename() { return m_filename; }
+		const std::string &filename() { return m_filename; }
 		User *user() { return m_user; }
 		void dispose();
 		

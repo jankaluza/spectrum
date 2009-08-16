@@ -30,20 +30,18 @@ class XMPPProtocol : AbstractProtocol
 	public:
 		XMPPProtocol(GlooxMessageHandler *main);
 		~XMPPProtocol();
-		std::string gatewayIdentity() { return "jabber"; }
-		std::string protocol() { return "prpl-jabber"; }
-		bool isValidUsername(std::string &username);
-		std::string prepareUserName(std::string &username);
+		const std::string gatewayIdentity() { return "jabber"; }
+		const std::string protocol() { return "prpl-jabber"; }
+		bool isValidUsername(const std::string &username);
+		void prepareUserName(std::string &username);
 		std::list<std::string> transportFeatures();
 		std::list<std::string> buddyFeatures();
 		std::string text(const std::string &key);
 		Tag *getVCardTag(User *user, GList *vcardEntries) { return NULL; }
 		bool isMUC(User *user, const std::string &jid) { return false; }
-		std::string userSearchAction() { return "Search for Users..."; }
-		std::string userSearchColumn() { return "Jabber ID"; }
+		const std::string userSearchAction() { return "Search for Users..."; }
+		const std::string userSearchColumn() { return "Jabber ID"; }
 		
-		std::string replace(std::string &str, const char *string_to_replace, const char *new_string);
-	
 	private:
 		GlooxMessageHandler *m_main;
 		std::list<std::string> m_transportFeatures;

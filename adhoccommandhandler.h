@@ -35,7 +35,7 @@ class AdhocCommandHandler : public AbstractPurpleRequest
 		virtual ~AdhocCommandHandler() {}
 
 		virtual bool handleIq(const IQ &iq) = 0;
-		virtual std::string & from() = 0;
+		virtual const std::string & from() = 0;
 };
 
 #endif

@@ -277,7 +277,7 @@ bool GlooxRegisterHandler::handleIq (const IQ &iq){
 		if (username.empty() || password.empty())
 			e=true;
 		
-		username = p->protocol()->prepareUserName(username);
+		p->protocol()->prepareUserName(username);
 		if (!p->protocol()->isValidUsername(username))
 			e = true;
 		

@@ -31,20 +31,19 @@ class FacebookProtocol : AbstractProtocol
 	public:
 		FacebookProtocol(GlooxMessageHandler *main);
 		~FacebookProtocol();
-		std::string gatewayIdentity() { return "facebook"; }
-		std::string protocol() { return "prpl-bigbrownchunx-facebookim"; }
-		bool isValidUsername(std::string &username);
-		std::string prepareUserName(std::string &username);
+		const std::string gatewayIdentity() { return "facebook"; }
+		const std::string protocol() { return "prpl-bigbrownchunx-facebookim"; }
+		bool isValidUsername(const std::string &username);
+		void prepareUserName(std::string &username);
 		std::list<std::string> transportFeatures();
 		std::list<std::string> buddyFeatures();
 		std::string text(const std::string &key);
 		Tag *getVCardTag(User *user, GList *vcardEntries);
 		bool isMUC(User *user, const std::string &jid) { return false; }
-		std::string notifyUsername() { return "info"; }
-		std::string userSearchAction() { return "Search for buddies..."; }
+		const std::string notifyUsername() { return "info"; }
+		const std::string userSearchAction() { return "Search for buddies..."; }
 		
-		std::string replace(std::string &str, const char *string_to_replace, const char *new_string);
-		std::string userSearchColumn() { return "ID"; }
+		const std::string userSearchColumn() { return "ID"; }
 		
 		void onPurpleRequestInput(User *user, const char *title, const char *primary,const char *secondary, const char *default_value,gboolean multiline, gboolean masked, gchar *hint,const char *ok_text, GCallback ok_cb,const char *cancel_text, GCallback cancel_cb, PurpleAccount *account, const char *who,PurpleConversation *conv, void *user_data);
 	
