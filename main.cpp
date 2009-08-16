@@ -398,6 +398,16 @@ static void buddyListSaveNode(PurpleBlistNode *node) {
 }
 
 static void buddyListRemoveNode(PurpleBlistNode *node) {
+	if (!PURPLE_BLIST_NODE_IS_BUDDY(node))
+		return;
+	PurpleBuddy *buddy = (PurpleBuddy *) node;
+	PurpleAccount *a = purple_buddy_get_account(buddy);
+	User *user = GlooxMessageHandler::instance()->userManager()->getUserByAccount(a);
+	if (user != NULL) {
+		std::string name(purple_buddy_get_name(buddy));
+		GlooxMessageHandler::instance()->sql()->removeUINFromRoster(user->jid(), name);
+	}
+
 }
 
 static void buddyListSaveAccount(PurpleAccount *account) {
