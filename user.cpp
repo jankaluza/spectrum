@@ -866,6 +866,8 @@ void User::connect() {
 
 		purple_accounts_add(m_account);
 	}
+	
+	m_account->ui_data = this;
 
 	// Load roster from DB to libpurple
 	for (std::map<std::string, RosterRow>::iterator u = m_roster.begin(); u != m_roster.end() ; u++) {
@@ -896,7 +898,6 @@ void User::connect() {
 	m_readyForConnect = false;
 	if (!m_bindIP.empty())
 		purple_account_set_string(m_account,"bind",std::string(m_bindIP).c_str());
-	purple_account_set_string(m_account,"lastUsedJid",m_userKey.c_str());
 	purple_account_set_password(m_account,m_password.c_str());
 	Log().Get(m_jid) << "UIN:" << m_username << " PASSWORD:" << m_password;
 
