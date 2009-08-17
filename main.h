@@ -97,7 +97,6 @@ class SQLClass;
 class FileTranferManager;
 class UserManager;
 class AbstractProtocol;
-// class AdhocHandler;
 class AdhocRepeater;
 class GlooxSearchHandler;
 class GlooxParser;
@@ -114,23 +113,25 @@ struct replaceJidCharacters {
 	void operator()(char& c) { if(c == '%') c = '@'; }
 };
 
+/*
+ * Transport features used to configure transport.
+ */
 typedef enum { 	TRANSPORT_FEATURE_TYPING_NOTIFY = 2,
 				TRANSPORT_FEATURE_AVATARS = 4,
                 TRANSPORT_MANGLE_STATUS = 8,
 				TRANSPORT_FEATURE_FILETRANSFER = 16
 				} TransportFeatures;
 
+/*
+ * Enum used by gloox::StanzaExtension to identify StanzaExtension by Gloox.
+ */
 typedef enum {	ExtGateway = 1024,
 				ExtStats = 1025
 } MyStanzaExtensions;
 
-struct fileTransferData{
-	std::string from;
-	std::string to;
-	std::string filename;
-	std::string name;
-};
-
+/*
+ * Struct used for storing transport configuration.
+ */
 struct Configuration {
 	std::string discoName;	// name which will be shown in service discovery
 	std::string protocol;	// protocol used for transporting
@@ -160,58 +161,65 @@ struct Configuration {
 	std::string sqlType;	// database type
 };
 
-class GlooxMessageHandler : public MessageHandler,ConnectionListener,PresenceHandler,SubscriptionHandler, LogHandler
-{
 
+/*
+ * Main transport class. It inits libpurple and Gloox, runs event loop and handles almost all signals.
+ * This class is created only once and can be reached by static GlooxMessageHandler::instance() function.
+ */
+class GlooxMessageHandler : public MessageHandler, ConnectionListener, PresenceHandler, SubscriptionHandler {
 public:
 	GlooxMessageHandler(const std::string &config);
 	~GlooxMessageHandler();
 
-    virtual void handleLog( LogLevel level, LogArea area, const std::string& message )
-    {
-      printf("log: level: %d, area: %d, %s\n", level, area, message.c_str() );
-    }
-
+	/*
+	 * Returns pointer to GlooxMessageHandler class.
+	 */
 	static GlooxMessageHandler *instance() { return m_pInstance; }
 
-	// Purple related
+	/*
+	 * Connects transport to Jabber server. It's called in constructor and in onDisconnect function
+	 * when transport disconnects from server.
+	 */
+	void transportConnect();
+
+	/*
+	 * Returns true if we have cached features (capabilities) of client with version string `ver`.
+	 */
+	bool hasCaps(const std::string &ver);
+
+	/*
+	 * Callbacks for libpurple UI-ops.
+	 */
 	void purpleBuddyChanged(PurpleBuddy* buddy);
-	void purpleConnectionError(PurpleConnection *gc,PurpleConnectionError reason,const char *text);
-	void purpleMessageReceived(PurpleAccount* account,char * name,char *msg,PurpleConversation *conv,PurpleMessageFlags flags);
+	void purpleConnectionError(PurpleConnection *gc, PurpleConnectionError reason, const char *text);
+	void purpleMessageReceived(PurpleAccount* account, char * name, char *msg, PurpleConversation *conv, PurpleMessageFlags flags);
 	void purpleConversationWriteIM(PurpleConversation *conv, const char *who, const char *message, PurpleMessageFlags flags, time_t mtime);
 	void purpleConversationWriteChat(PurpleConversation *conv, const char *who, const char *message, PurpleMessageFlags flags, time_t mtime);
 	void purpleChatTopicChanged(PurpleConversation *conv, const char *who, const char *topic);
 	void purpleChatAddUsers(PurpleConversation *conv, GList *cbuddies, gboolean new_arrivals);
 	void purpleChatRenameUser(PurpleConversation *conv, const char *old_name, const char *new_name, const char *new_alias);
 	void purpleChatRemoveUsers(PurpleConversation *conv, GList *users);
-	void * purpleAuthorizeReceived(PurpleAccount *account,const char *remote_user,const char *id,const char *alias,const char *message,gboolean on_list,PurpleAccountRequestAuthorizationCb authorize_cb,PurpleAccountRequestAuthorizationCb deny_cb,void *user_data);
+	void * purpleAuthorizeReceived(PurpleAccount *account, const char *remote_user, const char *id, const char *alias, const char *message, gboolean on_list, PurpleAccountRequestAuthorizationCb authorize_cb, PurpleAccountRequestAuthorizationCb deny_cb, void *user_data);
 	void purpleBuddyTyping(PurpleAccount *account, const char *who);
 	void purpleBuddyTypingStopped(PurpleAccount *account, const char *who);
 	void purpleBuddyRemoved(PurpleBuddy *buddy);
 	void purpleAuthorizeClose(void *data);
 	void purpleFileReceiveRequest(PurpleXfer *xfer);
 	void purpleFileReceiveComplete(PurpleXfer *xfer);
-	void notifyEmail(PurpleConnection *gc,const char *subject, const char *from,const char *to, const char *url);
+	void notifyEmail(PurpleConnection *gc, const char *subject, const char *from, const char *to, const char *url);
+	void signedOn(PurpleConnection *gc, gpointer unused);
 
-	// MessageHandler
-	void handleMessage (const Message &msg, MessageSession *session=0);
-
-	// ConnectionListener
+	/*
+	 * Gloox callbacks
+	 */
 	void onConnect();
 	void onDisconnect(ConnectionError e);
-	void onSessionCreateError  	(   	SessionCreateError   	 error);
+	void onSessionCreateError(SessionCreateError error);
 	bool onTLSConnect(const CertInfo & info);
-
-	// Gloox handlers
+	
+	void handleMessage (const Message &msg, MessageSession *session = 0);
 	void handlePresence(const Presence &presence);
 	void handleSubscription(const Subscription &stanza);
-	void signedOn(PurpleConnection *gc,gpointer unused);
-	void transportConnect();
-
-	// User related
-	// maybe we should move it to something like UserManager
-	bool hasCaps(const std::string &name);
-	void removeUser(User *user);
 
 	UserManager *userManager() { return m_userManager; }
 	GlooxStatsHandler *stats() { return m_stats; }
@@ -224,48 +232,49 @@ public:
 	GlooxSearchHandler *searchHandler() { return m_searchHandler; }
 	GlooxParser *parser() { return m_parser; }
 
+	// TODO: Make me private!
 	FileTransferManager* ftManager;
 	SIProfileFT* ft;
-
 	Component *j;
-// 	std::vector<User*> *users;
 	int lastIP;
 	std::map <std::string,int> capsCache;
-
-
-
 	GlooxGatewayHandler *gatewayHandler;
 	SOCKS5BytestreamServer* ftServer;
 
 private:
-// 	bool callback(GIOCondition condition);
+	/*
+	 * Inits libpurple and PurpleCmd API. Returns true if libpurple was sucefully loaded.
+	 */
 	bool initPurple();
+
+	/*
+	 * Loads config file or profile. Returns true if config file is loaded.
+	 */
 	bool loadConfigFile(const std::string &config);
+
+	/*
+	 * Loads m_protocol class. Returns true if protocol is loaded.
+	 */
 	bool loadProtocol();
 
-	Configuration m_configuration;
-	AbstractProtocol *m_protocol;
+	Configuration m_configuration;				// configuration struct
+	AbstractProtocol *m_protocol;				// currently used protocol
+	SQLClass *m_sql;							// storage class
 
-	SQLClass *m_sql;
+	GlooxDiscoHandler *m_discoHandler;			// disco stanza handler
+	GlooxDiscoInfoHandler *m_discoInfoHandler;	// disco#info handler
+ 	GlooxRegisterHandler *m_reg;				// jabber:iq:register handler
+	GlooxStatsHandler *m_stats;					// Statistic Gathering handler (xep-0039)
+	GlooxVCardHandler *m_vcard;					// VCard handler
+	GlooxSearchHandler *m_searchHandler;		// jabber:iq:search handler
+	GlooxAdhocHandler *m_adhoc;					// Ad-Hoc commands handler
+	GlooxParser *m_parser;						// Gloox parser - makes Tag* from std::string
 
-	GlooxDiscoHandler *m_discoHandler;
-	GlooxDiscoInfoHandler *m_discoInfoHandler;
- 	GlooxRegisterHandler *m_reg;
-	GlooxStatsHandler *m_stats;
-	GlooxVCardHandler *m_vcard;
-	GlooxSearchHandler *m_searchHandler;
-// 	std::list <GlooxAdhocHandler *> m_adhoc_handlers;
-	GlooxAdhocHandler *m_adhoc;
-	GlooxParser *m_parser;
+	GIOChannel *connectIO;						// GIOChannel for Gloox socket
 
-	GIOChannel *connectIO;
-
-	UserManager *m_userManager;
+	UserManager *m_userManager;					// UserManager class
+	bool m_firstConnection;						// true if transporConnect is called for first time
 	static GlooxMessageHandler* m_pInstance;
-	bool m_firstConnection;
-
-
-
 };
 
 #endif

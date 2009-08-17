@@ -660,8 +660,6 @@ GlooxMessageHandler::GlooxMessageHandler(const std::string &config) : MessageHan
 	Log().Get("gloox") << "connecting to: " << m_configuration.server << " as " << m_configuration.jid << " with password " << m_configuration.password;
 	j = new HiComponent("jabber:component:accept",m_configuration.server,m_configuration.jid,m_configuration.password,m_configuration.port);
 
-	j->logInstance().registerLogHandler( LogLevelDebug, LogAreaAll, this );
-
 	GMainLoop *loop = g_main_loop_new(NULL, FALSE);
 	signal(SIGCHLD, SIG_IGN);
 
@@ -1173,9 +1171,9 @@ void GlooxMessageHandler::purpleBuddyChanged(PurpleBuddy* buddy) {
 	}
 }
 
-bool GlooxMessageHandler::hasCaps(const std::string &name) {
+bool GlooxMessageHandler::hasCaps(const std::string &ver) {
 	std::map<std::string,int> ::iterator iter = capsCache.begin();
-	iter = capsCache.find(name);
+	iter = capsCache.find(ver);
 	if(iter != capsCache.end())
 		return true;
 	return false;
