@@ -132,8 +132,8 @@ set(spectrum_MOC_HDRS
 	protocols/myspace.h
 	protocols/qq.h
 	protocols/simple.h
-	protocols/yahoo.h
 	protocols/xmpp.h
+	protocols/yahoo.h
 )
 
 add_executable(spectrum ${spectrum_SRCS} ${lrelease_outputs})
