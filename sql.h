@@ -22,7 +22,6 @@
 #define _HI_SQL_H
 
 #include <dbi/dbi.h>
-#include <mysql++.h>
 #include <gloox/clientbase.h>
 #include <glib.h>
 class GlooxMessageHandler;
@@ -67,7 +66,7 @@ public:
 	void updateUserPassword(const std::string &jid,const std::string &password, const std::string &language);
 	void removeUserFromRoster(const std::string &jid);
 	void addUserToRoster(const std::string &jid,const std::string &uin,const std::string &subscription, const std::string &group = "Buddies", const std::string &nickname = "");
-	void updateUserToRoster(const std::string &jid,const std::string &uin,const std::string &subscription, const std::string &group = "Buddies", const std::string &nickname = "");
+// 	void updateUserToRoster(const std::string &jid,const std::string &uin,const std::string &subscription, const std::string &group = "Buddies", const std::string &nickname = "");
 	void updateUserRosterSubscription(const std::string &jid,const std::string &uin,const std::string &subscription);
 	void removeUINFromRoster(const std::string &jid,const std::string &uin);
 	bool isVIP(const std::string &jid);
@@ -82,8 +81,6 @@ public:
 
 	UserRow getUserByJid(const std::string &jid);
 	std::map<std::string,RosterRow> getRosterByJid(const std::string &jid);
-	mysqlpp::Connection *sql;
-	mysqlpp::Connection *vipSQL;
 	private:
 		GlooxMessageHandler *p;
 		dbi_conn m_conn;

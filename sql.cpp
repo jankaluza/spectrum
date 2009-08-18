@@ -100,54 +100,24 @@ void SQLClass::initDb() {
 }
 
 bool SQLClass::isVIP(const std::string &jid){
-	return true;
-// 	if (!p->configuration().VIPEnabled)
-// 		return true;
-// #if MYSQLPP_HEADER_VERSION < 0x030000
-// 	mysqlpp::Result res;
-// #else
-// 	mysqlpp::StoreQueryResult res;
-// #endif
-// 	mysqlpp::Row myrow;
-// 	if (vipSQL->connected()) {
-// 		mysqlpp::Query query = vipSQL->query();
-// 
-// 		query << "SELECT COUNT(jid) as is_vip FROM `users` WHERE jid='"<< jid <<"' and expire>NOW();";
-// 		res = query.store();
-// 		if (!res) {
-// 			Log().Get("SQL ERROR") << query.str();
-// 			Log().Get("SQL ERROR") << query.error();
-// 			return true;
-// 		}
-// 	}
-// 	else {
-// 		mysqlpp::Query query = sql->query();
-// 		query << "SELECT COUNT(jid) as is_vip FROM `vips` WHERE jid='"<< jid <<"'";
-// 		res = query.store();
-// 		if (!res) {
-// 			Log().Get("SQL ERROR") << query.str();
-// 			Log().Get("SQL ERROR") << query.error();
-// 			return true;
-// 		}
-// 	}
-// 
-// #if MYSQLPP_HEADER_VERSION < 0x030000
-// 	myrow = res.fetch_row();
-// 	if (int(myrow.at(0))==0)
-// 		return false;
-// 	else
-// 		return true;
-// #else
-// 	mysqlpp::StoreQueryResult::size_type i;
-// 	for (i = 0; i < res.num_rows(); ++i) {
-// 		myrow = res[i];
-// 		if (int(myrow.at(0))==0)
-// 			return false;
-// 		else
-// 			return true;
-// 	}
-// 	return true;
-// #endif
+	dbi_result result;
+	bool ret = false;
+
+	result = dbi_conn_queryf(m_conn, "SELECT COUNT(jid) as is_vip FROM `%svips` WHERE jid=\"%s\"", p->configuration().sqlPrefix.c_str(), jid.c_str());
+	if (result) {
+		if (dbi_result_first_row(result)) {
+			ret = true;
+		}
+		dbi_result_free(result);
+	}
+	else {
+		const char *errmsg;
+		dbi_conn_error(m_conn, &errmsg);
+		if (errmsg)
+			Log().Get("SQL ERROR") << errmsg;
+	}
+
+	return ret;
 }
 
 long SQLClass::getRegisteredUsersCount(){
@@ -250,31 +220,27 @@ void SQLClass::addUser(const std::string &jid,const std::string &uin,const std::
 	}
 }
 
+// TODO: We have to rewrite it or remove it when we find out how to do addUserToRoster for sqlite3
+// void SQLClass::updateUserToRoster(const std::string &jid,const std::string &uin,const std::string &subscription, const std::string &group, const std::string &nickname) {
+// 	dbi_result result;
+// 	// result = dbi_conn_queryf(m_conn, "INSERT INTO %srosters (jid, uin, subscription, g, nickname) VALUES (\"%s\", \"%s\", \"%s\", \"%s\", \"%s\") ON DUPLICATE KEY UPDATE g=\"%s\", nickname=\"%s\"", p->configuration().sqlPrefix.c_str(), jid.c_str(), uin.c_str(), subscription.c_str(), group.c_str(), nickname.c_str(), group.c_str(), nickname.c_str());
+// 	result = dbi_conn_queryf(m_conn, "INSERT INTO %srosters (jid, uin, subscription, g, nickname) VALUES (\"%s\", \"%s\", \"%s\", \"%s\", \"%s\")", p->configuration().sqlPrefix.c_str(), jid.c_str(), uin.c_str(), subscription.c_str(), group.c_str(), nickname.c_str());
+// 	if (!result) {
+// 		const char *errmsg;
+// 		dbi_conn_error(m_conn, &errmsg);
+// 		if (errmsg)
+// 			Log().Get("SQL ERROR") << errmsg;
+// 	}
+// }
+
 void SQLClass::addUserToRoster(const std::string &jid,const std::string &uin,const std::string &subscription, const std::string &group, const std::string &nickname) {
 	dbi_result result;
-	// result = dbi_conn_queryf(m_conn, "INSERT INTO %srosters (jid, uin, subscription, g, nickname) VALUES (\"%s\", \"%s\", \"%s\", \"%s\", \"%s\") ON DUPLICATE KEY UPDATE g=\"%s\", nickname=\"%s\"", p->configuration().sqlPrefix.c_str(), jid.c_str(), uin.c_str(), subscription.c_str(), group.c_str(), nickname.c_str(), group.c_str(), nickname.c_str());
-	result = dbi_conn_queryf(m_conn, "INSERT INTO %srosters (jid, uin, subscription, g, nickname) VALUES (\"%s\", \"%s\", \"%s\", \"%s\", \"%s\")", p->configuration().sqlPrefix.c_str(), jid.c_str(), uin.c_str(), subscription.c_str(), group.c_str(), nickname.c_str());
+	result = dbi_conn_queryf(m_conn, "INSERT INTO %srosters (jid, uin, subscription, g, nickname) VALUES (\"%s\", \"%s\", \"%s\", \"%s\", \"%s\") ON DUPLICATE KEY UPDATE g=\"%s\", nickname=\"%s\"", p->configuration().sqlPrefix.c_str(), jid.c_str(), uin.c_str(), subscription.c_str(), group.c_str(), nickname.c_str(), group.c_str(), nickname.c_str());
 	if (!result) {
 		const char *errmsg;
 		dbi_conn_error(m_conn, &errmsg);
 		if (errmsg)
 			Log().Get("SQL ERROR") << errmsg;
-	}
-}
-
-void SQLClass::updateUserToRoster(const std::string &jid,const std::string &uin,const std::string &subscription, const std::string &group, const std::string &nickname) {
-	dbi_result result;
-	// result = dbi_conn_queryf(m_conn, "INSERT INTO %srosters (jid, uin, subscription, g, nickname) VALUES (\"%s\", \"%s\", \"%s\", \"%s\", \"%s\") ON DUPLICATE KEY UPDATE g=\"%s\", nickname=\"%s\"", p->configuration().sqlPrefix.c_str(), jid.c_str(), uin.c_str(), subscription.c_str(), group.c_str(), nickname.c_str(), group.c_str(), nickname.c_str());
-	result = dbi_conn_queryf(m_conn, "UPDATE %srosters SET g=\"%s\", nickname=\"%s\" WHERE uin=\"%s\" AND jid=\"%s\"", p->configuration().sqlPrefix.c_str(), group.c_str(), nickname.c_str(), uin.c_str(), jid.c_str());
-	if (!result) {
-		const char *errmsg;
-		dbi_conn_error(m_conn, &errmsg);
-		if (errmsg)
-			Log().Get("SQL ERROR") << errmsg;
-	}
-	else if (dbi_result_get_numrows_affected(result) == 0) {
-		// there are no columns affected, so we have to add the buddy
-		addUserToRoster(jid, uin, subscription, group, nickname);
 	}
 }
 

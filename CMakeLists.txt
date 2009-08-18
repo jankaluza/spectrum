@@ -15,8 +15,6 @@ set(purple_DIR ${CMAKE_MODULE_PATH})
 find_package(purple REQUIRED)
 set(glib_DIR ${CMAKE_MODULE_PATH})
 find_package(glib REQUIRED)
-set(mysql_DIR ${CMAKE_MODULE_PATH})
-find_package(mysql REQUIRED)
 set(libdbi_DIR ${CMAKE_MODULE_PATH})
 find_package(libdbi REQUIRED)
 
@@ -32,8 +30,6 @@ include_directories(${GLOOX_INCLUDE_DIR})
 include_directories("/usr/local/include/libpurple")
 include_directories("/usr/include/libpurple")
 
-include_directories(${MySQLpp_INCLUDE_DIR})
-include_directories(${MYSQL_INCLUDE_DIR})
 include_directories(${LIBDBI_INCLUDE_DIR})
 
 if(GLIB_FOUND)
@@ -141,7 +137,7 @@ set(spectrum_MOC_HDRS
 
 add_executable(spectrum ${spectrum_SRCS} ${lrelease_outputs})
 
-target_link_libraries(spectrum ${GLOOX_LIBRARIES} ${MySQLpp_LIBRARY} ${PURPLE_LIBRARY} ${GLIB_LIBRARIES} ${GETTEXTPO_LIBRARY} ${LIBDBI_LIBRARIES} -export-dynamic)
+target_link_libraries(spectrum ${GLOOX_LIBRARIES} ${PURPLE_LIBRARY} ${GLIB_LIBRARIES} ${GETTEXTPO_LIBRARY} ${LIBDBI_LIBRARIES} -export-dynamic)
 
 message(STATUS "Transport will be installed into: " ${CMAKE_INSTALL_PREFIX})
 file(WRITE transport_config.h "#define INSTALL_DIR \"" ${CMAKE_INSTALL_PREFIX} "\"\n")

@@ -25,7 +25,6 @@
 #include <time.h>
 #include <string.h>
 #include <unistd.h>
-#include <mysql++.h>
 
 #include <gloox/component.h>
 #include <gloox/messagehandler.h>

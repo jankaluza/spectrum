@@ -393,7 +393,7 @@ static void buddyListSaveNode(PurpleBlistNode *node) {
 			alias = (std::string) purple_buddy_get_server_alias(buddy);
 		else
 			alias = (std::string) purple_buddy_get_alias(buddy);
-		GlooxMessageHandler::instance()->sql()->updateUserToRoster(user->jid(), name, "both", (std::string) purple_group_get_name(purple_buddy_get_group(buddy)), alias);
+		GlooxMessageHandler::instance()->sql()->addUserToRoster(user->jid(), name, "both", (std::string) purple_group_get_name(purple_buddy_get_group(buddy)), alias);
 	}
 }
 
