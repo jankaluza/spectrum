@@ -21,6 +21,7 @@
 #ifndef _HI_SQL_H
 #define _HI_SQL_H
 
+#include <dbi/dbi.h>
 #include <mysql++.h>
 #include <gloox/clientbase.h>
 #include <glib.h>
@@ -58,19 +59,20 @@ class SQLClass
 
 public:
 	SQLClass(GlooxMessageHandler *parent);
-// 	~SQLClass();
+	~SQLClass();
+	void initDb();
 	void addUser(const std::string &jid,const std::string &uin,const std::string &password, const std::string &language);
 	void addDownload(const std::string &filename,const std::string &vip);
 	void removeUser(const std::string &jid);
 	void updateUserPassword(const std::string &jid,const std::string &password, const std::string &language);
 	void removeUserFromRoster(const std::string &jid);
 	void addUserToRoster(const std::string &jid,const std::string &uin,const std::string &subscription, const std::string &group = "Buddies", const std::string &nickname = "");
+	void updateUserToRoster(const std::string &jid,const std::string &uin,const std::string &subscription, const std::string &group = "Buddies", const std::string &nickname = "");
 	void updateUserRosterSubscription(const std::string &jid,const std::string &uin,const std::string &subscription);
 	void removeUINFromRoster(const std::string &jid,const std::string &uin);
 	bool isVIP(const std::string &jid);
 	long getRegisteredUsersCount();
 	long getRegisteredUsersRosterCount();
-    void getRandomStatus(std::string & status);
 
 	// settings
 	void addSetting(const std::string &jid, const std::string &key, const std::string &value, PurpleType type);
@@ -78,16 +80,13 @@ public:
 	void getSetting(const std::string &jid, const std::string &key);
 	GHashTable * getSettings(const std::string &jid);
 
-	// vcards
-	bool getVCard(const std::string &name, void (*handleTagCallback)(Tag *tag, Tag *user_data), Tag *user_data);
-	void updateVCard(const std::string &name, const std::string &vcard);
-
 	UserRow getUserByJid(const std::string &jid);
 	std::map<std::string,RosterRow> getRosterByJid(const std::string &jid);
-	std::map<std::string,RosterRow> getRosterByJidAsk(const std::string &jid);
 	mysqlpp::Connection *sql;
 	mysqlpp::Connection *vipSQL;
-	GlooxMessageHandler *p;
+	private:
+		GlooxMessageHandler *p;
+		dbi_conn m_conn;
 };
 
 #endif

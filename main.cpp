@@ -1280,7 +1280,6 @@ void GlooxMessageHandler::handlePresence(const Presence &stanza){
 					Log().Get(stanza.from().full()) << "This user is not VIP, can't login...";
 					return;
 				}
-
 				Log().Get(stanza.from().full()) << "Creating new User instance";
 				if (protocol()->tempAccountsAllowed()) {
 					std::string server = stanza.to().username().substr(stanza.to().username().find("%") + 1, stanza.to().username().length() - stanza.to().username().find("%"));

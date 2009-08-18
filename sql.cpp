@@ -23,377 +23,392 @@
 #include "log.h"
 
 SQLClass::SQLClass(GlooxMessageHandler *parent){
-	p=parent;
-	sql = new mysqlpp::Connection(false);
-	if (!sql->connect(p->configuration().sqlDb.c_str(),p->configuration().sqlHost.c_str(),p->configuration().sqlUser.c_str(),p->configuration().sqlPassword.c_str()))
+	p = parent;
+
+	dbi_initialize(NULL);
+
+	m_conn = dbi_conn_new(p->configuration().sqlType.c_str());
+
+	if (p->configuration().sqlType == "sqlite3") {
+		dbi_conn_set_option(m_conn, "sqlite3_dbdir", g_path_get_dirname(p->configuration().sqlDb.c_str()));
+		dbi_conn_set_option(m_conn, "dbname", g_path_get_basename(p->configuration().sqlDb.c_str()));
+	} else {
+		dbi_conn_set_option(m_conn, "host", p->configuration().sqlHost.c_str());
+		dbi_conn_set_option(m_conn, "username", p->configuration().sqlUser.c_str());
+		dbi_conn_set_option(m_conn, "password", p->configuration().sqlPassword.c_str());
+		dbi_conn_set_option(m_conn, "dbname", p->configuration().sqlDb.c_str());
+		dbi_conn_set_option(m_conn, "encoding", "UTF-8");
+	}
+
+	if (dbi_conn_connect(m_conn) < 0) {
 		std::cout << "SQL CONNECTION FAILED\n";
-#if MYSQLPP_HEADER_VERSION < MYSQLPP_VERSION(3, 0, 0)
-	sql->set_option(mysqlpp::Connection::opt_reconnect, true);
-#else
-	sql->set_option(new mysqlpp::ReconnectOption(true));
-#endif
-	vipSQL = new mysqlpp::Connection(false);
-	if (!vipSQL->connect("platby",p->configuration().sqlHost.c_str(),p->configuration().sqlUser.c_str(),p->configuration().sqlPassword.c_str()))
-		std::cout << "Can't connect to SQL-VIP database, using built-in.\n";
+	}
+	else {
+		initDb();
+	}
+	
+
+// 	if (!vipSQL->connect("platby",p->configuration().sqlHost.c_str(),p->configuration().sqlUser.c_str(),p->configuration().sqlPassword.c_str()))
+}
+
+SQLClass::~SQLClass() {
+	dbi_conn_close(m_conn);
+	dbi_shutdown();
+}
+
+void SQLClass::initDb() {
+	dbi_result result;
+	int i;
+	const char *create_stmts_mysql[] = {
+		"CREATE TABLE IF NOT EXISTS rosters ("
+			"id bigint(20) unsigned NOT NULL auto_increment,"
+			"jid varchar(100) collate utf8_bin NOT NULL,"
+			"uin varchar(100) collate utf8_bin NOT NULL,"
+			"subscription varchar(10) collate utf8_bin NOT NULL,"
+			"nickname varchar(255) collate utf8_bin NOT NULL,"
+			"g varchar(255) collate utf8_bin NOT NULL,"
+			"PRIMARY KEY  (id),"
+			"UNIQUE KEY JidUin (jid,uin),"
+			"KEY jid (jid),"
+			"KEY uin (uin)"
+		") ENGINE=MyISAM  DEFAULT CHARSET=utf8 COLLATE=utf8_bin;",
+		"CREATE TABLE IF NOT EXISTS settings ("
+			"id int(10) unsigned NOT NULL auto_increment,"
+			"jid varchar(255) collate utf8_bin NOT NULL,"
+			"var varchar(255) collate utf8_bin NOT NULL,"
+			"`type` smallint(4) unsigned NOT NULL,"
+			"`value` varchar(255) collate utf8_bin NOT NULL,"
+			"PRIMARY KEY  (id)"
+		") ENGINE=MyISAM  DEFAULT CHARSET=utf8 COLLATE=utf8_bin;",
+		"CREATE TABLE IF NOT EXISTS users ("
+			"id int(10) unsigned NOT NULL auto_increment,"
+			"jid varchar(255) collate utf8_bin NOT NULL,"
+			"uin varchar(255) collate utf8_bin NOT NULL,"
+			"`password` varchar(255) collate utf8_bin NOT NULL,"
+			"`language` varchar(5) collate utf8_bin NOT NULL,"
+			"`group` int(11) NOT NULL default '0',"
+			"PRIMARY KEY  (id),"
+			"KEY jid (jid),"
+			"KEY uin (uin)"
+		") ENGINE=MyISAM  DEFAULT CHARSET=utf8 COLLATE=utf8_bin;",
+		"CREATE TABLE IF NOT EXISTS vcards ("
+			"username varchar(250) collate utf8_bin NOT NULL,"
+			"vcard text collate utf8_bin NOT NULL,"
+			"`timestamp` timestamp NOT NULL default CURRENT_TIMESTAMP on update CURRENT_TIMESTAMP,"
+			"PRIMARY KEY  (username)"
+		") ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_bin;",
+		"CREATE TABLE IF NOT EXISTS vips ("
+			"jid varchar(255) collate utf8_bin NOT NULL,"
+			"PRIMARY KEY  (jid)"
+		") ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_bin;"
+	};
+	
+	const char *create_stmts_sqlite[] = {
+		"CREATE TABLE IF NOT EXISTS rosters ("
+			"id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,"
+			"jid TEXT NOT NULL,"
+			"uin TEXT NOT NULL,"
+			"subscription TEXT NOT NULL,"
+			"nickname TEXT NOT NULL DEFAULT \"\","
+			"g TEXT NOT NULL DEFAULT \"\","
+			"UNIQUE (jid,uin)"
+		");",
+		"CREATE TABLE IF NOT EXISTS settings ("
+			"id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,"
+			"jid TEXT NOT NULL,"
+			"var TEXT NOT NULL,"
+			"type INTEGER NOT NULL,"
+			"value TEXT NOT NULL"
+		");",
+		"CREATE TABLE IF NOT EXISTS users ("
+			"id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,"
+			"jid TEXT NOT NULL,"
+			"uin TEXT NOT NULL,"
+			"password TEXT NOT NULL,"
+			"language TEXT NOT NULL,"
+			"`group` INTEGER NOT NULL DEFAULT 0"
+		");","",""
+	};
+	for (i = 0; i < 5; i++) {
+		if (p->configuration().sqlType == "sqlite3")
+			result = dbi_conn_query(m_conn, create_stmts_sqlite[i]);
+		else
+			result = dbi_conn_query(m_conn, create_stmts_mysql[i]);
+		if (result == NULL) {
+			const char *errmsg;
+			dbi_conn_error(m_conn, &errmsg);
+			if (errmsg)
+				Log().Get("SQL ERROR") << errmsg;
+		}
+		dbi_result_free(result);
+	}
 }
 
 bool SQLClass::isVIP(const std::string &jid){
-	if (!p->configuration().VIPEnabled)
-		return true;
-#if MYSQLPP_HEADER_VERSION < 0x030000
-	mysqlpp::Result res;
-#else
-	mysqlpp::StoreQueryResult res;
-#endif
-	mysqlpp::Row myrow;
-	if (vipSQL->connected()) {
-		mysqlpp::Query query = vipSQL->query();
-
-		query << "SELECT COUNT(jid) as is_vip FROM `users` WHERE jid='"<< jid <<"' and expire>NOW();";
-		res = query.store();
-		if (!res) {
-			Log().Get("SQL ERROR") << query.str();
-			Log().Get("SQL ERROR") << query.error();
-			return true;
-		}
-	}
-	else {
-		mysqlpp::Query query = sql->query();
-		query << "SELECT COUNT(jid) as is_vip FROM `vips` WHERE jid='"<< jid <<"'";
-		res = query.store();
-		if (!res) {
-			Log().Get("SQL ERROR") << query.str();
-			Log().Get("SQL ERROR") << query.error();
-			return true;
-		}
-	}
-
-#if MYSQLPP_HEADER_VERSION < 0x030000
-	myrow = res.fetch_row();
-	if (int(myrow.at(0))==0)
-		return false;
-	else
-		return true;
-#else
-	mysqlpp::StoreQueryResult::size_type i;
-	for (i = 0; i < res.num_rows(); ++i) {
-		myrow = res[i];
-		if (int(myrow.at(0))==0)
-			return false;
-		else
-			return true;
-	}
 	return true;
-#endif
+// 	if (!p->configuration().VIPEnabled)
+// 		return true;
+// #if MYSQLPP_HEADER_VERSION < 0x030000
+// 	mysqlpp::Result res;
+// #else
+// 	mysqlpp::StoreQueryResult res;
+// #endif
+// 	mysqlpp::Row myrow;
+// 	if (vipSQL->connected()) {
+// 		mysqlpp::Query query = vipSQL->query();
+// 
+// 		query << "SELECT COUNT(jid) as is_vip FROM `users` WHERE jid='"<< jid <<"' and expire>NOW();";
+// 		res = query.store();
+// 		if (!res) {
+// 			Log().Get("SQL ERROR") << query.str();
+// 			Log().Get("SQL ERROR") << query.error();
+// 			return true;
+// 		}
+// 	}
+// 	else {
+// 		mysqlpp::Query query = sql->query();
+// 		query << "SELECT COUNT(jid) as is_vip FROM `vips` WHERE jid='"<< jid <<"'";
+// 		res = query.store();
+// 		if (!res) {
+// 			Log().Get("SQL ERROR") << query.str();
+// 			Log().Get("SQL ERROR") << query.error();
+// 			return true;
+// 		}
+// 	}
+// 
+// #if MYSQLPP_HEADER_VERSION < 0x030000
+// 	myrow = res.fetch_row();
+// 	if (int(myrow.at(0))==0)
+// 		return false;
+// 	else
+// 		return true;
+// #else
+// 	mysqlpp::StoreQueryResult::size_type i;
+// 	for (i = 0; i < res.num_rows(); ++i) {
+// 		myrow = res[i];
+// 		if (int(myrow.at(0))==0)
+// 			return false;
+// 		else
+// 			return true;
+// 	}
+// 	return true;
+// #endif
 }
 
 long SQLClass::getRegisteredUsersCount(){
-	mysqlpp::Query query = sql->query();
-#if MYSQLPP_HEADER_VERSION < 0x030000
-	mysqlpp::Result res;
-#else
-	mysqlpp::StoreQueryResult res;
-#endif
-	mysqlpp::Row myrow;
-	query << "select count(*) as count from "<< p->configuration().sqlPrefix <<"users";
-	res = query.store();
-	if (!res) {
-		Log().Get("SQL ERROR") << query.str();
-		Log().Get("SQL ERROR") << query.error();
-		return 0;
+	dbi_result result;
+	unsigned int r = 0;
+
+	result = dbi_conn_queryf(m_conn, "select count(*) as count from %susers", p->configuration().sqlPrefix.c_str());
+	if (result) {
+		if (dbi_result_first_row(result)) {
+			r = dbi_result_get_uint(result, "count");
+		}
+		dbi_result_free(result);
 	}
-#if MYSQLPP_HEADER_VERSION < 0x030000
-	if (res){
-		myrow = res.fetch_row();
-		return long(myrow.at(0));
+	else {
+		const char *errmsg;
+		dbi_conn_error(m_conn, &errmsg);
+		if (errmsg)
+			Log().Get("SQL ERROR") << errmsg;
 	}
-	else return 0;
-#else
-	mysqlpp::StoreQueryResult::size_type i;
-	for (i = 0; i < res.num_rows(); ++i) {
-		myrow = res[i];
-		return long(myrow.at(0));
-	}
-	return 0;
-#endif
+
+	return r;
 }
 
 long SQLClass::getRegisteredUsersRosterCount(){
-	mysqlpp::Query query = sql->query();
-#if MYSQLPP_HEADER_VERSION < 0x030000
-	mysqlpp::Result res;
-#else
-	mysqlpp::StoreQueryResult res;
-#endif
-	mysqlpp::Row myrow;
-	query << "select count(*) as count from "<< p->configuration().sqlPrefix <<"rosters";
-	res = query.store();
-#if MYSQLPP_HEADER_VERSION < 0x030000
-	if (res){
-		myrow = res.fetch_row();
-		return long(myrow.at(0));
-	}
-	else return 0;
-#else
-	mysqlpp::StoreQueryResult::size_type i;
-	for (i = 0; i < res.num_rows(); ++i) {
-		myrow = res[i];
-		return long(myrow.at(0));
-	}
-	return 0;
-#endif
+	dbi_result result;
+	unsigned int r = 0;
 
+	result = dbi_conn_queryf(m_conn, "select count(*) as count from %srosters", p->configuration().sqlPrefix.c_str());
+	if (result) {
+		if (dbi_result_first_row(result)) {
+			r = dbi_result_get_uint(result, "count");
+		}
+		dbi_result_free(result);
+	}
+	else {
+		const char *errmsg;
+		dbi_conn_error(m_conn, &errmsg);
+		if (errmsg)
+			Log().Get("SQL ERROR") << errmsg;
+	}
+
+	return r;
 }
 
 void SQLClass::updateUserPassword(const std::string &jid,const std::string &password,const std::string &language) {
-	mysqlpp::Query query = sql->query();
-	query << "UPDATE "<< p->configuration().sqlPrefix <<"users SET password=\"" << password <<"\", language=\""<< language <<"\" WHERE jid=\"" << jid << "\";";
-	query.execute();
+	dbi_result result;
+	result = dbi_conn_queryf(m_conn, "UPDATE %susers SET password=\"%s\", language=\"%s\" WHERE jid=\"%s\"", p->configuration().sqlPrefix.c_str(), password.c_str(), language.c_str(), jid.c_str());
+	if (!result) {
+		const char *errmsg;
+		dbi_conn_error(m_conn, &errmsg);
+		if (errmsg)
+			Log().Get("SQL ERROR") << errmsg;
+	}
 }
 
 void SQLClass::removeUINFromRoster(const std::string &jid,const std::string &uin) {
-	mysqlpp::Query query = sql->query();
-	query << "DELETE FROM "<< p->configuration().sqlPrefix <<"rosters WHERE jid=\"" << jid << "\" AND uin=\"" << uin << "\";";
-	query.execute();
+	dbi_result result;
+	result = dbi_conn_queryf(m_conn, "DELETE FROM %srosters WHERE jid=\"%s\" AND uin=\"%s\"", p->configuration().sqlPrefix.c_str(), jid.c_str(), uin.c_str());
+	if (!result) {
+		const char *errmsg;
+		dbi_conn_error(m_conn, &errmsg);
+		if (errmsg)
+			Log().Get("SQL ERROR") << errmsg;
+	}
 }
 
 void SQLClass::removeUser(const std::string &jid){
-	mysqlpp::Query query = sql->query();
-	query << "DELETE FROM "<< p->configuration().sqlPrefix <<"users WHERE jid=\"" << jid << "\" ;";
-	query.execute();
+	dbi_result result;
+	result = dbi_conn_queryf(m_conn, "DELETE FROM %susers WHERE jid=\"%s\"", p->configuration().sqlPrefix.c_str(), jid.c_str());
+	if (!result) {
+		const char *errmsg;
+		dbi_conn_error(m_conn, &errmsg);
+		if (errmsg)
+			Log().Get("SQL ERROR") << errmsg;
+	}
 }
 
 void SQLClass::removeUserFromRoster(const std::string &jid){
-	mysqlpp::Query query = sql->query();
-	query << "DELETE FROM "<< p->configuration().sqlPrefix <<"rosters WHERE jid=\"" << jid << "\" ;";
-	query.execute();
+	dbi_result result;
+	result = dbi_conn_queryf(m_conn, "DELETE FROM %srosters WHERE jid=\"%s\"", p->configuration().sqlPrefix.c_str(), jid.c_str());
+	if (!result) {
+		const char *errmsg;
+		dbi_conn_error(m_conn, &errmsg);
+		if (errmsg)
+			Log().Get("SQL ERROR") << errmsg;
+	}
 }
 
 void SQLClass::addDownload(const std::string &filename,const std::string &vip){
-	mysqlpp::Query query = sql->query();
-	query << "INSERT INTO downloads " << "(filename,vip) VALUES (\"" << filename << "\"," << vip << ")";
-	query.execute();
 }
 
 void SQLClass::addUser(const std::string &jid,const std::string &uin,const std::string &password,const std::string &language){
-	mysqlpp::Query query = sql->query();
-	query << "INSERT INTO "<< p->configuration().sqlPrefix <<"users " << "(id, jid, uin, password, language) VALUES (\"\",\"" << jid << "\",\"" << uin << "\", \"" << password << "\", \"" << language << "\")";
-	query.execute();
+	dbi_result result;
+	result = dbi_conn_queryf(m_conn, "INSERT INTO %susers (jid, uin, password, language) VALUES (\"%s\", \"%s\", \"%s\", \"%s\")", p->configuration().sqlPrefix.c_str(), jid.c_str(), uin.c_str(), password.c_str(), language.c_str());
+	if (!result) {
+		const char *errmsg;
+		dbi_conn_error(m_conn, &errmsg);
+		if (errmsg)
+			Log().Get("SQL ERROR") << errmsg;
+	}
 }
 
 void SQLClass::addUserToRoster(const std::string &jid,const std::string &uin,const std::string &subscription, const std::string &group, const std::string &nickname) {
-	mysqlpp::Query query = sql->query();
-	query << "INSERT INTO "<< p->configuration().sqlPrefix <<"rosters " << "(id, jid, uin, subscription, g, nickname) VALUES (\"\",\"" << jid << "\",\"" << uin << "\", \"" << subscription << "\", \"" << group << "\", \"" << nickname << "\") ON DUPLICATE KEY UPDATE g=\""+ group +"\", nickname=\""+ nickname +"\";";
+	dbi_result result;
+	// result = dbi_conn_queryf(m_conn, "INSERT INTO %srosters (jid, uin, subscription, g, nickname) VALUES (\"%s\", \"%s\", \"%s\", \"%s\", \"%s\") ON DUPLICATE KEY UPDATE g=\"%s\", nickname=\"%s\"", p->configuration().sqlPrefix.c_str(), jid.c_str(), uin.c_str(), subscription.c_str(), group.c_str(), nickname.c_str(), group.c_str(), nickname.c_str());
+	result = dbi_conn_queryf(m_conn, "INSERT INTO %srosters (jid, uin, subscription, g, nickname) VALUES (\"%s\", \"%s\", \"%s\", \"%s\", \"%s\")", p->configuration().sqlPrefix.c_str(), jid.c_str(), uin.c_str(), subscription.c_str(), group.c_str(), nickname.c_str());
+	if (!result) {
+		const char *errmsg;
+		dbi_conn_error(m_conn, &errmsg);
+		if (errmsg)
+			Log().Get("SQL ERROR") << errmsg;
+		updateUserToRoster(jid, uin, subscription, group, nickname);
+	}
+}
 
-	query.execute();
+void SQLClass::updateUserToRoster(const std::string &jid,const std::string &uin,const std::string &subscription, const std::string &group, const std::string &nickname) {
+	dbi_result result;
+	// result = dbi_conn_queryf(m_conn, "INSERT INTO %srosters (jid, uin, subscription, g, nickname) VALUES (\"%s\", \"%s\", \"%s\", \"%s\", \"%s\") ON DUPLICATE KEY UPDATE g=\"%s\", nickname=\"%s\"", p->configuration().sqlPrefix.c_str(), jid.c_str(), uin.c_str(), subscription.c_str(), group.c_str(), nickname.c_str(), group.c_str(), nickname.c_str());
+	result = dbi_conn_queryf(m_conn, "UPDATE %srosters SET g=\"%s\", nickname=\"%s\" WHERE uin=\"%s\" AND jid=\"%s\"", p->configuration().sqlPrefix.c_str(), group.c_str(), nickname.c_str(), uin.c_str(), jid.c_str());
+	if (!result) {
+		const char *errmsg;
+		dbi_conn_error(m_conn, &errmsg);
+		if (errmsg)
+			Log().Get("SQL ERROR") << errmsg;
+	}
 }
 
 void SQLClass::updateUserRosterSubscription(const std::string &jid,const std::string &uin,const std::string &subscription){
-	mysqlpp::Query query = sql->query();
-	query << "UPDATE "<< p->configuration().sqlPrefix <<"rosters SET subscription=\"" << subscription << "\" WHERE jid=\"" << jid << "\" AND uin=\"" << uin << "\";";
-	query.execute();
-	std::cout << "query!!!\n";
+	dbi_result result;
+	result = dbi_conn_queryf(m_conn, "UPDATE %srosters SET subscription=\"%s\" WHERE jid=\"%s\" AND uin=\"%s\"", p->configuration().sqlPrefix.c_str(), subscription.c_str(), jid.c_str(), uin.c_str());
+	if (!result) {
+		const char *errmsg;
+		dbi_conn_error(m_conn, &errmsg);
+		if (errmsg)
+			Log().Get("SQL ERROR") << errmsg;
+	}
 }
 
 UserRow SQLClass::getUserByJid(const std::string &jid){
 	UserRow user;
-	mysqlpp::Query query = sql->query();
-	query << "SELECT * FROM "<< p->configuration().sqlPrefix <<"users WHERE jid=\"" << jid << "\";";
-#if MYSQLPP_HEADER_VERSION < 0x030000
-	mysqlpp::Result res = query.store();
-#else
-	mysqlpp::StoreQueryResult res = query.store();
-#endif
-	user.id=-1;
-	user.jid="";
-	user.uin="";
-	user.password="";
-	if (!res) {
-		Log().Get("SQL ERROR") << query.str();
-		Log().Get("SQL ERROR") << query.error();
-		return user;
+	dbi_result result;
+	user.id = -1;
+
+	result = dbi_conn_queryf(m_conn, "SELECT * FROM %susers WHERE jid=\"%s\"", p->configuration().sqlPrefix.c_str(), jid.c_str());
+	if (result) {
+		if (dbi_result_first_row(result)) {
+			user.id = dbi_result_get_uint(result, "id");
+			user.jid = std::string(dbi_result_get_string(result, "jid"));
+			user.uin = std::string(dbi_result_get_string(result, "uin"));
+			user.password = std::string(dbi_result_get_string(result, "password"));
+		}
+		dbi_result_free(result);
 	}
-#if MYSQLPP_HEADER_VERSION < 0x030000
-	if (res.size()) {
-		mysqlpp::Row row = res.fetch_row();
-		user.id=(long) row["id"];
-		user.jid=(std::string)row["jid"];
-		user.uin=(std::string)row["uin"];
-		user.password=(std::string)row["password"];
-		user.category=(int) row["group"];
+	else {
+		const char *errmsg;
+		dbi_conn_error(m_conn, &errmsg);
+		if (errmsg)
+			Log().Get("SQL ERROR") << errmsg;
 	}
-#else
-	mysqlpp::StoreQueryResult::size_type i;
-	mysqlpp::Row row;
-	if (res.num_rows() > 0) {
-		row = res[0];
-		user.id=(long) row["id"];
-		user.jid=(std::string)row["jid"];
-		user.uin=(std::string)row["uin"];
-		user.password=(std::string)row["password"];
-		user.category=(int) row["group"];
-	}
-#endif
+
 	return user;
 }
 
 std::map<std::string,RosterRow> SQLClass::getRosterByJid(const std::string &jid){
 	std::map<std::string,RosterRow> rows;
-	mysqlpp::Query query = sql->query();
-	query << "SELECT * FROM "<< p->configuration().sqlPrefix <<"rosters WHERE jid=\"" << jid << "\";";
-#if MYSQLPP_HEADER_VERSION < 0x030000
-	mysqlpp::Result res = query.store();
-#else
-	mysqlpp::StoreQueryResult res = query.store();
-#endif
+	dbi_result result;
 
-	if (!res) {
-		Log().Get("SQL ERROR") << query.str();
-		Log().Get("SQL ERROR") << query.error();
-		return rows;
-	}
-
-#if MYSQLPP_HEADER_VERSION < 0x030000
-	if (res) {
-		mysqlpp::Row row;
-		while(row = res.fetch_row()){
+	result = dbi_conn_queryf(m_conn, "SELECT * FROM %srosters WHERE jid=\"%s\"", p->configuration().sqlPrefix.c_str(), jid.c_str());
+	if (result) {
+		while (dbi_result_next_row(result)) {
 			RosterRow user;
-			user.id=(long) row["id"];
-			user.jid=(std::string)row["jid"];
-			user.uin=(std::string)row["uin"];
-			user.subscription=(std::string)row["subscription"];
-			user.nickname=(std::string)row["nickname"];
-			user.group=(std::string)row["g"];
+			user.id = dbi_result_get_longlong(result, "id");
+			user.jid = std::string(dbi_result_get_string(result, "jid"));
+			user.uin = std::string(dbi_result_get_string(result, "uin"));
+			user.subscription = std::string(dbi_result_get_string(result, "subscription"));
+			user.nickname = std::string(dbi_result_get_string(result, "nickname"));
+			user.group = std::string(dbi_result_get_string(result, "g"));
 			if (user.subscription.empty())
 				user.subscription="ask";
-			user.online=false;
-			user.lastPresence="";
-			rows[(std::string)row["uin"]]=user;
+			user.online = false;
+			user.lastPresence = "";
+			rows[std::string(dbi_result_get_string(result, "uin"))] = user;
 		}
 	}
-#else
-	mysqlpp::StoreQueryResult::size_type i;
-	mysqlpp::Row row;
-	for (i = 0; i < res.num_rows(); ++i) {
-		row = res[i];
-		RosterRow user;
-		user.id=(long) row["id"];
-		user.jid=(std::string)row["jid"];
-		user.uin=(std::string)row["uin"];
-		user.subscription=(std::string)row["subscription"];
-		user.nickname=(std::string)row["nickname"];
-		user.group=(std::string)row["g"];
-		if (user.subscription.empty())
-			user.subscription="ask";
-		user.online=false;
-		user.lastPresence="";
-		rows[(std::string)row["uin"]]=user;
+	else {
+		const char *errmsg;
+		dbi_conn_error(m_conn, &errmsg);
+		if (errmsg)
+			Log().Get("SQL ERROR") << errmsg;
 	}
-#endif
+
 	return rows;
-}
-
-std::map<std::string,RosterRow> SQLClass::getRosterByJidAsk(const std::string &jid){
-	std::map<std::string,RosterRow> rows;
-	mysqlpp::Query query = sql->query();
-	query << "SELECT * FROM "<< p->configuration().sqlPrefix <<"rosters WHERE jid=\"" << jid << "\" AND subscription=\"ask\";";
-#if MYSQLPP_HEADER_VERSION < 0x030000
-	mysqlpp::Result res = query.store();
-#else
-	mysqlpp::StoreQueryResult res = query.store();
-#endif
-
-	if (!res) {
-		Log().Get("SQL ERROR") << query.str();
-		Log().Get("SQL ERROR") << query.error();
-		return rows;
-	}
-
-#if MYSQLPP_HEADER_VERSION < 0x030000
-	if (res) {
-		mysqlpp::Row row;
-		while(row = res.fetch_row()){
-			RosterRow user;
-			user.id=(long) row["id"];
-			user.jid=(std::string)row["jid"];
-			user.uin=(std::string)row["uin"];
-			user.subscription=(std::string)row["subscription"];
-			user.nickname=(std::string)row["nickname"];
-			user.group=(std::string)row["group"];
-			user.online=false;
-			user.lastPresence="";
-			rows[(std::string)row["uin"]]=user;
-		}
-	}
-#else
-	mysqlpp::StoreQueryResult::size_type i;
-	mysqlpp::Row row;
-	for (i = 0; i < res.num_rows(); ++i) {
-		row = res[i];
-		RosterRow user;
-		user.id=(long) row["id"];
-		user.jid=(std::string)row["jid"];
-		user.uin=(std::string)row["uin"];
-		user.subscription=(std::string)row["subscription"];
-		user.nickname=(std::string)row["nickname"];
-		user.group=(std::string)row["group"];
-		if (user.subscription.empty())
-			user.subscription="ask";
-		user.online=false;
-		user.lastPresence="";
-		rows[(std::string)row["uin"]]=user;
-	}
-#endif
-	return rows;
-}
-
-void SQLClass::getRandomStatus(std::string & status)
-{
-    mysqlpp::Query query = sql->query();
-#if MYSQLPP_HEADER_VERSION < 0x030000
-	mysqlpp::Result res;
-#else
-	mysqlpp::StoreQueryResult res;
-#endif
-    mysqlpp::Row row;
-
-    status.clear();
-
-    query << "SELECT reklama FROM ad_statusy ORDER BY RAND() LIMIT 1";
-
-    res = query.store();
-	if (!res) {
-		Log().Get("SQL ERROR") << query.str();
-		Log().Get("SQL ERROR") << query.error();
-		return;
-	}
-#if MYSQLPP_HEADER_VERSION < 0x030000
-    if (res) {
-        if (row = res.fetch_row()) {
-            status = (std::string)row["reklama"];
-        }
-    }
-#else
-    if (res.num_rows() > 0) {
-        if (row = res[0]) {
-            status = (std::string)row["reklama"];
-        }
-    }
-#endif
 }
 
 // settings
 
 void SQLClass::addSetting(const std::string &jid, const std::string &key, const std::string &value, PurpleType type) {
-	mysqlpp::Query query = sql->query();
-	query << "INSERT INTO "<< p->configuration().sqlPrefix <<"settings " << "(jid, var, type, value) VALUES (\"" << jid << "\",\"" << key << "\", \"" << type << "\", \"" << value << "\")";
-	query.execute();
+	dbi_result result;
+	result = dbi_conn_queryf(m_conn, "INSERT INTO %ssettings (jid, var, type, value) VALUES (\"%s\",\"%s\", \"%d\", \"%s\")", p->configuration().sqlPrefix.c_str(), jid.c_str(), key.c_str(), (int) type, value.c_str());
+	if (!result) {
+		const char *errmsg;
+		dbi_conn_error(m_conn, &errmsg);
+		if (errmsg)
+			Log().Get("SQL ERROR") << errmsg;
+	}
 }
 
 void SQLClass::updateSetting(const std::string &jid, const std::string &key, const std::string &value) {
-	mysqlpp::Query query = sql->query();
-	query << "UPDATE "<< p->configuration().sqlPrefix <<"settings SET value=\"" << value <<"\" WHERE jid=\"" << jid << "\" AND var=\"" << key << "\";";
-	query.execute();
+	dbi_result result;
+	result = dbi_conn_queryf(m_conn, "UPDATE %ssettings SET value=\"%s\" WHERE jid=\"%s\" AND var=\"%s\"", p->configuration().sqlPrefix.c_str(), value.c_str(), jid.c_str(), key.c_str());
+	if (!result) {
+		const char *errmsg;
+		dbi_conn_error(m_conn, &errmsg);
+		if (errmsg)
+			Log().Get("SQL ERROR") << errmsg;
+	}
 }
 
 void SQLClass::getSetting(const std::string &jid, const std::string &key) {
@@ -404,92 +419,31 @@ GHashTable * SQLClass::getSettings(const std::string &jid) {
 	GHashTable *settings = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, (GDestroyNotify) purple_value_destroy);
 	PurpleType type;
 	PurpleValue *value;
-    mysqlpp::Query query = sql->query();
-#if MYSQLPP_HEADER_VERSION < 0x030000
-	mysqlpp::Result res;
-#else
-	mysqlpp::StoreQueryResult res;
-#endif
-    mysqlpp::Row row;
 
-    query << "SELECT * FROM "<< p->configuration().sqlPrefix <<"settings WHERE jid=\"" << jid << "\";";
+	dbi_result result;
 
-    res = query.store();
-
-	if (!res) {
-		Log().Get("SQL ERROR") << query.str();
-		Log().Get("SQL ERROR") << query.error();
-		return settings;
-	}
-
-	if (res) {
-#if MYSQLPP_HEADER_VERSION < 0x030000
-		mysqlpp::Row row;
-		while(row = res.fetch_row()) {
-#else
-		mysqlpp::StoreQueryResult::size_type i;
-		mysqlpp::Row row;
-		for (i = 0; i < res.num_rows(); ++i) {
-			row = res[i];
-#endif
-			type = (PurpleType) atoi(row["type"]);
+	result = dbi_conn_queryf(m_conn, "SELECT * FROM %ssettings WHERE jid=\"%s\"", p->configuration().sqlPrefix.c_str(), jid.c_str());
+	if (result) {
+		while (dbi_result_next_row(result)) {
+			type = (PurpleType) dbi_result_get_int(result, "type");
 			if (type == PURPLE_TYPE_BOOLEAN) {
 				value = purple_value_new(PURPLE_TYPE_BOOLEAN);
-				purple_value_set_boolean(value, atoi(row["value"]));
+				purple_value_set_boolean(value, atoi(dbi_result_get_string(result, "value")));
 			}
 			if (type == PURPLE_TYPE_STRING) {
 				value = purple_value_new(PURPLE_TYPE_STRING);
-				purple_value_set_string(value, row["value"]);
+				purple_value_set_string(value, dbi_result_get_string(result, "value"));
 			}
-			g_hash_table_replace(settings, g_strdup(row["var"]), value);
+			g_hash_table_replace(settings, g_strdup(dbi_result_get_string(result, "var")), value);
 		}
+		dbi_result_free(result);
 	}
-
-
+	else {
+		const char *errmsg;
+		dbi_conn_error(m_conn, &errmsg);
+		if (errmsg)
+			Log().Get("SQL ERROR") << errmsg;
+	}
 
 	return settings;
 }
-
-bool SQLClass::getVCard(const std::string &name, void (*handleTagCallback)(Tag *tag, Tag *user_data), Tag *user_data) {
-    mysqlpp::Query query = sql->query();
-#if MYSQLPP_HEADER_VERSION < 0x030000
-	mysqlpp::Result res;
-#else
-	mysqlpp::StoreQueryResult res;
-#endif
-    mysqlpp::Row row;
-
-    query << "SELECT vcard FROM "<< p->configuration().sqlPrefix <<"vcards WHERE username=\"" +name+ "\" AND NOW() < DATE_ADD(timestamp, INTERVAL 1 DAY);";
-
-    res = query.store();
-	if (res) {
-#if MYSQLPP_HEADER_VERSION < 0x030000
-		mysqlpp::Row row;
-		row = res.fetch_row();
-		if (row) {
-#else
-		mysqlpp::StoreQueryResult::size_type i;
-		mysqlpp::Row row;
-		if (res.num_rows()!=0) {
-			row = res[0];
-#endif
-			std::string vcardTag = (std::string) row["vcard"];
-			p->parser()->getTag(vcardTag, handleTagCallback, user_data);
-			return true;
-		}
-	}
-	return false;
-}
-
-void SQLClass::updateVCard(const std::string &name, const std::string &vcard) {
-	mysqlpp::Query query = sql->query();
-	query << "INSERT INTO "<< p->configuration().sqlPrefix <<"vcards (username, vcard) VALUES (\"" << name <<"\",\"" << vcard <<"\") ON DUPLICATE KEY UPDATE vcard=\""+ vcard +"\";";
-	query.execute();
-}
-
-// SQLClass::~SQLClass(){
-//  	delete(sql);
-//  	sql=NULL;
-// }
-
-

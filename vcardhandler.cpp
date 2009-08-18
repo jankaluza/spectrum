@@ -115,16 +115,7 @@ bool GlooxVCardHandler::handleIq (const IQ &stanza){
 	}
 
 	if(stanza.subtype() == IQ::Get) {
-		Tag *stanzaTag = stanza.tag();
-
-		if (!p->sql()->getVCard(stanza.to().username(), sendVCardTag, stanzaTag)) {
-			std::list<std::string> temp;
-			temp.push_back((std::string)stanza.id());
-			temp.push_back((std::string)stanza.from().full());
-			vcardRequests[(std::string)stanza.to().username()]=temp;
-			delete stanzaTag;
-			serv_get_info(purple_account_get_connection(user->account()), stanza.to().username().c_str());
-		}
+		serv_get_info(purple_account_get_connection(user->account()), stanza.to().username().c_str());
 	}
 
 	return true;
@@ -190,7 +181,6 @@ void GlooxVCardHandler::userInfoArrived(PurpleConnection *gc, const std::string 
 		}
 
 		reply->addChild(vcard);
-		p->sql()->updateVCard(who, reply->xml());
 		p->j->send(reply);
 		vcardRequests.erase(who);
 	}

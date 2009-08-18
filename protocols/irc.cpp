@@ -219,11 +219,6 @@ bool IRCProtocol::onPresenceReceived(User *user, const Presence &stanza) {
 
 				statusMessage.clear();
 
-				if (user->hasTransportFeature(TRANSPORT_MANGLE_STATUS)) {
-					m_main->sql()->getRandomStatus(statusMessage);
-                    statusMessage.append(" - ");
-				}
-
 				statusMessage.append(stanza.status());
 
 				if (!statusMessage.empty())

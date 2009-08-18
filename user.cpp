@@ -1212,11 +1212,6 @@ void User::receivedPresence(const Presence &stanza) {
 					// send presence to legacy network
 					statusMessage.clear();
 
-					if (hasTransportFeature(TRANSPORT_MANGLE_STATUS)) {
-						p->sql()->getRandomStatus(statusMessage);
-						statusMessage.append(" - ");
-					}
-
 					statusMessage.append(stanza.status());
 
 					if (!statusMessage.empty()) {
