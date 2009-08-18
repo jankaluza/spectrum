@@ -106,26 +106,26 @@ void SQLClass::initDb() {
 	const char *create_stmts_sqlite[] = {
 		"CREATE TABLE IF NOT EXISTS rosters ("
 			"id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,"
-			"jid TEXT NOT NULL,"
-			"uin TEXT NOT NULL,"
-			"subscription TEXT NOT NULL,"
-			"nickname TEXT NOT NULL DEFAULT \"\","
-			"g TEXT NOT NULL DEFAULT \"\","
+			"jid VARCHAR(100) NOT NULL,"
+			"uin VARCHAR(100) NOT NULL,"
+			"subscription VARCHAR(10) NOT NULL,"
+			"nickname VARCHAR(255) NOT NULL DEFAULT \"\","
+			"g VARCHAR(255) NOT NULL DEFAULT \"\","
 			"UNIQUE (jid,uin)"
 		");",
 		"CREATE TABLE IF NOT EXISTS settings ("
 			"id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,"
-			"jid TEXT NOT NULL,"
-			"var TEXT NOT NULL,"
+			"jid VARCHAR(255) NOT NULL,"
+			"var VARCHAR(255) NOT NULL,"
 			"type INTEGER NOT NULL,"
-			"value TEXT NOT NULL"
+			"value VARCHAR(255) NOT NULL"
 		");",
 		"CREATE TABLE IF NOT EXISTS users ("
 			"id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,"
-			"jid TEXT NOT NULL,"
-			"uin TEXT NOT NULL,"
-			"password TEXT NOT NULL,"
-			"language TEXT NOT NULL,"
+			"jid VARCHAR(255) NOT NULL,"
+			"uin VARCHAR(255) NOT NULL,"
+			"password VARCHAR(255) NOT NULL,"
+			"language VARCHAR(5) NOT NULL,"
 			"`group` INTEGER NOT NULL DEFAULT 0"
 		");","",""
 	};
@@ -304,7 +304,6 @@ void SQLClass::addUserToRoster(const std::string &jid,const std::string &uin,con
 		dbi_conn_error(m_conn, &errmsg);
 		if (errmsg)
 			Log().Get("SQL ERROR") << errmsg;
-		updateUserToRoster(jid, uin, subscription, group, nickname);
 	}
 }
 
@@ -317,6 +316,10 @@ void SQLClass::updateUserToRoster(const std::string &jid,const std::string &uin,
 		dbi_conn_error(m_conn, &errmsg);
 		if (errmsg)
 			Log().Get("SQL ERROR") << errmsg;
+	}
+	else if (dbi_result_get_numrows_affected(result) == 0) {
+		// there are no columns affected, so we have to add the buddy
+		addUserToRoster(jid, uin, subscription, group, nickname);
 	}
 }
 
@@ -339,7 +342,7 @@ UserRow SQLClass::getUserByJid(const std::string &jid){
 	result = dbi_conn_queryf(m_conn, "SELECT * FROM %susers WHERE jid=\"%s\"", p->configuration().sqlPrefix.c_str(), jid.c_str());
 	if (result) {
 		if (dbi_result_first_row(result)) {
-			user.id = dbi_result_get_uint(result, "id");
+			user.id = dbi_result_get_longlong(result, "id");
 			user.jid = std::string(dbi_result_get_string(result, "jid"));
 			user.uin = std::string(dbi_result_get_string(result, "uin"));
 			user.password = std::string(dbi_result_get_string(result, "password"));
