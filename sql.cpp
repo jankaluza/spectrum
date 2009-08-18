@@ -57,52 +57,10 @@ SQLClass::~SQLClass() {
 }
 
 void SQLClass::initDb() {
+	if (p->configuration().sqlType != "sqlite3")
+		return;
 	dbi_result result;
 	int i;
-	const char *create_stmts_mysql[] = {
-		"CREATE TABLE IF NOT EXISTS rosters ("
-			"id bigint(20) unsigned NOT NULL auto_increment,"
-			"jid varchar(100) collate utf8_bin NOT NULL,"
-			"uin varchar(100) collate utf8_bin NOT NULL,"
-			"subscription varchar(10) collate utf8_bin NOT NULL,"
-			"nickname varchar(255) collate utf8_bin NOT NULL,"
-			"g varchar(255) collate utf8_bin NOT NULL,"
-			"PRIMARY KEY  (id),"
-			"UNIQUE KEY JidUin (jid,uin),"
-			"KEY jid (jid),"
-			"KEY uin (uin)"
-		") ENGINE=MyISAM  DEFAULT CHARSET=utf8 COLLATE=utf8_bin;",
-		"CREATE TABLE IF NOT EXISTS settings ("
-			"id int(10) unsigned NOT NULL auto_increment,"
-			"jid varchar(255) collate utf8_bin NOT NULL,"
-			"var varchar(255) collate utf8_bin NOT NULL,"
-			"`type` smallint(4) unsigned NOT NULL,"
-			"`value` varchar(255) collate utf8_bin NOT NULL,"
-			"PRIMARY KEY  (id)"
-		") ENGINE=MyISAM  DEFAULT CHARSET=utf8 COLLATE=utf8_bin;",
-		"CREATE TABLE IF NOT EXISTS users ("
-			"id int(10) unsigned NOT NULL auto_increment,"
-			"jid varchar(255) collate utf8_bin NOT NULL,"
-			"uin varchar(255) collate utf8_bin NOT NULL,"
-			"`password` varchar(255) collate utf8_bin NOT NULL,"
-			"`language` varchar(5) collate utf8_bin NOT NULL,"
-			"`group` int(11) NOT NULL default '0',"
-			"PRIMARY KEY  (id),"
-			"KEY jid (jid),"
-			"KEY uin (uin)"
-		") ENGINE=MyISAM  DEFAULT CHARSET=utf8 COLLATE=utf8_bin;",
-		"CREATE TABLE IF NOT EXISTS vcards ("
-			"username varchar(250) collate utf8_bin NOT NULL,"
-			"vcard text collate utf8_bin NOT NULL,"
-			"`timestamp` timestamp NOT NULL default CURRENT_TIMESTAMP on update CURRENT_TIMESTAMP,"
-			"PRIMARY KEY  (username)"
-		") ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_bin;",
-		"CREATE TABLE IF NOT EXISTS vips ("
-			"jid varchar(255) collate utf8_bin NOT NULL,"
-			"PRIMARY KEY  (jid)"
-		") ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_bin;"
-	};
-	
 	const char *create_stmts_sqlite[] = {
 		"CREATE TABLE IF NOT EXISTS rosters ("
 			"id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,"
@@ -130,10 +88,7 @@ void SQLClass::initDb() {
 		");","",""
 	};
 	for (i = 0; i < 5; i++) {
-		if (p->configuration().sqlType == "sqlite3")
-			result = dbi_conn_query(m_conn, create_stmts_sqlite[i]);
-		else
-			result = dbi_conn_query(m_conn, create_stmts_mysql[i]);
+		result = dbi_conn_query(m_conn, create_stmts_sqlite[i]);
 		if (result == NULL) {
 			const char *errmsg;
 			dbi_conn_error(m_conn, &errmsg);
