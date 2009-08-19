@@ -715,6 +715,7 @@ GlooxMessageHandler::GlooxMessageHandler(const std::string &config) : MessageHan
 	lastIP = 0;
 	capsCache["_default"] = 0;
 	m_parser = NULL;
+	m_sql = NULL;
 
 	bool loaded = true;
 
@@ -730,7 +731,8 @@ GlooxMessageHandler::GlooxMessageHandler(const std::string &config) : MessageHan
 	GMainLoop *loop = g_main_loop_new(NULL, FALSE);
 	signal(SIGCHLD, SIG_IGN);
 
-	m_sql = new SQLClass(this);
+	if (loaded)
+		m_sql = new SQLClass(this);
 	m_userManager = new UserManager(this);
 	m_searchHandler = NULL;
 
@@ -783,7 +785,8 @@ GlooxMessageHandler::~GlooxMessageHandler(){
 	delete m_userManager;
 	if (m_parser)
 		delete m_parser;
-	delete m_sql;
+	if (m_sql)
+		delete m_sql;
 	delete j;
 	purple_core_quit();
 }
