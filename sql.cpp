@@ -24,11 +24,21 @@
 
 SQLClass::SQLClass(GlooxMessageHandler *parent){
 	p = parent;
+	m_loaded = false;
 
 	dbi_initialize(NULL);
 
 	m_conn = dbi_conn_new(p->configuration().sqlType.c_str());
-
+	if (!m_conn) {
+		dbi_driver driver;
+		std::cout << "Libdbi driver '" << p->configuration().sqlType << "' can't be loaded.\n";
+		std::cout << "Currently installed drivers are:\n";
+		for (driver = dbi_driver_list(NULL); driver; driver = dbi_driver_list(driver)) {
+			std::cout << "* " << dbi_driver_get_name(driver) << "\n";
+		}
+		return;
+	}
+	
 	if (p->configuration().sqlType == "sqlite3") {
 		dbi_conn_set_option(m_conn, "sqlite3_dbdir", g_path_get_dirname(p->configuration().sqlDb.c_str()));
 		dbi_conn_set_option(m_conn, "dbname", g_path_get_basename(p->configuration().sqlDb.c_str()));
@@ -49,6 +59,7 @@ SQLClass::SQLClass(GlooxMessageHandler *parent){
 	}
 	else {
 		initDb();
+		m_loaded = true;
 	}
 	
 

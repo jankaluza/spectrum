@@ -114,7 +114,11 @@ bool GlooxVCardHandler::handleIq (const IQ &stanza){
 		return false;
 	}
 
-	if(stanza.subtype() == IQ::Get) {
+	if (stanza.subtype() == IQ::Get) {
+		std::list<std::string> temp;
+		temp.push_back((std::string)stanza.id());
+		temp.push_back((std::string)stanza.from().full());
+		vcardRequests[(std::string)stanza.to().username()]=temp;
 		serv_get_info(purple_account_get_connection(user->account()), stanza.to().username().c_str());
 	}
 
