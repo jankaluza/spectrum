@@ -56,6 +56,45 @@ static GOptionEntry options_entries[] =
   { NULL }
 };
 
+static void daemonize(void) {
+	pid_t pid, sid;
+
+	/* already a daemon */
+	if ( getppid() == 1 ) return;
+
+	/* Fork off the parent process */
+	pid = fork();
+	if (pid < 0) {
+		exit(1);
+	}
+	/* If we got a good PID, then we can exit the parent process. */
+	if (pid > 0) {
+		exit(0);
+	}
+
+	/* At this point we are executing as the child process */
+
+	/* Change the file mode mask */
+	umask(0);
+
+	/* Create a new SID for the child process */
+	sid = setsid();
+	if (sid < 0) {
+		exit(1);
+	}
+
+	/* Change the current working directory.  This prevents the current
+		directory from being locked; hence not being able to remove it. */
+	if ((chdir("/")) < 0) {
+		exit(1);
+	}
+
+	/* Redirect standard files to /dev/null */
+	freopen( "/dev/null", "r", stdin);
+	freopen( "/dev/null", "w", stdout);
+	freopen( "/dev/null", "w", stderr);
+}
+
 
 namespace gloox {
 	class HiComponent : public Component {
@@ -666,6 +705,9 @@ GlooxMessageHandler::GlooxMessageHandler(const std::string &config) : MessageHan
 	if (!loadConfigFile(config))
 		loaded = false;
 
+	if (loaded && !nodaemon)
+		daemonize();
+	
 	Log().Get("gloox") << "connecting to: " << m_configuration.server << " as " << m_configuration.jid << " with password " << m_configuration.password;
 	j = new HiComponent("jabber:component:accept",m_configuration.server,m_configuration.jid,m_configuration.password,m_configuration.port);
 
