@@ -724,8 +724,7 @@ GlooxMessageHandler::GlooxMessageHandler(const std::string &config) : MessageHan
 
 	if (loaded && !nodaemon)
 		daemonize();
-	
-	Log().Get("gloox") << "connecting to: " << m_configuration.server << " as " << m_configuration.jid << " with password " << m_configuration.password;
+
 	j = new HiComponent("jabber:component:accept",m_configuration.server,m_configuration.jid,m_configuration.password,m_configuration.port);
 
 	GMainLoop *loop = g_main_loop_new(NULL, FALSE);
