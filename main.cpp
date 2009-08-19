@@ -19,6 +19,9 @@
  */
 
 #include "main.h"
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 #include "utf8.h"
 #include "log.h"
 #include "geventloop.h"
@@ -49,11 +52,12 @@
 #include <gloox/compressionbase.h>
 
 static gboolean nodaemon = FALSE;
+static gchar *logfile = NULL;
 
-static GOptionEntry options_entries[] =
-{
-  { "nodaemon", 'n', 0, G_OPTION_ARG_NONE, &nodaemon, "Disable background daemon mode", NULL },
-  { NULL }
+static GOptionEntry options_entries[] = {
+	{ "nodaemon", 'n', 0, G_OPTION_ARG_NONE, &nodaemon, "Disable background daemon mode", NULL },
+	{ "logfile", 'l', 0, G_OPTION_ARG_STRING, &logfile, "Set file to log", NULL },
+	{ NULL }
 };
 
 static void daemonize(void) {
@@ -88,11 +92,23 @@ static void daemonize(void) {
 	if ((chdir("/")) < 0) {
 		exit(1);
 	}
-
-	/* Redirect standard files to /dev/null */
+	
 	freopen( "/dev/null", "r", stdin);
-	freopen( "/dev/null", "w", stdout);
-	freopen( "/dev/null", "w", stderr);
+
+	int logfd = open(logfile ? logfile : "/dev/null", O_WRONLY | O_CREAT, 0644);
+	if (logfd <= 0) {
+		std::cout << "Can't open log file\n";
+		exit(1);
+	}
+	if (dup2(logfd, STDERR_FILENO) < 0) {
+		std::cout << "Can't redirect stderr\n";
+		exit(1);
+	}
+	if (dup2(logfd, STDOUT_FILENO) < 0) {
+		std::cout << "Can't redirect stdout\n";
+		exit(1);
+	}
+	close(logfd);
 }
 
 
