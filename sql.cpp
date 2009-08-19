@@ -34,7 +34,7 @@ SQLClass::SQLClass(GlooxMessageHandler *parent){
 		dbi_conn_set_option(m_conn, "dbname", g_path_get_basename(p->configuration().sqlDb.c_str()));
 	} else {
 		dbi_conn_set_option(m_conn, "host", p->configuration().sqlHost.c_str());
-		dbi_conn_set_option(m_conn, "username", "test");
+		dbi_conn_set_option(m_conn, "username", p->configuration().sqlUser.c_str());
 		dbi_conn_set_option(m_conn, "password", p->configuration().sqlPassword.c_str());
 		dbi_conn_set_option(m_conn, "dbname", p->configuration().sqlDb.c_str());
 		dbi_conn_set_option(m_conn, "encoding", "UTF-8");
