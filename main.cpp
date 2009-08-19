@@ -48,6 +48,15 @@
 #include <gloox/tlsbase.h>
 #include <gloox/compressionbase.h>
 
+static gboolean nodaemon = FALSE;
+
+static GOptionEntry options_entries[] =
+{
+  { "nodaemon", 'n', 0, G_OPTION_ARG_NONE, &nodaemon, "Disable background daemon mode", NULL },
+  { NULL }
+};
+
+
 namespace gloox {
 	class HiComponent : public Component {
 		public:
@@ -1505,8 +1514,17 @@ bool GlooxMessageHandler::initPurple(){
 GlooxMessageHandler* GlooxMessageHandler::m_pInstance = NULL;
 
 int main( int argc, char* argv[] ) {
+	GError *error = NULL;
+	GOptionContext *context;
+	context = g_option_context_new("config_file_name or profile name");
+	g_option_context_add_main_entries(context, options_entries, "");
+	if (!g_option_context_parse (context, &argc, &argv, &error)) {
+		std::cout << "option parsing failed: " << error->message << "\n";
+		return -1;
+	}
+
 	if (argc != 2)
-		std::cout << "Usage: " << std::string(argv[0]) << " config_file_name or profile name\n";
+		std::cout << g_option_context_get_help(context, FALSE, NULL);
 	else {
 		std::string config(argv[1]);
 		GlooxMessageHandler t(config);
