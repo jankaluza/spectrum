@@ -430,7 +430,8 @@ void User::purpleReauthorizeBuddy(PurpleBuddy *buddy) {
  * Called when something related to this buddy changed...
  */
 void User::purpleBuddyChanged(PurpleBuddy *buddy){
-	if (buddy==NULL || m_connected == false)
+	// Facebook is just broken today. it adds broken buddies before logged into network.
+	if (buddy==NULL || (m_connected == false && p->configuration().protocol == "facebook"))
 		return;
 	std::string alias;
 	if (purple_buddy_get_server_alias(buddy))
