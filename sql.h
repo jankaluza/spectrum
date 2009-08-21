@@ -82,6 +82,7 @@ public:
 	UserRow getUserByJid(const std::string &jid);
 	std::map<std::string,RosterRow> getRosterByJid(const std::string &jid);
 	bool loaded() { return m_loaded; }
+	void ping() { dbi_conn_ping(m_conn); }
 	
 	private:
 		GlooxMessageHandler *p;

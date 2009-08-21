@@ -22,6 +22,13 @@
 #include "parser.h"
 #include "log.h"
 
+static gboolean pingDB(gpointer data) {
+	SQLClass *sql = (SQLClass *) data;
+	std::cout << "PING.\n";
+	sql->ping();
+	return TRUE;
+}
+
 SQLClass::SQLClass(GlooxMessageHandler *parent){
 	p = parent;
 	m_loaded = false;
@@ -60,6 +67,7 @@ SQLClass::SQLClass(GlooxMessageHandler *parent){
 	else {
 		initDb();
 		m_loaded = true;
+		purple_timeout_add_seconds(60 * 5, &pingDB, this);
 	}
 	
 

@@ -730,17 +730,18 @@ GlooxMessageHandler::GlooxMessageHandler(const std::string &config) : MessageHan
 	GMainLoop *loop = g_main_loop_new(NULL, FALSE);
 	signal(SIGCHLD, SIG_IGN);
 
-	if (loaded) {
-		m_sql = new SQLClass(this);	
-		if (!m_sql->loaded())
-			loaded = false;
-	}
 	m_userManager = new UserManager(this);
 	m_searchHandler = NULL;
 
 	if (loaded && !initPurple())
 		loaded = false;
 
+	if (loaded) {
+		m_sql = new SQLClass(this);	
+		if (!m_sql->loaded())
+			loaded = false;
+	}
+	
 	if (loaded && !loadProtocol())
 		loaded = false;
 
