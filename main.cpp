@@ -725,6 +725,12 @@ GlooxMessageHandler::GlooxMessageHandler(const std::string &config) : MessageHan
 	if (loaded && !nodaemon)
 		daemonize();
 
+	if (loaded) {
+		m_sql = new SQLClass(this);	
+		if (!m_sql->loaded())
+			loaded = false;
+	}
+
 	j = new HiComponent("jabber:component:accept",m_configuration.server,m_configuration.jid,m_configuration.password,m_configuration.port);
 
 	GMainLoop *loop = g_main_loop_new(NULL, FALSE);
@@ -735,12 +741,6 @@ GlooxMessageHandler::GlooxMessageHandler(const std::string &config) : MessageHan
 
 	if (loaded && !initPurple())
 		loaded = false;
-
-	if (loaded) {
-		m_sql = new SQLClass(this);	
-		if (!m_sql->loaded())
-			loaded = false;
-	}
 	
 	if (loaded && !loadProtocol())
 		loaded = false;
@@ -763,6 +763,7 @@ GlooxMessageHandler::GlooxMessageHandler(const std::string &config) : MessageHan
 		ft->addStreamHost( j->jid(), configuration().bindIPs[0], 8000 );
 		ft->registerSOCKS5BytestreamServer( ftServer );
 		g_timeout_add(10, &ftServerReceive, NULL);
+		m_sql->purpleLoaded();
 		// ft->addStreamHost(gloox::JID("proxy.jabbim.cz"), "88.86.102.51", 7777);
 
 		j->registerMessageHandler(this);

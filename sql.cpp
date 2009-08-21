@@ -67,7 +67,6 @@ SQLClass::SQLClass(GlooxMessageHandler *parent){
 	else {
 		initDb();
 		m_loaded = true;
-		purple_timeout_add_seconds(60 * 5, &pingDB, this);
 	}
 	
 
@@ -393,4 +392,8 @@ GHashTable * SQLClass::getSettings(const std::string &jid) {
 	}
 
 	return settings;
+}
+
+void SQLClass::purpleLoaded() {
+	purple_timeout_add_seconds(60 * 5, &pingDB, this);
 }
