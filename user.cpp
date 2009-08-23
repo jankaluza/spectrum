@@ -890,7 +890,7 @@ void User::connect() {
 
 		// create buddy
 		PurpleBuddy *buddy = purple_buddy_new(m_account, (*u).second.uin.c_str(), (*u).second.nickname.c_str());
-		long *id = new long((*u).second.id);	// TODO: DELETE ME SOMEWHERE!!!
+		long *id = new long((*u).second.id);
 		buddy->node.ui_data = (void *) id;
 		purple_blist_add_buddy(buddy, contact, g, NULL);
 		Log().Get(m_jid) << "ADDING buddy " << (*u).second.uin << (*u).second.nickname << group;

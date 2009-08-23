@@ -209,6 +209,14 @@ static void buddyRemoved(PurpleBuddy *buddy, gpointer null) {
 	GlooxMessageHandler::instance()->purpleBuddyRemoved(buddy);
 }
 
+static void NodeRemoved(PurpleBlistNode *node, gpointer null) {
+	if (!PURPLE_BLIST_NODE_IS_BUDDY(node))
+		return;
+	PurpleBuddy *buddy = (PurpleBuddy *) node;
+	if (buddy->node.ui_data)
+		delete buddy->node.ui_data;
+}
+
 /*
  * Called when purple disconnects from legacy network.
  */
@@ -1599,6 +1607,7 @@ bool GlooxMessageHandler::initPurple(){
 		purple_signal_connect(purple_xfers_get_handle(), "file-recv-complete", &xfer_handle, PURPLE_CALLBACK(XferComplete), NULL);
 		purple_signal_connect(purple_connections_get_handle(), "signed-on", &conn_handle,PURPLE_CALLBACK(signed_on), NULL);
 		purple_signal_connect(purple_blist_get_handle(), "buddy-removed", &blist_handle,PURPLE_CALLBACK(buddyRemoved), NULL);
+		purple_signal_connect(purple_blist_get_handle(), "blist-node-removed", &blist_handle,PURPLE_CALLBACK(NodeRemoved), NULL);
 		purple_signal_connect(purple_conversations_get_handle(), "chat-topic-changed", &conversation_handle, PURPLE_CALLBACK(conv_chat_topic_changed), NULL);
 
 		purple_commands_init();
