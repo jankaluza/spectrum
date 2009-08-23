@@ -1030,7 +1030,7 @@ void User::receivedSubscription(const Subscription &subscription) {
 					return;
 				}
 			}
-			if (buddy && isInRoster(subscription.to().username(), "both")) {
+			if (buddy) {
 				Log().Get(m_jid) << "unsubscribed presence => removing this contact from legacy network";
 				// thi contact is in ICQ contact list, so we can remove him/her
 				purple_account_remove_buddy(m_account, buddy, purple_buddy_get_group(buddy));
@@ -1038,7 +1038,7 @@ void User::receivedSubscription(const Subscription &subscription) {
 			} else {
 				// this contact is not in ICQ contact list, so there is nothing to remove...
 			}
-			if (isInRoster(subscription.to().username(), "both")) {
+			if (isInRoster(subscription.to().username())) {
 				// this contact is in our local roster, so we have to remove her/him
 				Log().Get(m_jid) << "removing this contact from local roster";
 				m_roster.erase(subscription.to().username());
