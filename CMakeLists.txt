@@ -43,6 +43,7 @@ if(CMAKE_BUILD_TYPE MATCHES Debug)
 	ADD_DEFINITIONS(-ggdb)
 	ADD_DEFINITIONS(-DDEBUG)
 	ADD_DEFINITIONS(-Wall)
+	message(STATUS "Build type is set to Debug")
 endif(CMAKE_BUILD_TYPE MATCHES Debug)
 
 #CONFIGURE_FILE(config.h.in config.h)

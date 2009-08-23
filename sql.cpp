@@ -71,6 +71,19 @@ SQLClass::~SQLClass() {
 	dbi_shutdown();
 }
 
+void SQLClass::addUser(const std::string &jid,const std::string &uin,const std::string &password,const std::string &language){
+	dbi_result result;
+	result = dbi_conn_queryf(m_conn, "INSERT INTO %susers (jid, uin, password, language) VALUES (\"%s\", \"%s\", \"%s\", \"%s\")", p->configuration().sqlPrefix.c_str(), jid.c_str(), uin.c_str(), password.c_str(), language.c_str());
+	if (!result) {
+		const char *errmsg;
+		dbi_conn_error(m_conn, &errmsg);
+		if (errmsg)
+			Log().Get("SQL ERROR") << errmsg;
+	}
+	else
+		dbi_result_free(result);
+}
+
 void SQLClass::initDb() {
 	if (p->configuration().sqlType != "sqlite3")
 		return;
@@ -114,25 +127,8 @@ void SQLClass::initDb() {
 	}
 }
 
-bool SQLClass::isVIP(const std::string &jid){
-	dbi_result result;
-	bool ret = false;
-
-	result = dbi_conn_queryf(m_conn, "SELECT COUNT(jid) as is_vip FROM `%svips` WHERE jid=\"%s\"", p->configuration().sqlPrefix.c_str(), jid.c_str());
-	if (result) {
-		if (dbi_result_first_row(result)) {
-			ret = true;
-		}
-		dbi_result_free(result);
-	}
-	else {
-		const char *errmsg;
-		dbi_conn_error(m_conn, &errmsg);
-		if (errmsg)
-			Log().Get("SQL ERROR") << errmsg;
-	}
-
-	return ret;
+bool SQLClass::isVIP(const std::string &jid) {
+	return false;
 }
 
 long SQLClass::getRegisteredUsersCount(){
@@ -160,7 +156,7 @@ long SQLClass::getRegisteredUsersRosterCount(){
 	dbi_result result;
 	unsigned int r = 0;
 
-	result = dbi_conn_queryf(m_conn, "select count(*) as count from %srosters", p->configuration().sqlPrefix.c_str());
+	result = dbi_conn_queryf(m_conn, "select count(*) as count from %sbuddies", p->configuration().sqlPrefix.c_str());
 	if (result) {
 		if (dbi_result_first_row(result)) {
 			r = dbi_result_get_uint(result, "count");
@@ -186,17 +182,21 @@ void SQLClass::updateUserPassword(const std::string &jid,const std::string &pass
 		if (errmsg)
 			Log().Get("SQL ERROR") << errmsg;
 	}
+	else
+		dbi_result_free(result);
 }
 
-void SQLClass::removeUINFromRoster(const std::string &jid,const std::string &uin) {
+void SQLClass::removeBuddy(long userId, const std::string &uin) {
 	dbi_result result;
-	result = dbi_conn_queryf(m_conn, "DELETE FROM %srosters WHERE jid=\"%s\" AND uin=\"%s\"", p->configuration().sqlPrefix.c_str(), jid.c_str(), uin.c_str());
+	result = dbi_conn_queryf(m_conn, "DELETE FROM %sbuddies WHERE user_id=%d AND uin=\"%s\"", p->configuration().sqlPrefix.c_str(), userId, uin.c_str());
 	if (!result) {
 		const char *errmsg;
 		dbi_conn_error(m_conn, &errmsg);
 		if (errmsg)
 			Log().Get("SQL ERROR") << errmsg;
 	}
+	else
+		dbi_result_free(result);
 }
 
 void SQLClass::removeUser(const std::string &jid){
@@ -208,32 +208,27 @@ void SQLClass::removeUser(const std::string &jid){
 		if (errmsg)
 			Log().Get("SQL ERROR") << errmsg;
 	}
+	else
+		dbi_result_free(result);
 }
 
-void SQLClass::removeUserFromRoster(const std::string &jid){
+void SQLClass::removeUserBuddies(long userId){
 	dbi_result result;
-	result = dbi_conn_queryf(m_conn, "DELETE FROM %srosters WHERE jid=\"%s\"", p->configuration().sqlPrefix.c_str(), jid.c_str());
+	result = dbi_conn_queryf(m_conn, "DELETE FROM %sbuddies WHERE user_id=%d", p->configuration().sqlPrefix.c_str(), userId);
 	if (!result) {
 		const char *errmsg;
 		dbi_conn_error(m_conn, &errmsg);
 		if (errmsg)
 			Log().Get("SQL ERROR") << errmsg;
 	}
+	else
+		dbi_result_free(result);
 }
 
-void SQLClass::addDownload(const std::string &filename,const std::string &vip){
+void SQLClass::addDownload(const std::string &filename, const std::string &vip) {
 }
 
-void SQLClass::addUser(const std::string &jid,const std::string &uin,const std::string &password,const std::string &language){
-	dbi_result result;
-	result = dbi_conn_queryf(m_conn, "INSERT INTO %susers (jid, uin, password, language) VALUES (\"%s\", \"%s\", \"%s\", \"%s\")", p->configuration().sqlPrefix.c_str(), jid.c_str(), uin.c_str(), password.c_str(), language.c_str());
-	if (!result) {
-		const char *errmsg;
-		dbi_conn_error(m_conn, &errmsg);
-		if (errmsg)
-			Log().Get("SQL ERROR") << errmsg;
-	}
-}
+
 
 // TODO: We have to rewrite it or remove it when we find out how to do addUserToRoster for sqlite3
 // void SQLClass::updateUserToRoster(const std::string &jid,const std::string &uin,const std::string &subscription, const std::string &group, const std::string &nickname) {
@@ -248,26 +243,32 @@ void SQLClass::addUser(const std::string &jid,const std::string &uin,const std::
 // 	}
 // }
 
-void SQLClass::addUserToRoster(const std::string &jid,const std::string &uin,const std::string &subscription, const std::string &group, const std::string &nickname) {
+long SQLClass::addBuddy(long userId, const std::string &uin, const std::string &subscription, const std::string &group, const std::string &nickname) {
 	dbi_result result;
-	result = dbi_conn_queryf(m_conn, "INSERT INTO %srosters (jid, uin, subscription, g, nickname) VALUES (\"%s\", \"%s\", \"%s\", \"%s\", \"%s\") ON DUPLICATE KEY UPDATE g=\"%s\", nickname=\"%s\"", p->configuration().sqlPrefix.c_str(), jid.c_str(), uin.c_str(), subscription.c_str(), group.c_str(), nickname.c_str(), group.c_str(), nickname.c_str());
+	result = dbi_conn_queryf(m_conn, "INSERT INTO %sbuddies (user_id, uin, subscription, groups, nickname) VALUES (%d, \"%s\", \"%s\", \"%s\", \"%s\") ON DUPLICATE KEY UPDATE groups=\"%s\", nickname=\"%s\"", p->configuration().sqlPrefix.c_str(), userId, uin.c_str(), subscription.c_str(), group.c_str(), nickname.c_str(), group.c_str(), nickname.c_str());
 	if (!result) {
 		const char *errmsg;
 		dbi_conn_error(m_conn, &errmsg);
 		if (errmsg)
 			Log().Get("SQL ERROR") << errmsg;
+		return -1;
 	}
+	else
+		dbi_result_free(result);
+	return dbi_conn_sequence_last(m_conn, NULL);
 }
 
-void SQLClass::updateUserRosterSubscription(const std::string &jid,const std::string &uin,const std::string &subscription){
+void SQLClass::updateBuddySubscription(long userId, const std::string &uin, const std::string &subscription) {
 	dbi_result result;
-	result = dbi_conn_queryf(m_conn, "UPDATE %srosters SET subscription=\"%s\" WHERE jid=\"%s\" AND uin=\"%s\"", p->configuration().sqlPrefix.c_str(), subscription.c_str(), jid.c_str(), uin.c_str());
+	result = dbi_conn_queryf(m_conn, "UPDATE %sbuddies SET subscription=\"%s\" WHERE user_id=%d AND uin=\"%s\"", p->configuration().sqlPrefix.c_str(), subscription.c_str(), userId, uin.c_str());
 	if (!result) {
 		const char *errmsg;
 		dbi_conn_error(m_conn, &errmsg);
 		if (errmsg)
 			Log().Get("SQL ERROR") << errmsg;
 	}
+	else
+		dbi_result_free(result);
 }
 
 UserRow SQLClass::getUserByJid(const std::string &jid){
@@ -295,11 +296,11 @@ UserRow SQLClass::getUserByJid(const std::string &jid){
 	return user;
 }
 
-std::map<std::string,RosterRow> SQLClass::getRosterByJid(const std::string &jid){
+std::map<std::string,RosterRow> SQLClass::getBuddies(long userId){
 	std::map<std::string,RosterRow> rows;
 	dbi_result result;
 
-	result = dbi_conn_queryf(m_conn, "SELECT * FROM %srosters WHERE jid=\"%s\"", p->configuration().sqlPrefix.c_str(), jid.c_str());
+	result = dbi_conn_queryf(m_conn, "SELECT * FROM %sbuddies WHERE user_id=\"%d\"", p->configuration().sqlPrefix.c_str(), userId);
 	if (result) {
 		while (dbi_result_next_row(result)) {
 			RosterRow user;
@@ -308,13 +309,14 @@ std::map<std::string,RosterRow> SQLClass::getRosterByJid(const std::string &jid)
 			user.uin = std::string(dbi_result_get_string(result, "uin"));
 			user.subscription = std::string(dbi_result_get_string(result, "subscription"));
 			user.nickname = std::string(dbi_result_get_string(result, "nickname"));
-			user.group = std::string(dbi_result_get_string(result, "g"));
+			user.group = std::string(dbi_result_get_string(result, "groups"));
 			if (user.subscription.empty())
 				user.subscription="ask";
 			user.online = false;
 			user.lastPresence = "";
 			rows[std::string(dbi_result_get_string(result, "uin"))] = user;
 		}
+		dbi_result_free(result);
 	}
 	else {
 		const char *errmsg;
@@ -328,9 +330,9 @@ std::map<std::string,RosterRow> SQLClass::getRosterByJid(const std::string &jid)
 
 // settings
 
-void SQLClass::addSetting(const std::string &jid, const std::string &key, const std::string &value, PurpleType type) {
+void SQLClass::addSetting(long userId, const std::string &key, const std::string &value, PurpleType type) {
 	dbi_result result;
-	result = dbi_conn_queryf(m_conn, "INSERT INTO %ssettings (jid, var, type, value) VALUES (\"%s\",\"%s\", \"%d\", \"%s\")", p->configuration().sqlPrefix.c_str(), jid.c_str(), key.c_str(), (int) type, value.c_str());
+	result = dbi_conn_queryf(m_conn, "INSERT INTO %susers_settings (user_id, var, type, value) VALUES (\"%d\",\"%s\", \"%d\", \"%s\")", p->configuration().sqlPrefix.c_str(), userId, key.c_str(), (int) type, value.c_str());
 	if (!result) {
 		const char *errmsg;
 		dbi_conn_error(m_conn, &errmsg);
@@ -339,29 +341,73 @@ void SQLClass::addSetting(const std::string &jid, const std::string &key, const 
 	}
 }
 
-void SQLClass::updateSetting(const std::string &jid, const std::string &key, const std::string &value) {
+void SQLClass::updateSetting(long userId, const std::string &key, const std::string &value) {
 	dbi_result result;
-	result = dbi_conn_queryf(m_conn, "UPDATE %ssettings SET value=\"%s\" WHERE jid=\"%s\" AND var=\"%s\"", p->configuration().sqlPrefix.c_str(), value.c_str(), jid.c_str(), key.c_str());
+	result = dbi_conn_queryf(m_conn, "UPDATE %susers_settings SET value=\"%s\" WHERE user_id=\"%d\" AND var=\"%s\"", p->configuration().sqlPrefix.c_str(), value.c_str(), userId, key.c_str());
 	if (!result) {
 		const char *errmsg;
 		dbi_conn_error(m_conn, &errmsg);
 		if (errmsg)
 			Log().Get("SQL ERROR") << errmsg;
 	}
+	else
+		dbi_result_free(result);
 }
 
-void SQLClass::getSetting(const std::string &jid, const std::string &key) {
-
-}
-
-GHashTable * SQLClass::getSettings(const std::string &jid) {
+GHashTable * SQLClass::getSettings(long userId) {
 	GHashTable *settings = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, (GDestroyNotify) purple_value_destroy);
 	PurpleType type;
 	PurpleValue *value;
 
 	dbi_result result;
 
-	result = dbi_conn_queryf(m_conn, "SELECT * FROM %ssettings WHERE jid=\"%s\"", p->configuration().sqlPrefix.c_str(), jid.c_str());
+	result = dbi_conn_queryf(m_conn, "SELECT * FROM %susers_settings WHERE user_id=\"%d\"", p->configuration().sqlPrefix.c_str(), userId);
+	if (result) {
+		while (dbi_result_next_row(result)) {
+			type = (PurpleType) dbi_result_get_int(result, "type");
+			if (type == PURPLE_TYPE_BOOLEAN) {
+				value = purple_value_new(PURPLE_TYPE_BOOLEAN);
+				purple_value_set_boolean(value, atoi(dbi_result_get_string(result, "value")));
+			}
+			if (type == PURPLE_TYPE_STRING) {
+				value = purple_value_new(PURPLE_TYPE_STRING);
+				purple_value_set_string(value, dbi_result_get_string(result, "value"));
+			}
+			g_hash_table_replace(settings, g_strdup(dbi_result_get_string(result, "var")), value);
+		}
+		dbi_result_free(result);
+	}
+	else {
+		const char *errmsg;
+		dbi_conn_error(m_conn, &errmsg);
+		if (errmsg)
+			Log().Get("SQL ERROR") << errmsg;
+	}
+
+	return settings;
+}
+
+void SQLClass::addBuddySetting(long buddyId, const std::string &key, const std::string &value, PurpleType type) {
+	dbi_result result;
+	result = dbi_conn_queryf(m_conn, "INSERT INTO %sbuddies_settings (buddy_id, var, type, value) VALUES (\"%d\",\"%s\", \"%d\", \"%s\") ON DUPLICATE KEY UPDATE value=\"%s\"", p->configuration().sqlPrefix.c_str(), buddyId, key.c_str(), (int) type, value.c_str(), value.c_str());
+	if (!result) {
+		const char *errmsg;
+		dbi_conn_error(m_conn, &errmsg);
+		if (errmsg)
+			Log().Get("SQL ERROR") << errmsg;
+	}
+	else
+		dbi_result_free(result);
+}
+
+GHashTable * SQLClass::getBuddySettings(long buddyId) {
+	GHashTable *settings = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, (GDestroyNotify) purple_value_destroy);
+	PurpleType type;
+	PurpleValue *value;
+
+	dbi_result result;
+
+	result = dbi_conn_queryf(m_conn, "SELECT * FROM %sbuddies_settings WHERE buddy_id=\"%d\"", p->configuration().sqlPrefix.c_str(), buddyId);
 	if (result) {
 		while (dbi_result_next_row(result)) {
 			type = (PurpleType) dbi_result_get_int(result, "type");

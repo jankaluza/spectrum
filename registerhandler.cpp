@@ -149,6 +149,8 @@ bool GlooxRegisterHandler::handleIq (const IQ &iq){
 		std::string language("");
 		bool e = false;
 
+		UserRow res = p->sql()->getUserByJid(iq.from().bare());
+		
 		if (!query) return true;
 
 		Tag *xdata = query->findChild("x", "xmlns", "jabber:x:data");
@@ -216,7 +218,7 @@ bool GlooxRegisterHandler::handleIq (const IQ &iq){
 				Tag *item;
 
 				std::map<std::string,RosterRow> roster;
-				roster = p->sql()->getRosterByJid(iq.from().bare());
+				roster = p->sql()->getBuddies(res.id);
 				// add users which are added to roster
 				for(std::map<std::string, RosterRow>::iterator u = roster.begin(); u != roster.end() ; u++){
 					if (!(*u).second.uin.empty()){
@@ -230,9 +232,10 @@ bool GlooxRegisterHandler::handleIq (const IQ &iq){
 				tag->addChild(x);
 				std::cout << "* sending " << tag->xml() << "\n";
 				p->j->send(tag);
-				p->sql()->removeUser(iq.from().bare());
-				p->sql()->removeUserFromRoster(iq.from().bare());
-
+				if (res.id != -1) {
+					p->sql()->removeUser(iq.from().bare());
+					p->sql()->removeUserBuddies(res.id);
+				}
 			}
 			else{
 				// TODO: remove contacts from roster with unsubscribe presence
@@ -310,7 +313,6 @@ bool GlooxRegisterHandler::handleIq (const IQ &iq){
 
 
 
-		UserRow res = p->sql()->getUserByJid(iq.from().bare());
 		if(res.id==-1) {
 			std::cout << "* adding new user: "<< jid << ", " << username << ", " << password << ", " << language <<"\n";
 			p->sql()->addUser(jid,username,password,language);

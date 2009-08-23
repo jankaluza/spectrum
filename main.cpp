@@ -449,16 +449,51 @@ static void buddyListSaveNode(PurpleBlistNode *node) {
 	PurpleBuddy *buddy = (PurpleBuddy *) node;
 	PurpleAccount *a = purple_buddy_get_account(buddy);
 	User *user = GlooxMessageHandler::instance()->userManager()->getUserByAccount(a);
+	if (user->loadingBuddiesFromDB()) return;
 	if (user != NULL) {
+		// save PurpleBuddy
 		std::string alias;
 		std::string name(purple_buddy_get_name(buddy));
-		Log().Get("buddyListSaveNode") << user->jid() << name;
 		if (purple_buddy_get_server_alias(buddy))
 			alias = (std::string) purple_buddy_get_server_alias(buddy);
 		else
 			alias = (std::string) purple_buddy_get_alias(buddy);
-		GlooxMessageHandler::instance()->sql()->addUserToRoster(user->jid(), name, "both", (std::string) purple_group_get_name(purple_buddy_get_group(buddy)), alias);
+		long id;
+		if (buddy->node.ui_data) {
+			long *p = (long *) buddy->node.ui_data;
+			id = *p;
+			GlooxMessageHandler::instance()->sql()->addBuddy(user->storageId(), name, "both", purple_group_get_name(purple_buddy_get_group(buddy)) ? std::string(purple_group_get_name(purple_buddy_get_group(buddy))) : std::string("Buddies"), alias);
+		}
+		else {
+			id = GlooxMessageHandler::instance()->sql()->addBuddy(user->storageId(), name, "both", purple_group_get_name(purple_buddy_get_group(buddy)) ? std::string(purple_group_get_name(purple_buddy_get_group(buddy))) : std::string("Buddies"), alias);
+			buddy->node.ui_data = (void *) new long(id);
+		}
+		Log().Get("buddyListSaveNode") << id << " " << name << " " << alias;
+		// save settings
+		GHashTableIter iter;
+		gpointer k, v;
+		g_hash_table_iter_init (&iter, buddy->node.settings);
+		while (g_hash_table_iter_next (&iter, &k, &v)) {
+			PurpleValue *value = (PurpleValue *) v;
+			std::string key((char *) k);
+			if (purple_value_get_type(value) == PURPLE_TYPE_BOOLEAN) {
+				if (purple_value_get_boolean(value))
+					GlooxMessageHandler::instance()->sql()->addBuddySetting(id, key, "1", purple_value_get_type(value));
+				else
+					GlooxMessageHandler::instance()->sql()->addBuddySetting(id, key, "0", purple_value_get_type(value));
+			}
+			else if (purple_value_get_type(value) == PURPLE_TYPE_STRING) {
+				GlooxMessageHandler::instance()->sql()->addBuddySetting(id, key, purple_value_get_string(value), purple_value_get_type(value));
+			}
+		}
 	}
+}
+
+static void buddyListNewNode(PurpleBlistNode *node) {
+	if (!PURPLE_BLIST_NODE_IS_BUDDY(node))
+		return;
+	PurpleBuddy *buddy = (PurpleBuddy *) node;
+	buddy->node.ui_data = NULL;
 }
 
 static void buddyListRemoveNode(PurpleBlistNode *node) {
@@ -469,9 +504,8 @@ static void buddyListRemoveNode(PurpleBlistNode *node) {
 	User *user = GlooxMessageHandler::instance()->userManager()->getUserByAccount(a);
 	if (user != NULL) {
 		std::string name(purple_buddy_get_name(buddy));
-		GlooxMessageHandler::instance()->sql()->removeUINFromRoster(user->jid(), name);
+		GlooxMessageHandler::instance()->sql()->removeBuddy(user->storageId(), name);
 	}
-
 }
 
 static void buddyListSaveAccount(PurpleAccount *account) {
@@ -555,7 +589,7 @@ static PurpleAccountUiOps accountUiOps =
 static PurpleBlistUiOps blistUiOps =
 {
 	NULL,
-	NULL,
+	buddyListNewNode,
 	NULL,
 	buddyListUpdate,
 	NULL,
@@ -1356,10 +1390,10 @@ void GlooxMessageHandler::handlePresence(const Presence &stanza){
 				if (protocol()->tempAccountsAllowed()) {
 					std::string server = stanza.to().username().substr(stanza.to().username().find("%") + 1, stanza.to().username().length() - stanza.to().username().find("%"));
 					std::cout << "SERVER" << stanza.from().bare() + server << "\n";
-					user = new User(this, stanza.from(), stanza.to().resource() + "@" + server, "", stanza.from().bare() + server);
+					user = new User(this, stanza.from(), stanza.to().resource() + "@" + server, "", stanza.from().bare() + server, res.id);
 				}
 				else
-					user = new User(this, stanza.from(), res.uin, res.password, stanza.from().bare());
+					user = new User(this, stanza.from(), res.uin, res.password, stanza.from().bare(), res.id);
 				user->setFeatures(isVip ? configuration().VIPFeatures : configuration().transportFeatures);
 				if (c != NULL)
 					if (hasCaps(c->findAttribute("ver")))

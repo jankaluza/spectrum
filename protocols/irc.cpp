@@ -65,7 +65,7 @@ Tag *IRCProtocol::getVCardTag(User *user, GList *vcardEntries) {
 void IRCProtocol::onUserCreated(User *user) {
 	PurpleValue *value;
 	if ( (value = user->getSetting("nickserv")) == NULL ) {
-		m_main->sql()->addSetting(user->userKey(), "nickserv", "", PURPLE_TYPE_STRING);
+		m_main->sql()->addSetting(user->storageId(), "nickserv", "", PURPLE_TYPE_STRING);
 		value = purple_value_new(PURPLE_TYPE_STRING);
 		purple_value_set_string(value, "");
 		g_hash_table_replace(user->settings(), g_strdup("nickserv"), value);

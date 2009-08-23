@@ -28,6 +28,9 @@ class GlooxMessageHandler;
 #include "main.h"
 using namespace gloox;
 
+/*
+ * Structure which represents XMPP User
+ */
 struct UserRow {
 	long id;
 	std::string jid;
@@ -37,6 +40,9 @@ struct UserRow {
 	int category;
 };
 
+/*
+ * Structure which represents one buddy in roster (one roster row)
+ */
 struct RosterRow {
 	long id;
 	std::string jid;
@@ -48,42 +54,46 @@ struct RosterRow {
 	std::string lastPresence;
 };
 
-struct GlooxVCard {
-	Tag *vcard;
-	time_t created;
-};
+/*
+ * SQL storage backend. Uses libdbi for communication with SQL servers.
+ */
+class SQLClass {
+	public:
+		SQLClass(GlooxMessageHandler *parent);
+		~SQLClass();
 
-class SQLClass
-{
+		void addUser(const std::string &jid, const std::string &uin, const std::string &password, const std::string &language);
+		void addDownload(const std::string &filename, const std::string &vip);
+		void removeUser(const std::string &jid);
+		void updateUserPassword(const std::string &jid,const std::string &password, const std::string &language);
+		void removeUserBuddies(long userId);
+		long addBuddy(long userId, const std::string &uin, const std::string &subscription, const std::string &group = "Buddies", const std::string &nickname = "");
+	// 	void updateUserToRoster(const std::string &jid,const std::string &uin,const std::string &subscription, const std::string &group = "Buddies", const std::string &nickname = "");
+		void updateBuddySubscription(long userId, const std::string &uin, const std::string &subscription);
+		void removeBuddy(long userId, const std::string &uin);
+		bool isVIP(const std::string &jid); // TODO: remove me, I'm not needed with new db schema
+		long getRegisteredUsersCount();
+		long getRegisteredUsersRosterCount();
 
-public:
-	SQLClass(GlooxMessageHandler *parent);
-	~SQLClass();
-	void initDb();
-	void addUser(const std::string &jid,const std::string &uin,const std::string &password, const std::string &language);
-	void addDownload(const std::string &filename,const std::string &vip);
-	void removeUser(const std::string &jid);
-	void updateUserPassword(const std::string &jid,const std::string &password, const std::string &language);
-	void removeUserFromRoster(const std::string &jid);
-	void addUserToRoster(const std::string &jid,const std::string &uin,const std::string &subscription, const std::string &group = "Buddies", const std::string &nickname = "");
-// 	void updateUserToRoster(const std::string &jid,const std::string &uin,const std::string &subscription, const std::string &group = "Buddies", const std::string &nickname = "");
-	void updateUserRosterSubscription(const std::string &jid,const std::string &uin,const std::string &subscription);
-	void removeUINFromRoster(const std::string &jid,const std::string &uin);
-	bool isVIP(const std::string &jid);
-	long getRegisteredUsersCount();
-	long getRegisteredUsersRosterCount();
+		// settings
+		void addSetting(long userId, const std::string &key, const std::string &value, PurpleType type);
+		void updateSetting(long userId, const std::string &key, const std::string &value);
+		GHashTable * getSettings(long userId);
+		
+		// buddy settings
+		void addBuddySetting(long buddyId, const std::string &key, const std::string &value, PurpleType type);
+		GHashTable * getBuddySettings(long buddyId);
 
-	// settings
-	void addSetting(const std::string &jid, const std::string &key, const std::string &value, PurpleType type);
-	void updateSetting(const std::string &jid, const std::string &key, const std::string &value);
-	void getSetting(const std::string &jid, const std::string &key);
-	GHashTable * getSettings(const std::string &jid);
-
-	UserRow getUserByJid(const std::string &jid);
-	std::map<std::string,RosterRow> getRosterByJid(const std::string &jid);
-	bool loaded() { return m_loaded; }
-	
+		UserRow getUserByJid(const std::string &jid);
+		std::map<std::string,RosterRow> getBuddies(long userId);
+		bool loaded() { return m_loaded; }
+		
 	private:
+		/*
+		 * Creates tables for sqlite3 DB.
+		 */
+		void initDb();
+		
 		GlooxMessageHandler *p;
 		dbi_conn m_conn;
 		bool m_loaded;

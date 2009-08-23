@@ -30,3 +30,12 @@ CREATE TABLE IF NOT EXISTS `users` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `jid` (`jid`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+
+CREATE TABLE IF NOT EXISTS `users_settings` (
+  `user_id` int(10) unsigned NOT NULL,
+  `var` varchar(50) collate utf8_bin NOT NULL,
+  `type` smallint(4) unsigned NOT NULL,
+  `value` varchar(255) collate utf8_bin NOT NULL,
+  PRIMARY KEY (`user_id`,`var`),
+  KEY `user_id` (`user_id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
