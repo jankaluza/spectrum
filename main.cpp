@@ -213,8 +213,10 @@ static void NodeRemoved(PurpleBlistNode *node, gpointer null) {
 	if (!PURPLE_BLIST_NODE_IS_BUDDY(node))
 		return;
 	PurpleBuddy *buddy = (PurpleBuddy *) node;
-	if (buddy->node.ui_data)
-		delete buddy->node.ui_data;
+	if (buddy->node.ui_data) {
+		long *id = (long *) buddy->node.ui_data;
+		delete id;
+	}
 }
 
 /*
@@ -486,12 +488,12 @@ static void buddyListSaveNode(PurpleBlistNode *node) {
 			std::string key((char *) k);
 			if (purple_value_get_type(value) == PURPLE_TYPE_BOOLEAN) {
 				if (purple_value_get_boolean(value))
-					GlooxMessageHandler::instance()->sql()->addBuddySetting(id, key, "1", purple_value_get_type(value));
+					GlooxMessageHandler::instance()->sql()->addBuddySetting(user->storageId(), id, key, "1", purple_value_get_type(value));
 				else
-					GlooxMessageHandler::instance()->sql()->addBuddySetting(id, key, "0", purple_value_get_type(value));
+					GlooxMessageHandler::instance()->sql()->addBuddySetting(user->storageId(), id, key, "0", purple_value_get_type(value));
 			}
 			else if (purple_value_get_type(value) == PURPLE_TYPE_STRING) {
-				GlooxMessageHandler::instance()->sql()->addBuddySetting(id, key, purple_value_get_string(value), purple_value_get_type(value));
+				GlooxMessageHandler::instance()->sql()->addBuddySetting(user->storageId(), id, key, purple_value_get_string(value), purple_value_get_type(value));
 			}
 		}
 	}

@@ -62,7 +62,6 @@ User::User(GlooxMessageHandler *parent, JID jid, const std::string &username, co
 	m_password = password;
 	m_userKey = userKey;
 	m_connected = false;
-	m_roster = p->sql()->getBuddies(m_userID);
 	m_vip = p->sql()->isVIP(m_jid);
 	m_settings = p->sql()->getSettings(m_userID);
 	m_syncTimer = 0;
@@ -866,41 +865,11 @@ void User::connect() {
 	}
 
 	m_account->ui_data = this;
+
 	m_loadingBuddiesFromDB = true;
-	// Load roster from DB to libpurple
-	for (std::map<std::string, RosterRow>::iterator u = m_roster.begin(); u != m_roster.end() ; u++) {
-		// create group
-		std::string group = (*u).second.group.empty() ? "Buddies" : (*u).second.group;
-		PurpleGroup *g = purple_find_group(group.c_str());
-		if (!g) {
-			g = purple_group_new(group.c_str());
-			purple_blist_add_group(g, NULL);
-		}
-
-		// This is not called for first time, so buddies are already cached in memory.
-		// We can then just break; this loop.
-		if (purple_find_buddy_in_group(m_account, (*u).second.uin.c_str(), g)) {
-			Log().Get(m_jid) << "BUDDY IS ALREADY THERE " << (*u).second.uin << (*u).second.nickname << group;
-			break;
-		}
-
-		// create contact
-		PurpleContact *contact = purple_contact_new();
-		purple_blist_add_contact(contact, g, NULL);
-
-		// create buddy
-		PurpleBuddy *buddy = purple_buddy_new(m_account, (*u).second.uin.c_str(), (*u).second.nickname.c_str());
-		long *id = new long((*u).second.id);
-		buddy->node.ui_data = (void *) id;
-		purple_blist_add_buddy(buddy, contact, g, NULL);
-		Log().Get(m_jid) << "ADDING buddy " << (*u).second.uin << (*u).second.nickname << group;
-		
-		// create buddy settings
-		g_hash_table_destroy(buddy->node.settings);
-		buddy->node.settings = p->sql()->getBuddySettings((*u).second.id);
-	}
-
+	m_roster = p->sql()->getBuddies(m_userID, m_account);
 	m_loadingBuddiesFromDB = false;
+
 	m_connectionStart = time(NULL);
 	m_readyForConnect = false;
 	if (!m_bindIP.empty())

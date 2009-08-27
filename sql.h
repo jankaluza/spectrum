@@ -21,12 +21,20 @@
 #ifndef _HI_SQL_H
 #define _HI_SQL_H
 
-#include <dbi/dbi.h>
 #include <gloox/clientbase.h>
 #include <glib.h>
+#include <account.h>
+
+#include "Poco/Data/SessionFactory.h"
+#include "Poco/Data/Session.h"
+#include "Poco/Data/RecordSet.h"
+#include "Poco/Data/SQLite/Connector.h" 
+#include "Poco/Data/MySQL/Connector.h" 
+
 class GlooxMessageHandler;
 #include "main.h"
-using namespace gloox;
+
+using namespace Poco::Data;
 
 /*
  * Structure which represents XMPP User
@@ -37,7 +45,6 @@ struct UserRow {
 	std::string uin;
 	std::string password;
 	std::string language;
-	int category;
 };
 
 /*
@@ -52,6 +59,115 @@ struct RosterRow {
 	std::string nickname;
 	std::string group;
 	std::string lastPresence;
+};
+
+/*
+ * Prepared statements
+ */
+struct addUserStatement {
+	std::string jid;
+	std::string uin;
+	std::string password;
+	std::string language;
+	Poco::Data::Statement *stmt;
+};
+
+struct updateUserPasswordStatement {
+	std::string jid;
+	std::string uin;
+	std::string password;
+	std::string language;
+	Poco::Data::Statement *stmt;
+};
+
+struct RemoveBuddyStatement {
+	Poco::Int32 user_id;
+	std::string uin;
+	Poco::Data::Statement *stmt;
+};
+
+struct RemoveUserStatement {
+	std::string jid;
+	Poco::Data::Statement *stmt;
+};
+
+struct RemoveUserBuddiesStatement {
+	Poco::Int32 user_id;
+	Poco::Data::Statement *stmt;
+};
+
+struct AddBuddyStatement {
+	Poco::Int32 user_id;
+	std::string uin;
+	std::string subscription;
+	std::string groups;
+	std::string nickname;
+	Poco::Data::Statement *stmt;
+};
+
+struct updateBuddySubscriptionStatement {
+	Poco::Int32 user_id;
+	std::string uin;
+	std::string subscription;
+	std::string groups;
+	std::string nickname;
+	Poco::Data::Statement *stmt;
+};
+
+struct getUserByJidStatement {
+	std::string jid;
+	Poco::Data::Statement *stmt;
+	
+	Poco::Int32 resId;
+	std::string resJid;
+	std::string resUin;
+	std::string resPassword;
+};
+
+struct getBuddiesStatement {
+	Poco::Int32 user_id;
+	Poco::Data::Statement *stmt;
+	
+	Poco::Int32 resId;
+	Poco::Int32 resUserId;
+	std::string resUin;
+	std::string resSubscription;
+	std::string resNickname;
+	std::string resGroups;
+};
+
+struct addSettingStatement {
+	Poco::Int32 user_id;
+	std::string var;
+	std::string value;
+	int type;
+	Poco::Data::Statement *stmt;
+};
+
+struct updateSettingStatement {
+	Poco::Int32 user_id;
+	std::string var;
+	std::string value;
+	Poco::Data::Statement *stmt;
+};
+
+struct getBuddiesSettingsStatement {
+	Poco::Int32 user_id;
+	Poco::Data::Statement *stmt;
+	
+	std::vector<Poco::Int32> resId; 
+	std::vector<int> resType;
+	std::vector<std::string> resVar;
+	std::vector<std::string> resValue;
+};
+
+struct addBuddySettingStatement {
+	Poco::Int32 user_id;
+	Poco::Int32 buddy_id;
+	std::string var;
+	int type;
+	std::string value;
+	Poco::Data::Statement *stmt;
 };
 
 /*
@@ -81,11 +197,11 @@ class SQLClass {
 		GHashTable * getSettings(long userId);
 		
 		// buddy settings
-		void addBuddySetting(long buddyId, const std::string &key, const std::string &value, PurpleType type);
-		GHashTable * getBuddySettings(long buddyId);
+		void addBuddySetting(long userId, long buddyId, const std::string &key, const std::string &value, PurpleType type);
+		GHashTable * getBuddiesSettings(long userId);
 
 		UserRow getUserByJid(const std::string &jid);
-		std::map<std::string,RosterRow> getBuddies(long userId);
+		std::map<std::string,RosterRow> getBuddies(long userId, PurpleAccount *account = NULL);
 		bool loaded() { return m_loaded; }
 		
 	private:
@@ -93,9 +209,22 @@ class SQLClass {
 		 * Creates tables for sqlite3 DB.
 		 */
 		void initDb();
-		
+		addUserStatement m_stmt_addUser;
+		updateUserPasswordStatement m_stmt_updateUserPassword;
+		RemoveBuddyStatement m_stmt_removeBuddy;
+		RemoveUserStatement m_stmt_removeUser;
+		RemoveUserBuddiesStatement m_stmt_removeUserBuddies;
+		AddBuddyStatement m_stmt_addBuddy;
+		updateBuddySubscriptionStatement m_stmt_updateBuddySubscription;
+		getUserByJidStatement m_stmt_getUserByJid;
+		getBuddiesStatement m_stmt_getBuddies;
+		addSettingStatement m_stmt_addSetting;
+		updateSettingStatement m_stmt_updateSetting;
+		getBuddiesSettingsStatement m_stmt_getBuddiesSettings;
+		addBuddySettingStatement m_stmt_addBuddySetting;
+
+		Poco::Data::Session *m_sess;
 		GlooxMessageHandler *p;
-		dbi_conn m_conn;
 		bool m_loaded;
 };
 
