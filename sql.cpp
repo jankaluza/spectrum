@@ -48,7 +48,7 @@ SQLClass::SQLClass(GlooxMessageHandler *parent) {
 	m_stmt_removeUserBuddies.stmt = new Statement( ( *m_sess << std::string("DELETE FROM " + p->configuration().sqlPrefix + "buddies WHERE user_id=?"), use(m_stmt_removeUserBuddies.user_id) ) );
 	m_stmt_addBuddy.stmt = new Statement( ( *m_sess << std::string("INSERT INTO " + p->configuration().sqlPrefix + "buddies (user_id, uin, subscription, groups, nickname) VALUES (?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE groups=?, nickname=?"), use(m_stmt_addBuddy.user_id), use(m_stmt_addBuddy.uin),use(m_stmt_addBuddy.subscription), use(m_stmt_addBuddy.groups), use(m_stmt_addBuddy.nickname), use(m_stmt_addBuddy.groups), use(m_stmt_addBuddy.nickname) ) );
 	m_stmt_updateBuddySubscription.stmt = new Statement( ( *m_sess << std::string("UPDATE " + p->configuration().sqlPrefix + "buddies SET subscription=? WHERE user_id=? AND uin=?"), use(m_stmt_updateBuddySubscription.subscription), use(m_stmt_updateBuddySubscription.user_id), use(m_stmt_updateBuddySubscription.uin) ) );
-	m_stmt_getUserByJid.stmt = new Statement( ( *m_sess << std::string("SELECT id, jid, uin, password FROM " + p->configuration().sqlPrefix + "users WHERE jid=?"), use(m_stmt_getUserByJid.jid), into(m_stmt_getUserByJid.resId), into(m_stmt_getUserByJid.resJid), into(m_stmt_getUserByJid.resUin), into(m_stmt_getUserByJid.resPassword), limit(1), range(0, 1) ) );
+	m_stmt_getUserByJid.stmt = new Statement( ( *m_sess << std::string("SELECT id, jid, uin, password FROM " + p->configuration().sqlPrefix + "users WHERE jid=?"), use(m_stmt_getUserByJid.jid), into(m_stmt_getUserByJid.resId, -1), into(m_stmt_getUserByJid.resJid), into(m_stmt_getUserByJid.resUin), into(m_stmt_getUserByJid.resPassword), limit(1), range(0, 1) ) );
 	m_stmt_getBuddies.stmt = new Statement( ( *m_sess << std::string("SELECT id, user_id, uin, subscription, nickname, groups FROM " + p->configuration().sqlPrefix + "buddies WHERE user_id=? ORDER BY id"), use(m_stmt_getBuddies.user_id), into(m_stmt_getBuddies.resId), into(m_stmt_getBuddies.resUserId), into(m_stmt_getBuddies.resUin), into(m_stmt_getBuddies.resSubscription), into(m_stmt_getBuddies.resNickname), into(m_stmt_getBuddies.resGroups), range(0, 1) ) );
 	m_stmt_addSetting.stmt = new Statement( ( *m_sess << std::string("INSERT INTO " + p->configuration().sqlPrefix + "users_settings (user_id, var, type, value) VALUES (?,?,?,?)"), use(m_stmt_addSetting.user_id), use(m_stmt_addSetting.var), use(m_stmt_addSetting.type), use(m_stmt_addSetting.value) ) );
 	m_stmt_updateSetting.stmt = new Statement( ( *m_sess << std::string("UPDATE " + p->configuration().sqlPrefix + "users_settings SET value=? WHERE user_id=? AND var=?"), use(m_stmt_updateSetting.value), use(m_stmt_updateSetting.user_id), use(m_stmt_updateSetting.var) ) );
@@ -227,17 +227,15 @@ UserRow SQLClass::getUserByJid(const std::string &jid){
 	UserRow user;
 	user.id = -1;
 	m_stmt_getUserByJid.jid.assign(jid);
-
-	std::cout << jid << "\n";
-	while (!m_stmt_getUserByJid.stmt->done()) {
-		std::cout << "AHOJ\n";
-		m_stmt_getUserByJid.stmt->execute();
-		user.id = m_stmt_getUserByJid.resId;
-		user.jid = m_stmt_getUserByJid.resJid;
-		user.uin = m_stmt_getUserByJid.resUin;
-		user.password = m_stmt_getUserByJid.resPassword;
+	if (m_stmt_getUserByJid.stmt->execute()) {
+		do {
+			user.id = m_stmt_getUserByJid.resId;
+			user.jid = m_stmt_getUserByJid.resJid;
+			user.uin = m_stmt_getUserByJid.resUin;
+			user.password = m_stmt_getUserByJid.resPassword;
+			m_stmt_getUserByJid.stmt->execute();
+		} while (!m_stmt_getUserByJid.stmt->done());
 	}
-	std::cout << user.id << "\n";
 	return user;
 }
 
@@ -263,69 +261,71 @@ std::map<std::string,RosterRow> SQLClass::getBuddies(long userId, PurpleAccount 
 // 		buddy->node.settings = p->sql()->getBuddySettings(user.id);
 	Log().Get("test1");
 	try {
-		while (!m_stmt_getBuddies.stmt->done()) {
-			m_stmt_getBuddies.stmt->execute();
-			RosterRow user;
-			user.id = m_stmt_getBuddies.resId;
-// 			user.jid = m_stmt_getBuddies.resJid;
-			user.uin = m_stmt_getBuddies.resUin;
-			user.subscription = m_stmt_getBuddies.resSubscription;
-			user.nickname = m_stmt_getBuddies.resNickname;
-			user.group = m_stmt_getBuddies.resGroups;
-			if (user.subscription.empty())
-				user.subscription = "ask";
-			user.online = false;
-			user.lastPresence = "";
+		if (m_stmt_getUserByJid.stmt->execute()) {
+			do {
+				m_stmt_getBuddies.stmt->execute();
+				RosterRow user;
+				user.id = m_stmt_getBuddies.resId;
+	// 			user.jid = m_stmt_getBuddies.resJid;
+				user.uin = m_stmt_getBuddies.resUin;
+				user.subscription = m_stmt_getBuddies.resSubscription;
+				user.nickname = m_stmt_getBuddies.resNickname;
+				user.group = m_stmt_getBuddies.resGroups;
+				if (user.subscription.empty())
+					user.subscription = "ask";
+				user.online = false;
+				user.lastPresence = "";
 
-			if (!buddiesLoaded && account) {
-				// create group
-				std::string group = user.group.empty() ? "Buddies" : user.group;
-				PurpleGroup *g = purple_find_group(group.c_str());
-				if (!g) {
-					g = purple_group_new(group.c_str());
-					purple_blist_add_group(g, NULL);
-				}
-
-				if (!purple_find_buddy_in_group(account, user.uin.c_str(), g)) {
-					// create contact
-					PurpleContact *contact = purple_contact_new();
-					purple_blist_add_contact(contact, g, NULL);
-
-					// create buddy
-					PurpleBuddy *buddy = purple_buddy_new(account, user.uin.c_str(), user.nickname.c_str());
-					long *id = new long(user.id);
-					buddy->node.ui_data = (void *) id;
-					purple_blist_add_buddy(buddy, contact, g, NULL);
-					GHashTable *settings = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, (GDestroyNotify) purple_value_destroy);
-					std::cout << "ADDING BUDDY " << user.id << "\n";
-					while(i < (int) m_stmt_getBuddiesSettings.resId.size()) {
-						if (m_stmt_getBuddiesSettings.resId[i] == user.id) {
-							std::cout << "ADDING SETTING " << m_stmt_getBuddiesSettings.resId[i] << "\n";
-							PurpleType type = (PurpleType) m_stmt_getBuddiesSettings.resType[i];
-							PurpleValue *value;
-							if (type == PURPLE_TYPE_BOOLEAN) {
-								value = purple_value_new(PURPLE_TYPE_BOOLEAN);
-								purple_value_set_boolean(value, atoi(m_stmt_getBuddiesSettings.resValue[i].c_str()));
-							}
-							if (type == PURPLE_TYPE_STRING) {
-								value = purple_value_new(PURPLE_TYPE_STRING);
-								purple_value_set_string(value, m_stmt_getBuddiesSettings.resValue[i].c_str());
-							}
-							g_hash_table_replace(settings, g_strdup(m_stmt_getBuddiesSettings.resVar[i].c_str()), value);
-							i++;
-						}
-						else
-							break;
+				if (!buddiesLoaded && account) {
+					// create group
+					std::string group = user.group.empty() ? "Buddies" : user.group;
+					PurpleGroup *g = purple_find_group(group.c_str());
+					if (!g) {
+						g = purple_group_new(group.c_str());
+						purple_blist_add_group(g, NULL);
 					}
-					// set settings
-					g_hash_table_destroy(buddy->node.settings);
-					buddy->node.settings = settings;
-				}
-				else
-					buddiesLoaded = true;
-			}
 
-			rows[std::string(m_stmt_getBuddies.resUin)] = user;
+					if (!purple_find_buddy_in_group(account, user.uin.c_str(), g)) {
+						// create contact
+						PurpleContact *contact = purple_contact_new();
+						purple_blist_add_contact(contact, g, NULL);
+
+						// create buddy
+						PurpleBuddy *buddy = purple_buddy_new(account, user.uin.c_str(), user.nickname.c_str());
+						long *id = new long(user.id);
+						buddy->node.ui_data = (void *) id;
+						purple_blist_add_buddy(buddy, contact, g, NULL);
+						GHashTable *settings = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, (GDestroyNotify) purple_value_destroy);
+						std::cout << "ADDING BUDDY " << user.id << "\n";
+						while(i < (int) m_stmt_getBuddiesSettings.resId.size()) {
+							if (m_stmt_getBuddiesSettings.resId[i] == user.id) {
+								std::cout << "ADDING SETTING " << m_stmt_getBuddiesSettings.resId[i] << "\n";
+								PurpleType type = (PurpleType) m_stmt_getBuddiesSettings.resType[i];
+								PurpleValue *value;
+								if (type == PURPLE_TYPE_BOOLEAN) {
+									value = purple_value_new(PURPLE_TYPE_BOOLEAN);
+									purple_value_set_boolean(value, atoi(m_stmt_getBuddiesSettings.resValue[i].c_str()));
+								}
+								if (type == PURPLE_TYPE_STRING) {
+									value = purple_value_new(PURPLE_TYPE_STRING);
+									purple_value_set_string(value, m_stmt_getBuddiesSettings.resValue[i].c_str());
+								}
+								g_hash_table_replace(settings, g_strdup(m_stmt_getBuddiesSettings.resVar[i].c_str()), value);
+								i++;
+							}
+							else
+								break;
+						}
+						// set settings
+						g_hash_table_destroy(buddy->node.settings);
+						buddy->node.settings = settings;
+					}
+					else
+						buddiesLoaded = true;
+				}
+
+				rows[std::string(m_stmt_getBuddies.resUin)] = user;
+			} while (!m_stmt_getBuddies.stmt->done());
 		}
 	}
 	catch (Poco::Exception e) {

@@ -374,6 +374,9 @@ Tag *User::generatePresenceStanza(PurpleBuddy *buddy) {
 			}
 			tag->addChild(x);
 		}
+		
+		if (avatarHash)
+			g_free(avatarHash);
 	}
 
 	// update stats...
