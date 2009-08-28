@@ -87,7 +87,12 @@ void SQLClass::addUser(const std::string &jid,const std::string &uin,const std::
 	m_stmt_addUser.uin.assign(uin);
 	m_stmt_addUser.password.assign(password);
 	m_stmt_addUser.language.assign(language);
-	m_stmt_addUser.stmt->execute();
+	try {
+		m_stmt_addUser.stmt->execute();
+	}
+	catch (Poco::Exception e) {
+		Log().Get("SQL ERROR") << e.displayText();
+	}
 }
 
 void SQLClass::initDb() {
@@ -183,23 +188,43 @@ void SQLClass::updateUserPassword(const std::string &jid,const std::string &pass
 	m_stmt_updateUserPassword.jid.assign(jid);
 	m_stmt_updateUserPassword.password.assign(password);
 	m_stmt_updateUserPassword.language.assign(language);
-	m_stmt_updateUserPassword.stmt->execute();
+	try {
+		m_stmt_updateUserPassword.stmt->execute();
+	}
+	catch (Poco::Exception e) {
+		Log().Get("SQL ERROR") << e.displayText();
+	}
 }
 
 void SQLClass::removeBuddy(long userId, const std::string &uin) {
 	m_stmt_removeBuddy.user_id = userId;
 	m_stmt_removeBuddy.uin.assign(uin);
-	m_stmt_removeBuddy.stmt->execute();
+	try {
+		m_stmt_removeBuddy.stmt->execute();
+	}
+	catch (Poco::Exception e) {
+		Log().Get("SQL ERROR") << e.displayText();
+	}
 }
 
 void SQLClass::removeUser(const std::string &jid) {
 	m_stmt_removeUser.jid.assign(jid);
-	m_stmt_removeUser.stmt->execute();
+	try {
+		m_stmt_removeUser.stmt->execute();
+	}
+	catch (Poco::Exception e) {
+		Log().Get("SQL ERROR") << e.displayText();
+	}
 }
 
 void SQLClass::removeUserBuddies(long userId) {
 	m_stmt_removeUserBuddies.user_id = userId;
-	m_stmt_removeUserBuddies.stmt->execute();
+	try {
+		m_stmt_removeUserBuddies.stmt->execute();
+	}
+	catch (Poco::Exception e) {
+		Log().Get("SQL ERROR") << e.displayText();
+	}
 }
 
 void SQLClass::addDownload(const std::string &filename, const std::string &vip) {
@@ -226,7 +251,12 @@ long SQLClass::addBuddy(long userId, const std::string &uin, const std::string &
 	m_stmt_addBuddy.subscription.assign(subscription);
 	m_stmt_addBuddy.groups.assign(group);
 	m_stmt_addBuddy.nickname.assign(nickname);
-	m_stmt_addBuddy.stmt->execute();
+	try {
+		m_stmt_addBuddy.stmt->execute();
+	}
+	catch (Poco::Exception e) {
+		Log().Get("SQL ERROR") << e.displayText();
+	}
 	return Poco::AnyCast<Poco::UInt64>(m_sess->getProperty("insertId"));
 }
 
@@ -234,21 +264,31 @@ void SQLClass::updateBuddySubscription(long userId, const std::string &uin, cons
 	m_stmt_updateBuddySubscription.user_id = userId;
 	m_stmt_updateBuddySubscription.uin.assign(uin);
 	m_stmt_updateBuddySubscription.subscription.assign(subscription);
-	m_stmt_updateBuddySubscription.stmt->execute();
+	try {
+		m_stmt_updateBuddySubscription.stmt->execute();
+	}
+	catch (Poco::Exception e) {
+		Log().Get("SQL ERROR") << e.displayText();
+	}
 }
 
 UserRow SQLClass::getUserByJid(const std::string &jid){
 	UserRow user;
 	user.id = -1;
 	m_stmt_getUserByJid.jid.assign(jid);
-	if (m_stmt_getUserByJid.stmt->execute()) {
-		do {
-			user.id = m_stmt_getUserByJid.resId;
-			user.jid = m_stmt_getUserByJid.resJid;
-			user.uin = m_stmt_getUserByJid.resUin;
-			user.password = m_stmt_getUserByJid.resPassword;
-			m_stmt_getUserByJid.stmt->execute();
-		} while (!m_stmt_getUserByJid.stmt->done());
+	try {
+		if (m_stmt_getUserByJid.stmt->execute()) {
+			do {
+				user.id = m_stmt_getUserByJid.resId;
+				user.jid = m_stmt_getUserByJid.resJid;
+				user.uin = m_stmt_getUserByJid.resUin;
+				user.password = m_stmt_getUserByJid.resPassword;
+				m_stmt_getUserByJid.stmt->execute();
+			} while (!m_stmt_getUserByJid.stmt->done());
+		}
+	}
+	catch (Poco::Exception e) {
+		Log().Get("SQL ERROR") << e.displayText();
 	}
 	return user;
 }
@@ -411,6 +451,11 @@ void SQLClass::addBuddySetting(long userId, long buddyId, const std::string &key
 	m_stmt_addBuddySetting.var.assign(key);
 	m_stmt_addBuddySetting.value.assign(value);
 	m_stmt_addBuddySetting.type = (int) type;
-	m_stmt_addBuddySetting.stmt->execute();
+	try {
+		m_stmt_addBuddySetting.stmt->execute();
+	}
+	catch (Poco::Exception e) {
+		Log().Get("SQL ERROR") << e.displayText();
+	}
 }
 
