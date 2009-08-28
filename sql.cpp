@@ -66,6 +66,19 @@ SQLClass::~SQLClass() {
 	if (m_loaded) {
 		delete m_sess;
 		delete m_stmt_addUser.stmt;
+		delete m_stmt_updateUserPassword.stmt;
+		delete m_stmt_removeBuddy.stmt;
+		delete m_stmt_removeUser.stmt;
+		delete m_stmt_removeUserBuddies.stmt;
+		delete m_stmt_addBuddy.stmt;
+		delete m_stmt_updateBuddySubscription.stmt;
+		delete m_stmt_getUserByJid.stmt;
+		delete m_stmt_getBuddies.stmt;
+		delete m_stmt_addSetting.stmt;
+		delete m_stmt_updateSetting.stmt;
+		delete m_stmt_getBuddiesSettings.stmt;
+		delete m_stmt_addBuddySetting.stmt;
+		delete m_stmt_getSettings.stmt;
 	}
 }
 
