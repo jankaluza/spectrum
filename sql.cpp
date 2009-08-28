@@ -54,7 +54,8 @@ SQLClass::SQLClass(GlooxMessageHandler *parent) {
 	m_stmt_updateSetting.stmt = new Statement( ( *m_sess << std::string("UPDATE " + p->configuration().sqlPrefix + "users_settings SET value=? WHERE user_id=? AND var=?"), use(m_stmt_updateSetting.value), use(m_stmt_updateSetting.user_id), use(m_stmt_updateSetting.var) ) );
 	m_stmt_getBuddiesSettings.stmt = new Statement( ( *m_sess << std::string("SELECT buddy_id, type, var, value FROM " + p->configuration().sqlPrefix + "buddies_settings WHERE user_id=? ORDER BY buddy_id"), use(m_stmt_getBuddiesSettings.user_id), into(m_stmt_getBuddiesSettings.resId), into(m_stmt_getBuddiesSettings.resType), into(m_stmt_getBuddiesSettings.resVar), into(m_stmt_getBuddiesSettings.resValue) ) );
 	m_stmt_addBuddySetting.stmt = new Statement( ( *m_sess << std::string("INSERT INTO " + p->configuration().sqlPrefix + "buddies_settings (user_id, buddy_id, var, type, value) VALUES (?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE value=?"), use(m_stmt_addBuddySetting.user_id), use(m_stmt_addBuddySetting.buddy_id), use(m_stmt_addBuddySetting.var), use(m_stmt_addBuddySetting.type), use(m_stmt_addBuddySetting.value), use(m_stmt_addBuddySetting.value) ) );
-
+	m_stmt_getSettings.stmt = new Statement( ( *m_sess << std::string("SELECT user_id, type, var, value FROM " + p->configuration().sqlPrefix + "users_settings WHERE user_id=?"), use(m_stmt_getSettings.user_id), into(m_stmt_getSettings.resId), into(m_stmt_getSettings.resType), into(m_stmt_getSettings.resVar), into(m_stmt_getSettings.resValue) ) );
+	
 	initDb();
 	m_loaded = true;
 
@@ -364,33 +365,29 @@ void SQLClass::updateSetting(long userId, const std::string &key, const std::str
 
 GHashTable * SQLClass::getSettings(long userId) {
 	GHashTable *settings = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, (GDestroyNotify) purple_value_destroy);
-// 	PurpleType type;
-// 	PurpleValue *value;
-// 
-// 	dbi_result result;
-// 
-// 	result = dbi_conn_queryf(m_conn, "SELECT * FROM %susers_settings WHERE user_id=\"%d\"", p->configuration().sqlPrefix.c_str(), userId);
-// 	if (result) {
-// 		while (dbi_result_next_row(result)) {
-// 			type = (PurpleType) dbi_result_get_int(result, "type");
-// 			if (type == PURPLE_TYPE_BOOLEAN) {
-// 				value = purple_value_new(PURPLE_TYPE_BOOLEAN);
-// 				purple_value_set_boolean(value, atoi(dbi_result_get_string(result, "value")));
-// 			}
-// 			if (type == PURPLE_TYPE_STRING) {
-// 				value = purple_value_new(PURPLE_TYPE_STRING);
-// 				purple_value_set_string(value, dbi_result_get_string(result, "value"));
-// 			}
-// 			g_hash_table_replace(settings, g_strdup(dbi_result_get_string(result, "var")), value);
-// 		}
-// 		dbi_result_free(result);
-// 	}
-// 	else {
-// 		const char *errmsg;
-// 		dbi_conn_error(m_conn, &errmsg);
-// 		if (errmsg)
-// 			Log().Get("SQL ERROR") << errmsg;
-// 	}
+	PurpleType type;
+	PurpleValue *value;
+	int i;
+	m_stmt_getSettings.user_id = userId;
+	try {
+		m_stmt_getSettings.stmt->execute();
+	}
+	catch (Poco::Exception e) {
+		Log().Get("SQL ERROR") << e.displayText();
+	}
+
+	for (i = 0; i < (int) m_stmt_getSettings.resId.size(); i++) {
+		type = (PurpleType) m_stmt_getSettings.resType[i];
+		if (type == PURPLE_TYPE_BOOLEAN) {
+			value = purple_value_new(PURPLE_TYPE_BOOLEAN);
+			purple_value_set_boolean(value, atoi(m_stmt_getSettings.resValue[i].c_str()));
+		}
+		if (type == PURPLE_TYPE_STRING) {
+			value = purple_value_new(PURPLE_TYPE_STRING);
+			purple_value_set_string(value, m_stmt_getSettings.resValue[i].c_str());
+		}
+		g_hash_table_replace(settings, g_strdup(m_stmt_getSettings.resVar[i].c_str()), value);
+	}
 
 	return settings;
 }

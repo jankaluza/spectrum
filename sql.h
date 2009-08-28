@@ -161,6 +161,16 @@ struct getBuddiesSettingsStatement {
 	std::vector<std::string> resValue;
 };
 
+struct getSettingsStatement {
+	Poco::Int32 user_id;
+	Poco::Data::Statement *stmt;
+	
+	std::vector<Poco::Int32> resId; 
+	std::vector<int> resType;
+	std::vector<std::string> resVar;
+	std::vector<std::string> resValue;
+};
+
 struct addBuddySettingStatement {
 	Poco::Int32 user_id;
 	Poco::Int32 buddy_id;
@@ -221,6 +231,7 @@ class SQLClass {
 		addSettingStatement m_stmt_addSetting;
 		updateSettingStatement m_stmt_updateSetting;
 		getBuddiesSettingsStatement m_stmt_getBuddiesSettings;
+		getSettingsStatement m_stmt_getSettings;
 		addBuddySettingStatement m_stmt_addBuddySetting;
 
 		Poco::Data::Session *m_sess;
