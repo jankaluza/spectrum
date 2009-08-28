@@ -401,37 +401,3 @@ void SQLClass::addBuddySetting(long userId, long buddyId, const std::string &key
 	m_stmt_addBuddySetting.stmt->execute();
 }
 
-GHashTable * SQLClass::getBuddiesSettings(long userId) {
-	GHashTable *settings = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
-// 	PurpleType type;
-// 	PurpleValue *value;
-// 
-// 	dbi_result result;
-// 
-// 	result = dbi_conn_queryf(m_conn, "SELECT * FROM %sbuddies_settings WHERE user_id=\"%d\" ORDER BY buddy_id", p->configuration().sqlPrefix.c_str(), userId);
-// 	if (result) {
-// 		
-// 		while (dbi_result_next_row(result)) {
-// 			GHashTable *s = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, (GDestroyNotify) purple_value_destroy);
-// 			type = (PurpleType) dbi_result_get_int(result, "type");
-// 			if (type == PURPLE_TYPE_BOOLEAN) {
-// 				value = purple_value_new(PURPLE_TYPE_BOOLEAN);
-// 				purple_value_set_boolean(value, atoi(dbi_result_get_string(result, "value")));
-// 			}
-// 			if (type == PURPLE_TYPE_STRING) {
-// 				value = purple_value_new(PURPLE_TYPE_STRING);
-// 				purple_value_set_string(value, dbi_result_get_string(result, "value"));
-// 			}
-// 			g_hash_table_replace(settings, g_strdup(dbi_result_get_string(result, "var")), value);
-// 		}
-// 		dbi_result_free(result);
-// 	}
-// 	else {
-// 		const char *errmsg;
-// 		dbi_conn_error(m_conn, &errmsg);
-// 		if (errmsg)
-// 			Log().Get("SQL ERROR") << errmsg;
-// 	}
-
-	return settings;
-}

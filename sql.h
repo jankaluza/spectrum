@@ -208,7 +208,6 @@ class SQLClass {
 		
 		// buddy settings
 		void addBuddySetting(long userId, long buddyId, const std::string &key, const std::string &value, PurpleType type);
-		GHashTable * getBuddiesSettings(long userId);
 
 		UserRow getUserByJid(const std::string &jid);
 		std::map<std::string,RosterRow> getBuddies(long userId, PurpleAccount *account = NULL);
