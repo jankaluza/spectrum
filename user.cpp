@@ -422,6 +422,7 @@ void User::purpleReauthorizeBuddy(PurpleBuddy *buddy) {
 							break;
 						}
 					}
+					purple_menu_action_free(act);
 				}
 			}
 			g_list_free(ll);

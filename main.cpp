@@ -693,12 +693,16 @@ static void transport_core_ui_init(void)
 	purple_conversations_set_ui_ops(&conversation_ui_ops);
 }
 
+static void transport_core_ui_quit(void) {
+	delete GlooxMessageHandler::instance();
+}
+
 static PurpleCoreUiOps coreUiOps =
 {
 	NULL,
 	NULL,
 	transport_core_ui_init,
-	NULL,
+	transport_core_ui_quit,
 	NULL,
 	NULL,
 	NULL,
@@ -771,7 +775,7 @@ GlooxMessageHandler::GlooxMessageHandler(const std::string &config) : MessageHan
 
 	j = new HiComponent("jabber:component:accept",m_configuration.server,m_configuration.jid,m_configuration.password,m_configuration.port);
 
-	GMainLoop *loop = g_main_loop_new(NULL, FALSE);
+	m_loop = g_main_loop_new(NULL, FALSE);
 	signal(SIGCHLD, SIG_IGN);
 
 	if (loaded) {
@@ -822,19 +826,19 @@ GlooxMessageHandler::GlooxMessageHandler(const std::string &config) : MessageHan
 		j->registerSubscriptionHandler(this);
 
 		transportConnect();
-
-		g_main_loop_run(loop);
 	}
 }
 
 GlooxMessageHandler::~GlooxMessageHandler(){
-	delete m_userManager;
-	if (m_parser)
-		delete m_parser;
-	if (m_sql)
-		delete m_sql;
-	delete j;
-	purple_core_quit();
+// 	delete m_userManager;
+// 	if (m_parser)
+// 		delete m_parser;
+// 	if (m_sql)
+// 		delete m_sql;
+// 	j->disconnect();
+// 	delete j;
+// 	g_main_loop_run(m_loop);
+// 	purple_core_quit();
 }
 
 bool GlooxMessageHandler::loadProtocol(){
@@ -999,6 +1003,7 @@ bool GlooxMessageHandler::loadConfigFile(const std::string &config) {
 	GKeyFile *keyfile;
 	int flags;
   	char **bind;
+	char *value;
 	int i;
 
 	keyfile = g_key_file_new ();
@@ -1015,25 +1020,62 @@ bool GlooxMessageHandler::loadConfigFile(const std::string &config) {
 		}
 	}
 
-	m_configuration.protocol = (std::string) g_key_file_get_string(keyfile, "service","protocol", NULL);
-	m_configuration.discoName = (std::string) g_key_file_get_string(keyfile, "service","name", NULL);
-	m_configuration.server = (std::string)g_key_file_get_string(keyfile, "service","server", NULL);
-	m_configuration.password = (std::string)g_key_file_get_string(keyfile, "service","password", NULL);
-	m_configuration.jid = (std::string)g_key_file_get_string(keyfile, "service","jid", NULL);
+	value = g_key_file_get_string(keyfile, "service","protocol", NULL);
+	m_configuration.protocol = std::string(value);
+	g_free(value);
+	
+	value = g_key_file_get_string(keyfile, "service","name", NULL);
+	m_configuration.discoName = std::string(value);
+	g_free(value);
+	
+	value = g_key_file_get_string(keyfile, "service","server", NULL);
+	m_configuration.server = std::string(value);
+	g_free(value);
+	
+	value = g_key_file_get_string(keyfile, "service","password", NULL);
+	m_configuration.password = std::string(value);
+	g_free(value);
+	
+	value = g_key_file_get_string(keyfile, "service","jid", NULL);
+	m_configuration.jid = std::string(value);
+	g_free(value);
+	
 	m_configuration.port = (int)g_key_file_get_integer(keyfile, "service","port", NULL);
-	m_configuration.filetransferCache = (std::string)g_key_file_get_string(keyfile, "service","filetransfer_cache", NULL);
+	
+	value = g_key_file_get_string(keyfile, "service","filetransfer_cache", NULL);
+	m_configuration.filetransferCache = std::string(value);
+	g_free(value);
 
-	m_configuration.sqlType = (std::string)g_key_file_get_string(keyfile, "database","type", NULL);
-	m_configuration.sqlHost = (std::string)g_key_file_get_string(keyfile, "database","host", NULL);
-	m_configuration.sqlPassword = (std::string)g_key_file_get_string(keyfile, "database","password", NULL);
-	m_configuration.sqlUser = (std::string)g_key_file_get_string(keyfile, "database","user", NULL);
-	m_configuration.sqlDb = (std::string)g_key_file_get_string(keyfile, "database","database", NULL);
-	m_configuration.sqlPrefix = (std::string)g_key_file_get_string(keyfile, "database","prefix", NULL);
+	value = g_key_file_get_string(keyfile, "database","type", NULL);
+	m_configuration.sqlType = std::string(value);
+	g_free(value);
+	
+	value = g_key_file_get_string(keyfile, "database","host", NULL);
+	m_configuration.sqlHost = std::string(value);
+	g_free(value);
+	
+	value = g_key_file_get_string(keyfile, "database","password", NULL);
+	m_configuration.sqlPassword = std::string(value);
+	g_free(value);
+	
+	value = g_key_file_get_string(keyfile, "database","user", NULL);
+	m_configuration.sqlUser = std::string(value);
+	g_free(value);
+	
+	value = g_key_file_get_string(keyfile, "database","database", NULL);
+	m_configuration.sqlDb = std::string(value);
+	g_free(value);
+	
+	value = g_key_file_get_string(keyfile, "database","prefix", NULL);
+	m_configuration.sqlPrefix = std::string(value);
+	g_free(value);
 
-	m_configuration.userDir = (std::string)g_key_file_get_string(keyfile, "purple","userdir", NULL);
+	value = g_key_file_get_string(keyfile, "purple","userdir", NULL);
+	m_configuration.userDir = std::string(value);
+	g_free(value);
 
 	if (g_key_file_has_key(keyfile,"service","language",NULL))
-		m_configuration.language=g_key_file_get_string(keyfile, "service","language", NULL);
+		m_configuration.language = g_key_file_get_string(keyfile, "service","language", NULL);
 	else
 		m_configuration.language = "en";
 
@@ -1621,6 +1663,11 @@ bool GlooxMessageHandler::initPurple(){
 
 GlooxMessageHandler* GlooxMessageHandler::m_pInstance = NULL;
 
+static void spectrum_sigint_handler(int sig) {
+	purple_core_quit();
+	return;
+} 
+
 int main( int argc, char* argv[] ) {
 	GError *error = NULL;
 	GOptionContext *context;
@@ -1634,8 +1681,11 @@ int main( int argc, char* argv[] ) {
 	if (argc != 2)
 		std::cout << g_option_context_get_help(context, FALSE, NULL);
 	else {
+		if (signal(SIGINT, spectrum_sigint_handler) == SIG_ERR)
+			std::cout << "SIGINT handler can't be set\n";
 		std::string config(argv[1]);
 		GlooxMessageHandler t(config);
+		g_main_loop_run(t.loop());
 	}
 }
 
