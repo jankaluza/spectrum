@@ -693,16 +693,12 @@ static void transport_core_ui_init(void)
 	purple_conversations_set_ui_ops(&conversation_ui_ops);
 }
 
-static void transport_core_ui_quit(void) {
-	delete GlooxMessageHandler::instance();
-}
-
 static PurpleCoreUiOps coreUiOps =
 {
 	NULL,
 	NULL,
 	transport_core_ui_init,
-	transport_core_ui_quit,
+	NULL,
 	NULL,
 	NULL,
 	NULL,
@@ -760,10 +756,14 @@ static gboolean transportDataReceived(GIOChannel *source, GIOCondition condition
 GlooxMessageHandler::GlooxMessageHandler(const std::string &config) : MessageHandler(),ConnectionListener(),PresenceHandler(),SubscriptionHandler() {
 	m_pInstance = this;
 	m_firstConnection = true;
+	ftManager = NULL;
+	ft = NULL;
 	lastIP = 0;
 	capsCache["_default"] = 0;
 	m_parser = NULL;
 	m_sql = NULL;
+	m_searchHandler = NULL;
+	ftServer = NULL;
 
 	bool loaded = true;
 
@@ -826,19 +826,31 @@ GlooxMessageHandler::GlooxMessageHandler(const std::string &config) : MessageHan
 		j->registerSubscriptionHandler(this);
 
 		transportConnect();
+
+		g_main_loop_run(m_loop);
 	}
 }
 
 GlooxMessageHandler::~GlooxMessageHandler(){
-// 	delete m_userManager;
-// 	if (m_parser)
-// 		delete m_parser;
-// 	if (m_sql)
-// 		delete m_sql;
-// 	j->disconnect();
-// 	delete j;
-// 	g_main_loop_run(m_loop);
-// 	purple_core_quit();
+	purple_core_quit();
+	g_main_loop_quit(m_loop);
+	delete m_userManager;
+	if (m_parser)
+		delete m_parser;
+	if (m_sql)
+		delete m_sql;
+	if (ftManager)
+		delete ftManager;
+	// TODO: there are timers in commented classes, so wa have to stop them before purple_core_quit();
+// 	if (ft)
+// 		delete ft;
+// 	if (ftServer)
+// 		delete ftServer;
+	if (m_protocol)
+		delete m_protocol;
+	if (m_searchHandler)
+		delete m_searchHandler;
+	delete j;
 }
 
 bool GlooxMessageHandler::loadProtocol(){
@@ -1664,7 +1676,9 @@ bool GlooxMessageHandler::initPurple(){
 GlooxMessageHandler* GlooxMessageHandler::m_pInstance = NULL;
 
 static void spectrum_sigint_handler(int sig) {
-	purple_core_quit();
+// 	g_timeout_add(0, &deleteMain, NULL);
+	delete GlooxMessageHandler::instance();
+
 	return;
 } 
 
@@ -1684,8 +1698,8 @@ int main( int argc, char* argv[] ) {
 		if (signal(SIGINT, spectrum_sigint_handler) == SIG_ERR)
 			std::cout << "SIGINT handler can't be set\n";
 		std::string config(argv[1]);
-		GlooxMessageHandler t(config);
-		g_main_loop_run(t.loop());
+		new GlooxMessageHandler(config);
 	}
+	g_option_context_free(context);
 }
 

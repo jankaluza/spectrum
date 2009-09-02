@@ -57,6 +57,8 @@ class FileTransferManager : public gloox::SIProfileFTHandler {
 		std::map<std::string, Info> m_info;
 
 		std::list<std::string> m_sendlist;
+		
+		~FileTransferManager() {delete mutex;}
 
 		GlooxMessageHandler *p;
 		gloox::SIProfileFT *m_sip;

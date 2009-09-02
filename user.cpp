@@ -500,7 +500,7 @@ void User::purpleBuddyChanged(PurpleBuddy *buddy){
 				return;
 			}
 			else {
-				m_roster[name].lastPresence = tag->xml();
+				m_roster[name].lastPresence.assign(tag->xml());
 			}
 			tag->addAttribute("to", m_jid);
 			p->j->send(tag);

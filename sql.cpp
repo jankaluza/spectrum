@@ -64,7 +64,9 @@ SQLClass::SQLClass(GlooxMessageHandler *parent) {
 
 SQLClass::~SQLClass() {
 	if (m_loaded) {
+		m_sess->close();
 		delete m_sess;
+		MySQL::Connector::unregisterConnector();
 		delete m_stmt_addUser.stmt;
 		delete m_stmt_updateUserPassword.stmt;
 		delete m_stmt_removeBuddy.stmt;
@@ -246,6 +248,7 @@ void SQLClass::addDownload(const std::string &filename, const std::string &vip) 
 // }
 
 long SQLClass::addBuddy(long userId, const std::string &uin, const std::string &subscription, const std::string &group, const std::string &nickname) {
+	return 1;
 	m_stmt_addBuddy.user_id = userId;
 	m_stmt_addBuddy.uin.assign(uin);
 	m_stmt_addBuddy.subscription.assign(subscription);
@@ -298,7 +301,6 @@ std::map<std::string,RosterRow> SQLClass::getBuddies(long userId, PurpleAccount 
 	m_stmt_getBuddies.user_id = userId;
 	bool buddiesLoaded = false;
 	int i = 0;
-	Log().Get("test");
 	
 	if (account) {
 		m_stmt_getBuddiesSettings.user_id = userId;
@@ -309,15 +311,10 @@ std::map<std::string,RosterRow> SQLClass::getBuddies(long userId, PurpleAccount 
 			Log().Get("SQL ERROR") << e.displayText();
 		}
 	}
-		
-		// create buddy settings
-// 		g_hash_table_destroy(buddy->node.settings);
-// 		buddy->node.settings = p->sql()->getBuddySettings(user.id);
-	Log().Get("test1");
+
 	try {
-		if (m_stmt_getUserByJid.stmt->execute()) {
+		if (m_stmt_getBuddies.stmt->execute()) {
 			do {
-				m_stmt_getBuddies.stmt->execute();
 				RosterRow user;
 				user.id = m_stmt_getBuddies.resId;
 	// 			user.jid = m_stmt_getBuddies.resJid;
@@ -344,7 +341,7 @@ std::map<std::string,RosterRow> SQLClass::getBuddies(long userId, PurpleAccount 
 						PurpleContact *contact = purple_contact_new();
 						purple_blist_add_contact(contact, g, NULL);
 
-						// create buddy
+// 						create buddy
 						PurpleBuddy *buddy = purple_buddy_new(account, user.uin.c_str(), user.nickname.c_str());
 						long *id = new long(user.id);
 						buddy->node.ui_data = (void *) id;
@@ -379,12 +376,18 @@ std::map<std::string,RosterRow> SQLClass::getBuddies(long userId, PurpleAccount 
 				}
 
 				rows[std::string(m_stmt_getBuddies.resUin)] = user;
+				m_stmt_getBuddies.stmt->execute();
 			} while (!m_stmt_getBuddies.stmt->done());
 		}
 	}
 	catch (Poco::Exception e) {
 		Log().Get("SQL ERROR") << e.displayText();
 	}
+
+	m_stmt_getBuddiesSettings.resId.clear();
+	m_stmt_getBuddiesSettings.resType.clear();
+	m_stmt_getBuddiesSettings.resValue.clear();
+	m_stmt_getBuddiesSettings.resVar.clear();
 
 	return rows;
 }
@@ -441,6 +444,11 @@ GHashTable * SQLClass::getSettings(long userId) {
 		}
 		g_hash_table_replace(settings, g_strdup(m_stmt_getSettings.resVar[i].c_str()), value);
 	}
+
+	m_stmt_getSettings.resId.clear();
+	m_stmt_getSettings.resType.clear();
+	m_stmt_getSettings.resValue.clear();
+	m_stmt_getSettings.resVar.clear();
 
 	return settings;
 }
