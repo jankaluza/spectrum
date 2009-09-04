@@ -307,7 +307,6 @@ void SQLClass::addDownload(const std::string &filename, const std::string &vip) 
 // }
 
 long SQLClass::addBuddy(long userId, const std::string &uin, const std::string &subscription, const std::string &group, const std::string &nickname) {
-	return 1;
 	m_stmt_addBuddy.user_id = userId;
 	m_stmt_addBuddy.uin.assign(uin);
 	m_stmt_addBuddy.subscription.assign(subscription);
