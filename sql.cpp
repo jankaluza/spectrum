@@ -77,7 +77,7 @@ SQLClass::SQLClass(GlooxMessageHandler *parent) {
 												into(m_stmt_getUserByJid.resPassword),
 												limit(1),
 												range(0, 1) ) );
-	m_stmt_getBuddies.stmt = new Statement( ( STATEMENT("SELECT id, user_id, uin, subscription, nickname, groups FROM " + p->configuration().sqlPrefix + "buddies WHERE user_id=? ORDER BY id"),
+	m_stmt_getBuddies.stmt = new Statement( ( STATEMENT("SELECT id, user_id, uin, subscription, nickname, groups FROM " + p->configuration().sqlPrefix + "buddies WHERE user_id=? ORDER BY id ASC"),
 											  use(m_stmt_getBuddies.user_id),
 											  into(m_stmt_getBuddies.resId),
 											  into(m_stmt_getBuddies.resUserId),
@@ -95,7 +95,7 @@ SQLClass::SQLClass(GlooxMessageHandler *parent) {
 												 use(m_stmt_updateSetting.value),
 												 use(m_stmt_updateSetting.user_id),
 												 use(m_stmt_updateSetting.var) ) );
-	m_stmt_getBuddiesSettings.stmt = new Statement( ( STATEMENT("SELECT buddy_id, type, var, value FROM " + p->configuration().sqlPrefix + "buddies_settings WHERE user_id=? ORDER BY buddy_id"),
+	m_stmt_getBuddiesSettings.stmt = new Statement( ( STATEMENT("SELECT buddy_id, type, var, value FROM " + p->configuration().sqlPrefix + "buddies_settings WHERE user_id=? ORDER BY buddy_id ASC"),
 													  use(m_stmt_getBuddiesSettings.user_id),
 													  into(m_stmt_getBuddiesSettings.resId),
 													  into(m_stmt_getBuddiesSettings.resType),
@@ -405,10 +405,11 @@ std::map<std::string,RosterRow> SQLClass::getBuddies(long userId, PurpleAccount 
 						buddy->node.ui_data = (void *) id;
 						purple_blist_add_buddy(buddy, contact, g, NULL);
 						GHashTable *settings = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, (GDestroyNotify) purple_value_destroy);
-						std::cout << "ADDING BUDDY " << user.id << "\n";
+						std::cout << "ADDING BUDDY " << " " << user.id << " " << user.uin << "\n";
 						while(i < (int) m_stmt_getBuddiesSettings.resId.size()) {
+							std::cout << m_stmt_getBuddiesSettings.resId[i] << "\n";
 							if (m_stmt_getBuddiesSettings.resId[i] == user.id) {
-								std::cout << "ADDING SETTING " << m_stmt_getBuddiesSettings.resId[i] << "\n";
+								std::cout << "ADDING SETTING " << m_stmt_getBuddiesSettings.resVar[i] << "\n";
 								PurpleType type = (PurpleType) m_stmt_getBuddiesSettings.resType[i];
 								PurpleValue *value;
 								if (type == PURPLE_TYPE_BOOLEAN) {

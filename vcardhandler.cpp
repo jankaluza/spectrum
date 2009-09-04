@@ -155,9 +155,16 @@ void GlooxVCardHandler::userInfoArrived(PurpleConnection *gc, const std::string 
 			vcard->addAttribute( "xmlns", "vcard-temp" );
 		}
 
+		if (purple_value_get_boolean(user->getSetting("enable_avatars")))
+			std::cout << "AVATARS ENABLED IN USER SETTINGS\n";
+		
+		if (user->hasTransportFeature(TRANSPORT_FEATURE_AVATARS))
+			std::cout << "TRANSPORT_FEATURE_AVATARS IS READY\n";
+
 		if (purple_value_get_boolean(user->getSetting("enable_avatars")) && user->hasTransportFeature(TRANSPORT_FEATURE_AVATARS)) {
 			Tag *photo = new Tag("PHOTO");
 
+			std::cout << "Trying to fin out \n" << who;
 			PurpleBuddy *buddy = purple_find_buddy(purple_connection_get_account(gc), who.c_str());
 			if (buddy){
 				std::cout << "found buddy " << who << "\n";
