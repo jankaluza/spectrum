@@ -16,7 +16,7 @@ CREATE TABLE IF NOT EXISTS `buddies_settings` (
   `type` smallint(4) unsigned NOT NULL,
   `value` varchar(255) collate utf8_bin NOT NULL,
   PRIMARY KEY (`buddy_id`,`var`),
-  KEY `buddy_id` (`buddy_id`).
+  KEY `buddy_id` (`buddy_id`),
   KEY `user_id` (`user_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
  
@@ -25,10 +25,10 @@ CREATE TABLE IF NOT EXISTS `users` (
   `jid` varchar(255) collate utf8_bin NOT NULL,
   `uin` varchar(4095) collate utf8_bin NOT NULL,
   `password` varchar(255) collate utf8_bin NOT NULL,
-  `language` varchar(25) collate utf8_bin NOT NULL,
-  `encoding` varchar(50) collate utf8_bin NOT NULL,
-  `last_login` datetime NOT NULL,
-  `vip` tinyint(1) NOT NULL,
+  `language` varchar(25) collate utf8_bin NOT NULL;
+  `encoding` varchar(50) collate utf8_bin NOT NULL default 'utf8',
+  `last_login` datetime,
+  `vip` tinyint(1) NOT NULL  default '0',
   PRIMARY KEY (`id`),
   UNIQUE KEY `jid` (`jid`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
