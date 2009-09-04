@@ -41,20 +41,79 @@ SQLClass::SQLClass(GlooxMessageHandler *parent) {
 		return;
 	
 	// Prepared statements
-	m_stmt_addUser.stmt = new Statement( ( *m_sess << std::string("INSERT INTO " + p->configuration().sqlPrefix + "users (jid, uin, password, language) VALUES (?, ?, ?, ?)"), use(m_stmt_addUser.jid), use(m_stmt_addUser.uin), use(m_stmt_addUser.password), use(m_stmt_addUser.language) ) );
-	m_stmt_updateUserPassword.stmt = new Statement( ( *m_sess << std::string("UPDATE " + p->configuration().sqlPrefix + "users SET password=?, language=? WHERE jid=?)"), use(m_stmt_updateUserPassword.password), use(m_stmt_updateUserPassword.language), use(m_stmt_updateUserPassword.jid) ) );
-	m_stmt_removeBuddy.stmt = new Statement( ( *m_sess << std::string("DELETE FROM " + p->configuration().sqlPrefix + "buddies WHERE user_id=? AND uin=?"), use(m_stmt_removeBuddy.user_id), use(m_stmt_removeBuddy.uin) ) );
-	m_stmt_removeUser.stmt = new Statement( ( *m_sess << std::string("DELETE FROM " + p->configuration().sqlPrefix + "users WHERE jid=?"), use(m_stmt_removeUser.jid) ) );
-	m_stmt_removeUserBuddies.stmt = new Statement( ( *m_sess << std::string("DELETE FROM " + p->configuration().sqlPrefix + "buddies WHERE user_id=?"), use(m_stmt_removeUserBuddies.user_id) ) );
-	m_stmt_addBuddy.stmt = new Statement( ( *m_sess << std::string("INSERT INTO " + p->configuration().sqlPrefix + "buddies (user_id, uin, subscription, groups, nickname) VALUES (?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE groups=?, nickname=?"), use(m_stmt_addBuddy.user_id), use(m_stmt_addBuddy.uin),use(m_stmt_addBuddy.subscription), use(m_stmt_addBuddy.groups), use(m_stmt_addBuddy.nickname), use(m_stmt_addBuddy.groups), use(m_stmt_addBuddy.nickname) ) );
-	m_stmt_updateBuddySubscription.stmt = new Statement( ( *m_sess << std::string("UPDATE " + p->configuration().sqlPrefix + "buddies SET subscription=? WHERE user_id=? AND uin=?"), use(m_stmt_updateBuddySubscription.subscription), use(m_stmt_updateBuddySubscription.user_id), use(m_stmt_updateBuddySubscription.uin) ) );
-	m_stmt_getUserByJid.stmt = new Statement( ( *m_sess << std::string("SELECT id, jid, uin, password FROM " + p->configuration().sqlPrefix + "users WHERE jid=?"), use(m_stmt_getUserByJid.jid), into(m_stmt_getUserByJid.resId, -1), into(m_stmt_getUserByJid.resJid), into(m_stmt_getUserByJid.resUin), into(m_stmt_getUserByJid.resPassword), limit(1), range(0, 1) ) );
-	m_stmt_getBuddies.stmt = new Statement( ( *m_sess << std::string("SELECT id, user_id, uin, subscription, nickname, groups FROM " + p->configuration().sqlPrefix + "buddies WHERE user_id=? ORDER BY id"), use(m_stmt_getBuddies.user_id), into(m_stmt_getBuddies.resId), into(m_stmt_getBuddies.resUserId), into(m_stmt_getBuddies.resUin), into(m_stmt_getBuddies.resSubscription), into(m_stmt_getBuddies.resNickname), into(m_stmt_getBuddies.resGroups), range(0, 1) ) );
-	m_stmt_addSetting.stmt = new Statement( ( *m_sess << std::string("INSERT INTO " + p->configuration().sqlPrefix + "users_settings (user_id, var, type, value) VALUES (?,?,?,?)"), use(m_stmt_addSetting.user_id), use(m_stmt_addSetting.var), use(m_stmt_addSetting.type), use(m_stmt_addSetting.value) ) );
-	m_stmt_updateSetting.stmt = new Statement( ( *m_sess << std::string("UPDATE " + p->configuration().sqlPrefix + "users_settings SET value=? WHERE user_id=? AND var=?"), use(m_stmt_updateSetting.value), use(m_stmt_updateSetting.user_id), use(m_stmt_updateSetting.var) ) );
-	m_stmt_getBuddiesSettings.stmt = new Statement( ( *m_sess << std::string("SELECT buddy_id, type, var, value FROM " + p->configuration().sqlPrefix + "buddies_settings WHERE user_id=? ORDER BY buddy_id"), use(m_stmt_getBuddiesSettings.user_id), into(m_stmt_getBuddiesSettings.resId), into(m_stmt_getBuddiesSettings.resType), into(m_stmt_getBuddiesSettings.resVar), into(m_stmt_getBuddiesSettings.resValue) ) );
-	m_stmt_addBuddySetting.stmt = new Statement( ( *m_sess << std::string("INSERT INTO " + p->configuration().sqlPrefix + "buddies_settings (user_id, buddy_id, var, type, value) VALUES (?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE value=?"), use(m_stmt_addBuddySetting.user_id), use(m_stmt_addBuddySetting.buddy_id), use(m_stmt_addBuddySetting.var), use(m_stmt_addBuddySetting.type), use(m_stmt_addBuddySetting.value), use(m_stmt_addBuddySetting.value) ) );
-	m_stmt_getSettings.stmt = new Statement( ( *m_sess << std::string("SELECT user_id, type, var, value FROM " + p->configuration().sqlPrefix + "users_settings WHERE user_id=?"), use(m_stmt_getSettings.user_id), into(m_stmt_getSettings.resId), into(m_stmt_getSettings.resType), into(m_stmt_getSettings.resVar), into(m_stmt_getSettings.resValue) ) );
+	m_stmt_addUser.stmt = new Statement( ( STATEMENT("INSERT INTO " + p->configuration().sqlPrefix + "users (jid, uin, password, language) VALUES (?, ?, ?, ?)"),
+										   use(m_stmt_addUser.jid),
+										   use(m_stmt_addUser.uin),
+										   use(m_stmt_addUser.password),
+										   use(m_stmt_addUser.language) ) );
+	m_stmt_updateUserPassword.stmt = new Statement( ( STATEMENT("UPDATE " + p->configuration().sqlPrefix + "users SET password=?, language=? WHERE jid=?)"),
+													  use(m_stmt_updateUserPassword.password),
+													  use(m_stmt_updateUserPassword.language),
+													  use(m_stmt_updateUserPassword.jid) ) );
+	m_stmt_removeBuddy.stmt = new Statement( ( STATEMENT("DELETE FROM " + p->configuration().sqlPrefix + "buddies WHERE user_id=? AND uin=?"),
+											   use(m_stmt_removeBuddy.user_id),
+											   use(m_stmt_removeBuddy.uin) ) );
+	m_stmt_removeUser.stmt = new Statement( ( STATEMENT("DELETE FROM " + p->configuration().sqlPrefix + "users WHERE jid=?"),
+											  use(m_stmt_removeUser.jid) ) );
+	m_stmt_removeUserBuddies.stmt = new Statement( ( STATEMENT("DELETE FROM " + p->configuration().sqlPrefix + "buddies WHERE user_id=?"),
+													 use(m_stmt_removeUserBuddies.user_id) ) );
+	m_stmt_addBuddy.stmt = new Statement( ( STATEMENT("INSERT INTO " + p->configuration().sqlPrefix + "buddies (user_id, uin, subscription, groups, nickname) VALUES (?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE groups=?, nickname=?"),
+											use(m_stmt_addBuddy.user_id),
+											use(m_stmt_addBuddy.uin),
+											use(m_stmt_addBuddy.subscription),
+											use(m_stmt_addBuddy.groups),
+											use(m_stmt_addBuddy.nickname),
+											use(m_stmt_addBuddy.groups),
+											use(m_stmt_addBuddy.nickname) ) );
+	m_stmt_updateBuddySubscription.stmt = new Statement( ( STATEMENT("UPDATE " + p->configuration().sqlPrefix + "buddies SET subscription=? WHERE user_id=? AND uin=?"),
+														   use(m_stmt_updateBuddySubscription.subscription),
+														   use(m_stmt_updateBuddySubscription.user_id),
+														   use(m_stmt_updateBuddySubscription.uin) ) );
+	m_stmt_getUserByJid.stmt = new Statement( ( STATEMENT("SELECT id, jid, uin, password FROM " + p->configuration().sqlPrefix + "users WHERE jid=?"),
+												use(m_stmt_getUserByJid.jid),
+												into(m_stmt_getUserByJid.resId, -1),
+												into(m_stmt_getUserByJid.resJid),
+												into(m_stmt_getUserByJid.resUin),
+												into(m_stmt_getUserByJid.resPassword),
+												limit(1),
+												range(0, 1) ) );
+	m_stmt_getBuddies.stmt = new Statement( ( STATEMENT("SELECT id, user_id, uin, subscription, nickname, groups FROM " + p->configuration().sqlPrefix + "buddies WHERE user_id=? ORDER BY id"),
+											  use(m_stmt_getBuddies.user_id),
+											  into(m_stmt_getBuddies.resId),
+											  into(m_stmt_getBuddies.resUserId),
+											  into(m_stmt_getBuddies.resUin),
+											  into(m_stmt_getBuddies.resSubscription),
+											  into(m_stmt_getBuddies.resNickname),
+											  into(m_stmt_getBuddies.resGroups),
+											  range(0, 1) ) );
+	m_stmt_addSetting.stmt = new Statement( ( STATEMENT("INSERT INTO " + p->configuration().sqlPrefix + "users_settings (user_id, var, type, value) VALUES (?,?,?,?)"),
+											  use(m_stmt_addSetting.user_id),
+											  use(m_stmt_addSetting.var),
+											  use(m_stmt_addSetting.type),
+											  use(m_stmt_addSetting.value) ) );
+	m_stmt_updateSetting.stmt = new Statement( ( STATEMENT("UPDATE " + p->configuration().sqlPrefix + "users_settings SET value=? WHERE user_id=? AND var=?"),
+												 use(m_stmt_updateSetting.value),
+												 use(m_stmt_updateSetting.user_id),
+												 use(m_stmt_updateSetting.var) ) );
+	m_stmt_getBuddiesSettings.stmt = new Statement( ( STATEMENT("SELECT buddy_id, type, var, value FROM " + p->configuration().sqlPrefix + "buddies_settings WHERE user_id=? ORDER BY buddy_id"),
+													  use(m_stmt_getBuddiesSettings.user_id),
+													  into(m_stmt_getBuddiesSettings.resId),
+													  into(m_stmt_getBuddiesSettings.resType),
+													  into(m_stmt_getBuddiesSettings.resVar),
+													  into(m_stmt_getBuddiesSettings.resValue) ) );
+	m_stmt_addBuddySetting.stmt = new Statement( ( STATEMENT("INSERT INTO " + p->configuration().sqlPrefix + "buddies_settings (user_id, buddy_id, var, type, value) VALUES (?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE value=?"),
+												   use(m_stmt_addBuddySetting.user_id),
+												   use(m_stmt_addBuddySetting.buddy_id),
+												   use(m_stmt_addBuddySetting.var),
+												   use(m_stmt_addBuddySetting.type),
+												   use(m_stmt_addBuddySetting.value),
+												   use(m_stmt_addBuddySetting.value) ) );
+	m_stmt_getSettings.stmt = new Statement( ( STATEMENT("SELECT user_id, type, var, value FROM " + p->configuration().sqlPrefix + "users_settings WHERE user_id=?"),
+											   use(m_stmt_getSettings.user_id),
+											   into(m_stmt_getSettings.resId),
+											   into(m_stmt_getSettings.resType),
+											   into(m_stmt_getSettings.resVar),
+											   into(m_stmt_getSettings.resValue) ) );
 	
 	initDb();
 	m_loaded = true;

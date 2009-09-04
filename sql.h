@@ -36,6 +36,8 @@ class GlooxMessageHandler;
 
 using namespace Poco::Data;
 
+#define STATEMENT(STRING) *m_sess << std::string(STRING)
+
 /*
  * Structure which represents XMPP User
  */
