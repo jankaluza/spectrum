@@ -25,7 +25,7 @@ CREATE TABLE IF NOT EXISTS `users` (
   `jid` varchar(255) collate utf8_bin NOT NULL,
   `uin` varchar(4095) collate utf8_bin NOT NULL,
   `password` varchar(255) collate utf8_bin NOT NULL,
-  `language` varchar(25) collate utf8_bin NOT NULL;
+  `language` varchar(25) collate utf8_bin NOT NULL,
   `encoding` varchar(50) collate utf8_bin NOT NULL default 'utf8',
   `last_login` datetime,
   `vip` tinyint(1) NOT NULL  default '0',
