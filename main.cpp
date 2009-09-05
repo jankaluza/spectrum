@@ -459,42 +459,41 @@ static void buddyListSaveNode(PurpleBlistNode *node) {
 	PurpleBuddy *buddy = (PurpleBuddy *) node;
 	PurpleAccount *a = purple_buddy_get_account(buddy);
 	User *user = GlooxMessageHandler::instance()->userManager()->getUserByAccount(a);
+	if (!user) return;
 	if (user->loadingBuddiesFromDB()) return;
-	if (user != NULL) {
-		// save PurpleBuddy
-		std::string alias;
-		std::string name(purple_buddy_get_name(buddy));
-		if (purple_buddy_get_server_alias(buddy))
-			alias = (std::string) purple_buddy_get_server_alias(buddy);
-		else
-			alias = (std::string) purple_buddy_get_alias(buddy);
-		long id;
-		if (buddy->node.ui_data) {
-			long *p = (long *) buddy->node.ui_data;
-			id = *p;
-			GlooxMessageHandler::instance()->sql()->addBuddy(user->storageId(), name, "both", purple_group_get_name(purple_buddy_get_group(buddy)) ? std::string(purple_group_get_name(purple_buddy_get_group(buddy))) : std::string("Buddies"), alias);
+	// save PurpleBuddy
+	std::string alias;
+	std::string name(purple_buddy_get_name(buddy));
+	if (purple_buddy_get_server_alias(buddy))
+		alias = (std::string) purple_buddy_get_server_alias(buddy);
+	else
+		alias = (std::string) purple_buddy_get_alias(buddy);
+	long id;
+	if (buddy->node.ui_data) {
+		long *p = (long *) buddy->node.ui_data;
+		id = *p;
+		GlooxMessageHandler::instance()->sql()->addBuddy(user->storageId(), name, "both", purple_group_get_name(purple_buddy_get_group(buddy)) ? std::string(purple_group_get_name(purple_buddy_get_group(buddy))) : std::string("Buddies"), alias);
+	}
+	else {
+		id = GlooxMessageHandler::instance()->sql()->addBuddy(user->storageId(), name, "both", purple_group_get_name(purple_buddy_get_group(buddy)) ? std::string(purple_group_get_name(purple_buddy_get_group(buddy))) : std::string("Buddies"), alias);
+		buddy->node.ui_data = (void *) new long(id);
+	}
+	Log().Get("buddyListSaveNode") << id << " " << name << " " << alias;
+	// save settings
+	GHashTableIter iter;
+	gpointer k, v;
+	g_hash_table_iter_init (&iter, buddy->node.settings);
+	while (g_hash_table_iter_next (&iter, &k, &v)) {
+		PurpleValue *value = (PurpleValue *) v;
+		std::string key((char *) k);
+		if (purple_value_get_type(value) == PURPLE_TYPE_BOOLEAN) {
+			if (purple_value_get_boolean(value))
+				GlooxMessageHandler::instance()->sql()->addBuddySetting(user->storageId(), id, key, "1", purple_value_get_type(value));
+			else
+				GlooxMessageHandler::instance()->sql()->addBuddySetting(user->storageId(), id, key, "0", purple_value_get_type(value));
 		}
-		else {
-			id = GlooxMessageHandler::instance()->sql()->addBuddy(user->storageId(), name, "both", purple_group_get_name(purple_buddy_get_group(buddy)) ? std::string(purple_group_get_name(purple_buddy_get_group(buddy))) : std::string("Buddies"), alias);
-			buddy->node.ui_data = (void *) new long(id);
-		}
-		Log().Get("buddyListSaveNode") << id << " " << name << " " << alias;
-		// save settings
-		GHashTableIter iter;
-		gpointer k, v;
-		g_hash_table_iter_init (&iter, buddy->node.settings);
-		while (g_hash_table_iter_next (&iter, &k, &v)) {
-			PurpleValue *value = (PurpleValue *) v;
-			std::string key((char *) k);
-			if (purple_value_get_type(value) == PURPLE_TYPE_BOOLEAN) {
-				if (purple_value_get_boolean(value))
-					GlooxMessageHandler::instance()->sql()->addBuddySetting(user->storageId(), id, key, "1", purple_value_get_type(value));
-				else
-					GlooxMessageHandler::instance()->sql()->addBuddySetting(user->storageId(), id, key, "0", purple_value_get_type(value));
-			}
-			else if (purple_value_get_type(value) == PURPLE_TYPE_STRING) {
-				GlooxMessageHandler::instance()->sql()->addBuddySetting(user->storageId(), id, key, purple_value_get_string(value), purple_value_get_type(value));
-			}
+		else if (purple_value_get_type(value) == PURPLE_TYPE_STRING) {
+			GlooxMessageHandler::instance()->sql()->addBuddySetting(user->storageId(), id, key, purple_value_get_string(value), purple_value_get_type(value));
 		}
 	}
 }
