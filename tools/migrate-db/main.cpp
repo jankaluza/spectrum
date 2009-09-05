@@ -39,13 +39,13 @@ SQLClass::SQLClass(const std::string &config) {
 		return;
 	try {
 		std::cout << "Deleting old temp tables\n";
-		*m_sess << "DROP TABLE IF EXISTS buddies_new", now;
-		*m_sess << "DROP TABLE IF EXISTS buddies_settings_new", now;
-		*m_sess << "DROP TABLE IF EXISTS users_new", now;
-		*m_sess << "DROP TABLE IF EXISTS users_settings_new", now;
+		*m_sess << "DROP TABLE IF EXISTS migrated_" + m_configuration.sqlPrefix + "buddies", now;
+		*m_sess << "DROP TABLE IF EXISTS migrated_" + m_configuration.sqlPrefix + "buddies_settings", now;
+		*m_sess << "DROP TABLE IF EXISTS migrated_" + m_configuration.sqlPrefix + "users", now;
+		*m_sess << "DROP TABLE IF EXISTS migrated_" + m_configuration.sqlPrefix + "users_settings", now;
 		
 		std::cout << "Creating new temp tables\n";
-		*m_sess << "CREATE TABLE `buddies_new` (\n"
+		*m_sess << "CREATE TABLE `migrated_" + m_configuration.sqlPrefix + "buddies` (\n"
 			"`id` int(10) unsigned NOT NULL auto_increment,\n"
 			"`user_id` int(10) unsigned NOT NULL,\n"
 			"`uin` varchar(255) collate utf8_bin NOT NULL,\n"
@@ -55,7 +55,7 @@ SQLClass::SQLClass(const std::string &config) {
 			"PRIMARY KEY (`id`),\n"
 			"UNIQUE KEY `user_id` (`user_id`,`uin`)\n"
 		") ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_bin;\n", now;
-		*m_sess << "CREATE TABLE IF NOT EXISTS `buddies_settings_new` (\n"
+		*m_sess << "CREATE TABLE IF NOT EXISTS `migrated_" + m_configuration.sqlPrefix + "buddies_settings` (\n"
 			"`user_id` int(10) unsigned NOT NULL,\n"
 			"`buddy_id` int(10) unsigned NOT NULL,\n"
 			"`var` varchar(50) collate utf8_bin NOT NULL,\n"
@@ -65,7 +65,7 @@ SQLClass::SQLClass(const std::string &config) {
 			"KEY `buddy_id` (`buddy_id`),\n"
 			"KEY `user_id` (`user_id`)\n"
 		") ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_bin;\n", now;
-		*m_sess << "CREATE TABLE IF NOT EXISTS `users_new` (\n"
+		*m_sess << "CREATE TABLE IF NOT EXISTS `migrated_" + m_configuration.sqlPrefix + "users` (\n"
 			"`id` int(10) unsigned NOT NULL auto_increment,\n"
 			"`jid` varchar(255) collate utf8_bin NOT NULL,\n"
 			"`uin` varchar(4095) collate utf8_bin NOT NULL,\n"
@@ -77,7 +77,7 @@ SQLClass::SQLClass(const std::string &config) {
 			"PRIMARY KEY (`id`),\n"
 			"UNIQUE KEY `jid` (`jid`)\n"
 		") ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_bin;\n", now;
-		*m_sess << "CREATE TABLE IF NOT EXISTS `users_settings_new` (\n"
+		*m_sess << "CREATE TABLE IF NOT EXISTS `migrated_" + m_configuration.sqlPrefix + "users_settings` (\n"
 			"`user_id` int(10) unsigned NOT NULL,\n"
 			"`var` varchar(50) collate utf8_bin NOT NULL,\n"
 			"`type` smallint(4) unsigned NOT NULL,\n"
@@ -86,14 +86,17 @@ SQLClass::SQLClass(const std::string &config) {
 			"KEY `user_id` (`user_id`)\n"
 		") ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_bin;", now;
 		
-		std::cout << "Migrating data from `" + m_configuration.sqlPrefix + "users` table to temporary table\n";
-		*m_sess << std::string("INSERT users_new SELECT * FROM " + m_configuration.sqlPrefix + "users;"), now;
+		std::cout << "Migrating data from `" + m_configuration.sqlPrefix + "users` table to `migrated_" + m_configuration.sqlPrefix + "users` temporary table\n";
+		*m_sess << std::string("INSERT INTO migrated_" + m_configuration.sqlPrefix + "users (`id`, `jid`, `uin`, `password`, `language`) SELECT `id`, `jid`, `uin`, `password`, `language` FROM " + m_configuration.sqlPrefix + "users;"), now;
 	
-		std::cout << "Migrating data from `" + m_configuration.sqlPrefix + "rosters` table to temporary table\n";
-		*m_sess << "INSERT INTO buddies_new (`id`,  `user_id`,  `uin`,  `subscription`,  `nickname`,  `groups`) SELECT AA.`id`,  AB.`id`,  AA.`uin`,  AA.`subscription`,  AA.`nickname`,  AA.`g` FROM " + m_configuration.sqlPrefix + "rosters AA, users_new AB WHERE AA.`jid`=AB.`jid`";
+		std::cout << "Migrating data from `" + m_configuration.sqlPrefix + "rosters` table to `migrated_" + m_configuration.sqlPrefix + "buddies` temporary table\n";
+		*m_sess << "INSERT INTO migrated_" + m_configuration.sqlPrefix + "buddies (`id`,  `user_id`,  `uin`,  `subscription`,  `nickname`,  `groups`) SELECT AA.`id`,  AB.`id`,  AA.`uin`,  AA.`subscription`,  AA.`nickname`,  AA.`g` FROM " + m_configuration.sqlPrefix + "rosters AA, " + m_configuration.sqlPrefix + "users AB WHERE AA.`jid`=AB.`jid`", now;
 
-		std::cout << "Migrating data from `" + m_configuration.sqlPrefix + "settings` table to temporary table\n";
-		*m_sess << "INSERT INTO users_settings_new (`user_id`,  `var`,  `type`,  `value`) SELECT AB.`id`,  AA.`var`,  AA.`type`,  AA.`value` FROM " + m_configuration.sqlPrefix + "settings AA, users_new AB WHERE AA.`jid`=AB.`jid`";
+		std::cout << "Migrating data from `" + m_configuration.sqlPrefix + "settings` table to `migrated_users_settings` temporary table\n";
+		*m_sess << "INSERT INTO migrated_" + m_configuration.sqlPrefix + "users_settings (`user_id`,  `var`,  `type`,  `value`) SELECT AB.`id`,  AA.`var`,  AA.`type`,  AA.`value` FROM " + m_configuration.sqlPrefix + "settings AA, " + m_configuration.sqlPrefix + "users AB WHERE AA.`jid`=AB.`jid`", now;
+		std::cout << "All data are now migrated in `migrated_" + m_configuration.sqlPrefix + "users`, `migrated_" + m_configuration.sqlPrefix + "buddies` and `migrated_" + m_configuration.sqlPrefix + "users_settings` tables.\n";
+		std::cout << "PLEASE verify if data are migrated sucessfully by changing prefix in your config file to \"migrate_" <<  m_configuration.sqlPrefix  <<"\" and run new version of transport.\n";
+		std::cout << "You can of course drop tables from previous version, but be sure data are migrated sucessfully!\n";
 	}
 		catch (Poco::Exception e) {
 		std::cout << "\n" << e.displayText() << "\n";
