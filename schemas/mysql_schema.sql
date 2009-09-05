@@ -16,7 +16,6 @@ CREATE TABLE IF NOT EXISTS `buddies_settings` (
   `type` smallint(4) unsigned NOT NULL,
   `value` varchar(255) collate utf8_bin NOT NULL,
   PRIMARY KEY (`buddy_id`,`var`),
-  KEY `buddy_id` (`buddy_id`),
   KEY `user_id` (`user_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
  

@@ -86,12 +86,17 @@ SQLClass::SQLClass(const std::string &config) {
 			"KEY `user_id` (`user_id`)\n"
 		") ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_bin;", now;
 		
-		std::cout << "Migrating data from `users` table to temporary table\n";
-		*m_sess << "INSERT users_new SELECT * FROM users;", now;
-		
+		std::cout << "Migrating data from `" + m_configuration.sqlPrefix + "users` table to temporary table\n";
+		*m_sess << std::string("INSERT users_new SELECT * FROM " + m_configuration.sqlPrefix + "users;"), now;
+	
+		std::cout << "Migrating data from `" + m_configuration.sqlPrefix + "rosters` table to temporary table\n";
+		*m_sess << "INSERT INTO buddies_new (`id`,  `user_id`,  `uin`,  `subscription`,  `nickname`,  `groups`) SELECT AA.`id`,  AB.`id`,  AA.`uin`,  AA.`subscription`,  AA.`nickname`,  AA.`g` FROM " + m_configuration.sqlPrefix + "rosters AA, users_new AB WHERE AA.`jid`=AB.`jid`";
+
+		std::cout << "Migrating data from `" + m_configuration.sqlPrefix + "settings` table to temporary table\n";
+		*m_sess << "INSERT INTO users_settings_new (`user_id`,  `var`,  `type`,  `value`) SELECT AB.`id`,  AA.`var`,  AA.`type`,  AA.`value` FROM " + m_configuration.sqlPrefix + "settings AA, users_new AB WHERE AA.`jid`=AB.`jid`";
 	}
 		catch (Poco::Exception e) {
-		std::cout << e.displayText() << "\n";
+		std::cout << "\n" << e.displayText() << "\n";
 		return;
 	}
 	m_sess->close();
