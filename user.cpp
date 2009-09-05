@@ -51,19 +51,19 @@ static void sendXhtmlTag(Tag *tag, Tag *stanzaTag) {
 	GlooxMessageHandler::instance()->j->send(stanzaTag);
 }
 
-User::User(GlooxMessageHandler *parent, JID jid, const std::string &username, const std::string &password, const std::string &userKey) {
+User::User(GlooxMessageHandler *parent, JID jid, const std::string &username, const std::string &password, const std::string &userKey, long id) {
 	p = parent;
 	m_jid = jid.bare();
 	Resource r;
+	m_userID = id;
 	m_resources[jid.resource()] = r;
 	m_resource = jid.resource();
 	m_username = username;
 	m_password = password;
 	m_userKey = userKey;
 	m_connected = false;
-	m_roster = p->sql()->getRosterByJid(m_jid);
 	m_vip = p->sql()->isVIP(m_jid);
-	m_settings = p->sql()->getSettings(userKey);
+	m_settings = p->sql()->getSettings(m_userID);
 	m_syncTimer = 0;
 	removeTimer = 0;
 	m_readyForConnect = false;
@@ -80,25 +80,25 @@ User::User(GlooxMessageHandler *parent, JID jid, const std::string &username, co
 
 	// check default settings
 	if ( (value = getSetting("enable_transport")) == NULL ) {
-		p->sql()->addSetting(m_userKey, "enable_transport", "1", PURPLE_TYPE_BOOLEAN);
+		p->sql()->addSetting(m_userID, "enable_transport", "1", PURPLE_TYPE_BOOLEAN);
 		value = purple_value_new(PURPLE_TYPE_BOOLEAN);
 		purple_value_set_boolean(value, true);
 		g_hash_table_replace(m_settings, g_strdup("enable_transport"), value);
 	}
 	if ( (value = getSetting("enable_notify_email")) == NULL ) {
-		p->sql()->addSetting(m_userKey, "enable_notify_email", "0", PURPLE_TYPE_BOOLEAN);
+		p->sql()->addSetting(m_userID, "enable_notify_email", "0", PURPLE_TYPE_BOOLEAN);
 		value = purple_value_new(PURPLE_TYPE_BOOLEAN);
 		purple_value_set_boolean(value, false);
 		g_hash_table_replace(m_settings, g_strdup("enable_notify_email"), value);
 	}
 	if ( (value = getSetting("enable_avatars")) == NULL ) {
-		p->sql()->addSetting(m_userKey, "enable_avatars", "1", PURPLE_TYPE_BOOLEAN);
+		p->sql()->addSetting(m_userID, "enable_avatars", "1", PURPLE_TYPE_BOOLEAN);
 		value = purple_value_new(PURPLE_TYPE_BOOLEAN);
 		purple_value_set_boolean(value, true);
 		g_hash_table_replace(m_settings, g_strdup("enable_avatars"), value);
 	}
 	if ( (value = getSetting("enable_chatstate")) == NULL ) {
-		p->sql()->addSetting(m_userKey, "enable_chatstate", "1", PURPLE_TYPE_BOOLEAN);
+		p->sql()->addSetting(m_userID, "enable_chatstate", "1", PURPLE_TYPE_BOOLEAN);
 		value = purple_value_new(PURPLE_TYPE_BOOLEAN);
 		purple_value_set_boolean(value, true);
 		g_hash_table_replace(m_settings, g_strdup("enable_chatstate"), value);
@@ -374,6 +374,9 @@ Tag *User::generatePresenceStanza(PurpleBuddy *buddy) {
 			}
 			tag->addChild(x);
 		}
+		
+		if (avatarHash)
+			g_free(avatarHash);
 	}
 
 	// update stats...
@@ -419,6 +422,7 @@ void User::purpleReauthorizeBuddy(PurpleBuddy *buddy) {
 							break;
 						}
 					}
+					purple_menu_action_free(act);
 				}
 			}
 			g_list_free(ll);
@@ -431,7 +435,7 @@ void User::purpleReauthorizeBuddy(PurpleBuddy *buddy) {
  */
 void User::purpleBuddyChanged(PurpleBuddy *buddy){
 	// Facebook is just broken today. it adds broken buddies before logged into network.
-	if (buddy==NULL || (m_connected == false && p->configuration().protocol == "facebook"))
+	if (buddy==NULL || (m_connected == false && p->configuration().protocol == "facebook") || m_loadingBuddiesFromDB)
 		return;
 	std::string alias;
 	if (purple_buddy_get_server_alias(buddy))
@@ -496,7 +500,7 @@ void User::purpleBuddyChanged(PurpleBuddy *buddy){
 				return;
 			}
 			else {
-				m_roster[name].lastPresence = tag->xml();
+				m_roster[name].lastPresence.assign(tag->xml());
 			}
 			tag->addAttribute("to", m_jid);
 			p->j->send(tag);
@@ -668,12 +672,12 @@ PurpleValue * User::getSetting(const char *key) {
 void User::updateSetting(const std::string &key, PurpleValue *value) {
 	if (purple_value_get_type(value) == PURPLE_TYPE_BOOLEAN) {
 		if (purple_value_get_boolean(value))
-			p->sql()->updateSetting(m_userKey, key, "1");
+			p->sql()->updateSetting(m_userID, key, "1");
 		else
-			p->sql()->updateSetting(m_userKey, key, "0");
+			p->sql()->updateSetting(m_userID, key, "0");
 	}
 	else if (purple_value_get_type(value) == PURPLE_TYPE_STRING) {
-		p->sql()->updateSetting(m_userKey, key, purple_value_get_string(value));
+		p->sql()->updateSetting(m_userID, key, purple_value_get_string(value));
 	}
 	g_hash_table_replace(m_settings, g_strdup(key.c_str()), value);
 }
@@ -866,30 +870,9 @@ void User::connect() {
 
 	m_account->ui_data = this;
 
-	// Load roster from DB to libpurple
-	for (std::map<std::string, RosterRow>::iterator u = m_roster.begin(); u != m_roster.end() ; u++) {
-		// create group
-		std::string group = (*u).second.group.empty() ? "Buddies" : (*u).second.group;
-		PurpleGroup *g = purple_find_group(group.c_str());
-		if (!g) {
-			g = purple_group_new(group.c_str());
-			purple_blist_add_group(g, NULL);
-		}
-
-		// This is not called for first time, so buddies are already cached in memory.
-		// We can then just break; this loop.
-		if (purple_find_buddy_in_group(m_account, (*u).second.uin.c_str(), g))
-			break;
-
-		// create contact
-		PurpleContact *contact = purple_contact_new();
-		purple_blist_add_contact(contact, g, NULL);
-
-		// create buddy
-		PurpleBuddy *buddy = purple_buddy_new(m_account, (*u).second.uin.c_str(), (*u).second.nickname.c_str());
-		purple_blist_add_buddy(buddy, contact, g, NULL);
-		Log().Get(m_jid) << "ADDING buddy " << (*u).second.uin << (*u).second.nickname << group;
-	}
+	m_loadingBuddiesFromDB = true;
+	m_roster = p->sql()->getBuddies(m_userID, m_account);
+	m_loadingBuddiesFromDB = false;
 
 	m_connectionStart = time(NULL);
 	m_readyForConnect = false;
@@ -967,11 +950,11 @@ void User::receivedSubscription(const Subscription &subscription) {
 						user.online = false;
 						user.lastPresence = "";
 						m_roster[subscription.to().username()] = user;
-						p->sql()->addUserToRoster(m_jid, (std::string) subscription.to().username(), "both");
+						p->sql()->addBuddy(m_userID, (std::string) subscription.to().username(), "both");
 					}
 					else {
 						m_roster[subscription.to().username()].subscription = "both";
-						p->sql()->updateUserRosterSubscription(m_jid, (std::string) subscription.to().username(), "both");
+						p->sql()->updateBuddySubscription(m_userID, (std::string) subscription.to().username(), "both");
 					}
 					// user is in ICQ contact list so we can inform jabber user
 					// about status
@@ -1043,7 +1026,7 @@ void User::receivedSubscription(const Subscription &subscription) {
 				Log().Get(m_jid) << "removing this contact from local roster";
 				m_roster.erase(subscription.to().username());
 				if (buddy != NULL)
-					p->sql()->removeUINFromRoster(m_jid, subscription.to().username());
+					p->sql()->removeBuddy(m_userID, subscription.to().username());
 			}
 			// inform user about removing this contact
 			Tag *tag = new Tag("presence");

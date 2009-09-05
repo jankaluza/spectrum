@@ -81,7 +81,7 @@ struct Conversation {
 
 class User {
 	public:
-		User(GlooxMessageHandler *parent, JID jid, const std::string &username, const std::string &password, const std::string &userKey);
+		User(GlooxMessageHandler *parent, JID jid, const std::string &username, const std::string &password, const std::string &userKey, long id);
 		~User();
 
 		void connect();
@@ -180,6 +180,8 @@ class User {
 		GHashTable *mucs() { return m_mucs; }
 		std::map<std::string,Conversation> conversations() { return m_conversations; }
 		void setFeatures(int f) { m_features = f; }
+		long storageId() { return m_userID; }
+		bool loadingBuddiesFromDB() { return m_loadingBuddiesFromDB; }
 
 		guint removeTimer;
 
@@ -211,6 +213,8 @@ class User {
 		std::map<std::string,Conversation> m_conversations; // list of opened conversations
 		std::map<std::string,PurpleBuddy *> m_subscribeCache;	// cache for contacts for roster X
 		GHashTable *m_settings;		// user settings
+		long m_userID;				// userID for Database
+		bool m_loadingBuddiesFromDB;
 };
 
 #endif

@@ -3,6 +3,7 @@
 
 #include <time.h>
 #include <sstream>
+#include <cstdio>
 
 class Log
 {

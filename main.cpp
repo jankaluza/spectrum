@@ -209,6 +209,16 @@ static void buddyRemoved(PurpleBuddy *buddy, gpointer null) {
 	GlooxMessageHandler::instance()->purpleBuddyRemoved(buddy);
 }
 
+static void NodeRemoved(PurpleBlistNode *node, gpointer null) {
+	if (!PURPLE_BLIST_NODE_IS_BUDDY(node))
+		return;
+	PurpleBuddy *buddy = (PurpleBuddy *) node;
+	if (buddy->node.ui_data) {
+		long *id = (long *) buddy->node.ui_data;
+		delete id;
+	}
+}
+
 /*
  * Called when purple disconnects from legacy network.
  */
@@ -449,16 +459,51 @@ static void buddyListSaveNode(PurpleBlistNode *node) {
 	PurpleBuddy *buddy = (PurpleBuddy *) node;
 	PurpleAccount *a = purple_buddy_get_account(buddy);
 	User *user = GlooxMessageHandler::instance()->userManager()->getUserByAccount(a);
+	if (user->loadingBuddiesFromDB()) return;
 	if (user != NULL) {
+		// save PurpleBuddy
 		std::string alias;
 		std::string name(purple_buddy_get_name(buddy));
-		Log().Get("buddyListSaveNode") << user->jid() << name;
 		if (purple_buddy_get_server_alias(buddy))
 			alias = (std::string) purple_buddy_get_server_alias(buddy);
 		else
 			alias = (std::string) purple_buddy_get_alias(buddy);
-		GlooxMessageHandler::instance()->sql()->addUserToRoster(user->jid(), name, "both", (std::string) purple_group_get_name(purple_buddy_get_group(buddy)), alias);
+		long id;
+		if (buddy->node.ui_data) {
+			long *p = (long *) buddy->node.ui_data;
+			id = *p;
+			GlooxMessageHandler::instance()->sql()->addBuddy(user->storageId(), name, "both", purple_group_get_name(purple_buddy_get_group(buddy)) ? std::string(purple_group_get_name(purple_buddy_get_group(buddy))) : std::string("Buddies"), alias);
+		}
+		else {
+			id = GlooxMessageHandler::instance()->sql()->addBuddy(user->storageId(), name, "both", purple_group_get_name(purple_buddy_get_group(buddy)) ? std::string(purple_group_get_name(purple_buddy_get_group(buddy))) : std::string("Buddies"), alias);
+			buddy->node.ui_data = (void *) new long(id);
+		}
+		Log().Get("buddyListSaveNode") << id << " " << name << " " << alias;
+		// save settings
+		GHashTableIter iter;
+		gpointer k, v;
+		g_hash_table_iter_init (&iter, buddy->node.settings);
+		while (g_hash_table_iter_next (&iter, &k, &v)) {
+			PurpleValue *value = (PurpleValue *) v;
+			std::string key((char *) k);
+			if (purple_value_get_type(value) == PURPLE_TYPE_BOOLEAN) {
+				if (purple_value_get_boolean(value))
+					GlooxMessageHandler::instance()->sql()->addBuddySetting(user->storageId(), id, key, "1", purple_value_get_type(value));
+				else
+					GlooxMessageHandler::instance()->sql()->addBuddySetting(user->storageId(), id, key, "0", purple_value_get_type(value));
+			}
+			else if (purple_value_get_type(value) == PURPLE_TYPE_STRING) {
+				GlooxMessageHandler::instance()->sql()->addBuddySetting(user->storageId(), id, key, purple_value_get_string(value), purple_value_get_type(value));
+			}
+		}
 	}
+}
+
+static void buddyListNewNode(PurpleBlistNode *node) {
+	if (!PURPLE_BLIST_NODE_IS_BUDDY(node))
+		return;
+	PurpleBuddy *buddy = (PurpleBuddy *) node;
+	buddy->node.ui_data = NULL;
 }
 
 static void buddyListRemoveNode(PurpleBlistNode *node) {
@@ -469,9 +514,8 @@ static void buddyListRemoveNode(PurpleBlistNode *node) {
 	User *user = GlooxMessageHandler::instance()->userManager()->getUserByAccount(a);
 	if (user != NULL) {
 		std::string name(purple_buddy_get_name(buddy));
-		GlooxMessageHandler::instance()->sql()->removeUINFromRoster(user->jid(), name);
+		GlooxMessageHandler::instance()->sql()->removeBuddy(user->storageId(), name);
 	}
-
 }
 
 static void buddyListSaveAccount(PurpleAccount *account) {
@@ -555,7 +599,7 @@ static PurpleAccountUiOps accountUiOps =
 static PurpleBlistUiOps blistUiOps =
 {
 	NULL,
-	NULL,
+	buddyListNewNode,
 	NULL,
 	buddyListUpdate,
 	NULL,
@@ -712,10 +756,14 @@ static gboolean transportDataReceived(GIOChannel *source, GIOCondition condition
 GlooxMessageHandler::GlooxMessageHandler(const std::string &config) : MessageHandler(),ConnectionListener(),PresenceHandler(),SubscriptionHandler() {
 	m_pInstance = this;
 	m_firstConnection = true;
+	ftManager = NULL;
+	ft = NULL;
 	lastIP = 0;
 	capsCache["_default"] = 0;
 	m_parser = NULL;
 	m_sql = NULL;
+	m_searchHandler = NULL;
+	ftServer = NULL;
 
 	bool loaded = true;
 
@@ -733,8 +781,7 @@ GlooxMessageHandler::GlooxMessageHandler(const std::string &config) : MessageHan
 
 	j = new HiComponent("jabber:component:accept",m_configuration.server,m_configuration.jid,m_configuration.password,m_configuration.port);
 
-	GMainLoop *loop = g_main_loop_new(NULL, FALSE);
-	signal(SIGCHLD, SIG_IGN);
+	m_loop = g_main_loop_new(NULL, FALSE);
 
 	m_userManager = new UserManager(this);
 	m_searchHandler = NULL;
@@ -763,7 +810,6 @@ GlooxMessageHandler::GlooxMessageHandler(const std::string &config) : MessageHan
 		ft->addStreamHost( j->jid(), configuration().bindIPs[0], 8000 );
 		ft->registerSOCKS5BytestreamServer( ftServer );
 		g_timeout_add(10, &ftServerReceive, NULL);
-		m_sql->purpleLoaded();
 		// ft->addStreamHost(gloox::JID("proxy.jabbim.cz"), "88.86.102.51", 7777);
 
 		j->registerMessageHandler(this);
@@ -781,18 +827,30 @@ GlooxMessageHandler::GlooxMessageHandler(const std::string &config) : MessageHan
 
 		transportConnect();
 
-		g_main_loop_run(loop);
+		g_main_loop_run(m_loop);
 	}
 }
 
 GlooxMessageHandler::~GlooxMessageHandler(){
+	purple_core_quit();
+	g_main_loop_quit(m_loop);
 	delete m_userManager;
 	if (m_parser)
 		delete m_parser;
 	if (m_sql)
 		delete m_sql;
+	if (ftManager)
+		delete ftManager;
+	// TODO: there are timers in commented classes, so wa have to stop them before purple_core_quit();
+// 	if (ft)
+// 		delete ft;
+// 	if (ftServer)
+// 		delete ftServer;
+	if (m_protocol)
+		delete m_protocol;
+	if (m_searchHandler)
+		delete m_searchHandler;
 	delete j;
-	purple_core_quit();
 }
 
 bool GlooxMessageHandler::loadProtocol(){
@@ -957,6 +1015,7 @@ bool GlooxMessageHandler::loadConfigFile(const std::string &config) {
 	GKeyFile *keyfile;
 	int flags;
   	char **bind;
+	char *value;
 	int i;
 
 	keyfile = g_key_file_new ();
@@ -973,25 +1032,62 @@ bool GlooxMessageHandler::loadConfigFile(const std::string &config) {
 		}
 	}
 
-	m_configuration.protocol = (std::string) g_key_file_get_string(keyfile, "service","protocol", NULL);
-	m_configuration.discoName = (std::string) g_key_file_get_string(keyfile, "service","name", NULL);
-	m_configuration.server = (std::string)g_key_file_get_string(keyfile, "service","server", NULL);
-	m_configuration.password = (std::string)g_key_file_get_string(keyfile, "service","password", NULL);
-	m_configuration.jid = (std::string)g_key_file_get_string(keyfile, "service","jid", NULL);
+	value = g_key_file_get_string(keyfile, "service","protocol", NULL);
+	m_configuration.protocol = std::string(value);
+	g_free(value);
+	
+	value = g_key_file_get_string(keyfile, "service","name", NULL);
+	m_configuration.discoName = std::string(value);
+	g_free(value);
+	
+	value = g_key_file_get_string(keyfile, "service","server", NULL);
+	m_configuration.server = std::string(value);
+	g_free(value);
+	
+	value = g_key_file_get_string(keyfile, "service","password", NULL);
+	m_configuration.password = std::string(value);
+	g_free(value);
+	
+	value = g_key_file_get_string(keyfile, "service","jid", NULL);
+	m_configuration.jid = std::string(value);
+	g_free(value);
+	
 	m_configuration.port = (int)g_key_file_get_integer(keyfile, "service","port", NULL);
-	m_configuration.filetransferCache = (std::string)g_key_file_get_string(keyfile, "service","filetransfer_cache", NULL);
+	
+	value = g_key_file_get_string(keyfile, "service","filetransfer_cache", NULL);
+	m_configuration.filetransferCache = std::string(value);
+	g_free(value);
 
-	m_configuration.sqlType = (std::string)g_key_file_get_string(keyfile, "database","type", NULL);
-	m_configuration.sqlHost = (std::string)g_key_file_get_string(keyfile, "database","host", NULL);
-	m_configuration.sqlPassword = (std::string)g_key_file_get_string(keyfile, "database","password", NULL);
-	m_configuration.sqlUser = (std::string)g_key_file_get_string(keyfile, "database","user", NULL);
-	m_configuration.sqlDb = (std::string)g_key_file_get_string(keyfile, "database","database", NULL);
-	m_configuration.sqlPrefix = (std::string)g_key_file_get_string(keyfile, "database","prefix", NULL);
+	value = g_key_file_get_string(keyfile, "database","type", NULL);
+	m_configuration.sqlType = std::string(value);
+	g_free(value);
+	
+	value = g_key_file_get_string(keyfile, "database","host", NULL);
+	m_configuration.sqlHost = std::string(value);
+	g_free(value);
+	
+	value = g_key_file_get_string(keyfile, "database","password", NULL);
+	m_configuration.sqlPassword = std::string(value);
+	g_free(value);
+	
+	value = g_key_file_get_string(keyfile, "database","user", NULL);
+	m_configuration.sqlUser = std::string(value);
+	g_free(value);
+	
+	value = g_key_file_get_string(keyfile, "database","database", NULL);
+	m_configuration.sqlDb = std::string(value);
+	g_free(value);
+	
+	value = g_key_file_get_string(keyfile, "database","prefix", NULL);
+	m_configuration.sqlPrefix = std::string(value);
+	g_free(value);
 
-	m_configuration.userDir = (std::string)g_key_file_get_string(keyfile, "purple","userdir", NULL);
+	value = g_key_file_get_string(keyfile, "purple","userdir", NULL);
+	m_configuration.userDir = std::string(value);
+	g_free(value);
 
 	if (g_key_file_has_key(keyfile,"service","language",NULL))
-		m_configuration.language=g_key_file_get_string(keyfile, "service","language", NULL);
+		m_configuration.language = g_key_file_get_string(keyfile, "service","language", NULL);
 	else
 		m_configuration.language = "en";
 
@@ -1358,10 +1454,10 @@ void GlooxMessageHandler::handlePresence(const Presence &stanza){
 				if (protocol()->tempAccountsAllowed()) {
 					std::string server = stanza.to().username().substr(stanza.to().username().find("%") + 1, stanza.to().username().length() - stanza.to().username().find("%"));
 					std::cout << "SERVER" << stanza.from().bare() + server << "\n";
-					user = new User(this, stanza.from(), stanza.to().resource() + "@" + server, "", stanza.from().bare() + server);
+					user = new User(this, stanza.from(), stanza.to().resource() + "@" + server, "", stanza.from().bare() + server, res.id);
 				}
 				else
-					user = new User(this, stanza.from(), res.uin, res.password, stanza.from().bare());
+					user = new User(this, stanza.from(), res.uin, res.password, stanza.from().bare(), res.id);
 				user->setFeatures(isVip ? configuration().VIPFeatures : configuration().transportFeatures);
 				if (c != NULL)
 					if (hasCaps(c->findAttribute("ver")))
@@ -1567,6 +1663,7 @@ bool GlooxMessageHandler::initPurple(){
 		purple_signal_connect(purple_xfers_get_handle(), "file-recv-complete", &xfer_handle, PURPLE_CALLBACK(XferComplete), NULL);
 		purple_signal_connect(purple_connections_get_handle(), "signed-on", &conn_handle,PURPLE_CALLBACK(signed_on), NULL);
 		purple_signal_connect(purple_blist_get_handle(), "buddy-removed", &blist_handle,PURPLE_CALLBACK(buddyRemoved), NULL);
+		purple_signal_connect(purple_blist_get_handle(), "blist-node-removed", &blist_handle,PURPLE_CALLBACK(NodeRemoved), NULL);
 		purple_signal_connect(purple_conversations_get_handle(), "chat-topic-changed", &conversation_handle, PURPLE_CALLBACK(conv_chat_topic_changed), NULL);
 
 		purple_commands_init();
@@ -1577,6 +1674,13 @@ bool GlooxMessageHandler::initPurple(){
 
 
 GlooxMessageHandler* GlooxMessageHandler::m_pInstance = NULL;
+
+static void spectrum_sigint_handler(int sig) {
+// 	g_timeout_add(0, &deleteMain, NULL);
+	delete GlooxMessageHandler::instance();
+
+	return;
+} 
 
 int main( int argc, char* argv[] ) {
 	GError *error = NULL;
@@ -1591,8 +1695,11 @@ int main( int argc, char* argv[] ) {
 	if (argc != 2)
 		std::cout << g_option_context_get_help(context, FALSE, NULL);
 	else {
+		if (signal(SIGINT, spectrum_sigint_handler) == SIG_ERR)
+			std::cout << "SIGINT handler can't be set\n";
 		std::string config(argv[1]);
-		GlooxMessageHandler t(config);
+		new GlooxMessageHandler(config);
 	}
+	g_option_context_free(context);
 }
 

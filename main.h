@@ -239,6 +239,7 @@ public:
 	std::map <std::string,int> capsCache;
 	GlooxGatewayHandler *gatewayHandler;
 	SOCKS5BytestreamServer* ftServer;
+	GMainLoop *loop() { return m_loop; }
 
 private:
 	/*
@@ -274,6 +275,7 @@ private:
 	UserManager *m_userManager;					// UserManager class
 	bool m_firstConnection;						// true if transporConnect is called for first time
 	static GlooxMessageHandler* m_pInstance;
+	GMainLoop *m_loop;
 };
 
 #endif
