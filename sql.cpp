@@ -406,6 +406,8 @@ std::map<std::string,RosterRow> SQLClass::getBuddies(long userId, PurpleAccount 
 						purple_blist_add_buddy(buddy, contact, g, NULL);
 						GHashTable *settings = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, (GDestroyNotify) purple_value_destroy);
 						std::cout << "ADDING BUDDY " << " " << user.id << " " << user.uin << "\n";
+						if (i < user.id)
+							i = user.id;
 						while(i < (int) m_stmt_getBuddiesSettings.resId.size()) {
 							std::cout << m_stmt_getBuddiesSettings.resId[i] << "\n";
 							if (m_stmt_getBuddiesSettings.resId[i] == user.id) {
