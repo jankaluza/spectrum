@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS `buddies` (
   `groups` varchar(255) collate utf8_bin NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `user_id` (`user_id`,`uin`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
  
 CREATE TABLE IF NOT EXISTS `buddies_settings` (
   `user_id` int(10) unsigned NOT NULL,
@@ -17,7 +17,7 @@ CREATE TABLE IF NOT EXISTS `buddies_settings` (
   `value` varchar(255) collate utf8_bin NOT NULL,
   PRIMARY KEY (`buddy_id`,`var`),
   KEY `user_id` (`user_id`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
  
 CREATE TABLE IF NOT EXISTS `users` (
   `id` int(10) unsigned NOT NULL auto_increment,
@@ -30,7 +30,7 @@ CREATE TABLE IF NOT EXISTS `users` (
   `vip` tinyint(1) NOT NULL  default '0',
   PRIMARY KEY (`id`),
   UNIQUE KEY `jid` (`jid`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 
 CREATE TABLE IF NOT EXISTS `users_settings` (
   `user_id` int(10) unsigned NOT NULL,
@@ -39,4 +39,4 @@ CREATE TABLE IF NOT EXISTS `users_settings` (
   `value` varchar(255) collate utf8_bin NOT NULL,
   PRIMARY KEY (`user_id`,`var`),
   KEY `user_id` (`user_id`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;

@@ -54,7 +54,7 @@ SQLClass::SQLClass(const std::string &config) {
 			"`groups` varchar(255) collate utf8_bin NOT NULL,\n"
 			"PRIMARY KEY (`id`),\n"
 			"UNIQUE KEY `user_id` (`user_id`,`uin`)\n"
-		") ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_bin;\n", now;
+		") ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;\n", now;
 		*m_sess << "CREATE TABLE IF NOT EXISTS `migrated_" + m_configuration.sqlPrefix + "buddies_settings` (\n"
 			"`user_id` int(10) unsigned NOT NULL,\n"
 			"`buddy_id` int(10) unsigned NOT NULL,\n"
@@ -64,7 +64,7 @@ SQLClass::SQLClass(const std::string &config) {
 			"PRIMARY KEY (`buddy_id`,`var`),\n"
 			"KEY `buddy_id` (`buddy_id`),\n"
 			"KEY `user_id` (`user_id`)\n"
-		") ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_bin;\n", now;
+		") ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;\n", now;
 		*m_sess << "CREATE TABLE IF NOT EXISTS `migrated_" + m_configuration.sqlPrefix + "users` (\n"
 			"`id` int(10) unsigned NOT NULL auto_increment,\n"
 			"`jid` varchar(255) collate utf8_bin NOT NULL,\n"
@@ -76,7 +76,7 @@ SQLClass::SQLClass(const std::string &config) {
 			"`vip` tinyint(1) NOT NULL default '0',\n"
 			"PRIMARY KEY (`id`),\n"
 			"UNIQUE KEY `jid` (`jid`)\n"
-		") ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_bin;\n", now;
+		") ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;\n", now;
 		*m_sess << "CREATE TABLE IF NOT EXISTS `migrated_" + m_configuration.sqlPrefix + "users_settings` (\n"
 			"`user_id` int(10) unsigned NOT NULL,\n"
 			"`var` varchar(50) collate utf8_bin NOT NULL,\n"
@@ -84,7 +84,7 @@ SQLClass::SQLClass(const std::string &config) {
 			"`value` varchar(255) collate utf8_bin NOT NULL,\n"
 			"PRIMARY KEY (`user_id`,`var`),\n"
 			"KEY `user_id` (`user_id`)\n"
-		") ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_bin;", now;
+		") ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;", now;
 		
 		std::cout << "Migrating data from `" + m_configuration.sqlPrefix + "users` table to `migrated_" + m_configuration.sqlPrefix + "users` temporary table\n";
 		*m_sess << std::string("INSERT INTO migrated_" + m_configuration.sqlPrefix + "users (`id`, `jid`, `uin`, `password`, `language`) SELECT `id`, `jid`, `uin`, `password`, `language` FROM " + m_configuration.sqlPrefix + "users;"), now;
