@@ -202,6 +202,10 @@ public:
 	void purpleBuddyTyping(PurpleAccount *account, const char *who);
 	void purpleBuddyTypingStopped(PurpleAccount *account, const char *who);
 	void purpleBuddyRemoved(PurpleBuddy *buddy);
+	void purpleBuddyCreated(PurpleBuddy *buddy);
+	void purpleBuddyStatusChanged(PurpleBuddy *buddy, PurpleStatus *status, PurpleStatus *old_status);
+	void purpleBuddySignedOn(PurpleBuddy *buddy);
+	void purpleBuddySignedOff(PurpleBuddy *buddy);
 	void purpleAuthorizeClose(void *data);
 	void purpleFileReceiveRequest(PurpleXfer *xfer);
 	void purpleFileReceiveComplete(PurpleXfer *xfer);

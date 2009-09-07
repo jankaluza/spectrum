@@ -110,6 +110,10 @@ class User {
 		// Libpurple callbacks
 		void purpleBuddyChanged(PurpleBuddy *buddy);
 		void purpleBuddyRemoved(PurpleBuddy *buddy);
+		void purpleBuddyCreated(PurpleBuddy *buddy);
+		void purpleBuddyStatusChanged(PurpleBuddy *buddy, PurpleStatus *status, PurpleStatus *old_status);
+		void purpleBuddySignedOn(PurpleBuddy *buddy);
+		void purpleBuddySignedOff(PurpleBuddy *buddy);
 		void purpleMessageReceived(PurpleAccount* account,char * name,char *msg,PurpleConversation *conv,PurpleMessageFlags flags);
 		void purpleConversationWriteIM(PurpleConversation *conv, const char *who, const char *msg, PurpleMessageFlags flags, time_t mtime);
 		void purpleConversationWriteChat(PurpleConversation *conv, const char *who, const char *msg, PurpleMessageFlags flags, time_t mtime);

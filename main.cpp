@@ -209,6 +209,18 @@ static void buddyRemoved(PurpleBuddy *buddy, gpointer null) {
 	GlooxMessageHandler::instance()->purpleBuddyRemoved(buddy);
 }
 
+static void buddyStatusChanged(PurpleBuddy *buddy, PurpleStatus *status, PurpleStatus *old_status) {
+	GlooxMessageHandler::instance()->purpleBuddyStatusChanged(buddy, status, old_status);
+}
+
+static void buddySignedOn(PurpleBuddy *buddy) {
+	GlooxMessageHandler::instance()->purpleBuddySignedOn(buddy);
+}
+
+static void buddySignedOff(PurpleBuddy *buddy) {
+	GlooxMessageHandler::instance()->purpleBuddySignedOff(buddy);
+}
+
 static void NodeRemoved(PurpleBlistNode *node, gpointer null) {
 	if (!PURPLE_BLIST_NODE_IS_BUDDY(node))
 		return;
@@ -503,6 +515,7 @@ static void buddyListNewNode(PurpleBlistNode *node) {
 		return;
 	PurpleBuddy *buddy = (PurpleBuddy *) node;
 	buddy->node.ui_data = NULL;
+	GlooxMessageHandler::instance()->purpleBuddyCreated(buddy);
 }
 
 static void buddyListRemoveNode(PurpleBlistNode *node) {
@@ -600,11 +613,11 @@ static PurpleBlistUiOps blistUiOps =
 	NULL,
 	buddyListNewNode,
 	NULL,
-	buddyListUpdate,
+	NULL, // buddyListUpdate,
 	NULL,
 	NULL,
 	NULL,
-	buddyListAddBuddy,
+	NULL, // buddyListAddBuddy,
 	NULL,
 	NULL,
 	buddyListSaveNode,
@@ -762,7 +775,11 @@ GlooxMessageHandler::GlooxMessageHandler(const std::string &config) : MessageHan
 	m_parser = NULL;
 	m_sql = NULL;
 	m_searchHandler = NULL;
+	m_reg = NULL;
+	m_adhoc = NULL;
+	gatewayHandler = NULL;
 	ftServer = NULL;
+	m_stats = NULL;
 
 	bool loaded = true;
 
@@ -833,6 +850,7 @@ GlooxMessageHandler::GlooxMessageHandler(const std::string &config) : MessageHan
 GlooxMessageHandler::~GlooxMessageHandler(){
 	purple_core_quit();
 	g_main_loop_quit(m_loop);
+	g_main_loop_unref(m_loop);
 	delete m_userManager;
 	if (m_parser)
 		delete m_parser;
@@ -840,6 +858,14 @@ GlooxMessageHandler::~GlooxMessageHandler(){
 		delete m_sql;
 	if (ftManager)
 		delete ftManager;
+	if (m_reg)
+		delete m_reg;
+	if (gatewayHandler)
+		delete gatewayHandler;
+	if (m_stats)
+		delete m_stats;
+	if (m_adhoc)
+		delete m_adhoc;
 	// TODO: there are timers in commented classes, so wa have to stop them before purple_core_quit();
 // 	if (ft)
 // 		delete ft;
@@ -949,6 +975,34 @@ void GlooxMessageHandler::purpleBuddyRemoved(PurpleBuddy *buddy) {
 		if (user != NULL)
 			user->purpleBuddyRemoved(buddy);
 	}
+}
+
+void GlooxMessageHandler::purpleBuddyCreated(PurpleBuddy *buddy) {
+	PurpleAccount *a = purple_buddy_get_account(buddy);
+	User *user = userManager()->getUserByAccount(a);
+	if (user != NULL)
+		user->purpleBuddyCreated(buddy);
+}
+
+void GlooxMessageHandler::purpleBuddyStatusChanged(PurpleBuddy *buddy, PurpleStatus *status, PurpleStatus *old_status) {
+	PurpleAccount *a = purple_buddy_get_account(buddy);
+	User *user = userManager()->getUserByAccount(a);
+	if (user != NULL)
+		user->purpleBuddyStatusChanged(buddy, status, old_status);
+}
+
+void GlooxMessageHandler::purpleBuddySignedOn(PurpleBuddy *buddy) {
+	PurpleAccount *a = purple_buddy_get_account(buddy);
+	User *user = userManager()->getUserByAccount(a);
+	if (user != NULL)
+		user->purpleBuddySignedOn(buddy);
+}
+
+void GlooxMessageHandler::purpleBuddySignedOff(PurpleBuddy *buddy) {
+	PurpleAccount *a = purple_buddy_get_account(buddy);
+	User *user = userManager()->getUserByAccount(a);
+	if (user != NULL)
+		user->purpleBuddySignedOff(buddy);
 }
 
 void GlooxMessageHandler::purpleBuddyTypingStopped(PurpleAccount *account, const char *who) {
@@ -1662,6 +1716,9 @@ bool GlooxMessageHandler::initPurple(){
 		purple_signal_connect(purple_xfers_get_handle(), "file-recv-complete", &xfer_handle, PURPLE_CALLBACK(XferComplete), NULL);
 		purple_signal_connect(purple_connections_get_handle(), "signed-on", &conn_handle,PURPLE_CALLBACK(signed_on), NULL);
 		purple_signal_connect(purple_blist_get_handle(), "buddy-removed", &blist_handle,PURPLE_CALLBACK(buddyRemoved), NULL);
+		purple_signal_connect(purple_blist_get_handle(), "buddy-signed-on", &blist_handle,PURPLE_CALLBACK(buddySignedOn), NULL);
+		purple_signal_connect(purple_blist_get_handle(), "buddy-signed-off", &blist_handle,PURPLE_CALLBACK(buddySignedOff), NULL);
+		purple_signal_connect(purple_blist_get_handle(), "buddy-status-changed", &blist_handle,PURPLE_CALLBACK(buddyStatusChanged), NULL);
 		purple_signal_connect(purple_blist_get_handle(), "blist-node-removed", &blist_handle,PURPLE_CALLBACK(NodeRemoved), NULL);
 		purple_signal_connect(purple_conversations_get_handle(), "chat-topic-changed", &conversation_handle, PURPLE_CALLBACK(conv_chat_topic_changed), NULL);
 

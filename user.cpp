@@ -518,6 +518,78 @@ void User::purpleBuddyRemoved(PurpleBuddy *buddy) {
 	m_subscribeCache.erase(name);
 }
 
+void User::purpleBuddyCreated(PurpleBuddy *buddy) {
+	if (buddy==NULL || m_loadingBuddiesFromDB)
+		return;
+	std::string alias;
+	if (purple_buddy_get_server_alias(buddy))
+		alias = (std::string) purple_buddy_get_server_alias(buddy);
+	else
+		alias = (std::string) purple_buddy_get_alias(buddy);
+
+	std::string name(purple_buddy_get_name(buddy));
+	std::for_each( name.begin(), name.end(), replaceBadJidCharacters() );
+
+	Log().Get(m_jid) << "purpleBuddyChanged: " << name << " ("<< alias <<")";
+
+	if (m_syncTimer==0 && !m_rosterXCalled) {
+		m_syncTimer = purple_timeout_add_seconds(4, sync_cb, this);
+	}
+
+	bool inRoster = isInRoster(name,"");
+
+	if (!inRoster) {
+		if (findResourceWithFeature(GLOOX_FEATURE_ROSTERX)) {
+			if (!m_rosterXCalled) {
+				m_subscribeCache[name] = buddy;
+				Log().Get(m_jid) << "Not in roster => adding to rosterX cache";
+			}
+			else {
+				Log().Get(m_jid) << "Not in roster => sending rosterx";
+				if (m_syncTimer == 0) {
+					m_syncTimer = purple_timeout_add_seconds(4, sync_cb, this);
+				}
+				m_subscribeCache[name] = buddy;
+			}
+		}
+		else {
+			Log().Get(m_jid) << "Not in roster => sending subscribe";
+			Tag *tag = new Tag("presence");
+			tag->addAttribute("type", "subscribe");
+			tag->addAttribute("from", name + "@" + p->jid());
+			tag->addAttribute("to", m_jid);
+			Tag *nick = new Tag("nick", alias);
+			nick->addAttribute("xmlns","http://jabber.org/protocol/nick");
+			tag->addChild(nick);
+			p->j->send(tag);
+		}
+	}
+}
+
+void User::purpleBuddyStatusChanged(PurpleBuddy *buddy, PurpleStatus *status, PurpleStatus *old_status) {
+	Tag *tag = generatePresenceStanza(buddy);
+	if (tag) {
+		tag->addAttribute("to", m_jid);
+		p->j->send(tag);
+	}
+}
+
+void User::purpleBuddySignedOn(PurpleBuddy *buddy) {
+	Tag *tag = generatePresenceStanza(buddy);
+	if (tag) {
+		tag->addAttribute("to", m_jid);
+		p->j->send(tag);
+	}
+}
+
+void User::purpleBuddySignedOff(PurpleBuddy *buddy) {
+	Tag *tag = generatePresenceStanza(buddy);
+	if (tag) {
+		tag->addAttribute("to", m_jid);
+		p->j->send(tag);
+	}
+}
+
 /*
  * Called when new message has been received.
  */
