@@ -597,6 +597,7 @@ void User::purpleMessageReceived(PurpleAccount* account,char * name,char *msg,Pu
 	// new message grom legacy network has been received
 	if (conv == NULL) {
 		// make conversation if it doesn't exist
+		std::cout << "CONVERSATION 4!\n";
 		conv = purple_conversation_new(PURPLE_CONV_TYPE_IM, account, name);
 		m_conversations[(std::string)name].conv = conv;
 	}
@@ -656,7 +657,7 @@ void User::purpleConversationWriteIM(PurpleConversation *conv, const char *who, 
 	else
 		to = m_jid + "/" + m_conversations[name].resource;
 	Message s(Message::Chat, to, message);
-	s.setFrom(name + "@" + p->jid() + "/bot");
+	s.setFrom(name + std::string(g_hash_table_size(m_mucs) == 0 ? "" : ("%" + JID(m_username).server())) + "@" + p->jid() + "/bot");
 
 	// chatstates
 	if (purple_value_get_boolean(getSetting("enable_chatstate"))) {
@@ -829,8 +830,13 @@ void User::receivedMessage(const Message& msg){
 	if (!p->protocol()->isMUC(this, username)) {
 		std::for_each( username.begin(), username.end(), replaceJidCharacters() );
 	}
-	else if (!msg.to().resource().empty()) {
+	else if (!msg.to().resource().empty() && msg.to().resource() != "bot") {
 		username = msg.to().resource();
+	}
+	else {
+		size_t pos = username.find("%");
+		if (pos != std::string::npos)
+			username.erase((int) pos, username.length() - (int) pos);
 	}
 	// open new conversation or get the opened one
 	if (!isOpenedConversation(username)) {
