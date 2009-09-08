@@ -30,7 +30,7 @@ static gboolean iter(gpointer data){
 	AutoConnectLoop *loop = (AutoConnectLoop*) data;
 	if (loop->restoreNextConnection())
 		return TRUE;
-	delete loop;
+// 	delete loop;
 	return FALSE;
 }
 
@@ -42,10 +42,12 @@ static void account_removed(const PurpleAccount *account, gpointer user_data) {
 AutoConnectLoop::AutoConnectLoop(GlooxMessageHandler *m){
 	main = m;
 	static int conn_handle;
-	purple_signal_connect(purple_accounts_get_handle(), "account-removed", &conn_handle, PURPLE_CALLBACK(account_removed), this);
+	
 	m_account = purple_accounts_get_all();
-	if (m_account != NULL)
+	if (m_account != NULL) {
+		purple_signal_connect(purple_accounts_get_handle(), "account-removed", &conn_handle, PURPLE_CALLBACK(account_removed), this);
 		g_timeout_add(10000,&iter,this);
+	}
 	else
 		delete this;
 }
