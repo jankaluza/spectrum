@@ -25,6 +25,7 @@
 #include "utf8.h"
 #include "log.h"
 #include "geventloop.h"
+#include "accountcollector.h"
 #include "autoconnectloop.h"
 #include "usermanager.h"
 #include "adhochandler.h"
@@ -525,6 +526,7 @@ static void buddyListRemoveNode(PurpleBlistNode *node) {
 	PurpleAccount *a = purple_buddy_get_account(buddy);
 	User *user = GlooxMessageHandler::instance()->userManager()->getUserByAccount(a);
 	if (user != NULL) {
+		if (user->loadingBuddiesFromDB()) return;
 		std::string name(purple_buddy_get_name(buddy));
 		GlooxMessageHandler::instance()->sql()->removeBuddy(user->storageId(), name);
 	}
@@ -774,6 +776,7 @@ GlooxMessageHandler::GlooxMessageHandler(const std::string &config) : MessageHan
 	capsCache["_default"] = 0;
 	m_parser = NULL;
 	m_sql = NULL;
+	m_collector = NULL;
 	m_searchHandler = NULL;
 	m_reg = NULL;
 	m_adhoc = NULL;
@@ -817,6 +820,7 @@ GlooxMessageHandler::GlooxMessageHandler(const std::string &config) : MessageHan
 
 		m_adhoc = new GlooxAdhocHandler(this);
 		m_parser = new GlooxParser();
+		m_collector = new AccountCollector();
 
 		ftManager = new FileTransferManager();
 		ft = new SIProfileFT(j, ftManager);

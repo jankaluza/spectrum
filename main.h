@@ -99,6 +99,7 @@ class AbstractProtocol;
 class AdhocRepeater;
 class GlooxSearchHandler;
 class GlooxParser;
+class AccountCollector;
 
 struct User;
 struct UserRow;
@@ -234,6 +235,7 @@ public:
 	GlooxAdhocHandler *adhoc() { return m_adhoc; }
 	GlooxSearchHandler *searchHandler() { return m_searchHandler; }
 	GlooxParser *parser() { return m_parser; }
+	AccountCollector *collector() { return m_collector; }
 
 	// TODO: Make me private!
 	FileTransferManager* ftManager;
@@ -264,6 +266,7 @@ private:
 	Configuration m_configuration;				// configuration struct
 	AbstractProtocol *m_protocol;				// currently used protocol
 	SQLClass *m_sql;							// storage class
+	AccountCollector *m_collector;
 
 	GlooxDiscoHandler *m_discoHandler;			// disco stanza handler
 	GlooxDiscoInfoHandler *m_discoInfoHandler;	// disco#info handler

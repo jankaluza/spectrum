@@ -29,6 +29,7 @@
 #include "parser.h"
 #include "proxy.h"
 #include "filetransferrepeater.h"
+#include "accountcollector.h"
 
 Resource DummyResource;
 
@@ -379,19 +380,6 @@ Tag *User::generatePresenceStanza(PurpleBuddy *buddy) {
 			g_free(avatarHash);
 	}
 
-	// update stats...
-	if (s == PURPLE_STATUS_OFFLINE) {
-		if (m_roster[name].online) {
-			m_roster[name].online = false;
-			p->userManager()->buddyOffline();
-		}
-	}
-	else
-		if (!m_roster[name].online) {
-			m_roster[name].online = true;
-			p->userManager()->buddyOnline();
-		}
-
 	return tag;
 }
 
@@ -572,6 +560,7 @@ void User::purpleBuddyStatusChanged(PurpleBuddy *buddy, PurpleStatus *status, Pu
 		tag->addAttribute("to", m_jid);
 		p->j->send(tag);
 	}
+	m_roster[std::string(purple_buddy_get_name(buddy))].online = true;
 }
 
 void User::purpleBuddySignedOn(PurpleBuddy *buddy) {
@@ -580,6 +569,8 @@ void User::purpleBuddySignedOn(PurpleBuddy *buddy) {
 		tag->addAttribute("to", m_jid);
 		p->j->send(tag);
 	}
+	p->userManager()->buddyOnline();
+	m_roster[std::string(purple_buddy_get_name(buddy))].online = true;
 }
 
 void User::purpleBuddySignedOff(PurpleBuddy *buddy) {
@@ -588,6 +579,8 @@ void User::purpleBuddySignedOff(PurpleBuddy *buddy) {
 		tag->addAttribute("to", m_jid);
 		p->j->send(tag);
 	}
+	p->userManager()->buddyOffline();
+	m_roster[std::string(purple_buddy_get_name(buddy))].online = false;
 }
 
 /*
@@ -1342,6 +1335,8 @@ User::~User(){
 	// if (this->save_timer!=0 && this->save_timer!=-1)
 	// 	std::cout << "* removing timer\n";
 	// 	purple_timeout_remove(this->save_timer);
+	m_account->ui_data = NULL;
+	p->collector()->collect(m_account);
 
 	if (m_syncTimer != 0) {
 		Log().Get(m_jid) << "removing timer\n";

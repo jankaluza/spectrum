@@ -49,6 +49,7 @@ endif(CMAKE_BUILD_TYPE MATCHES Debug)
 #CONFIGURE_FILE(config.h.in config.h)
 
 set(spectrum_SRCS
+	accountcollector.cpp
 	adhocadmin.cpp
 	adhochandler.cpp
 	adhocrepeater.cpp
@@ -92,6 +93,7 @@ set(spectrum_SRCS
 
 set(spectrum_MOC_HDRS
 	abstractpurplerequest.h
+	accountcollector.h
 	adhocadmin.h
 	adhoccommandhandler.h
 	adhochandler.h
