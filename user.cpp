@@ -693,7 +693,9 @@ void User::purpleConversationWriteIM(PurpleConversation *conv, const char *who, 
 }
 
 void User::purpleChatTopicChanged(PurpleConversation *conv, const char *who, const char *topic) {
-	MUCHandler *muc = (MUCHandler*) g_hash_table_lookup(m_mucs, purple_conversation_get_name(conv));
+	std::string name(purple_conversation_get_name(conv));
+	std::transform(name.begin(), name.end(), name.begin(),(int(*)(int)) std::tolower);
+	MUCHandler *muc = (MUCHandler*) g_hash_table_lookup(m_mucs, name.c_str());
 	if (muc) {
 		muc->topicChanged(who, topic);
 	}
@@ -701,6 +703,7 @@ void User::purpleChatTopicChanged(PurpleConversation *conv, const char *who, con
 
 void User::purpleChatAddUsers(PurpleConversation *conv, GList *cbuddies, gboolean new_arrivals) {
 	std::string name(purple_conversation_get_name(conv));
+	std::transform(name.begin(), name.end(), name.begin(),(int(*)(int)) std::tolower);
 	name = name + "%" + JID(m_username).server();
 	MUCHandler *muc = (MUCHandler*) g_hash_table_lookup(m_mucs, name.c_str());
 	if (!muc)
@@ -714,6 +717,7 @@ void User::purpleChatAddUsers(PurpleConversation *conv, GList *cbuddies, gboolea
 
 void User::purpleChatRenameUser(PurpleConversation *conv, const char *old_name, const char *new_name, const char *new_alias) {
 	std::string name(purple_conversation_get_name(conv));
+	std::transform(name.begin(), name.end(), name.begin(),(int(*)(int)) std::tolower);
 	name = name + "%" + JID(m_username).server();
 	MUCHandler *muc = (MUCHandler*) g_hash_table_lookup(m_mucs, name.c_str());
 	if (muc) {
@@ -723,6 +727,7 @@ void User::purpleChatRenameUser(PurpleConversation *conv, const char *old_name, 
 
 void User::purpleChatRemoveUsers(PurpleConversation *conv, GList *users) {
 	std::string name(purple_conversation_get_name(conv));
+	std::transform(name.begin(), name.end(), name.begin(),(int(*)(int)) std::tolower);
 	name = name + "%" + JID(m_username).server();
 	MUCHandler *muc = (MUCHandler*) g_hash_table_lookup(m_mucs, name.c_str());
 	if (muc) {
