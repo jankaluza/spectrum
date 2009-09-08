@@ -1335,8 +1335,10 @@ User::~User(){
 	// if (this->save_timer!=0 && this->save_timer!=-1)
 	// 	std::cout << "* removing timer\n";
 	// 	purple_timeout_remove(this->save_timer);
-	m_account->ui_data = NULL;
-	p->collector()->collect(m_account);
+	if (m_account) {
+		m_account->ui_data = NULL;
+		p->collector()->collect(m_account);
+	}
 
 	if (m_syncTimer != 0) {
 		Log().Get(m_jid) << "removing timer\n";

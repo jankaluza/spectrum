@@ -42,6 +42,44 @@ void AccountCollector::collect(PurpleAccount *account) {
 		g_hash_table_replace(m_accounts, g_strdup(purple_account_get_username(account)), account);
 }
 
+void AccountCollector::collectNow(PurpleAccount *account, bool remove) {
+	if (account->ui_data == NULL) {
+		std::cout << "AccountCollector => freeing account " << purple_account_get_username(account) << "\n";
+		
+		if (remove)
+			g_hash_table_remove(m_accounts, purple_account_get_username(account));
+			
+		
+		purple_notify_close_with_handle(account);
+		purple_request_close_with_handle(account);
+
+		purple_accounts_remove(account);
+
+		GSList *buddies = purple_find_buddies(account, NULL);
+		while(buddies) {
+			PurpleBuddy *b = (PurpleBuddy *) buddies->data;
+			purple_blist_remove_buddy(b);
+			buddies = g_slist_delete_link(buddies, buddies);
+		}
+
+		/* Remove any open conversation for this account */
+		for (GList *it = purple_get_conversations(); it; ) {
+			PurpleConversation *conv = (PurpleConversation *) it->data;
+			it = it->next;
+			if (purple_conversation_get_account(conv) == account)
+				purple_conversation_destroy(conv);
+		}
+
+		/* Remove this account's pounces */
+ 			// purple_pounce_destroy_all_by_account(account);
+
+		/* This will cause the deletion of an old buddy icon. */
+		purple_buddy_icons_set_account_icon(account, NULL, 0);
+
+		purple_account_destroy(account);
+	}
+}
+
 void AccountCollector::timeout() {
 	GHashTableIter iter;
 	gpointer key, v;
@@ -49,36 +87,7 @@ void AccountCollector::timeout() {
 	std::cout << "AccountCollector => timeout\n";
 	while (g_hash_table_iter_next (&iter, &key, &v)) {
 		PurpleAccount *account = (PurpleAccount *) v;
-		if (account->ui_data == NULL) {
-			std::cout << "AccountCollector => freeing account " << purple_account_get_username(account) << "\n";
-			purple_notify_close_with_handle(account);
-			purple_request_close_with_handle(account);
-
-			purple_accounts_remove(account);
-
-			GSList *buddies = purple_find_buddies(account, NULL);
-			while(buddies) {
-				PurpleBuddy *b = (PurpleBuddy *) buddies->data;
-				purple_blist_remove_buddy(b);
-				buddies = g_slist_delete_link(buddies, buddies);
-			}
-
-			/* Remove any open conversation for this account */
-			for (GList *it = purple_get_conversations(); it; ) {
-				PurpleConversation *conv = (PurpleConversation *) it->data;
-				it = it->next;
-				if (purple_conversation_get_account(conv) == account)
-					purple_conversation_destroy(conv);
-			}
-
-			/* Remove this account's pounces */
-// 			purple_pounce_destroy_all_by_account(account);
-
-			/* This will cause the deletion of an old buddy icon. */
-			purple_buddy_icons_set_account_icon(account, NULL, 0);
-
-			purple_account_destroy(account);
-		}
+		collectNow(account);
 	}
 	g_hash_table_remove_all(m_accounts);
 }

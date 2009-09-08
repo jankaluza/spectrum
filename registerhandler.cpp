@@ -26,6 +26,7 @@
 #include "sql.h"
 #include "caps.h"
 #include "usermanager.h"
+#include "accountcollector.h"
 #include "protocols/abstractprotocol.h"
 
 GlooxRegisterHandler::GlooxRegisterHandler(GlooxMessageHandler *parent) : IqHandler(){
@@ -197,6 +198,7 @@ bool GlooxRegisterHandler::handleIq (const IQ &iq){
 		// someone wants to be removed
 		if (remove) {
 			std::cout << "* removing user from database and disconnecting from legacy network\n";
+			PurpleAccount *account;
 			if (user!=NULL){
 				if (user->isConnected()==true){
 					purple_account_disconnect(user->account());
@@ -236,6 +238,7 @@ bool GlooxRegisterHandler::handleIq (const IQ &iq){
 					p->sql()->removeUser(iq.from().bare());
 					p->sql()->removeUserBuddies(res.id);
 				}
+				p->collector()->collectNow(account, true);
 			}
 			else{
 				// TODO: remove contacts from roster with unsubscribe presence
