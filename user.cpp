@@ -521,7 +521,7 @@ void User::purpleBuddyCreated(PurpleBuddy *buddy) {
 	Log().Get(m_jid) << "purpleBuddyChanged: " << name << " ("<< alias <<")";
 
 	if (m_syncTimer==0 && !m_rosterXCalled) {
-		m_syncTimer = purple_timeout_add_seconds(4, sync_cb, this);
+		m_syncTimer = purple_timeout_add_seconds(12, sync_cb, this);
 	}
 
 	bool inRoster = isInRoster(name,"");
@@ -535,7 +535,7 @@ void User::purpleBuddyCreated(PurpleBuddy *buddy) {
 			else {
 				Log().Get(m_jid) << "Not in roster => sending rosterx";
 				if (m_syncTimer == 0) {
-					m_syncTimer = purple_timeout_add_seconds(4, sync_cb, this);
+					m_syncTimer = purple_timeout_add_seconds(12, sync_cb, this);
 				}
 				m_subscribeCache[name] = buddy;
 			}
