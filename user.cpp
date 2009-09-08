@@ -590,7 +590,6 @@ void User::purpleMessageReceived(PurpleAccount* account,char * name,char *msg,Pu
 	// new message grom legacy network has been received
 	if (conv == NULL) {
 		// make conversation if it doesn't exist
-		std::cout << "CONVERSATION 4!\n";
 		conv = purple_conversation_new(PURPLE_CONV_TYPE_IM, account, name);
 		m_conversations[(std::string)name].conv = conv;
 	}
@@ -600,8 +599,8 @@ void User::purpleConversationWriteChat(PurpleConversation *conv, const char *who
 	if (who == NULL)
 		return;
 
-	// std::string name(who);
 	std::string name(purple_conversation_get_name(conv));
+	std::transform(name.begin(), name.end(), name.begin(),(int(*)(int)) std::tolower);
 	name = name + "%" + JID(m_username).server();
 	MUCHandler *muc = (MUCHandler*) g_hash_table_lookup(m_mucs, name.c_str());
 	if (!isOpenedConversation(name)) {
@@ -832,7 +831,7 @@ void User::receivedMessage(const Message& msg){
 	else if (!msg.to().resource().empty() && msg.to().resource() != "bot") {
 		username = msg.to().resource();
 	}
-	else {
+	else if (msg.to().resource() == "bot") {
 		size_t pos = username.find("%");
 		if (pos != std::string::npos)
 			username.erase((int) pos, username.length() - (int) pos);
@@ -892,6 +891,11 @@ void User::receivedMessage(const Message& msg){
 	}
 	else if (purple_conversation_get_type(conv) == PURPLE_CONV_TYPE_CHAT) {
 		purple_conv_chat_send(PURPLE_CONV_CHAT(conv), body.c_str());
+// 		Message s(Message::Groupchat, msg.from().full(), body);
+// 		s.setFrom(msg.to().full());
+// 		Tag *xx = s.tag();
+// 		std::cout << "MESSAGE" << xx->xml() << "\n";
+// 		p->j->send( xx );
 	}
 }
 
