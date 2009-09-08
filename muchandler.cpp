@@ -90,7 +90,7 @@ void MUCHandler::addUsers(GList *cbuddies) {
 			item->addAttribute("affiliation", "admin");
 			item->addAttribute("role", "moderator");
 		}
-		else if (PURPLE_CBFLAGS_FOUNDER) {
+		else if (flags & PURPLE_CBFLAGS_FOUNDER) {
 			item->addAttribute("affiliation", "owner");
 			item->addAttribute("role", "moderator");
 		}
