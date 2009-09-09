@@ -19,12 +19,18 @@ set(libpoco_DIR ${CMAKE_MODULE_PATH})
 find_package(libpoco REQUIRED)
 
 FIND_LIBRARY(GETTEXTPO_LIBRARY NAMES gettextpo)
+find_path(GETTEXTPO_INCLUDE_DIR NAMES gettext-po.h
+	PATHS
+	/usr/include
+	/usr/local/include
+)
 
-if(GETTEXTPO_LIBRARY)
-	message(STATUS "libgettextpo found OK")
-else(GETTEXTPO_LIBRARY)
-	message(FATAL_ERROR "no libgettextpo")
-endif(GETTEXTPO_LIBRARY)
+if(GETTEXTPO_LIBRARY AND GETTEXTPO_INCLUDE_DIR)
+	include (${GETTEXTPO_INCLUDE_DIR})
+	message(STATUS "libgettextpo (gettext-devel) found: " ${GETTEXTPO_LIBRARY})
+else(GETTEXTPO_LIBRARY AND GETTEXTPO_INCLUDE_DIR)
+	message(FATAL_ERROR "no libgettextpo (gettext-devel)")
+endif(GETTEXTPO_LIBRARY AND GETTEXTPO_INCLUDE_DIR)
 
 include_directories(${GLOOX_INCLUDE_DIR})
 include_directories("/usr/local/include/libpurple")
