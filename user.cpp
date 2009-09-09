@@ -848,7 +848,7 @@ void User::receivedMessage(const Message& msg){
 	}
 	std::string body = msg.body();
 
-	if (body.find("/") == 0) {
+	if (body.find("/transport") == 0) {
 		PurpleCmdStatus status;
 		char *error = NULL;
 		body.erase(0, 11);
