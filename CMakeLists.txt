@@ -32,11 +32,11 @@ include_directories("/usr/include/libpurple")
 
 include_directories(${LIBPOCO_INCLUDE_DIR})
 
-if(GLIB_FOUND)
-	include_directories(${GLIB_INCLUDE_DIRS})
-else(GLIB_FOUND)
+if(GLIB2_FOUND)
+	include_directories(${GLIB2_INCLUDE_DIR})
+else(GLIB2_FOUND)
 	message(FATAL_ERROR "No GLIB2")
-endif(GLIB_FOUND)
+endif(GLIB2_FOUND)
 
 
 if(CMAKE_BUILD_TYPE MATCHES Debug)
@@ -140,7 +140,7 @@ set(spectrum_MOC_HDRS
 
 add_executable(spectrum ${spectrum_SRCS} ${lrelease_outputs})
 
-target_link_libraries(spectrum ${GLOOX_LIBRARIES} ${PURPLE_LIBRARY} ${GLIB_LIBRARIES} ${GETTEXTPO_LIBRARY} ${LIBPOCO_LIBRARIES} -export-dynamic)
+target_link_libraries(spectrum ${GLOOX_LIBRARIES} ${PURPLE_LIBRARY} ${GLIB2_LIBRARIES} ${GETTEXTPO_LIBRARY} ${LIBPOCO_LIBRARIES} -export-dynamic)
 
 message(STATUS "Transport will be installed into: " ${CMAKE_INSTALL_PREFIX})
 file(WRITE transport_config.h "#define INSTALL_DIR \"" ${CMAKE_INSTALL_PREFIX} "\"\n")
