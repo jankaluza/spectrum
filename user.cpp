@@ -596,7 +596,7 @@ void User::purpleMessageReceived(PurpleAccount* account,char * name,char *msg,Pu
 }
 
 void User::purpleConversationWriteChat(PurpleConversation *conv, const char *who, const char *msg, PurpleMessageFlags flags, time_t mtime) {
-	if (who == NULL)
+	if (who == NULL || flags & PURPLE_MESSAGE_SYSTEM)
 		return;
 
 	std::string name(purple_conversation_get_name(conv));
