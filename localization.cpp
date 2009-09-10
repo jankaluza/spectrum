@@ -49,11 +49,7 @@ const char * Localization::translate(const char *lang, const char *key) {
 
 bool Localization::loadLocale(const std::string &lang) {
 	po_file_t pofile = NULL;
-#if LIBGETTEXTPO_VERSION < (0<<16) + (14<<8)
 	po_error_handler_t error_handle;
-#else
-	po_xerror_handler_t error_handle;
-#endif
 	const char * const *domains;
 	const char * const *domainp;
 	const char *msgstr = NULL;
