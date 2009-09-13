@@ -1081,67 +1081,138 @@ bool GlooxMessageHandler::loadConfigFile(const std::string &config) {
 	if (!g_key_file_load_from_file (keyfile, config.c_str(), (GKeyFileFlags)flags, NULL)) {
 		if (!g_key_file_load_from_file (keyfile, std::string("/etc/spectrum/" + config + ".cfg").c_str(), (GKeyFileFlags)flags, NULL))
 		{
-			Log().Get("gloox") << "Can't load config file!";
-			Log().Get("gloox") << std::string("/etc/spectrum/" + config + ".cfg") << " or ./" << config;
+			Log().Get("loadConfigFile") << "Can't load config file!";
+			Log().Get("loadConfigFile") << std::string("/etc/spectrum/" + config + ".cfg") << " or ./" << config;
 
 			g_key_file_free(keyfile);
 			return false;
 		}
 	}
 
-	value = g_key_file_get_string(keyfile, "service","protocol", NULL);
-	m_configuration.protocol = std::string(value);
-	g_free(value);
-	
-	value = g_key_file_get_string(keyfile, "service","name", NULL);
-	m_configuration.discoName = std::string(value);
-	g_free(value);
-	
-	value = g_key_file_get_string(keyfile, "service","server", NULL);
-	m_configuration.server = std::string(value);
-	g_free(value);
-	
-	value = g_key_file_get_string(keyfile, "service","password", NULL);
-	m_configuration.password = std::string(value);
-	g_free(value);
-	
-	value = g_key_file_get_string(keyfile, "service","jid", NULL);
-	m_configuration.jid = std::string(value);
-	g_free(value);
-	
-	m_configuration.port = (int)g_key_file_get_integer(keyfile, "service","port", NULL);
-	
-	value = g_key_file_get_string(keyfile, "service","filetransfer_cache", NULL);
-	m_configuration.filetransferCache = std::string(value);
-	g_free(value);
+	if ((value = g_key_file_get_string(keyfile, "service","protocol", NULL)) != NULL) {
+		m_configuration.protocol = std::string(value);
+		g_free(value);
+	}
+	else {
+		Log().Get("loadConfigFile") << "You have to specify `protocol` in [service] part of config file.";
+		return false;
+	}
 
-	value = g_key_file_get_string(keyfile, "database","type", NULL);
-	m_configuration.sqlType = std::string(value);
-	g_free(value);
-	
-	value = g_key_file_get_string(keyfile, "database","host", NULL);
-	m_configuration.sqlHost = std::string(value);
-	g_free(value);
-	
-	value = g_key_file_get_string(keyfile, "database","password", NULL);
-	m_configuration.sqlPassword = std::string(value);
-	g_free(value);
-	
-	value = g_key_file_get_string(keyfile, "database","user", NULL);
-	m_configuration.sqlUser = std::string(value);
-	g_free(value);
-	
-	value = g_key_file_get_string(keyfile, "database","database", NULL);
-	m_configuration.sqlDb = std::string(value);
-	g_free(value);
-	
-	value = g_key_file_get_string(keyfile, "database","prefix", NULL);
-	m_configuration.sqlPrefix = std::string(value);
-	g_free(value);
+	if ((value = g_key_file_get_string(keyfile, "service","name", NULL)) != NULL) {
+		m_configuration.discoName = std::string(value);
+		g_free(value);
+	}
+	else {
+		Log().Get("loadConfigFile") << "You have to specify `name` in [service] part of config file.";
+		return false;
+	}
 
-	value = g_key_file_get_string(keyfile, "purple","userdir", NULL);
-	m_configuration.userDir = std::string(value);
-	g_free(value);
+	if ((value = g_key_file_get_string(keyfile, "service","server", NULL)) != NULL) {
+		m_configuration.server = std::string(value);
+		g_free(value);
+	}
+	else {
+		Log().Get("loadConfigFile") << "You have to specify `server` in [service] part of config file.";
+		return false;
+	}
+	
+	if ((value = g_key_file_get_string(keyfile, "service","password", NULL)) != NULL) {
+		m_configuration.password = std::string(value);
+		g_free(value);
+	}
+	else {
+		Log().Get("loadConfigFile") << "You have to specify `password` in [service] part of config file.";
+		return false;
+	}
+	
+	if ((value = g_key_file_get_string(keyfile, "service","jid", NULL)) != NULL) {
+		m_configuration.jid = std::string(value);
+		g_free(value);
+	}
+	else {
+		Log().Get("loadConfigFile") << "You have to specify `jid` in [service] part of config file.";
+		return false;
+	}
+	
+	if (g_key_file_get_integer(keyfile, "service","port", NULL))
+		m_configuration.port = (int)g_key_file_get_integer(keyfile, "service","port", NULL);
+	else {
+		Log().Get("loadConfigFile") << "You have to specify `port` in [service] part of config file.";
+		return false;
+	}
+	
+	if ((value = g_key_file_get_string(keyfile, "service","filetransfer_cache", NULL)) != NULL) {
+		m_configuration.filetransferCache = std::string(value);
+		g_free(value);
+	}
+	else {
+		Log().Get("loadConfigFile") << "You have to specify `filetransfer_cache` in [service] part of config file.";
+		return false;
+	}
+
+	if ((value = g_key_file_get_string(keyfile, "database","type", NULL)) != NULL) {
+		m_configuration.sqlType = std::string(value);
+		g_free(value);
+	}
+	else {
+		Log().Get("loadConfigFile") << "You have to specify `type` in [database] part of config file.";
+		return false;
+	}
+	
+	if ((value = g_key_file_get_string(keyfile, "database","host", NULL)) != NULL) {
+		m_configuration.sqlHost = std::string(value);
+		g_free(value);
+	}
+	else {
+		Log().Get("loadConfigFile") << "You have to specify `host` in [database] part of config file.";
+		return false;
+	}
+	
+	if ((value = g_key_file_get_string(keyfile, "database","password", NULL)) != NULL) {
+		m_configuration.sqlPassword = std::string(value);
+		g_free(value);
+	}
+	else {
+		Log().Get("loadConfigFile") << "You have to specify `password` in [database] part of config file.";
+		return false;
+	}
+	
+	if ((value = g_key_file_get_string(keyfile, "database","user", NULL)) != NULL) {
+		m_configuration.sqlUser = std::string(value);
+		g_free(value);
+	}
+	else {
+		Log().Get("loadConfigFile") << "You have to specify `user` in [database] part of config file.";
+		return false;
+	}
+	
+	if ((value = g_key_file_get_string(keyfile, "database","database", NULL)) != NULL) {
+		m_configuration.sqlDb = std::string(value);
+		g_free(value);
+	}
+	else {
+		Log().Get("loadConfigFile") << "You have to specify `database` in [database] part of config file.";
+		return false;
+	}
+	
+	if ((value = g_key_file_get_string(keyfile, "database","prefix", NULL)) != NULL) {
+		m_configuration.sqlPrefix = std::string(value);
+		g_free(value);
+	}
+	else {
+		Log().Get("loadConfigFile") << "You have to specify `prefix` in [database] part of config file.";
+		return false;
+	}
+
+	if ((value = g_key_file_get_string(keyfile, "purple","userdir", NULL)) != NULL) {
+		m_configuration.userDir = std::string(value);
+		g_free(value);
+	}
+	else {
+		Log().Get("loadConfigFile") << "You have to specify `userdir` in [purple] part of config file.";
+		return false;
+	}
+		
 
 	if (g_key_file_has_key(keyfile,"service","language",NULL))
 		m_configuration.language = g_key_file_get_string(keyfile, "service","language", NULL);
@@ -1172,7 +1243,7 @@ bool GlooxMessageHandler::loadConfigFile(const std::string &config) {
 		}
 		g_strfreev (bind);
 	}
-	else m_configuration.transportFeatures = 255;
+	else m_configuration.transportFeatures = TRANSPORT_FEATURE_AVATARS | TRANSPORT_FEATURE_FILETRANSFER | TRANSPORT_FEATURE_TYPING_NOTIFY;
 
 	if(g_key_file_has_key(keyfile,"service","vip_features",NULL)) {
 		bind = g_key_file_get_string_list (keyfile,"service","vip_features",NULL, NULL);
@@ -1188,7 +1259,7 @@ bool GlooxMessageHandler::loadConfigFile(const std::string &config) {
 		}
 		g_strfreev (bind);
 	}
-	else m_configuration.VIPFeatures = 255;
+	else m_configuration.VIPFeatures = TRANSPORT_FEATURE_AVATARS | TRANSPORT_FEATURE_FILETRANSFER | TRANSPORT_FEATURE_TYPING_NOTIFY;
 
 	if(g_key_file_has_key(keyfile,"service","use_proxy",NULL))
 		m_configuration.useProxy=g_key_file_get_boolean(keyfile, "service","use_proxy", NULL);
