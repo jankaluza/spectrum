@@ -1547,12 +1547,15 @@ void GlooxMessageHandler::handlePresence(const Presence &stanza){
 		delete stanzaTag;
 	}
 	User *user;
+	std::string userkey;
 	if (protocol()->isMUC(NULL, stanza.to().bare())) {
 		std::string server = stanza.to().username().substr(stanza.to().username().find("%") + 1, stanza.to().username().length() - stanza.to().username().find("%"));
+		userkey = stanza.from().bare() + server;
 		user = userManager()->getUserByJID(stanza.from().bare() + server);
 	}
 	else {
 		user = userManager()->getUserByJID(stanza.from().bare());
+		userkey = stanza.from().bare();
 	}
 	if (user == NULL) {
 		// we are not connected and probe arrived => answer with unavailable
@@ -1565,13 +1568,17 @@ void GlooxMessageHandler::handlePresence(const Presence &stanza){
 			j->send(tag);
 		}
 		else if (((stanza.to().username() == "" && !protocol()->tempAccountsAllowed()) || protocol()->isMUC(NULL, stanza.to().bare())) && stanza.presence() != Presence::Unavailable){
-			UserRow res = sql()->getUserByJid(stanza.from().bare());
+			UserRow res = sql()->getUserByJid(userkey);
 			if(res.id==-1 && !protocol()->tempAccountsAllowed()) {
 				// presence from unregistered user
 				Log().Get(stanza.from().full()) << "This user is not registered";
 				return;
 			}
 			else {
+				if(res.id==-1 && protocol()->tempAccountsAllowed()) {
+					sql()->addUser(userkey,stanza.from().username(),"","en");
+					res = sql()->getUserByJid(userkey);
+				}
 				bool isVip = sql()->isVIP(stanza.from().bare());
 				std::list<std::string> const &x = configuration().allowedServers;
 				if (configuration().onlyForVIP && !isVip && std::find(x.begin(), x.end(), stanza.from().server()) == x.end()) {
