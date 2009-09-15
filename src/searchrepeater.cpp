@@ -22,7 +22,7 @@
 #include "gloox/stanza.h"
 #include "log.h"
 #include "protocols/abstractprotocol.h"
-#include "dataforms.h"
+#include "adhoc/dataforms.h"
 #include "user.h"
 #include "main.h"
 #include <iostream>

@@ -56,14 +56,14 @@ endif(CMAKE_BUILD_TYPE MATCHES Debug)
 
 set(spectrum_SRCS
 	src/accountcollector.cpp
-	src/adhocadmin.cpp
-	src/adhochandler.cpp
-	src/adhocrepeater.cpp
-	src/adhocsettings.cpp
+	src/adhoc/adhocadmin.cpp
+	src/adhoc/adhochandler.cpp
+	src/adhoc/adhocrepeater.cpp
+	src/adhoc/adhocsettings.cpp
+	src/adhoc/dataforms.cpp
 	src/autoconnectloop.cpp
 	src/caps.cpp
 	src/commands.cpp
-	src/dataforms.cpp
 	src/discoinfohandler.cpp
 	src/filetransfermanager.cpp
 	src/filetransferrepeater.cpp
@@ -100,15 +100,15 @@ set(spectrum_SRCS
 set(spectrum_MOC_HDRS
 	src/abstractpurplerequest.h
 	src/accountcollector.h
-	src/adhocadmin.h
-	src/adhoccommandhandler.h
-	src/adhochandler.h
-	src/adhocrepeater.h
-	src/adhocsettings.h
-	src/autoconnectloop.h
+	src/adhoc/adhocadmin.h
+	src/adhoc/adhoccommandhandler.h
+	src/adhoc/adhochandler.h
+	src/adhoc/adhocrepeater.h
+	src/adhoc/adhocsettings.h
+	src/adhoc/autoconnectloop.h
+	src/adhoc/dataforms.h
 	src/caps.h
 	src/commands.h
-	src/dataforms.h
 	src/discoinfohandler.h
 	src/filetransfermanager.h
 	src/filetransferrepeater.h
