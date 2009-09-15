@@ -22,6 +22,8 @@
 #include <glib.h>
 #include "main.h"
 #include "sql.h"
+#include "log.h"
+#include "spectrum_util.h"
 
 GatewayExtension::GatewayExtension() : StanzaExtension( ExtGateway )
 {

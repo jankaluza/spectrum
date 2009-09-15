@@ -21,6 +21,7 @@
 #include "sql.h"
 #include "parser.h"
 #include "log.h"
+#include "main.h"
 
 SQLClass::SQLClass(GlooxMessageHandler *parent) {
 	p = parent;

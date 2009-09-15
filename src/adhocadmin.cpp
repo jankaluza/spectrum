@@ -20,6 +20,8 @@
 
 #include "adhocadmin.h"
 #include "gloox/stanza.h"
+#include "user.h"
+#include "main.h"
 #include "log.h"
 
 AdhocAdmin::AdhocAdmin(GlooxMessageHandler *m, User *user, const std::string &from, const std::string &id) {

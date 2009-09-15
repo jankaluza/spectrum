@@ -27,13 +27,15 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 class GlooxMessageHandler;
-#include "main.h"
 
 #include <gloox/siprofilefthandler.h>
 #include <gloox/siprofileft.h>
+#include <gloox/jid.h>
 
 #include <iostream>
 #include <algorithm>
+
+using namespace gloox;
 
 struct progress {
 	std::string filename;
@@ -81,3 +83,4 @@ class FileTransferManager : public gloox::SIProfileFTHandler {
 		void sendFile(const std::string &jid, const std::string &from, const std::string &name, const std::string &file);
 	};
 #endif
+

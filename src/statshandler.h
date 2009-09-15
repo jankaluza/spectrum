@@ -22,6 +22,8 @@
 #define _HI_STATS_H
 
 #include <gloox/stanza.h>
+#include <gloox/stanzaextension.h>
+#include <gloox/iqhandler.h>
 
 class GlooxMessageHandler;
 

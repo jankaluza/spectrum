@@ -21,6 +21,9 @@
 #ifndef _HI_CAPS_H
 #define _HI_CAPS_H
 
+#include <sstream>
+#include <iostream>
+
 #include <gloox/iqhandler.h>
 #include <gloox/discohandler.h>
 class GlooxMessageHandler;
@@ -30,8 +33,6 @@ typedef enum { 	GLOOX_FEATURE_ROSTERX = 2,
 				GLOOX_FEATURE_FILETRANSFER = 8,
 				GLOOX_FEATURE_CHATSTATES = 16,
 				} GlooxImportantFeatures;
-
-
 
 using namespace gloox;
 

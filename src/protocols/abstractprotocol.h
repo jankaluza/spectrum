@@ -26,6 +26,11 @@
 #include "glib.h"
 #include "gloox/tag.h"
 #include "../user.h"
+#include "../spectrum_util.h"
+#include "../log.h"
+#include "../localization.h"
+
+extern Localization localization;
 
 using namespace gloox;
 

@@ -19,9 +19,11 @@
  */
 
 #include "filetransferrepeater.h"
+#include "filetransfermanager.h"
 #include "main.h"
 #include "usermanager.h"
-
+#include "log.h"
+#include "sql.h"
 
 SendFile::SendFile(Bytestream *stream, int size, const std::string &filename, User *user, FiletransferRepeater *manager) {
     std::cout << "SendFile::SendFile" << " Constructor.\n";
@@ -42,7 +44,7 @@ SendFile::~SendFile() {
 
 void SendFile::exec() {
     std::cout << "SendFile::exec Starting transfer.\n";
-    char input[200024];
+//     char input[200024];
 	int ret;
 	bool empty;
     m_file.open(m_filename.c_str(), std::ios_base::out | std::ios_base::binary );
@@ -125,7 +127,7 @@ SendFileStraight::~SendFileStraight() {
 
 void SendFileStraight::exec() {
     std::cout << "SendFileStraight::exec Starting transfer.\n";
-    char input[200024];
+//     char input[200024];
 	int ret;
 	bool empty;
     while (true) {

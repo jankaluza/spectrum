@@ -22,9 +22,10 @@
 #define _HI_SEARCH_HANDLER_H
 
 #include <gloox/iqhandler.h>
-#include "searchrepeater.h"
+#include "notify.h"
 
 class GlooxMessageHandler;
+class SearchRepeater;
 using namespace gloox;
 
 

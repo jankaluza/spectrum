@@ -26,8 +26,6 @@
 #include <gloox/discohandler.h>
 #include <glib.h>
 class GlooxMessageHandler;
-#include "main.h"
-#include "sql.h"
 
 using namespace gloox;
 

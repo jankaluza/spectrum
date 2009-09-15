@@ -25,6 +25,7 @@
 #include "cmds.h"
 #include "user.h"
 #include "usermanager.h"
+#include "main.h"
 
 static PurpleCmdRet settings_command_cb(PurpleConversation *conv, const char *cmd, char **args, char **error, void *data) {
 	GString *s = NULL;

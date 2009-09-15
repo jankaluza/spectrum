@@ -24,8 +24,12 @@
 #include "adhocrepeater.h"
 #include "adhocsettings.h"
 #include "adhocadmin.h"
+#include "adhoccommandhandler.h"
+#include "user.h"
 #include "gloox/disconodehandler.h"
 #include "gloox/adhoc.h"
+#include <algorithm>
+#include "main.h"
 
 static AdhocCommandHandler * createSettingsHandler(GlooxMessageHandler *m, User *user, const std::string &from, const std::string &id) {
 	AdhocCommandHandler *handler = new AdhocSettings(m, user, from, id);

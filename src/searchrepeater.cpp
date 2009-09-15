@@ -23,6 +23,9 @@
 #include "log.h"
 #include "protocols/abstractprotocol.h"
 #include "dataforms.h"
+#include "user.h"
+#include "main.h"
+#include <iostream>
 
 static gboolean removeRepeater(gpointer data){
 	SearchRepeater *repeater = (SearchRepeater*) data;

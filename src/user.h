@@ -26,12 +26,11 @@
 #include <gloox/messagesession.h>
 #include <gloox/siprofileft.h>
 #include <glib.h>
+
+#include "account.h"
+
 class GlooxMessageHandler;
 class FiletransferRepeater;
-
-#include "main.h"
-#include "sql.h"
-#include "caps.h"
 
 class RosterRow;
 

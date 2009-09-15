@@ -22,6 +22,7 @@
 #include "../main.h"
 #include "../muchandler.h"
 #include "../usermanager.h"
+#include "../sql.h"
 #include "cmds.h"
 
 IRCProtocol::IRCProtocol(GlooxMessageHandler *main){

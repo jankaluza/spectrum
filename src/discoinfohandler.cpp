@@ -20,6 +20,8 @@
 
 #include "discoinfohandler.h"
 #include "protocols/abstractprotocol.h"
+#include "main.h"
+#include "sql.h"
 
 GlooxDiscoInfoHandler::GlooxDiscoInfoHandler(GlooxMessageHandler *parent) : IqHandler(){
 	p=parent;

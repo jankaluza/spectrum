@@ -22,6 +22,7 @@
 #include "gloox/stanza.h"
 #include "log.h"
 #include "dataforms.h"
+#include "user.h"
 
 static gboolean removeRepeater(gpointer data){
 	AdhocRepeater *repeater = (AdhocRepeater*) data;

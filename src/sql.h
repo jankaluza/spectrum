@@ -21,7 +21,10 @@
 #ifndef _HI_SQL_H
 #define _HI_SQL_H
 
+#include <iostream>
+
 #include <gloox/clientbase.h>
+#include <gloox/tag.h>
 #include <glib.h>
 #include <account.h>
 
@@ -32,9 +35,9 @@
 #include "Poco/Data/MySQL/Connector.h" 
 
 class GlooxMessageHandler;
-#include "main.h"
 
 using namespace Poco::Data;
+using namespace gloox;
 
 #define STATEMENT(STRING) *m_sess << std::string(STRING)
 

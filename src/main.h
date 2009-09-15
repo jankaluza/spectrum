@@ -25,6 +25,11 @@
 #include <time.h>
 #include <string.h>
 #include <unistd.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <sstream>
+
+#include <glib.h>
 
 #include <gloox/component.h>
 #include <gloox/messagehandler.h>
@@ -36,8 +41,6 @@
 #include <gloox/socks5bytestreamserver.h>
 #include <gloox/siprofileft.h>
 #include <gloox/message.h>
-
-#include <glib.h>
 
 #include "account.h"
 #include "conversation.h"
@@ -59,26 +62,12 @@
 #include <libintl.h>
 #include <locale.h>
 
+#include "transport_config.h"
+#include "localization.h"
+
 #define PURPLE_UI "spectrum"
 #define tr(lang,STRING)    localization.translate(lang,STRING)
 #define _(STRING)    STRING
-
-#include "registerhandler.h"
-#include "discoinfohandler.h"
-#include "statshandler.h"
-#include "vcardhandler.h"
-#include "gatewayhandler.h"
-#include "caps.h"
-#include "spectrum_util.h"
-#include "sql.h"
-#include "user.h"
-class FileTransferManager;
-#include "filetransfermanager.h"
-#include <sys/stat.h>
-#include <sys/types.h>
-#include "localization.h"
-#include "transport_config.h"
-
 
 using namespace gloox;
 
@@ -93,7 +82,7 @@ class GlooxVCardHandler;
 class GlooxGatewayHandler;
 class GlooxAdhocHandler;
 class SQLClass;
-class FileTranferManager;
+class FileTransferManager;
 class UserManager;
 class AbstractProtocol;
 class AdhocRepeater;

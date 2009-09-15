@@ -21,6 +21,8 @@
 #include "filetransfermanager.h"
 #include "usermanager.h"
 #include "filetransferrepeater.h"
+#include "log.h"
+#include "main.h"
 
 void FileTransferManager::setSIProfileFT(gloox::SIProfileFT *sipft,GlooxMessageHandler *parent) {
 	m_sip = sipft;

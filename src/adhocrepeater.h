@@ -23,10 +23,10 @@
 
 #include <string>
 #include "account.h"
-#include "user.h"
 #include "glib.h"
 #include "request.h"
 #include "adhoccommandhandler.h"
+#include "main.h"
 
 class GlooxMessageHandler;
 class User;

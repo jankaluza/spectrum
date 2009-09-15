@@ -23,6 +23,8 @@
 #include "gloox/search.h"
 #include "usermanager.h"
 #include "protocols/abstractprotocol.h"
+#include "log.h"
+#include "searchrepeater.h"
 
 SearchExtension::SearchExtension() : StanzaExtension( ExtSearch )
 {

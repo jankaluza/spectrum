@@ -18,13 +18,14 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02111-1301  USA
  */
 
-#include "registerhandler.h"
+#include "statshandler.h"
 #include "main.h"
 #include <time.h>
 #include <gloox/clientbase.h>
 #include <gloox/tag.h>
 #include <glib.h>
 #include "usermanager.h"
+#include "log.h"
 
 #include "sql.h"
 #include <sstream>

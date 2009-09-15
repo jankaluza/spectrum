@@ -23,14 +23,17 @@
 
 #include <string>
 #include "account.h"
-#include "user.h"
 #include "glib.h"
 #include "gloox/disconodehandler.h"
-#include "adhoccommandhandler.h"
+#include "gloox/iqhandler.h"
+#include "gloox/discohandler.h"
+
+using namespace gloox;
 
 class GlooxMessageHandler;
 class AdhocRepeater;
-
+class AdhocCommandHandler;
+class User;
 
 /*
  * Structure used for registering Ad-Hoc command
