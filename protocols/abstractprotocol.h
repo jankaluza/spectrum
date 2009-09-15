@@ -87,6 +87,10 @@ class AbstractProtocol
 		 * Returns true if temporary accounts for MUC are allows (this is useful for IRC, if you want to connect more network from one account)
 		 */
 		virtual bool tempAccountsAllowed() { return false; }
+		/*
+		 * Change nickname in room. Returns true if the nickname has to be changed in all rooms user is in.
+		 */
+		virtual bool changeNickname(const std::string &nick, PurpleConversation *conv) { return true; }
 
 		// SIGNALS
 

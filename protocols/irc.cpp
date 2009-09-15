@@ -22,6 +22,7 @@
 #include "../main.h"
 #include "../muchandler.h"
 #include "../usermanager.h"
+#include "cmds.h"
 
 IRCProtocol::IRCProtocol(GlooxMessageHandler *main){
 	m_main = main;
@@ -60,6 +61,14 @@ Tag *IRCProtocol::getVCardTag(User *user, GList *vcardEntries) {
 	vcard->addAttribute( "xmlns", "vcard-temp" );
 
 	return vcard;
+}
+
+bool IRCProtocol::changeNickname(const std::string &nick, PurpleConversation *conv) {
+	char *error = NULL;
+	purple_cmd_do_command(conv, std::string("nick " + nick).c_str(), std::string("nick " + nick).c_str(), &error);
+	if (error)
+		g_free(error);
+	return true;
 }
 
 void IRCProtocol::onUserCreated(User *user) {

@@ -45,11 +45,14 @@ class MUCHandler
 		void topicChanged(const char *who, const char *topic);
 		bool isConnected() { return m_connected; }
 		void setConversation(PurpleConversation *conv) { m_conv = conv; }
+		void changeNickname(const std::string &nickname);
 
 	private:
 		void sendTopic();
 
 		User *m_user;
+		Tag *m_lastPresence;
+		std::string m_nickname;
 		std::string m_jid;
 		std::string m_userJid;
 		bool m_connected;

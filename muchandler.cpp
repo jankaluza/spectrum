@@ -21,6 +21,7 @@
 #include "muchandler.h"
 #include "main.h"
 #include "user.h"
+#include "protocols/abstractprotocol.h"
 
 MUCHandler::MUCHandler(User *user, const std::string &jid, const std::string &userJid){
 	m_user = user;
@@ -29,6 +30,8 @@ MUCHandler::MUCHandler(User *user, const std::string &jid, const std::string &us
 	m_connected = false;
 	m_topic = "";
 	m_topicUser = "";
+	m_nickname = "";
+	m_lastPresence = NULL;
 }
 
 MUCHandler::~MUCHandler() {}
@@ -41,10 +44,50 @@ Tag * MUCHandler::handlePresence(const Presence &stanza) {
 	return ret;
 }
 
+void MUCHandler::changeNickname(const std::string &nickname) {
+	m_nickname = nickname;
+	Tag *presence = m_lastPresence->clone();
+	Tag *x = presence->findChild("x");
+	
+	Tag *status = new Tag("status");
+	status->addAttribute("code","303");
+	x->addChild(status);
+	
+	status = new Tag("status");
+	status->addAttribute("code","110");
+	x->addChild(status);
+	
+	Tag *item = x->findChild("item");
+	item->addAttribute("nick", m_nickname);
+
+	m_user->p->j->send(presence);
+	m_user->p->j->send(m_lastPresence->clone());
+}
+
 Tag * MUCHandler::handlePresence(Tag *stanza) {
 	if (stanza->findAttribute("type") != "unavailable") {
 		GHashTable *comps = NULL;
 		std::string name = JID(stanza->findAttribute("to")).username();
+		std::string nickname = JID(stanza->findAttribute("to")).resource();
+
+		if (!m_nickname.empty() && nickname != m_nickname) {
+			m_nickname = nickname;
+			if (m_user->p->protocol()->changeNickname(m_nickname, m_conv)) {
+				GHashTable *mucs = m_user->mucs();
+				GHashTableIter iter;
+				gpointer key, v;
+				g_hash_table_iter_init (&iter, mucs);
+				while (g_hash_table_iter_next (&iter, &key, &v)) {
+					MUCHandler *m = (MUCHandler *) v;
+					m->changeNickname(m_nickname);
+				}
+			}
+			else
+				changeNickname(m_nickname);
+		}
+		else if (m_nickname.empty())
+			m_nickname = nickname;
+
 		PurpleConnection *gc = purple_account_get_connection(m_user->account());
 		if (PURPLE_PLUGIN_PROTOCOL_INFO(gc->prpl)->chat_info_defaults != NULL) {
 			if (name.find("%") != std::string::npos)
@@ -54,6 +97,7 @@ Tag * MUCHandler::handlePresence(Tag *stanza) {
 		if (comps) {
 			serv_join_chat(gc, comps);
 		}
+		
 	}
 	else if (m_connected) {
 		purple_conversation_destroy(m_conv);
@@ -101,6 +145,11 @@ void MUCHandler::addUsers(GList *cbuddies) {
 
 		x->addChild(item);
 		tag->addChild(x);
+		if (name == m_nickname) {
+			if (m_lastPresence)
+				delete m_lastPresence;
+			m_lastPresence = tag->clone();
+		}
 		m_user->p->j->send(tag);
 
 		l = l->next;

@@ -49,6 +49,7 @@ class IRCProtocol : AbstractProtocol
 		Tag *getVCardTag(User *user, GList *vcardEntries);
 		bool isMUC(User *user, const std::string &jid) { return jid.find("%") != std::string::npos; }
 		bool tempAccountsAllowed() { return true; }
+		bool changeNickname(const std::string &nick, PurpleConversation *conv);
 
 		// SIGNALS
 
