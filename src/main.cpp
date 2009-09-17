@@ -107,21 +107,6 @@ static void daemonize(void) {
 	}
 	
 	freopen( "/dev/null", "r", stdin);
-
-	int logfd = open(logfile ? logfile : "/dev/null", O_WRONLY | O_CREAT, 0644);
-	if (logfd <= 0) {
-		std::cout << "Can't open log file\n";
-		exit(1);
-	}
-	if (dup2(logfd, STDERR_FILENO) < 0) {
-		std::cout << "Can't redirect stderr\n";
-		exit(1);
-	}
-	if (dup2(logfd, STDOUT_FILENO) < 0) {
-		std::cout << "Can't redirect stdout\n";
-		exit(1);
-	}
-	close(logfd);
 }
 
 
@@ -803,6 +788,23 @@ GlooxMessageHandler::GlooxMessageHandler(const std::string &config) : MessageHan
 
 	if (loaded && !nodaemon)
 		daemonize();
+	
+	if (logfile || !nodaemon) {
+		int logfd = open(logfile ? logfile : "/dev/null", O_WRONLY | O_CREAT, 0644);
+		if (logfd <= 0) {
+			std::cout << "Can't open log file\n";
+			exit(1);
+		}
+		if (dup2(logfd, STDERR_FILENO) < 0) {
+			std::cout << "Can't redirect stderr\n";
+			exit(1);
+		}
+		if (dup2(logfd, STDOUT_FILENO) < 0) {
+			std::cout << "Can't redirect stdout\n";
+			exit(1);
+		}
+		close(logfd);
+	}
 
 	if (loaded) {
 		m_sql = new SQLClass(this);	
