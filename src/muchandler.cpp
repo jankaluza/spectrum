@@ -23,6 +23,13 @@
 #include "user.h"
 #include "protocols/abstractprotocol.h"
 
+static void change_nickname(gpointer key, gpointer v, gpointer data) {
+	MUCHandler *m = (MUCHandler *) v;
+	std::string nickname((char *) data);
+	m->changeNickname(nickname);
+}
+
+
 MUCHandler::MUCHandler(User *user, const std::string &jid, const std::string &userJid){
 	m_user = user;
 	m_jid = jid;
@@ -74,13 +81,9 @@ Tag * MUCHandler::handlePresence(Tag *stanza) {
 			m_nickname = nickname;
 			if (m_user->p->protocol()->changeNickname(m_nickname, m_conv)) {
 				GHashTable *mucs = m_user->mucs();
-				GHashTableIter iter;
-				gpointer key, v;
-				g_hash_table_iter_init (&iter, mucs);
-				while (g_hash_table_iter_next (&iter, &key, &v)) {
-					MUCHandler *m = (MUCHandler *) v;
-					m->changeNickname(m_nickname);
-				}
+				char *nickname =  g_strdup(m_nickname.c_str());
+				g_hash_table_foreach(mucs, change_nickname, nickname);
+				g_free(nickname);
 			}
 			else
 				changeNickname(m_nickname);

@@ -21,6 +21,12 @@
 #include "accountcollector.h"
 #include "request.h"
 
+static void collect_account(gpointer key, gpointer v, gpointer data) {
+	AccountCollector *collector = (AccountCollector*) data;
+	PurpleAccount *account = (PurpleAccount *) v;
+	collector->collectNow(account);
+}
+
 static gboolean collectorTimeout(gpointer data){
 	AccountCollector *collector = (AccountCollector*) data;
 	collector->timeout();
@@ -81,14 +87,7 @@ void AccountCollector::collectNow(PurpleAccount *account, bool remove) {
 }
 
 void AccountCollector::timeout() {
-	GHashTableIter iter;
-	gpointer key, v;
-	g_hash_table_iter_init (&iter, m_accounts);
-	std::cout << "AccountCollector => timeout\n";
-	while (g_hash_table_iter_next (&iter, &key, &v)) {
-		PurpleAccount *account = (PurpleAccount *) v;
-		collectNow(account);
-	}
+	g_hash_table_foreach(m_accounts, collect_account, this);
 	g_hash_table_remove_all(m_accounts);
 }
 

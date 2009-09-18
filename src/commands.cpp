@@ -27,6 +27,21 @@
 #include "usermanager.h"
 #include "main.h"
 
+static void get_settings(gpointer key, gpointer v, gpointer data) {
+	PurpleValue *value = (PurpleValue *) v;
+	GString *s = (GString *) data;
+	if (purple_value_get_type(value) == PURPLE_TYPE_BOOLEAN) {
+		if (purple_value_get_boolean(value))
+			g_string_append_printf(s, "%s = True \n", (char *) key);
+		else
+			g_string_append_printf(s, "%s = False \n", (char *) key);
+	}
+	else if (purple_value_get_type(value) == PURPLE_TYPE_STRING) {
+		g_string_append_printf(s, "%s = %s \n", (char *) key, purple_value_get_string(value));
+	}
+}
+
+
 static PurpleCmdRet settings_command_cb(PurpleConversation *conv, const char *cmd, char **args, char **error, void *data) {
 	GString *s = NULL;
 	User *user = GlooxMessageHandler::instance()->userManager()->getUserByAccount(purple_conversation_get_account(conv));
@@ -37,21 +52,7 @@ static PurpleCmdRet settings_command_cb(PurpleConversation *conv, const char *cm
 		if (cmd == "list") {
 			s = g_string_new("Transport: ");
 			GHashTable *settings = user->settings();
-			GHashTableIter iter;
-			gpointer key, v;
-			g_hash_table_iter_init (&iter, settings);
-			while (g_hash_table_iter_next (&iter, &key, &v)) {
-				PurpleValue *value = (PurpleValue *) v;
-				if (purple_value_get_type(value) == PURPLE_TYPE_BOOLEAN) {
-					if (purple_value_get_boolean(value))
-						g_string_append_printf(s, "%s = True \n", (char *) key);
-					else
-						g_string_append_printf(s, "%s = False \n", (char *) key);
-				}
-				else if (purple_value_get_type(value) == PURPLE_TYPE_STRING) {
-					g_string_append_printf(s, "%s = %s \n", (char *) key, purple_value_get_string(value));
-				}
-			}
+			g_hash_table_foreach(settings, get_settings, s);
 		}
 		else if (cmd == "set") {
 			if (args[1] != NULL) {

@@ -3,6 +3,22 @@ AC_INIT(src/main.cpp)
 AM_INIT_AUTOMAKE(spectrum, 0.0.1)
 AM_CONFIG_HEADER(transport_config.h)
 
+# Check for OS
+case "$host_os" in
+  *cygwin*)
+     ;;
+  *)
+     AC_MSG_ERROR([
+
+Don't use ./configure on Linux. Use CMake (cmake .) instead of ./configure
+
+This configure script can be used only in Cygwin on Windows.
+See http://spectrum.im/documentation/building/windows for more informations.
+]);;
+esac
+
+	
+
 # Checks for programs.
 AC_PROG_AWK
 AC_PROG_CXX

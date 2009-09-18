@@ -463,6 +463,23 @@ static void fileRecvStart(PurpleXfer *xfer) {
 static void buddyListAddBuddy(PurpleAccount *account, const char *username, const char *group, const char *alias) {
 }
 
+static void save_settings(gpointer k, gpointer v, gpointer data) {
+	PurpleValue *value = (PurpleValue *) v;
+	std::string key((char *) k);
+	SaveData *s = (SaveData *) data;
+	User *user = s->user;
+	long id = *s->id;
+	if (purple_value_get_type(value) == PURPLE_TYPE_BOOLEAN) {
+		if (purple_value_get_boolean(value))
+			GlooxMessageHandler::instance()->sql()->addBuddySetting(user->storageId(), id, key, "1", purple_value_get_type(value));
+		else
+			GlooxMessageHandler::instance()->sql()->addBuddySetting(user->storageId(), id, key, "0", purple_value_get_type(value));
+	}
+	else if (purple_value_get_type(value) == PURPLE_TYPE_STRING) {
+		GlooxMessageHandler::instance()->sql()->addBuddySetting(user->storageId(), id, key, purple_value_get_string(value), purple_value_get_type(value));
+	}
+}
+
 static void buddyListSaveNode(PurpleBlistNode *node) {
 	if (!PURPLE_BLIST_NODE_IS_BUDDY(node))
 		return;
@@ -489,23 +506,11 @@ static void buddyListSaveNode(PurpleBlistNode *node) {
 		buddy->node.ui_data = (void *) new long(id);
 	}
 	Log().Get("buddyListSaveNode") << id << " " << name << " " << alias;
-	// save settings
-	GHashTableIter iter;
-	gpointer k, v;
-	g_hash_table_iter_init (&iter, buddy->node.settings);
-	while (g_hash_table_iter_next (&iter, &k, &v)) {
-		PurpleValue *value = (PurpleValue *) v;
-		std::string key((char *) k);
-		if (purple_value_get_type(value) == PURPLE_TYPE_BOOLEAN) {
-			if (purple_value_get_boolean(value))
-				GlooxMessageHandler::instance()->sql()->addBuddySetting(user->storageId(), id, key, "1", purple_value_get_type(value));
-			else
-				GlooxMessageHandler::instance()->sql()->addBuddySetting(user->storageId(), id, key, "0", purple_value_get_type(value));
-		}
-		else if (purple_value_get_type(value) == PURPLE_TYPE_STRING) {
-			GlooxMessageHandler::instance()->sql()->addBuddySetting(user->storageId(), id, key, purple_value_get_string(value), purple_value_get_type(value));
-		}
-	}
+	SaveData *s = new SaveData;
+	s->user = user;
+	s->id = (long *) buddy->node.ui_data;
+	g_hash_table_foreach(buddy->node.settings, save_settings, s);
+	delete s;
 }
 
 static void buddyListNewNode(PurpleBlistNode *node) {
