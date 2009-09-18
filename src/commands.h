@@ -21,6 +21,7 @@
 #ifndef _HI_COMMANDS_H
 #define _HI_COMMANDS_H
 
+#include "purple.h"
 #include <glib.h>
 class GlooxMessageHandler;
 

@@ -22,6 +22,7 @@
 #define _HI_SEARCH_REPEATER_H
 
 #include <string>
+#include "purple.h"
 #include "account.h"
 #include "glib.h"
 #include "request.h"

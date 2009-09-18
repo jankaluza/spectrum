@@ -23,6 +23,7 @@
 #include <string>
 #include <map>
 #include "glib.h"
+#include "purple.h"
 #include <gettext-po.h>
 
 class Localization {

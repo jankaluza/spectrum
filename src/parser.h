@@ -22,6 +22,7 @@
 #define _HI_PARSER_H
 
 #include <string>
+#include "purple.h"
 #include "gloox/parser.h"
 #include "gloox/taghandler.h"
 

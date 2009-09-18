@@ -26,7 +26,7 @@
 #include <gloox/messagesession.h>
 #include <gloox/siprofileft.h>
 #include <glib.h>
-
+#include "purple.h"
 #include "account.h"
 
 class GlooxMessageHandler;

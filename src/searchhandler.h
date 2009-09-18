@@ -21,6 +21,7 @@
 #ifndef _HI_SEARCH_HANDLER_H
 #define _HI_SEARCH_HANDLER_H
 
+#include "purple.h"
 #include <gloox/iqhandler.h>
 #include "notify.h"
 

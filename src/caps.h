@@ -23,6 +23,7 @@
 
 #include <sstream>
 #include <iostream>
+#include "purple.h"
 
 #include <gloox/iqhandler.h>
 #include <gloox/discohandler.h>

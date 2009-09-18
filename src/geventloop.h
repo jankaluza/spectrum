@@ -22,6 +22,7 @@
 #define _HI_EVENTLOOP_H
 
 #include <glib.h>
+#include "purple.h"
 #include "eventloop.h"
 
 #define READ_COND  (G_IO_IN | G_IO_HUP | G_IO_ERR)

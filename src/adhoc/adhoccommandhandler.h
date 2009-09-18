@@ -25,6 +25,7 @@
 #include <list>
 #include "glib.h"
 #include "gloox/iq.h"
+#include "purple.h"
 #include "abstractpurplerequest.h"
 
 using namespace gloox;

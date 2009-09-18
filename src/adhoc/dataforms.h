@@ -22,6 +22,7 @@
 #define _HI_DATAFORMS_H
 
 #include <glib.h>
+#include "purple.h"
 #include "gloox/tag.h"
 #include "request.h"
 

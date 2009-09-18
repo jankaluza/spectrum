@@ -21,6 +21,7 @@
 #ifndef STRIPHTMLTAGS_H
 #define STRIPHTMLTAGS_H
 #include <string>
+#include "purple.h"
 
 std::string& stripHTMLTags(std::string& s);
 #endif

@@ -22,6 +22,7 @@
 #define USERMANAGER_H
 
 #include <string>
+#include "purple.h"
 #include "account.h"
 #include "user.h"
 #include "glib.h"

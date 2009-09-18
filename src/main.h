@@ -42,6 +42,7 @@
 #include <gloox/siprofileft.h>
 #include <gloox/message.h>
 
+#include "purple.h"
 #include "account.h"
 #include "conversation.h"
 #include "core.h"

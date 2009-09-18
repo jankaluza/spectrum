@@ -23,6 +23,7 @@
 
 #include <string>
 #include <list>
+#include "purple.h"
 #include "user.h"
 
 using namespace gloox;

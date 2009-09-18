@@ -21,6 +21,7 @@
 #ifndef _HI_CL_H
 #define _HI_CL_H
 
+#include "purple.h"
 #include <gloox/iqhandler.h>
 
 class GlooxMessageHandler;

@@ -23,15 +23,12 @@
 
 #include <iostream>
 
-#define HAVE_PTHREADS
-
-#ifdef HAVE_PTHREADS
-#include <pthread.h>
-#include <errno.h>
-#elif WIN32
+#if WIN32
 #include <windows.h>
 #else
-        #error NO THREADING SUPPORT!!! THIS SOFTWARE WILL NOT RUN!
+#define HAVE_PTHREADS
+#include <pthread.h>
+#include <errno.h>
 #endif
 
 class Thread;

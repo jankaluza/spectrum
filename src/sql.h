@@ -26,6 +26,7 @@
 #include <gloox/clientbase.h>
 #include <gloox/tag.h>
 #include <glib.h>
+#include "purple.h"
 #include <account.h>
 
 #include "Poco/Data/SessionFactory.h"

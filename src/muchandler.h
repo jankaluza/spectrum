@@ -21,6 +21,7 @@
 #ifndef _HI_MUCHANDLER_H
 #define _HI_MUCHANDLER_H
 
+#include "purple.h"
 #include "localization.h"
 #include "gloox/tag.h"
 #include "gloox/presence.h"

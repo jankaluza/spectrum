@@ -22,6 +22,7 @@
 #define _SPECTRUM_ACCOUNT_COLLECTOR_H
 
 #include "glib.h"
+#include "purple.h"
 #include "account.h"
 #include <iostream>
 

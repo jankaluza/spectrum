@@ -21,6 +21,7 @@
 #ifndef _HI_GATEWAY_H
 #define _HI_GATEWAY_H
 
+#include "purple.h"
 #include <gloox/iqhandler.h>
 #include <gloox/clientbase.h>
 

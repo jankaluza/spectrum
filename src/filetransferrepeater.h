@@ -21,6 +21,7 @@
 #ifndef _SPECTRUM_FILETRANSFER_REPEATER_H
 #define _SPECTRUM_FILETRANSFER_REPEATER_H
 
+#include "purple.h"
 #include "localization.h"
 #include "gloox/tag.h"
 #include "gloox/presence.h"

@@ -24,6 +24,7 @@
 #include <string>
 #include <map>
 #include "glib.h"
+#include "purple.h"
 #include "account.h"
 
 class GlooxMessageHandler;

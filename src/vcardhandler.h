@@ -21,7 +21,7 @@
 #ifndef _HI_VCARD_H
 #define _HI_VCARD_H
 
-
+#include "purple.h"
 #include <gloox/iqhandler.h>
 #include <gloox/clientbase.h>
 #include <gloox/tag.h>

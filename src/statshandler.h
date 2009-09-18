@@ -21,6 +21,7 @@
 #ifndef _HI_STATS_H
 #define _HI_STATS_H
 
+#include "purple.h"
 #include <gloox/stanza.h>
 #include <gloox/stanzaextension.h>
 #include <gloox/iqhandler.h>
