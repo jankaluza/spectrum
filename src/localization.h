@@ -24,7 +24,10 @@
 #include <map>
 #include "glib.h"
 #include "purple.h"
+
+#ifndef WIN32
 #include <gettext-po.h>
+#endif
 
 class Localization {
 	public:

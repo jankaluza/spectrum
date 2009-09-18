@@ -60,8 +60,10 @@
 #include "request.h"
 #include "ft.h"
 
+#ifndef WIN32
 #include <libintl.h>
 #include <locale.h>
+#endif
 
 #include "transport_config.h"
 #include "localization.h"

@@ -52,8 +52,7 @@ void AccountCollector::collectNow(PurpleAccount *account, bool remove) {
 	if (account->ui_data == NULL) {
 		std::cout << "AccountCollector => freeing account " << purple_account_get_username(account) << "\n";
 		
-		if (remove)
-			g_hash_table_remove(m_accounts, purple_account_get_username(account));
+		g_hash_table_remove(m_accounts, purple_account_get_username(account));
 			
 		
 		purple_notify_close_with_handle(account);
@@ -88,6 +87,5 @@ void AccountCollector::collectNow(PurpleAccount *account, bool remove) {
 
 void AccountCollector::timeout() {
 	g_hash_table_foreach(m_accounts, collect_account, this);
-	g_hash_table_remove_all(m_accounts);
 }
 

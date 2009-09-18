@@ -74,7 +74,7 @@ static GOptionEntry options_entries[] = {
 };
 
 static void daemonize(void) {
-#if WIN32
+#ifndef WIN32
 	pid_t pid, sid;
 
 	/* already a daemon */
@@ -796,7 +796,7 @@ GlooxMessageHandler::GlooxMessageHandler(const std::string &config) : MessageHan
 	if (loaded && !nodaemon)
 		daemonize();
 
-#if WIN32
+#ifndef WIN32
 	if (logfile || !nodaemon) {
 		int logfd = open(logfile ? logfile : "/dev/null", O_WRONLY | O_CREAT, 0644);
 		if (logfd <= 0) {
@@ -979,7 +979,7 @@ void GlooxMessageHandler::purpleConnectionError(PurpleConnection *gc,PurpleConne
 			}
 			else {
 				user->disconnected();
-				g_timeout_add_seconds(5, &reconnect, g_strdup(user->jid().c_str()));
+				g_timeout_add(5000, &reconnect, g_strdup(user->jid().c_str()));
 			}
 		}
 	}
@@ -1636,10 +1636,10 @@ void GlooxMessageHandler::handlePresence(const Presence &stanza){
 				if (protocol()->isMUC(NULL, stanza.to().bare())) {
 					std::string server = stanza.to().username().substr(stanza.to().username().find("%") + 1, stanza.to().username().length() - stanza.to().username().find("%"));
 					server = stanza.from().bare() + server;
-					g_timeout_add_seconds(15, &connectUser, g_strdup(server.c_str()));
+					g_timeout_add(15000, &connectUser, g_strdup(server.c_str()));
 				}
 				else
-					g_timeout_add_seconds(15, &connectUser, g_strdup(stanza.from().bare().c_str()));
+					g_timeout_add(15000, &connectUser, g_strdup(stanza.from().bare().c_str()));
 			}
 		}
 		if (stanza.presence() == Presence::Unavailable && stanza.to().username() == ""){
@@ -1689,7 +1689,7 @@ void GlooxMessageHandler::onDisconnect(ConnectionError e) {
 	Log().Get("gloox") << j->streamErrorText("default text");
 	if (j->streamError() == 0 || j->streamError() == 24) {
 		Log().Get("gloox") << j->streamErrorText("trying to reconnect after 3 seconds");
-		g_timeout_add_seconds(3, &transportReconnect, NULL);
+		g_timeout_add(3000, &transportReconnect, NULL);
 	}
 }
 
@@ -1797,7 +1797,7 @@ bool GlooxMessageHandler::initPurple(){
 
 	purple_util_set_user_dir(configuration().userDir.c_str());
 
-	// purple_debug_set_enabled(true);
+	purple_debug_set_enabled(true);
 
 	purple_core_set_ui_ops(&coreUiOps);
 	purple_eventloop_set_ui_ops(getEventLoopUiOps());

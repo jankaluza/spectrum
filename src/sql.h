@@ -33,7 +33,9 @@
 #include "Poco/Data/Session.h"
 #include "Poco/Data/RecordSet.h"
 #include "Poco/Data/SQLite/Connector.h" 
-#include "Poco/Data/MySQL/Connector.h" 
+#ifndef WIN32
+#include "Poco/Data/MySQL/Connector.h"
+#endif 
 
 class GlooxMessageHandler;
 

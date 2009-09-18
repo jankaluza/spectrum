@@ -29,8 +29,10 @@ SQLClass::SQLClass(GlooxMessageHandler *parent) {
 	m_sess = NULL;
 	try {
 		if (p->configuration().sqlType == "mysql") {
+		#ifndef WIN32
 			MySQL::Connector::registerConnector(); 
 			m_sess = new Session("MySQL", "user=" + p->configuration().sqlUser + ";password=" + p->configuration().sqlPassword + ";host=" + p->configuration().sqlHost + ";db=" + p->configuration().sqlDb + ";auto-reconnect=true");
+			#endif
 		}
 	}
 	catch (Poco::Exception e) {
@@ -126,7 +128,6 @@ SQLClass::~SQLClass() {
 	if (m_loaded) {
 		m_sess->close();
 		delete m_sess;
-		MySQL::Connector::unregisterConnector();
 		delete m_stmt_addUser.stmt;
 		delete m_stmt_updateUserPassword.stmt;
 		delete m_stmt_removeBuddy.stmt;

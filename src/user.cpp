@@ -359,7 +359,7 @@ Tag *User::generatePresenceStanza(PurpleBuddy *buddy) {
 			if (avatarHash != NULL) {
 				Log().Get(m_jid) << "Got avatar hash";
 				// Check if it's patched libpurple which saves icons to directories
-				char *hash = rindex(avatarHash,'/');
+				char *hash = strrchr(avatarHash,'/');
 				std::string h;
 				if (hash) {
 					char *dot;

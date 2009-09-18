@@ -93,7 +93,7 @@ static PurpleEventLoopUiOps eventLoopOps =
 	input_add,
 	g_source_remove,
 	NULL,
-	g_timeout_add_seconds,
+	NULL,//g_timeout_add_seconds,
 	NULL,
 	NULL,
 	NULL
