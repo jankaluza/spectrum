@@ -74,6 +74,7 @@ static GOptionEntry options_entries[] = {
 };
 
 static void daemonize(void) {
+#if WIN32
 	pid_t pid, sid;
 
 	/* already a daemon */
@@ -107,6 +108,7 @@ static void daemonize(void) {
 	}
 	
 	freopen( "/dev/null", "r", stdin);
+#endif
 }
 
 
@@ -793,7 +795,8 @@ GlooxMessageHandler::GlooxMessageHandler(const std::string &config) : MessageHan
 
 	if (loaded && !nodaemon)
 		daemonize();
-	
+
+#if WIN32
 	if (logfile || !nodaemon) {
 		int logfd = open(logfile ? logfile : "/dev/null", O_WRONLY | O_CREAT, 0644);
 		if (logfd <= 0) {
@@ -810,6 +813,7 @@ GlooxMessageHandler::GlooxMessageHandler(const std::string &config) : MessageHan
 		}
 		close(logfd);
 	}
+#endif
 
 	if (loaded) {
 		m_sql = new SQLClass(this);	
@@ -1850,7 +1854,11 @@ int main( int argc, char* argv[] ) {
 	}
 
 	if (argc != 2)
+#if WIN32
+		std::cout << "Usage: spectrum.exe <configuration_file.cfg>";
+#else
 		std::cout << g_option_context_get_help(context, FALSE, NULL);
+#endif
 	else {
 		if (signal(SIGINT, spectrum_sigint_handler) == SIG_ERR)
 			std::cout << "SIGINT handler can't be set\n";
