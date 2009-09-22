@@ -366,18 +366,6 @@ static void XferComplete(PurpleXfer *xfer) {
 }
 
 /*
- * Called on every buddy list change. We call buddyChanged from here... :)
- */
-static void buddyListUpdate(PurpleBuddyList *blist, PurpleBlistNode *node) {
-	if (node != NULL) {
-		if (node->type == PURPLE_BLIST_BUDDY_NODE) {
-			PurpleBuddy* buddy = (PurpleBuddy*) node;
-			GlooxMessageHandler::instance()->purpleBuddyChanged(buddy);
-		}
-	}
-}
-
-/*
  * Called when somebody from legacy network wants to authorize some jabber user.
  * We can return some object which will be connected with this request all the time...
  */
@@ -459,10 +447,6 @@ static void fileRecvStart(PurpleXfer *xfer) {
 	FiletransferRepeater *repeater = (FiletransferRepeater *) xfer->ui_data;
 	repeater->fileRecvStart();
 	Log().Get("filesend") << "fileRecvStart()";
-}
-
-
-static void buddyListAddBuddy(PurpleAccount *account, const char *username, const char *group, const char *alias) {
 }
 
 static void save_settings(gpointer k, gpointer v, gpointer data) {
