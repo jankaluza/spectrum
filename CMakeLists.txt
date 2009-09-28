@@ -5,6 +5,7 @@ if(COMMAND cmake_policy)
 	cmake_policy(SET CMP0003 NEW)
 endif(COMMAND cmake_policy)
 
+file(WRITE src/transport_config.h "\n")
 
 set(CMAKE_MODULE_PATH "cmake_modules")
 include_directories(src)
@@ -149,7 +150,7 @@ add_executable(spectrum ${spectrum_SRCS} ${lrelease_outputs})
 target_link_libraries(spectrum ${GLOOX_LIBRARIES} ${PURPLE_LIBRARY} ${GLIB2_LIBRARIES} ${GETTEXTPO_LIBRARY} ${LIBPOCO_LIBRARIES} -export-dynamic)
 
 message(STATUS "Transport will be installed into: " ${CMAKE_INSTALL_PREFIX})
-file(WRITE src/transport_config.h "#define INSTALL_DIR \"" ${CMAKE_INSTALL_PREFIX} "\"\n")
+file(APPEND src/transport_config.h "#define INSTALL_DIR \"" ${CMAKE_INSTALL_PREFIX} "\"\n")
 
 INSTALL(TARGETS spectrum
     RUNTIME DESTINATION bin

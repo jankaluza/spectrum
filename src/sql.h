@@ -22,6 +22,7 @@
 #define _HI_SQL_H
 
 #include <iostream>
+#include "transport_config.h"
 
 #include <gloox/clientbase.h>
 #include <gloox/tag.h>
@@ -32,10 +33,14 @@
 #include "Poco/Data/SessionFactory.h"
 #include "Poco/Data/Session.h"
 #include "Poco/Data/RecordSet.h"
+
+#ifdef WITH_SQLITE
 #include "Poco/Data/SQLite/Connector.h" 
-#ifndef WIN32
+#endif // WITH_SQLITE
+
+#ifdef WITH_MYSQL
 #include "Poco/Data/MySQL/Connector.h"
-#endif 
+#endif // WITH_MYSQL
 
 class GlooxMessageHandler;
 

@@ -23,17 +23,31 @@
 #include "log.h"
 #include "main.h"
 
+#ifndef WITH_MYSQL
+#ifndef WITH_SQLITE
+#ifndef WITH_ODBC
+#error There is no libPocoData storage backend installed. Spectrum will not work without one of them.
+#endif // WITH_ODBC
+#endif // WITH_SQLITE
+#endif // WITH_MYSQL
+
 SQLClass::SQLClass(GlooxMessageHandler *parent) {
 	p = parent;
 	m_loaded = false;
 	m_sess = NULL;
 	try {
+#ifdef WITH_MYSQL
 		if (p->configuration().sqlType == "mysql") {
-		#ifndef WIN32
 			MySQL::Connector::registerConnector(); 
 			m_sess = new Session("MySQL", "user=" + p->configuration().sqlUser + ";password=" + p->configuration().sqlPassword + ";host=" + p->configuration().sqlHost + ";db=" + p->configuration().sqlDb + ";auto-reconnect=true");
-			#endif
 		}
+#endif
+#ifdef WITH_SQLITE
+		if (p->configuration().sqlType == "sqlite") {
+			SQLite::Connector::registerConnector(); 
+			m_sess = new Session("SQLite", p->configuration().sqlDb);
+		}
+#endif
 	}
 	catch (Poco::Exception e) {
 		Log().Get("SQL ERROR") << e.displayText();
