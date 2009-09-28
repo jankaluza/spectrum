@@ -173,46 +173,58 @@ void SQLClass::addUser(const std::string &jid,const std::string &uin,const std::
 }
 
 void SQLClass::initDb() {
-// 	if (p->configuration().sqlType != "sqlite3")
-// 		return;
-// 	dbi_result result;
-// 	int i;
-// 	const char *create_stmts_sqlite[] = {
-// 		"CREATE TABLE IF NOT EXISTS rosters ("
-// 			"id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,"
-// 			"jid VARCHAR(100) NOT NULL,"
-// 			"uin VARCHAR(100) NOT NULL,"
-// 			"subscription VARCHAR(10) NOT NULL,"
-// 			"nickname VARCHAR(255) NOT NULL DEFAULT \"\","
-// 			"g VARCHAR(255) NOT NULL DEFAULT \"\","
-// 			"UNIQUE (jid,uin)"
-// 		");",
-// 		"CREATE TABLE IF NOT EXISTS settings ("
-// 			"id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,"
-// 			"jid VARCHAR(255) NOT NULL,"
-// 			"var VARCHAR(255) NOT NULL,"
-// 			"type INTEGER NOT NULL,"
-// 			"value VARCHAR(255) NOT NULL"
-// 		");",
-// 		"CREATE TABLE IF NOT EXISTS users ("
-// 			"id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,"
-// 			"jid VARCHAR(255) NOT NULL,"
-// 			"uin VARCHAR(255) NOT NULL,"
-// 			"password VARCHAR(255) NOT NULL,"
-// 			"language VARCHAR(5) NOT NULL,"
-// 			"`group` INTEGER NOT NULL DEFAULT 0"
-// 		");","",""
-// 	};
-// 	for (i = 0; i < 5; i++) {
-// 		result = dbi_conn_query(m_conn, create_stmts_sqlite[i]);
-// 		if (result == NULL) {
-// 			const char *errmsg;
-// 			dbi_conn_error(m_conn, &errmsg);
-// 			if (errmsg)
-// 				Log().Get("SQL ERROR") << errmsg;
-// 		}
-// 		dbi_result_free(result);
-// 	}
+	if (p->configuration().sqlType != "sqlite")
+		return;
+	try {
+		*m_sess << "CREATE TABLE buddies ("
+					"  id INTEGER PRIMARY KEY NOT NULL,"
+					"  user_id int(10) NOT NULL,"
+					"  uin varchar(255) NOT NULL,"
+					"  subscription enum(4) NOT NULL,"
+					"  nickname varchar(255) NOT NULL,"
+					"  groups varchar(255) NOT NULL"
+					");", now;
+
+		*m_sess << "CREATE UNIQUE INDEX user_id ON buddies (user_id, uin);", now;
+
+		*m_sess << "CREATE TABLE buddies_settings ("
+					"  user_id int(10) NOT NULL,"
+					"  buddy_id int(10) NOT NULL,"
+					"  var varchar(50) NOT NULL,"
+					"  type smallint(4) NOT NULL,"
+					"  value varchar(255) NOT NULL,"
+					"  PRIMARY KEY (buddy_id, var)"
+					");", now;
+
+		*m_sess << "CREATE INDEX user_id02 ON buddies_settings (user_id);", now;
+
+		*m_sess << "CREATE TABLE users ("
+					"  id INTEGER PRIMARY KEY NOT NULL,"
+					"  jid varchar(255) NOT NULL,"
+					"  uin varchar(4095) NOT NULL,"
+					"  password varchar(255) NOT NULL,"
+					"  language varchar(25) NOT NULL,"
+					"  encoding varchar(50) NOT NULL DEFAULT 'utf8',"
+					"  last_login datetime,"
+					"  vip tinyint(1) NOT NULL DEFAULT '0'"
+					");", now;
+
+		*m_sess << "CREATE UNIQUE INDEX jid ON users (jid);", now;
+
+		*m_sess << "CREATE TABLE users_settings ("
+					"  user_id int(10) NOT NULL,"
+					"  var varchar(50) NOT NULL,"
+					"  type smallint(4) NOT NULL,"
+					"  value varchar(255) NOT NULL,"
+					"  PRIMARY KEY (user_id, var)"
+					");", now;
+					
+		*m_sess << "CREATE INDEX user_id03 ON users_settings (user_id);", now;
+	}
+	catch (Poco::Exception e) {
+		Log().Get("SQL ERROR") << e.displayText();
+		return;
+	}
 }
 
 bool SQLClass::isVIP(const std::string &jid) {
