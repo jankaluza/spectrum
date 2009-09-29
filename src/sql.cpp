@@ -176,7 +176,7 @@ void SQLClass::initDb() {
 	if (p->configuration().sqlType != "sqlite")
 		return;
 	try {
-		*m_sess << "CREATE TABLE buddies ("
+		*m_sess << "CREATE TABLE " + p->configuration().sqlPrefix + "buddies ("
 					"  id INTEGER PRIMARY KEY NOT NULL,"
 					"  user_id int(10) NOT NULL,"
 					"  uin varchar(255) NOT NULL,"
@@ -185,9 +185,9 @@ void SQLClass::initDb() {
 					"  groups varchar(255) NOT NULL"
 					");", now;
 
-		*m_sess << "CREATE UNIQUE INDEX user_id ON buddies (user_id, uin);", now;
+		*m_sess << "CREATE UNIQUE INDEX user_id ON " + p->configuration().sqlPrefix + "buddies (user_id, uin);", now;
 
-		*m_sess << "CREATE TABLE buddies_settings ("
+		*m_sess << "CREATE TABLE " + p->configuration().sqlPrefix + "buddies_settings ("
 					"  user_id int(10) NOT NULL,"
 					"  buddy_id int(10) NOT NULL,"
 					"  var varchar(50) NOT NULL,"
@@ -196,9 +196,9 @@ void SQLClass::initDb() {
 					"  PRIMARY KEY (buddy_id, var)"
 					");", now;
 
-		*m_sess << "CREATE INDEX user_id02 ON buddies_settings (user_id);", now;
+		*m_sess << "CREATE INDEX user_id02 ON " + p->configuration().sqlPrefix + "buddies_settings (user_id);", now;
 
-		*m_sess << "CREATE TABLE users ("
+		*m_sess << "CREATE TABLE " + p->configuration().sqlPrefix + "users ("
 					"  id INTEGER PRIMARY KEY NOT NULL,"
 					"  jid varchar(255) NOT NULL,"
 					"  uin varchar(4095) NOT NULL,"
@@ -209,9 +209,9 @@ void SQLClass::initDb() {
 					"  vip tinyint(1) NOT NULL DEFAULT '0'"
 					");", now;
 
-		*m_sess << "CREATE UNIQUE INDEX jid ON users (jid);", now;
+		*m_sess << "CREATE UNIQUE INDEX jid ON " + p->configuration().sqlPrefix + "users (jid);", now;
 
-		*m_sess << "CREATE TABLE users_settings ("
+		*m_sess << "CREATE TABLE " + p->configuration().sqlPrefix + "users_settings ("
 					"  user_id int(10) NOT NULL,"
 					"  var varchar(50) NOT NULL,"
 					"  type smallint(4) NOT NULL,"
@@ -219,7 +219,7 @@ void SQLClass::initDb() {
 					"  PRIMARY KEY (user_id, var)"
 					");", now;
 					
-		*m_sess << "CREATE INDEX user_id03 ON users_settings (user_id);", now;
+		*m_sess << "CREATE INDEX user_id03 ON " + p->configuration().sqlPrefix + "users_settings (user_id);", now;
 	}
 	catch (Poco::Exception e) {
 		Log().Get("SQL ERROR") << e.displayText();
