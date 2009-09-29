@@ -75,7 +75,7 @@ SQLClass::SQLClass(GlooxMessageHandler *parent) {
 	m_stmt_removeUserBuddies.stmt = new Statement( ( STATEMENT("DELETE FROM " + p->configuration().sqlPrefix + "buddies WHERE user_id=?"),
 													 use(m_stmt_removeUserBuddies.user_id) ) );
 	if (p->configuration().sqlType == "sqlite")
-		m_stmt_addBuddy.stmt = new Statement( ( STATEMENT("INSERT INTO " + p->configuration().sqlPrefix + "buddies (user_id, uin, subscription, groups, nickname) VALUES (?, ?, ?, ?, ?)"),
+		m_stmt_addBuddy.stmt = new Statement( ( STATEMENT("INSERT OR REPLACE INTO " + p->configuration().sqlPrefix + "buddies (user_id, uin, subscription, groups, nickname) VALUES (?, ?, ?, ?, ?)"),
 											use(m_stmt_addBuddy.user_id),
 											use(m_stmt_addBuddy.uin),
 											use(m_stmt_addBuddy.subscription),
@@ -127,7 +127,7 @@ SQLClass::SQLClass(GlooxMessageHandler *parent) {
 													  into(m_stmt_getBuddiesSettings.resVar),
 													  into(m_stmt_getBuddiesSettings.resValue) ) );
 	if (p->configuration().sqlType == "sqlite")
-		m_stmt_addBuddySetting.stmt = new Statement( ( STATEMENT("INSERT INTO " + p->configuration().sqlPrefix + "buddies_settings (user_id, buddy_id, var, type, value) VALUES (?, ?, ?, ?, ?)"),
+		m_stmt_addBuddySetting.stmt = new Statement( ( STATEMENT("INSERT OR REPLACE INTO " + p->configuration().sqlPrefix + "buddies_settings (user_id, buddy_id, var, type, value) VALUES (?, ?, ?, ?, ?)"),
 												   use(m_stmt_addBuddySetting.user_id),
 												   use(m_stmt_addBuddySetting.buddy_id),
 												   use(m_stmt_addBuddySetting.var),
@@ -195,22 +195,22 @@ void SQLClass::initDb() {
 		return;
 	try {
 		*m_sess << "CREATE TABLE " + p->configuration().sqlPrefix + "buddies ("
-					"  id INTEGER PRIMARY KEY NOT NULL ON CONFLICT REPLACE,"
-					"  user_id int(10) NOT NULL ON CONFLICT REPLACE,"
-					"  uin varchar(255) NOT NULL ON CONFLICT REPLACE,"
-					"  subscription varchar(20) NOT NULL ON CONFLICT REPLACE,"
-					"  nickname varchar(255) NOT NULL ON CONFLICT REPLACE,"
-					"  groups varchar(255) NOT NULL ON CONFLICT REPLACE"
+					"  id INTEGER PRIMARY KEY NOT NULL,"
+					"  user_id int(10) NOT NULL,"
+					"  uin varchar(255) NOT NULL,"
+					"  subscription varchar(20) NOT NULL,"
+					"  nickname varchar(255) NOT NULL,"
+					"  groups varchar(255) NOT NULL"
 					");", now;
 
 		*m_sess << "CREATE UNIQUE INDEX user_id ON " + p->configuration().sqlPrefix + "buddies (user_id, uin);", now;
 
 		*m_sess << "CREATE TABLE " + p->configuration().sqlPrefix + "buddies_settings ("
-					"  user_id int(10) NOT NULL ON CONFLICT REPLACE,"
-					"  buddy_id int(10) NOT NULL ON CONFLICT REPLACE,"
-					"  var varchar(50) NOT NULL ON CONFLICT REPLACE,"
-					"  type smallint(4) NOT NULL ON CONFLICT REPLACE,"
-					"  value varchar(255) NOT NULL ON CONFLICT REPLACE,"
+					"  user_id int(10) NOT NULL,"
+					"  buddy_id int(10) NOT NULL,"
+					"  var varchar(50) NOT NULL,"
+					"  type smallint(4) NOT NULL,"
+					"  value varchar(255) NOT NULL,"
 					"  PRIMARY KEY (buddy_id, var)"
 					");", now;
 
@@ -364,6 +364,7 @@ long SQLClass::addBuddy(long userId, const std::string &uin, const std::string &
 	catch (Poco::Exception e) {
 		Log().Get("SQL ERROR") << e.displayText();
 	}
+	// It would be much more better to find out the way how to get last_inserted_rowid from Poco.
 	if (p->configuration().sqlType == "sqlite") {
 		Poco::UInt64 id;
 		*m_sess << "SELECT id FROM " + p->configuration().sqlPrefix + "buddies WHERE user_id=? AND uin=?", use(m_stmt_addBuddy.user_id), use(m_stmt_addBuddy.uin), into(id), now;
