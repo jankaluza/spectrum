@@ -79,7 +79,7 @@ SQLClass::SQLClass(GlooxMessageHandler *parent) {
 										   use(m_stmt_addUser.uin),
 										   use(m_stmt_addUser.password),
 										   use(m_stmt_addUser.language) ) );
-	m_stmt_updateUserPassword.stmt = new Statement( ( STATEMENT("UPDATE " + p->configuration().sqlPrefix + "users SET password=?, language=? WHERE jid=?)"),
+	m_stmt_updateUserPassword.stmt = new Statement( ( STATEMENT("UPDATE " + p->configuration().sqlPrefix + "users SET password=?, language=? WHERE jid=?"),
 													  use(m_stmt_updateUserPassword.password),
 													  use(m_stmt_updateUserPassword.language),
 													  use(m_stmt_updateUserPassword.jid) ) );
