@@ -48,13 +48,18 @@ def start():
 						u = x.getElementsByTagName('username')
 						uin = gatherTextNodes(u[0])
 						print jid
-						db.runQuery('insert ignore into ' + prefix + 'users (jid, uin, password) values ("%s", "%s", "%s")'%(s(jid), s(uin),s(password))).addCallback(done)
-						items = x.getElementsByTagName('item')
-						for j in items:
-							db.runQuery('insert ignore into ' + prefix + 'rosters (uin, jid) values ("%s", "%s")'%(s(j.getAttribute('jid')), s(jid))).addCallback(done)
-
-def done(res):
-	print '..done'
+						
+						def done2(res):
+							user_id = int(res[0][0])
+							items = x.getElementsByTagName('item')
+							for j in items:
+								db.runQuery('insert ignore into ' + prefix + 'buddies (uin, user_id, nickname, groups, subscription) values ("%s", "%s", "%s","Buddies", "both")'%(s(j.getAttribute('jid')), s(str(user_id)), s(j.getAttribute('jid')))).addCallback(done)
+						
+						def done(res):
+							print '..done'
+							db.runQuery('select @@IDENTITY from'+ prefix + 'users ;' ).addCallback(done2)
+						
+						db.runQuery('insert ignore into ' + prefix + 'users (jid, uin, password, lang) values ("%s", "%s", "%s", "en")'%(s(jid), s(uin),s(password))).addCallback(done)
 
 reactor.callWhenRunning(start)
 reactor.run()
