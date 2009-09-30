@@ -54,8 +54,20 @@ SQLClass::SQLClass(GlooxMessageHandler *parent) {
 		return;
 	}
 	
-	if (!m_sess)
+	if (!m_sess) {
+		Log().Get("SQL ERROR") << "You don't have Spectrum compiled with the storage backend you are trying to use";
+		Log().Get("SQL ERROR") << "Currently Spectrum is compiled with these storage backends:";
+#ifdef WITH_MYSQL
+		Log().Get("SQL ERROR") << " - MySQL - use type=mysql for this backend in config file";
+#endif
+#ifdef WITH_SQLITE
+		Log().Get("SQL ERROR") << " - SQLite - use type=sqlite for this backend in config file";
+#endif
+// #ifdef WITH_ODBC
+// 		Log().Get("SQL ERROR") << " - ODBC - use type=odbc for this backend in config file";
+// #endif
 		return;
+	}
 	
 	// Prepared statements
 	m_stmt_addUser.stmt = new Statement( ( STATEMENT("INSERT INTO " + p->configuration().sqlPrefix + "users (jid, uin, password, language) VALUES (?, ?, ?, ?)"),
@@ -180,10 +192,8 @@ void SQLClass::addUser(const std::string &jid,const std::string &uin,const std::
 	m_stmt_addUser.uin.assign(uin);
 	m_stmt_addUser.password.assign(password);
 	m_stmt_addUser.language.assign(language);
-	std::cout << "DUMP " << m_stmt_addUser.stmt->toString() << "\n";
 	try {
 		m_stmt_addUser.stmt->execute();
-		std::cout << "DUMP " << m_stmt_addUser.stmt->toString() << "\n";
 	}
 	catch (Poco::Exception e) {
 		Log().Get("SQL ERROR") << e.displayText();
