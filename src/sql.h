@@ -98,23 +98,23 @@ struct updateUserPasswordStatement {
 	Poco::Data::Statement *stmt;
 };
 
-struct RemoveBuddyStatement {
+struct removeBuddyStatement {
 	Poco::Int32 user_id;
 	std::string uin;
 	Poco::Data::Statement *stmt;
 };
 
-struct RemoveUserStatement {
+struct removeUserStatement {
 	std::string jid;
 	Poco::Data::Statement *stmt;
 };
 
-struct RemoveUserBuddiesStatement {
+struct removeUserBuddiesStatement {
 	Poco::Int32 user_id;
 	Poco::Data::Statement *stmt;
 };
 
-struct AddBuddyStatement {
+struct addBuddyStatement {
 	Poco::Int32 user_id;
 	std::string uin;
 	std::string subscription;
@@ -248,10 +248,10 @@ class SQLClass {
 		void initDb();
 		addUserStatement m_stmt_addUser;
 		updateUserPasswordStatement m_stmt_updateUserPassword;
-		RemoveBuddyStatement m_stmt_removeBuddy;
-		RemoveUserStatement m_stmt_removeUser;
-		RemoveUserBuddiesStatement m_stmt_removeUserBuddies;
-		AddBuddyStatement m_stmt_addBuddy;
+		removeBuddyStatement m_stmt_removeBuddy;
+		removeUserStatement m_stmt_removeUser;
+		removeUserBuddiesStatement m_stmt_removeUserBuddies;
+		addBuddyStatement m_stmt_addBuddy;
 #ifdef WITH_SQLITE
 		updateBuddyStatement m_stmt_updateBuddy;
 #endif
