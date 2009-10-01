@@ -357,21 +357,6 @@ void SQLClass::removeUserBuddies(long userId) {
 void SQLClass::addDownload(const std::string &filename, const std::string &vip) {
 }
 
-
-
-// TODO: We have to rewrite it or remove it when we find out how to do addUserToRoster for sqlite3
-// void SQLClass::updateUserToRoster(const std::string &jid,const std::string &uin,const std::string &subscription, const std::string &group, const std::string &nickname) {
-// 	dbi_result result;
-// 	// result = dbi_conn_queryf(m_conn, "INSERT INTO %srosters (jid, uin, subscription, g, nickname) VALUES (\"%s\", \"%s\", \"%s\", \"%s\", \"%s\") ON DUPLICATE KEY UPDATE g=\"%s\", nickname=\"%s\"", p->configuration().sqlPrefix.c_str(), jid.c_str(), uin.c_str(), subscription.c_str(), group.c_str(), nickname.c_str(), group.c_str(), nickname.c_str());
-// 	result = dbi_conn_queryf(m_conn, "INSERT INTO %srosters (jid, uin, subscription, g, nickname) VALUES (\"%s\", \"%s\", \"%s\", \"%s\", \"%s\")", p->configuration().sqlPrefix.c_str(), jid.c_str(), uin.c_str(), subscription.c_str(), group.c_str(), nickname.c_str());
-// 	if (!result) {
-// 		const char *errmsg;
-// 		dbi_conn_error(m_conn, &errmsg);
-// 		if (errmsg)
-// 			Log().Get("SQL ERROR") << errmsg;
-// 	}
-// }
-
 long SQLClass::addBuddy(long userId, const std::string &uin, const std::string &subscription, const std::string &group, const std::string &nickname) {
 	m_stmt_addBuddy.user_id = userId;
 	m_stmt_addBuddy.uin.assign(uin);

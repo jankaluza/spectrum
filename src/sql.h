@@ -222,7 +222,6 @@ class SQLClass {
 		void updateUserPassword(const std::string &jid,const std::string &password, const std::string &language);
 		void removeUserBuddies(long userId);
 		long addBuddy(long userId, const std::string &uin, const std::string &subscription, const std::string &group = "Buddies", const std::string &nickname = "");
-	// 	void updateUserToRoster(const std::string &jid,const std::string &uin,const std::string &subscription, const std::string &group = "Buddies", const std::string &nickname = "");
 		void updateBuddySubscription(long userId, const std::string &uin, const std::string &subscription);
 		void removeBuddy(long userId, const std::string &uin);
 		bool isVIP(const std::string &jid); // TODO: remove me, I'm not needed with new db schema
