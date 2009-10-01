@@ -406,6 +406,9 @@ long SQLClass::addBuddy(long userId, const std::string &uin, const std::string &
 		return id;
 	}
 	else
+		/* This is only needed when doing an insert, so is OK even though
+		 * it returns something bogus for ON DUPLICATE KEY UPPDATE.
+		 */
 		return Poco::AnyCast<Poco::UInt64>(m_sess->getProperty("insertId"));
 }
 
