@@ -31,6 +31,10 @@
 #endif // WITH_SQLITE
 #endif // WITH_MYSQL
 
+#ifdef WITH_SQLITE
+#include <Poco/Data/SQLite/SQLiteException.h>
+#endif
+
 SQLClass::SQLClass(GlooxMessageHandler *parent) {
 	p = parent;
 	m_loaded = false;
@@ -86,14 +90,21 @@ SQLClass::SQLClass(GlooxMessageHandler *parent) {
 											  use(m_stmt_removeUser.jid) ) );
 	m_stmt_removeUserBuddies.stmt = new Statement( ( STATEMENT("DELETE FROM " + p->configuration().sqlPrefix + "buddies WHERE user_id=?"),
 													 use(m_stmt_removeUserBuddies.user_id) ) );
-	if (p->configuration().sqlType == "sqlite")
-		m_stmt_addBuddy.stmt = new Statement( ( STATEMENT("INSERT OR REPLACE INTO " + p->configuration().sqlPrefix + "buddies (user_id, uin, subscription, groups, nickname) VALUES (?, ?, ?, ?, ?)"),
+#ifdef WITH_SQLITE
+	if (p->configuration().sqlType == "sqlite") {
+		m_stmt_addBuddy.stmt = new Statement( ( STATEMENT("INSERT INTO " + p->configuration().sqlPrefix + "buddies (user_id, uin, subscription, groups, nickname) VALUES (?, ?, ?, ?, ?)"),
 											use(m_stmt_addBuddy.user_id),
 											use(m_stmt_addBuddy.uin),
 											use(m_stmt_addBuddy.subscription),
 											use(m_stmt_addBuddy.groups),
 											use(m_stmt_addBuddy.nickname) ) );
-	else
+		m_stmt_updateBuddy.stmt = new Statement( ( STATEMENT("UPDATE " + p->configuration().sqlPrefix + "buddies SET groups=?, nickname=? WHERE user_id=? AND uin=?"),
+											use(m_stmt_updateBuddy.groups),
+											use(m_stmt_updateBuddy.nickname),
+											use(m_stmt_updateBuddy.user_id),
+											use(m_stmt_updateBuddy.uin) ) );
+	} else
+#endif
 		m_stmt_addBuddy.stmt = new Statement( ( STATEMENT("INSERT INTO " + p->configuration().sqlPrefix + "buddies (user_id, uin, subscription, groups, nickname) VALUES (?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE groups=?, nickname=?"),
 											use(m_stmt_addBuddy.user_id),
 											use(m_stmt_addBuddy.uin),
@@ -176,6 +187,9 @@ SQLClass::~SQLClass() {
 		delete m_stmt_removeUser.stmt;
 		delete m_stmt_removeUserBuddies.stmt;
 		delete m_stmt_addBuddy.stmt;
+#ifdef WITH_SQLITE
+		delete m_stmt_updateBuddy.stmt;
+#endif
 		delete m_stmt_updateBuddySubscription.stmt;
 		delete m_stmt_getUserByJid.stmt;
 		delete m_stmt_getBuddies.stmt;
@@ -371,6 +385,21 @@ long SQLClass::addBuddy(long userId, const std::string &uin, const std::string &
 	try {
 		m_stmt_addBuddy.stmt->execute();
 	}
+#ifdef WITH_SQLITE
+	/* SQLite doesn't support "ON DUPLICATE UPDATE". */
+	catch (Poco::Data::SQLite::ConstraintViolationException e) {
+		m_stmt_updateBuddy.user_id = userId;
+		m_stmt_updateBuddy.uin = uin;
+		m_stmt_updateBuddy.groups = group;
+		m_stmt_updateBuddy.nickname = nickname;
+		try {
+			m_stmt_updateBuddy.stmt->execute();
+		}
+		catch (Poco::Exception e) {
+			Log().Get("SQL ERROR") << e.displayText();
+		}
+	}
+#endif
 	catch (Poco::Exception e) {
 		Log().Get("SQL ERROR") << e.displayText();
 	}

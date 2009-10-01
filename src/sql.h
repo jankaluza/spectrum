@@ -123,6 +123,16 @@ struct AddBuddyStatement {
 	Poco::Data::Statement *stmt;
 };
 
+#ifdef WITH_SQLITE
+struct updateBuddyStatement {
+	Poco::Int32 user_id;
+	std::string uin;
+	std::string groups;
+	std::string nickname;
+	Poco::Data::Statement *stmt;
+};
+#endif
+
 struct updateBuddySubscriptionStatement {
 	Poco::Int32 user_id;
 	std::string uin;
@@ -242,6 +252,9 @@ class SQLClass {
 		RemoveUserStatement m_stmt_removeUser;
 		RemoveUserBuddiesStatement m_stmt_removeUserBuddies;
 		AddBuddyStatement m_stmt_addBuddy;
+#ifdef WITH_SQLITE
+		updateBuddyStatement m_stmt_updateBuddy;
+#endif
 		updateBuddySubscriptionStatement m_stmt_updateBuddySubscription;
 		getUserByJidStatement m_stmt_getUserByJid;
 		getBuddiesStatement m_stmt_getBuddies;
