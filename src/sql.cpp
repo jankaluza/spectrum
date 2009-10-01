@@ -23,13 +23,9 @@
 #include "log.h"
 #include "main.h"
 
-#ifndef WITH_MYSQL
-#ifndef WITH_SQLITE
-#ifndef WITH_ODBC
+#if !defined(WITH_MYSQL) && !defined(WITH_SQLITE) && !defined(WITH_ODBC)
 #error There is no libPocoData storage backend installed. Spectrum will not work without one of them.
-#endif // WITH_ODBC
-#endif // WITH_SQLITE
-#endif // WITH_MYSQL
+#endif
 
 #ifdef WITH_SQLITE
 #include <Poco/Data/SQLite/SQLiteException.h>
