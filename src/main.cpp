@@ -807,6 +807,8 @@ GlooxMessageHandler::GlooxMessageHandler(const std::string &config) : MessageHan
 
 	j = new HiComponent("jabber:component:accept",m_configuration.server,m_configuration.jid,m_configuration.password,m_configuration.port);
 
+	j->logInstance().registerLogHandler(LogLevelDebug, LogAreaXmlIncoming | LogAreaXmlOutgoing, this);
+	
 	m_loop = g_main_loop_new(NULL, FALSE);
 
 	m_userManager = new UserManager(this);
@@ -928,6 +930,15 @@ bool GlooxMessageHandler::loadProtocol(){
 		j->registerIqHandler(m_searchHandler, ExtSearch);
 	}
 	return true;
+}
+
+void GlooxMessageHandler::handleLog(LogLevel level, LogArea area, const std::string &message) {
+	if (m_configuration.logAreas & LOG_AREA_XML) {
+		if (area == LogAreaXmlIncoming)
+			Log().Get("XML IN") << message;
+		else
+			Log().Get("XML OUT") << message;
+	}
 }
 
 void GlooxMessageHandler::onSessionCreateError(SessionCreateError error) {
@@ -1273,6 +1284,24 @@ bool GlooxMessageHandler::loadConfigFile(const std::string &config) {
 	else
 		m_configuration.useProxy = false;
 
+	if (g_key_file_has_key(keyfile,"logging","log_file",NULL)) {
+		logfile = g_key_file_get_string(keyfile, "logging","log_file", NULL);
+	}
+	
+	if (g_key_file_has_key(keyfile,"logging","log_areas",NULL)) {
+		bind = g_key_file_get_string_list (keyfile,"logging","log_areas", NULL, NULL);
+		m_configuration.logAreas = 0;
+		for (i = 0; bind[i]; i++) {
+			std::string feature(bind[i]);
+			if (feature == "xml")
+				m_configuration.logAreas = m_configuration.logAreas | LOG_AREA_XML;
+			else if (feature == "purple")
+				m_configuration.logAreas = m_configuration.logAreas | LOG_AREA_PURPLE;
+		}
+		g_strfreev (bind);
+	}
+	else m_configuration.logAreas = LOG_AREA_XML | LOG_AREA_PURPLE;
+	
 	if(g_key_file_has_key(keyfile,"purple","bind",NULL)) {
 		bind = g_key_file_get_string_list (keyfile,"purple","bind",NULL, NULL);
 		for (i = 0; bind[i]; i++){
@@ -1781,7 +1810,8 @@ bool GlooxMessageHandler::initPurple(){
 
 	purple_util_set_user_dir(configuration().userDir.c_str());
 
-	purple_debug_set_enabled(true);
+	if (m_configuration.logAreas & LOG_AREA_PURPLE)
+		purple_debug_set_enabled(true);
 
 	purple_core_set_ui_ops(&coreUiOps);
 	purple_eventloop_set_ui_ops(getEventLoopUiOps());

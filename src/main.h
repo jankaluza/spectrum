@@ -114,6 +114,10 @@ typedef enum { 	TRANSPORT_FEATURE_TYPING_NOTIFY = 2,
 				TRANSPORT_FEATURE_FILETRANSFER = 16
 				} TransportFeatures;
 
+typedef enum {	LOG_AREA_XML = 2,
+				LOG_AREA_PURPLE = 4,
+				} LogAreas;
+				
 /*
  * Enum used by gloox::StanzaExtension to identify StanzaExtension by Gloox.
  */
@@ -136,6 +140,8 @@ struct Configuration {
 	std::string password;	// server password
 	std::string jid;		// JID of this transport
 	int port;				// server port
+	
+	int logAreas;			// logging areas
 
 	bool onlyForVIP;		// true if transport is only for users in VIP users database
 	bool VIPEnabled;
@@ -163,7 +169,7 @@ struct Configuration {
  * Main transport class. It inits libpurple and Gloox, runs event loop and handles almost all signals.
  * This class is created only once and can be reached by static GlooxMessageHandler::instance() function.
  */
-class GlooxMessageHandler : public MessageHandler, ConnectionListener, PresenceHandler, SubscriptionHandler {
+class GlooxMessageHandler : public MessageHandler, ConnectionListener, PresenceHandler, SubscriptionHandler, LogHandler {
 public:
 	GlooxMessageHandler(const std::string &config);
 	~GlooxMessageHandler();
@@ -221,6 +227,7 @@ public:
 	void handleMessage (const Message &msg, MessageSession *session = 0);
 	void handlePresence(const Presence &presence);
 	void handleSubscription(const Subscription &stanza);
+	void handleLog(LogLevel level, LogArea area, const std::string &message);
 
 	UserManager *userManager() { return m_userManager; }
 	GlooxStatsHandler *stats() { return m_stats; }

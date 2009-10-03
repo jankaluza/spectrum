@@ -1320,7 +1320,8 @@ void User::addFiletransfer( const JID& to ) {
 }
 
 User::~User(){
-	purple_account_set_enabled(m_account, PURPLE_UI, FALSE);
+	if (m_account)
+		purple_account_set_enabled(m_account, PURPLE_UI, FALSE);
 
 	// send unavailable to online users
 	Tag *tag;
