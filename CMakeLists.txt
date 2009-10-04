@@ -27,7 +27,7 @@ find_path(GETTEXTPO_INCLUDE_DIR NAMES gettext-po.h
 )
 
 if(GETTEXTPO_LIBRARY AND GETTEXTPO_INCLUDE_DIR)
-	include (${GETTEXTPO_INCLUDE_DIR})
+	include_directories(${GETTEXTPO_INCLUDE_DIR})
 	message(STATUS "libgettextpo (gettext-devel) found: " ${GETTEXTPO_LIBRARY})
 else(GETTEXTPO_LIBRARY AND GETTEXTPO_INCLUDE_DIR)
 	message(FATAL_ERROR "no libgettextpo (gettext-devel)")
