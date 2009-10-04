@@ -1730,9 +1730,52 @@ void GlooxMessageHandler::onDisconnect(ConnectionError e) {
 		case ConnUserDisconnected: Log().Get("gloox") << "Reason: User disconnected"; break;
 		case ConnNotConnected: Log().Get("gloox") << "Reason: Not connected"; break;
 	};
-	
+
+	switch (j->streamError()) {
+		case StreamErrorBadFormat: Log().Get("gloox") << "Stream error: Bad format"; break;
+		case StreamErrorBadNamespacePrefix: Log().Get("gloox") << "Stream error: Bad namespace prefix"; break;
+		case StreamErrorConflict: Log().Get("gloox") << "Stream error: Conflict"; break;
+		case StreamErrorConnectionTimeout: Log().Get("gloox") << "Stream error: Connection timeout"; break;
+		case StreamErrorHostGone: Log().Get("gloox") << "Stream error: Host gone"; break;
+		case StreamErrorHostUnknown: Log().Get("gloox") << "Stream error: Host unknown"; break;
+		case StreamErrorImproperAddressing: Log().Get("gloox") << "Stream error: Improper addressing"; break;
+		case StreamErrorInternalServerError: Log().Get("gloox") << "Stream error: Internal server error"; break;
+		case StreamErrorInvalidFrom: Log().Get("gloox") << "Stream error: Invalid from"; break;
+		case StreamErrorInvalidId: Log().Get("gloox") << "Stream error: Invalid ID"; break;
+		case StreamErrorInvalidNamespace: Log().Get("gloox") << "Stream error: Invalid Namespace"; break;
+		case StreamErrorInvalidXml: Log().Get("gloox") << "Stream error: Invalid XML"; break;
+		case StreamErrorNotAuthorized: Log().Get("gloox") << "Stream error: Not Authorized"; break;
+		case StreamErrorPolicyViolation: Log().Get("gloox") << "Stream error: Policy violation"; break;
+		case StreamErrorRemoteConnectionFailed: Log().Get("gloox") << "Stream error: Remote connection failed"; break;
+		case StreamErrorResourceConstraint: Log().Get("gloox") << "Stream error: Resource constraint"; break;
+		case StreamErrorRestrictedXml: Log().Get("gloox") << "Stream error: Restricted XML"; break;
+		case StreamErrorSeeOtherHost: Log().Get("gloox") << "Stream error: See other host"; break;
+		case StreamErrorSystemShutdown: Log().Get("gloox") << "Stream error: System shutdown"; break;
+		case StreamErrorUndefinedCondition: Log().Get("gloox") << "Stream error: Undefined Condition"; break;
+		case StreamErrorUnsupportedEncoding: Log().Get("gloox") << "Stream error: Unsupported encoding"; break;
+		case StreamErrorUnsupportedStanzaType: Log().Get("gloox") << "Stream error: Unsupported stanza type"; break;
+		case StreamErrorUnsupportedVersion: Log().Get("gloox") << "Stream error: Unsupported version"; break;
+		case StreamErrorXmlNotWellFormed: Log().Get("gloox") << "Stream error: XML Not well formed"; break;
+		case StreamErrorUndefined: Log().Get("gloox") << "Stream error: Error undefined"; break;
+	};
+
+	switch (j->authError()) {
+		case AuthErrorUndefined: Log().Get("gloox") << "Auth error: Error undefined"; break;
+		case SaslAborted: Log().Get("gloox") << "Auth error: Sasl aborted"; break;
+		case SaslIncorrectEncoding: Log().Get("gloox") << "Auth error: Sasl incorrect encoding"; break;        
+		case SaslInvalidAuthzid: Log().Get("gloox") << "Auth error: Sasl invalid authzid"; break;
+		case SaslInvalidMechanism: Log().Get("gloox") << "Auth error: Sasl invalid mechanism"; break;
+		case SaslMalformedRequest: Log().Get("gloox") << "Auth error: Sasl malformed request"; break;
+		case SaslMechanismTooWeak: Log().Get("gloox") << "Auth error: Sasl mechanism too weak"; break;
+		case SaslNotAuthorized: Log().Get("gloox") << "Auth error: Sasl Not authorized"; break;
+		case SaslTemporaryAuthFailure: Log().Get("gloox") << "Auth error: Sasl temporary auth failure"; break;
+		case NonSaslConflict: Log().Get("gloox") << "Auth error: Non sasl conflict"; break;
+		case NonSaslNotAcceptable: Log().Get("gloox") << "Auth error: Non sasl not acceptable"; break;
+		case NonSaslNotAuthorized: Log().Get("gloox") << "Auth error: Non sasl not authorized"; break;
+	};
+
 	if (j->streamError() == 0 || j->streamError() == 24) {
-		Log().Get("gloox") << j->streamErrorText("trying to reconnect after 3 seconds");
+		Log().Get("gloox") << "trying to reconnect after 3 seconds";
 		g_timeout_add(3000, &transportReconnect, NULL);
 	}
 }
