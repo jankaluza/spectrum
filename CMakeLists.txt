@@ -61,6 +61,7 @@ set(spectrum_SRCS
 	src/adhoc/adhochandler.cpp
 	src/adhoc/adhocrepeater.cpp
 	src/adhoc/adhocsettings.cpp
+	src/adhoc/adhoctag.cpp
 	src/adhoc/dataforms.cpp
 	src/autoconnectloop.cpp
 	src/caps.cpp
@@ -106,6 +107,7 @@ set(spectrum_MOC_HDRS
 	src/adhoc/adhochandler.h
 	src/adhoc/adhocrepeater.h
 	src/adhoc/adhocsettings.h
+	src/adhoc/adhoctag.h
 	src/adhoc/autoconnectloop.h
 	src/adhoc/dataforms.h
 	src/caps.h

@@ -50,9 +50,11 @@ GlooxAdhocHandler::GlooxAdhocHandler(GlooxMessageHandler *m) {
 	main->j->disco()->registerNodeHandler( this, std::string() );
 
 	m_handlers["transport_settings"].name = "Transport settings";
+	m_handlers["transport_settings"].admin = false;
 	m_handlers["transport_settings"].createHandler = createSettingsHandler;
 
 	m_handlers["transport_admin"].name = "Transport administration";
+	m_handlers["transport_admin"].admin = true;
 	m_handlers["transport_admin"].createHandler = createAdminHandler;
 }
 
@@ -76,11 +78,15 @@ Disco::ItemList GlooxAdhocHandler::handleDiscoNodeItems( const JID &_from, const
 	// it's adhoc request for transport
 	if (to == main->jid()) {
 		User *user = main->userManager()->getUserByJID(from);
-		if (user) {
-			// add internal commands from m_handlers
-			for(std::map<std::string, adhocCommand>::iterator u = m_handlers.begin(); u != m_handlers.end() ; u++) {
+		std::list<std::string> const &admins = main->configuration().admins;
+		// add internal commands from m_handlers
+		for(std::map<std::string, adhocCommand>::iterator u = m_handlers.begin(); u != m_handlers.end() ; u++) {
+			if (user)
 				lst.push_back( new Disco::Item( main->jid(), (*u).first, (std::string) tr(user->getLang(), (*u).second.name) ) );
-			}
+			else if ((*u).second.admin && std::find(admins.begin(), admins.end(), from) != admins.end())
+				lst.push_back( new Disco::Item( main->jid(), (*u).first, (*u).second.name) );
+		}
+		if (user) {
 			// add commands from libpurple
 			if (user->isConnected() && purple_account_get_connection(user->account())) {
 				PurpleConnection *gc = purple_account_get_connection(user->account());
@@ -156,25 +162,28 @@ bool GlooxAdhocHandler::handleIq( const IQ &stanza ) {
 	}
 
 	User *user = main->userManager()->getUserByJID(from);
-	if (user) {
-		// check if we have existing session for this jid
-		if (hasSession(stanza.from().full())) {
-			if( m_sessions[stanza.from().full()]->handleIq(stanza) ) {
-				// AdhocCommandHandler returned true, so we should remove it
-				std::string jid = stanza.from().full();
-				delete m_sessions[jid];
-				unregisterSession(jid);
-			}
-			delete stanzaTag;
-			return true;
+	// check if we have existing session for this jid
+	if (hasSession(stanza.from().full())) {
+		if( m_sessions[stanza.from().full()]->handleIq(stanza) ) {
+			// AdhocCommandHandler returned true, so we should remove it
+			std::string jid = stanza.from().full();
+			delete m_sessions[jid];
+			unregisterSession(jid);
 		}
-		// check if we have registered handler for this node and create AdhocCommandHandler class
-		else if (m_handlers.find(node) != m_handlers.end()) {
+		delete stanzaTag;
+		return true;
+	}
+	// check if we have registered handler for this node and create AdhocCommandHandler class
+	else if (m_handlers.find(node) != m_handlers.end()) {
+		std::list<std::string> const &admins = main->configuration().admins;
+		if (m_handlers[node].admin && std::find(admins.begin(), admins.end(), from) != admins.end()) {
 			AdhocCommandHandler *handler = m_handlers[node].createHandler(main, user, stanza.from().full(), stanza.id());
 			registerSession(stanza.from().full(), handler);
 			delete stanzaTag;
 			return true;
 		}
+	}
+	if (user) {
 		// if it's PurpleAction, so we don't have handler for it, we have to execute the action here.
 		if (user->isConnected() && purple_account_get_connection(user->account())) {
 			if (to == main->jid()) {

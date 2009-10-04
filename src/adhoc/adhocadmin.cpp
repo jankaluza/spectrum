@@ -23,82 +23,27 @@
 #include "user.h"
 #include "main.h"
 #include "log.h"
+#include "adhoctag.h"
 
 AdhocAdmin::AdhocAdmin(GlooxMessageHandler *m, User *user, const std::string &from, const std::string &id) {
 	main = m;
-	m_user = user;
-	PurpleValue *value;
-	Tag *field;
 	m_from = std::string(from);
-	setRequestType(CALLER_ADHOC);
+	m_state = ADHOC_ADMIN_INIT;
 
 	IQ _response(IQ::Result, from, id);
 	Tag *response = _response.tag();
 	response->addAttribute("from",main->jid());
 
-	Tag *c = new Tag("command");
-	c->addAttribute("xmlns","http://jabber.org/protocol/commands");
-	c->addAttribute("sessionid",main->j->getID());
-	c->addAttribute("node","transport_settings");
-	c->addAttribute("status","executing");
+	AdhocTag *adhocTag = new AdhocTag(main->j->getID(), "transport_settings", "executing");
+	adhocTag->setAction("next");
+	adhocTag->setTitle("Transport administration");
+	adhocTag->setInstructions("Please select the group you want to change.");
+	
+	std::list <std::string> values;
+	values.push_back("Logging");
+	adhocTag->addListSingle("Config area", "config_area", values);
 
-	Tag *actions = new Tag("actions");
-	actions->addAttribute("execute","complete");
-	actions->addChild(new Tag("complete"));
-	c->addChild(actions);
-
-	Tag *xdata = new Tag("x");
-	xdata->addAttribute("xmlns","jabber:x:data");
-	xdata->addAttribute("type","form");
-	xdata->addChild(new Tag("title","Transport settings"));
-	xdata->addChild(new Tag("instructions","Change your transport settings here."));
-
-	field = new Tag("field");
-	field->addAttribute("type","boolean");
-	field->addAttribute("label","Enable transport");
-	field->addAttribute("var","enable_transport");
-	value = m_user->getSetting("enable_transport");
-	if (purple_value_get_boolean(value))
-		field->addChild(new Tag("value","1"));
-	else
-		field->addChild(new Tag("value","0"));
-	xdata->addChild(field);
-
-	field = new Tag("field");
-	field->addAttribute("type","boolean");
-	field->addAttribute("label","Enable network notification");
-	field->addAttribute("var","enable_notify_email");
-	value = m_user->getSetting("enable_notify_email");
-	if (purple_value_get_boolean(value))
-		field->addChild(new Tag("value","1"));
-	else
-		field->addChild(new Tag("value","0"));
-	xdata->addChild(field);
-
-	field = new Tag("field");
-	field->addAttribute("type","boolean");
-	field->addAttribute("label","Enable avatars");
-	field->addAttribute("var","enable_avatars");
-	value = m_user->getSetting("enable_avatars");
-	if (purple_value_get_boolean(value))
-		field->addChild(new Tag("value","1"));
-	else
-		field->addChild(new Tag("value","0"));
-	xdata->addChild(field);
-
-	field = new Tag("field");
-	field->addAttribute("type","boolean");
-	field->addAttribute("label","Enable chatstates");
-	field->addAttribute("var","enable_chatstate");
-	value = m_user->getSetting("enable_chatstate");
-	if (purple_value_get_boolean(value))
-		field->addChild(new Tag("value","1"));
-	else
-		field->addChild(new Tag("value","0"));
-	xdata->addChild(field);
-
-	c->addChild(xdata);
-	response->addChild(c);
+	response->addChild(adhocTag);
 	main->j->send(response);
 
 }
@@ -112,56 +57,76 @@ bool AdhocAdmin::handleIq(const IQ &stanza) {
 		IQ _response(IQ::Result, stanza.from().full(), stanza.id());
 		_response.setFrom(main->jid());
 		Tag *response = _response.tag();
-
-		Tag *c = new Tag("command");
-		c->addAttribute("xmlns","http://jabber.org/protocol/commands");
-		c->addAttribute("sessionid",tag->findAttribute("sessionid"));
-		c->addAttribute("node","configuration");
-		c->addAttribute("status","canceled");
-		response->addChild(c);
+		response->addChild( new AdhocTag(tag->findAttribute("sessionid"), "transport_settings", "canceled") );
 		main->j->send(response);
 
-// 		g_timeout_add(0,&removeHandler,this);
 		delete stanzaTag;
 		return true;
 	}
 
 	Tag *x = tag->findChildWithAttrib("xmlns","jabber:x:data");
 	if (x) {
-		std::string result("");
-		for(std::list<Tag*>::const_iterator it = x->children().begin(); it != x->children().end(); ++it) {
-			std::string key = (*it)->findAttribute("var");
-			if (key.empty()) continue;
-
-			PurpleValue * savedValue = m_user->getSetting(key.c_str());
-			if (!savedValue) continue;
-
-			Tag *v =(*it)->findChild("value");
-			if (!v) continue;
-
-			PurpleValue *value;
-			if (purple_value_get_type(savedValue) == PURPLE_TYPE_BOOLEAN) {
-				value = purple_value_new(PURPLE_TYPE_BOOLEAN);
-				purple_value_set_boolean(value, atoi(v->cdata().c_str()));
-				if (purple_value_get_boolean(savedValue) == purple_value_get_boolean(value)) {
-					purple_value_destroy(value);
-					continue;
+		if (m_state == ADHOC_ADMIN_INIT) {
+			std::string result("");
+			for(std::list<Tag*>::const_iterator it = x->children().begin(); it != x->children().end(); ++it) {
+				if ((*it)->hasAttribute("var","config_area")){
+					result = (*it)->findChild("value")->cdata();
+					break;
 				}
-				m_user->updateSetting(key, value);
+			}
+			
+			if (result == "Logging") {
+				m_state = ADHOC_ADMIN_LOGGING;
+
+				IQ _response(IQ::Result, stanza.from().full(), stanza.id());
+				Tag *response = _response.tag();
+				response->addAttribute("from", main->jid());
+
+				AdhocTag *adhocTag = new AdhocTag(tag->findAttribute("sessionid"), "transport_settings", "executing");
+				adhocTag->setAction("complete");
+				adhocTag->setTitle("Logging settings");
+				adhocTag->setInstructions("You can change logging settings here.");
+				adhocTag->addBoolean("Log XML", "log_xml", main->configuration().logAreas & LOG_AREA_XML);
+				adhocTag->addBoolean("Log Purple messages", "log_purple", main->configuration().logAreas & LOG_AREA_PURPLE);
+
+				response->addChild(adhocTag);
+				main->j->send(response);
+				delete stanzaTag;
+				return false;
 			}
 		}
+		else if (m_state == ADHOC_ADMIN_LOGGING) {
+			for(std::list<Tag*>::const_iterator it = x->children().begin(); it != x->children().end(); ++it) {
+				std::string key = (*it)->findAttribute("var");
+				if (key.empty()) continue;
 
-		IQ _s(IQ::Result, stanza.from().full(), stanza.id());
-		_s.setFrom(main->jid());
-		Tag *s = _s.tag();
-
-		Tag *c = new Tag("command");
-		c->addAttribute("xmlns","http://jabber.org/protocol/commands");
-		c->addAttribute("sessionid",tag->findAttribute("sessionid"));
-		c->addAttribute("node","configuration");
-		c->addAttribute("status","completed");
-		s->addChild(c);
-		main->j->send(s);
+				Tag *v =(*it)->findChild("value");
+				if (!v) continue;
+				
+				std::string data(v->cdata());
+				
+				if (key == "log_xml") {
+					if (data == "1")
+						main->configuration().logAreas |= LOG_AREA_XML;
+					else {
+						Log().Get("test") << main->configuration().logAreas;
+						main->configuration().logAreas &= ~LOG_AREA_XML;
+						Log().Get("test") << main->configuration().logAreas;
+					}
+				}
+				else if (key == "log_purple") {
+					if (data == "1")
+						main->configuration().logAreas |= LOG_AREA_PURPLE;
+					else
+						main->configuration().logAreas &= ~(LOG_AREA_PURPLE);
+				}
+			}
+			IQ _response(IQ::Result, stanza.from().full(), stanza.id());
+			_response.setFrom(main->jid());
+			Tag *response = _response.tag();
+			response->addChild( new AdhocTag(tag->findAttribute("sessionid"), "transport_settings", "completed") );
+			main->j->send(response);
+		}
 
 // 		g_timeout_add(0,&removeRepeater,this);
 	}

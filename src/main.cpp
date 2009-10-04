@@ -1293,8 +1293,9 @@ bool GlooxMessageHandler::loadConfigFile(const std::string &config) {
 		m_configuration.logAreas = 0;
 		for (i = 0; bind[i]; i++) {
 			std::string feature(bind[i]);
-			if (feature == "xml")
+			if (feature == "xml") {
 				m_configuration.logAreas = m_configuration.logAreas | LOG_AREA_XML;
+			}
 			else if (feature == "purple")
 				m_configuration.logAreas = m_configuration.logAreas | LOG_AREA_PURPLE;
 		}
@@ -1314,6 +1315,14 @@ bool GlooxMessageHandler::loadConfigFile(const std::string &config) {
 		bind = g_key_file_get_string_list(keyfile, "service", "allowed_servers", NULL, NULL);
 		for (i = 0; bind[i]; i++){
 			m_configuration.allowedServers.push_back((std::string) bind[i]);
+		}
+		g_strfreev (bind);
+	}
+
+	if(g_key_file_has_key(keyfile,"service","admins",NULL)) {
+		bind = g_key_file_get_string_list(keyfile, "service", "admins", NULL, NULL);
+		for (i = 0; bind[i]; i++){
+			m_configuration.admins.push_back((std::string) bind[i]);
 		}
 		g_strfreev (bind);
 	}

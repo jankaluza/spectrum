@@ -41,6 +41,7 @@ class User;
  */
 struct adhocCommand {
 	std::string name;	// command's name
+	bool admin;			// true if the user has to be admin to execute this command
 	// function which creates AdhocCommandHandler class which will be used as handler for this command
 	AdhocCommandHandler * (*createHandler)(GlooxMessageHandler *m, User *user, const std::string &from, const std::string &id);
 };

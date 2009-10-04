@@ -18,39 +18,31 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02111-1301  USA
  */
 
-#ifndef _HI_ADHOC_ADMIN_H
-#define _HI_ADHOC_ADMIN_H
+#ifndef _HI_ADHOC_TAG_H
+#define _HI_ADHOC_TAG_H
 
 #include <string>
-#include "purple.h"
-#include "account.h"
-#include "glib.h"
-#include "request.h"
-#include "adhoccommandhandler.h"
+#include "gloox/tag.h"
 
-class GlooxMessageHandler;
-class User;
+using namespace gloox;
 
-typedef enum {	ADHOC_ADMIN_INIT = 0,
-				ADHOC_ADMIN_LOGGING
-				} AdhocAdminState;
 
-/*
- * AdhocCommandHandler for Administration node
- */
-class AdhocAdmin : public AdhocCommandHandler
+class AdhocTag : public Tag
 {
 	public:
-		AdhocAdmin(GlooxMessageHandler *m, User *user, const std::string &from, const std::string &id);
-		~AdhocAdmin();
-		bool handleIq(const IQ &iq);
-		const std::string & from() { return m_from; }
+		AdhocTag(const std::string &id, const std::string &node, const std::string &status);
+		~AdhocTag() {}
+		void setAction(const std::string &action);
+		void setTitle(const std::string &title);
+		void setInstructions(const std::string &instructions);
+		void addListSingle(const std::string &label, const std::string &var, std::list <std::string> &values);
+		void addBoolean(const std::string &label, const std::string &var, bool value);
 
 	private:
-		GlooxMessageHandler *main;		// client
-		std::string m_from;				// full jid
-		User *m_user;					// User class
-		int m_state;					// current executing state
+		void initXData();
+
+		Tag *xdata;
+
 };
 
 #endif
