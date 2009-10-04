@@ -1706,9 +1706,31 @@ void GlooxMessageHandler::onConnect() {
 }
 
 void GlooxMessageHandler::onDisconnect(ConnectionError e) {
-	Log().Get("gloox") << "!!!!!!!!!! DISCONNECTED FROM JABBER SERVER !!!!!!!!!!!";
-	Log().Get("gloox") << j->streamError();
-	Log().Get("gloox") << j->streamErrorText("default text");
+	Log().Get("gloox") << "Disconnected from Jabber server !";
+	switch (e) {
+		case ConnNoError: Log().Get("gloox") << "Reason: No error"; break;
+		case ConnStreamError: Log().Get("gloox") << "Reason: Stream error"; break;
+		case ConnStreamVersionError: Log().Get("gloox") << "Reason: Stream version error"; break;
+		case ConnStreamClosed: Log().Get("gloox") << "Reason: Stream closed"; break;
+		case ConnProxyAuthRequired: Log().Get("gloox") << "Reason: Proxy auth required"; break;
+		case ConnProxyAuthFailed: Log().Get("gloox") << "Reason: Proxy auth failed"; break;
+		case ConnProxyNoSupportedAuth: Log().Get("gloox") << "Reason: Proxy no supported auth"; break;
+		case ConnIoError: Log().Get("gloox") << "Reason: IO Error"; break;
+		case ConnParseError: Log().Get("gloox") << "Reason: Parse error"; break;
+		case ConnConnectionRefused: Log().Get("gloox") << "Reason: Connection refused"; break;
+// 		case ConnSocketError: Log().Get("gloox") << "Reason: Socket error"; break;
+		case ConnDnsError: Log().Get("gloox") << "Reason: DNS Error"; break;
+		case ConnOutOfMemory: Log().Get("gloox") << "Reason: Out Of Memory"; break;
+		case ConnNoSupportedAuth: Log().Get("gloox") << "Reason: No supported auth"; break;
+		case ConnTlsFailed: Log().Get("gloox") << "Reason: Tls failed"; break;
+		case ConnTlsNotAvailable: Log().Get("gloox") << "Reason: Tls not available"; break;
+		case ConnCompressionFailed: Log().Get("gloox") << "Reason: Compression failed"; break;
+// 		case ConnCompressionNotAvailable: Log().Get("gloox") << "Reason: Compression not available"; break;
+		case ConnAuthenticationFailed: Log().Get("gloox") << "Reason: Authentication Failed"; break;
+		case ConnUserDisconnected: Log().Get("gloox") << "Reason: User disconnected"; break;
+		case ConnNotConnected: Log().Get("gloox") << "Reason: Not connected"; break;
+	};
+	
 	if (j->streamError() == 0 || j->streamError() == 24) {
 		Log().Get("gloox") << j->streamErrorText("trying to reconnect after 3 seconds");
 		g_timeout_add(3000, &transportReconnect, NULL);
