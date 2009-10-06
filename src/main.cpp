@@ -1605,8 +1605,16 @@ void GlooxMessageHandler::handlePresence(const Presence &stanza){
 					std::cout << "SERVER" << stanza.from().bare() + server << "\n";
 					user = new User(this, stanza.from(), stanza.to().resource() + "@" + server, "", stanza.from().bare() + server, res.id);
 				}
-				else
+				else {
+					if (purple_accounts_find(res.uin.c_str(), protocol()->protocol().c_str()) != NULL) {
+						PurpleAccount *act = purple_accounts_find(res.uin.c_str(), protocol()->protocol().c_str());
+						if (userManager()->getUserByAccount(act)) {
+							Log().Get(stanza.from().full()) << "This account is already connected by another jid";
+							return;
+						}
+					}
 					user = new User(this, stanza.from(), res.uin, res.password, stanza.from().bare(), res.id);
+				}
 				user->setFeatures(isVip ? configuration().VIPFeatures : configuration().transportFeatures);
 				if (c != NULL)
 					if (hasCaps(c->findAttribute("ver")))
