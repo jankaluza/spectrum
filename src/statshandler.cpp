@@ -29,6 +29,43 @@
 
 #include "sql.h"
 #include <sstream>
+#include <fstream>
+
+#ifndef WIN32
+static void process_mem_usage(double& vm_usage, double& resident_set) {
+	using std::ios_base;
+	using std::ifstream;
+	using std::string;
+
+	vm_usage     = 0.0;
+	resident_set = 0.0;
+
+	// 'file' stat seems to give the most reliable results
+	//
+	ifstream stat_stream("/proc/self/stat",ios_base::in);
+
+	// dummy vars for leading entries in stat that we don't care about
+	//
+	string pid, comm, state, ppid, pgrp, session, tty_nr;
+	string tpgid, flags, minflt, cminflt, majflt, cmajflt;
+	string utime, stime, cutime, cstime, priority, nice;
+	string O, itrealvalue, starttime;
+
+	// the two fields we want
+	//
+	unsigned long vsize;
+	long rss;
+
+	stat_stream >> pid >> comm >> state >> ppid >> pgrp >> session >> tty_nr
+				>> tpgid >> flags >> minflt >> cminflt >> majflt >> cmajflt
+				>> utime >> stime >> cutime >> cstime >> priority >> nice
+				>> O >> itrealvalue >> starttime >> vsize >> rss; // don't care about the rest
+
+	long page_size_kb = sysconf(_SC_PAGE_SIZE) / 1024; // in case x86-64 is configured to use 2MB pages
+	vm_usage     = vsize / 1024.0;
+	resident_set = rss * page_size_kb;
+}
+#endif
 
 StatsExtension::StatsExtension() : StanzaExtension( ExtStats )
 {
@@ -128,6 +165,12 @@ bool GlooxStatsHandler::handleIq (const IQ &stanza){
 		t = new Tag("stat");
 		t->addAttribute("name","messages/out");
 		query->addChild(t);
+		
+#ifndef WIN32
+		t = new Tag("stat");
+		t->addAttribute("name","memory-usage");
+		query->addChild(t);
+#endif
 
 		s->addChild(query);
 
@@ -199,6 +242,18 @@ bool GlooxStatsHandler::handleIq (const IQ &stanza){
 		t->addAttribute("value",m_messagesOut);
 		query->addChild(t);
 
+#ifndef WIN32
+		double vm, rss;
+		std::stringstream rss_stream;
+		process_mem_usage(vm, rss);
+		rss_stream << rss;
+
+		t = new Tag("stat");
+		t->addAttribute("name","memory-usage");
+		t->addAttribute("units","bytes");
+		t->addAttribute("value", rss_stream.str());
+		query->addChild(t);
+#endif
 		s->addChild(query);
 
 		p->j->send(s);
