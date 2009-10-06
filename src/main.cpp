@@ -515,8 +515,13 @@ static void buddyListRemoveNode(PurpleBlistNode *node) {
 	User *user = GlooxMessageHandler::instance()->userManager()->getUserByAccount(a);
 	if (user != NULL) {
 		if (user->loadingBuddiesFromDB()) return;
+		long id = 0;
+		if (buddy->node.ui_data) {
+			long *p = (long *) buddy->node.ui_data;
+			id = *p;
+		}
 		std::string name(purple_buddy_get_name(buddy));
-		GlooxMessageHandler::instance()->sql()->removeBuddy(user->storageId(), name);
+		GlooxMessageHandler::instance()->sql()->removeBuddy(user->storageId(), name, id);
 	}
 }
 

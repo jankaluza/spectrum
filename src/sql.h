@@ -168,7 +168,15 @@ struct addSettingStatement {
 	Poco::Int32 user_id;
 	std::string var;
 	std::string value;
+	int type;struct addBuddySettingStatement {
+	Poco::Int32 user_id;
+	Poco::Int32 buddy_id;
+	std::string var;
 	int type;
+	std::string value;
+	Poco::Data::Statement *stmt;
+};
+
 	Poco::Data::Statement *stmt;
 };
 
@@ -208,6 +216,11 @@ struct addBuddySettingStatement {
 	Poco::Data::Statement *stmt;
 };
 
+struct removeBuddySettingsStatement {
+	Poco::Int32 buddy_id;
+	Poco::Data::Statement *stmt;
+};
+
 /*
  * SQL storage backend. Uses libdbi for communication with SQL servers.
  */
@@ -223,7 +236,7 @@ class SQLClass {
 		void removeUserBuddies(long userId);
 		long addBuddy(long userId, const std::string &uin, const std::string &subscription, const std::string &group = "Buddies", const std::string &nickname = "");
 		void updateBuddySubscription(long userId, const std::string &uin, const std::string &subscription);
-		void removeBuddy(long userId, const std::string &uin);
+		void removeBuddy(long userId, const std::string &uin, long buddy_id);
 		bool isVIP(const std::string &jid); // TODO: remove me, I'm not needed with new db schema
 		long getRegisteredUsersCount();
 		long getRegisteredUsersRosterCount();
@@ -262,6 +275,7 @@ class SQLClass {
 		getBuddiesSettingsStatement m_stmt_getBuddiesSettings;
 		getSettingsStatement m_stmt_getSettings;
 		addBuddySettingStatement m_stmt_addBuddySetting;
+		removeBuddySettingsStatement m_stmt_removeBuddySettings;
 
 		Poco::Data::Session *m_sess;
 		GlooxMessageHandler *p;

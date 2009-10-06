@@ -1109,8 +1109,14 @@ void User::receivedSubscription(const Subscription &subscription) {
 				// this contact is in our local roster, so we have to remove her/him
 				Log().Get(m_jid) << "removing this contact from local roster";
 				m_roster.erase(subscription.to().username());
-				if (buddy != NULL)
-					p->sql()->removeBuddy(m_userID, subscription.to().username());
+				if (buddy != NULL) {
+					long id = 0;
+					if (buddy->node.ui_data) {
+						long *p = (long *) buddy->node.ui_data;
+						id = *p;
+					}
+					p->sql()->removeBuddy(m_userID, subscription.to().username(), id);
+				}
 			}
 			// inform user about removing this contact
 			Tag *tag = new Tag("presence");

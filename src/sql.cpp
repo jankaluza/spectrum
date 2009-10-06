@@ -160,6 +160,10 @@ SQLClass::SQLClass(GlooxMessageHandler *parent) {
 												   use(m_stmt_addBuddySetting.type),
 												   use(m_stmt_addBuddySetting.value),
 												   use(m_stmt_addBuddySetting.value) ) );
+
+	m_stmt_removeBuddySettings.stmt = new Statement( ( STATEMENT("DELETE FROM " + p->configuration().sqlPrefix + "buddies_settings WHERE buddy_id=?"),
+											  use(m_stmt_removeBuddySettings.buddy_id) ) );
+
 	m_stmt_getSettings.stmt = new Statement( ( STATEMENT("SELECT user_id, type, var, value FROM " + p->configuration().sqlPrefix + "users_settings WHERE user_id=?"),
 											   use(m_stmt_getSettings.user_id),
 											   into(m_stmt_getSettings.resId),
@@ -323,11 +327,13 @@ void SQLClass::updateUserPassword(const std::string &jid,const std::string &pass
 	}
 }
 
-void SQLClass::removeBuddy(long userId, const std::string &uin) {
+void SQLClass::removeBuddy(long userId, const std::string &uin, long buddy_id) {
 	m_stmt_removeBuddy.user_id = userId;
 	m_stmt_removeBuddy.uin.assign(uin);
+	m_stmt_removeBuddySettings.buddy_id = buddy_id;
 	try {
 		m_stmt_removeBuddy.stmt->execute();
+		m_stmt_removeBuddySettings.stmt->execute();
 	}
 	catch (Poco::Exception e) {
 		Log().Get("SQL ERROR") << e.displayText();
