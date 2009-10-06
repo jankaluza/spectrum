@@ -125,11 +125,6 @@ typedef enum {	ExtGateway = 1024,
 				ExtStats = 1025
 } MyStanzaExtensions;
 
-struct SaveData {
-	User *user;
-	long *id;
-};
-
 /*
  * Struct used for storing transport configuration.
  */
