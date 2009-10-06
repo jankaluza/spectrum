@@ -845,7 +845,7 @@ GlooxMessageHandler::GlooxMessageHandler(const std::string &config) : MessageHan
 		if( ftServer->listen() != ConnNoError ) {}
 		ft->addStreamHost( j->jid(), configuration().bindIPs[0], 8000 );
 		ft->registerSOCKS5BytestreamServer( ftServer );
-		g_timeout_add(10, &ftServerReceive, NULL);
+		purple_timeout_add(10, &ftServerReceive, NULL);
 		// ft->addStreamHost(gloox::JID("proxy.jabbim.cz"), "88.86.102.51", 7777);
 
 		j->registerMessageHandler(this);
@@ -981,7 +981,7 @@ void GlooxMessageHandler::purpleConnectionError(PurpleConnection *gc,PurpleConne
 			}
 			else {
 				user->disconnected();
-				g_timeout_add(5000, &reconnect, g_strdup(user->jid().c_str()));
+				purple_timeout_add_seconds(5, &reconnect, g_strdup(user->jid().c_str()));
 			}
 		}
 	}
@@ -1665,10 +1665,10 @@ void GlooxMessageHandler::handlePresence(const Presence &stanza){
 				if (protocol()->isMUC(NULL, stanza.to().bare())) {
 					std::string server = stanza.to().username().substr(stanza.to().username().find("%") + 1, stanza.to().username().length() - stanza.to().username().find("%"));
 					server = stanza.from().bare() + server;
-					g_timeout_add(15000, &connectUser, g_strdup(server.c_str()));
+					purple_timeout_add_seconds(15, &connectUser, g_strdup(server.c_str()));
 				}
 				else
-					g_timeout_add(15000, &connectUser, g_strdup(stanza.from().bare().c_str()));
+					purple_timeout_add_seconds(15, &connectUser, g_strdup(stanza.from().bare().c_str()));
 			}
 		}
 		if (stanza.presence() == Presence::Unavailable && stanza.to().username() == ""){
@@ -1805,7 +1805,7 @@ void GlooxMessageHandler::onDisconnect(ConnectionError e) {
 
 	if (j->streamError() == 0 || j->streamError() == 24) {
 		Log().Get("gloox") << "trying to reconnect after 3 seconds";
-		g_timeout_add(3000, &transportReconnect, NULL);
+		purple_timeout_add_seconds(3, &transportReconnect, NULL);
 	}
 }
 
