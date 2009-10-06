@@ -340,8 +340,8 @@ Tag *User::generatePresenceStanza(PurpleBuddy *buddy) {
 	Tag *c = new Tag("c");
 	c->addAttribute("xmlns", "http://jabber.org/protocol/caps");
 	c->addAttribute("hash", "sha-1");
-	c->addAttribute("node", "http://jabbim.cz/icqtransport");
-	c->addAttribute("ver", "Q543534fdsfsdsssT/WM94uAlu0=");
+	c->addAttribute("node", "http://spectrum.im/transport");
+	c->addAttribute("ver", p->configuration().hash);
 	tag->addChild(c);
 
 	if (hasTransportFeature(TRANSPORT_FEATURE_AVATARS)) {

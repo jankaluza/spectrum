@@ -163,6 +163,8 @@ struct Configuration {
 	std::string sqlDb;		// database database
 	std::string sqlPrefix;	// database prefix used for tables
 	std::string sqlType;	// database type
+	
+	std::string hash; 		// version hash used for caps
 };
 
 
