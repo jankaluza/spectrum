@@ -25,5 +25,6 @@
 
 /* Replace all instances of from with to in string str in-place */
 void replace(std::string &str, const char *from, const char *to);
+int isValidEmail(const char *address);
 
 #endif

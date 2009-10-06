@@ -284,8 +284,10 @@ bool GlooxRegisterHandler::handleIq (const IQ &iq){
 			e=true;
 
 		p->protocol()->prepareUserName(username);
-		if (!p->protocol()->isValidUsername(username))
+		if (!p->protocol()->isValidUsername(username)) {
+			std::cout << "* This is now valid username: "<< username << "\n";
 			e = true;
+		}
 
 //    <iq type='error' from='shakespeare.lit' to='bill@shakespeare.lit/globe' id='change1'>
 //        <error code='400' type='modify'>

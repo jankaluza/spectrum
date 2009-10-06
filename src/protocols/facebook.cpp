@@ -68,8 +68,7 @@ void FacebookProtocol::prepareUserName(std::string &str) {
 }
 
 bool FacebookProtocol::isValidUsername(const std::string &str){
-	// TODO: check valid email address
-	return true;
+	return isValidEmail(str.c_str());
 }
 
 std::list<std::string> FacebookProtocol::transportFeatures(){
