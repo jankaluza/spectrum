@@ -62,11 +62,10 @@ static void save_settings(gpointer k, gpointer v, gpointer data) {
 	}
 }
 
-static void storeBuddy(gpointer key, gpointer v, gpointer data) {
+static gboolean storeBuddy(gpointer key, gpointer v, gpointer data) {
 	User *user = (User *) data;
 	PurpleBuddy *buddy = (PurpleBuddy *) v;
 	GHashTable *buddies = user->storageCache();
-	g_hash_table_remove(buddies, purple_buddy_get_name (buddy));
 	
 	// save PurpleBuddy
 	std::string alias;
@@ -91,6 +90,7 @@ static void storeBuddy(gpointer key, gpointer v, gpointer data) {
 	s->id = (long *) buddy->node.ui_data;
 	g_hash_table_foreach(buddy->node.settings, save_settings, s);
 	delete s;
+	return TRUE;
 }
 
 static gboolean storageTimeout(gpointer data) {
@@ -100,7 +100,7 @@ static gboolean storageTimeout(gpointer data) {
 		user->removeStorageTimer();
 		return FALSE;
 	}
-	g_hash_table_foreach(buddies, storeBuddy, user);
+	g_hash_table_foreach_remove(buddies, storeBuddy, user);
 	return TRUE;
 }
 

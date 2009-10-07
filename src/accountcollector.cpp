@@ -21,10 +21,11 @@
 #include "accountcollector.h"
 #include "request.h"
 
-static void collect_account(gpointer key, gpointer v, gpointer data) {
+static gboolean collect_account(gpointer key, gpointer v, gpointer data) {
 	AccountCollector *collector = (AccountCollector*) data;
 	PurpleAccount *account = (PurpleAccount *) v;
-	collector->collectNow(account);
+	collector->collectNow(account, false);
+	return TRUE;
 }
 
 static gboolean collectorTimeout(gpointer data){
@@ -58,7 +59,8 @@ void AccountCollector::collectNow(PurpleAccount *account, bool remove) {
 	if (account->ui_data == NULL) {
 		std::cout << "AccountCollector => freeing account " << purple_account_get_username(account) << "\n";
 		
-		g_hash_table_remove(m_accounts, purple_account_get_username(account));
+		if (remove)
+			g_hash_table_remove(m_accounts, purple_account_get_username(account));
 			
 		
 		purple_notify_close_with_handle(account);
@@ -92,6 +94,6 @@ void AccountCollector::collectNow(PurpleAccount *account, bool remove) {
 }
 
 void AccountCollector::timeout() {
-	g_hash_table_foreach(m_accounts, collect_account, this);
+	g_hash_table_foreach_remove(m_accounts, collect_account, this);
 }
 
