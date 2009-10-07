@@ -581,8 +581,8 @@ void User::purpleBuddyRemoved(PurpleBuddy *buddy) {
 	std::for_each( name.begin(), name.end(), replaceBadJidCharacters() );
 	m_subscribeCache.erase(name);
 	
-	if (g_hash_table_lookup(m_storeCache, purple_buddy_get_name(buddy)) != NULL)
-		g_hash_table_remove(m_storeCache, purple_buddy_get_name(buddy));
+	if (g_hash_table_lookup(m_storageCache, purple_buddy_get_name(buddy)) != NULL)
+		g_hash_table_remove(m_storageCache, purple_buddy_get_name(buddy));
 }
 
 void User::purpleBuddyCreated(PurpleBuddy *buddy) {
