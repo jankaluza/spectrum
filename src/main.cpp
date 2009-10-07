@@ -19,9 +19,11 @@
  */
 
 #include "main.h"
-#include <sys/types.h>
 #include <sys/stat.h>
+#include <sys/types.h>
+#include <sys/wait.h>
 #include <fcntl.h>
+#include <signal.h>
 #include "utf8.h"
 #include "log.h"
 #include "geventloop.h"
@@ -1928,7 +1930,23 @@ static void spectrum_sigint_handler(int sig) {
 	delete GlooxMessageHandler::instance();
 
 	return;
-} 
+}
+
+static void spectrum_sigchld_handler(int sig)
+{
+	int status;
+	pid_t pid;
+
+	do {
+		pid = waitpid(-1, &status, WNOHANG);
+	} while (pid != 0 && pid != (pid_t)-1);
+
+	if ((pid == (pid_t) - 1) && (errno != ECHILD)) {
+		char errmsg[BUFSIZ];
+		snprintf(errmsg, BUFSIZ, "Warning: waitpid() returned %d", pid);
+		perror(errmsg);
+	}
+}
 
 int main( int argc, char* argv[] ) {
 	GError *error = NULL;
@@ -1947,8 +1965,18 @@ int main( int argc, char* argv[] ) {
 		std::cout << g_option_context_get_help(context, FALSE, NULL);
 #endif
 	else {
-		if (signal(SIGINT, spectrum_sigint_handler) == SIG_ERR)
+		signal(SIGPIPE, SIG_IGN);
+
+		if (signal(SIGCHLD, spectrum_sigchld_handler) == SIG_ERR) {
+			std::cout << "SIGCHLD handler can't be set\n";
+			return -1;
+		}
+
+		if (signal(SIGINT, spectrum_sigint_handler) == SIG_ERR) {
 			std::cout << "SIGINT handler can't be set\n";
+			return -1;
+		}
+
 		std::string config(argv[1]);
 		new GlooxMessageHandler(config);
 	}
