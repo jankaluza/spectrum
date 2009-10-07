@@ -142,6 +142,11 @@ User::User(GlooxMessageHandler *parent, JID jid, const std::string &username, co
 	m_filetransfers = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
 	m_storageCache = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
 	PurpleValue *value;
+	
+	PurpleAccount *act = purple_accounts_find(m_username.c_str(), this->p->protocol()->protocol().c_str());
+	if (act)
+		p->collector()->stopCollecting(act);
+
 
 	// check default settings
 	if ( (value = getSetting("enable_transport")) == NULL ) {

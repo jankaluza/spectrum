@@ -32,6 +32,7 @@ class AccountCollector {
 		~AccountCollector();
 		
 		void collect(PurpleAccount *account);
+		void stopCollecting(PurpleAccount *account);
 		void collectNow(PurpleAccount *accout, bool remove = false);
 		void timeout();
 	

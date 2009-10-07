@@ -43,6 +43,12 @@ AccountCollector::~AccountCollector() {
 	g_hash_table_destroy(m_accounts);
 }
 
+void AccountCollector::stopCollecting(PurpleAccount *account) {
+	if (g_hash_table_lookup(m_accounts, purple_account_get_username(account)) != NULL)
+		g_hash_table_remove(m_accounts, purple_account_get_username(account));
+}
+
+
 void AccountCollector::collect(PurpleAccount *account) {
 	if (g_hash_table_lookup(m_accounts, purple_account_get_username(account)) == NULL)
 		g_hash_table_replace(m_accounts, g_strdup(purple_account_get_username(account)), account);
