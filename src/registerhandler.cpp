@@ -198,9 +198,10 @@ bool GlooxRegisterHandler::handleIq (const IQ &iq){
 		// someone wants to be removed
 		if (remove) {
 			std::cout << "* removing user from database and disconnecting from legacy network\n";
-			PurpleAccount *account;
+			PurpleAccount *account = NULL;
 			if (user!=NULL){
 				if (user->isConnected()==true){
+					account = user->account();
 					purple_account_disconnect(user->account());
 					user->disconnected();
 				}
@@ -238,7 +239,8 @@ bool GlooxRegisterHandler::handleIq (const IQ &iq){
 					p->sql()->removeUser(iq.from().bare());
 					p->sql()->removeUserBuddies(res.id);
 				}
-				p->collector()->collectNow(account, true);
+// 				if (account)
+// 					p->collector()->collectNow(account, true);
 			}
 			else{
 				// TODO: remove contacts from roster with unsubscribe presence
