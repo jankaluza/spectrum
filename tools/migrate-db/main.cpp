@@ -87,13 +87,13 @@ SQLClass::SQLClass(const std::string &config) {
 		") ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;", now;
 		
 		std::cout << "Migrating data from `" + m_configuration.sqlPrefix + "users` table to `migrated_" + m_configuration.sqlPrefix + "users` temporary table\n";
-		*m_sess << std::string("INSERT INTO migrated_" + m_configuration.sqlPrefix + "users (`id`, `jid`, `uin`, `password`, `language`) SELECT `id`, `jid`, `uin`, `password`, `language` FROM " + m_configuration.sqlPrefix + "users;"), now;
+		*m_sess << std::string("INSERT IGNORE INTO migrated_" + m_configuration.sqlPrefix + "users (`id`, `jid`, `uin`, `password`, `language`) SELECT `id`, `jid`, `uin`, `password`, `language` FROM " + m_configuration.sqlPrefix + "users;"), now;
 	
 		std::cout << "Migrating data from `" + m_configuration.sqlPrefix + "rosters` table to `migrated_" + m_configuration.sqlPrefix + "buddies` temporary table\n";
-		*m_sess << "INSERT INTO migrated_" + m_configuration.sqlPrefix + "buddies (`id`,  `user_id`,  `uin`,  `subscription`,  `nickname`,  `groups`) SELECT AA.`id`,  AB.`id`,  AA.`uin`,  AA.`subscription`,  AA.`nickname`,  AA.`g` FROM " + m_configuration.sqlPrefix + "rosters AA, " + m_configuration.sqlPrefix + "users AB WHERE AA.`jid`=AB.`jid`", now;
+		*m_sess << "INSERT IGNORE INTO migrated_" + m_configuration.sqlPrefix + "buddies (`id`,  `user_id`,  `uin`,  `subscription`,  `nickname`,  `groups`) SELECT AA.`id`,  AB.`id`,  AA.`uin`,  AA.`subscription`,  AA.`nickname`,  AA.`g` FROM " + m_configuration.sqlPrefix + "rosters AA, " + m_configuration.sqlPrefix + "users AB WHERE AA.`jid`=AB.`jid`", now;
 
 		std::cout << "Migrating data from `" + m_configuration.sqlPrefix + "settings` table to `migrated_users_settings` temporary table\n";
-		*m_sess << "INSERT INTO migrated_" + m_configuration.sqlPrefix + "users_settings (`user_id`,  `var`,  `type`,  `value`) SELECT AB.`id`,  AA.`var`,  AA.`type`,  AA.`value` FROM " + m_configuration.sqlPrefix + "settings AA, " + m_configuration.sqlPrefix + "users AB WHERE AA.`jid`=AB.`jid`", now;
+		*m_sess << "INSERT IGNORE INTO migrated_" + m_configuration.sqlPrefix + "users_settings (`user_id`,  `var`,  `type`,  `value`) SELECT AB.`id`,  AA.`var`,  AA.`type`,  AA.`value` FROM " + m_configuration.sqlPrefix + "settings AA, " + m_configuration.sqlPrefix + "users AB WHERE AA.`jid`=AB.`jid`", now;
 		std::cout << "All data are now migrated in `migrated_" + m_configuration.sqlPrefix + "users`, `migrated_" + m_configuration.sqlPrefix + "buddies` and `migrated_" + m_configuration.sqlPrefix + "users_settings` tables.\n";
 		std::cout << "PLEASE verify if data are migrated sucessfully by changing prefix in your config file to \"migrated_" <<  m_configuration.sqlPrefix  <<"\" and run new version of transport.\n";
 		std::cout << "You can of course drop tables from previous version, but be sure data are migrated sucessfully!\n";
