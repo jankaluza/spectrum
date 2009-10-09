@@ -270,7 +270,7 @@ void SQLClass::initDb() {
 }
 
 bool SQLClass::isVIP(const std::string &jid) {
-	return false;
+	return true;
 }
 
 long SQLClass::getRegisteredUsersCount(){
