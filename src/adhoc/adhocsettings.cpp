@@ -20,7 +20,7 @@
 
 #include "adhocsettings.h"
 #include "gloox/stanza.h"
-#include "log.h"
+#include "../log.h"
 #include "user.h"
 #include "main.h"
 

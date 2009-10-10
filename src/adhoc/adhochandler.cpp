@@ -20,7 +20,7 @@
 
 #include "adhochandler.h"
 #include "usermanager.h"
-#include "log.h"
+#include "../log.h"
 #include "adhocrepeater.h"
 #include "adhocsettings.h"
 #include "adhocadmin.h"

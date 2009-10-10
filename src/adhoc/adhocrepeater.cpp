@@ -20,7 +20,7 @@
 
 #include "adhocrepeater.h"
 #include "gloox/stanza.h"
-#include "log.h"
+#include "../log.h"
 #include "dataforms.h"
 #include "user.h"
 
