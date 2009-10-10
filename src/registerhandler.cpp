@@ -40,6 +40,12 @@ GlooxRegisterHandler::~GlooxRegisterHandler(){
 bool GlooxRegisterHandler::handleIq (const IQ &iq){
 	std::cout << "*** "<< iq.from().full() << ": iq:register received (" << iq.subtype() << ")\n";
 	User *user = p->userManager()->getUserByJID(iq.from().bare());
+	if (p->configuration().onlyForVIP){
+		std::list<std::string> const &x = p->configuration().allowedServers;
+		if (std::find(x.begin(), x.end(), iq.from().server()) == x.end())
+			return false;
+	}
+
 
 	// send registration form
 	if(iq.subtype() == IQ::Get) {
