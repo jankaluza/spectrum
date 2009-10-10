@@ -132,7 +132,7 @@ void SendFileStraight::exec() {
 	bool empty;
     while (true) {
 		if (m_stream->isOpen()){
-// 			std::cout << "sending...\n";
+			std::cout << "sending...\n";
 			std::string data;
 // 			if (getBuffer().size() > size) {
 // 				data = repeater->getBuffer().substr(0, size);
@@ -145,8 +145,9 @@ void SendFileStraight::exec() {
 // 			m_file.read(input, 200024);
 			getMutex()->lock();
 			std::string t;
-			if (m_parent->getBuffer().empty())
+			if (m_parent->getBuffer().empty()) {
 				empty = true;
+			}
 			else {
 				empty = false;
 				t = std::string(m_parent->getBuffer());
@@ -161,7 +162,12 @@ void SendFileStraight::exec() {
 				};
 			}
 		}
-		m_stream->recv(200);
+		else {
+			std::cout << "stream not open!\n";
+		}
+		std::cout << "recv before\n";
+		m_stream->recv(1000);
+		std::cout << "recv after\n";
     }
 //     delete this;
 }
@@ -412,9 +418,12 @@ void FiletransferRepeater::handleFTSendBytestream(Bytestream *bs, const std::str
 void FiletransferRepeater::gotData(const std::string &data) {
 	m_buffer.append(std::string(data));
 	if (m_wantsData) {
+		std::cout << "got data\n";
 		m_wantsData = false;
 		purple_timeout_add(0,&ui_got_data,m_xfer);
 	}
+	else
+		std::cout << "got data but don't want them yet\n";
 }
 
 
