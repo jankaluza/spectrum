@@ -99,7 +99,6 @@ bool GlooxRegisterHandler::handleIq (const IQ &iq){
 		field->addAttribute("type", "text-private");
 		field->addAttribute("var", "password");
 		field->addAttribute("label", "Password");
-		field->addChild( new Tag("required") );
 		x->addChild(field);
 
 		field = new Tag("field");
