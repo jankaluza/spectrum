@@ -166,7 +166,8 @@ void SendFileStraight::exec() {
 			std::cout << "stream not open!\n";
 		}
 		std::cout << "recv before\n";
-		m_stream->recv(1000);
+		if (m_stream->recv(2000) != ConnNoError)
+			break;
 		std::cout << "recv after\n";
     }
 //     delete this;
