@@ -25,6 +25,7 @@ secret3 = "test"
 
 print "Initializing"
 
+os.system("rm -rf tests")
 os.system("rm test.db")
 os.system("rm spectrum.log")
 pid = Popen(["../../spectrum", "-n", "spectrum.cfg", "-l", "spectrum.log"]).pid
@@ -61,12 +62,15 @@ class AbstractTest(object):
 		connector.connect()
 		self.t = reactor.callLater(timer, self.failed, True)
 		self._f = False
+		self.running = True
 
 	def rawDataIn(self, buf):
 		self.logs += "RECV: %s\n" % unicode(buf, 'utf-8').encode('ascii', 'replace')
+		#print "RECV: %s" % unicode(buf, 'utf-8').encode('ascii', 'replace')
 
 	def rawDataOut(self, buf):
 		self.logs += "SEND: %s\n" % unicode(buf, 'utf-8').encode('ascii', 'replace')
+		#print "SEND: %s" % unicode(buf, 'utf-8').encode('ascii', 'replace')
 
 	def connected(self, xs):
 		self.xmlstream = xs
@@ -76,14 +80,16 @@ class AbstractTest(object):
 		xs.rawDataOutFn = self.rawDataOut
 
 	def ok(self):
-		print "OK"
-		self.t.cancel()
-		self.xmlstream.sendFooter()
-		self.f.stopTrying()
-		if len(self.cb) != 0:
-			self.cb[0](self.jid, self.password, self.cb[1:], self.i)
-		#else:
-			#os.system("kill " + str(pid))
+		if self.running:
+			self.running = False
+			print "OK"
+			self.t.cancel()
+			self.xmlstream.sendFooter()
+			self.f.stopTrying()
+			if len(self.cb) != 0:
+				self.cb[0](self.jid, self.password, self.cb[1:], self.i)
+			#else:
+				#os.system("kill " + str(pid))
 
 	def failed(self, timer = False):
 		if self._f == False:
@@ -282,6 +288,77 @@ class LoginTransport(AbstractTest):
 
 		self.xmlstream.send(iq)
 
+class ChangeStatusTransport(AbstractTest):
+	def __init__(self, client_jid, secret, cb, i):
+		AbstractTest.__init__(self, client_jid, secret, cb, i, timer = 6)
+		print str(i) + ". Change status " + client_jid.userhost() + ": ",
+		self.stage = -1
+
+	def authenticated(self, xs):
+		self.xmlstream.addObserver("/iq[@type='get'][@id]/query[@xmlns='http://jabber.org/protocol/disco#info']", self._discoInfo, 1)
+		self.xmlstream.addObserver("/presence", self._presence, 1)
+
+		presence = domish.Element((None, 'presence'))
+		xs.send(presence)
+	
+	def _presence(self, el, called = False):
+		if el['from'] == client_jid2.user + "%" + client_jid2.host + "@" + transport + "/bot":
+			couple = None
+			if self.stage == -1:
+				reactor.callLater(2, self._presence, el, True)
+				self.stage = 0
+				return
+			elif self.stage == 0:
+				if called:
+					couple = ("stage1", "xa")
+				else:
+					return
+			elif self.stage == 1:
+				for child in el.children:
+					if child.name == "status" and unicode(child) != "stage1":
+						self.failed()
+						return
+					elif child.name == "show" and unicode(child) != "xa":
+						self.failed()
+						return
+				couple = ("stage2", "away")
+			elif self.stage == 2:
+				for child in el.children:
+					if child.name == "status" and unicode(child) != "stage2":
+						self.failed()
+						return
+					elif child.name == "show" and unicode(child) != "away":
+						self.failed()
+						return
+			if couple:
+				presence = domish.Element((None, 'presence'))
+				presence.addElement('status', content = couple[0])
+				presence.addElement('show', content = couple[1])
+				self.xmlstream.send(presence)
+			else:
+				self.ok()
+			self.stage += 1
+	
+	def _discoInfo(self, el):
+		iq = domish.Element((None,'iq'))
+		iq['to'] = el['from']
+		iq['type'] = 'result'
+		iq['id'] = el['id']
+		q = iq.addElement('query', 'http://jabber.org/protocol/disco#info')
+
+		id = q.addElement('identity')
+		id['category'] = "client"
+		id['name'] = "test_client"
+		id['type'] = "client"
+		
+		features = ["http://jabber.org/protocol/rosterx","http://jabber.org/protocol/xhtml-im","http://jabber.org/protocol/si/profile/file-transfer","http://jabber.org/protocol/chatstates"]
+		
+		for feature in features:
+			f = q.addElement('feature')
+			f['var'] = feature
+
+		self.xmlstream.send(iq)
+
 class SendMessageTransport(AbstractTest):
 	def __init__(self, client_jid, secret, cb, i):
 		AbstractTest.__init__(self, client_jid, secret, cb, i, timer = 5)
@@ -294,9 +371,7 @@ class SendMessageTransport(AbstractTest):
 
 		presence = domish.Element((None, 'presence'))
 		xs.send(presence)
-	def _presence(self, el):
-		if el['from'] == client_jid2.user + "%" + client_jid2.host + "@" + "icq.localhost/bot":
-			self.ok()
+
 	def _presence(self, el):
 		if el['from'] == client_jid2.user + "%" + client_jid2.host + "@" + transport + "/bot":
 			message = domish.Element((None,'message'))
@@ -307,6 +382,9 @@ class SendMessageTransport(AbstractTest):
 			self.xmlstream.send(message)
 
 	def _message(self, el):
+		for child in el.children:
+			if child.name == "body" and unicode(child) != "pong":
+				self.failed()
 		self.ok()
 
 	def _discoInfo(self, el):
@@ -339,7 +417,8 @@ class AddUser(AbstractTest):
 	def __init__(self, client_jid, secret, cb, i):
 		AbstractTest.__init__(self, client_jid, secret, cb, i, 800)
 		print str(i) + ". Adding test user to roster " + client_jid.userhost() + ": ",
-		self.tests = [UnregisterAccount,RegisterAccount,RegisterTransport,LoginTransport,SendMessageTransport,Done]
+		self.tests = [UnregisterAccount,RegisterAccount,RegisterTransport,LoginTransport,SendMessageTransport,ChangeStatusTransport,Done]
+		self.stages = []
 
 	def authenticated(self, xs):
 		self.xmlstream.addObserver("/presence[@type='subscribe']", self.onSubscribe, 1)
@@ -358,14 +437,22 @@ class AddUser(AbstractTest):
 		presence['to'] = el['from']
 		presence['type'] = "subscribed"
 		self.xmlstream.send(presence)
-		self.ok()
-		tests = self.tests
-		tests[0](client_jid3, secret3, tests[1:], self.i)
+		self.stages.append("subscribe")
+		if "subscribed" in self.stages:
+			self.ok()
+			tests = self.tests
+			tests[0](client_jid3, secret3, tests[1:], self.i)
 		
 	def onSubscribed(self, el):
-		self.ok()
-		tests = self.tests
-		tests[0](client_jid3, secret3, tests[1:], self.i)
+		presence = domish.Element((None, 'presence'))
+		presence['to'] = el['from']
+		presence['type'] = "subscribe"
+		self.xmlstream.send(presence)
+		self.stages.append("subscribed")
+		if "subscribe" in self.stages:
+			self.ok()
+			tests = self.tests
+			tests[0](client_jid3, secret3, tests[1:], self.i)
 
 class PassiveClient(AbstractTest):
 	def __init__(self, client_jid, secret, cb, i):
@@ -376,11 +463,23 @@ class PassiveClient(AbstractTest):
 		self.xmlstream.addObserver("/presence[@type='subscribe']", self.onSubscribe, 1)
 		self.xmlstream.addObserver("/presence[@type='subscribed']", self.onSubscribed, 1)
 		self.xmlstream.addObserver("/message", self._message, 1)
+		self.xmlstream.addObserver("/presence", self._presence, 1)
 
 		presence = domish.Element((None, 'presence'))
 		xs.send(presence)
 		tests = [UnregisterAccount,RegisterAccount,AddUser]
 		tests[0](client_jid1, secret1, tests[1:], self.i)
+
+	def _presence(self, el):
+		if el['from'] == self.jid.full():
+			return
+		presence = domish.Element((None, 'presence'))
+		for child in el.children:
+			if child.name == "status":
+				presence.addElement('status', content = unicode(child))
+			elif child.name == "show":
+				presence.addElement('show', content = unicode(child))
+		self.xmlstream.send(presence)
 
 	def _message(self, el):
 		message = domish.Element((None,'message'))
@@ -395,9 +494,16 @@ class PassiveClient(AbstractTest):
 		presence['to'] = el['from']
 		presence['type'] = "subscribed"
 		self.xmlstream.send(presence)
+		presence = domish.Element((None, 'presence'))
+		presence['to'] = el['from']
+		presence['type'] = "subscribe"
+		self.xmlstream.send(presence)
 		
 	def onSubscribed(self, el):
-		pass
+		presence = domish.Element((None, 'presence'))
+		presence['to'] = el['from']
+		presence['type'] = "subscribe"
+		self.xmlstream.send(presence)
 
 tests_passive_client = [UnregisterAccount, RegisterAccount, PassiveClient, UnregisterAccount]
 tests_passive_client[0](client_jid2, secret2, tests_passive_client[1:], 1)
