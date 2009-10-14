@@ -85,6 +85,9 @@ class Client(object):
 			print stat['name'].replace('/', '_').replace('-',  '_'),stat['value'],stat["units"]
 		reactor.stop()
 
+if len(sys.argv) != 4:
+	print "Usage: " + sys.argv[0] + " <bare JID> <password> <transport JID>"
+	exit(0)
 Client(jid.JID(sys.argv[1] + "/stats"), sys.argv[2])
 
 reactor.run()
