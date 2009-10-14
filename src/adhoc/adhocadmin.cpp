@@ -115,10 +115,14 @@ bool AdhocAdmin::handleIq(const IQ &stanza) {
 					}
 				}
 				else if (key == "log_purple") {
-					if (data == "1")
+					if (data == "1") {
 						main->configuration().logAreas |= LOG_AREA_PURPLE;
-					else
+						purple_debug_set_enabled(true);
+					}
+					else {
 						main->configuration().logAreas &= ~(LOG_AREA_PURPLE);
+						purple_debug_set_enabled(false);
+					}
 				}
 			}
 			IQ _response(IQ::Result, stanza.from().full(), stanza.id());
