@@ -145,6 +145,9 @@ void GlooxVCardHandler::userInfoArrived(PurpleConnection *gc, const std::string 
 			return;
 		if (!hasVCardRequest(who))
 			return;
+		std::string name(who);
+		std::for_each( name.begin(), name.end(), replaceJidCharacters() );
+
 		std::cout << "VCard received, making vcard IQ\n";
 		Tag *reply = new Tag( "iq" );
 		reply->addAttribute( "id", vcardRequests[who].front() );
@@ -167,14 +170,14 @@ void GlooxVCardHandler::userInfoArrived(PurpleConnection *gc, const std::string 
 		if (purple_value_get_boolean(user->getSetting("enable_avatars")) && user->hasTransportFeature(TRANSPORT_FEATURE_AVATARS)) {
 			Tag *photo = new Tag("PHOTO");
 
-			std::cout << "Trying to find out " << who << "\n";
-			PurpleBuddy *buddy = purple_find_buddy(purple_connection_get_account(gc), who.c_str());
+			std::cout << "Trying to find out " << name << "\n";
+			PurpleBuddy *buddy = purple_find_buddy(purple_connection_get_account(gc), name.c_str());
 			if (buddy){
-				std::cout << "found buddy " << who << "\n";
+				std::cout << "found buddy " << name << "\n";
 				gsize len;
 				PurpleBuddyIcon *icon = NULL;
 				std::cout << "Is buddy_icon set? " << (purple_blist_node_get_string((PurpleBlistNode*)buddy, "buddy_icon") == NULL ? "NO" : "YES") <<"\n";
-				icon = purple_buddy_icons_find(purple_connection_get_account(gc), who.c_str());
+				icon = purple_buddy_icons_find(purple_connection_get_account(gc), name.c_str());
 				if(icon!=NULL) {
 					std::cout << "found icon\n";
 					const gchar * data = (gchar*)purple_buddy_icon_get_data(icon, &len);
