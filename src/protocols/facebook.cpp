@@ -24,6 +24,7 @@
 FacebookProtocol::FacebookProtocol(GlooxMessageHandler *main){
 	m_main = main;
 	m_transportFeatures.push_back("jabber:iq:register");
+	m_transportFeatures.push_back("jabber:iq:gateway");
 	m_transportFeatures.push_back("http://jabber.org/protocol/disco#info");
 	m_transportFeatures.push_back("http://jabber.org/protocol/caps");
 	m_transportFeatures.push_back("http://jabber.org/protocol/chatstates");

@@ -160,6 +160,10 @@ struct Configuration {
 	std::string sqlType;	// database type
 	
 	std::string hash; 		// version hash used for caps
+	
+	operator bool() const {
+		return !protocol.empty();
+	}
 };
 
 
