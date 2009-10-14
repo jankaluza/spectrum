@@ -536,6 +536,10 @@ std::map<std::string,RosterRow> SQLClass::getBuddies(long userId, PurpleAccount 
 // settings
 
 void SQLClass::addSetting(long userId, const std::string &key, const std::string &value, PurpleType type) {
+	if (userId == 0) {
+		Log().Get("SQL ERROR") << "Trying to add user setting with user_id = 0: " << key;
+		return;
+	}
 	m_stmt_addSetting.user_id = userId;
 	m_stmt_addSetting.var.assign(key);
 	m_stmt_addSetting.value.assign(value);
