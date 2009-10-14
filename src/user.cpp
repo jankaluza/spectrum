@@ -648,8 +648,10 @@ void User::purpleBuddySignedOn(PurpleBuddy *buddy) {
 		tag->addAttribute("to", m_jid);
 		p->j->send(tag);
 	}
-	p->userManager()->buddyOnline();
-	m_roster[std::string(purple_buddy_get_name(buddy))].online = true;
+	if (!m_roster[std::string(purple_buddy_get_name(buddy))].online) {
+		p->userManager()->buddyOnline();
+		m_roster[std::string(purple_buddy_get_name(buddy))].online = true;
+	}
 }
 
 void User::purpleBuddySignedOff(PurpleBuddy *buddy) {
@@ -658,8 +660,10 @@ void User::purpleBuddySignedOff(PurpleBuddy *buddy) {
 		tag->addAttribute("to", m_jid);
 		p->j->send(tag);
 	}
-	p->userManager()->buddyOffline();
-	m_roster[std::string(purple_buddy_get_name(buddy))].online = false;
+	if (m_roster[std::string(purple_buddy_get_name(buddy))].online) {
+		p->userManager()->buddyOffline();
+		m_roster[std::string(purple_buddy_get_name(buddy))].online = false;
+	}
 }
 
 /*
@@ -1413,6 +1417,7 @@ User::~User(){
 			tag->addAttribute( "from", (*u).second.uin + "@" + p->jid() + "/bot");
 			p->j->send( tag );
 			p->userManager()->buddyOffline();
+			(*u).second.online = false;
 		}
 	}
 
