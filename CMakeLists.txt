@@ -66,7 +66,7 @@ set(spectrum_SRCS
 	src/autoconnectloop.cpp
 	src/caps.cpp
 	src/commands.cpp
-	src/configfile.cpp
+# 	src/configfile.cpp
 	src/discoinfohandler.cpp
 	src/filetransfermanager.cpp
 	src/filetransferrepeater.cpp
@@ -113,7 +113,7 @@ set(spectrum_MOC_HDRS
 	src/adhoc/dataforms.h
 	src/caps.h
 	src/commands.h
-	src/configfile.h
+# 	src/configfile.h
 	src/discoinfohandler.h
 	src/filetransfermanager.h
 	src/filetransferrepeater.h

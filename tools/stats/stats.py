@@ -33,6 +33,10 @@ class Client(object):
 		connector.servers = [self.jid.host, 5222]
 		connector.orderedServers = [self.jid.host, 5222]
 		connector.connect()
+		self.t = reactor.callLater(10, self.failed)
+
+	def failed(self):
+		reactor.stop()
 
 	def rawDataIn(self, buf):
 		#self.logs += "RECV: %s\n" % unicode(buf, 'utf-8').encode('ascii', 'replace')

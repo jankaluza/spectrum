@@ -1159,7 +1159,9 @@ void User::receivedSubscription(const Subscription &subscription) {
 				Log().Get(m_jid) << "subscribe presence; user is not in roster => adding to legacy network";
 				// this user is not in local roster, so we have to send add_buddy request
 				// to our legacy network and wait for response
-				PurpleBuddy *buddy = purple_buddy_new(m_account, subscription.to().username().c_str(), subscription.to().username().c_str());
+				std::string name(subscription.to().username());
+				std::for_each( name.begin(), name.end(), replaceJidCharacters() );
+				PurpleBuddy *buddy = purple_buddy_new(m_account, name.c_str(), name.c_str());
 				purple_blist_add_buddy(buddy, NULL, NULL ,NULL);
 				purple_account_add_buddy(m_account, buddy);
 			}

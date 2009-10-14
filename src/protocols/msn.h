@@ -37,8 +37,10 @@ class MSNProtocol : AbstractProtocol
 		std::list<std::string> transportFeatures();
 		std::list<std::string> buddyFeatures();
 		std::string text(const std::string &key);
-		Tag *getVCardTag(User *user, GList *vcardEntries) { return NULL; }
+		Tag *getVCardTag(User *user, GList *vcardEntries);
 		bool isMUC(User *user, const std::string &jid) { return false; }
+		void onPurpleRequestInput(User *user, const char *title, const char *primary,const char *secondary, const char *default_value,gboolean multiline, gboolean masked, gchar *hint,const char *ok_text, GCallback ok_cb,const char *cancel_text, GCallback cancel_cb, PurpleAccount *account, const char *who,PurpleConversation *conv, void *user_data);
+		
 
 	private:
 		GlooxMessageHandler *m_main;
