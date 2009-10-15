@@ -1043,7 +1043,7 @@ void User::connect() {
 	if (!m_bindIP.empty())
 		purple_account_set_string(m_account,"bind",std::string(m_bindIP).c_str());
 	purple_account_set_password(m_account,m_password.c_str());
-	Log().Get(m_jid) << "UIN:" << m_username << " PASSWORD:" << m_password;
+	Log().Get(m_jid) << "UIN:" << m_username << " USER_ID:" << m_userID;
 
 	if (p->configuration().useProxy) {
 		PurpleProxyInfo *info = purple_proxy_info_new();
