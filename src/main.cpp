@@ -495,6 +495,7 @@ static void buddyListSaveAccount(PurpleAccount *account) {
 }
 
 static gssize XferWrite(PurpleXfer *xfer, const guchar *buffer, gssize size) {
+	std::cout << "gotData\n";
 	FiletransferRepeater *repeater = (FiletransferRepeater *) xfer->ui_data;
 	std::string d((char *) buffer, size);
 	if (repeater->getResender())

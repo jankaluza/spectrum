@@ -132,7 +132,6 @@ void SendFileStraight::exec() {
 	bool empty;
     while (true) {
 		if (m_stream->isOpen()){
-			std::cout << "sending...\n";
 			std::string data;
 // 			if (getBuffer().size() > size) {
 // 				data = repeater->getBuffer().substr(0, size);
@@ -165,10 +164,8 @@ void SendFileStraight::exec() {
 		else {
 			std::cout << "stream not open!\n";
 		}
-		std::cout << "recv before\n";
 		if (m_stream->recv(2000) != ConnNoError)
 			break;
-		std::cout << "recv after\n";
     }
 //     delete this;
 }
@@ -352,7 +349,6 @@ FiletransferRepeater::FiletransferRepeater(GlooxMessageHandler *main, const JID&
 	m_wantsData = false;
 	m_resender = NULL;
 	m_send = false;
-	m_file.open("dump.bin", std::ios_base::out | std::ios_base::binary );
 }
 
 FiletransferRepeater::FiletransferRepeater(GlooxMessageHandler *main, const JID& from, const JID& to) {
@@ -423,7 +419,7 @@ void FiletransferRepeater::gotData(const std::string &data) {
 		m_wantsData = false;
 		purple_timeout_add(0,&ui_got_data,m_xfer);
 	}
-	else
+	else if (!m_send)
 		std::cout << "got data but don't want them yet\n";
 }
 
