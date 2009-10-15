@@ -18,7 +18,7 @@
 set -e
 
 USER=spectrum
-CONFSDIR=/etc/spectrum/conf-enabled
+CONFSDIR=/etc/spectrum/
 DAEMON=/usr/local/bin/spectrum
 LOGPATH=/var/log/spectrum
 PIDPATH=/var/run/spectrum
@@ -44,26 +44,30 @@ case "$1" in
   start)
     check_user
     for i in $CONFSDIR/* ; do
-      CONF=`basename $i`
-      log_daemon_msg "Starting spectrum instance:" "$CONF"
-      if start-stop-daemon --start --quiet --oknodo --pidfile "$PIDPATH/$CONF.pid" --chuid "$USER" --exec "$DAEMON" --make-pidfile --background -- "$CONFSDIR/$CONF" -l "$LOGPATH/$CONF.log" -n ; then
-        log_end_msg 0
-      else
-        log_end_msg 1
+      if grep "enable" $i | grep "=" | grep "1" > /dev/null ; then
+        CONF=`basename $i`
+        log_daemon_msg "Starting spectrum instance:" "$CONF"
+        if start-stop-daemon --start --quiet --oknodo --pidfile "$PIDPATH/$CONF.pid" --chuid "$USER" --exec "$DAEMON" --make-pidfile --background -- "$CONFSDIR/$CONF" -l "$LOGPATH/$CONF.log" -n ; then
+          log_end_msg 0
+        else
+          log_end_msg 1
+        fi
       fi
     done
     ;;
   stop)
     for i in $CONFSDIR/* ; do
-      CONF=`basename $i`
-      log_daemon_msg "Stopping spectrum instance:" "$CONF"
-      if start-stop-daemon --stop --retry 30 --quiet --oknodo --pidfile "$PIDPATH/$CONF.pid"; then
-        if [ -e "$PIDPATH/$CONF.pid" ] ; then
-          rm "$PIDPATH/$CONF.pid"
+      if grep "enable" $i | grep "=" | grep "1" > /dev/null ; then
+        CONF=`basename $i`
+        log_daemon_msg "Stopping spectrum instance:" "$CONF"
+        if start-stop-daemon --stop --retry 30 --quiet --oknodo --pidfile "$PIDPATH/$CONF.pid"; then
+          if [ -e "$PIDPATH/$CONF.pid" ] ; then
+            rm "$PIDPATH/$CONF.pid"
+          fi
+          log_end_msg 0
+        else
+          log_end_msg 1
         fi
-        log_end_msg 0
-      else
-        log_end_msg 1
       fi
     done
     ;;

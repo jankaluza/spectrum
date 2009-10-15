@@ -754,6 +754,9 @@ GlooxMessageHandler::GlooxMessageHandler(const std::string &config) : MessageHan
 
 #ifndef WIN32
 	if (logfile || !nodaemon) {
+		if (logfile) {
+			g_mkdir_with_parents(g_path_get_dirname(logfile), 0755);
+		}
 		int logfd = open(logfile ? logfile : "/dev/null", O_WRONLY | O_CREAT, 0644);
 		if (logfd <= 0) {
 			std::cout << "Can't open log file\n";
