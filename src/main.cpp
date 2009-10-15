@@ -1023,6 +1023,8 @@ void GlooxMessageHandler::signedOn(PurpleConnection *gc, gpointer unused) {
 
 void GlooxMessageHandler::purpleAuthorizeClose(void *data) {
 	authData *d = (authData*) data;
+	if (!d)
+		return;
 	User *user = userManager()->getUserByAccount(d->account);
 	if (user != NULL) {
 		Log().Get(user->jid()) << "purple wants to close authorizeRequest";
