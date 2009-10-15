@@ -1153,6 +1153,8 @@ bool GlooxMessageHandler::loadConfigFile(const std::string &config) {
 		m_configuration.sqlHost = std::string(value);
 		g_free(value);
 	}
+	else if (m_configuration.sqlType == "sqlite")
+		m_configuration.sqlHost = "";
 	else {
 		Log().Get("loadConfigFile") << "You have to specify `host` in [database] part of config file.";
 		return false;
@@ -1162,6 +1164,8 @@ bool GlooxMessageHandler::loadConfigFile(const std::string &config) {
 		m_configuration.sqlPassword = std::string(value);
 		g_free(value);
 	}
+	else if (m_configuration.sqlType == "sqlite")
+		m_configuration.sqlPassword = "";
 	else {
 		Log().Get("loadConfigFile") << "You have to specify `password` in [database] part of config file.";
 		return false;
@@ -1171,6 +1175,8 @@ bool GlooxMessageHandler::loadConfigFile(const std::string &config) {
 		m_configuration.sqlUser = std::string(value);
 		g_free(value);
 	}
+	else if (m_configuration.sqlType == "sqlite")
+		m_configuration.sqlUser = "";
 	else {
 		Log().Get("loadConfigFile") << "You have to specify `user` in [database] part of config file.";
 		return false;
@@ -1189,6 +1195,8 @@ bool GlooxMessageHandler::loadConfigFile(const std::string &config) {
 		m_configuration.sqlPrefix = std::string(value);
 		g_free(value);
 	}
+	else if (m_configuration.sqlType == "sqlite")
+		m_configuration.sqlPrefix = "";
 	else {
 		Log().Get("loadConfigFile") << "You have to specify `prefix` in [database] part of config file.";
 		return false;
