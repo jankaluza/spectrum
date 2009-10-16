@@ -117,29 +117,49 @@ void MyMutex::unlock() {
 #endif
 }
 
-#ifdef HAVE_PTHREADS
-
 WaitCondition::WaitCondition() {
+#ifdef HAVE_PTHREADS
 	pthread_mutex_init(&m_mutex, NULL);
 	pthread_cond_init(&m_cond, NULL);
+#else
+	m_handle = NULL;
+	m_handle = CreateEvent(NULL, FALSE, FALSE, NULL);
+#endif
 }
 
 WaitCondition::~WaitCondition() {
+#ifdef HAVE_PTHREADS
 	pthread_mutex_destroy(&m_mutex);
 	pthread_cond_destroy(&m_cond);
+#else
+	if (m_handle) {
+		CloseHandle(m_handle);
+	}
+#endif
 }
 
 void WaitCondition::wait() {
+#ifdef HAVE_PTHREADS
 	pthread_mutex_lock(&m_mutex);
 	pthread_cond_wait(&m_cond, &m_mutex);
 	pthread_mutex_unlock(&m_mutex);
+#else
+	bool wait_success = false;
+	if (m_handle) {
+		wait_success = WaitForSingleObject(m_handle, INFINITE) == WAIT_OBJECT_0;
+	}
+#endif
 }
 
 void WaitCondition::wakeUp() {
+#ifdef HAVE_PTHREADS
 	pthread_mutex_lock(&m_mutex);
 	pthread_cond_broadcast(&m_cond);
 	pthread_mutex_unlock(&m_mutex);
-}
-
+#else
+	if (m_handle) {
+		SetEvent(m_handle);
+	}
 #endif
+}
 
