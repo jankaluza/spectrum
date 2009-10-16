@@ -25,6 +25,13 @@
 #include "log.h"
 #include "sql.h"
 
+static gboolean ui_got_data(gpointer data){
+	PurpleXfer *xfer = (PurpleXfer*) data;
+	purple_xfer_ui_ready(xfer);
+	return FALSE;
+}
+
+
 SendFile::SendFile(Bytestream *stream, int size, const std::string &filename, User *user, FiletransferRepeater *manager) {
     std::cout << "SendFile::SendFile" << " Constructor.\n";
     m_stream = stream;
@@ -133,15 +140,6 @@ void SendFileStraight::exec() {
     while (true) {
 		if (m_stream->isOpen()){
 			std::string data;
-// 			if (getBuffer().size() > size) {
-// 				data = repeater->getBuffer().substr(0, size);
-// 				repeater->getBuffer().erase(0, size);
-// 			}
-// 			else {
-// 			getBuffer();
-// 			getBuffer().erase();
-// 			}
-// 			m_file.read(input, 200024);
 			getMutex()->lock();
 			std::string t;
 			if (m_parent->getBuffer().empty()) {
@@ -152,6 +150,7 @@ void SendFileStraight::exec() {
 				t = std::string(m_parent->getBuffer());
 				m_parent->getBuffer().erase();
 			}
+			m_parent->ready();
 			getMutex()->unlock();
 			if (!empty) {
 				ret = m_stream->send(t);
@@ -160,6 +159,8 @@ void SendFileStraight::exec() {
 					break;
 				};
 			}
+			else
+				wait();
 		}
 		else {
 			std::cout << "stream not open!\n";
@@ -332,12 +333,6 @@ void ReceiveFileStraight::handleBytestreamClose(gloox::Bytestream *s5b) {
 	}
 }
 
-static gboolean ui_got_data(gpointer data){
-	PurpleXfer *xfer = (PurpleXfer*) data;
-	purple_xfer_ui_ready(xfer);
-	return FALSE;
-}
-
 FiletransferRepeater::FiletransferRepeater(GlooxMessageHandler *main, const JID& to, const std::string& sid, SIProfileFT::StreamType type, const JID& from, long size) {
 	m_main = main;
 	m_size = size;
@@ -410,16 +405,18 @@ void FiletransferRepeater::handleFTSendBytestream(Bytestream *bs, const std::str
 		User *user = m_main->userManager()->getUserByJID(bs->initiator().bare());
 		m_resender = new SendFile(bs, 0, filename, user, this);
 	}
+	purple_timeout_add_seconds(3,&ui_got_data,m_xfer);
 }
 
 void FiletransferRepeater::gotData(const std::string &data) {
 	m_buffer.append(std::string(data));
 	if (m_wantsData) {
-		std::cout << "got data\n";
 		m_wantsData = false;
 		purple_timeout_add(0,&ui_got_data,m_xfer);
 	}
-	else if (!m_send)
+	else if (m_send)
+		m_resender->wakeUp();
+	else
 		std::cout << "got data but don't want them yet\n";
 }
 

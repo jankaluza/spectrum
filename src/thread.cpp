@@ -116,3 +116,30 @@ void MyMutex::unlock() {
     LeaveCriticalSection(&m_cs);
 #endif
 }
+
+#ifdef HAVE_PTHREADS
+
+WaitCondition::WaitCondition() {
+	pthread_mutex_init(&m_mutex, NULL);
+	pthread_cond_init(&m_cond, NULL);
+}
+
+WaitCondition::~WaitCondition() {
+	pthread_mutex_destroy(&m_mutex);
+	pthread_cond_destroy(&m_cond);
+}
+
+void WaitCondition::wait() {
+	pthread_mutex_lock(&m_mutex);
+	pthread_cond_wait(&m_cond, &m_mutex);
+	pthread_mutex_unlock(&m_mutex);
+}
+
+void WaitCondition::wakeUp() {
+	pthread_mutex_lock(&m_mutex);
+	pthread_cond_broadcast(&m_cond);
+	pthread_mutex_unlock(&m_mutex);
+}
+
+#endif
+

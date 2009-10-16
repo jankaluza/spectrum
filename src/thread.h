@@ -79,4 +79,25 @@ public:
 
         void unlock();
 };
+
+#ifdef HAVE_PTHREADS
+class WaitCondition {
+	pthread_cond_t m_cond;
+	pthread_mutex_t m_mutex;
+	
+	public:
+		WaitCondition();
+		~WaitCondition();
+		
+		void wait();
+		void wakeUp();
+};
+#else
+class WaitCondition {
+	public:
+		WaitCondition() {}
+		~WaitCondition() {}
+};
+#endif
+
 #endif

@@ -44,13 +44,30 @@ class FiletransferRepeater;
 
 class AbstractResendClass {
 	public:
-		AbstractResendClass() { m_mutex = new MyMutex(); }
+		AbstractResendClass() {
+			m_mutex = new MyMutex();
+#ifdef HAVE_PTHREADS
+			m_cond = new WaitCondition();
+#endif
+		}
 		~AbstractResendClass() { delete m_mutex; }
 
 		MyMutex *getMutex() { return m_mutex; }
+		void wait() {
+#ifdef HAVE_PTHREADS
+			m_cond->wait();
+#endif
+		}
+
+		void wakeUp() {
+#ifdef HAVE_PTHREADS
+			m_cond->wakeUp();
+#endif
+		}
 
 	private:
 		MyMutex *m_mutex;
+		WaitCondition *m_cond;
 };
 
 class ReceiveFile : public AbstractResendClass, public BytestreamDataHandler, public Thread {
@@ -164,6 +181,7 @@ class FiletransferRepeater {
 		std::string & getBuffer() { return m_buffer; }
 		AbstractResendClass *getResender() { return m_resender; }
 		void wantsData() { m_wantsData = true; }
+		void ready() { purple_xfer_ui_ready(m_xfer); }
 		std::ofstream m_file;
 		GlooxMessageHandler *parent() { return m_main; }
 
