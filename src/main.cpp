@@ -755,6 +755,9 @@ GlooxMessageHandler::GlooxMessageHandler(const std::string &config) : MessageHan
 #ifndef WIN32
 	if (logfile || !nodaemon) {
 		if (logfile) {
+			std::string l(logfile);
+			replace(l, "$jid", m_configuration.jid.c_str());
+			logfile = g_strdup(l.c_str());
 			g_mkdir_with_parents(g_path_get_dirname(logfile), 0755);
 		}
 		int logfd = open(logfile ? logfile : "/dev/null", O_WRONLY | O_CREAT, 0644);
@@ -1190,6 +1193,8 @@ bool GlooxMessageHandler::loadConfigFile(const std::string &config) {
 	if ((value = g_key_file_get_string(keyfile, "database","database", NULL)) != NULL) {
 		m_configuration.sqlDb = std::string(value);
 		g_free(value);
+		replace(m_configuration.sqlDb, "$jid", m_configuration.jid.c_str());
+		g_mkdir_with_parents(g_path_get_dirname(m_configuration.sqlDb.c_str()), 0755);
 	}
 	else {
 		Log().Get("loadConfigFile") << "You have to specify `database` in [database] part of config file.";
@@ -1210,6 +1215,8 @@ bool GlooxMessageHandler::loadConfigFile(const std::string &config) {
 	if ((value = g_key_file_get_string(keyfile, "purple","userdir", NULL)) != NULL) {
 		m_configuration.userDir = std::string(value);
 		g_free(value);
+		replace(m_configuration.userDir, "$jid", m_configuration.jid.c_str());
+		g_mkdir_with_parents(g_path_get_dirname(m_configuration.userDir.c_str()), 0755);
 	}
 	else {
 		Log().Get("loadConfigFile") << "You have to specify `userdir` in [purple] part of config file.";
