@@ -35,7 +35,7 @@ void FileTransferManager::handleFTRequest (const JID &from, const JID &to, const
 	m_info[sid].filename = name;
 	m_info[sid].size = size;
 	std::string uname = to.username();
-	std::for_each( uname.begin(), uname.end(), replaceBadJidCharacters() );
+	std::for_each( uname.begin(), uname.end(), replaceJidCharacters() );
 	User *user = p->userManager()->getUserByJID(from.bare());
 	if (user) {
 		if (user->account()){

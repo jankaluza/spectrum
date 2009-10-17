@@ -419,6 +419,9 @@ static void * notifyMessage(PurpleNotifyMsgType type, const char *title, const c
 
 static void XferCreated(PurpleXfer *xfer) {
 	std::string remote_user(purple_xfer_get_remote_user(xfer));
+	
+	std::for_each( remote_user.begin(), remote_user.end(), replaceBadJidCharacters() );
+	
 	Log().Get("xfercreated") << "get user " << remote_user;
 	User *user = GlooxMessageHandler::instance()->userManager()->getUserByAccount(purple_xfer_get_account(xfer));
 	if (!user) return;
@@ -507,6 +510,7 @@ static gssize XferWrite(PurpleXfer *xfer, const guchar *buffer, gssize size) {
 }
 
 static gssize XferRead(PurpleXfer *xfer, guchar **buffer, gssize size) {
+	Log().Get("REPEATER") << "xferRead";
 	FiletransferRepeater *repeater = (FiletransferRepeater *) xfer->ui_data;
 	if (!repeater->getResender()) {
 		repeater->wantsData();
@@ -911,12 +915,12 @@ bool GlooxMessageHandler::loadProtocol(){
 }
 
 void GlooxMessageHandler::handleLog(LogLevel level, LogArea area, const std::string &message) {
-	if (m_configuration.logAreas & LOG_AREA_XML) {
+// 	if (m_configuration.logAreas & LOG_AREA_XML) {
 		if (area == LogAreaXmlIncoming)
 			Log().Get("XML IN") << message;
 		else
 			Log().Get("XML OUT") << message;
-	}
+// 	}
 }
 
 void GlooxMessageHandler::onSessionCreateError(SessionCreateError error) {
@@ -1632,7 +1636,7 @@ void GlooxMessageHandler::handlePresence(const Presence &stanza){
 					if (purple_accounts_find(res.uin.c_str(), protocol()->protocol().c_str()) != NULL) {
 						PurpleAccount *act = purple_accounts_find(res.uin.c_str(), protocol()->protocol().c_str());
 						if (userManager()->getUserByAccount(act)) {
-							Log().Get(stanza.from().full()) << "This account is already connected by another jid";
+							Log().Get(stanza.from().full()) << "This account is already connected by another jid " << user->jid();
 							return;
 						}
 					}

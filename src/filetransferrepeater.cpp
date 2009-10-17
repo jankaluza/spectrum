@@ -310,7 +310,9 @@ void ReceiveFileStraight::handleBytestreamData(gloox::Bytestream *s5b, const std
 	getMutex()->lock();
 // 	m_file.write(data.c_str(), data.size());
 	m_parent->gotData(data);
+	m_parent->ready();
 	getMutex()->unlock();
+	wait();
 }
 
 void ReceiveFileStraight::handleBytestreamError(gloox::Bytestream *s5b, const gloox::IQ &iq) {
@@ -369,6 +371,8 @@ void FiletransferRepeater::registerXfer(PurpleXfer *xfer) {
 
 void FiletransferRepeater::fileSendStart() {
 	Log().Get("ReceiveFileStraight") << "fileSendStart!" << m_from.full() << " " << m_to.full();
+	Log().Get("ReceiveFileStraight") << m_sid;
+	Log().Get("ReceiveFileStraight") << m_type;
 	m_main->ft->acceptFT(m_to, m_sid, m_type, m_from.resource().empty() ? std::string(m_from.bare() + "/bot") : m_from);
 }
 

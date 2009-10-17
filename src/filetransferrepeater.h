@@ -180,7 +180,7 @@ class FiletransferRepeater {
 
 		std::string & getBuffer() { return m_buffer; }
 		AbstractResendClass *getResender() { return m_resender; }
-		void wantsData() { m_wantsData = true; }
+		void wantsData() { m_wantsData = true; if (m_resender) m_resender->wakeUp(); }
 		void ready() { purple_xfer_ui_ready(m_xfer); }
 		std::ofstream m_file;
 		GlooxMessageHandler *parent() { return m_main; }

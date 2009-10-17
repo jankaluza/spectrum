@@ -1440,6 +1440,13 @@ User::~User(){
 		m_account->ui_data = NULL;
 		p->collector()->collect(m_account);
 	}
+	else {
+		PurpleAccount *act = purple_accounts_find(m_username.c_str(), this->p->protocol()->protocol().c_str());
+		if (act) {
+			act->ui_data = NULL;
+			p->collector()->collect(act);
+		}
+	}
 
 	if (m_syncTimer != 0) {
 		Log().Get(m_jid) << "removing timer\n";
