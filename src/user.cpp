@@ -1445,6 +1445,8 @@ User::~User(){
 		if (act) {
 			act->ui_data = NULL;
 			p->collector()->collect(act);
+			purple_account_disconnect(act);
+			purple_account_set_enabled(act, PURPLE_UI, FALSE);
 		}
 	}
 
