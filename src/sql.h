@@ -49,6 +49,32 @@ using namespace gloox;
 
 #define STATEMENT(STRING) *m_sess << std::string(STRING)
 
+#define STATEMENT_EXECUTE_BEGIN() try {
+
+#define STATEMENT_EXECUTE_END(STATEMENT,FUNC)	} \
+	catch (Poco::Exception e) { \
+		m_error++;\
+		Log().Get("SQL ERROR") << e.code(); \
+		if (m_error != 3) { \
+			if (e.code() == 1243) { \
+				delete STATEMENT; \
+				STATEMENT = NULL; \
+				createStatements(); \
+				return FUNC; \
+			} \
+			else if (e.code() == 2013) { \
+				reconnect(); \
+				return FUNC; \
+			} \
+			else if (e.code() == 0) { \
+				reconnect(); \
+				return FUNC; \
+			} \
+		} \
+		Log().Get("SQL ERROR") << e.displayText(); \
+	} \
+	m_error = 0;
+
 /*
  * Structure which represents XMPP User
  */
@@ -240,6 +266,9 @@ class SQLClass {
 		bool isVIP(const std::string &jid); // TODO: remove me, I'm not needed with new db schema
 		long getRegisteredUsersCount();
 		long getRegisteredUsersRosterCount();
+		void createStatements();
+		void removeStatements();
+		void reconnect();
 
 		// settings
 		void addSetting(long userId, const std::string &key, const std::string &value, PurpleType type);
@@ -280,6 +309,7 @@ class SQLClass {
 		Poco::Data::Session *m_sess;
 		GlooxMessageHandler *p;
 		bool m_loaded;
+		int m_error;
 };
 
 #endif

@@ -35,6 +35,27 @@ SQLClass::SQLClass(GlooxMessageHandler *parent) {
 	p = parent;
 	m_loaded = false;
 	m_sess = NULL;
+	m_stmt_addUser.stmt = NULL;
+	m_stmt_updateUserPassword.stmt = NULL;
+	m_stmt_removeBuddy.stmt = NULL;
+	m_stmt_removeUser.stmt = NULL;
+	m_stmt_removeUserBuddies.stmt = NULL;
+	m_stmt_addBuddy.stmt = NULL;
+#ifdef WITH_SQLITE
+	m_stmt_updateBuddy.stmt = NULL;
+#endif
+	m_stmt_updateBuddySubscription.stmt = NULL;
+	m_stmt_getUserByJid.stmt = NULL;
+	m_stmt_getBuddies.stmt = NULL;
+	m_stmt_addSetting.stmt = NULL;
+	m_stmt_updateSetting.stmt = NULL;
+	m_stmt_getBuddiesSettings.stmt = NULL;
+	m_stmt_addBuddySetting.stmt = NULL;
+	m_stmt_getSettings.stmt = NULL;
+	
+	m_error = 0;
+	
+	
 	try {
 #ifdef WITH_MYSQL
 		if (p->configuration().sqlType == "mysql") {
@@ -69,107 +90,7 @@ SQLClass::SQLClass(GlooxMessageHandler *parent) {
 		return;
 	}
 	
-	// Prepared statements
-	m_stmt_addUser.stmt = new Statement( ( STATEMENT("INSERT INTO " + p->configuration().sqlPrefix + "users (jid, uin, password, language) VALUES (?, ?, ?, ?)"),
-										   use(m_stmt_addUser.jid),
-										   use(m_stmt_addUser.uin),
-										   use(m_stmt_addUser.password),
-										   use(m_stmt_addUser.language) ) );
-	m_stmt_updateUserPassword.stmt = new Statement( ( STATEMENT("UPDATE " + p->configuration().sqlPrefix + "users SET password=?, language=? WHERE jid=?"),
-													  use(m_stmt_updateUserPassword.password),
-													  use(m_stmt_updateUserPassword.language),
-													  use(m_stmt_updateUserPassword.jid) ) );
-	m_stmt_removeBuddy.stmt = new Statement( ( STATEMENT("DELETE FROM " + p->configuration().sqlPrefix + "buddies WHERE user_id=? AND uin=?"),
-											   use(m_stmt_removeBuddy.user_id),
-											   use(m_stmt_removeBuddy.uin) ) );
-	m_stmt_removeUser.stmt = new Statement( ( STATEMENT("DELETE FROM " + p->configuration().sqlPrefix + "users WHERE jid=?"),
-											  use(m_stmt_removeUser.jid) ) );
-	m_stmt_removeUserBuddies.stmt = new Statement( ( STATEMENT("DELETE FROM " + p->configuration().sqlPrefix + "buddies WHERE user_id=?"),
-													 use(m_stmt_removeUserBuddies.user_id) ) );
-#ifdef WITH_SQLITE
-	if (p->configuration().sqlType == "sqlite") {
-		m_stmt_addBuddy.stmt = new Statement( ( STATEMENT("INSERT INTO " + p->configuration().sqlPrefix + "buddies (user_id, uin, subscription, groups, nickname) VALUES (?, ?, ?, ?, ?)"),
-											use(m_stmt_addBuddy.user_id),
-											use(m_stmt_addBuddy.uin),
-											use(m_stmt_addBuddy.subscription),
-											use(m_stmt_addBuddy.groups),
-											use(m_stmt_addBuddy.nickname) ) );
-		m_stmt_updateBuddy.stmt = new Statement( ( STATEMENT("UPDATE " + p->configuration().sqlPrefix + "buddies SET groups=?, nickname=? WHERE user_id=? AND uin=?"),
-											use(m_stmt_updateBuddy.groups),
-											use(m_stmt_updateBuddy.nickname),
-											use(m_stmt_updateBuddy.user_id),
-											use(m_stmt_updateBuddy.uin) ) );
-	} else
-#endif
-		m_stmt_addBuddy.stmt = new Statement( ( STATEMENT("INSERT INTO " + p->configuration().sqlPrefix + "buddies (user_id, uin, subscription, groups, nickname) VALUES (?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE groups=?, nickname=?"),
-											use(m_stmt_addBuddy.user_id),
-											use(m_stmt_addBuddy.uin),
-											use(m_stmt_addBuddy.subscription),
-											use(m_stmt_addBuddy.groups),
-											use(m_stmt_addBuddy.nickname),
-											use(m_stmt_addBuddy.groups),
-											use(m_stmt_addBuddy.nickname) ) );
-	m_stmt_updateBuddySubscription.stmt = new Statement( ( STATEMENT("UPDATE " + p->configuration().sqlPrefix + "buddies SET subscription=? WHERE user_id=? AND uin=?"),
-														   use(m_stmt_updateBuddySubscription.subscription),
-														   use(m_stmt_updateBuddySubscription.user_id),
-														   use(m_stmt_updateBuddySubscription.uin) ) );
-	m_stmt_getUserByJid.stmt = new Statement( ( STATEMENT("SELECT id, jid, uin, password FROM " + p->configuration().sqlPrefix + "users WHERE jid=?"),
-												use(m_stmt_getUserByJid.jid),
-												into(m_stmt_getUserByJid.resId, -1),
-												into(m_stmt_getUserByJid.resJid),
-												into(m_stmt_getUserByJid.resUin),
-												into(m_stmt_getUserByJid.resPassword),
-												limit(1),
-												range(0, 1) ) );
-	m_stmt_getBuddies.stmt = new Statement( ( STATEMENT("SELECT id, user_id, uin, subscription, nickname, groups FROM " + p->configuration().sqlPrefix + "buddies WHERE user_id=? ORDER BY id ASC"),
-											  use(m_stmt_getBuddies.user_id),
-											  into(m_stmt_getBuddies.resId),
-											  into(m_stmt_getBuddies.resUserId),
-											  into(m_stmt_getBuddies.resUin),
-											  into(m_stmt_getBuddies.resSubscription),
-											  into(m_stmt_getBuddies.resNickname),
-											  into(m_stmt_getBuddies.resGroups),
-											  range(0, 1) ) );
-	m_stmt_addSetting.stmt = new Statement( ( STATEMENT("INSERT INTO " + p->configuration().sqlPrefix + "users_settings (user_id, var, type, value) VALUES (?,?,?,?)"),
-											  use(m_stmt_addSetting.user_id),
-											  use(m_stmt_addSetting.var),
-											  use(m_stmt_addSetting.type),
-											  use(m_stmt_addSetting.value) ) );
-	m_stmt_updateSetting.stmt = new Statement( ( STATEMENT("UPDATE " + p->configuration().sqlPrefix + "users_settings SET value=? WHERE user_id=? AND var=?"),
-												 use(m_stmt_updateSetting.value),
-												 use(m_stmt_updateSetting.user_id),
-												 use(m_stmt_updateSetting.var) ) );
-	m_stmt_getBuddiesSettings.stmt = new Statement( ( STATEMENT("SELECT buddy_id, type, var, value FROM " + p->configuration().sqlPrefix + "buddies_settings WHERE user_id=? ORDER BY buddy_id ASC"),
-													  use(m_stmt_getBuddiesSettings.user_id),
-													  into(m_stmt_getBuddiesSettings.resId),
-													  into(m_stmt_getBuddiesSettings.resType),
-													  into(m_stmt_getBuddiesSettings.resVar),
-													  into(m_stmt_getBuddiesSettings.resValue) ) );
-	if (p->configuration().sqlType == "sqlite")
-		m_stmt_addBuddySetting.stmt = new Statement( ( STATEMENT("INSERT OR REPLACE INTO " + p->configuration().sqlPrefix + "buddies_settings (user_id, buddy_id, var, type, value) VALUES (?, ?, ?, ?, ?)"),
-												   use(m_stmt_addBuddySetting.user_id),
-												   use(m_stmt_addBuddySetting.buddy_id),
-												   use(m_stmt_addBuddySetting.var),
-												   use(m_stmt_addBuddySetting.type),
-												   use(m_stmt_addBuddySetting.value) ) );
-	else
-		m_stmt_addBuddySetting.stmt = new Statement( ( STATEMENT("INSERT INTO " + p->configuration().sqlPrefix + "buddies_settings (user_id, buddy_id, var, type, value) VALUES (?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE value=?"),
-												   use(m_stmt_addBuddySetting.user_id),
-												   use(m_stmt_addBuddySetting.buddy_id),
-												   use(m_stmt_addBuddySetting.var),
-												   use(m_stmt_addBuddySetting.type),
-												   use(m_stmt_addBuddySetting.value),
-												   use(m_stmt_addBuddySetting.value) ) );
-
-	m_stmt_removeBuddySettings.stmt = new Statement( ( STATEMENT("DELETE FROM " + p->configuration().sqlPrefix + "buddies_settings WHERE buddy_id=?"),
-											  use(m_stmt_removeBuddySettings.buddy_id) ) );
-
-	m_stmt_getSettings.stmt = new Statement( ( STATEMENT("SELECT user_id, type, var, value FROM " + p->configuration().sqlPrefix + "users_settings WHERE user_id=?"),
-											   use(m_stmt_getSettings.user_id),
-											   into(m_stmt_getSettings.resId),
-											   into(m_stmt_getSettings.resType),
-											   into(m_stmt_getSettings.resVar),
-											   into(m_stmt_getSettings.resValue) ) );
+	createStatements();
 	
 	initDb();
 	m_loaded = true;
@@ -181,24 +102,131 @@ SQLClass::~SQLClass() {
 	if (m_loaded) {
 		m_sess->close();
 		delete m_sess;
-		delete m_stmt_addUser.stmt;
-		delete m_stmt_updateUserPassword.stmt;
-		delete m_stmt_removeBuddy.stmt;
-		delete m_stmt_removeUser.stmt;
-		delete m_stmt_removeUserBuddies.stmt;
-		delete m_stmt_addBuddy.stmt;
-#ifdef WITH_SQLITE
-		delete m_stmt_updateBuddy.stmt;
-#endif
-		delete m_stmt_updateBuddySubscription.stmt;
-		delete m_stmt_getUserByJid.stmt;
-		delete m_stmt_getBuddies.stmt;
-		delete m_stmt_addSetting.stmt;
-		delete m_stmt_updateSetting.stmt;
-		delete m_stmt_getBuddiesSettings.stmt;
-		delete m_stmt_addBuddySetting.stmt;
-		delete m_stmt_getSettings.stmt;
+		removeStatements();
 	}
+}
+
+void SQLClass::createStatements() {
+	// Prepared statements
+	if (!m_stmt_addUser.stmt)
+		m_stmt_addUser.stmt = new Statement( ( STATEMENT("INSERT INTO " + p->configuration().sqlPrefix + "users (jid, uin, password, language) VALUES (?, ?, ?, ?)"),
+											use(m_stmt_addUser.jid),
+											use(m_stmt_addUser.uin),
+											use(m_stmt_addUser.password),
+											use(m_stmt_addUser.language) ) );
+	if (!m_stmt_updateUserPassword.stmt)
+		m_stmt_updateUserPassword.stmt = new Statement( ( STATEMENT("UPDATE " + p->configuration().sqlPrefix + "users SET password=?, language=? WHERE jid=?"),
+														use(m_stmt_updateUserPassword.password),
+														use(m_stmt_updateUserPassword.language),
+														use(m_stmt_updateUserPassword.jid) ) );
+	if (!m_stmt_removeBuddy.stmt)
+		m_stmt_removeBuddy.stmt = new Statement( ( STATEMENT("DELETE FROM " + p->configuration().sqlPrefix + "buddies WHERE user_id=? AND uin=?"),
+												use(m_stmt_removeBuddy.user_id),
+												use(m_stmt_removeBuddy.uin) ) );
+	if (!m_stmt_removeUser.stmt)
+		m_stmt_removeUser.stmt = new Statement( ( STATEMENT("DELETE FROM " + p->configuration().sqlPrefix + "users WHERE jid=?"),
+												use(m_stmt_removeUser.jid) ) );
+	if (!m_stmt_removeUserBuddies.stmt)
+		m_stmt_removeUserBuddies.stmt = new Statement( ( STATEMENT("DELETE FROM " + p->configuration().sqlPrefix + "buddies WHERE user_id=?"),
+														use(m_stmt_removeUserBuddies.user_id) ) );
+#ifdef WITH_SQLITE
+	if (p->configuration().sqlType == "sqlite") {
+		if (!m_stmt_addBuddy.stmt)
+			m_stmt_addBuddy.stmt = new Statement( ( STATEMENT("INSERT INTO " + p->configuration().sqlPrefix + "buddies (user_id, uin, subscription, groups, nickname) VALUES (?, ?, ?, ?, ?)"),
+												use(m_stmt_addBuddy.user_id),
+												use(m_stmt_addBuddy.uin),
+												use(m_stmt_addBuddy.subscription),
+												use(m_stmt_addBuddy.groups),
+												use(m_stmt_addBuddy.nickname) ) );
+		if (!m_stmt_updateBuddy.stmt)
+			m_stmt_updateBuddy.stmt = new Statement( ( STATEMENT("UPDATE " + p->configuration().sqlPrefix + "buddies SET groups=?, nickname=? WHERE user_id=? AND uin=?"),
+												use(m_stmt_updateBuddy.groups),
+												use(m_stmt_updateBuddy.nickname),
+												use(m_stmt_updateBuddy.user_id),
+												use(m_stmt_updateBuddy.uin) ) );
+	} else
+#endif
+		if (!m_stmt_addBuddy.stmt)
+			m_stmt_addBuddy.stmt = new Statement( ( STATEMENT("INSERT INTO " + p->configuration().sqlPrefix + "buddies (user_id, uin, subscription, groups, nickname) VALUES (?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE groups=?, nickname=?"),
+												use(m_stmt_addBuddy.user_id),
+												use(m_stmt_addBuddy.uin),
+												use(m_stmt_addBuddy.subscription),
+												use(m_stmt_addBuddy.groups),
+												use(m_stmt_addBuddy.nickname),
+												use(m_stmt_addBuddy.groups),
+												use(m_stmt_addBuddy.nickname) ) );
+	if (!m_stmt_updateBuddySubscription.stmt)
+		m_stmt_updateBuddySubscription.stmt = new Statement( ( STATEMENT("UPDATE " + p->configuration().sqlPrefix + "buddies SET subscription=? WHERE user_id=? AND uin=?"),
+															use(m_stmt_updateBuddySubscription.subscription),
+															use(m_stmt_updateBuddySubscription.user_id),
+															use(m_stmt_updateBuddySubscription.uin) ) );
+	if (!m_stmt_getUserByJid.stmt)
+		m_stmt_getUserByJid.stmt = new Statement( ( STATEMENT("SELECT id, jid, uin, password FROM " + p->configuration().sqlPrefix + "users WHERE jid=?"),
+													use(m_stmt_getUserByJid.jid),
+													into(m_stmt_getUserByJid.resId, -1),
+													into(m_stmt_getUserByJid.resJid),
+													into(m_stmt_getUserByJid.resUin),
+													into(m_stmt_getUserByJid.resPassword),
+													limit(1),
+													range(0, 1) ) );
+	if (!m_stmt_getBuddies.stmt)
+		m_stmt_getBuddies.stmt = new Statement( ( STATEMENT("SELECT id, user_id, uin, subscription, nickname, groups FROM " + p->configuration().sqlPrefix + "buddies WHERE user_id=? ORDER BY id ASC"),
+												use(m_stmt_getBuddies.user_id),
+												into(m_stmt_getBuddies.resId),
+												into(m_stmt_getBuddies.resUserId),
+												into(m_stmt_getBuddies.resUin),
+												into(m_stmt_getBuddies.resSubscription),
+												into(m_stmt_getBuddies.resNickname),
+												into(m_stmt_getBuddies.resGroups),
+												range(0, 1) ) );
+	if (!m_stmt_addSetting.stmt)
+		m_stmt_addSetting.stmt = new Statement( ( STATEMENT("INSERT INTO " + p->configuration().sqlPrefix + "users_settings (user_id, var, type, value) VALUES (?,?,?,?)"),
+												use(m_stmt_addSetting.user_id),
+												use(m_stmt_addSetting.var),
+												use(m_stmt_addSetting.type),
+												use(m_stmt_addSetting.value) ) );
+	if (!m_stmt_updateSetting.stmt)
+		m_stmt_updateSetting.stmt = new Statement( ( STATEMENT("UPDATE " + p->configuration().sqlPrefix + "users_settings SET value=? WHERE user_id=? AND var=?"),
+													use(m_stmt_updateSetting.value),
+													use(m_stmt_updateSetting.user_id),
+													use(m_stmt_updateSetting.var) ) );
+	if (!m_stmt_getBuddiesSettings.stmt)
+		m_stmt_getBuddiesSettings.stmt = new Statement( ( STATEMENT("SELECT buddy_id, type, var, value FROM " + p->configuration().sqlPrefix + "buddies_settings WHERE user_id=? ORDER BY buddy_id ASC"),
+														use(m_stmt_getBuddiesSettings.user_id),
+														into(m_stmt_getBuddiesSettings.resId),
+														into(m_stmt_getBuddiesSettings.resType),
+														into(m_stmt_getBuddiesSettings.resVar),
+														into(m_stmt_getBuddiesSettings.resValue) ) );
+#ifdef WITH_SQLITE
+	if (p->configuration().sqlType == "sqlite") {
+		if (!m_stmt_addBuddySetting.stmt)
+			m_stmt_addBuddySetting.stmt = new Statement( ( STATEMENT("INSERT OR REPLACE INTO " + p->configuration().sqlPrefix + "buddies_settings (user_id, buddy_id, var, type, value) VALUES (?, ?, ?, ?, ?)"),
+													use(m_stmt_addBuddySetting.user_id),
+													use(m_stmt_addBuddySetting.buddy_id),
+													use(m_stmt_addBuddySetting.var),
+													use(m_stmt_addBuddySetting.type),
+													use(m_stmt_addBuddySetting.value) ) );
+	}
+	else
+#endif
+		if (!m_stmt_addBuddySetting.stmt)
+			m_stmt_addBuddySetting.stmt = new Statement( ( STATEMENT("INSERT INTO " + p->configuration().sqlPrefix + "buddies_settings (user_id, buddy_id, var, type, value) VALUES (?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE value=?"),
+													use(m_stmt_addBuddySetting.user_id),
+													use(m_stmt_addBuddySetting.buddy_id),
+													use(m_stmt_addBuddySetting.var),
+													use(m_stmt_addBuddySetting.type),
+													use(m_stmt_addBuddySetting.value),
+													use(m_stmt_addBuddySetting.value) ) );
+	if (!m_stmt_removeBuddySettings.stmt)
+		m_stmt_removeBuddySettings.stmt = new Statement( ( STATEMENT("DELETE FROM " + p->configuration().sqlPrefix + "buddies_settings WHERE buddy_id=?"),
+												use(m_stmt_removeBuddySettings.buddy_id) ) );
+	if (!m_stmt_getSettings.stmt)
+		m_stmt_getSettings.stmt = new Statement( ( STATEMENT("SELECT user_id, type, var, value FROM " + p->configuration().sqlPrefix + "users_settings WHERE user_id=?"),
+												use(m_stmt_getSettings.user_id),
+												into(m_stmt_getSettings.resId),
+												into(m_stmt_getSettings.resType),
+												into(m_stmt_getSettings.resVar),
+												into(m_stmt_getSettings.resValue) ) );
 }
 
 void SQLClass::addUser(const std::string &jid,const std::string &uin,const std::string &password,const std::string &language){
@@ -212,6 +240,52 @@ void SQLClass::addUser(const std::string &jid,const std::string &uin,const std::
 	catch (Poco::Exception e) {
 		Log().Get("SQL ERROR") << e.displayText();
 	}
+}
+
+void SQLClass::removeStatements() {
+	delete m_stmt_addUser.stmt;
+	delete m_stmt_updateUserPassword.stmt;
+	delete m_stmt_removeBuddy.stmt;
+	delete m_stmt_removeUser.stmt;
+	delete m_stmt_removeUserBuddies.stmt;
+	delete m_stmt_addBuddy.stmt;
+#ifdef WITH_SQLITE
+	delete m_stmt_updateBuddy.stmt;
+#endif
+	delete m_stmt_updateBuddySubscription.stmt;
+	delete m_stmt_getBuddies.stmt;
+	delete m_stmt_addSetting.stmt;
+	delete m_stmt_updateSetting.stmt;
+	delete m_stmt_getUserByJid.stmt;
+	delete m_stmt_getBuddiesSettings.stmt;
+	delete m_stmt_addBuddySetting.stmt;
+	delete m_stmt_getSettings.stmt;
+	
+	m_stmt_addUser.stmt = NULL;
+	m_stmt_updateUserPassword.stmt = NULL;
+	m_stmt_removeBuddy.stmt = NULL;
+	m_stmt_removeUser.stmt = NULL;
+	m_stmt_removeUserBuddies.stmt = NULL;
+	m_stmt_addBuddy.stmt = NULL;
+#ifdef WITH_SQLITE
+	m_stmt_updateBuddy.stmt = NULL;
+#endif
+	m_stmt_updateBuddySubscription.stmt = NULL;
+	m_stmt_getUserByJid.stmt = NULL;
+	m_stmt_getBuddies.stmt = NULL;
+	m_stmt_addSetting.stmt = NULL;
+	m_stmt_updateSetting.stmt = NULL;
+	m_stmt_getBuddiesSettings.stmt = NULL;
+	m_stmt_addBuddySetting.stmt = NULL;
+	m_stmt_getSettings.stmt = NULL;
+}
+
+void SQLClass::reconnect() {
+	removeStatements();
+	m_sess->close();
+	delete m_sess;
+	m_sess = new Session("MySQL", "user=" + p->configuration().sqlUser + ";password=" + p->configuration().sqlPassword + ";host=" + p->configuration().sqlHost + ";db=" + p->configuration().sqlDb + ";auto-reconnect=true");
+	createStatements();
 }
 
 void SQLClass::initDb() {
@@ -319,45 +393,33 @@ void SQLClass::updateUserPassword(const std::string &jid,const std::string &pass
 	m_stmt_updateUserPassword.jid.assign(jid);
 	m_stmt_updateUserPassword.password.assign(password);
 	m_stmt_updateUserPassword.language.assign(language);
-	try {
+	STATEMENT_EXECUTE_BEGIN();
 		m_stmt_updateUserPassword.stmt->execute();
-	}
-	catch (Poco::Exception e) {
-		Log().Get("SQL ERROR") << e.displayText();
-	}
+	STATEMENT_EXECUTE_END(m_stmt_updateUserPassword.stmt, updateUserPassword(jid, password, language));
 }
 
 void SQLClass::removeBuddy(long userId, const std::string &uin, long buddy_id) {
 	m_stmt_removeBuddy.user_id = userId;
 	m_stmt_removeBuddy.uin.assign(uin);
 	m_stmt_removeBuddySettings.buddy_id = buddy_id;
-	try {
+	STATEMENT_EXECUTE_BEGIN();
 		m_stmt_removeBuddy.stmt->execute();
 		m_stmt_removeBuddySettings.stmt->execute();
-	}
-	catch (Poco::Exception e) {
-		Log().Get("SQL ERROR") << e.displayText();
-	}
+	STATEMENT_EXECUTE_END(m_stmt_removeBuddy.stmt, removeBuddy(userId, uin, buddy_id));
 }
 
 void SQLClass::removeUser(const std::string &jid) {
 	m_stmt_removeUser.jid.assign(jid);
-	try {
+	STATEMENT_EXECUTE_BEGIN();
 		m_stmt_removeUser.stmt->execute();
-	}
-	catch (Poco::Exception e) {
-		Log().Get("SQL ERROR") << e.displayText();
-	}
+	STATEMENT_EXECUTE_END(m_stmt_removeUser.stmt, removeUser(jid));
 }
 
 void SQLClass::removeUserBuddies(long userId) {
 	m_stmt_removeUserBuddies.user_id = userId;
-	try {
+	STATEMENT_EXECUTE_BEGIN();
 		m_stmt_removeUserBuddies.stmt->execute();
-	}
-	catch (Poco::Exception e) {
-		Log().Get("SQL ERROR") << e.displayText();
-	}
+	STATEMENT_EXECUTE_END(m_stmt_removeUserBuddies.stmt, removeUserBuddies(userId));
 }
 
 void SQLClass::addDownload(const std::string &filename, const std::string &vip) {
@@ -407,19 +469,18 @@ void SQLClass::updateBuddySubscription(long userId, const std::string &uin, cons
 	m_stmt_updateBuddySubscription.user_id = userId;
 	m_stmt_updateBuddySubscription.uin.assign(uin);
 	m_stmt_updateBuddySubscription.subscription.assign(subscription);
-	try {
+	STATEMENT_EXECUTE_BEGIN();
 		m_stmt_updateBuddySubscription.stmt->execute();
-	}
-	catch (Poco::Exception e) {
-		Log().Get("SQL ERROR") << e.displayText();
-	}
+	STATEMENT_EXECUTE_END(m_stmt_updateBuddySubscription.stmt, updateBuddySubscription(userId, uin, subscription));
 }
 
 UserRow SQLClass::getUserByJid(const std::string &jid){
 	UserRow user;
 	user.id = -1;
 	m_stmt_getUserByJid.jid.assign(jid);
-	try {
+	bool error = FALSE;
+
+	STATEMENT_EXECUTE_BEGIN();
 		if (m_stmt_getUserByJid.stmt->execute()) {
 			do {
 				user.id = m_stmt_getUserByJid.resId;
@@ -429,10 +490,10 @@ UserRow SQLClass::getUserByJid(const std::string &jid){
 				m_stmt_getUserByJid.stmt->execute();
 			} while (!m_stmt_getUserByJid.stmt->done());
 		}
-	}
-	catch (Poco::Exception e) {
-		Log().Get("SQL ERROR") << e.displayText();
-	}
+		Log().Get("GET USER BY JID succeed");
+	STATEMENT_EXECUTE_END(m_stmt_getUserByJid.stmt, getUserByJid(jid));
+
+	user.id = -1;
 	return user;
 }
 
@@ -444,15 +505,12 @@ std::map<std::string,RosterRow> SQLClass::getBuddies(long userId, PurpleAccount 
 	
 	if (account) {
 		m_stmt_getBuddiesSettings.user_id = userId;
-		try {
+		STATEMENT_EXECUTE_BEGIN();
 			m_stmt_getBuddiesSettings.stmt->execute();
-		}
-		catch (Poco::Exception e) {
-			Log().Get("SQL ERROR") << e.displayText();
-		}
+		STATEMENT_EXECUTE_END(m_stmt_getBuddiesSettings.stmt, getBuddies(userId, account));
 	}
 
-	try {
+	STATEMENT_EXECUTE_BEGIN();
 		if (m_stmt_getBuddies.stmt->execute()) {
 			do {
 				RosterRow user;
@@ -520,10 +578,7 @@ std::map<std::string,RosterRow> SQLClass::getBuddies(long userId, PurpleAccount 
 				m_stmt_getBuddies.stmt->execute();
 			} while (!m_stmt_getBuddies.stmt->done());
 		}
-	}
-	catch (Poco::Exception e) {
-		Log().Get("SQL ERROR") << e.displayText();
-	}
+	STATEMENT_EXECUTE_END(m_stmt_getBuddies.stmt, getBuddies(userId, account));
 
 	m_stmt_getBuddiesSettings.resId.clear();
 	m_stmt_getBuddiesSettings.resType.clear();
@@ -544,24 +599,18 @@ void SQLClass::addSetting(long userId, const std::string &key, const std::string
 	m_stmt_addSetting.var.assign(key);
 	m_stmt_addSetting.value.assign(value);
 	m_stmt_addSetting.type = type;
-	try {
+	STATEMENT_EXECUTE_BEGIN();
 		m_stmt_addSetting.stmt->execute();
-	}
-	catch (Poco::Exception e) {
-		Log().Get("SQL ERROR") << e.displayText();
-	}
+	STATEMENT_EXECUTE_END(m_stmt_addSetting.stmt, addSetting(userId, key, value, type));
 }
 
 void SQLClass::updateSetting(long userId, const std::string &key, const std::string &value) {
 	m_stmt_updateSetting.user_id = userId;
 	m_stmt_updateSetting.var.assign(key);
 	m_stmt_updateSetting.value.assign(value);
-	try {
+	STATEMENT_EXECUTE_BEGIN();
 		m_stmt_updateSetting.stmt->execute();
-	}
-	catch (Poco::Exception e) {
-		Log().Get("SQL ERROR") << e.displayText();
-	}
+	STATEMENT_EXECUTE_END(m_stmt_updateSetting.stmt, updateSetting(userId, key, value));
 }
 
 GHashTable * SQLClass::getSettings(long userId) {
@@ -570,12 +619,9 @@ GHashTable * SQLClass::getSettings(long userId) {
 	PurpleValue *value;
 	int i;
 	m_stmt_getSettings.user_id = userId;
-	try {
+	STATEMENT_EXECUTE_BEGIN();
 		m_stmt_getSettings.stmt->execute();
-	}
-	catch (Poco::Exception e) {
-		Log().Get("SQL ERROR") << e.displayText();
-	}
+	STATEMENT_EXECUTE_END(m_stmt_getSettings.stmt, getSettings(userId));
 
 	for (i = 0; i < (int) m_stmt_getSettings.resId.size(); i++) {
 		type = (PurpleType) m_stmt_getSettings.resType[i];
@@ -604,11 +650,8 @@ void SQLClass::addBuddySetting(long userId, long buddyId, const std::string &key
 	m_stmt_addBuddySetting.var.assign(key);
 	m_stmt_addBuddySetting.value.assign(value);
 	m_stmt_addBuddySetting.type = (int) type;
-	try {
+	STATEMENT_EXECUTE_BEGIN();
 		m_stmt_addBuddySetting.stmt->execute();
-	}
-	catch (Poco::Exception e) {
-		Log().Get("SQL ERROR") << e.displayText();
-	}
+	STATEMENT_EXECUTE_END(m_stmt_addBuddySetting.stmt, addBuddySetting(userId, buddyId, key, value, type));
 }
 
