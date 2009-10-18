@@ -478,7 +478,6 @@ UserRow SQLClass::getUserByJid(const std::string &jid){
 	UserRow user;
 	user.id = -1;
 	m_stmt_getUserByJid.jid.assign(jid);
-	bool error = FALSE;
 
 	STATEMENT_EXECUTE_BEGIN();
 		if (m_stmt_getUserByJid.stmt->execute()) {
@@ -493,7 +492,6 @@ UserRow SQLClass::getUserByJid(const std::string &jid){
 		Log().Get("GET USER BY JID succeed");
 	STATEMENT_EXECUTE_END(m_stmt_getUserByJid.stmt, getUserByJid(jid));
 
-	user.id = -1;
 	return user;
 }
 
