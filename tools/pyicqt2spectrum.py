@@ -14,8 +14,9 @@ s = util.safe
 from twisted.internet import reactor
 
 def start():
-	if len(sys.argv) != 6 and len(sys.argv) != 7:
-		print sys.argv[0] + " pyicqt_directory database username password host [mysql_prefix]"
+	if len(sys.argv) != 6 and len(sys.argv) != 7 and len(sys.argv) != 3:
+		print "Usage for MySQL: " + sys.argv[0] + " pyicqt_directory database username password host [mysql_prefix]"
+		print "Usage for SQLite: " + sys.argv[0] + " pyicqt_directory database"
 		reactor.stop()
 		return
 	maindir = sys.argv[1]
@@ -24,7 +25,14 @@ def start():
 	if len(sys.argv) == 7:
 		prefix = sys.argv[6]
 	dict = {}
-	db = adbapi.ConnectionPool('MySQLdb', db = sys.argv[2], user = sys.argv[3], passwd = sys.argv[4], host = sys.argv[5], cp_min=1, cp_max=1)
+	if len(sys.argv) == 3:
+		if not os.path.exists(sys.argv[2]):
+			print "Run Spectrum to create this DB file first and then run this script again with the DB file created by Spectrum."
+			reactor.stop()
+			return
+		db = adbapi.ConnectionPool('SQLite3', sys.argv[2])
+	else:
+		db = adbapi.ConnectionPool('MySQLdb', db = sys.argv[2], user = sys.argv[3], passwd = sys.argv[4], host = sys.argv[5], cp_min=1, cp_max=1)
 	c = 0
 	for dr in os.listdir(maindir):
 		if os.path.isdir(maindir+dr):
@@ -51,9 +59,13 @@ def start():
 						
 						def done2(res):
 							user_id = int(res[0][0])
+							print "user_id", user_id
 							items = x.getElementsByTagName('item')
 							for j in items:
-								db.runQuery('insert ignore into ' + prefix + 'buddies (uin, user_id, nickname, groups, subscription) values ("%s", "%s", "%s","Buddies", "both")'%(s(j.getAttribute('jid')), s(str(user_id)), s(j.getAttribute('jid')))).addCallback(done)
+								if len(sys.argv) == 3:
+									db.runQuery('insert or ignore into ' + prefix + 'buddies (uin, user_id, nickname, groups, subscription) values ("%s", "%s", "%s","Buddies", "both")'%(s(j.getAttribute('jid')), s(str(user_id)), s(j.getAttribute('jid'))))
+								else:
+									db.runQuery('insert ignore into ' + prefix + 'buddies (uin, user_id, nickname, groups, subscription) values ("%s", "%s", "%s","Buddies", "both")'%(s(j.getAttribute('jid')), s(str(user_id)), s(j.getAttribute('jid'))))
 						
 						def done(res):
 							print '..done'
