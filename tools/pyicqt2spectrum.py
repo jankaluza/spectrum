@@ -41,7 +41,7 @@ def start():
 		if os.path.isdir(maindir+dr):
 			for f in os.listdir(maindir+dr):
 				if os.path.isfile(maindir+dr+'/'+f) and not f in ['pubsub', 'avatars']:
-					fp = open(maindir+dr+'/'+dr2+'/'+f, 'r')
+					fp = open(maindir+dr+'/'+f, 'r')
 					c += 1
 					buff = fp.read()
 					fp.close()
