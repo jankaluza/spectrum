@@ -221,7 +221,7 @@ void SQLClass::createStatements() {
 		m_stmt_removeBuddySettings.stmt = new Statement( ( STATEMENT("DELETE FROM " + p->configuration().sqlPrefix + "buddies_settings WHERE buddy_id=?"),
 												use(m_stmt_removeBuddySettings.buddy_id) ) );
 	if (!m_stmt_getSettings.stmt)
-		m_stmt_getSettings.stmt = new Statement( ( STATEMENT("SELECT user_id, type, var, value FROM " + p->configuration().sqlPrefix + "users_settings WHERE user_id=:id"),
+		m_stmt_getSettings.stmt = new Statement( ( STATEMENT("SELECT user_id, type, var, value FROM " + p->configuration().sqlPrefix + "users_settings WHERE user_id=?"),
 												use(m_stmt_getSettings.user_id),
 												into(m_stmt_getSettings.resId),
 												into(m_stmt_getSettings.resType),
