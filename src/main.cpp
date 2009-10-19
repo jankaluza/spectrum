@@ -70,16 +70,20 @@
 
 static gboolean nodaemon = FALSE;
 static gchar *logfile = NULL;
+static gchar *lock_file = NULL;
 
 static GOptionEntry options_entries[] = {
 	{ "nodaemon", 'n', 0, G_OPTION_ARG_NONE, &nodaemon, "Disable background daemon mode", NULL },
 	{ "logfile", 'l', 0, G_OPTION_ARG_STRING, &logfile, "Set file to log", NULL },
+	{ "pidfile", 'p', 0, G_OPTION_ARG_STRING, &lock_file, "File where to write transport PID", NULL },
 	{ NULL }
 };
 
 static void daemonize(void) {
 #ifndef WIN32
 	pid_t pid, sid;
+	FILE* lock_file_f;
+	char process_pid[20];
 
 	/* already a daemon */
 	if ( getppid() == 1 ) return;
@@ -110,6 +114,16 @@ static void daemonize(void) {
 	if ((chdir("/")) < 0) {
 		exit(1);
 	}
+	
+    /* write our pid into it & close the file. */
+	lock_file_f = fopen(lock_file, "w+");
+	if (lock_file_f == NULL) {
+		std::cout << "EE cannot write to lock file " << lock_file << ". Exiting\n";
+		exit(1);
+    }
+	sprintf(process_pid,"%d\n",getpid());
+	fwrite(process_pid,1,strlen(process_pid),lock_file_f);
+	fclose(lock_file_f);
 	
 	freopen( "/dev/null", "r", stdin);
 #endif
@@ -1150,6 +1164,19 @@ bool GlooxMessageHandler::loadConfigFile(const std::string &config) {
 	else {
 		Log().Get("loadConfigFile") << "You have to specify `filetransfer_cache` in [service] part of config file.";
 		return false;
+	}
+
+	if (lock_file == NULL) {
+		if ((value = g_key_file_get_string(keyfile, "service","pid_file", NULL)) != NULL) {
+			std::string pid_f(value);
+			replace(pid_f, "$jid", m_configuration.jid.c_str());
+			g_mkdir_with_parents(g_path_get_dirname(pid_f.c_str()), 0755);
+			lock_file = g_strdup(pid_f.c_str());
+		}
+		else {
+			lock_file = g_strdup(std::string("/var/run/spectrum/" + m_configuration.jid).c_str());
+			g_mkdir_with_parents("/var/run/spectrum", 0755);
+		}
 	}
 
 	if ((value = g_key_file_get_string(keyfile, "database","type", NULL)) != NULL) {
