@@ -76,7 +76,7 @@ def start():
 					
 					def done(res):
 						print 'Getting user_id of', jid
-						db.runQuery('select id from'+ prefix + 'users WHERE jid="' + jid + '";' ).addCallback(done2).addErrback(error)
+						db.runQuery('select id from '+ prefix + 'users WHERE jid="' + jid + '";' ).addCallback(done2).addErrback(error)
 					if len(sys.argv) == 3 or len(sys.argv) == 4:
 						db.runQuery('insert or ignore into ' + prefix + 'users (jid, uin, password, language) values ("%s", "%s", "%s", "en")'%(s(jid), s(uin),s(password))).addCallback(done).addErrback(error)
 					else:
