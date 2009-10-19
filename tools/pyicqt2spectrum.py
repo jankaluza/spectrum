@@ -28,7 +28,7 @@ def start():
 	if len(sys.argv) == 7:
 		prefix = sys.argv[6]
 	elif len(sys.argv) == 4:
-		prefix = len(sys.argv[3]
+		prefix = sys.argv[3]
 	dict = {}
 	if len(sys.argv) == 3 or len(sys.argv) == 4:
 		if not os.path.exists(sys.argv[2]):
