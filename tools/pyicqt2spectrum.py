@@ -27,8 +27,10 @@ def start():
 	prefix = ""
 	if len(sys.argv) == 7:
 		prefix = sys.argv[6]
+	elif len(sys.argv) == 4:
+		prefix = len(sys.argv[3]
 	dict = {}
-	if len(sys.argv) == 3:
+	if len(sys.argv) == 3 or len(sys.argv) == 4:
 		if not os.path.exists(sys.argv[2]):
 			print "Run Spectrum to create this DB file first and then run this script again with the DB file created by Spectrum."
 			reactor.stop()
@@ -66,7 +68,7 @@ def start():
 						print "Adding buddies of", jid
 						items = x.getElementsByTagName('item')
 						for j in items:
-							if len(sys.argv) == 3:
+							if len(sys.argv) == 3 or len(sys.argv) == 4:
 								db.runQuery('insert or ignore into ' + prefix + 'buddies (uin, user_id, nickname, groups, subscription) values ("%s", "%s", "%s","Buddies", "both")'%(s(j.getAttribute('jid')), s(str(user_id)), s(j.getAttribute('jid')))).addErrback(error)
 							else:
 								db.runQuery('insert ignore into ' + prefix + 'buddies (uin, user_id, nickname, groups, subscription) values ("%s", "%s", "%s","Buddies", "both")'%(s(j.getAttribute('jid')), s(str(user_id)), s(j.getAttribute('jid')))).addErrback(error)
@@ -74,12 +76,12 @@ def start():
 					
 					def done(res):
 						print 'Getting user_id of', jid
-						db.runQuery('select user_id from'+ prefix + 'users WHERE jid="' + jid + '";' ).addCallback(done2).addErrback(error)
-					if len(sys.argv) == 3:
+						db.runQuery('select id from'+ prefix + 'users WHERE jid="' + jid + '";' ).addCallback(done2).addErrback(error)
+					if len(sys.argv) == 3 or len(sys.argv) == 4:
 						db.runQuery('insert or ignore into ' + prefix + 'users (jid, uin, password, language) values ("%s", "%s", "%s", "en")'%(s(jid), s(uin),s(password))).addCallback(done).addErrback(error)
 					else:
 						db.runQuery('insert ignore into ' + prefix + 'users (jid, uin, password, language) values ("%s", "%s", "%s", "en")'%(s(jid), s(uin),s(password))).addCallback(done).addErrback(error)
-	print "Everything done!"
+	#print "Everything done!"
 	#reactor.stop()
 
 reactor.callWhenRunning(start)
