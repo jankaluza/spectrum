@@ -71,11 +71,13 @@
 static gboolean nodaemon = FALSE;
 static gchar *logfile = NULL;
 static gchar *lock_file = NULL;
+static gboolean ver = FALSE;
 
 static GOptionEntry options_entries[] = {
 	{ "nodaemon", 'n', 0, G_OPTION_ARG_NONE, &nodaemon, "Disable background daemon mode", NULL },
 	{ "logfile", 'l', 0, G_OPTION_ARG_STRING, &logfile, "Set file to log", NULL },
 	{ "pidfile", 'p', 0, G_OPTION_ARG_STRING, &lock_file, "File where to write transport PID", NULL },
+	{ "version", 'v', 0, G_OPTION_ARG_NONE, &ver, "Shows Spectrum version", NULL },
 	{ NULL }
 };
 
@@ -1725,7 +1727,7 @@ void GlooxMessageHandler::handlePresence(const Presence &stanza){
 void GlooxMessageHandler::onConnect() {
 	Log().Get("gloox") << "CONNECTED!";
 	j->disco()->setIdentity("gateway", protocol()->gatewayIdentity(), configuration().discoName);
-	j->disco()->setVersion(configuration().discoName, "0.1", "");
+	j->disco()->setVersion(configuration().discoName, VERSION, "");
 
 	std::string id = "gateway";
 	id += '/';
@@ -2010,6 +2012,12 @@ int main( int argc, char* argv[] ) {
 		return -1;
 	}
 
+	if (ver) {
+		std::cout << VERSION << "\n";
+		g_option_context_free(context);
+		return 0;
+	}
+
 	if (argc != 2)
 #if WIN32
 		std::cout << "Usage: spectrum.exe <configuration_file.cfg>";
@@ -2017,15 +2025,18 @@ int main( int argc, char* argv[] ) {
 		std::cout << g_option_context_get_help(context, FALSE, NULL);
 #endif
 	else {
+
 		signal(SIGPIPE, SIG_IGN);
 
 		if (signal(SIGCHLD, spectrum_sigchld_handler) == SIG_ERR) {
 			std::cout << "SIGCHLD handler can't be set\n";
+			g_option_context_free(context);
 			return -1;
 		}
 
 		if (signal(SIGINT, spectrum_sigint_handler) == SIG_ERR) {
 			std::cout << "SIGINT handler can't be set\n";
+			g_option_context_free(context);
 			return -1;
 		}
 

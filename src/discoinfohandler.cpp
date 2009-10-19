@@ -76,7 +76,7 @@ bool GlooxDiscoInfoHandler::handleIq (const IQ &stanza){
 			Tag *t;
 			t = new Tag("identity");
 			t->addAttribute("category","gateway");
-			t->addAttribute("name","High Flyer Transport");
+			t->addAttribute("name","Spectrum");
 			t->addAttribute("type",p->protocol()->gatewayIdentity());
 			query2->addChild(t);
 
