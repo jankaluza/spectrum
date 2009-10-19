@@ -71,7 +71,7 @@ def start():
 							print '..done'
 							db.runQuery('select @@IDENTITY from'+ prefix + 'users ;' ).addCallback(done2)
 						
-						db.runQuery('insert ignore into ' + prefix + 'users (jid, uin, password, lang) values ("%s", "%s", "%s", "en")'%(s(jid), s(uin),s(password))).addCallback(done)
+						db.runQuery('insert ignore into ' + prefix + 'users (jid, uin, password, language) values ("%s", "%s", "%s", "en")'%(s(jid), s(uin),s(password))).addCallback(done)
 
 reactor.callWhenRunning(start)
 reactor.run()
