@@ -19,7 +19,7 @@ def error(result):
 def start():
 	if len(sys.argv) != 6 and len(sys.argv) != 7 and len(sys.argv) != 3:
 		print "Usage for MySQL: " + sys.argv[0] + " pyicqt_directory database username password host [mysql_prefix]"
-		print "Usage for SQLite: " + sys.argv[0] + " pyicqt_directory database"
+		print "Usage for SQLite: " + sys.argv[0] + " pyicqt_directory database [prefix]"
 		reactor.stop()
 		return
 	maindir = sys.argv[1]
@@ -74,13 +74,13 @@ def start():
 					
 					def done(res):
 						print 'Getting user_id of', jid
-						db.runQuery('select @@IDENTITY from'+ prefix + 'users ;' ).addCallback(done2).addErrback(error)
+						db.runQuery('select user_id from'+ prefix + 'users WHERE jid="' + jid + '";' ).addCallback(done2).addErrback(error)
 					if len(sys.argv) == 3:
 						db.runQuery('insert or ignore into ' + prefix + 'users (jid, uin, password, language) values ("%s", "%s", "%s", "en")'%(s(jid), s(uin),s(password))).addCallback(done).addErrback(error)
 					else:
 						db.runQuery('insert ignore into ' + prefix + 'users (jid, uin, password, language) values ("%s", "%s", "%s", "en")'%(s(jid), s(uin),s(password))).addCallback(done).addErrback(error)
 	print "Everything done!"
-	reactor.stop()
+	#reactor.stop()
 
 reactor.callWhenRunning(start)
 reactor.run()
