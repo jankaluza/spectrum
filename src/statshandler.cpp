@@ -250,7 +250,7 @@ bool GlooxStatsHandler::handleIq (const IQ &stanza){
 
 		t = new Tag("stat");
 		t->addAttribute("name","memory-usage");
-		t->addAttribute("units","bytes");
+		t->addAttribute("units","KB");
 		t->addAttribute("value", rss_stream.str());
 		query->addChild(t);
 #endif
