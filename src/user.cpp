@@ -639,6 +639,8 @@ void User::purpleBuddyStatusChanged(PurpleBuddy *buddy, PurpleStatus *status, Pu
 		tag->addAttribute("to", m_jid);
 		p->j->send(tag);
 	}
+	if (!m_roster[std::string(purple_buddy_get_name(buddy))].online) {
+		p->userManager()->buddyOnline();
 	m_roster[std::string(purple_buddy_get_name(buddy))].online = true;
 }
 
