@@ -307,7 +307,7 @@ void SQLClass::initDb() {
 					"  user_id int(10) NOT NULL,"
 					"  buddy_id int(10) NOT NULL,"
 					"  var varchar(50) NOT NULL,"
-					"  type smallint(4) NOT NULL,"
+					"  type int(4) NOT NULL,"
 					"  value varchar(255) NOT NULL,"
 					"  PRIMARY KEY (buddy_id, var)"
 					");", now;
@@ -330,7 +330,7 @@ void SQLClass::initDb() {
 		*m_sess << "CREATE TABLE " + p->configuration().sqlPrefix + "users_settings ("
 					"  user_id int(10) NOT NULL,"
 					"  var varchar(50) NOT NULL,"
-					"  type smallint(4) NOT NULL,"
+					"  type int(4) NOT NULL,"
 					"  value varchar(255) NOT NULL,"
 					"  PRIMARY KEY (user_id, var)"
 					");", now;

@@ -62,25 +62,23 @@ def start():
 					uin = gatherTextNodes(u[0])
 					print "Adding", jid
 					
-					def done2(res):
+					def done2(res, x2):
 						user_id = int(res[0][0])
 						print "user_id =", user_id
 						print "Adding buddies of", jid
-						items = x.getElementsByTagName('item')
+						items = x2.getElementsByTagName('item')
 						for j in items:
 							if len(sys.argv) == 3 or len(sys.argv) == 4:
 								db.runQuery('insert or ignore into ' + prefix + 'buddies (uin, user_id, nickname, groups, subscription) values ("%s", "%s", "%s","Buddies", "both")'%(s(j.getAttribute('jid')), s(str(user_id)), s(j.getAttribute('jid')))).addErrback(error)
 							else:
 								db.runQuery('insert ignore into ' + prefix + 'buddies (uin, user_id, nickname, groups, subscription) values ("%s", "%s", "%s","Buddies", "both")'%(s(j.getAttribute('jid')), s(str(user_id)), s(j.getAttribute('jid')))).addErrback(error)
 						print "done!"
-					
-					def done(res):
-						print 'Getting user_id of', jid
-						db.runQuery('select id from '+ prefix + 'users WHERE jid="' + jid + '";' ).addCallback(done2).addErrback(error)
+
 					if len(sys.argv) == 3 or len(sys.argv) == 4:
-						db.runQuery('insert or ignore into ' + prefix + 'users (jid, uin, password, language) values ("%s", "%s", "%s", "en")'%(s(jid), s(uin),s(password))).addCallback(done).addErrback(error)
+						db.runQuery('insert or ignore into ' + prefix + 'users (jid, uin, password, language) values ("%s", "%s", "%s", "en")'%(s(jid), s(uin),s(password))).addErrback(error)
 					else:
-						db.runQuery('insert ignore into ' + prefix + 'users (jid, uin, password, language) values ("%s", "%s", "%s", "en")'%(s(jid), s(uin),s(password))).addCallback(done).addErrback(error)
+						db.runQuery('insert ignore into ' + prefix + 'users (jid, uin, password, language) values ("%s", "%s", "%s", "en")'%(s(jid), s(uin),s(password))).addErrback(error)
+					db.runQuery('select id from users WHERE jid = "'+jid+'";').addCallback(done2, x).addErrback(error)
 	#print "Everything done!"
 	#reactor.stop()
 
