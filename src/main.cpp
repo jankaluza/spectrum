@@ -72,12 +72,14 @@ static gboolean nodaemon = FALSE;
 static gchar *logfile = NULL;
 static gchar *lock_file = NULL;
 static gboolean ver = FALSE;
+static gboolean upgrade_db = FALSE;
 
 static GOptionEntry options_entries[] = {
 	{ "nodaemon", 'n', 0, G_OPTION_ARG_NONE, &nodaemon, "Disable background daemon mode", NULL },
 	{ "logfile", 'l', 0, G_OPTION_ARG_STRING, &logfile, "Set file to log", NULL },
 	{ "pidfile", 'p', 0, G_OPTION_ARG_STRING, &lock_file, "File where to write transport PID", NULL },
 	{ "version", 'v', 0, G_OPTION_ARG_NONE, &ver, "Shows Spectrum version", NULL },
+	{ "upgrade-db", 'u', 0, G_OPTION_ARG_NONE, &upgrade_db, "Upgrades Spectrum database", NULL },
 	{ NULL }
 };
 
@@ -798,7 +800,7 @@ GlooxMessageHandler::GlooxMessageHandler(const std::string &config) : MessageHan
 #endif
 
 	if (loaded) {
-		m_sql = new SQLClass(this);	
+		m_sql = new SQLClass(this, upgrade_db);	
 		if (!m_sql->loaded())
 			loaded = false;
 	}

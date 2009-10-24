@@ -21,6 +21,8 @@
 #ifndef _HI_SQL_H
 #define _HI_SQL_H
 
+#define DB_VERSION 1
+
 #include <iostream>
 #include "transport_config.h"
 
@@ -252,7 +254,7 @@ struct removeBuddySettingsStatement {
  */
 class SQLClass {
 	public:
-		SQLClass(GlooxMessageHandler *parent);
+		SQLClass(GlooxMessageHandler *parent, bool upgrade = false);
 		~SQLClass();
 
 		void addUser(const std::string &jid, const std::string &uin, const std::string &password, const std::string &language);
@@ -269,6 +271,7 @@ class SQLClass {
 		void createStatements();
 		void removeStatements();
 		void reconnect();
+		void upgradeDatabase();
 
 		// settings
 		void addSetting(long userId, const std::string &key, const std::string &value, PurpleType type);
@@ -307,7 +310,9 @@ class SQLClass {
 		removeBuddySettingsStatement m_stmt_removeBuddySettings;
 
 		Poco::Data::Session *m_sess;
+		Poco::UInt64 m_version;
 		GlooxMessageHandler *p;
+		bool m_upgrade;
 		bool m_loaded;
 		int m_error;
 };

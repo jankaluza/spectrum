@@ -31,9 +31,10 @@
 #include <Poco/Data/SQLite/SQLiteException.h>
 #endif
 
-SQLClass::SQLClass(GlooxMessageHandler *parent) {
+SQLClass::SQLClass(GlooxMessageHandler *parent, bool upgrade) {
 	p = parent;
 	m_loaded = false;
+	m_upgrade = upgrade;
 	m_sess = NULL;
 	m_stmt_addUser.stmt = NULL;
 	m_stmt_updateUserPassword.stmt = NULL;
@@ -93,7 +94,6 @@ SQLClass::SQLClass(GlooxMessageHandler *parent) {
 	createStatements();
 	
 	initDb();
-	m_loaded = true;
 
 // 	if (!vipSQL->connect("platby",p->configuration().sqlHost.c_str(),p->configuration().sqlUser.c_str(),p->configuration().sqlPassword.c_str()))
 }
@@ -289,58 +289,115 @@ void SQLClass::reconnect() {
 }
 
 void SQLClass::initDb() {
-	if (p->configuration().sqlType != "sqlite")
-		return;
+	if (p->configuration().sqlType == "sqlite") {
+		try {
+			*m_sess << "CREATE TABLE IF NOT EXISTS " + p->configuration().sqlPrefix + "buddies ("
+						"  id INTEGER PRIMARY KEY NOT NULL,"
+						"  user_id int(10) NOT NULL,"
+						"  uin varchar(255) NOT NULL,"
+						"  subscription varchar(20) NOT NULL,"
+						"  nickname varchar(255) NOT NULL,"
+						"  groups varchar(255) NOT NULL"
+						");", now;
+
+			*m_sess << "CREATE UNIQUE INDEX IF NOT EXISTS user_id ON " + p->configuration().sqlPrefix + "buddies (user_id, uin);", now;
+
+			*m_sess << "CREATE TABLE IF NOT EXISTS " + p->configuration().sqlPrefix + "buddies_settings ("
+						"  user_id int(10) NOT NULL,"
+						"  buddy_id int(10) NOT NULL,"
+						"  var varchar(50) NOT NULL,"
+						"  type int(4) NOT NULL,"
+						"  value varchar(255) NOT NULL,"
+						"  PRIMARY KEY (buddy_id, var)"
+						");", now;
+
+			*m_sess << "CREATE INDEX IF NOT EXISTS user_id02 ON " + p->configuration().sqlPrefix + "buddies_settings (user_id);", now;
+
+			*m_sess << "CREATE TABLE IF NOT EXISTS " + p->configuration().sqlPrefix + "users ("
+						"  id INTEGER PRIMARY KEY NOT NULL,"
+						"  jid varchar(255) NOT NULL,"
+						"  uin varchar(4095) NOT NULL,"
+						"  password varchar(255) NOT NULL,"
+						"  language varchar(25) NOT NULL,"
+						"  encoding varchar(50) NOT NULL DEFAULT 'utf8',"
+						"  last_login datetime,"
+						"  vip tinyint(1) NOT NULL DEFAULT '0',"
+						"  online int(1) NOT NULL DEFAULT '0'"
+						");", now;
+
+			*m_sess << "CREATE UNIQUE INDEX IF NOT EXISTS jid ON " + p->configuration().sqlPrefix + "users (jid);", now;
+
+			*m_sess << "CREATE TABLE IF NOT EXISTS " + p->configuration().sqlPrefix + "users_settings ("
+						"  user_id int(10) NOT NULL,"
+						"  var varchar(50) NOT NULL,"
+						"  type int(4) NOT NULL,"
+						"  value varchar(255) NOT NULL,"
+						"  PRIMARY KEY (user_id, var)"
+						");", now;
+						
+			*m_sess << "CREATE INDEX IF NOT EXISTS user_id03 ON " + p->configuration().sqlPrefix + "users_settings (user_id);", now;
+			
+			*m_sess << "INSERT INTO " + p->configuration().sqlPrefix + "db_version ('ver') VALUES (1);", now;
+		}
+		catch (Poco::Exception e) {
+			Log().Get("SQL ERROR") << e.displayText();
+			return;
+		}
+	}
+
 	try {
-		*m_sess << "CREATE TABLE " + p->configuration().sqlPrefix + "buddies ("
-					"  id INTEGER PRIMARY KEY NOT NULL,"
-					"  user_id int(10) NOT NULL,"
-					"  uin varchar(255) NOT NULL,"
-					"  subscription varchar(20) NOT NULL,"
-					"  nickname varchar(255) NOT NULL,"
-					"  groups varchar(255) NOT NULL"
-					");", now;
-
-		*m_sess << "CREATE UNIQUE INDEX user_id ON " + p->configuration().sqlPrefix + "buddies (user_id, uin);", now;
-
-		*m_sess << "CREATE TABLE " + p->configuration().sqlPrefix + "buddies_settings ("
-					"  user_id int(10) NOT NULL,"
-					"  buddy_id int(10) NOT NULL,"
-					"  var varchar(50) NOT NULL,"
-					"  type int(4) NOT NULL,"
-					"  value varchar(255) NOT NULL,"
-					"  PRIMARY KEY (buddy_id, var)"
-					");", now;
-
-		*m_sess << "CREATE INDEX user_id02 ON " + p->configuration().sqlPrefix + "buddies_settings (user_id);", now;
-
-		*m_sess << "CREATE TABLE " + p->configuration().sqlPrefix + "users ("
-					"  id INTEGER PRIMARY KEY NOT NULL,"
-					"  jid varchar(255) NOT NULL,"
-					"  uin varchar(4095) NOT NULL,"
-					"  password varchar(255) NOT NULL,"
-					"  language varchar(25) NOT NULL,"
-					"  encoding varchar(50) NOT NULL DEFAULT 'utf8',"
-					"  last_login datetime,"
-					"  vip tinyint(1) NOT NULL DEFAULT '0'"
-					");", now;
-
-		*m_sess << "CREATE UNIQUE INDEX jid ON " + p->configuration().sqlPrefix + "users (jid);", now;
-
-		*m_sess << "CREATE TABLE " + p->configuration().sqlPrefix + "users_settings ("
-					"  user_id int(10) NOT NULL,"
-					"  var varchar(50) NOT NULL,"
-					"  type int(4) NOT NULL,"
-					"  value varchar(255) NOT NULL,"
-					"  PRIMARY KEY (user_id, var)"
-					");", now;
-					
-		*m_sess << "CREATE INDEX user_id03 ON " + p->configuration().sqlPrefix + "users_settings (user_id);", now;
+		*m_sess << "SELECT ver FROM " + p->configuration().sqlPrefix + "db_version", into(m_version), now;
 	}
 	catch (Poco::Exception e) {
+		m_version = 0;
+		if (p->configuration().sqlType != "sqlite" && !m_upgrade) {
+			Log().Get("SQL") << "Database schema is not updated. Please run \"spectrum <config_file.cfg> --upgrade-db\" to fix that.";
+			return;
+		}
+		if (p->configuration().sqlType == "sqlite") {
+			m_loaded = true;
+			upgradeDatabase();
+			return;
+		}
+	}
+	Log().Get("SQL") << "Current DB version: " << m_version;
+	if ((p->configuration().sqlType == "sqlite" || (p->configuration().sqlType != "sqlite" && m_upgrade)) && m_version < DB_VERSION) {
+		Log().Get("SQL") << "Starting DB upgrade.";
+		upgradeDatabase();
+		return;
+	}
+	
+	m_loaded = true;
+
+}
+
+void SQLClass::upgradeDatabase() {
+	try {
+		for (int i = (int) m_version; i < DB_VERSION; i++) {
+			Log().Get("SQL") << "Upgrading from version " << i << " to " << i + 1;
+			if (i == 0) {
+				if (p->configuration().sqlType == "sqlite") {
+					*m_sess << "CREATE TABLE IF NOT EXISTS " + p->configuration().sqlPrefix + "db_version ("
+						"  ver INTEGER NOT NULL DEFAULT '1'"
+						");", now;
+					*m_sess << "ALTER TABLE " + p->configuration().sqlPrefix + "users ADD online int(1) NOT NULL DEFAULT '0';", now;
+				}
+				else {
+					*m_sess << "CREATE TABLE IF NOT EXISTS `" + p->configuration().sqlPrefix + "db_version` ("
+								"`ver` int(10) unsigned NOT NULL default '1'"
+								");", now;
+					*m_sess << "ALTER TABLE " + p->configuration().sqlPrefix + "users ADD online tinyint(1) NOT NULL DEFAULT '0';", now;
+				}
+				*m_sess << "INSERT INTO " + p->configuration().sqlPrefix + "db_version (ver) VALUES ('1');", now;
+			}
+		}
+	}
+	catch (Poco::Exception e) {
+		m_loaded = false;
 		Log().Get("SQL ERROR") << e.displayText();
 		return;
 	}
+	Log().Get("SQL") << "Done";
 }
 
 bool SQLClass::isVIP(const std::string &jid) {

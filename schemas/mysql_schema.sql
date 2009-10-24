@@ -28,15 +28,14 @@ CREATE TABLE IF NOT EXISTS `users` (
   `encoding` varchar(50) collate utf8_bin NOT NULL default 'utf8',
   `last_login` datetime,
   `vip` tinyint(1) NOT NULL  default '0',
+  `online` tinyint(1) NOT NULL  default '0',
   PRIMARY KEY (`id`),
   UNIQUE KEY `jid` (`jid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 
-CREATE TABLE IF NOT EXISTS `users_settings` (
-  `user_id` int(10) unsigned NOT NULL,
-  `var` varchar(50) collate utf8_bin NOT NULL,
-  `type` smallint(4) unsigned NOT NULL,
-  `value` varchar(255) collate utf8_bin NOT NULL,
-  PRIMARY KEY (`user_id`,`var`),
-  KEY `user_id` (`user_id`)
+CREATE TABLE IF NOT EXISTS `db_version` (
+  `ver` int(10) unsigned NOT NULL default '1'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+
+INSERT INTO db_version (ver) VALUES ('1');
+
