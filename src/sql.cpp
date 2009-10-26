@@ -341,7 +341,6 @@ void SQLClass::initDb() {
 		}
 		catch (Poco::Exception e) {
 			Log().Get("SQL ERROR") << e.displayText();
-			return;
 		}
 	}
 
