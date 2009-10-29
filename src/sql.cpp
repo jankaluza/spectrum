@@ -327,7 +327,7 @@ void SQLClass::initDb() {
 
 			*m_sess << "CREATE UNIQUE INDEX IF NOT EXISTS jid ON " + p->configuration().sqlPrefix + "users (jid);", now;
 
-			*m_sess << "CREATE TABLE IF NOT EXISTS " + p->configuration().sqlPrefix + "users_settings ("
+			*m_sess << "CREATE TABLE " + p->configuration().sqlPrefix + "users_settings ("
 						"  user_id int(10) NOT NULL,"
 						"  var varchar(50) NOT NULL,"
 						"  type int(4) NOT NULL,"
