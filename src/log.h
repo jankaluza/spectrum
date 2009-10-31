@@ -4,15 +4,26 @@
 #include <time.h>
 #include <sstream>
 #include <cstdio>
+#include <iostream>
+#include <fstream>
+#include "gloox/loghandler.h"
 
-class Log
+using namespace gloox;
+
+class LogClass;
+
+class LogMessage
 {
 public:
-	Log(){};
-	virtual ~Log() {
+	LogMessage(std::ofstream &file) : m_file(file) {}
+	~LogMessage() {
 		os << std::endl;
 		fprintf(stdout, "%s", os.str().c_str());
 		fflush(stdout);
+		if (m_file.is_open()) {
+			m_file << os.str();
+			m_file.flush();
+		}
 	}
 
 	std::ostringstream& Get(const std::string &user) {
@@ -25,5 +36,32 @@ public:
 	}
 protected:
 	std::ostringstream os;
+	std::ofstream &m_file;
 };
+
+class LogClass : public LogHandler {
+	public:
+		LogClass() {}
+		~LogClass() {
+			if (m_file.is_open())
+				m_file.close();
+		}
+
+		void setLogFile(const std::string &file) {
+			if (m_file.is_open())
+				m_file.close();
+			m_file.open(file.c_str());
+		}
+		
+		std::ofstream &fileStream() { return m_file; }
+		void handleLog(LogLevel level, LogArea area, const std::string &message) {
+			
+		}
+		
+	private:
+		std::ofstream m_file;
+};
+
+#define Log(HEAD,STRING) LogMessage(Log_.fileStream()).Get(HEAD) << STRING;
+
 #endif

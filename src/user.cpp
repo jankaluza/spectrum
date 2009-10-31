@@ -84,7 +84,7 @@ static gboolean storeBuddy(gpointer key, gpointer v, gpointer data) {
 		id = user->p->sql()->addBuddy(user->storageId(), name, "both", purple_group_get_name(purple_buddy_get_group(buddy)) ? std::string(purple_group_get_name(purple_buddy_get_group(buddy))) : std::string("Buddies"), alias);
 		buddy->node.ui_data = (void *) new long(id);
 	}
-	Log().Get("buddyListSaveNode") << id << " " << name << " " << alias;
+	Log("buddyListSaveNode", id << " " << name << " " << alias);
 	SaveData *s = new SaveData;
 	s->user = user;
 	s->id = (long *) buddy->node.ui_data;
@@ -185,7 +185,7 @@ void User::storeBuddy(PurpleBuddy *buddy) {
 }
 
 bool User::syncCallback() {
-	Log().Get(jid()) << "sync_cb lastCount: " << m_subscribeLastCount << "cacheSize: " << int(m_subscribeCache.size());
+	Log(jid(), "sync_cb lastCount: " << m_subscribeLastCount << "cacheSize: " << int(m_subscribeCache.size()));
 	// we have to check, if all users arrived and repeat this call if not
 	if (m_subscribeLastCount == int(m_subscribeCache.size())) {
 		syncContacts();
@@ -279,7 +279,7 @@ void User::sendRosterX()
 	m_syncTimer = 0;
 	if (int(m_subscribeCache.size()) == 0)
 		return;
-	Log().Get(m_jid) << "Sending rosterX";
+	Log(m_jid, "Sending rosterX");
 	Tag *tag = new Tag("iq");
 	Resource res = findResourceWithFeature(GLOOX_FEATURE_ROSTERX);
 	if (!res)
@@ -338,7 +338,7 @@ void User::sendRosterX()
 void User::syncContacts()
 {
 	PurpleBuddy *buddy;
-	Log().Get(m_jid) << "Syncing contacts with legacy network.";
+	Log(m_jid, "Syncing contacts with legacy network.");
 	for (std::map<std::string, RosterRow>::iterator u = m_roster.begin(); u != m_roster.end() ; u++) {
 		std::string name((*u).second.uin);
 		std::for_each( name.begin(), name.end(), replaceJidCharacters() );
@@ -377,13 +377,13 @@ Tag *User::generatePresenceStanza(PurpleBuddy *buddy) {
 	int s = purple_status_type_get_primitive(purple_status_get_type(stat));
 	const char *statusMessage = purple_status_get_attr_string(stat, "message");
 
-	Log().Get(m_jid) << "Generating presence stanza for user " << name;
+	Log(m_jid, "Generating presence stanza for user " << name);
 	Tag *tag = new Tag("presence");
 	tag->addAttribute("from", name + "@" + p->jid() + "/bot");
 
 	if (statusMessage != NULL) {
 		std::string _status(statusMessage);
-		Log().Get(m_jid) << "Raw status message: " << _status;
+		Log(m_jid, "Raw status message: " << _status);
 		tag->addChild( new Tag("status", stripHTMLTags(_status)) );
 	}
 
@@ -423,14 +423,14 @@ Tag *User::generatePresenceStanza(PurpleBuddy *buddy) {
 		PurpleBuddyIcon *icon = purple_buddy_icons_find(m_account, name.c_str());
 		if (icon != NULL) {
 			avatarHash = purple_buddy_icon_get_full_path(icon);
-			Log().Get(m_jid) << "avatarHash";
+			Log(m_jid, "avatarHash");
 		}
 
 		if (purple_value_get_boolean(getSetting("enable_avatars"))) {
 			Tag *x = new Tag("x");
 			x->addAttribute("xmlns","vcard-temp:x:update");
 			if (avatarHash != NULL) {
-				Log().Get(m_jid) << "Got avatar hash";
+				Log(m_jid, "Got avatar hash");
 				// Check if it's patched libpurple which saves icons to directories
 				char *hash = strrchr(avatarHash,'/');
 				std::string h;
@@ -446,7 +446,7 @@ Tag *User::generatePresenceStanza(PurpleBuddy *buddy) {
 					x->addChild(new Tag("photo", (std::string) avatarHash));
 			}
 			else {
-				Log().Get(m_jid) << "no avatar hash";
+				Log(m_jid, "no avatar hash");
 				x->addChild(new Tag("photo"));
 			}
 			tag->addChild(x);
@@ -479,9 +479,9 @@ void User::purpleReauthorizeBuddy(PurpleBuddy *buddy) {
 				if (l->data) {
 					PurpleMenuAction *act = (PurpleMenuAction *) l->data;
 					if (act->label) {
-						Log().Get(m_jid) << (std::string)act->label;
+						Log(m_jid, (std::string)act->label);
 						if ((std::string) act->label == "Re-request Authorization") {
-							Log().Get(m_jid) << "rerequesting authorization for " << name;
+							Log(m_jid, "rerequesting authorization for " << name);
 							((GSourceFunc) act->callback) (act->data);
 							break;
 						}
@@ -517,7 +517,7 @@ void User::purpleBuddyChanged(PurpleBuddy *buddy){
 		return;
 	int s = purple_status_type_get_primitive(purple_status_get_type(stat));
 
-	Log().Get(m_jid) << "purpleBuddyChanged: " << name << " ("<< alias <<") (" << s << ")";
+	Log(m_jid, "purpleBuddyChanged: " << name << " ("<< alias <<") (" << s << ")");
 
 	if (m_syncTimer==0 && !m_rosterXCalled) {
 		m_syncTimer = purple_timeout_add_seconds(4, sync_cb, this);
@@ -533,10 +533,10 @@ void User::purpleBuddyChanged(PurpleBuddy *buddy){
 		if (findResourceWithFeature(GLOOX_FEATURE_ROSTERX)) {
 			if (!m_rosterXCalled) {
 				m_subscribeCache[name] = buddy;
-				Log().Get(m_jid) << "Not in roster => adding to rosterX cache";
+				Log(m_jid, "Not in roster => adding to rosterX cache");
 			}
 			else {
-				Log().Get(m_jid) << "Not in roster => sending rosterx";
+				Log(m_jid, "Not in roster => sending rosterx");
 				if (m_syncTimer == 0) {
 					m_syncTimer = purple_timeout_add_seconds(4, sync_cb, this);
 				}
@@ -544,7 +544,7 @@ void User::purpleBuddyChanged(PurpleBuddy *buddy){
 			}
 		}
 		else {
-			Log().Get(m_jid) << "Not in roster => sending subscribe";
+			Log(m_jid, "Not in roster => sending subscribe");
 			Tag *tag = new Tag("presence");
 			tag->addAttribute("type", "subscribe");
 			tag->addAttribute("from", name + "@" + p->jid());
@@ -559,7 +559,7 @@ void User::purpleBuddyChanged(PurpleBuddy *buddy){
 		Tag *tag = generatePresenceStanza(buddy);
 		if (tag) {
 			if (tag->xml() == m_roster[name].lastPresence) {
-				Log().Get(m_jid) << "Not sending this presence, because we've already sent it before.";
+				Log(m_jid, "Not sending this presence, because we've already sent it before.");
 				delete tag;
 				return;
 			}
@@ -597,7 +597,7 @@ void User::purpleBuddyCreated(PurpleBuddy *buddy) {
 	std::string name(purple_buddy_get_name(buddy));
 	std::for_each( name.begin(), name.end(), replaceBadJidCharacters() );
 
-	Log().Get(m_jid) << "purpleBuddyChanged: " << name << " ("<< alias <<")";
+	Log(m_jid, "purpleBuddyChanged: " << name << " ("<< alias <<")");
 
 	if (m_syncTimer==0 && !m_rosterXCalled) {
 		m_syncTimer = purple_timeout_add_seconds(12, sync_cb, this);
@@ -609,10 +609,10 @@ void User::purpleBuddyCreated(PurpleBuddy *buddy) {
 		if (findResourceWithFeature(GLOOX_FEATURE_ROSTERX)) {
 			if (!m_rosterXCalled) {
 				m_subscribeCache[name] = buddy;
-				Log().Get(m_jid) << "Not in roster => adding to rosterX cache";
+				Log(m_jid, "Not in roster => adding to rosterX cache");
 			}
 			else {
-				Log().Get(m_jid) << "Not in roster => sending rosterx";
+				Log(m_jid, "Not in roster => sending rosterx");
 				if (m_syncTimer == 0) {
 					m_syncTimer = purple_timeout_add_seconds(12, sync_cb, this);
 				}
@@ -620,7 +620,7 @@ void User::purpleBuddyCreated(PurpleBuddy *buddy) {
 			}
 		}
 		else {
-			Log().Get(m_jid) << "Not in roster => sending subscribe";
+			Log(m_jid, "Not in roster => sending subscribe");
 			Tag *tag = new Tag("presence");
 			tag->addAttribute("type", "subscribe");
 			tag->addAttribute("from", name + "@" + p->jid());
@@ -721,7 +721,7 @@ void User::purpleConversationWriteIM(PurpleConversation *conv, const char *who, 
 		m_conversations[name].conv = conv;
 	}
 
-	Log().Get(m_jid) <<  "purpleConversationWriteIM:" << name << msg;
+	Log(m_jid, "purpleConversationWriteIM:" << name << msg);
 
 	// send message to user
 	char *newline = purple_strdup_withhtml(msg);
@@ -760,7 +760,7 @@ void User::purpleConversationWriteIM(PurpleConversation *conv, const char *who, 
 		m.erase(0,6);
 		m.erase(m.length() - 7, 7);
 	}
-	Log().Get("TEST") << m << " " << message;
+	Log("TEST", m << " " << message);
 	std::string res = m_conversations[name].resource;
 	if (hasFeature(GLOOX_FEATURE_XHTML_IM, res) && m != message) {
 		p->parser()->getTag("<body>" + m + "</body>", sendXhtmlTag, stanzaTag);
@@ -769,7 +769,7 @@ void User::purpleConversationWriteIM(PurpleConversation *conv, const char *who, 
 		return;
 	}
 
-	Log().Get("STANZATAG") << stanzaTag->xml();
+	Log("STANZATAG", stanzaTag->xml());
 
 	p->j->send(stanzaTag);
 	g_free(newline);
@@ -846,7 +846,7 @@ void User::purpleBuddyTypingStopped(const std::string &uin){
 		return;
 	if (!purple_value_get_boolean(getSetting("enable_chatstate")))
 		return;
-	Log().Get(m_jid) << uin << " stopped typing";
+	Log(m_jid, uin << " stopped typing");
 	std::string username(uin);
 	std::for_each( username.begin(), username.end(), replaceBadJidCharacters() );
 
@@ -872,7 +872,7 @@ void User::purpleBuddyTyping(const std::string &uin){
 		return;
 	if (!purple_value_get_boolean(getSetting("enable_chatstate")))
 		return;
-	Log().Get(m_jid) << uin << " is typing";
+	Log(m_jid, uin << " is typing");
 	std::string username(uin);
 	std::for_each( username.begin(), username.end(), replaceBadJidCharacters() );
 
@@ -895,7 +895,7 @@ void User::purpleBuddyTyping(const std::string &uin){
 void User::receivedChatState(const std::string &uin,const std::string &state){
 	if (!hasFeature(GLOOX_FEATURE_CHATSTATES) || !hasTransportFeature(TRANSPORT_FEATURE_TYPING_NOTIFY))
 		return;
-	Log().Get(m_jid) << "Sending " << state << " message to " << uin;
+	Log(m_jid, "Sending " << state << " message to " << uin);
 	if (state == "composing")
 		serv_send_typing(purple_account_get_connection(m_account),uin.c_str(),PURPLE_TYPING);
 	else if (state == "paused")
@@ -993,7 +993,7 @@ void User::purpleAuthorizeReceived(PurpleAccount *account,const char *remote_use
 	req.deny_cb = deny_cb;
 	req.user_data = user_data;
 	m_authRequests[std::string(remote_user)] = req;
-	Log().Get(m_jid) <<  "purpleAuthorizeReceived: " << std::string(remote_user) << "on_list:" << on_list;
+	Log(m_jid, "purpleAuthorizeReceived: " << std::string(remote_user) << "on_list:" << on_list);
 	// send subscribe presence to user
 	Tag *tag = new Tag("presence");
 	tag->addAttribute("type", "subscribe" );
@@ -1015,19 +1015,19 @@ void User::purpleAuthorizeReceived(PurpleAccount *account,const char *remote_use
  */
 void User::connect() {
 	if (!m_readyForConnect) {
-		Log().Get(m_jid) << "We are not ready for connect";
+		Log(m_jid, "We are not ready for connect");
 		return;
 	}
 	if (m_account) {
-		Log().Get(m_jid) << "connect() has been called before";
+		Log(m_jid, "connect() has been called before");
 		return;
 	}
 	if (purple_accounts_find(m_username.c_str(), this->p->protocol()->protocol().c_str()) != NULL){
-		Log().Get(m_jid) << "this account already exists";
+		Log(m_jid, "this account already exists");
 		m_account = purple_accounts_find(m_username.c_str(), this->p->protocol()->protocol().c_str());
 	}
 	else {
-		Log().Get(m_jid) << "creating new account";
+		Log(m_jid, "creating new account");
 		m_account = purple_account_new(m_username.c_str(), this->p->protocol()->protocol().c_str());
 		purple_account_set_string(m_account,"encoding","windows-1250");
 
@@ -1045,7 +1045,7 @@ void User::connect() {
 	if (!m_bindIP.empty())
 		purple_account_set_string(m_account,"bind",std::string(m_bindIP).c_str());
 	purple_account_set_password(m_account,m_password.c_str());
-	Log().Get(m_jid) << "UIN:" << m_username << " USER_ID:" << m_userID;
+	Log(m_jid, "UIN:" << m_username << " USER_ID:" << m_userID);
 
 	if (p->configuration().useProxy) {
 		PurpleProxyInfo *info = purple_proxy_info_new();
@@ -1091,7 +1091,7 @@ void User::receivedSubscription(const Subscription &subscription) {
 		if (subscription.subtype() == Subscription::Subscribed) {
 			// we've already received auth request from legacy server, so we should respond to this request
 			if (hasAuthRequest((std::string) subscription.to().username())) {
-				Log().Get(m_jid) <<  "subscribed presence for authRequest arrived => accepting the request";
+				Log(m_jid, "subscribed presence for authRequest arrived => accepting the request");
 				m_authRequests[(std::string) subscription.to().username()].authorize_cb(m_authRequests[(std::string) subscription.to().username()].user_data);
 				m_authRequests.erase(subscription.to().username());
 			}
@@ -1101,11 +1101,11 @@ void User::receivedSubscription(const Subscription &subscription) {
 			PurpleBuddy *buddy = purple_find_buddy(m_account, name.c_str());
 			if (!isInRoster(subscription.to().username(),"both")) {
 				if (!buddy) {
-					Log().Get(m_jid) << "user is not in legacy network contact lists => nothing to be subscribed";
+					Log(m_jid, "user is not in legacy network contact lists => nothing to be subscribed");
 					// this user is not in ICQ contact list... It's nothing to do here,
 					// because there is no user to authorize
 				} else {
-					Log().Get(m_jid) << "adding this user to local roster and sending presence";
+					Log(m_jid, "adding this user to local roster and sending presence");
 					if (!isInRoster(subscription.to().username(),"ask")) {
 						// add user to mysql database and to local cache
 						RosterRow user;
@@ -1148,7 +1148,7 @@ void User::receivedSubscription(const Subscription &subscription) {
 					reply->addAttribute( "type", "subscribe" );
 					p->j->send( reply );
 				}
-				Log().Get(m_jid) << "subscribe presence; user is already in roster => sending subscribed";
+				Log(m_jid, "subscribe presence; user is already in roster => sending subscribed");
 				// username is in local roster (he/her is in ICQ roster too),
 				// so we should send subscribed presence
 				Tag *reply = new Tag("presence");
@@ -1158,7 +1158,7 @@ void User::receivedSubscription(const Subscription &subscription) {
 				p->j->send( reply );
 			}
 			else {
-				Log().Get(m_jid) << "subscribe presence; user is not in roster => adding to legacy network";
+				Log(m_jid, "subscribe presence; user is not in roster => adding to legacy network");
 				// this user is not in local roster, so we have to send add_buddy request
 				// to our legacy network and wait for response
 				std::string name(subscription.to().username());
@@ -1175,14 +1175,14 @@ void User::receivedSubscription(const Subscription &subscription) {
 			if (subscription.subtype() == Subscription::Unsubscribed) {
 				// user respond to auth request from legacy network and deny it
 				if (hasAuthRequest((std::string) subscription.to().username())) {
-					Log().Get(m_jid) << "unsubscribed presence for authRequest arrived => rejecting the request";
+					Log(m_jid, "unsubscribed presence for authRequest arrived => rejecting the request");
 					m_authRequests[(std::string) subscription.to().username()].deny_cb(m_authRequests[(std::string) subscription.to().username()].user_data);
 					m_authRequests.erase(subscription.to().username());
 					return;
 				}
 			}
 			if (buddy) {
-				Log().Get(m_jid) << "unsubscribed presence => removing this contact from legacy network";
+				Log(m_jid, "unsubscribed presence => removing this contact from legacy network");
 				long id = 0;
 				if (buddy->node.ui_data) {
 					long *p = (long *) buddy->node.ui_data;
@@ -1197,7 +1197,7 @@ void User::receivedSubscription(const Subscription &subscription) {
 			}
 			if (isInRoster(subscription.to().username(),"")) {
 				// this contact is in our local roster, so we have to remove her/him
-				Log().Get(m_jid) << "removing this contact from local roster";
+				Log(m_jid, "removing this contact from local roster");
 				m_roster.erase(subscription.to().username());
 			}
 			// inform user about removing this contact
@@ -1228,7 +1228,7 @@ void User::receivedPresence(const Presence &stanza) {
 			lang = "en";
 		setLang(lang.c_str());
 		localization.loadLocale(getLang());
-		Log().Get("LANG") << lang << " " << lang.c_str();
+		Log("LANG", lang << " " << lang.c_str());
 	}
 
 	if (m_connected) {
@@ -1245,7 +1245,7 @@ void User::receivedPresence(const Presence &stanza) {
 				}
 			}
 			else {
-				Log().Get(m_jid) << "answering to probe presence with unavailable presence";
+				Log(m_jid, "answering to probe presence with unavailable presence");
 				Tag *tag = new Tag("presence");
 				tag->addAttribute("to", stanza.from().full());
 				tag->addAttribute("from", stanza.to().bare() + "/bot");
@@ -1280,7 +1280,7 @@ void User::receivedPresence(const Presence &stanza) {
 			}
 			if (m_connected) {
 				if (m_resources.empty() || (p->protocol()->tempAccountsAllowed() && g_hash_table_size(m_mucs) == 0)){
-					Log().Get(m_jid) << "disconecting";
+					Log(m_jid, "disconecting");
 					purple_account_disconnect(m_account);
 					p->userManager()->removeUserTimer(this);
 				}
@@ -1296,7 +1296,7 @@ void User::receivedPresence(const Presence &stanza) {
 					m_resource=(*iter).first;
 				}
 				else if (m_account) {
-					Log().Get(m_jid) << "disconecting2";
+					Log(m_jid, "disconecting2");
 					purple_account_disconnect(m_account);
 				}
 			}
@@ -1317,10 +1317,10 @@ void User::receivedPresence(const Presence &stanza) {
 					m_resource = resource;
 			}
 
-			Log().Get(m_jid) << "resource: " << m_resource;
+			Log(m_jid, "resource: " << m_resource);
 			if (!m_connected) {
 				// we are not connected to legacy network, so we should do it when disco#info arrive :)
-				Log().Get(m_jid) << "connecting: resource=" << m_resource;
+				Log(m_jid, "connecting: resource=" << m_resource);
 				if (m_readyForConnect == false) {
 					m_readyForConnect = true;
 					if (m_resources[m_resource].capsVersion.empty()) {
@@ -1332,7 +1332,7 @@ void User::receivedPresence(const Presence &stanza) {
 				}
 			}
 			else {
-				Log().Get(m_jid) << "mirroring presence to legacy network";
+				Log(m_jid, "mirroring presence to legacy network");
 				// we are already connected so we have to change status
 				int PurplePresenceType;
 				const PurpleStatusType *status_type;
@@ -1400,7 +1400,7 @@ void User::receivedPresence(const Presence &stanza) {
 void User::addFiletransfer( const JID& to, const std::string& sid, SIProfileFT::StreamType type, const JID& from, long size ) {
 	FiletransferRepeater *ft = new FiletransferRepeater(p, to, sid, type, from, size);
 	g_hash_table_replace(m_filetransfers, g_strdup(to.bare() == m_jid ? from.username().c_str() : to.username().c_str()), ft);
-	Log().Get("filetransfer") << "adding FT Class as jid:" << std::string(to.bare() == m_jid ? from.username() : to.username());
+	Log("filetransfer", "adding FT Class as jid:" << std::string(to.bare() == m_jid ? from.username() : to.username()));
 }
 void User::addFiletransfer( const JID& to ) {
 	FiletransferRepeater *ft = new FiletransferRepeater(p, to, m_jid + "/" + m_resource);
@@ -1453,7 +1453,7 @@ User::~User(){
 	}
 
 	if (m_syncTimer != 0) {
-		Log().Get(m_jid) << "removing timer\n";
+		Log(m_jid, "removing timer\n");
 		purple_timeout_remove(m_syncTimer);
 	}
 	

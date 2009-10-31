@@ -101,7 +101,7 @@ Tag *FacebookProtocol::getVCardTag(User *user, GList *vcardEntries) {
 		vcardEntry = (PurpleNotifyUserInfoEntry *)(vcardEntries->data);
 		if (purple_notify_user_info_entry_get_label(vcardEntry) && purple_notify_user_info_entry_get_value(vcardEntry)){
 			label = (std::string) purple_notify_user_info_entry_get_label(vcardEntry);
-			Log().Get("vcard label") << label << " => " << (std::string)purple_notify_user_info_entry_get_value(vcardEntry);
+			Log("vcard label", label << " => " << (std::string)purple_notify_user_info_entry_get_value(vcardEntry));
 			if (label==tr(user->getLang(),"Gender")){
 				vcard->addChild( new Tag("GENDER", (std::string)purple_notify_user_info_entry_get_value(vcardEntry)));
 			}
@@ -126,7 +126,7 @@ Tag *FacebookProtocol::getVCardTag(User *user, GList *vcardEntries) {
 		}
 		else if (purple_notify_user_info_entry_get_type(vcardEntry)==PURPLE_NOTIFY_USER_INFO_ENTRY_SECTION_HEADER){
 			header = (std::string)purple_notify_user_info_entry_get_label(vcardEntry);
-			Log().Get("vcard header") << header;
+			Log("vcard header", header);
 // 			if (head)
 // 				if (!head->children().empty())
 // 					vcard->addChild(head);

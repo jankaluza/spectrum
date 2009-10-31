@@ -53,7 +53,7 @@ AutoConnectLoop::AutoConnectLoop(GlooxMessageHandler *m){
 }
 
 AutoConnectLoop::~AutoConnectLoop() {
-	Log().Get("connection restorer") << "Restorer deleted";
+	Log("connection restorer", "Restorer deleted");
 }
 
 void AutoConnectLoop::purpleAccountRemoved(const PurpleAccount *account) {
@@ -66,17 +66,17 @@ bool AutoConnectLoop::restoreNextConnection() {
 // 	Stanza * stanza;
 	User *user;
 	PurpleAccount *account;
-	Log().Get("connection restorer") << "Restoring new connection";
+	Log("connection restorer", "Restoring new connection");
 	if (m_account == NULL)
 		return false;
 
 	account = (PurpleAccount *) m_account->data;
 
-	Log().Get("connection restorer") << "Checking next account";
+	Log("connection restorer", "Checking next account");
 	if (purple_presence_is_online(account->presence)) {
 		user = main->userManager()->getUserByAccount(account);
 		if (user == NULL) {
-			Log().Get("connection restorer") << "Sending probe presence to "<< JID((std::string)purple_account_get_string(account,"lastUsedJid","")).bare();
+			Log("connection restorer", "Sending probe presence to "<< JID((std::string)purple_account_get_string(account,"lastUsedJid","")).bare());
 			Tag *stanza = new Tag("presence");
 			stanza->addAttribute( "to", JID((std::string)purple_account_get_string(account,"lastUsedJid","")).bare());
 			stanza->addAttribute( "type", "probe");
@@ -86,6 +86,6 @@ bool AutoConnectLoop::restoreNextConnection() {
 			return true;
 		}
 	}
-	Log().Get("connection restorer") << "There is no other account to be checked => stopping Restorer";
+	Log("connection restorer", "There is no other account to be checked => stopping Restorer");
 	return false;
 }

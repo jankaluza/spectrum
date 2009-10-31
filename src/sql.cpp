@@ -72,18 +72,18 @@ SQLClass::SQLClass(GlooxMessageHandler *parent, bool upgrade) {
 #endif
 	}
 	catch (Poco::Exception e) {
-		Log().Get("SQL ERROR") << e.displayText();
+		Log("SQL ERROR", e.displayText());
 		return;
 	}
 	
 	if (!m_sess) {
-		Log().Get("SQL ERROR") << "You don't have Spectrum compiled with the storage backend you are trying to use";
-		Log().Get("SQL ERROR") << "Currently Spectrum is compiled with these storage backends:";
+		Log("SQL ERROR", "You don't have Spectrum compiled with the storage backend you are trying to use");
+		Log("SQL ERROR", "Currently Spectrum is compiled with these storage backends:");
 #ifdef WITH_MYSQL
-		Log().Get("SQL ERROR") << " - MySQL - use type=mysql for this backend in config file";
+		Log("SQL ERROR", " - MySQL - use type=mysql for this backend in config file");
 #endif
 #ifdef WITH_SQLITE
-		Log().Get("SQL ERROR") << " - SQLite - use type=sqlite for this backend in config file";
+		Log("SQL ERROR", " - SQLite - use type=sqlite for this backend in config file");
 #endif
 // #ifdef WITH_ODBC
 // 		Log().Get("SQL ERROR") << " - ODBC - use type=odbc for this backend in config file";
@@ -238,7 +238,7 @@ void SQLClass::addUser(const std::string &jid,const std::string &uin,const std::
 		m_stmt_addUser.stmt->execute();
 	}
 	catch (Poco::Exception e) {
-		Log().Get("SQL ERROR") << e.displayText();
+		Log("SQL ERROR", e.displayText());
 	}
 }
 
@@ -340,7 +340,7 @@ void SQLClass::initDb() {
 			*m_sess << "INSERT INTO " + p->configuration().sqlPrefix + "db_version ('ver') VALUES (1);", now;
 		}
 		catch (Poco::Exception e) {
-			Log().Get("SQL ERROR") << e.displayText();
+			Log("SQL ERROR", e.displayText());
 		}
 	}
 
@@ -350,7 +350,7 @@ void SQLClass::initDb() {
 	catch (Poco::Exception e) {
 		m_version = 0;
 		if (p->configuration().sqlType != "sqlite" && !m_upgrade) {
-			Log().Get("SQL") << "Database schema is not updated. Please run \"spectrum <config_file.cfg> --upgrade-db\" to fix that.";
+			Log("SQL", "Database schema is not updated. Please run \"spectrum <config_file.cfg> --upgrade-db\" to fix that.");
 			return;
 		}
 		if (p->configuration().sqlType == "sqlite") {
@@ -359,9 +359,9 @@ void SQLClass::initDb() {
 			return;
 		}
 	}
-	Log().Get("SQL") << "Current DB version: " << m_version;
+	Log("SQL", "Current DB version: " << m_version);
 	if ((p->configuration().sqlType == "sqlite" || (p->configuration().sqlType != "sqlite" && m_upgrade)) && m_version < DB_VERSION) {
-		Log().Get("SQL") << "Starting DB upgrade.";
+		Log("SQL", "Starting DB upgrade.");
 		upgradeDatabase();
 		return;
 	}
@@ -373,7 +373,7 @@ void SQLClass::initDb() {
 void SQLClass::upgradeDatabase() {
 	try {
 		for (int i = (int) m_version; i < DB_VERSION; i++) {
-			Log().Get("SQL") << "Upgrading from version " << i << " to " << i + 1;
+			Log("SQL", "Upgrading from version " << i << " to " << i + 1);
 			if (i == 0) {
 				if (p->configuration().sqlType == "sqlite") {
 					*m_sess << "CREATE TABLE IF NOT EXISTS " + p->configuration().sqlPrefix + "db_version ("
@@ -393,10 +393,10 @@ void SQLClass::upgradeDatabase() {
 	}
 	catch (Poco::Exception e) {
 		m_loaded = false;
-		Log().Get("SQL ERROR") << e.displayText();
+		Log("SQL ERROR", e.displayText());
 		return;
 	}
-	Log().Get("SQL") << "Done";
+	Log("SQL", "Done");
 }
 
 bool SQLClass::isVIP(const std::string &jid) {
@@ -501,12 +501,12 @@ long SQLClass::addBuddy(long userId, const std::string &uin, const std::string &
 			m_stmt_updateBuddy.stmt->execute();
 		}
 		catch (Poco::Exception e) {
-			Log().Get("SQL ERROR") << e.displayText();
+			Log("SQL ERROR", e.displayText());
 		}
 	}
 #endif
 	catch (Poco::Exception e) {
-		Log().Get("SQL ERROR") << e.displayText();
+		Log("SQL ERROR", e.displayText());
 	}
 	// It would be much more better to find out the way how to get last_inserted_rowid from Poco.
 	if (p->configuration().sqlType == "sqlite") {
@@ -545,7 +545,6 @@ UserRow SQLClass::getUserByJid(const std::string &jid){
 				m_stmt_getUserByJid.stmt->execute();
 			} while (!m_stmt_getUserByJid.stmt->done());
 		}
-		Log().Get("GET USER BY JID succeed");
 	STATEMENT_EXECUTE_END(m_stmt_getUserByJid.stmt, getUserByJid(jid));
 
 	return user;
@@ -646,7 +645,7 @@ std::map<std::string,RosterRow> SQLClass::getBuddies(long userId, PurpleAccount 
 
 void SQLClass::addSetting(long userId, const std::string &key, const std::string &value, PurpleType type) {
 	if (userId == 0) {
-		Log().Get("SQL ERROR") << "Trying to add user setting with user_id = 0: " << key;
+		Log("SQL ERROR", "Trying to add user setting with user_id = 0: " << key);
 		return;
 	}
 	m_stmt_addSetting.user_id = userId;

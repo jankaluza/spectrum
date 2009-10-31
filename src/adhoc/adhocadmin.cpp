@@ -109,9 +109,9 @@ bool AdhocAdmin::handleIq(const IQ &stanza) {
 					if (data == "1")
 						main->configuration().logAreas |= LOG_AREA_XML;
 					else {
-						Log().Get("test") << main->configuration().logAreas;
+						Log("test", main->configuration().logAreas);
 						main->configuration().logAreas &= ~LOG_AREA_XML;
-						Log().Get("test") << main->configuration().logAreas;
+						Log("test", main->configuration().logAreas);
 					}
 				}
 				else if (key == "log_purple") {

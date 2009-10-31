@@ -26,8 +26,11 @@
 #include "account.h"
 #include "glib.h"
 #include "request.h"
+#include "../log.h"
 #include "adhoccommandhandler.h"
 #include "main.h"
+
+extern LogClass Log_;
 
 class GlooxMessageHandler;
 class User;

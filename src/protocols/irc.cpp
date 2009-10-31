@@ -141,7 +141,7 @@ bool IRCProtocol::onPresenceReceived(User *user, const Presence &stanza) {
 			// disconnect from legacy network if we are connected
 			if (user->isConnected()) {
 				if (g_hash_table_size(user->mucs()) == 0) {
-					Log().Get(user->jid()) << "disconecting";
+					Log(user->jid(), "disconecting");
 					purple_account_disconnect(user->account());
 					m_main->userManager()->removeUserTimer(user);
 				}
@@ -158,7 +158,7 @@ bool IRCProtocol::onPresenceReceived(User *user, const Presence &stanza) {
 					user->setActiveResource(res);
 				}
 				else if (user->account()){
-					Log().Get(user->jid()) << "disconecting2";
+					Log(user->jid(), "disconecting2");
 					purple_account_disconnect(user->account());
 				}
 			}
@@ -179,10 +179,10 @@ bool IRCProtocol::onPresenceReceived(User *user, const Presence &stanza) {
 					user->setActiveResource(resource);
 			}
 
-			Log().Get(user->jid()) << "resource: " << user->resource();
+			Log(user->jid(), "resource: " << user->resource());
 			if (!user->isConnected()) {
 				// we are not connected to legacy network, so we should do it when disco#info arrive :)
-				Log().Get(user->jid()) << "connecting: resource=" << user->resource();
+				Log(user->jid(), "connecting: resource=" << user->resource());
 				if (user->readyForConnect()==false){
 					user->setReadyForConnect(true);
 					if (user->getResource().capsVersion.empty()){
@@ -194,7 +194,7 @@ bool IRCProtocol::onPresenceReceived(User *user, const Presence &stanza) {
 				}
 			}
 			else {
-				Log().Get(user->jid()) << "mirroring presence to legacy network";
+				Log(user->jid(), "mirroring presence to legacy network");
 				// we are already connected so we have to change status
 				PurpleSavedStatus *status;
 				int PurplePresenceType;

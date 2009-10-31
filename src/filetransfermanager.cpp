@@ -73,7 +73,7 @@ void FileTransferManager::handleFTRequest (const JID &from, const JID &to, const
 
 
 void FileTransferManager::handleFTBytestream (Bytestream *bs) {
-	Log().Get("a") << "handleFTBytestream";
+	Log("a", "handleFTBytestream");
 	if (std::find(m_sendlist.begin(), m_sendlist.end(), bs->target().full()) == m_sendlist.end()) {
 		std::string filename = "";
 		if (m_info[bs->sid()].straight == false) {
@@ -87,10 +87,10 @@ void FileTransferManager::handleFTBytestream (Bytestream *bs) {
 			filename = p->configuration().filetransferCache + "/" + bs->target().username() + "-" + p->j->getID() + "-" + filename;
 		}
 		User *user = p->userManager()->getUserByJID(bs->initiator().bare());
-		Log().Get("a") << "wants user" << bs->initiator().bare();
+		Log("a", "wants user" << bs->initiator().bare());
 		FiletransferRepeater *repeater = NULL;
 		if (user) {
-			Log().Get("a") << "wants repeater" << bs->target().username();
+			Log("a", "wants repeater" << bs->target().username());
 			repeater = user->removeFiletransfer(bs->target().username());
 			if (!repeater) return;
 		}

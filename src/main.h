@@ -75,6 +75,7 @@
 using namespace gloox;
 
 extern Localization localization;
+extern LogClass Log_;
 
 class GlooxDiscoHandler;
 class GlooxDiscoInfoHandler;

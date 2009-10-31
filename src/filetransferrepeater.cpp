@@ -52,11 +52,10 @@ SendFile::~SendFile() {
 void SendFile::exec() {
     std::cout << "SendFile::exec Starting transfer.\n";
 //     char input[200024];
-	int ret;
 	bool empty;
     m_file.open(m_filename.c_str(), std::ios_base::out | std::ios_base::binary );
     if (!m_file) {
-        Log().Get(m_filename) << "can't create this file!";
+//         Log().Get(m_filename) << "can't create this file!";
         return;
     }
     while (true) {
@@ -84,10 +83,6 @@ void SendFile::exec() {
 			getMutex()->unlock();
 			if (!empty) {
 				m_file.write(t.c_str(), t.size());
-				if(ret<1){
-					std::cout << "error in sending or sending probably finished\n";
-					break;
-				};
 			}
 		}
 		m_stream->recv(200);
@@ -191,10 +186,10 @@ static gboolean transferFinished(gpointer data) {
 	ReceiveFile *receive = (ReceiveFile *) data;
 	User *user = receive->user();
 	std::string filename(receive->filename());
-	Log().Get(user->jid()) << "trying to send file "<< filename;
+	Log(user->jid(), "trying to send file "<< filename);
 	if (user->account()){
 		if (user->isConnected()){
-			Log().Get(user->jid()) << "sending download message";
+			Log(user->jid(), "sending download message");
 			std::string basename(g_path_get_basename(filename.c_str()));
 			if (user->isVIP()) {
 				user->p->sql()->addDownload(basename,"1");
@@ -221,7 +216,7 @@ ReceiveFile::ReceiveFile(gloox::Bytestream *stream, int size, const std::string 
     m_finished = false;
 	m_parent = manager;
     if(!m_stream->connect()) {
-        Log().Get("ReceiveFile") << "connection can't be established!";
+//         Log().Get("ReceiveFile") << "connection can't be established!";
         return;
     }
     run();
@@ -236,10 +231,10 @@ void ReceiveFile::dispose() {
 }
 
 void ReceiveFile::exec() {
-	Log().Get("ReceiveFile") << "starting receiveFile thread";
+// 	Log().Get("ReceiveFile") << "starting receiveFile thread";
     m_file.open(m_filename.c_str(), std::ios_base::out | std::ios_base::binary );
     if (!m_file) {
-        Log().Get(m_filename) << "can't create this file!";
+//         Log().Get(m_filename) << "can't create this file!";
         return;
     }
 	while (!m_finished) {
@@ -254,21 +249,21 @@ void ReceiveFile::handleBytestreamData(gloox::Bytestream *s5b, const std::string
 }
 
 void ReceiveFile::handleBytestreamError(gloox::Bytestream *s5b, const gloox::IQ &iq) {
-	Log().Get("ReceiveFile") << "STREAM ERROR!";
+// 	Log().Get("ReceiveFile") << "STREAM ERROR!";
 // 	Log().Get("ReceiveFile") << stanza->xml();
 }
 
 void ReceiveFile::handleBytestreamOpen(gloox::Bytestream *s5b) {
-	Log().Get("ReceiveFile") << "stream opened...";
+// 	Log().Get("ReceiveFile") << "stream opened...";
 }
 
 void ReceiveFile::handleBytestreamClose(gloox::Bytestream *s5b) {
     if (m_finished){
-		Log().Get("ReceiveFile") << "Transfer finished and we're already finished => deleting receiveFile thread";
+// 		Log().Get("ReceiveFile") << "Transfer finished and we're already finished => deleting receiveFile thread";
 		delete this;
 	}
 	else{
-		Log().Get("ReceiveFile") << "Transfer finished";
+// 		Log().Get("ReceiveFile") << "Transfer finished";
 		m_finished = true;
 	}
 }
@@ -281,7 +276,7 @@ ReceiveFileStraight::ReceiveFileStraight(gloox::Bytestream *stream, int size, Fi
     m_finished = false;
 	m_parent = manager;
     if(!m_stream->connect()) {
-        Log().Get("ReceiveFileStraight") << "connection can't be established!";
+//         Log().Get("ReceiveFileStraight") << "connection can't be established!";
         return;
     }
     run();
@@ -292,9 +287,9 @@ ReceiveFileStraight::~ReceiveFileStraight() {
 }
 
 void ReceiveFileStraight::exec() {
-	Log().Get("ReceiveFileStraight") << "starting receiveFile thread";
+// 	Log().Get("ReceiveFileStraight") << "starting receiveFile thread";
 // 	m_stream->handleConnect(m_stream->connectionImpl());
-	Log().Get("ReceiveFileStraight") << "begin receiving this file";
+// 	Log().Get("ReceiveFileStraight") << "begin receiving this file";
 //     m_file.open("dump.bin", std::ios_base::out | std::ios_base::binary );
 //     if (!m_file) {
 //         Log().Get(m_filename) << "can't create this file!";
@@ -316,21 +311,21 @@ void ReceiveFileStraight::handleBytestreamData(gloox::Bytestream *s5b, const std
 }
 
 void ReceiveFileStraight::handleBytestreamError(gloox::Bytestream *s5b, const gloox::IQ &iq) {
-	Log().Get("ReceiveFileStraight") << "STREAM ERROR!";
+// 	Log().Get("ReceiveFileStraight") << "STREAM ERROR!";
 // 	Log().Get("ReceiveFileStraight") << stanza->xml();
 }
 
 void ReceiveFileStraight::handleBytestreamOpen(gloox::Bytestream *s5b) {
-	Log().Get("ReceiveFileStraight") << "stream opened...";
+// 	Log().Get("ReceiveFileStraight") << "stream opened...";
 }
 
 void ReceiveFileStraight::handleBytestreamClose(gloox::Bytestream *s5b) {
     if (m_finished){
-		Log().Get("ReceiveFileStraight") << "Transfer finished and we're already finished => deleting receiveFile thread";
+// 		Log().Get("ReceiveFileStraight") << "Transfer finished and we're already finished => deleting receiveFile thread";
 		delete this;
 	}
 	else{
-		Log().Get("ReceiveFileStraight") << "Transfer finished";
+// 		Log().Get("ReceiveFileStraight") << "Transfer finished";
 		m_finished = true;
 	}
 }
@@ -370,14 +365,14 @@ void FiletransferRepeater::registerXfer(PurpleXfer *xfer) {
 }
 
 void FiletransferRepeater::fileSendStart() {
-	Log().Get("ReceiveFileStraight") << "fileSendStart!" << m_from.full() << " " << m_to.full();
-	Log().Get("ReceiveFileStraight") << m_sid;
-	Log().Get("ReceiveFileStraight") << m_type;
+	Log("ReceiveFileStraight", "fileSendStart!" << m_from.full() << " " << m_to.full());
+	Log("ReceiveFileStraight", m_sid);
+	Log("ReceiveFileStraight", m_type);
 	m_main->ft->acceptFT(m_to, m_sid, m_type, m_from.resource().empty() ? std::string(m_from.bare() + "/bot") : m_from);
 }
 
 void FiletransferRepeater::fileRecvStart() {
-	Log().Get("SendFileStraight") << "fileRecvStart!" << m_from.full() << " " << m_to.full();
+	Log("SendFileStraight", "fileRecvStart!" << m_from.full() << " " << m_to.full());
 }
 
 std::string FiletransferRepeater::requestFT() {
@@ -391,7 +386,7 @@ std::string FiletransferRepeater::requestFT() {
 }
 
 void FiletransferRepeater::handleFTReceiveBytestream(Bytestream *bs, const std::string &filename) {
-	Log().Get("ReceiveFileStraight") << "new!";
+	Log("ReceiveFileStraight", "new!");
 	if (filename.empty())
 		m_resender = new ReceiveFileStraight(bs, 0, this);
 	else {
@@ -401,7 +396,7 @@ void FiletransferRepeater::handleFTReceiveBytestream(Bytestream *bs, const std::
 }
 
 void FiletransferRepeater::handleFTSendBytestream(Bytestream *bs, const std::string &filename) {
-	Log().Get("SendFileStraight") << "new!";
+	Log("SendFileStraight", "new!");
 	purple_xfer_request_accepted(m_xfer, NULL);
 	if (filename.empty())
 		m_resender = new SendFileStraight(bs, 0, this);

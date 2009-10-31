@@ -73,7 +73,7 @@ Disco::ItemList GlooxAdhocHandler::handleDiscoNodeItems( const JID &_from, const
 	Disco::ItemList lst;
 	std::string from = _from.bare();
 	std::string to = _to.bare();
-	Log().Get("GlooxAdhocHandler") << "items" << from << to;
+	Log("GlooxAdhocHandler", "items" << from << to);
 
 	// it's adhoc request for transport
 	if (to == main->jid()) {
@@ -115,7 +115,7 @@ Disco::ItemList GlooxAdhocHandler::handleDiscoNodeItems( const JID &_from, const
 		User *user = main->userManager()->getUserByJID(from);
 		if (user) {
 			if (user->isConnected() && purple_account_get_connection(user->account())) {
-				Log().Get("GlooxAdhocHandler") << user->getLang();
+				Log("GlooxAdhocHandler", user->getLang());
 				GList *l, *ll;
 				PurpleConnection *gc = purple_account_get_connection(user->account());
 				PurplePlugin *plugin = gc && PURPLE_CONNECTION_IS_CONNECTED(gc) ? gc->prpl : NULL;
@@ -148,13 +148,13 @@ Disco::IdentityList GlooxAdhocHandler::handleDiscoNodeIdentities( const JID& jid
 }
 
 bool GlooxAdhocHandler::handleIq( const IQ &stanza ) {
-	Log().Get("GlooxAdhocHandler") << "handleIq";
+	Log("GlooxAdhocHandler", "handleIq");
 	std::string to = stanza.to().bare();
 	std::string from = stanza.from().bare();
 	Tag *stanzaTag = stanza.tag();
 	if (!stanzaTag) return false;
 	Tag *tag = stanzaTag->findChild( "command" );
-	if (!tag) { Log().Get("GlooxAdhocHandler") << "No Node!"; return false; }
+	if (!tag) { Log("GlooxAdhocHandler", "No Node!"); return false; }
 	const std::string& node = tag->findAttribute( "node" );
 	if (node.empty()) {
 		delete stanzaTag;
@@ -266,7 +266,7 @@ bool GlooxAdhocHandler::hasSession(const std::string &jid) {
 void GlooxAdhocHandler::handleIqID( const IQ &iq, int context ) {}
 
 void GlooxAdhocHandler::handleDiscoInfo(const JID &jid, const Disco::Info &info, int context) {
-	Log().Get("handle disco info adhoc") << jid.full();
+	Log("handle disco info adhoc", jid.full());
 }
 
 void GlooxAdhocHandler::handleDiscoItems(const JID &jid, const Disco::Items &items, int context) {}

@@ -38,7 +38,7 @@ SearchExtension::SearchExtension(const Tag *tag) : StanzaExtension( ExtSearch )
 
 SearchExtension::~SearchExtension()
 {
-	Log().Get("SearchExtension") << "deleting SearchExtension()";
+	Log("SearchExtension", "deleting SearchExtension()");
 	delete m_tag;
 }
 

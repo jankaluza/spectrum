@@ -20,14 +20,13 @@
 
 #include "adhocrepeater.h"
 #include "gloox/stanza.h"
-#include "../log.h"
 #include "dataforms.h"
 #include "user.h"
 
 static gboolean removeRepeater(gpointer data){
 	AdhocRepeater *repeater = (AdhocRepeater*) data;
 	purple_request_close(repeater->type(),repeater);
-	Log().Get("AdhocRepeater") << "repeater closed";
+	Log("AdhocRepeater", "repeater closed");
 	return FALSE;
 }
 

@@ -30,7 +30,7 @@
 static gboolean removeRepeater(gpointer data){
 	SearchRepeater *repeater = (SearchRepeater*) data;
 	purple_request_close(repeater->type(),repeater);
-	Log().Get("SearchRepeater") << "repeater closed";
+	Log("SearchRepeater", "repeater closed");
 	return FALSE;
 }
 

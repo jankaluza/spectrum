@@ -18,41 +18,6 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02111-1301  USA
  */
 
-#ifndef _HI_ADHOC_ADMIN_H
-#define _HI_ADHOC_ADMIN_H
+#include "log.h"
 
-#include <string>
-#include "purple.h"
-#include "account.h"
-#include "glib.h"
-#include "request.h"
-#include "adhoccommandhandler.h"
-
-class GlooxMessageHandler;
-class User;
-
-extern LogClass Log_;
-
-typedef enum {	ADHOC_ADMIN_INIT = 0,
-				ADHOC_ADMIN_LOGGING
-				} AdhocAdminState;
-
-/*
- * AdhocCommandHandler for Administration node
- */
-class AdhocAdmin : public AdhocCommandHandler
-{
-	public:
-		AdhocAdmin(GlooxMessageHandler *m, User *user, const std::string &from, const std::string &id);
-		~AdhocAdmin();
-		bool handleIq(const IQ &iq);
-		const std::string & from() { return m_from; }
-
-	private:
-		GlooxMessageHandler *main;		// client
-		std::string m_from;				// full jid
-		User *m_user;					// User class
-		int m_state;					// current executing state
-};
-
-#endif
+LogClass Log_;

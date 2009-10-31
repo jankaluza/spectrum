@@ -26,7 +26,7 @@
 static gboolean deleteUser(gpointer data){
 	User *user = (User*) data;
 	delete user;
-	Log().Get("logout") << "delete user; called => user is sucesfully removed";
+	Log("logout", "delete user; called => user is sucesfully removed");
 	return FALSE;
 }
 
@@ -56,7 +56,7 @@ User *UserManager::getUserByAccount(PurpleAccount * account){
 }
 
 void UserManager::removeUser(User *user){
-	Log().Get("logout") << "removing user";
+	Log("logout", "removing user");
 	g_hash_table_remove(m_users, user->userKey().c_str());
 	if (m_cachedUser && user->userKey() == m_cachedUser->userKey()) {
 		m_cachedUser = NULL;
@@ -64,11 +64,11 @@ void UserManager::removeUser(User *user){
 	if (user->removeTimer != 0)
 		purple_timeout_remove(user->removeTimer);
 	delete user;
-	Log().Get("logout") << "delete user; called => user is sucesfully removed";
+	Log("logout", "delete user; called => user is sucesfully removed");
 }
 
 void UserManager::removeUserTimer(User *user){
-	Log().Get("logout") << "removing user by timer";
+	Log("logout", "removing user by timer");
 	g_hash_table_remove(m_users, user->userKey().c_str());
 	if (m_cachedUser && user->userKey() == m_cachedUser->userKey()) {
 		m_cachedUser = NULL;

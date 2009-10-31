@@ -74,6 +74,7 @@ set(spectrum_SRCS
 	src/gatewayhandler.cpp
 	src/geventloop.cpp
 	src/localization.cpp
+	src/log.cpp
 	src/main.cpp
 	src/muchandler.cpp
 	src/parser.cpp

@@ -37,7 +37,7 @@ GatewayExtension::GatewayExtension(const Tag *tag) : StanzaExtension( ExtGateway
 
 GatewayExtension::~GatewayExtension()
 {
-	Log().Get("GatewayExtension") << "deleting GatewayExtension()";
+	Log("GatewayExtension", "deleting GatewayExtension()");
 	delete m_tag;
 }
 
@@ -87,7 +87,7 @@ bool GlooxGatewayHandler::handleIq (const IQ &stanza){
 	}
 	else if(stanza.subtype() == IQ::Set){
 		Tag *stanzaTag = stanza.tag();
-		Log().Get("tag") << stanzaTag->xml();
+		Log("tag", stanzaTag->xml());
 		Tag *query = stanzaTag->findChild("query");
 		if (query==NULL)
 			return false;

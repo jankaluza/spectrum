@@ -79,7 +79,7 @@ StatsExtension::StatsExtension(const Tag *tag) : StanzaExtension( ExtStats )
 
 StatsExtension::~StatsExtension()
 {
-	Log().Get("StatsExtension") << "deleting StatsExtension()";
+	Log("StatsExtension", "deleting StatsExtension()");
 	delete m_tag;
 }
 

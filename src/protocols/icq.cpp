@@ -81,7 +81,7 @@ Tag *ICQProtocol::getVCardTag(User *user, GList *vcardEntries) {
 		vcardEntry = (PurpleNotifyUserInfoEntry *)(vcardEntries->data);
 		if (purple_notify_user_info_entry_get_label(vcardEntry) && purple_notify_user_info_entry_get_value(vcardEntry)){
 			label=(std::string)purple_notify_user_info_entry_get_label(vcardEntry);
-			Log().Get("vcard label") << label << " => " << (std::string)purple_notify_user_info_entry_get_value(vcardEntry);
+			Log("vcard label", label << " => " << (std::string)purple_notify_user_info_entry_get_value(vcardEntry));
 			if (label=="First Name"){
 				N->addChild( new Tag("GIVEN", (std::string)purple_notify_user_info_entry_get_value(vcardEntry)));
 				firstName = (std::string)purple_notify_user_info_entry_get_value(vcardEntry);

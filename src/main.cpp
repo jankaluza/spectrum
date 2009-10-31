@@ -264,10 +264,10 @@ void connection_report_disconnect(PurpleConnection *gc,PurpleConnectionError rea
  * Called when purple wants to some input from transport.
  */
 static void * requestInput(const char *title, const char *primary,const char *secondary, const char *default_value,gboolean multiline, gboolean masked, gchar *hint,const char *ok_text, GCallback ok_cb,const char *cancel_text, GCallback cancel_cb,PurpleAccount *account, const char *who,PurpleConversation *conv, void *user_data) {
-	Log().Get("purple") << "new requestInput";
+	Log("purple", "new requestInput");
 	if (primary) {
 		std::string primaryString(primary);
-		Log().Get("purple") << "primary string: " << primaryString;
+		Log("purple", "primary string: " << primaryString);
 		User *user = GlooxMessageHandler::instance()->userManager()->getUserByAccount(account);
 		if (!user) return NULL;
 		// Check if there is some adhocData. If it's there, this request will be handled by some handler registered to this data.
@@ -342,7 +342,7 @@ static void * requestAction(const char *title, const char *primary,const char *s
 	}
 	else if (title) {
 		std::string headerString(title);
-		Log().Get("purple") << "header string: " << headerString;
+		Log("purple", "header string: " << headerString);
 		if (headerString == "SSL Certificate Verification") {
 			va_arg(actions, char *);
 			((PurpleRequestActionCb) va_arg(actions, GCallback)) (user_data, 2);
@@ -375,7 +375,7 @@ static void requestClose(PurpleRequestType type, void *ui_handle) {
  * Called when somebody from legacy network wants to send file to us.
  */
 static void newXfer(PurpleXfer *xfer) {
-	Log().Get("purple filetransfer") << "new file transfer request from legacy network";
+	Log("purple filetransfer", "new file transfer request from legacy network");
 	GlooxMessageHandler::instance()->purpleFileReceiveRequest(xfer);
 }
 
@@ -383,7 +383,7 @@ static void newXfer(PurpleXfer *xfer) {
  * Called when file from legacy network is completely received.
  */
 static void XferComplete(PurpleXfer *xfer) {
-	Log().Get("purple filetransfer") << "filetransfer complete";
+	Log("purple filetransfer", "filetransfer complete");
 	GlooxMessageHandler::instance()->purpleFileReceiveComplete(xfer);
 }
 
@@ -440,14 +440,14 @@ static void XferCreated(PurpleXfer *xfer) {
 	
 	std::for_each( remote_user.begin(), remote_user.end(), replaceBadJidCharacters() );
 	
-	Log().Get("xfercreated") << "get user " << remote_user;
+	Log("xfercreated", "get user " << remote_user);
 	User *user = GlooxMessageHandler::instance()->userManager()->getUserByAccount(purple_xfer_get_account(xfer));
 	if (!user) return;
 
 	FiletransferRepeater *repeater = user->getFiletransfer(remote_user);
-	Log().Get(user->jid()) << "get filetransferRepeater" << remote_user;
+	Log(user->jid(), "get filetransferRepeater" << remote_user);
 	if (repeater) {
-		Log().Get(user->jid()) << "registerXfer";
+		Log(user->jid(), "registerXfer");
 		repeater->registerXfer(xfer);
 	}
 	else {
@@ -465,13 +465,13 @@ static void XferCreated(PurpleXfer *xfer) {
 static void fileSendStart(PurpleXfer *xfer) {
 	FiletransferRepeater *repeater = (FiletransferRepeater *) xfer->ui_data;
 	repeater->fileSendStart();
-	Log().Get("filesend") << "fileSendStart()";
+	Log("filesend", "fileSendStart()");
 }
 
 static void fileRecvStart(PurpleXfer *xfer) {
 	FiletransferRepeater *repeater = (FiletransferRepeater *) xfer->ui_data;
 	repeater->fileRecvStart();
-	Log().Get("filesend") << "fileRecvStart()";
+	Log("filesend", "fileRecvStart()");
 }
 
 static void buddyListSaveNode(PurpleBlistNode *node) {
@@ -528,7 +528,7 @@ static gssize XferWrite(PurpleXfer *xfer, const guchar *buffer, gssize size) {
 }
 
 static gssize XferRead(PurpleXfer *xfer, guchar **buffer, gssize size) {
-	Log().Get("REPEATER") << "xferRead";
+	Log("REPEATER", "xferRead");
 	FiletransferRepeater *repeater = (FiletransferRepeater *) xfer->ui_data;
 	if (!repeater->getResender()) {
 		repeater->wantsData();
@@ -536,7 +536,7 @@ static gssize XferRead(PurpleXfer *xfer, guchar **buffer, gssize size) {
 	}
 	repeater->getResender()->getMutex()->lock();
 	if (repeater->getBuffer().empty()) {
-		Log().Get("REPEATER") << "buffer is empty, setting wantsData = true";
+		Log("REPEATER", "buffer is empty, setting wantsData = true");
 		repeater->wantsData();
 		repeater->getResender()->getMutex()->unlock();
 		return 0;
@@ -775,14 +775,8 @@ GlooxMessageHandler::GlooxMessageHandler(const std::string &config) : MessageHan
 		daemonize();
 
 #ifndef WIN32
-	if (logfile || !nodaemon) {
-		if (logfile) {
-			std::string l(logfile);
-			replace(l, "$jid", m_configuration.jid.c_str());
-			logfile = g_strdup(l.c_str());
-			g_mkdir_with_parents(g_path_get_dirname(logfile), 0755);
-		}
-		int logfd = open(logfile ? logfile : "/dev/null", O_WRONLY | O_CREAT, 0644);
+	if (!nodaemon) {
+		int logfd = open("/dev/null", O_WRONLY | O_CREAT, 0644);
 		if (logfd <= 0) {
 			std::cout << "Can't open log file\n";
 			exit(1);
@@ -798,6 +792,14 @@ GlooxMessageHandler::GlooxMessageHandler(const std::string &config) : MessageHan
 		close(logfd);
 	}
 #endif
+
+	if (logfile) {
+		std::string l(logfile);
+		replace(l, "$jid", m_configuration.jid.c_str());
+		logfile = g_strdup(l.c_str());
+		g_mkdir_with_parents(g_path_get_dirname(logfile), 0755);
+		Log_.setLogFile(l);
+	}
 
 	if (loaded) {
 		m_sql = new SQLClass(this, upgrade_db);	
@@ -915,13 +917,13 @@ bool GlooxMessageHandler::loadProtocol(){
 	else if (configuration().protocol == "yahoo")
 		m_protocol = (AbstractProtocol*) new YahooProtocol(this);
 	else {
-		Log().Get("loadProtocol") << "Protocol \"" << configuration().protocol << "\" does not exist.";
-		Log().Get("loadProtocol") << "Protocol has to be one of: facebook, gg, msn, irc, xmpp, myspace, qq, simple, aim, yahoo.";
+		Log("loadProtocol", "Protocol \"" << configuration().protocol << "\" does not exist.");
+		Log("loadProtocol", "Protocol has to be one of: facebook, gg, msn, irc, xmpp, myspace, qq, simple, aim, yahoo.");
 		return false;
 	}
 
 	if (!purple_find_prpl(m_protocol->protocol().c_str())) {
-		Log().Get("loadProtocol") << "There is no libpurple plugin installed for protocol \"" << configuration().protocol << "\"";
+		Log("loadProtocol", "There is no libpurple plugin installed for protocol \"" << configuration().protocol << "\"");
 		return false;
 	}
 
@@ -934,24 +936,24 @@ bool GlooxMessageHandler::loadProtocol(){
 
 void GlooxMessageHandler::handleLog(LogLevel level, LogArea area, const std::string &message) {
 // 	if (m_configuration.logAreas & LOG_AREA_XML) {
-		if (area == LogAreaXmlIncoming)
-			Log().Get("XML IN") << message;
-		else
-			Log().Get("XML OUT") << message;
+// 		if (area == LogAreaXmlIncoming)
+// 			Log("XML IN", message);
+// 		else
+// 			Log("XML OUT", message);
 // 	}
 }
 
 void GlooxMessageHandler::onSessionCreateError(SessionCreateError error) {
-	Log().Get("gloox") << "sessionCreateError";
+	Log("gloox", "sessionCreateError");
 }
 
 void GlooxMessageHandler::purpleConnectionError(PurpleConnection *gc,PurpleConnectionError reason,const char *text) {
 	PurpleAccount *account = purple_connection_get_account(gc);
 	User *user = userManager()->getUserByAccount(account);
 	if (user != NULL) {
-		Log().Get(user->jid()) << "Disconnected from legacy network because of error " << int(reason);
+		Log(user->jid(), "Disconnected from legacy network because of error " << int(reason));
 		if (text)
-			Log().Get(user->jid()) << std::string(text);
+			Log(user->jid(), std::string(text));
 		// fatal error => account will be disconnected, so we have to remove it
 		if (reason != 0) {
 			if (text){
@@ -986,7 +988,7 @@ void GlooxMessageHandler::purpleBuddyTyping(PurpleAccount *account, const char *
 		user->purpleBuddyTyping((std::string)who);
 	}
 	else {
-		Log().Get("purple") << "purpleBuddyTyping called, but user does not exist!!!";
+		Log("purple", "purpleBuddyTyping called, but user does not exist!!!");
 	}
 }
 
@@ -1033,7 +1035,7 @@ void GlooxMessageHandler::purpleBuddyTypingStopped(PurpleAccount *account, const
 		user->purpleBuddyTypingStopped((std::string) who);
 	}
 	else {
-		Log().Get("purple") << "purpleBuddyTypingStopped called, but user does not exist!!!";
+		Log("purple", "purpleBuddyTypingStopped called, but user does not exist!!!");
 	}
 }
 
@@ -1041,7 +1043,7 @@ void GlooxMessageHandler::signedOn(PurpleConnection *gc, gpointer unused) {
 	PurpleAccount *account = purple_connection_get_account(gc);
 	User *user = userManager()->getUserByAccount(account);
 	if (user != NULL) {
-		Log().Get(user->jid()) << "logged in to legacy network";
+		Log(user->jid(), "logged in to legacy network");
 		user->connected();
 	}
 }
@@ -1052,14 +1054,14 @@ void GlooxMessageHandler::purpleAuthorizeClose(void *data) {
 		return;
 	User *user = userManager()->getUserByAccount(d->account);
 	if (user != NULL) {
-		Log().Get(user->jid()) << "purple wants to close authorizeRequest";
+		Log(user->jid(), "purple wants to close authorizeRequest");
 		if (user->hasAuthRequest(d->who)) {
-			Log().Get(user->jid()) << "closing authorizeRequest";
+			Log(user->jid(), "closing authorizeRequest");
 			user->removeAuthRequest(d->who);
 		}
 	}
 	else {
-		Log().Get("purple") << "purpleAuthorizationClose called, but user does not exist!!!";
+		Log("purple", "purpleAuthorizationClose called, but user does not exist!!!");
 	}
 }
 
@@ -1076,11 +1078,11 @@ void * GlooxMessageHandler::purpleAuthorizeReceived(PurpleAccount *account, cons
 			return data;
 		}
 		else {
-			Log().Get(user->jid()) << "purpleAuthorizeReceived called for unconnected user...";
+			Log(user->jid(), "purpleAuthorizeReceived called for unconnected user...");
 		}
 	}
 	else {
-		Log().Get("purple") << "purpleAuthorizeReceived called, but user does not exist!!!";
+		Log("purple", "purpleAuthorizeReceived called, but user does not exist!!!");
 	}
 	return NULL;
 }
@@ -1101,8 +1103,8 @@ bool GlooxMessageHandler::loadConfigFile(const std::string &config) {
 	if (!g_key_file_load_from_file (keyfile, config.c_str(), (GKeyFileFlags)flags, NULL)) {
 		if (!g_key_file_load_from_file (keyfile, std::string("/etc/spectrum/" + config + ".cfg").c_str(), (GKeyFileFlags)flags, NULL))
 		{
-			Log().Get("loadConfigFile") << "Can't load config file!";
-			Log().Get("loadConfigFile") << std::string("/etc/spectrum/" + config + ".cfg") << " or ./" << config;
+			Log("loadConfigFile", "Can't load config file!");
+			Log("loadConfigFile", std::string("/etc/spectrum/" + config + ".cfg") << " or ./" << config);
 
 			g_key_file_free(keyfile);
 			return false;
@@ -1114,7 +1116,7 @@ bool GlooxMessageHandler::loadConfigFile(const std::string &config) {
 		g_free(value);
 	}
 	else {
-		Log().Get("loadConfigFile") << "You have to specify `protocol` in [service] part of config file.";
+		Log("loadConfigFile", "You have to specify `protocol` in [service] part of config file.");
 		return false;
 	}
 
@@ -1123,7 +1125,7 @@ bool GlooxMessageHandler::loadConfigFile(const std::string &config) {
 		g_free(value);
 	}
 	else {
-		Log().Get("loadConfigFile") << "You have to specify `name` in [service] part of config file.";
+		Log("loadConfigFile", "You have to specify `name` in [service] part of config file.");
 		return false;
 	}
 
@@ -1132,7 +1134,7 @@ bool GlooxMessageHandler::loadConfigFile(const std::string &config) {
 		g_free(value);
 	}
 	else {
-		Log().Get("loadConfigFile") << "You have to specify `server` in [service] part of config file.";
+		Log("loadConfigFile", "You have to specify `server` in [service] part of config file.");
 		return false;
 	}
 	
@@ -1141,7 +1143,7 @@ bool GlooxMessageHandler::loadConfigFile(const std::string &config) {
 		g_free(value);
 	}
 	else {
-		Log().Get("loadConfigFile") << "You have to specify `password` in [service] part of config file.";
+		Log("loadConfigFile", "You have to specify `password` in [service] part of config file.");
 		return false;
 	}
 	
@@ -1150,14 +1152,14 @@ bool GlooxMessageHandler::loadConfigFile(const std::string &config) {
 		g_free(value);
 	}
 	else {
-		Log().Get("loadConfigFile") << "You have to specify `jid` in [service] part of config file.";
+		Log("loadConfigFile", "You have to specify `jid` in [service] part of config file.");
 		return false;
 	}
 	
 	if (g_key_file_get_integer(keyfile, "service","port", NULL))
 		m_configuration.port = (int)g_key_file_get_integer(keyfile, "service","port", NULL);
 	else {
-		Log().Get("loadConfigFile") << "You have to specify `port` in [service] part of config file.";
+		Log("loadConfigFile", "You have to specify `port` in [service] part of config file.");
 		return false;
 	}
 	
@@ -1166,7 +1168,7 @@ bool GlooxMessageHandler::loadConfigFile(const std::string &config) {
 		g_free(value);
 	}
 	else {
-		Log().Get("loadConfigFile") << "You have to specify `filetransfer_cache` in [service] part of config file.";
+		Log("loadConfigFile", "You have to specify `filetransfer_cache` in [service] part of config file.");
 		return false;
 	}
 
@@ -1188,7 +1190,7 @@ bool GlooxMessageHandler::loadConfigFile(const std::string &config) {
 		g_free(value);
 	}
 	else {
-		Log().Get("loadConfigFile") << "You have to specify `type` in [database] part of config file.";
+		Log("loadConfigFile", "You have to specify `type` in [database] part of config file.");
 		return false;
 	}
 	
@@ -1199,7 +1201,7 @@ bool GlooxMessageHandler::loadConfigFile(const std::string &config) {
 	else if (m_configuration.sqlType == "sqlite")
 		m_configuration.sqlHost = "";
 	else {
-		Log().Get("loadConfigFile") << "You have to specify `host` in [database] part of config file.";
+		Log("loadConfigFile", "You have to specify `host` in [database] part of config file.");
 		return false;
 	}
 	
@@ -1210,7 +1212,7 @@ bool GlooxMessageHandler::loadConfigFile(const std::string &config) {
 	else if (m_configuration.sqlType == "sqlite")
 		m_configuration.sqlPassword = "";
 	else {
-		Log().Get("loadConfigFile") << "You have to specify `password` in [database] part of config file.";
+		Log("loadConfigFile", "You have to specify `password` in [database] part of config file.");
 		return false;
 	}
 	
@@ -1221,7 +1223,7 @@ bool GlooxMessageHandler::loadConfigFile(const std::string &config) {
 	else if (m_configuration.sqlType == "sqlite")
 		m_configuration.sqlUser = "";
 	else {
-		Log().Get("loadConfigFile") << "You have to specify `user` in [database] part of config file.";
+		Log("loadConfigFile", "You have to specify `user` in [database] part of config file.");
 		return false;
 	}
 	
@@ -1232,7 +1234,7 @@ bool GlooxMessageHandler::loadConfigFile(const std::string &config) {
 		g_mkdir_with_parents(g_path_get_dirname(m_configuration.sqlDb.c_str()), 0755);
 	}
 	else {
-		Log().Get("loadConfigFile") << "You have to specify `database` in [database] part of config file.";
+		Log("loadConfigFile", "You have to specify `database` in [database] part of config file.");
 		return false;
 	}
 	
@@ -1243,7 +1245,7 @@ bool GlooxMessageHandler::loadConfigFile(const std::string &config) {
 	else if (m_configuration.sqlType == "sqlite")
 		m_configuration.sqlPrefix = "";
 	else {
-		Log().Get("loadConfigFile") << "You have to specify `prefix` in [database] part of config file.";
+		Log("loadConfigFile", "You have to specify `prefix` in [database] part of config file.");
 		return false;
 	}
 
@@ -1254,7 +1256,7 @@ bool GlooxMessageHandler::loadConfigFile(const std::string &config) {
 		g_mkdir_with_parents(g_path_get_dirname(m_configuration.userDir.c_str()), 0755);
 	}
 	else {
-		Log().Get("loadConfigFile") << "You have to specify `userdir` in [purple] part of config file.";
+		Log("loadConfigFile", "You have to specify `userdir` in [purple] part of config file.");
 		return false;
 	}
 		
@@ -1407,11 +1409,11 @@ void GlooxMessageHandler::purpleFileReceiveComplete(PurpleXfer *xfer) {
 				j->send(s);
 			}
 			else{
-				Log().Get(user->jid()) << "purpleFileReceiveComplete called for unconnected user...";
+				Log(user->jid(), "purpleFileReceiveComplete called for unconnected user...");
 			}
 		}
 		else
-			Log().Get("purple") << "purpleFileReceiveComplete called, but user does not exist!!!";
+			Log("purple", "purpleFileReceiveComplete called, but user does not exist!!!");
 	}
 }
 
@@ -1423,11 +1425,11 @@ void GlooxMessageHandler::purpleMessageReceived(PurpleAccount* account, char * n
 			user->purpleMessageReceived(account,name,msg,conv,flags);
 		}
 		else {
-			Log().Get(user->jid()) << "purpleMessageReceived called for unconnected user...";
+			Log(user->jid(),"purpleMessageReceived called for unconnected user...");
 		}
 	}
 	else {
-		Log().Get("purple") << "purpleMessageReceived called, but user does not exist!!!";
+		Log("purple", "purpleMessageReceived called, but user does not exist!!!");
 	}
 }
 
@@ -1442,11 +1444,11 @@ void GlooxMessageHandler::purpleConversationWriteIM(PurpleConversation *conv, co
 			user->purpleConversationWriteIM(conv, who, message, flags, mtime);
 		}
 		else {
-			Log().Get(user->jid()) << "purpleConversationWriteIM called for unconnected user...";
+			Log(user->jid(), "purpleConversationWriteIM called for unconnected user...");
 		}
 	}
 	else {
-		Log().Get("purple") << "purpleConversationWriteIM called, but user does not exist!!!";
+		Log("purple", "purpleConversationWriteIM called, but user does not exist!!!");
 	}
 }
 
@@ -1484,11 +1486,11 @@ void GlooxMessageHandler::purpleConversationWriteChat(PurpleConversation *conv, 
 			user->purpleConversationWriteChat(conv, who, message, flags, mtime);
 		}
 		else {
-			Log().Get(user->jid()) << "purpleConversationWriteIM called for unconnected user...";
+			Log(user->jid(), "purpleConversationWriteIM called for unconnected user...");
 		}
 	}
 	else {
-		Log().Get("purple") << "purpleConversationWriteIM called, but user does not exist!!!";
+		Log("purple", "purpleConversationWriteIM called, but user does not exist!!!");
 	}
 }
 
@@ -1552,7 +1554,7 @@ bool GlooxMessageHandler::hasCaps(const std::string &ver) {
 void GlooxMessageHandler::handleSubscription(const Subscription &stanza) {
 	// answer to subscibe
 	if(stanza.subtype() == Subscription::Subscribe && stanza.to().username() == "") {
-		Log().Get(stanza.from().full()) << "Subscribe presence received => sending subscribed";
+		Log(stanza.from().full(), "Subscribe presence received => sending subscribed");
 		Tag *reply = new Tag("presence");
 		reply->addAttribute( "to", stanza.from().bare() );
 		reply->addAttribute( "from", stanza.to().bare() );
@@ -1579,7 +1581,7 @@ void GlooxMessageHandler::handlePresence(const Presence &stanza){
 	}
 	// get entity capabilities
 	Tag *c = NULL;
-	Log().Get(stanza.from().full()) << "Presence received (" << stanza.subtype() << ") for: " << stanza.to().full();
+	Log(stanza.from().full(), "Presence received (" << stanza.subtype() << ") for: " << stanza.to().full());
 
 	if (stanza.presence() != Presence::Unavailable && ((stanza.to().username() == "" && !protocol()->tempAccountsAllowed()) || protocol()->isMUC(NULL, stanza.to().bare()))) {
 		Tag *stanzaTag = stanza.tag();
@@ -1591,7 +1593,7 @@ void GlooxMessageHandler::handlePresence(const Presence &stanza){
 			if (!hasCaps(c->findAttribute("ver"))) {
 				// ask for caps
 				std::string id = j->getID();
-				Log().Get(stanza.from().full()) << "asking for caps with ID: " << id;
+				Log(stanza.from().full(), "asking for caps with ID: " << id);
 				m_discoHandler->versions[m_discoHandler->version].version = c->findAttribute("ver");
 				m_discoHandler->versions[m_discoHandler->version].jid = stanza.to().full();
 				std::string node;
@@ -1601,7 +1603,7 @@ void GlooxMessageHandler::handlePresence(const Presence &stanza){
 			}
 			else {
 				std::string id = j->getID();
-				Log().Get(stanza.from().full()) << "asking for disco#info with ID: " << id;
+				Log(stanza.from().full(), "asking for disco#info with ID: " << id);
 				m_discoHandler->versions[m_discoHandler->version].version = stanza.from().full();
 				m_discoHandler->versions[m_discoHandler->version].jid = stanza.to().full();
 				j->disco()->getDiscoInfo(stanza.from(), "", m_discoHandler, m_discoHandler->version, id);
@@ -1610,7 +1612,7 @@ void GlooxMessageHandler::handlePresence(const Presence &stanza){
 		}
 		else {
 			std::string id = j->getID();
-			Log().Get(stanza.from().full()) << "asking for disco#info with ID: " << id;
+			Log(stanza.from().full(), "asking for disco#info with ID: " << id);
 			m_discoHandler->versions[m_discoHandler->version].version = stanza.from().full();
 			m_discoHandler->versions[m_discoHandler->version].jid = stanza.to().full();
 			j->disco()->getDiscoInfo(stanza.from(), "", m_discoHandler, m_discoHandler->version, id);
@@ -1632,7 +1634,7 @@ void GlooxMessageHandler::handlePresence(const Presence &stanza){
 	if (user == NULL) {
 		// we are not connected and probe arrived => answer with unavailable
 		if (stanza.subtype() == Presence::Probe) {
-			Log().Get(stanza.from().full()) << "Answering to probe presence with unavailable presence";
+			Log(stanza.from().full(), "Answering to probe presence with unavailable presence");
 			Tag *tag = new Tag("presence");
 			tag->addAttribute("to", stanza.from().full());
 			tag->addAttribute("from", stanza.to().bare() + "/bot");
@@ -1643,7 +1645,7 @@ void GlooxMessageHandler::handlePresence(const Presence &stanza){
 			UserRow res = sql()->getUserByJid(userkey);
 			if(res.id==-1 && !protocol()->tempAccountsAllowed()) {
 				// presence from unregistered user
-				Log().Get(stanza.from().full()) << "This user is not registered";
+				Log(stanza.from().full(), "This user is not registered");
 				return;
 			}
 			else {
@@ -1654,10 +1656,10 @@ void GlooxMessageHandler::handlePresence(const Presence &stanza){
 				bool isVip = sql()->isVIP(stanza.from().bare());
 				std::list<std::string> const &x = configuration().allowedServers;
 				if (configuration().onlyForVIP && !isVip && std::find(x.begin(), x.end(), stanza.from().server()) == x.end()) {
-					Log().Get(stanza.from().full()) << "This user is not VIP, can't login...";
+					Log(stanza.from().full(), "This user is not VIP, can't login...");
 					return;
 				}
-				Log().Get(stanza.from().full()) << "Creating new User instance";
+				Log(stanza.from().full(), "Creating new User instance");
 				if (protocol()->tempAccountsAllowed()) {
 					std::string server = stanza.to().username().substr(stanza.to().username().find("%") + 1, stanza.to().username().length() - stanza.to().username().find("%"));
 					std::cout << "SERVER" << stanza.from().bare() + server << "\n";
@@ -1667,7 +1669,7 @@ void GlooxMessageHandler::handlePresence(const Presence &stanza){
 					if (purple_accounts_find(res.uin.c_str(), protocol()->protocol().c_str()) != NULL) {
 						PurpleAccount *act = purple_accounts_find(res.uin.c_str(), protocol()->protocol().c_str());
 						if (userManager()->getUserByAccount(act)) {
-							Log().Get(stanza.from().full()) << "This account is already connected by another jid " << user->jid();
+							Log(stanza.from().full(), "This account is already connected by another jid " << user->jid());
 							return;
 						}
 					}
@@ -1700,7 +1702,7 @@ void GlooxMessageHandler::handlePresence(const Presence &stanza){
 			}
 		}
 		if (stanza.presence() == Presence::Unavailable && stanza.to().username() == ""){
-			Log().Get(stanza.from().full()) << "User is already logged out => sending unavailable presence";
+			Log(stanza.from().full(), "User is already logged out => sending unavailable presence");
 			Tag *tag = new Tag("presence");
 			tag->addAttribute( "to", stanza.from().bare() );
 			tag->addAttribute( "type", "unavailable" );
@@ -1713,21 +1715,21 @@ void GlooxMessageHandler::handlePresence(const Presence &stanza){
 	}
 	if (stanza.to().username() == "" && user != NULL) {
 		if(stanza.presence() == Presence::Unavailable && user->isConnected() == true && user->resources().empty()) {
-			Log().Get(stanza.from().full()) << "Logging out";
+			Log(stanza.from().full(), "Logging out");
 			m_userManager->removeUser(user);
 		}
 		else if (stanza.presence() == Presence::Unavailable && user->isConnected() == false && int(time(NULL)) > int(user->connectionStart()) + 10 && user->resources().empty()) {
-			Log().Get(stanza.from().full()) << "Logging out, but he's not connected...";
+			Log(stanza.from().full(), "Logging out, but he's not connected...");
 			m_userManager->removeUser(user);
 		}
 		else if (stanza.presence() == Presence::Unavailable && user->isConnected() == false) {
-			Log().Get(stanza.from().full()) << "Can't logout because we're connecting now...";
+			Log(stanza.from().full(), "Can't logout because we're connecting now...");
 		}
 	}
 }
 
 void GlooxMessageHandler::onConnect() {
-	Log().Get("gloox") << "CONNECTED!";
+	Log("gloox", "CONNECTED!");
 	j->disco()->setIdentity("gateway", protocol()->gatewayIdentity(), configuration().discoName);
 	j->disco()->setVersion(configuration().discoName, VERSION, "");
 
@@ -1763,76 +1765,76 @@ void GlooxMessageHandler::onConnect() {
 }
 
 void GlooxMessageHandler::onDisconnect(ConnectionError e) {
-	Log().Get("gloox") << "Disconnected from Jabber server !";
+	Log("gloox", "Disconnected from Jabber server !");
 	switch (e) {
-		case ConnNoError: Log().Get("gloox") << "Reason: No error"; break;
-		case ConnStreamError: Log().Get("gloox") << "Reason: Stream error"; break;
-		case ConnStreamVersionError: Log().Get("gloox") << "Reason: Stream version error"; break;
-		case ConnStreamClosed: Log().Get("gloox") << "Reason: Stream closed"; break;
-		case ConnProxyAuthRequired: Log().Get("gloox") << "Reason: Proxy auth required"; break;
-		case ConnProxyAuthFailed: Log().Get("gloox") << "Reason: Proxy auth failed"; break;
-		case ConnProxyNoSupportedAuth: Log().Get("gloox") << "Reason: Proxy no supported auth"; break;
-		case ConnIoError: Log().Get("gloox") << "Reason: IO Error"; break;
-		case ConnParseError: Log().Get("gloox") << "Reason: Parse error"; break;
-		case ConnConnectionRefused: Log().Get("gloox") << "Reason: Connection refused"; break;
-// 		case ConnSocketError: Log().Get("gloox") << "Reason: Socket error"; break;
-		case ConnDnsError: Log().Get("gloox") << "Reason: DNS Error"; break;
-		case ConnOutOfMemory: Log().Get("gloox") << "Reason: Out Of Memory"; break;
-		case ConnNoSupportedAuth: Log().Get("gloox") << "Reason: No supported auth"; break;
-		case ConnTlsFailed: Log().Get("gloox") << "Reason: Tls failed"; break;
-		case ConnTlsNotAvailable: Log().Get("gloox") << "Reason: Tls not available"; break;
-		case ConnCompressionFailed: Log().Get("gloox") << "Reason: Compression failed"; break;
-// 		case ConnCompressionNotAvailable: Log().Get("gloox") << "Reason: Compression not available"; break;
-		case ConnAuthenticationFailed: Log().Get("gloox") << "Reason: Authentication Failed"; break;
-		case ConnUserDisconnected: Log().Get("gloox") << "Reason: User disconnected"; break;
-		case ConnNotConnected: Log().Get("gloox") << "Reason: Not connected"; break;
+		case ConnNoError: Log("gloox", "Reason: No error"); break;
+		case ConnStreamError: Log("gloox", "Reason: Stream error"); break;
+		case ConnStreamVersionError: Log("gloox", "Reason: Stream version error"); break;
+		case ConnStreamClosed: Log("gloox", "Reason: Stream closed"); break;
+		case ConnProxyAuthRequired: Log("gloox", "Reason: Proxy auth required"); break;
+		case ConnProxyAuthFailed: Log("gloox", "Reason: Proxy auth failed"); break;
+		case ConnProxyNoSupportedAuth: Log("gloox", "Reason: Proxy no supported auth"); break;
+		case ConnIoError: Log("gloox", "Reason: IO Error"); break;
+		case ConnParseError: Log("gloox", "Reason: Parse error"); break;
+		case ConnConnectionRefused: Log("gloox", "Reason: Connection refused"); break;
+// 		case ConnSocketError: Log("gloox", "Reason: Socket error"); break;
+		case ConnDnsError: Log("gloox", "Reason: DNS Error"); break;
+		case ConnOutOfMemory: Log("gloox", "Reason: Out Of Memory"); break;
+		case ConnNoSupportedAuth: Log("gloox", "Reason: No supported auth"); break;
+		case ConnTlsFailed: Log("gloox", "Reason: Tls failed"); break;
+		case ConnTlsNotAvailable: Log("gloox", "Reason: Tls not available"); break;
+		case ConnCompressionFailed: Log("gloox", "Reason: Compression failed"); break;
+// 		case ConnCompressionNotAvailable: Log("gloox", "Reason: Compression not available"); break;
+		case ConnAuthenticationFailed: Log("gloox", "Reason: Authentication Failed"); break;
+		case ConnUserDisconnected: Log("gloox", "Reason: User disconnected"); break;
+		case ConnNotConnected: Log("gloox", "Reason: Not connected"); break;
 	};
 
 	switch (j->streamError()) {
-		case StreamErrorBadFormat: Log().Get("gloox") << "Stream error: Bad format"; break;
-		case StreamErrorBadNamespacePrefix: Log().Get("gloox") << "Stream error: Bad namespace prefix"; break;
-		case StreamErrorConflict: Log().Get("gloox") << "Stream error: Conflict"; break;
-		case StreamErrorConnectionTimeout: Log().Get("gloox") << "Stream error: Connection timeout"; break;
-		case StreamErrorHostGone: Log().Get("gloox") << "Stream error: Host gone"; break;
-		case StreamErrorHostUnknown: Log().Get("gloox") << "Stream error: Host unknown"; break;
-		case StreamErrorImproperAddressing: Log().Get("gloox") << "Stream error: Improper addressing"; break;
-		case StreamErrorInternalServerError: Log().Get("gloox") << "Stream error: Internal server error"; break;
-		case StreamErrorInvalidFrom: Log().Get("gloox") << "Stream error: Invalid from"; break;
-		case StreamErrorInvalidId: Log().Get("gloox") << "Stream error: Invalid ID"; break;
-		case StreamErrorInvalidNamespace: Log().Get("gloox") << "Stream error: Invalid Namespace"; break;
-		case StreamErrorInvalidXml: Log().Get("gloox") << "Stream error: Invalid XML"; break;
-		case StreamErrorNotAuthorized: Log().Get("gloox") << "Stream error: Not Authorized"; break;
-		case StreamErrorPolicyViolation: Log().Get("gloox") << "Stream error: Policy violation"; break;
-		case StreamErrorRemoteConnectionFailed: Log().Get("gloox") << "Stream error: Remote connection failed"; break;
-		case StreamErrorResourceConstraint: Log().Get("gloox") << "Stream error: Resource constraint"; break;
-		case StreamErrorRestrictedXml: Log().Get("gloox") << "Stream error: Restricted XML"; break;
-		case StreamErrorSeeOtherHost: Log().Get("gloox") << "Stream error: See other host"; break;
-		case StreamErrorSystemShutdown: Log().Get("gloox") << "Stream error: System shutdown"; break;
-		case StreamErrorUndefinedCondition: Log().Get("gloox") << "Stream error: Undefined Condition"; break;
-		case StreamErrorUnsupportedEncoding: Log().Get("gloox") << "Stream error: Unsupported encoding"; break;
-		case StreamErrorUnsupportedStanzaType: Log().Get("gloox") << "Stream error: Unsupported stanza type"; break;
-		case StreamErrorUnsupportedVersion: Log().Get("gloox") << "Stream error: Unsupported version"; break;
-		case StreamErrorXmlNotWellFormed: Log().Get("gloox") << "Stream error: XML Not well formed"; break;
-		case StreamErrorUndefined: Log().Get("gloox") << "Stream error: Error undefined"; break;
+		case StreamErrorBadFormat: Log("gloox", "Stream error: Bad format"); break;
+		case StreamErrorBadNamespacePrefix: Log("gloox", "Stream error: Bad namespace prefix"); break;
+		case StreamErrorConflict: Log("gloox", "Stream error: Conflict"); break;
+		case StreamErrorConnectionTimeout: Log("gloox", "Stream error: Connection timeout"); break;
+		case StreamErrorHostGone: Log("gloox", "Stream error: Host gone"); break;
+		case StreamErrorHostUnknown: Log("gloox", "Stream error: Host unknown"); break;
+		case StreamErrorImproperAddressing: Log("gloox", "Stream error: Improper addressing"); break;
+		case StreamErrorInternalServerError: Log("gloox", "Stream error: Internal server error"); break;
+		case StreamErrorInvalidFrom: Log("gloox", "Stream error: Invalid from"); break;
+		case StreamErrorInvalidId: Log("gloox", "Stream error: Invalid ID"); break;
+		case StreamErrorInvalidNamespace: Log("gloox", "Stream error: Invalid Namespace"); break;
+		case StreamErrorInvalidXml: Log("gloox", "Stream error: Invalid XML"); break;
+		case StreamErrorNotAuthorized: Log("gloox", "Stream error: Not Authorized"); break;
+		case StreamErrorPolicyViolation: Log("gloox", "Stream error: Policy violation"); break;
+		case StreamErrorRemoteConnectionFailed: Log("gloox", "Stream error: Remote connection failed"); break;
+		case StreamErrorResourceConstraint: Log("gloox", "Stream error: Resource constraint"); break;
+		case StreamErrorRestrictedXml: Log("gloox", "Stream error: Restricted XML"); break;
+		case StreamErrorSeeOtherHost: Log("gloox", "Stream error: See other host"); break;
+		case StreamErrorSystemShutdown: Log("gloox", "Stream error: System shutdown"); break;
+		case StreamErrorUndefinedCondition: Log("gloox", "Stream error: Undefined Condition"); break;
+		case StreamErrorUnsupportedEncoding: Log("gloox", "Stream error: Unsupported encoding"); break;
+		case StreamErrorUnsupportedStanzaType: Log("gloox", "Stream error: Unsupported stanza type"); break;
+		case StreamErrorUnsupportedVersion: Log("gloox", "Stream error: Unsupported version"); break;
+		case StreamErrorXmlNotWellFormed: Log("gloox", "Stream error: XML Not well formed"); break;
+		case StreamErrorUndefined: Log("gloox", "Stream error: Error undefined"); break;
 	};
 
 	switch (j->authError()) {
-		case AuthErrorUndefined: Log().Get("gloox") << "Auth error: Error undefined"; break;
-		case SaslAborted: Log().Get("gloox") << "Auth error: Sasl aborted"; break;
-		case SaslIncorrectEncoding: Log().Get("gloox") << "Auth error: Sasl incorrect encoding"; break;        
-		case SaslInvalidAuthzid: Log().Get("gloox") << "Auth error: Sasl invalid authzid"; break;
-		case SaslInvalidMechanism: Log().Get("gloox") << "Auth error: Sasl invalid mechanism"; break;
-		case SaslMalformedRequest: Log().Get("gloox") << "Auth error: Sasl malformed request"; break;
-		case SaslMechanismTooWeak: Log().Get("gloox") << "Auth error: Sasl mechanism too weak"; break;
-		case SaslNotAuthorized: Log().Get("gloox") << "Auth error: Sasl Not authorized"; break;
-		case SaslTemporaryAuthFailure: Log().Get("gloox") << "Auth error: Sasl temporary auth failure"; break;
-		case NonSaslConflict: Log().Get("gloox") << "Auth error: Non sasl conflict"; break;
-		case NonSaslNotAcceptable: Log().Get("gloox") << "Auth error: Non sasl not acceptable"; break;
-		case NonSaslNotAuthorized: Log().Get("gloox") << "Auth error: Non sasl not authorized"; break;
+		case AuthErrorUndefined: Log("gloox", "Auth error: Error undefined"); break;
+		case SaslAborted: Log("gloox", "Auth error: Sasl aborted"); break;
+		case SaslIncorrectEncoding: Log("gloox", "Auth error: Sasl incorrect encoding"); break;        
+		case SaslInvalidAuthzid: Log("gloox", "Auth error: Sasl invalid authzid"); break;
+		case SaslInvalidMechanism: Log("gloox", "Auth error: Sasl invalid mechanism"); break;
+		case SaslMalformedRequest: Log("gloox", "Auth error: Sasl malformed request"); break;
+		case SaslMechanismTooWeak: Log("gloox", "Auth error: Sasl mechanism too weak"); break;
+		case SaslNotAuthorized: Log("gloox", "Auth error: Sasl Not authorized"); break;
+		case SaslTemporaryAuthFailure: Log("gloox", "Auth error: Sasl temporary auth failure"); break;
+		case NonSaslConflict: Log("gloox", "Auth error: Non sasl conflict"); break;
+		case NonSaslNotAcceptable: Log("gloox", "Auth error: Non sasl not acceptable"); break;
+		case NonSaslNotAuthorized: Log("gloox", "Auth error: Non sasl not authorized"); break;
 	};
 
 	if (j->streamError() == 0 || j->streamError() == 24) {
-		Log().Get("gloox") << "trying to reconnect after 3 seconds";
+		Log("gloox", "trying to reconnect after 3 seconds");
 		purple_timeout_add_seconds(3, &transportReconnect, NULL);
 	}
 }
@@ -1920,7 +1922,7 @@ void GlooxMessageHandler::handleMessage (const Message &msg, MessageSession *ses
 			delete msgTag;
 		}
 		else{
-			Log().Get(msg.from().bare()) << "New message received, but we're not connected yet";
+			Log(msg.from().bare(), "New message received, but we're not connected yet");
 		}
 	}
 	else {

@@ -71,7 +71,6 @@ bool Localization::loadLocale(const std::string &lang) {
 	g_free(l);
 	if (pofile != NULL) {
 		GHashTable *locale = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
-		Log().Get("Localization") << lang  << " locale found";
 		domains = po_file_domains (pofile);
 		for (domainp = domains; *domainp; domainp++) {
 			const char *domain = *domainp;
