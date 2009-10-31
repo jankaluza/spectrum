@@ -188,7 +188,10 @@ bool User::syncCallback() {
 	Log(jid(), "sync_cb lastCount: " << m_subscribeLastCount << "cacheSize: " << int(m_subscribeCache.size()));
 	// we have to check, if all users arrived and repeat this call if not
 	if (m_subscribeLastCount == int(m_subscribeCache.size())) {
-		syncContacts();
+		// We don't want to do it, because user could remove contacts from different client.
+		// This was originally written to import JIT local contacts to ICQ servers
+		// TODO: Make me allowable by config file...
+		// syncContacts();
 		sendRosterX();
 		return FALSE;
 	}
