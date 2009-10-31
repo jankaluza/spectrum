@@ -1759,7 +1759,7 @@ void GlooxMessageHandler::onConnect() {
     m_configuration.hash = Base64::encode64( sha.binary() );
 
 	if (m_firstConnection) {
-		new AutoConnectLoop(this);
+// 		new AutoConnectLoop(this);
 		m_firstConnection = false;
 	}
 }
