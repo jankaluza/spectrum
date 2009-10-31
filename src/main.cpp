@@ -1425,7 +1425,7 @@ void GlooxMessageHandler::purpleMessageReceived(PurpleAccount* account, char * n
 			user->purpleMessageReceived(account,name,msg,conv,flags);
 		}
 		else {
-			Log(user->jid(),"purpleMessageReceived called for unconnected user...");
+			Log(user->jid(),"purpleMessageReceived called for unconnected user..."  << msg);
 		}
 	}
 	else {
@@ -1444,7 +1444,7 @@ void GlooxMessageHandler::purpleConversationWriteIM(PurpleConversation *conv, co
 			user->purpleConversationWriteIM(conv, who, message, flags, mtime);
 		}
 		else {
-			Log(user->jid(), "purpleConversationWriteIM called for unconnected user...");
+			Log(user->jid(), "purpleConversationWriteIM called for unconnected user..." << message);
 		}
 	}
 	else {
