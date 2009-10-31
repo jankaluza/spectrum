@@ -809,7 +809,7 @@ GlooxMessageHandler::GlooxMessageHandler(const std::string &config) : MessageHan
 
 	j = new HiComponent("jabber:component:accept",m_configuration.server,m_configuration.jid,m_configuration.password,m_configuration.port);
 
-	j->logInstance().registerLogHandler(LogLevelDebug, LogAreaXmlIncoming | LogAreaXmlOutgoing, this);
+	j->logInstance().registerLogHandler(LogLevelDebug, LogAreaXmlIncoming | LogAreaXmlOutgoing, &Log_);
 	
 	m_loop = g_main_loop_new(NULL, FALSE);
 

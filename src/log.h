@@ -55,7 +55,10 @@ class LogClass : public LogHandler {
 		
 		std::ofstream &fileStream() { return m_file; }
 		void handleLog(LogLevel level, LogArea area, const std::string &message) {
-			
+			if (area == LogAreaXmlIncoming)
+				LogMessage(m_file).Get("XML IN") << message;
+			else
+				LogMessage(m_file).Get("XML OUT") << message;
 		}
 		
 	private:
