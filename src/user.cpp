@@ -280,6 +280,7 @@ void User::sendRosterX()
 {
 	m_rosterXCalled = true;
 	m_syncTimer = 0;
+	bool send = false;
 	if (int(m_subscribeCache.size()) == 0)
 		return;
 	Log(m_jid, "Sending rosterX");
@@ -301,7 +302,8 @@ void User::sendRosterX()
 		PurpleBuddy *buddy = (*it).second;
 		std::string name(purple_buddy_get_name(buddy));
 		std::for_each(name.begin(), name.end(), replaceBadJidCharacters());
-		if (!name.empty()) {
+		if (!name.empty() && !isInRoster(name,"")) {
+			send = true;
 			RosterRow user;
 			std::string alias;
 			if (purple_buddy_get_server_alias(buddy))
@@ -328,7 +330,10 @@ void User::sendRosterX()
 	}
 	tag->addChild(x);
 	std::cout << tag->xml() << "\n";
-	p->j->send(tag);
+	if (send)
+		p->j->send(tag);
+	else
+		delete tag;
 
 	m_subscribeCache.clear();
 	m_subscribeLastCount = -1;
