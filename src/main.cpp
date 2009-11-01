@@ -1959,6 +1959,26 @@ bool GlooxMessageHandler::initPurple(){
 		purple_set_blist(purple_blist_new());
 		purple_blist_load();
 
+		purple_prefs_load();
+
+		/* Good default preferences */
+		/* The combination of these two settings mean that libpurple will never
+		 * (of its own accord) set all the user accounts idle.
+		 */
+		purple_prefs_set_bool("/purple/away/away_when_idle", false);
+		/*
+		 * This must be set to something not "none" for idle reporting to work
+		 * for, e.g., the OSCAR prpl. We don't implement the UI ops, so this is
+		 * okay for now.
+		 */
+		purple_prefs_set_string("/purple/away/idle_reporting", "system");
+
+		/* Disable all logging */
+		purple_prefs_set_bool("/purple/logging/log_ims", false);
+		purple_prefs_set_bool("/purple/logging/log_chats", false);
+		purple_prefs_set_bool("/purple/logging/log_system", false);
+
+
 		purple_signal_connect(purple_conversations_get_handle(), "received-im-msg", &conversation_handle, PURPLE_CALLBACK(newMessageReceived), NULL);
 		purple_signal_connect(purple_conversations_get_handle(), "buddy-typing", &conversation_handle, PURPLE_CALLBACK(buddyTyping), NULL);
 		purple_signal_connect(purple_conversations_get_handle(), "buddy-typing-stopped", &conversation_handle, PURPLE_CALLBACK(buddyTypingStopped), NULL);
