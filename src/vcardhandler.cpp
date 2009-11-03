@@ -116,7 +116,7 @@ bool GlooxVCardHandler::handleIq (const IQ &stanza){
 
 	std::string name(stanza.to().username());
 	std::for_each( name.begin(), name.end(), replaceJidCharacters() );
-
+	Log("VCard", "asking for vcard" << name);
 	if (stanza.subtype() == IQ::Get) {
 		std::list<std::string> temp;
 		temp.push_back((std::string)stanza.id());
@@ -148,7 +148,7 @@ void GlooxVCardHandler::userInfoArrived(PurpleConnection *gc, const std::string 
 		std::string name(who);
 		std::for_each( name.begin(), name.end(), replaceJidCharacters() );
 
-		std::cout << "VCard received, making vcard IQ\n";
+		Log("VCard", "VCard received, making vcard IQ");
 		Tag *reply = new Tag( "iq" );
 		reply->addAttribute( "id", vcardRequests[who].front() );
 		reply->addAttribute( "type", "result" );
@@ -162,31 +162,31 @@ void GlooxVCardHandler::userInfoArrived(PurpleConnection *gc, const std::string 
 		}
 
 		if (purple_value_get_boolean(user->getSetting("enable_avatars")))
-			std::cout << "AVATARS ENABLED IN USER SETTINGS\n";
+			Log("VCard", "AVATARS ENABLED IN USER SETTINGS");
 		
 		if (user->hasTransportFeature(TRANSPORT_FEATURE_AVATARS))
-			std::cout << "TRANSPORT_FEATURE_AVATARS IS READY\n";
+			Log("VCard", "TRANSPORT_FEATURE_AVATARS IS READY");
 
 		if (purple_value_get_boolean(user->getSetting("enable_avatars")) && user->hasTransportFeature(TRANSPORT_FEATURE_AVATARS)) {
 			Tag *photo = new Tag("PHOTO");
 
-			std::cout << "Trying to find out " << name << "\n";
+			Log("VCard", "Trying to find out " << name);
 			PurpleBuddy *buddy = purple_find_buddy(purple_connection_get_account(gc), name.c_str());
 			if (buddy){
-				std::cout << "found buddy " << name << "\n";
+				Log("VCard", "found buddy " << name);
 				gsize len;
 				PurpleBuddyIcon *icon = NULL;
-				std::cout << "Is buddy_icon set? " << (purple_blist_node_get_string((PurpleBlistNode*)buddy, "buddy_icon") == NULL ? "NO" : "YES") <<"\n";
+				Log("VCard", "Is buddy_icon set? " << (purple_blist_node_get_string((PurpleBlistNode*)buddy, "buddy_icon") == NULL ? "NO" : "YES"));
 				icon = purple_buddy_icons_find(purple_connection_get_account(gc), name.c_str());
 				if(icon!=NULL) {
-					std::cout << "found icon\n";
+					Log("VCard", "found icon");
 					const gchar * data = (gchar*)purple_buddy_icon_get_data(icon, &len);
 					if (data!=NULL){
-						std::cout << "making avatar " << len <<"\n";
+						Log("VCard", "making avatar " << len);
 						std::string avatarData((char *)data,len);
 						base64encode((unsigned char *)data, len, avatarData);
 						photo->addChild( new Tag("BINVAL", avatarData));
-						std::cout << "avatar made\n";
+						Log("VCard", "avatar made");
 	// 					std::cout << photo->xml() << "\n";
 					}
 				}
