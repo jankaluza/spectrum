@@ -143,6 +143,7 @@ void GlooxVCardHandler::userInfoArrived(PurpleConnection *gc, const std::string 
 	if (user!=NULL){
 		if (!user->isConnected())
 			return;
+		Log("VCard", "VCard received for " << who);
 		if (!hasVCardRequest(who))
 			return;
 		std::string name(who);
