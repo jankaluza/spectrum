@@ -428,7 +428,7 @@ Tag *User::generatePresenceStanza(PurpleBuddy *buddy) {
 	if (hasTransportFeature(TRANSPORT_FEATURE_AVATARS)) {
 		// vcard-temp:x:update
 		char *avatarHash = NULL;
-		PurpleBuddyIcon *icon = purple_buddy_icons_find(m_account, name.c_str());
+		PurpleBuddyIcon *icon = purple_buddy_icons_find(m_account, purple_buddy_get_name(buddy));
 		if (icon != NULL) {
 			avatarHash = purple_buddy_icon_get_full_path(icon);
 			Log(m_jid, "avatarHash");
