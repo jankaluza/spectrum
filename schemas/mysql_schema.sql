@@ -33,6 +33,15 @@ CREATE TABLE IF NOT EXISTS `users` (
   UNIQUE KEY `jid` (`jid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 
+CREATE TABLE IF NOT EXISTS `users_settings` (
+  `user_id` int(10) unsigned NOT NULL,
+  `var` varchar(50) collate utf8_bin NOT NULL,
+  `type` smallint(4) unsigned NOT NULL,
+  `value` varchar(255) collate utf8_bin NOT NULL,
+  PRIMARY KEY (`user_id`,`var`),
+  KEY `user_id` (`user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+
 CREATE TABLE IF NOT EXISTS `db_version` (
   `ver` int(10) unsigned NOT NULL default '1'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
