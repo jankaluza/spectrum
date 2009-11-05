@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 import os,  os.path, sys
 try:
@@ -23,7 +24,7 @@ def start():
 		reactor.stop()
 		return
 	maindir = sys.argv[1]
-	
+
 	prefix = ""
 	if len(sys.argv) == 7:
 		prefix = sys.argv[6]
@@ -61,7 +62,7 @@ def start():
 					u = x.getElementsByTagName('username')
 					uin = gatherTextNodes(u[0])
 					print "Adding", jid
-					
+
 					def done2(res, x2):
 						user_id = int(res[0][0])
 						print "user_id =", user_id
