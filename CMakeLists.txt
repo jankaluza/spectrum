@@ -11,13 +11,13 @@ set(CMAKE_MODULE_PATH "cmake_modules")
 include_directories(src)
 
 
-set(gloox_DIR ${CMAKE_MODULE_PATH})
+set(gloox_DIR "${CMAKE_SOURCE_DIR}/cmake_modules")
 find_package(gloox REQUIRED)
-set(purple_DIR ${CMAKE_MODULE_PATH})
+set(purple_DIR "${CMAKE_SOURCE_DIR}/cmake_modules")
 find_package(purple REQUIRED)
-set(glib_DIR ${CMAKE_MODULE_PATH})
+set(glib_DIR "${CMAKE_SOURCE_DIR}/cmake_modules")
 find_package(glib REQUIRED)
-set(libpoco_DIR ${CMAKE_MODULE_PATH})
+set(libpoco_DIR "${CMAKE_SOURCE_DIR}/cmake_modules")
 find_package(libpoco REQUIRED)
 
 FIND_LIBRARY(GETTEXTPO_LIBRARY NAMES gettextpo)
@@ -35,8 +35,7 @@ else(GETTEXTPO_LIBRARY AND GETTEXTPO_INCLUDE_DIR)
 endif(GETTEXTPO_LIBRARY AND GETTEXTPO_INCLUDE_DIR)
 
 include_directories(${GLOOX_INCLUDE_DIR})
-include_directories("/usr/local/include/libpurple")
-include_directories("/usr/include/libpurple")
+include_directories(${PURPLE_INCLUDE_DIR})
 
 include_directories(${LIBPOCO_INCLUDE_DIR})
 
