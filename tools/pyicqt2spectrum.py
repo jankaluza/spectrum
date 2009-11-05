@@ -18,8 +18,8 @@ def error(result):
 
 def start():
 	if len(sys.argv) != 6 and len(sys.argv) != 7 and len(sys.argv) != 3 and len(sys.argv) != 4:
-		print "Usage for MySQL: " + sys.argv[0] + " pyicqt_directory database username password host [mysql_prefix]"
-		print "Usage for SQLite: " + sys.argv[0] + " pyicqt_directory database [prefix]"
+		print "Usage for MySQL: " + sys.argv[0] + " transport_path database username password host [mysql_prefix]"
+		print "Usage for SQLite: " + sys.argv[0] + " transport_path database [prefix]"
 		reactor.stop()
 		return
 	maindir = sys.argv[1]
