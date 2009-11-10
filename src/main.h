@@ -196,7 +196,6 @@ public:
 	/*
 	 * Callbacks for libpurple UI-ops.
 	 */
-	void purpleBuddyChanged(PurpleBuddy* buddy);
 	void purpleConnectionError(PurpleConnection *gc, PurpleConnectionError reason, const char *text);
 	void purpleMessageReceived(PurpleAccount* account, char * name, char *msg, PurpleConversation *conv, PurpleMessageFlags flags);
 	void purpleConversationWriteIM(PurpleConversation *conv, const char *who, const char *message, PurpleMessageFlags flags, time_t mtime);
