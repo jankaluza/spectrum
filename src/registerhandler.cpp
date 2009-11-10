@@ -218,17 +218,17 @@ bool GlooxRegisterHandler::handleIq (const IQ &iq){
 				x->addAttribute("xmlns","http://jabber.org/protocol/rosterx");
 				Tag *item;
 
-				std::map<std::string,RosterRow> roster;
-				roster = p->sql()->getBuddies(res.id);
-				// add users which are added to roster
-				for(std::map<std::string, RosterRow>::iterator u = roster.begin(); u != roster.end() ; u++){
-					if (!(*u).second.uin.empty()){
-						item = new Tag("item");
-						item->addAttribute("action","delete");
-						item->addAttribute("jid",(*u).second.uin+"@"+p->jid());
-						x->addChild(item);
-					}
-				}
+// 				std::map<std::string,RosterRow> roster;
+// 				roster = p->sql()->getBuddies(res.id);
+// 				// add users which are added to roster
+// 				for(std::map<std::string, RosterRow>::iterator u = roster.begin(); u != roster.end() ; u++){
+// 					if (!(*u).second.uin.empty()){
+// 						item = new Tag("item");
+// 						item->addAttribute("action","delete");
+// 						item->addAttribute("jid",(*u).second.uin+"@"+p->jid());
+// 						x->addChild(item);
+// 					}
+// 				}
 
 				tag->addChild(x);
 				std::cout << "* sending " << tag->xml() << "\n";

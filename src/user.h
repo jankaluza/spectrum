@@ -31,6 +31,7 @@
 
 class GlooxMessageHandler;
 class FiletransferRepeater;
+class RosterManager;
 
 class RosterRow;
 
@@ -91,8 +92,6 @@ class User {
 		~User();
 
 		void connect();
-		void sendRosterX();
-		void syncContacts();
 		bool hasTransportFeature(int feature); // TODO: move me to p->hasTransportFeature and rewrite my API
 
 		// Utils
@@ -114,7 +113,6 @@ class User {
 		void receivedChatState(const std::string &uin, const std::string &state);
 
 		// Libpurple callbacks
-		void purpleBuddyChanged(PurpleBuddy *buddy);
 		void purpleBuddyRemoved(PurpleBuddy *buddy);
 		void purpleBuddyCreated(PurpleBuddy *buddy);
 		void purpleBuddyStatusChanged(PurpleBuddy *buddy, PurpleStatus *status, PurpleStatus *old_status);
@@ -232,6 +230,7 @@ class User {
 		guint m_storageTimer;		// timer for storing
 		long m_userID;				// userID for Database
 		bool m_loadingBuddiesFromDB;
+		RosterManager *m_rosterManager;
 };
 
 #endif
