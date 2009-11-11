@@ -284,6 +284,7 @@ private:
 	GlooxParser *m_parser;						// Gloox parser - makes Tag* from std::string
 
 	GIOChannel *connectIO;						// GIOChannel for Gloox socket
+	guint connectID;
 
 	UserManager *m_userManager;					// UserManager class
 	bool m_firstConnection;						// true if transporConnect is called for first time

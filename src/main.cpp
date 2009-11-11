@@ -765,6 +765,7 @@ GlooxMessageHandler::GlooxMessageHandler(const std::string &config) : MessageHan
 	gatewayHandler = NULL;
 	ftServer = NULL;
 	m_stats = NULL;
+	connectIO = NULL;
 
 	bool loaded = true;
 
@@ -1828,6 +1829,10 @@ void GlooxMessageHandler::onDisconnect(ConnectionError e) {
 		Log("gloox", "trying to reconnect after 3 seconds");
 		purple_timeout_add_seconds(3, &transportReconnect, NULL);
 	}
+	if (connectIO) {
+		g_source_remove(connectID);
+		connectIO = NULL;
+	}
 }
 
 void GlooxMessageHandler::transportConnect() {
@@ -1835,7 +1840,7 @@ void GlooxMessageHandler::transportConnect() {
 	int mysock = dynamic_cast<ConnectionTCPClient*>( j->connectionImpl() )->socket();
 	if (mysock > 0) {
 		connectIO = g_io_channel_unix_new(mysock);
-		g_io_add_watch(connectIO, (GIOCondition) READ_COND, &transportDataReceived, NULL);
+		connectID = g_io_add_watch(connectIO, (GIOCondition) READ_COND, &transportDataReceived, NULL);
 	}
 }
 
