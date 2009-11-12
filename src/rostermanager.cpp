@@ -98,7 +98,7 @@ RosterManager::RosterManager(GlooxMessageHandler *m, User *user) {
 	m_user = user;
 	m_roster = NULL;
 	m_syncTimer = new SpectrumTimer(10000, &sync_cb, this);
-	m_storageTimer = 0;
+	m_storageTimer = new SpectrumTimer(10000, &storageTimerTimeout, this);
 	m_cacheSize = 0;
 	m_oldCacheSize = -1;
 	m_storageCache = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
@@ -109,6 +109,7 @@ RosterManager::~RosterManager() {
 	g_hash_table_destroy(m_roster);
 	
 	delete m_syncTimer;
+	delete m_storageTimer;
 }
 
 bool RosterManager::isInRoster(SpectrumBuddy *buddy) {
@@ -120,7 +121,6 @@ bool RosterManager::isInRoster(SpectrumBuddy *buddy) {
 bool RosterManager::storageTimeout() {
 	
 	if (g_hash_table_size(m_storageCache) == 0) {
-		m_storageTimer = 0;
 		return FALSE;
 	}
 	g_hash_table_foreach_remove(m_storageCache, storeAllBuddies, m_user);
@@ -317,8 +317,7 @@ void RosterManager::storeBuddy(SpectrumBuddy *buddy) {
 		return;
 	if (!isInRoster(buddy))
 		g_hash_table_replace(m_storageCache, g_strdup(buddy->getUin().c_str()), buddy);
-	if (m_storageTimer == 0)
-		m_storageTimer = purple_timeout_add_seconds(10, storageTimerTimeout, this);
+	m_storageTimer->start();
 }
 
 SpectrumBuddy* RosterManager::purpleBuddyToSpectrumBuddy(PurpleBuddy *buddy) {

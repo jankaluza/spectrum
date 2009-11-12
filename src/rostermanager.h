@@ -69,7 +69,7 @@ class RosterManager {
 		GHashTable *m_storageCache;
 		User *m_user;
 		SpectrumTimer *m_syncTimer;
-		guint m_storageTimer;
+		SpectrumTimer *m_storageTimer;
 		int m_cacheSize;
 		int m_oldCacheSize;
 		bool m_loadingBuddies;
