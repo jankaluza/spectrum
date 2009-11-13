@@ -151,6 +151,7 @@ class User {
 
 		// Storage
 		void storeBuddy(PurpleBuddy *buddy);
+		void removeBuddy(PurpleBuddy *buddy);
 
 		// bind IP
 		void setBindIP(const std::string& bindIP) { m_bindIP = bindIP; }

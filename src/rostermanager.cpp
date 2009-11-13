@@ -262,6 +262,17 @@ void RosterManager::handleUnsubscribe(const std::string &uin, const std::string 
 	removeBuddy(s_buddy);
 }
 
+void RosterManager::buddyRemoved(PurpleBuddy *buddy) {
+	if (g_hash_table_lookup(m_storageCache, purple_buddy_get_name(buddy)) != NULL)
+		g_hash_table_remove(m_storageCache, purple_buddy_get_name(buddy));
+	SpectrumBuddy *s_buddy = purpleBuddyToSpectrumBuddy(buddy);
+	if (isInRoster(s_buddy))
+		s_buddy->setBuddy(NULL);
+	else
+		delete buddy;
+	
+}
+
 void RosterManager::addBuddy(SpectrumBuddy *buddy) {
 	// Add Buddy strategy:
 	// SpectrumBuddy here has subscription = SUBSCRIPTION_NONE.
@@ -279,6 +290,8 @@ void RosterManager::addBuddy(SpectrumBuddy *buddy) {
 	// we answer with 'subscribed' and change subscription according to this table:
 	// SUBSCRIPTION_ASK -> SUBSCRIPTION_FROM
 	// and if subscription was SUBSCRIBE_ASK, we also send 'subcribe' request
+	if (m_loadingBuddies)
+		return;
 	if (!isInRoster(buddy)) {
 		Log(m_user->jid(), "Adding buddy to roster: " << buddy->getUin() << " ("<< buddy->getNickname() <<")");
 
@@ -318,6 +331,20 @@ void RosterManager::storeBuddy(SpectrumBuddy *buddy) {
 	if (!isInRoster(buddy))
 		g_hash_table_replace(m_storageCache, g_strdup(buddy->getUin().c_str()), buddy);
 	m_storageTimer->start();
+}
+
+void RosterManager::removeBuddy(PurpleBuddy *buddy) {
+	if (m_loadingBuddies)
+		return;
+	SpectrumBuddy *s_buddy;
+	if (buddy->node.ui_data == NULL) {
+		s_buddy = purpleBuddyToSpectrumBuddy(buddy);
+		removeBuddy(s_buddy);
+	}
+	else {
+		s_buddy = purpleBuddyToSpectrumBuddy(buddy);
+		removeBuddy(s_buddy);
+	}
 }
 
 SpectrumBuddy* RosterManager::purpleBuddyToSpectrumBuddy(PurpleBuddy *buddy) {
