@@ -47,6 +47,8 @@ class RosterManager {
 		void removeBuddy(SpectrumBuddy *buddy);
 		void storeBuddy(PurpleBuddy *);
 		void storeBuddy(SpectrumBuddy *);
+		void removeBuddy(PurpleBuddy *);
+		void buddyRemoved(PurpleBuddy *);
 
 		SpectrumBuddy *getBuddy(const std::string &name);
 		void loadBuddies();

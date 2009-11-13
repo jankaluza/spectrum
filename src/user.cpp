@@ -115,6 +115,10 @@ void User::storeBuddy(PurpleBuddy *buddy) {
 	m_rosterManager->storeBuddy(buddy);
 }
 
+void User::removeBuddy(PurpleBuddy *buddy) {
+	m_rosterManager->removeBuddy(buddy);
+}
+
 /*
  * Returns true if main JID for this User has feature `feature`,
  * otherwise returns false.
@@ -315,20 +319,17 @@ void User::purpleReauthorizeBuddy(PurpleBuddy *buddy) {
  * Called when PurpleBuddy is removed.
  */
 void User::purpleBuddyRemoved(PurpleBuddy *buddy) {
+	m_rosterManager->buddyRemoved(buddy);
 	// we should remove pointer to buddy from subscribCache
 	std::string name(purple_buddy_get_name(buddy));
 	std::for_each( name.begin(), name.end(), replaceBadJidCharacters() );
 	m_subscribeCache.erase(name);
-	
-	if (g_hash_table_lookup(m_storageCache, purple_buddy_get_name(buddy)) != NULL)
-		g_hash_table_remove(m_storageCache, purple_buddy_get_name(buddy));
 }
 
 void User::purpleBuddyCreated(PurpleBuddy *buddy) {
 	if (buddy == NULL)
 		return;
-	if (!m_rosterManager->loadingBuddies())
-		m_rosterManager->addBuddy(buddy);
+	m_rosterManager->addBuddy(buddy);
 }
 
 void User::purpleBuddyStatusChanged(PurpleBuddy *buddy, PurpleStatus *status, PurpleStatus *old_status) {

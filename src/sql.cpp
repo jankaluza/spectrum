@@ -570,66 +570,67 @@ GHashTable *SQLClass::getBuddies(long userId, PurpleAccount *account, User *us){
 	}
 
 	STATEMENT_EXECUTE_BEGIN();
-		if (m_stmt_getBuddies.stmt->execute()) {
-			do {
-				SpectrumBuddy *user = new SpectrumBuddy();
-				user->setId(m_stmt_getBuddies.resId);
-				user->setUin(m_stmt_getBuddies.resUin);
-				user->setSubscription(SUBSCRIPTION_BOTH); // = m_stmt_getBuddies.resSubscription;
-				user->setNickname(m_stmt_getBuddies.resNickname);
-				user->setGroup(m_stmt_getBuddies.resGroups);
-				user->setUser(us);
+	do {
+		if (!m_stmt_getBuddies.stmt->execute())
+			break;
+		SpectrumBuddy *user = new SpectrumBuddy();
+		user->setId(m_stmt_getBuddies.resId);
+		user->setUin(m_stmt_getBuddies.resUin);
+		user->setSubscription(SUBSCRIPTION_BOTH); // = m_stmt_getBuddies.resSubscription;
+		user->setNickname(m_stmt_getBuddies.resNickname);
+		user->setGroup(m_stmt_getBuddies.resGroups);
+		user->setUser(us);
+		Log("SQLClass::getBuddies", "Adding buddy " << user->getUin());
 
-				if (!buddiesLoaded && account) {
-					// create group
-					std::string group = user->getGroup().empty() ? "Buddies" : user->getGroup();
-					PurpleGroup *g = purple_find_group(group.c_str());
-					if (!g) {
-						g = purple_group_new(group.c_str());
-						purple_blist_add_group(g, NULL);
-					}
+		if (!buddiesLoaded && account) {
+			// create group
+			std::string group = user->getGroup().empty() ? "Buddies" : user->getGroup();
+			PurpleGroup *g = purple_find_group(group.c_str());
+			if (!g) {
+				g = purple_group_new(group.c_str());
+				purple_blist_add_group(g, NULL);
+			}
 
-					if (!purple_find_buddy_in_group(account, user->getUin().c_str(), g)) {
-						// create contact
-						PurpleContact *contact = purple_contact_new();
-						purple_blist_add_contact(contact, g, NULL);
+			if (!purple_find_buddy_in_group(account, user->getUin().c_str(), g)) {
+				// create contact
+				PurpleContact *contact = purple_contact_new();
+				purple_blist_add_contact(contact, g, NULL);
 
 // 						create buddy
-						PurpleBuddy *buddy = purple_buddy_new(account, user->getUin().c_str(), user->getNickname().c_str());
-						user->setBuddy(buddy);
-						purple_blist_add_buddy(buddy, contact, g, NULL);
-						GHashTable *settings = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, (GDestroyNotify) purple_value_destroy);
-						while(i < (int) m_stmt_getBuddiesSettings.resId.size()) {
-							std::cout << m_stmt_getBuddiesSettings.resId[i] << "\n";
-							if (m_stmt_getBuddiesSettings.resId[i] == user->getId()) {
-								std::cout << "ADDING SETTING " << m_stmt_getBuddiesSettings.resVar[i] << "\n";
-								PurpleType type = (PurpleType) m_stmt_getBuddiesSettings.resType[i];
-								PurpleValue *value;
-								if (type == PURPLE_TYPE_BOOLEAN) {
-									value = purple_value_new(PURPLE_TYPE_BOOLEAN);
-									purple_value_set_boolean(value, atoi(m_stmt_getBuddiesSettings.resValue[i].c_str()));
-								}
-								if (type == PURPLE_TYPE_STRING) {
-									value = purple_value_new(PURPLE_TYPE_STRING);
-									purple_value_set_string(value, m_stmt_getBuddiesSettings.resValue[i].c_str());
-								}
-								g_hash_table_replace(settings, g_strdup(m_stmt_getBuddiesSettings.resVar[i].c_str()), value);
-								i++;
-							}
-							else
-								break;
+				PurpleBuddy *buddy = purple_buddy_new(account, user->getUin().c_str(), user->getNickname().c_str());
+				user->setBuddy(buddy);
+				purple_blist_add_buddy(buddy, contact, g, NULL);
+				GHashTable *settings = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, (GDestroyNotify) purple_value_destroy);
+				while(i < (int) m_stmt_getBuddiesSettings.resId.size()) {
+					std::cout << m_stmt_getBuddiesSettings.resId[i] << "\n";
+					if (m_stmt_getBuddiesSettings.resId[i] == user->getId()) {
+						std::cout << "ADDING SETTING " << m_stmt_getBuddiesSettings.resVar[i] << "\n";
+						PurpleType type = (PurpleType) m_stmt_getBuddiesSettings.resType[i];
+						PurpleValue *value;
+						if (type == PURPLE_TYPE_BOOLEAN) {
+							value = purple_value_new(PURPLE_TYPE_BOOLEAN);
+							purple_value_set_boolean(value, atoi(m_stmt_getBuddiesSettings.resValue[i].c_str()));
 						}
-						// set settings
-						g_hash_table_destroy(buddy->node.settings);
-						buddy->node.settings = settings;
+						if (type == PURPLE_TYPE_STRING) {
+							value = purple_value_new(PURPLE_TYPE_STRING);
+							purple_value_set_string(value, m_stmt_getBuddiesSettings.resValue[i].c_str());
+						}
+						g_hash_table_replace(settings, g_strdup(m_stmt_getBuddiesSettings.resVar[i].c_str()), value);
+						i++;
 					}
 					else
-						buddiesLoaded = true;
+						break;
 				}
-				g_hash_table_replace(rows, g_strdup(user->getUin().c_str()), user);
-				m_stmt_getBuddies.stmt->execute();
-			} while (!m_stmt_getBuddies.stmt->done());
+				// set settings
+				g_hash_table_destroy(buddy->node.settings);
+				buddy->node.settings = settings;
+			}
+			else
+				buddiesLoaded = true;
 		}
+		g_hash_table_replace(rows, g_strdup(user->getUin().c_str()), user);
+	} while (!m_stmt_getBuddies.stmt->done());
+
 	STATEMENT_EXECUTE_END(m_stmt_getBuddies.stmt, getBuddies(userId, account));
 
 // 	GSList *buddies = purple_find_buddies(account, NULL);
