@@ -94,8 +94,7 @@ if len(sys.argv) >= 5:
                 print stat['name'].replace('/', '_').replace('-',  '_'),stat['value'],stat["units"]
             reactor.stop()
 
-def getConfig():
-    filename = sys.argv[1]
+def getConfig(filename):
     if not os.path.exists(filename):
         if not filename.endswith(".cfg"):
             filename += ".cfg"
@@ -105,9 +104,8 @@ def getConfig():
     if not os.path.exists(filename):
         print "Config file", filename, "does not exist."
         exit(0)
-
     config = ConfigObj(filename)
-    return config, filename
+    return config
 
 if not len(sys.argv) in [3,5] or (len(sys.argv) == 3 and not sys.argv[2] in ["start", "stop"]):
     print "Usage: " + sys.argv[0] + " <config file> start"
@@ -118,7 +116,7 @@ if not len(sys.argv) in [3,5] or (len(sys.argv) == 3 and not sys.argv[2] in ["st
     exit(0)
 
 if sys.argv[2] == "start":
-    config, filename = getConfig()
+    config = getConfig(sys.argv[1])
 
     pid_file = "/var/run/spectrum/" + config['service']['jid']
     if config['service'].has_key("pid_file"):
@@ -134,14 +132,14 @@ if sys.argv[2] == "start":
         f.close()
         exit(0)
 
-    print "Starting spectrum isntance for jid", config['service']['jid'];
+    print "Starting spectrum instance for jid", config['service']['jid'];
     if os.path.exists(os.path.join(os.getcwd(),"spectrum")):
-        os.system(os.path.join(os.getcwd(),"spectrum") + " " + filename)
+        os.system(os.path.join(os.getcwd(),"spectrum") + " " + sys.argv[1])
     else:
         os.system("spectrum" + " " + filename)
     print "Started"
 elif sys.argv[2] == "stop":
-    config, filename = getConfig()
+    config = getConfig(sys.argv[1])
 
     pid_file = "/var/run/spectrum/" + config['service']['jid']
     if config['service'].has_key("pid_file"):
