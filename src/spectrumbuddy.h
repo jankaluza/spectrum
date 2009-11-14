@@ -47,6 +47,7 @@ class SpectrumBuddy {
 	public:
 		SpectrumBuddy();
 		SpectrumBuddy(const std::string &uin);
+		SpectrumBuddy(User *user, PurpleBuddy *buddy);
 		~SpectrumBuddy();
 
 		void setUser(User *user);

@@ -42,8 +42,8 @@ class RosterManager {
 
 		bool isInRoster(SpectrumBuddy *buddy);
 		
-		void addBuddy(PurpleBuddy *buddy) { addBuddy(purpleBuddyToSpectrumBuddy(buddy)); }
-		void addBuddy(SpectrumBuddy *buddy);
+		bool addBuddy(PurpleBuddy *buddy);
+		bool addBuddy(SpectrumBuddy *buddy);
 		void removeBuddy(SpectrumBuddy *buddy);
 		void storeBuddy(PurpleBuddy *);
 		void storeBuddy(SpectrumBuddy *);
@@ -56,6 +56,9 @@ class RosterManager {
 		void handleSubscribed(const std::string &uin, const std::string &from);
 		void handleSubscribe(const std::string &uin, const std::string &from);
 		void handleUnsubscribe(const std::string &uin, const std::string &from);
+		void handleBuddyStatusChanged(PurpleBuddy *buddy, PurpleStatus *status, PurpleStatus *old_status);
+		void handleBuddySignedOn(PurpleBuddy *buddy);
+		void handleBuddySignedOff(PurpleBuddy *buddy);
 
 		
 		bool storageTimeout();
@@ -76,7 +79,7 @@ class RosterManager {
 		int m_oldCacheSize;
 		bool m_loadingBuddies;
 		
-		SpectrumBuddy* purpleBuddyToSpectrumBuddy(PurpleBuddy *buddy);
+		SpectrumBuddy* purpleBuddyToSpectrumBuddy(PurpleBuddy *buddy, bool create = FALSE);
 		static gboolean subscribeBuddiesWrapper(void *rosterManager, void *data);
 
 };

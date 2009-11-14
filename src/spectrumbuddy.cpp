@@ -56,6 +56,13 @@ SpectrumBuddy::SpectrumBuddy(const std::string &uin) : m_id(0), m_uin(uin), m_ni
 	m_subscription(SUBSCRIPTION_NONE), m_online(false), m_lastPresence(""), m_buddy(NULL) {
 }
 
+SpectrumBuddy::SpectrumBuddy(User *user, PurpleBuddy *buddy) : m_id(0), m_uin(""), m_nickname(""), m_group("Buddies"),
+	m_subscription(SUBSCRIPTION_NONE), m_online(false), m_lastPresence(""), m_buddy(NULL) {
+
+	setUser(m_user);
+	setBuddy(buddy);
+}
+
 SpectrumBuddy::~SpectrumBuddy() {
 	// Remove pointer to this class from PurpleBuddy ui_data
 	if (m_buddy) {
@@ -78,6 +85,7 @@ void SpectrumBuddy::setBuddy(PurpleBuddy *buddy) {
 		buddy->node.ui_data = (void *) this;
 	}
 	m_buddy = buddy;
+	Log("setting buddy", getUin());
 }
 
 void SpectrumBuddy::setOffline() {
