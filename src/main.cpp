@@ -1291,11 +1291,11 @@ bool GlooxMessageHandler::loadConfigFile(const std::string &config) {
 		for (i = 0; bind[i]; i++){
 			std::string feature(bind[i]);
 			if (feature == "avatars")
-				m_configuration.VIPFeatures = m_configuration.VIPFeatures | TRANSPORT_FEATURE_AVATARS;
+				m_configuration.VIPFeatures |= TRANSPORT_FEATURE_AVATARS;
 			else if (feature == "chatstate")
-				m_configuration.VIPFeatures = m_configuration.VIPFeatures | TRANSPORT_FEATURE_TYPING_NOTIFY;
+				m_configuration.VIPFeatures |= TRANSPORT_FEATURE_TYPING_NOTIFY;
 			else if (feature == "filetransfer")
-				m_configuration.VIPFeatures = m_configuration.VIPFeatures | TRANSPORT_FEATURE_FILETRANSFER;
+				m_configuration.VIPFeatures |= TRANSPORT_FEATURE_FILETRANSFER;
 		}
 		g_strfreev (bind);
 	}
