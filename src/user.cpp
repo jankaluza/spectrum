@@ -338,9 +338,7 @@ void User::purpleBuddyStatusChanged(PurpleBuddy *buddy, PurpleStatus *status, Pu
 		tag->addAttribute("to", m_jid);
 		p->j->send(tag);
 	}
-	if (!m_roster[std::string(purple_buddy_get_name(buddy))].online)
-		p->userManager()->buddyOnline();
-	m_roster[std::string(purple_buddy_get_name(buddy))].online = true;
+	m_rosterManager->handleBuddyStatusChanged(buddy, status, old_status);
 }
 
 void User::purpleBuddySignedOn(PurpleBuddy *buddy) {
@@ -349,10 +347,7 @@ void User::purpleBuddySignedOn(PurpleBuddy *buddy) {
 		tag->addAttribute("to", m_jid);
 		p->j->send(tag);
 	}
-	if (!m_roster[std::string(purple_buddy_get_name(buddy))].online) {
-		p->userManager()->buddyOnline();
-		m_roster[std::string(purple_buddy_get_name(buddy))].online = true;
-	}
+	m_rosterManager->handleBuddySignedOn(buddy);
 }
 
 void User::purpleBuddySignedOff(PurpleBuddy *buddy) {
@@ -361,10 +356,7 @@ void User::purpleBuddySignedOff(PurpleBuddy *buddy) {
 		tag->addAttribute("to", m_jid);
 		p->j->send(tag);
 	}
-	if (m_roster[std::string(purple_buddy_get_name(buddy))].online) {
-		p->userManager()->buddyOffline();
-		m_roster[std::string(purple_buddy_get_name(buddy))].online = false;
-	}
+	m_rosterManager->handleBuddySignedOff(buddy);
 }
 
 /*
