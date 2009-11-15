@@ -25,6 +25,7 @@
 #include "sql.h"
 #include "usermanager.h"
 #include "caps.h"
+#include "striphtmltags.h"
 
 void SpectrumBuddyFree(gpointer data) {
 	SpectrumBuddy *buddy = (SpectrumBuddy *) data;
@@ -161,6 +162,23 @@ const std::string SpectrumBuddy::getJid() {
 
 const std::string SpectrumBuddy::getBareJid() {
 	return getSafeUin() + "@" + GlooxMessageHandler::instance()->jid();
+}
+
+bool SpectrumBuddy::getStatus(int &status, std::string &message) {
+	if (m_buddy == NULL)
+		return false;
+	PurplePresence *pres = purple_buddy_get_presence(m_buddy);
+	if (pres == NULL)
+		return false;
+	PurpleStatus *stat = purple_presence_get_active_status(pres);
+	if (stat == NULL)
+		return false;
+	status = purple_status_type_get_primitive(purple_status_get_type(stat));
+
+	const char *statusMessage = purple_status_get_attr_string(stat, "message");
+	message = statusMessage ? std::string(statusMessage) : "";
+	message = stripHTMLTags(message);
+	return true;
 }
 
 void SpectrumBuddy::store(PurpleBuddy *buddy) {

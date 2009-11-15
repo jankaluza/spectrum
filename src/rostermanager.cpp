@@ -112,10 +112,14 @@ RosterManager::~RosterManager() {
 	delete m_storageTimer;
 }
 
-bool RosterManager::isInRoster(SpectrumBuddy *buddy) {
-	if (g_hash_table_lookup(m_roster, buddy->getUin().c_str()))
+bool RosterManager::isInRoster(const std::string &name) {
+	if (g_hash_table_lookup(m_roster, name.c_str()))
 		return TRUE;
 	return FALSE;
+}
+
+bool RosterManager::isInRoster(SpectrumBuddy *buddy) {
+	return isInRoster(buddy->getUin());
 }
 
 bool RosterManager::storageTimeout() {
@@ -264,14 +268,19 @@ void RosterManager::handleUnsubscribe(const std::string &uin, const std::string 
 
 void RosterManager::handleBuddyStatusChanged(PurpleBuddy *buddy, PurpleStatus *status, PurpleStatus *old_status) {
 	SpectrumBuddy *s_buddy = purpleBuddyToSpectrumBuddy(buddy);
+	
+	sendCurrentPresence(s_buddy);
+
 	if (!s_buddy->isOnline())
 		m_main->userManager()->buddyOnline();
 	s_buddy->setOnline();
-	Log("buddy", "setting online " << (getBuddy(s_buddy->getUin().c_str()) == s_buddy));
 }
 
 void RosterManager::handleBuddySignedOn(PurpleBuddy *buddy) {
 	SpectrumBuddy *s_buddy = purpleBuddyToSpectrumBuddy(buddy);
+
+	sendCurrentPresence(s_buddy);
+
 	if (!s_buddy->isOnline())
 		m_main->userManager()->buddyOnline();
 	s_buddy->setOnline();
@@ -280,13 +289,16 @@ void RosterManager::handleBuddySignedOn(PurpleBuddy *buddy) {
 
 void RosterManager::handleBuddySignedOff(PurpleBuddy *buddy) {
 	SpectrumBuddy *s_buddy = purpleBuddyToSpectrumBuddy(buddy);
+
+	sendCurrentPresence(s_buddy);
+
 	if (s_buddy->isOnline())
 		m_main->userManager()->buddyOffline();
 	Log("buddy", "setting offline " << isInRoster(s_buddy));
 	s_buddy->setOffline();
 }
 
-void RosterManager::buddyRemoved(PurpleBuddy *buddy) {
+void RosterManager::handleBuddyRemoved(PurpleBuddy *buddy) {
 	if (g_hash_table_lookup(m_storageCache, purple_buddy_get_name(buddy)) != NULL)
 		g_hash_table_remove(m_storageCache, purple_buddy_get_name(buddy));
 	SpectrumBuddy *s_buddy = purpleBuddyToSpectrumBuddy(buddy, true);
@@ -294,7 +306,10 @@ void RosterManager::buddyRemoved(PurpleBuddy *buddy) {
 		s_buddy->setBuddy(NULL);
 	else
 		delete buddy;
-	
+}
+
+void RosterManager::handleBuddyCreated(PurpleBuddy *buddy) {
+	addBuddy(buddy);
 }
 
 bool RosterManager::addBuddy(SpectrumBuddy *buddy) {
@@ -314,7 +329,7 @@ bool RosterManager::addBuddy(SpectrumBuddy *buddy) {
 	// we answer with 'subscribed' and change subscription according to this table:
 	// SUBSCRIPTION_ASK -> SUBSCRIPTION_FROM
 	// and if subscription was SUBSCRIBE_ASK, we also send 'subcribe' request
-	if (m_loadingBuddies)
+	if (m_loadingBuddies || buddy == NULL)
 		return false;
 	if (!isInRoster(buddy)) {
 		Log(m_user->jid(), "Adding buddy to roster: " << buddy->getUin() << " ("<< buddy->getNickname() <<")");
@@ -330,11 +345,16 @@ bool RosterManager::addBuddy(SpectrumBuddy *buddy) {
 }
 
 bool RosterManager::addBuddy(PurpleBuddy *buddy) {
+	if (m_loadingBuddies || buddy == NULL)
+		return false;
 	SpectrumBuddy *s_buddy = purpleBuddyToSpectrumBuddy(buddy);
 	if (!s_buddy)
 		s_buddy = new SpectrumBuddy(m_user, buddy);
-	if (!addBuddy(s_buddy))
+	if (!addBuddy(s_buddy)) {
 		delete s_buddy;
+		return false;
+	}
+	return true;
 }
 
 void RosterManager::removeBuddy(SpectrumBuddy *buddy) {
@@ -383,6 +403,16 @@ void RosterManager::removeBuddy(PurpleBuddy *buddy) {
 	}
 }
 
+bool RosterManager::sendCurrentPresence(SpectrumBuddy *s_buddy) {
+	Tag *tag = generatePresenceTag(s_buddy);
+	if (tag) {
+		tag->addAttribute("to", m_user->jid());
+		m_main->j->send(tag);
+		return true;
+	}
+	return false;
+}
+
 SpectrumBuddy* RosterManager::purpleBuddyToSpectrumBuddy(PurpleBuddy *buddy, bool create) {
 	if (buddy->node.ui_data) {
 		return (SpectrumBuddy *) buddy->node.ui_data;
@@ -399,6 +429,98 @@ SpectrumBuddy* RosterManager::purpleBuddyToSpectrumBuddy(PurpleBuddy *buddy, boo
 	}
 	return NULL;
 }
-	
-	
 
+Tag *RosterManager::generatePresenceTag(PurpleBuddy *buddy) {
+	if (buddy == NULL)
+		return NULL;
+	return generatePresenceTag(purpleBuddyToSpectrumBuddy(buddy));
+}
+
+Tag *RosterManager::generatePresenceTag(SpectrumBuddy *buddy) {
+	if (buddy == NULL)
+		return NULL;
+
+	std::string name = buddy->getSafeUin();
+
+	Log(m_user->jid(), "Generating presence stanza for user " << name);
+	Tag *tag = new Tag("presence");
+	tag->addAttribute("from", buddy->getJid());
+
+	int s;	// Primitive status
+	std::string statusMessage;
+	if (!buddy->getStatus(s, statusMessage))
+		return NULL;
+	if (!statusMessage.empty())
+		tag->addChild( new Tag("status", statusMessage) );
+
+	switch(s) {
+		case PURPLE_STATUS_AVAILABLE: {
+			break;
+		}
+		case PURPLE_STATUS_AWAY: {
+			tag->addChild( new Tag("show", "away" ) );
+			break;
+		}
+		case PURPLE_STATUS_UNAVAILABLE: {
+			tag->addChild( new Tag("show", "dnd" ) );
+			break;
+		}
+		case PURPLE_STATUS_EXTENDED_AWAY: {
+			tag->addChild( new Tag("show", "xa" ) );
+			break;
+		}
+		case PURPLE_STATUS_OFFLINE: {
+			tag->addAttribute( "type", "unavailable" );
+			break;
+		}
+	}
+
+	// caps
+	Tag *c = new Tag("c");
+	c->addAttribute("xmlns", "http://jabber.org/protocol/caps");
+	c->addAttribute("hash", "sha-1");
+	c->addAttribute("node", "http://spectrum.im/transport");
+	c->addAttribute("ver", m_main->configuration().hash);
+	tag->addChild(c);
+
+	if (m_user->hasTransportFeature(TRANSPORT_FEATURE_AVATARS)) {
+		// vcard-temp:x:update
+		char *avatarHash = NULL;
+		PurpleBuddyIcon *icon = purple_buddy_icons_find(m_user->account(), name.c_str());
+		if (icon != NULL) {
+			avatarHash = purple_buddy_icon_get_full_path(icon);
+			Log(m_user->jid(), "avatarHash");
+		}
+
+		if (purple_value_get_boolean(m_user->getSetting("enable_avatars"))) {
+			Tag *x = new Tag("x");
+			x->addAttribute("xmlns","vcard-temp:x:update");
+			if (avatarHash != NULL) {
+				Log(m_user->jid(), "Got avatar hash");
+				// Check if it's patched libpurple which saves icons to directories
+				char *hash = strrchr(avatarHash,'/');
+				std::string h;
+				if (hash) {
+					char *dot;
+					hash++;
+					dot = strchr(hash, '.');
+					if (dot)
+						*dot = '\0';
+					x->addChild(new Tag("photo", (std::string) hash));
+				}
+				else
+					x->addChild(new Tag("photo", (std::string) avatarHash));
+			}
+			else {
+				Log(m_user->jid(), "no avatar hash");
+				x->addChild(new Tag("photo"));
+			}
+			tag->addChild(x);
+		}
+		
+		if (avatarHash)
+			g_free(avatarHash);
+	}
+
+	return tag;
+}
