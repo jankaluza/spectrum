@@ -47,6 +47,7 @@ class SpectrumBuddy {
 	public:
 		SpectrumBuddy();
 		SpectrumBuddy(const std::string &uin);
+		SpectrumBuddy(User *user, PurpleBuddy *buddy);
 		~SpectrumBuddy();
 
 		void setUser(User *user);
@@ -76,6 +77,7 @@ class SpectrumBuddy {
 
 		const std::string getJid();
 		const std::string getBareJid();
+		bool getStatus(int &status, std::string &message);
 
 		void store(PurpleBuddy *buddy = NULL);
 		void remove();
