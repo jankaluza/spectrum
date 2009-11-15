@@ -82,12 +82,10 @@ User *SpectrumBuddy::getUser() {
 }
 
 void SpectrumBuddy::setBuddy(PurpleBuddy *buddy) {
-	Log("setBuddy", this << " " << buddy);
 	if (buddy) {
 		buddy->node.ui_data = (void *) this;
 	}
 	m_buddy = buddy;
-	Log("setting buddy", getUin());
 }
 
 void SpectrumBuddy::setOffline() {
