@@ -369,7 +369,7 @@ void RosterManager::storeBuddy(PurpleBuddy *buddy) {
 	if (m_loadingBuddies)
 		return;
 	SpectrumBuddy *s_buddy;
-	if (buddy->node.ui_data == NULL) {
+	if (buddy->node.ui_data == NULL && !isInRoster(purple_buddy_get_name(buddy))) {
 		s_buddy = purpleBuddyToSpectrumBuddy(buddy, true);
 		if (!addBuddy(s_buddy))
 			delete s_buddy;
