@@ -82,12 +82,9 @@ User *SpectrumBuddy::getUser() {
 }
 
 void SpectrumBuddy::setBuddy(PurpleBuddy *buddy) {
-	if (m_user)
-		Log("setBuddy", m_user->jid());
+	Log("setBuddy", this << " " << buddy);
 	if (buddy) {
-		if (buddy->node.ui_data == NULL) {
-			buddy->node.ui_data = (void *) this;
-		}
+		buddy->node.ui_data = (void *) this;
 	}
 	m_buddy = buddy;
 	Log("setting buddy", getUin());
