@@ -118,9 +118,6 @@ void SpectrumBuddy::setUin(const std::string &uin) {
 }
 
 const std::string &SpectrumBuddy::getUin() {
-	if (m_buddy && purple_buddy_get_name(m_buddy)) {
-		m_uin = std::string(purple_buddy_get_name(m_buddy));
-	}
 	return m_uin;
 }
 
