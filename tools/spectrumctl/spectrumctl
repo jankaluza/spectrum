@@ -3,7 +3,7 @@
 
 import sys, os
 from configobj import ConfigObj
-from optparser import OptParser
+from optparse import OptionParser
 import signal
 import subprocess
 
@@ -163,7 +163,7 @@ def main():
     usage = """usage:
     %prog <config file> start
     %prog <config file> stop
-    % <bare JID> <password> <transport hostname> <command> [args...]
+    %prog <bare JID> <password> <transport hostname> <command> [args...]
     Commands list :
         stats - show transport statistics
     """
@@ -174,18 +174,21 @@ def main():
 
     #if options.verbose:
     #    print "reading {0}...".format(args[0])
-        
+
+    if len(args) == 0:
+        parser.error("incorrect number of arguments")
+
     commands = dict(stats=stats)
-    
+
     config = get_config(args[0])
     if args[1] == 'start':
         start_daemon(config)
     elif args[1] == 'stop':
         stop_daemon(config)
-    elif args[3] in commands:
-        commands[args[3]](args[0], args[1], args[2])
+    #elif args[3] in commands:
+    #    commands[args[3]](args[0], args[1], args[2])
     else:
-        print 'No such command: ', args[3]
+        print 'No such command: ', args[1]
         exit(1)
 
 if __name__ == "__main__":
