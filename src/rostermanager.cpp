@@ -420,7 +420,7 @@ SpectrumBuddy* RosterManager::purpleBuddyToSpectrumBuddy(PurpleBuddy *buddy, boo
 	std::string uin(purple_buddy_get_name(buddy));
 	SpectrumBuddy *s_buddy = getBuddy(uin);
 	if (s_buddy) {
-		s_buddy->setBuddy(buddy);\
+		s_buddy->setBuddy(buddy);
 		return s_buddy;
 	}
 	if (create) {
