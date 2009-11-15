@@ -27,21 +27,18 @@
 class GlooxMessageHandler;
 class RosterRow;
 
-
-
 using namespace gloox;
 
+class GlooxRegisterHandler : public IqHandler {
+	public:
+		GlooxRegisterHandler(GlooxMessageHandler *parent);
+		~GlooxRegisterHandler();
+		bool handleIq (const IQ &iq);
+		void handleIqID (const IQ &iq, int context);
 
-class GlooxRegisterHandler : public IqHandler
-{
-
-public:
-	GlooxRegisterHandler(GlooxMessageHandler *parent);
-	~GlooxRegisterHandler();
-	bool handleIq (const IQ &iq);
-	void handleIqID (const IQ &iq, int context);
-
-	GlooxMessageHandler *p;
+		GlooxMessageHandler *p;
+	private:
+		void sendError(int code, const std::string &error, const IQ &iq);
 };
 
 #endif
