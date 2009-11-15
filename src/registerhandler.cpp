@@ -38,12 +38,15 @@ GlooxRegisterHandler::~GlooxRegisterHandler(){
 }
 
 bool GlooxRegisterHandler::handleIq (const IQ &iq){
-	std::cout << "*** "<< iq.from().full() << ": iq:register received (" << iq.subtype() << ")\n";
+	Log("GlooxRegisterHandler", iq.from().full() << ": iq:register received (" << iq.subtype() << ")");
 	User *user = p->userManager()->getUserByJID(iq.from().bare());
 	if (p->configuration().onlyForVIP){
 		std::list<std::string> const &x = p->configuration().allowedServers;
-		if (std::find(x.begin(), x.end(), iq.from().server()) == x.end())
+		if (std::find(x.begin(), x.end(), iq.from().server()) == x.end()) {
+			Log("GlooxRegisterHandler", "This user has no permissions to register an account");
+			sendError(400, "bad-request", iq);
 			return false;
+		}
 	}
 
 
@@ -58,20 +61,18 @@ bool GlooxRegisterHandler::handleIq (const IQ &iq){
 		query->addAttribute( "xmlns", "jabber:iq:register" );
 		UserRow res = p->sql()->getUserByJid(iq.from().bare());
 
-		if(res.id==-1) {
-			std::cout << "* sending registration form; user is not registered\n";
+		if (res.id == -1) {
+			Log("GlooxRegisterHandler", "* sending registration form; user is not registered");
 			query->addChild( new Tag("instructions", p->protocol()->text("instructions")) );
 			query->addChild( new Tag("username") );
 			query->addChild( new Tag("password") );
-// 			query->addChild( new Tag("language", p->configuration().language) );
 		}
 		else {
-			std::cout << "* sending registration form; user is registered\n";
+			Log("GlooxRegisterHandler", "* sending registration form; user is registered");
 			query->addChild( new Tag("instructions", p->protocol()->text("instructions")) );
 			query->addChild( new Tag("registered") );
 			query->addChild( new Tag("username",res.uin));
 			query->addChild( new Tag("password"));
-// 			query->addChild( new Tag("language", res.language) );
 		}
 
 		Tag *x = new Tag("x");
@@ -121,7 +122,7 @@ bool GlooxRegisterHandler::handleIq (const IQ &iq){
 		option->addChild( new Tag("value", "en") );
 		field->addChild(option);
 
-		if (res.id!=-1) {
+		if (res.id != -1) {
 			field = new Tag("field");
 			field->addAttribute("type", "boolean");
 			field->addAttribute("var", "unregister");
@@ -139,29 +140,28 @@ bool GlooxRegisterHandler::handleIq (const IQ &iq){
 		bool sendsubscribe = false;
 		bool remove = false;
 		Tag *iqTag = iq.tag();
-		Tag *query = iqTag->findChild( "query" );
+		Tag *query;
 		Tag *usernametag;
 		Tag *passwordtag;
 		Tag *languagetag;
 		std::string username("");
 		std::string password("");
 		std::string language("");
-		bool e = false;
 
 		UserRow res = p->sql()->getUserByJid(iq.from().bare());
 		
+		query = iqTag->findChild( "query" );
 		if (!query) return true;
 
 		Tag *xdata = query->findChild("x", "xmlns", "jabber:x:data");
-
 		if (xdata) {
-			if(query->hasChild( "remove" ))
+			if (query->hasChild( "remove" ))
 				remove = true;
-			for(std::list<Tag*>::const_iterator it = xdata->children().begin(); it != xdata->children().end(); ++it){
+			for (std::list<Tag*>::const_iterator it = xdata->children().begin(); it != xdata->children().end(); ++it) {
 				std::string key = (*it)->findAttribute("var");
 				if (key.empty()) continue;
 
-				Tag *v =(*it)->findChild("value");
+				Tag *v = (*it)->findChild("value");
 				if (!v) continue;
 
 				if (key == "username")
@@ -175,7 +175,7 @@ bool GlooxRegisterHandler::handleIq (const IQ &iq){
 			}
 		}
 		else {
-			if(query->hasChild( "remove" ))
+			if (query->hasChild( "remove" ))
 				remove = true;
 			usernametag = query->findChild("username");
 			passwordtag = query->findChild("password");
@@ -186,19 +186,21 @@ bool GlooxRegisterHandler::handleIq (const IQ &iq){
 			else
 				language = p->configuration().language;
 
-			if (usernametag==NULL || passwordtag==NULL)
-				e=true;
+			if (usernametag==NULL || passwordtag==NULL) {
+				sendError(406, "not-acceptable", iq);
+				return false;
+			}
 			else {
 				username = usernametag->cdata();
 				password = passwordtag->cdata();
 			}
 		}
-		// someone wants to be removed
+
 		if (remove) {
-			std::cout << "* removing user from database and disconnecting from legacy network\n";
+			Log("GlooxRegisterHandler", "removing user from database and disconnecting from legacy network");
 			PurpleAccount *account = NULL;
-			if (user!=NULL){
-				if (user->isConnected()==true){
+			if (user != NULL) {
+				if (user->isConnected()) {
 					account = user->account();
 					purple_account_disconnect(user->account());
 					user->disconnected();
@@ -216,7 +218,6 @@ bool GlooxRegisterHandler::handleIq (const IQ &iq){
 				tag->addChild(new Tag("body","removing users"));
 				Tag *x = new Tag("x");
 				x->addAttribute("xmlns","http://jabber.org/protocol/rosterx");
-				Tag *item;
 
 // 				std::map<std::string,RosterRow> roster;
 // 				roster = p->sql()->getBuddies(res.id);
@@ -250,7 +251,7 @@ bool GlooxRegisterHandler::handleIq (const IQ &iq){
 // 					}
 			}
 
-			if (user!=NULL){
+			if (user != NULL) {
 				p->userManager()->removeUser(user);
 			}
 			Tag *reply = new Tag("iq");
@@ -280,53 +281,29 @@ bool GlooxRegisterHandler::handleIq (const IQ &iq){
 
 		std::string jid = iq.from().bare();
 
-		if (username.empty() || password.empty())
-			e=true;
+		if (username.empty() || password.empty()) {
+			sendError(406, "not-acceptable", iq);
+			return false;
+		}
 
 		p->protocol()->prepareUserName(username);
 		if (!p->protocol()->isValidUsername(username)) {
-			std::cout << "* This is now valid username: "<< username << "\n";
-			e = true;
+			Log("GlooxRegisterHandler", "This is now valid username: "<< username);
+			sendError(400, "bad-request", iq);
+			return false;
 		}
 
-//    <iq type='error' from='shakespeare.lit' to='bill@shakespeare.lit/globe' id='change1'>
-//        <error code='400' type='modify'>
-//    	    <bad-request xmlns='urn:ietf:params:xml:ns:xmpp-stanzas'/>
-//	</error>
-//    </iq>
-		if (e) {
-		    Tag *iq2 = new Tag("iq");
-		    iq2->addAttribute("type","error");
-		    iq2->addAttribute("from", p->jid());
-		    iq2->addAttribute("to", iq.from().full());
-		    iq2->addAttribute("id", iq.id());
-
-			Tag *error = new Tag("error");
-		    error->addAttribute("code",400);
-		    error->addAttribute("type","modify");
-		    Tag *bad = new Tag("bad-request");
-		    bad->addAttribute("xmlns","urn:ietf:params:xml:ns:xmpp-stanzas");
-
-		    error->addChild(bad);
-		    iq2->addChild(error);
-
-		    p->j->send(iq2);
-
-			delete iqTag;
-		    return true;
-		}
-
-
-
-		if(res.id==-1) {
-			std::cout << "* adding new user: "<< jid << ", " << username << ", " << password << ", " << language <<"\n";
+		if (res.id == -1) {
+			Log("GlooxRegisterHandler", "adding new user: "<< jid << ", " << username << ", " << password << ", " << language);
 			p->sql()->addUser(jid,username,password,language);
 			sendsubscribe = true;
-		} else {
+		}
+		else {
 			// change passwordhttp://soumar.jabbim.cz/phpmyadmin/index.php
-			std::cout << "* changing user password: "<< jid << ", " << username << ", " << password <<"\n";
+			Log("GlooxRegisterHandler", "changing user password: "<< jid << ", " << username << ", " << password);
 			p->sql()->updateUserPassword(iq.from().bare(),password,language);
 		}
+
 		Tag *reply = new Tag( "iq" );
 		reply->addAttribute( "id", iq.id() );
 		reply->addAttribute( "type", "result" );
@@ -337,7 +314,7 @@ bool GlooxRegisterHandler::handleIq (const IQ &iq){
 		reply->addChild(rquery);
 		p->j->send( reply );
 
-		if(sendsubscribe) {
+		if (sendsubscribe) {
 			reply = new Tag("presence");
 			reply->addAttribute( "from", p->jid() );
 			reply->addAttribute( "to", iq.from().bare() );
@@ -353,3 +330,23 @@ bool GlooxRegisterHandler::handleIq (const IQ &iq){
 void GlooxRegisterHandler::handleIqID (const IQ &iq, int context){
 	std::cout << "IQ ID IQ ID IQ ID\n";
 }
+
+void GlooxRegisterHandler::sendError(int code, const std::string &err, const IQ &iq) {
+	Tag *iq2 = new Tag("iq");
+	iq2->addAttribute("type","error");
+	iq2->addAttribute("from", p->jid());
+	iq2->addAttribute("to", iq.from().full());
+	iq2->addAttribute("id", iq.id());
+
+	Tag *error = new Tag("error");
+	error->addAttribute("code",code);
+	error->addAttribute("type","modify");
+	Tag *bad = new Tag(err);
+	bad->addAttribute("xmlns","urn:ietf:params:xml:ns:xmpp-stanzas");
+
+	error->addChild(bad);
+	iq2->addChild(error);
+
+	p->j->send(iq2);
+}
+
