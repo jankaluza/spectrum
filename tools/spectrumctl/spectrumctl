@@ -1,10 +1,15 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+
 import sys, os
 from configobj import ConfigObj
+from optparser import OptParser
 import signal
+import subprocess
 
-if len(sys.argv) >= 5:
+# - commands --------------------------
+
+def stats(jid, passwd, host):
     from twisted.internet import reactor, task
     from twisted.internet import reactor
     from twisted.names.srvconnect import SRVConnector
@@ -15,7 +20,6 @@ if len(sys.argv) >= 5:
     class XMPPClientConnector(SRVConnector):
         def __init__(self, reactor, domain, factory):
             SRVConnector.__init__(self, reactor, 'xmpp-client', domain, factory)
-
 
         def pickServer(self):
             #host, port = SRVConnector.pickServer(self)
@@ -44,13 +48,15 @@ if len(sys.argv) >= 5:
             reactor.stop()
 
         def rawDataIn(self, buf):
-            #self.logs += "RECV: %s\n" % unicode(buf, 'utf-8').encode('ascii', 'replace')
-            #print "RECV: %s" % unicode(buf, 'utf-8').encode('ascii', 'replace')
+            #msg = "RECV: {0}\n".format(unicode(buf, 'utf-8').encode('ascii', 'replace'))
+            #self.logs += msg
+            #print msg
             pass
 
         def rawDataOut(self, buf):
-            #self.logs += "SEND: %s\n" % unicode(buf, 'utf-8').encode('ascii', 'replace')
-            #print "SEND: %s" % unicode(buf, 'utf-8').encode('ascii', 'replace')
+            #msg = "SEND: {0}\n".format(unicode(buf, 'utf-8').encode('ascii', 'replace'))
+            #self.logs += msg
+            #print msg
             pass
 
         def connected(self, xs):
@@ -75,7 +81,6 @@ if len(sys.argv) >= 5:
             iq.send()
         
         def _statsReceived(self, el):
-
             iq = IQ(self.xmlstream, "get")
             iq['to'] = el['from']
             q = iq.addElement(("http://jabber.org/protocol/stats", "query"))
@@ -94,71 +99,94 @@ if len(sys.argv) >= 5:
                 print stat['name'].replace('/', '_').replace('-',  '_'),stat['value'],stat["units"]
             reactor.stop()
 
-def getConfig(filename):
+    Client(jid.JID(jid + "/stats"), passwd)
+    reactor.run()
+
+# ------------------------------------- 
+
+def get_config(filename):
     if not os.path.exists(filename):
         if not filename.endswith(".cfg"):
             filename += ".cfg"
-        if os.path.exists("/etc/spectrum/" + filename):
-            filename = "/etc/spectrum/" + filename
-            
+        default_location = os.path.join("/etc/spectrum", filename) 
+        if os.path.exists(default_location):
+            filename = default_location
+
     if not os.path.exists(filename):
         print "Config file", filename, "does not exist."
-        exit(0)
-    config = ConfigObj(filename)
-    return config
-
-if not len(sys.argv) in [3,5] or (len(sys.argv) == 3 and not sys.argv[2] in ["start", "stop"]):
-    print "Usage: " + sys.argv[0] + " <config file> start"
-    print "Usage: " + sys.argv[0] + " <config file> stop"
-    print "Usage: " + sys.argv[0] + " <bare JID> <password> <transport hostname> <command> [args...]"
-    print "Commands list :"
-    print "   \"stats\" - show transport statistics"
-    exit(0)
-
-if sys.argv[2] == "start":
-    config = getConfig(sys.argv[1])
-
-    pid_file = "/var/run/spectrum/" + config['service']['jid']
-    if config['service'].has_key("pid_file"):
-        pid_file = config['service']['pid_file'].replace("$jid", config['service']['jid'])
-    try:
-        f = open(pid_file, 'r');
-        print "There is already running spectrum instance for this jid, please this instance first"
-    except:
-        f = None
-        pass
-    if f:
-        pid = f.read()[:-1]
-        f.close()
-        exit(0)
-
-    print "Starting spectrum instance for jid", config['service']['jid'];
-    if os.path.exists(os.path.join(os.getcwd(),"spectrum")):
-        os.system(os.path.join(os.getcwd(),"spectrum") + " " + sys.argv[1])
-    else:
-        os.system("spectrum" + " " + filename)
-    print "Started"
-elif sys.argv[2] == "stop":
-    config = getConfig(sys.argv[1])
-
-    pid_file = "/var/run/spectrum/" + config['service']['jid']
-    if config['service'].has_key("pid_file"):
-        pid_file = config['service']['pid_file'].replace("$jid", config['service']['jid'])
-    try:
-        f = open(pid_file, 'r');
-    except:
-        print "There is no running instance for jid", config['service']['jid']
-        exit(0)
-    pid = f.read()[:-1]
-    f.close()
+        exit(1)
     
-    print "Stopping", config['service']['jid'], "(" + str(pid_file) + ")", "(" + str(pid) + ")"
-    os.system("rm " + pid_file)
-    os.kill(int(pid), signal.SIGTERM)
-    print "Stopped"
-else:
-    if (sys.argv[4] == "stats"):
-        Client(jid.JID(sys.argv[1] + "/stats"), sys.argv[2])
-        reactor.run()
+    return ConfigObj(filename)
+    
+def get_pid(config):
+    if config['service'].has_key("pid_file"):
+        pid_file = config['service']['pid_file'].replace("$jid", config['service']['jid'])
     else:
-        print "Unknown command:", sys.argv[4]
+        pid_file = os.path.join("/var/run/spectrum", config['service']['jid'])
+
+    if not os.path.exists(pid_file):
+        return pid_file, None
+
+    return pid_file, int(file.read(pid_file).strip())
+
+def start_daemon(config):
+    if get_pid(config)[1]:
+        print "There is already running spectrum instance for this jid, ",
+        print "please stop this instance first"
+        exit(1)
+
+    print "Starting spectrum instance for jid", config['service']['jid']
+    spectrum_here = os.path.join(os.getcwd(), "spectrum")
+    if os.path.exists(spectrum_here):
+        subprocess.call((spectrum_here, sys.argv[1]))
+    else:
+        subprocess.call(("spectrum", filename))
+    print "Started"
+
+def stop_daemon(config):
+    pid_file, pid = get_pid(config)
+    
+    if pid is None:
+        print "There is no running instance for jid", config['service']['jid']
+        exit(1)
+
+    print "Stopping {jid} ({pid_file}) ({pid})".format(
+        jid=config['service']['jid'],
+        pid_file=pid_file,
+        pid=pid)
+
+    os.remove(pid_file)
+    os.kill(pid, signal.SIGTERM)
+    print "Stopped"
+
+def main():
+    usage = """usage:
+    %prog <config file> start
+    %prog <config file> stop
+    % <bare JID> <password> <transport hostname> <command> [args...]
+    Commands list :
+        stats - show transport statistics
+    """
+    parser = OptionParser(usage)
+    #parser.add_option("-v", "--verbose",
+    #                  action="store_true", dest="verbose")
+    (options, args) = parser.parse_args()
+
+    #if options.verbose:
+    #    print "reading {0}...".format(args[0])
+        
+    commands = dict(stats=stats)
+    
+    config = get_config(args[0])
+    if args[1] == 'start':
+        start_daemon(config)
+    elif args[1] == 'stop':
+        stop_daemon(config)
+    elif args[3] in commands:
+        commands[args[3]](args[0], args[1], args[2])
+    else:
+        print 'No such command: ', args[3]
+        exit(1)
+
+if __name__ == "__main__":
+    main()
