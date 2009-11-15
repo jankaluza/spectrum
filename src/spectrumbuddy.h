@@ -77,6 +77,7 @@ class SpectrumBuddy {
 
 		const std::string getJid();
 		const std::string getBareJid();
+		bool getStatus(int &status, std::string &message);
 
 		void store(PurpleBuddy *buddy = NULL);
 		void remove();
