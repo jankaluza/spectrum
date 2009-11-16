@@ -369,7 +369,7 @@ void RosterManager::storeBuddy(PurpleBuddy *buddy) {
 	if (m_loadingBuddies)
 		return;
 	SpectrumBuddy *s_buddy;
-	if (buddy->node.ui_data == NULL && !isInRoster(purple_buddy_get_name(buddy))) {
+	if (!isInRoster(purple_buddy_get_name(buddy))) {
 		s_buddy = purpleBuddyToSpectrumBuddy(buddy, true);
 		if (!addBuddy(s_buddy))
 			delete s_buddy;
@@ -414,9 +414,9 @@ bool RosterManager::sendCurrentPresence(SpectrumBuddy *s_buddy) {
 }
 
 SpectrumBuddy* RosterManager::purpleBuddyToSpectrumBuddy(PurpleBuddy *buddy, bool create) {
-	if (buddy->node.ui_data) {
-		return (SpectrumBuddy *) buddy->node.ui_data;
-	}
+// 	if (buddy->node.ui_data) {
+// 		return (SpectrumBuddy *) buddy->node.ui_data;
+// 	}
 	std::string uin(purple_buddy_get_name(buddy));
 	SpectrumBuddy *s_buddy = getBuddy(uin);
 	if (s_buddy) {
