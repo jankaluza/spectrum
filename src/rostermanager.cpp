@@ -181,7 +181,7 @@ void RosterManager::handleSubscribed(const std::string &uin, const std::string &
 		SpectrumBuddy *s_buddy = purpleBuddyToSpectrumBuddy(buddy, true);
 		if (!isInRoster(s_buddy)) {
 			Log(m_user->jid(), "Adding buddy to roster: " << s_buddy->getUin() << " (" << s_buddy->getNickname() << ")");
-			g_hash_table_replace(m_roster, g_strdup(s_buddy->getUin().c_str()), buddy);
+			g_hash_table_replace(m_roster, g_strdup(s_buddy->getUin().c_str()), s_buddy);
 		}
 		Log(m_user->jid(), "adding " << uin << " to local roster and sending presence");
 		if (s_buddy->getSubscription() == SUBSCRIPTION_ASK) {
