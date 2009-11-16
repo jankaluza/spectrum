@@ -116,7 +116,7 @@ def get_config(filename):
         print "Config file", filename, "does not exist."
         exit(1)
     
-    return ConfigObj(filename)
+    return ConfigObj(filename), filename
     
 def get_pid(config):
     if config['service'].has_key("pid_file"):
@@ -129,7 +129,7 @@ def get_pid(config):
 
     return pid_file, int(file.read(pid_file).strip())
 
-def start_daemon(config):
+def start_daemon(config, filename):
     if get_pid(config)[1]:
         print "There is already running spectrum instance for this jid, ",
         print "please stop this instance first"
@@ -138,7 +138,7 @@ def start_daemon(config):
     print "Starting spectrum instance for jid", config['service']['jid']
     spectrum_here = os.path.join(os.getcwd(), "spectrum")
     if os.path.exists(spectrum_here):
-        subprocess.call((spectrum_here, sys.argv[1]))
+        subprocess.call((spectrum_here, filename))
     else:
         subprocess.call(("spectrum", filename))
     print "Started"
@@ -180,9 +180,9 @@ def main():
 
     commands = dict(stats=stats)
 
-    config = get_config(args[0])
+    config, filename = get_config(args[0])
     if args[1] == 'start':
-        start_daemon(config)
+        start_daemon(config, filename)
     elif args[1] == 'stop':
         stop_daemon(config)
     #elif args[3] in commands:
