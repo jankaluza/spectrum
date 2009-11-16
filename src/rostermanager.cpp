@@ -305,7 +305,7 @@ void RosterManager::handleBuddyRemoved(PurpleBuddy *buddy) {
 	if (isInRoster(s_buddy))
 		s_buddy->setBuddy(NULL);
 	else
-		delete buddy;
+		delete s_buddy;
 }
 
 void RosterManager::handleBuddyCreated(PurpleBuddy *buddy) {
