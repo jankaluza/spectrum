@@ -304,8 +304,8 @@ void RosterManager::handleBuddyRemoved(PurpleBuddy *buddy) {
 	SpectrumBuddy *s_buddy = purpleBuddyToSpectrumBuddy(buddy, true);
 	if (isInRoster(s_buddy))
 		s_buddy->setBuddy(NULL);
-	else
-		delete s_buddy;
+// 	else
+// 		delete s_buddy;
 }
 
 void RosterManager::handleBuddyCreated(PurpleBuddy *buddy) {
@@ -351,7 +351,7 @@ bool RosterManager::addBuddy(PurpleBuddy *buddy) {
 	if (!s_buddy)
 		s_buddy = new SpectrumBuddy(m_user, buddy);
 	if (!addBuddy(s_buddy)) {
-		delete s_buddy;
+// 		delete s_buddy;
 		return false;
 	}
 	return true;
@@ -361,8 +361,8 @@ void RosterManager::removeBuddy(SpectrumBuddy *buddy) {
 	buddy->remove();
 	if (isInRoster(buddy))
 		g_hash_table_remove(m_roster, buddy->getUin().c_str());
-	else
-		delete buddy;
+// 	else
+// 		delete buddy;
 }
 
 void RosterManager::storeBuddy(PurpleBuddy *buddy) {
@@ -371,8 +371,8 @@ void RosterManager::storeBuddy(PurpleBuddy *buddy) {
 	SpectrumBuddy *s_buddy;
 	if (!isInRoster(purple_buddy_get_name(buddy))) {
 		s_buddy = purpleBuddyToSpectrumBuddy(buddy, true);
-		if (!addBuddy(s_buddy))
-			delete s_buddy;
+		if (!addBuddy(s_buddy)) {}
+// 			delete s_buddy;
 	}
 	else {
 		s_buddy = purpleBuddyToSpectrumBuddy(buddy);
