@@ -114,7 +114,7 @@ static void sendXhtmlTag(Tag *tag, Tag *stanzaTag) {
 	GlooxMessageHandler::instance()->j->send(stanzaTag);
 }
 
-User::User(GlooxMessageHandler *parent, JID jid, const std::string &username, const std::string &password, const std::string &userKey, long id) : RosterManager(parent, this) {
+User::User(GlooxMessageHandler *parent, JID jid, const std::string &username, const std::string &password, const std::string &userKey, long id) {
 	p = parent;
 	m_jid = jid.bare();
 	Resource r;
@@ -127,16 +127,20 @@ User::User(GlooxMessageHandler *parent, JID jid, const std::string &username, co
 	m_connected = false;
 	m_vip = p->sql()->isVIP(m_jid);
 	m_settings = p->sql()->getSettings(m_userID);
+	m_syncTimer = 0;
 	removeTimer = 0;
 	m_readyForConnect = false;
 	m_rosterXCalled = false;
 	m_account = NULL;
 	m_connectionStart = time(NULL);
+	m_subscribeLastCount = -1;
 	m_reconnectCount = 0;
+	m_storageTimer = 0;
 	m_lang = NULL;
 	m_features = 0;
 	m_mucs = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
 	m_filetransfers = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
+	m_storageCache = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
 	PurpleValue *value;
 	
 	PurpleAccount *act = purple_accounts_find(m_username.c_str(), this->p->protocol()->protocol().c_str());
@@ -195,6 +199,10 @@ bool User::syncCallback() {
 		m_subscribeLastCount = int(m_subscribeCache.size());
 		return TRUE;
 	}
+}
+
+void User::removeBuddy(PurpleBuddy *buddy) {
+
 }
 
 /*
@@ -266,95 +274,6 @@ bool User::isOpenedConversation(const std::string &name) {
 	if (iter != m_conversations.end())
 		return true;
 	return false;
-}
-
-/*
- * Sends all legacy network users which are recorded in subscribeCache
- * to this jabber user by roster item exchange.
- */
-void User::sendRosterX()
-{
-	m_rosterXCalled = true;
-	m_syncTimer = 0;
-	bool send = false;
-	if (int(m_subscribeCache.size()) == 0)
-		return;
-	Log(m_jid, "Sending rosterX");
-	Tag *tag = new Tag("iq");
-	Resource res = findResourceWithFeature(GLOOX_FEATURE_ROSTERX);
-	if (!res)
-		return;
-	tag->addAttribute("to", m_jid + "/" + res.name);
-	tag->addAttribute("type", "set");
-	tag->addAttribute("id", p->j->getID());
-	tag->addAttribute("from", p->jid());
-	Tag *x = new Tag("x");
-	x->addAttribute("xmlns", "http://jabber.org/protocol/rosterx");
-	Tag *item;
-
-	// add these users to roster db with subscription=ask
-	std::map<std::string,PurpleBuddy*>::iterator it = m_subscribeCache.begin();
-	while (it != m_subscribeCache.end()) {
-		PurpleBuddy *buddy = (*it).second;
-		std::string name(purple_buddy_get_name(buddy));
-		std::for_each(name.begin(), name.end(), replaceBadJidCharacters());
-		if (!name.empty() && !isInRoster(name,"")) {
-			send = true;
-			RosterRow user;
-			std::string alias;
-			if (purple_buddy_get_server_alias(buddy))
-				alias = (std::string) purple_buddy_get_server_alias(buddy);
-			else
-				alias = (std::string) purple_buddy_get_alias(buddy);
-			user.id = -1;
-			user.jid = m_jid;
-			user.uin = name;
-			user.subscription = "ask";
-			user.online = false;
-			user.lastPresence = "";
-			m_roster[name] = user;
-// 			p->sql()->addUserToRoster(m_jid, name, "ask");
-
-			item = new Tag("item");
-			item->addAttribute("action", "add");
-			item->addAttribute("jid",name + "@" + p->jid());
-			item->addAttribute("name", alias);
-			item->addChild( new Tag("group", (std::string) purple_group_get_name(purple_buddy_get_group(buddy))));
-			x->addChild(item);
-		}
-		it++;
-	}
-	tag->addChild(x);
-	std::cout << tag->xml() << "\n";
-	if (send)
-		p->j->send(tag);
-	else
-		delete tag;
-
-	m_subscribeCache.clear();
-	m_subscribeLastCount = -1;
-}
-
-/*
- * Adds contacts which are not in legacy network, but which are in local jabber roster,
- * to the legacy network.
- */
-void User::syncContacts()
-{
-	PurpleBuddy *buddy;
-	Log(m_jid, "Syncing contacts with legacy network.");
-	for (std::map<std::string, RosterRow>::iterator u = m_roster.begin(); u != m_roster.end() ; u++) {
-		std::string name((*u).second.uin);
-		std::for_each( name.begin(), name.end(), replaceJidCharacters() );
-		buddy = purple_find_buddy(m_account, name.c_str());
-		// buddy is not in blist, so it's not on server
-		if (!buddy) {
-			// add buddy to server
-			buddy = purple_buddy_new(m_account, (*u).second.uin.c_str(), (*u).second.uin.c_str());
-			purple_blist_add_buddy(buddy, NULL, NULL ,NULL);
-			purple_account_add_buddy(m_account, buddy);
-		}
-	}
 }
 
 /*
@@ -463,6 +382,93 @@ Tag *User::generatePresenceStanza(PurpleBuddy *buddy) {
 	return tag;
 }
 
+/*
+ * Re-requests authorization for buddy if we can do it (if buddy is not authorized).
+ */
+void User::sendRosterX()
+{
+	m_rosterXCalled = true;
+	m_syncTimer = 0;
+	bool send = false;
+	if (int(m_subscribeCache.size()) == 0)
+		return;
+	Log(m_jid, "Sending rosterX");
+	Tag *tag = new Tag("iq");
+	Resource res = findResourceWithFeature(GLOOX_FEATURE_ROSTERX);
+	if (!res)
+		return;
+	tag->addAttribute("to", m_jid + "/" + res.name);
+	tag->addAttribute("type", "set");
+	tag->addAttribute("id", p->j->getID());
+	tag->addAttribute("from", p->jid());
+	Tag *x = new Tag("x");
+	x->addAttribute("xmlns", "http://jabber.org/protocol/rosterx");
+	Tag *item;
+
+	// add these users to roster db with subscription=ask
+	std::map<std::string,PurpleBuddy*>::iterator it = m_subscribeCache.begin();
+	while (it != m_subscribeCache.end()) {
+		PurpleBuddy *buddy = (*it).second;
+		std::string name(purple_buddy_get_name(buddy));
+		std::for_each(name.begin(), name.end(), replaceBadJidCharacters());
+		if (!name.empty() && !isInRoster(name,"")) {
+			send = true;
+			RosterRow user;
+			std::string alias;
+			if (purple_buddy_get_server_alias(buddy))
+				alias = (std::string) purple_buddy_get_server_alias(buddy);
+			else
+				alias = (std::string) purple_buddy_get_alias(buddy);
+			user.id = -1;
+			user.jid = m_jid;
+			user.uin = name;
+			user.subscription = "ask";
+			user.online = false;
+			user.lastPresence = "";
+			m_roster[name] = user;
+// 			p->sql()->addUserToRoster(m_jid, name, "ask");
+
+			item = new Tag("item");
+			item->addAttribute("action", "add");
+			item->addAttribute("jid",name + "@" + p->jid());
+			item->addAttribute("name", alias);
+			item->addChild( new Tag("group", (std::string) purple_group_get_name(purple_buddy_get_group(buddy))));
+			x->addChild(item);
+		}
+		it++;
+	}
+	tag->addChild(x);
+	std::cout << tag->xml() << "\n";
+	if (send)
+		p->j->send(tag);
+	else
+		delete tag;
+
+	m_subscribeCache.clear();
+	m_subscribeLastCount = -1;
+}
+
+/*
+ * Adds contacts which are not in legacy network, but which are in local jabber roster,
+ * to the legacy network.
+ */
+void User::syncContacts()
+{
+	PurpleBuddy *buddy;
+	Log(m_jid, "Syncing contacts with legacy network.");
+	for (std::map<std::string, RosterRow>::iterator u = m_roster.begin(); u != m_roster.end() ; u++) {
+		std::string name((*u).second.uin);
+		std::for_each( name.begin(), name.end(), replaceJidCharacters() );
+		buddy = purple_find_buddy(m_account, name.c_str());
+		// buddy is not in blist, so it's not on server
+		if (!buddy) {
+			// add buddy to server
+			buddy = purple_buddy_new(m_account, (*u).second.uin.c_str(), (*u).second.uin.c_str());
+			purple_blist_add_buddy(buddy, NULL, NULL ,NULL);
+			purple_account_add_buddy(m_account, buddy);
+		}
+	}
+}
 
 void User::purpleReauthorizeBuddy(PurpleBuddy *buddy) {
 	if (!m_connected)
@@ -1242,8 +1248,12 @@ void User::receivedPresence(const Presence &stanza) {
 			std::string name(stanza.to().username());
 			std::for_each( name.begin(), name.end(), replaceJidCharacters() );
 			PurpleBuddy *buddy = purple_find_buddy(m_account, name.c_str());
-			if (buddy && isInRoster(name)) {
-				sendCurrentPresence(purpleBuddyToSpectrumBuddy(buddy));
+			if (buddy) {
+				Tag *probe = generatePresenceStanza(buddy);
+				if (probe) {
+					probe->addAttribute("to", stanza.from().full());
+					p->j->send(probe);
+				}
 			}
 			else {
 				Log(m_jid, "answering to probe presence with unavailable presence");
@@ -1452,11 +1462,17 @@ User::~User(){
 			purple_account_set_enabled(act, PURPLE_UI, FALSE);
 		}
 	}
+
+	if (m_syncTimer != 0) {
+		Log(m_jid, "removing timer\n");
+		purple_timeout_remove(m_syncTimer);
+	}
 	
 	if (m_storageTimer != 0)
 		purple_timeout_remove(m_storageTimer);
 
 	m_roster.clear();
+
 	m_conversations.clear();
 	m_authRequests.clear();
 	g_hash_table_destroy(m_mucs);
