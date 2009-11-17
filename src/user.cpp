@@ -201,10 +201,6 @@ bool User::syncCallback() {
 	}
 }
 
-void User::removeBuddy(PurpleBuddy *buddy) {
-
-}
-
 /*
  * Returns true if main JID for this User has feature `feature`,
  * otherwise returns false.
@@ -1425,11 +1421,13 @@ User::~User(){
 	// send unavailable to online users
 	Tag *tag;
 	for (std::map<std::string, RosterRow>::iterator u = m_roster.begin(); u != m_roster.end() ; u++) {
-		if ((*u).second.online == true){
+		if ((*u).second.online){
+			std::string name((*u).second.uin);
+			std::for_each( name.begin(), name.end(), replaceBadJidCharacters() );
 			tag = new Tag("presence");
 			tag->addAttribute( "to", m_jid );
 			tag->addAttribute( "type", "unavailable" );
-			tag->addAttribute( "from", (*u).second.uin + "@" + p->jid() + "/bot");
+			tag->addAttribute( "from", name + "@" + p->jid() + "/bot");
 			p->j->send( tag );
 			p->userManager()->buddyOffline();
 			(*u).second.online = false;
