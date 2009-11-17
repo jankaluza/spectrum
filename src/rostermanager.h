@@ -24,6 +24,7 @@
 #include <string>
 #include "purple.h"
 #include "account.h"
+#include "user.h"
 #include "glib.h"
 #include "gloox/tag.h"
 #include <algorithm>
@@ -33,7 +34,6 @@ using namespace gloox;
 class SpectrumBuddy;
 class GlooxMessageHandler;
 class SpectrumTimer;
-class User;
 
 class RosterManager {
 	public:
@@ -41,7 +41,6 @@ class RosterManager {
 		~RosterManager();
 
 		bool isInRoster(SpectrumBuddy *buddy);
-		bool isInRoster(const std::string &uin);
 		
 		bool addBuddy(PurpleBuddy *buddy);
 		bool addBuddy(SpectrumBuddy *buddy);
@@ -49,7 +48,7 @@ class RosterManager {
 		void storeBuddy(PurpleBuddy *);
 		void storeBuddy(SpectrumBuddy *);
 		void removeBuddy(PurpleBuddy *);
-		
+		void buddyRemoved(PurpleBuddy *);
 
 		SpectrumBuddy *getBuddy(const std::string &name);
 		void loadBuddies();
@@ -60,14 +59,10 @@ class RosterManager {
 		void handleBuddyStatusChanged(PurpleBuddy *buddy, PurpleStatus *status, PurpleStatus *old_status);
 		void handleBuddySignedOn(PurpleBuddy *buddy);
 		void handleBuddySignedOff(PurpleBuddy *buddy);
-		void handleBuddyCreated(PurpleBuddy *buddy);
-		void handleBuddyRemoved(PurpleBuddy *);
 
 		
 		bool storageTimeout();
 		bool subscribeBuddies();
-		bool sendCurrentPresence(SpectrumBuddy *buddy);
-		SpectrumBuddy* purpleBuddyToSpectrumBuddy(PurpleBuddy *buddy, bool create = FALSE);
 
 		bool loadingBuddies() { return m_loadingBuddies; }
 		User *getUser() { return m_user; }
@@ -83,9 +78,9 @@ class RosterManager {
 		int m_cacheSize;
 		int m_oldCacheSize;
 		bool m_loadingBuddies;
-
-		Tag *generatePresenceTag(PurpleBuddy *buddy);
-		Tag *generatePresenceTag(SpectrumBuddy *buddy);
+		
+		SpectrumBuddy* purpleBuddyToSpectrumBuddy(PurpleBuddy *buddy, bool create = FALSE);
+		static gboolean subscribeBuddiesWrapper(void *rosterManager, void *data);
 
 };
 

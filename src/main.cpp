@@ -990,7 +990,7 @@ void GlooxMessageHandler::purpleBuddyRemoved(PurpleBuddy *buddy) {
 		PurpleAccount *a = purple_buddy_get_account(buddy);
 		User *user = userManager()->getUserByAccount(a);
 		if (user != NULL)
-			user->handleBuddyRemoved(buddy);
+			user->purpleBuddyRemoved(buddy);
 	}
 }
 
@@ -998,28 +998,28 @@ void GlooxMessageHandler::purpleBuddyCreated(PurpleBuddy *buddy) {
 	PurpleAccount *a = purple_buddy_get_account(buddy);
 	User *user = userManager()->getUserByAccount(a);
 	if (user != NULL)
-		user->handleBuddyCreated(buddy);
+		user->purpleBuddyCreated(buddy);
 }
 
 void GlooxMessageHandler::purpleBuddyStatusChanged(PurpleBuddy *buddy, PurpleStatus *status, PurpleStatus *old_status) {
 	PurpleAccount *a = purple_buddy_get_account(buddy);
 	User *user = userManager()->getUserByAccount(a);
 	if (user != NULL)
-		user->handleBuddyStatusChanged(buddy, status, old_status);
+		user->purpleBuddyStatusChanged(buddy, status, old_status);
 }
 
 void GlooxMessageHandler::purpleBuddySignedOn(PurpleBuddy *buddy) {
 	PurpleAccount *a = purple_buddy_get_account(buddy);
 	User *user = userManager()->getUserByAccount(a);
 	if (user != NULL)
-		user->handleBuddySignedOn(buddy);
+		user->purpleBuddySignedOn(buddy);
 }
 
 void GlooxMessageHandler::purpleBuddySignedOff(PurpleBuddy *buddy) {
 	PurpleAccount *a = purple_buddy_get_account(buddy);
 	User *user = userManager()->getUserByAccount(a);
 	if (user != NULL)
-		user->handleBuddySignedOff(buddy);
+		user->purpleBuddySignedOff(buddy);
 }
 
 void GlooxMessageHandler::purpleBuddyTypingStopped(PurpleAccount *account, const char *who) {

@@ -28,10 +28,10 @@
 #include <glib.h>
 #include "purple.h"
 #include "account.h"
-#include "rostermanager.h"
 
 class GlooxMessageHandler;
 class FiletransferRepeater;
+class RosterManager;
 
 class RosterRow;
 
@@ -86,7 +86,7 @@ struct SaveData {
 	long *id;
 };
 
-class User : public RosterManager {
+class User {
 	public:
 		User(GlooxMessageHandler *parent, JID jid, const std::string &username, const std::string &password, const std::string &userKey, long id);
 		~User();
@@ -97,8 +97,13 @@ class User : public RosterManager {
 		bool hasTransportFeature(int feature); // TODO: move me to p->hasTransportFeature and rewrite my API
 
 		// Utils
+		bool syncCallback();
+		bool isInRoster(const std::string &name, const std::string &subscription);
 		bool isOpenedConversation(const std::string &name);
 		bool hasFeature(int feature, const std::string &resource = "");
+
+		// XMPP stuff
+		Tag *generatePresenceStanza(PurpleBuddy *buddy);
 
 		// Libpurple stuff
 		void purpleReauthorizeBuddy(PurpleBuddy *buddy);
@@ -147,6 +152,10 @@ class User : public RosterManager {
 		bool hasAuthRequest(const std::string &name);
 		void removeAuthRequest(const std::string &name);
 
+		// Storage
+		void storeBuddy(PurpleBuddy *buddy);
+		void removeBuddy(PurpleBuddy *buddy);
+
 		// bind IP
 		void setBindIP(const std::string& bindIP) { m_bindIP = bindIP; }
 
@@ -187,6 +196,9 @@ class User : public RosterManager {
 		std::map<std::string,Conversation> conversations() { return m_conversations; }
 		void setFeatures(int f) { m_features = f; }
 		long storageId() { return m_userID; }
+		bool loadingBuddiesFromDB() { return m_loadingBuddiesFromDB; }
+		GHashTable *storageCache() { return m_storageCache; }
+		void removeStorageTimer() { m_storageTimer = 0; }
 
 		guint removeTimer;
 
@@ -194,6 +206,8 @@ class User : public RosterManager {
 		std::string m_userKey;
 		PurpleAccount *m_account;	// PurpleAccount to which this user is connected
 		void *m_protocolData;
+		guint m_syncTimer;			// timer used for syncing purple buddy list and roster
+		int m_subscribeLastCount;	// number of buddies which was in subscribeCache in previous iteration of m_syncTimer
 		bool m_vip;					// true if the user is VIP
 		bool m_readyForConnect;		// true if the user user wants to connect and we're ready to do it
 		bool m_rosterXCalled;		// true if we are counting buddies for roster X
@@ -214,9 +228,11 @@ class User : public RosterManager {
 		std::map<std::string,Resource> m_resources;	// list of all resources which are connected to the transport
 		std::map<std::string,authRequest> m_authRequests;	// list of authorization requests (holds callbacks and user data)
 		std::map<std::string,Conversation> m_conversations; // list of opened conversations
+		std::map<std::string,PurpleBuddy *> m_subscribeCache;	// cache for contacts for roster X
 		GHashTable *m_settings;		// user settings
+		GHashTable *m_storageCache;	// cache for storing PurpleBuddies
+		guint m_storageTimer;		// timer for storing
 		long m_userID;				// userID for Database
-
 		bool m_loadingBuddiesFromDB;
 };
 
