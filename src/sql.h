@@ -45,7 +45,6 @@
 #endif // WITH_MYSQL
 
 class GlooxMessageHandler;
-class User;
 
 using namespace Poco::Data;
 using namespace gloox;
@@ -283,7 +282,7 @@ class SQLClass {
 		void addBuddySetting(long userId, long buddyId, const std::string &key, const std::string &value, PurpleType type);
 
 		UserRow getUserByJid(const std::string &jid);
-		GHashTable *getBuddies(long userId, PurpleAccount *account = NULL, User *user = NULL);
+		std::map<std::string,RosterRow> getBuddies(long userId, PurpleAccount *account = NULL);
 		bool loaded() { return m_loaded; }
 		
 	private:
