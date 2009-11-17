@@ -262,6 +262,7 @@ void RosterManager::handleUnsubscribe(const std::string &uin, const std::string 
 	removeBuddy(s_buddy);
 }
 
+<<<<<<< HEAD:src/rostermanager.cpp
 void RosterManager::handleBuddyStatusChanged(PurpleBuddy *buddy, PurpleStatus *status, PurpleStatus *old_status) {
 	SpectrumBuddy *s_buddy = purpleBuddyToSpectrumBuddy(buddy);
 	if (!s_buddy->isOnline())
@@ -307,6 +308,9 @@ void RosterManager::handleBuddyCreated(PurpleBuddy *buddy) {
 }
 
 bool RosterManager::addBuddy(SpectrumBuddy *buddy) {
+=======
+void RosterManager::addBuddy(SpectrumBuddy *buddy) {
+>>>>>>> 0452a02... Fixed crash when PurpleBuddy was removed, but it was still used by SpectrumBuddy. Fixed RIE spam when last buddy was not added to roster from DB.:src/rostermanager.cpp
 	// Add Buddy strategy:
 	// SpectrumBuddy here has subscription = SUBSCRIPTION_NONE.
 	// 1. We add it to roster and activate timer which will call sync_cb after some time.
@@ -323,8 +327,11 @@ bool RosterManager::addBuddy(SpectrumBuddy *buddy) {
 	// we answer with 'subscribed' and change subscription according to this table:
 	// SUBSCRIPTION_ASK -> SUBSCRIPTION_FROM
 	// and if subscription was SUBSCRIBE_ASK, we also send 'subcribe' request
+<<<<<<< HEAD:src/rostermanager.cpp
 	if (m_loadingBuddies)
 		return false;
+=======
+>>>>>>> 0452a02... Fixed crash when PurpleBuddy was removed, but it was still used by SpectrumBuddy. Fixed RIE spam when last buddy was not added to roster from DB.:src/rostermanager.cpp
 	if (!isInRoster(buddy)) {
 		Log(m_user->jid(), "Adding buddy to roster: " << buddy->getUin() << " ("<< buddy->getNickname() <<")");
 
@@ -386,6 +393,7 @@ void RosterManager::storeBuddy(SpectrumBuddy *buddy) {
 	m_storageTimer->start();
 }
 
+<<<<<<< HEAD:src/rostermanager.cpp
 void RosterManager::removeBuddy(PurpleBuddy *buddy) {
 	if (m_loadingBuddies)
 		return;
@@ -415,6 +423,15 @@ SpectrumBuddy* RosterManager::purpleBuddyToSpectrumBuddy(PurpleBuddy *buddy, boo
 		return s_buddy;
 	}
 	return NULL;
+=======
+SpectrumBuddy* RosterManager::purpleBuddyToSpectrumBuddy(PurpleBuddy *buddy) {
+	if (buddy->node.ui_data)
+		return (SpectrumBuddy *) buddy->node.ui_data;
+	SpectrumBuddy *s_buddy = new SpectrumBuddy();
+	s_buddy->setUser(m_user);
+	s_buddy->setBuddy(buddy);
+	return s_buddy;
+>>>>>>> 0452a02... Fixed crash when PurpleBuddy was removed, but it was still used by SpectrumBuddy. Fixed RIE spam when last buddy was not added to roster from DB.:src/rostermanager.cpp
 }
 	
 	
