@@ -92,6 +92,8 @@ class User : public RosterManager {
 		~User();
 
 		void connect();
+		void sendRosterX();
+		void syncContacts();
 		bool hasTransportFeature(int feature); // TODO: move me to p->hasTransportFeature and rewrite my API
 
 		// Utils
@@ -108,6 +110,12 @@ class User : public RosterManager {
 		void receivedChatState(const std::string &uin, const std::string &state);
 
 		// Libpurple callbacks
+		void purpleBuddyChanged(PurpleBuddy *buddy);
+		void purpleBuddyRemoved(PurpleBuddy *buddy);
+		void purpleBuddyCreated(PurpleBuddy *buddy);
+		void purpleBuddyStatusChanged(PurpleBuddy *buddy, PurpleStatus *status, PurpleStatus *old_status);
+		void purpleBuddySignedOn(PurpleBuddy *buddy);
+		void purpleBuddySignedOff(PurpleBuddy *buddy);
 		void purpleMessageReceived(PurpleAccount* account,char * name,char *msg,PurpleConversation *conv,PurpleMessageFlags flags);
 		void purpleConversationWriteIM(PurpleConversation *conv, const char *who, const char *msg, PurpleMessageFlags flags, time_t mtime);
 		void purpleConversationWriteChat(PurpleConversation *conv, const char *who, const char *msg, PurpleMessageFlags flags, time_t mtime);
@@ -208,6 +216,8 @@ class User : public RosterManager {
 		std::map<std::string,Conversation> m_conversations; // list of opened conversations
 		GHashTable *m_settings;		// user settings
 		long m_userID;				// userID for Database
+
+		bool m_loadingBuddiesFromDB;
 };
 
 #endif
