@@ -1388,9 +1388,16 @@ void User::receivedPresence(const Presence &stanza) {
 		}
 		// send presence about tranport status to user
 		if (m_connected || m_readyForConnect) {
-			Presence tag(stanza.presence(), m_jid, stanza.status());
-			tag.setFrom(p->jid());
-			p->j->send(tag);
+			if (stanza.presence() == Presence::Unavailable) {
+				Presence tag(stanza.presence(), stanza.from().full(), stanza.status());
+				tag.setFrom(p->jid());
+				p->j->send(tag);
+			}
+			else {
+				Presence tag(stanza.presence(), m_jid, stanza.status());
+				tag.setFrom(p->jid());
+				p->j->send(tag);
+			}
 		} else {
 			if (m_resource.empty()) {
 				Tag *tag = new Tag("presence");
