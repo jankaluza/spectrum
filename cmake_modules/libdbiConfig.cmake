@@ -8,17 +8,9 @@
 #
 # vim: expandtab sw=4 ts=4 sts=4:
 
-find_path(LIBDBI_INCLUDE_DIR NAMES dbi/dbi.h
-	PATHS
-	/usr/include
-	/usr/local/include
-)
+find_path(LIBDBI_INCLUDE_DIR NAMES dbi/dbi.h)
 
-find_library(LIBDBI_LIBRARIES NAMES dbi
-	PATHS
-	/usr/lib
-	/usr/local/lib
-)
+find_library(LIBDBI_LIBRARIES NAMES dbi)
 
 if(LIBDBI_INCLUDE_DIR AND LIBDBI_LIBRARIES)
 	message(STATUS "Found libdbi: ${LIBDBI_INCLUDE_DIR}, ${LIBDBI_LIBRARIES}")

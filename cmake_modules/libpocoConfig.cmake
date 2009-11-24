@@ -4,41 +4,17 @@ set(POCO_MYSQL "POCO_MYSQL-NOTFOUND")
 set(POCO_SQLITE "POCO_SQLITE-NOTFOUND")
 set(POCO_ODBC "POCO_ODBC-NOTFOUND")
 
-find_path(LIBPOCO_INCLUDE_DIR NAMES Poco/Poco.h
-	PATHS
-	/usr/include
-	/usr/local/include
-)
+find_path(LIBPOCO_INCLUDE_DIR NAMES Poco/Poco.h)
 
-find_library(POCO_FOUNDATION NAMES PocoFoundation
-	PATHS
-	/usr/lib
-	/usr/local/lib
-)
+find_library(POCO_FOUNDATION NAMES PocoFoundation)
 
-find_library(POCO_DATA NAMES PocoData
-	PATHS
-	/usr/lib
-	/usr/local/lib
-)
+find_library(POCO_DATA NAMES PocoData)
 
-find_library(POCO_MYSQL NAMES PocoMySQL
-	PATHS
-	/usr/lib
-	/usr/local/lib
-)
+find_library(POCO_MYSQL NAMES PocoMySQL)
 
-find_library(POCO_SQLITE NAMES PocoSQLite
-	PATHS
-	/usr/lib
-	/usr/local/lib
-)
+find_library(POCO_SQLITE NAMES PocoSQLite)
 
-find_library(POCO_ODBC NAMES PocoODBC
-	PATHS
-	/usr/lib
-	/usr/local/lib
-)
+find_library(POCO_ODBC NAMES PocoODBC)
 
 if(LIBPOCO_INCLUDE_DIR AND POCO_DATA AND POCO_FOUNDATION)
 	set(LIBPOCO_LIBRARIES ${POCO_DATA} ${POCO_FOUNDATION})
