@@ -126,8 +126,8 @@ def get_pid(config):
 
     if not os.path.exists(pid_file):
         return pid_file, None
-
-    return pid_file, int(file.read(pid_file).strip())
+    file = open(pid_file)
+    return pid_file, int(file.read().strip())
 
 def start_daemon(config, filename):
     if get_pid(config)[1]:
