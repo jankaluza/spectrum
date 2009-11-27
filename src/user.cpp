@@ -1283,6 +1283,19 @@ void User::receivedPresence(const Presence &stanza) {
 							}
 						}
 					}
+					// send unavailable to online users
+					Tag *tag;
+					for (std::map<std::string, RosterRow>::iterator u = m_roster.begin(); u != m_roster.end() ; u++) {
+						if ((*u).second.online){
+							std::string name((*u).second.uin);
+							std::for_each( name.begin(), name.end(), replaceBadJidCharacters() );
+							tag = new Tag("presence");
+							tag->addAttribute( "to", m_jid );
+							tag->addAttribute( "type", "unavailable" );
+							tag->addAttribute( "from", name + "@" + p->jid() + "/bot");
+							p->j->send( tag );
+						}
+					}
 				}
 			}
 			if (m_connected) {
@@ -1322,6 +1335,21 @@ void User::receivedPresence(const Presence &stanza) {
 				}
 				if (m_resources[resource].priority > m_resources[m_resource].priority)
 					m_resource = resource;
+
+				for (std::map<std::string, RosterRow>::iterator u = m_roster.begin(); u != m_roster.end() ; u++) {
+					if ((*u).second.online){
+						std::string name((*u).second.uin);
+						std::for_each( name.begin(), name.end(), replaceJidCharacters() );
+						PurpleBuddy *buddy = purple_find_buddy(m_account, name.c_str());
+						if (buddy) {
+							Tag *probe = generatePresenceStanza(buddy);
+							if (probe) {
+								probe->addAttribute("to", stanza.from().full());
+								p->j->send(probe);
+							}
+						}
+					}
+				}
 			}
 
 			Log(m_jid, "resource: " << m_resource);
