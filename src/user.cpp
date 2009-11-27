@@ -1290,7 +1290,7 @@ void User::receivedPresence(const Presence &stanza) {
 							std::string name((*u).second.uin);
 							std::for_each( name.begin(), name.end(), replaceBadJidCharacters() );
 							tag = new Tag("presence");
-							tag->addAttribute( "to", m_jid );
+							tag->addAttribute( "to", m_jid + "/" + stanza.from().resource() );
 							tag->addAttribute( "type", "unavailable" );
 							tag->addAttribute( "from", name + "@" + p->jid() + "/bot");
 							p->j->send( tag );
