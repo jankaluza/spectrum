@@ -30,7 +30,7 @@ class GGProtocol : AbstractProtocol
 	public:
 		GGProtocol(GlooxMessageHandler *main);
 		~GGProtocol();
-		const std::string gatewayIdentity() { return "gg"; }
+		const std::string gatewayIdentity() { return "gadu-gadu"; }
 		const std::string protocol() { return "prpl-gg"; }
 		bool isValidUsername(const std::string &username);
 		void prepareUserName(std::string &username);
