@@ -31,7 +31,7 @@ class MyspaceProtocol : AbstractProtocol
 	public:
 		MyspaceProtocol(GlooxMessageHandler *main);
 		~MyspaceProtocol();
-		const std::string gatewayIdentity() { return "myspace"; }
+		const std::string gatewayIdentity() { return "myspaceim"; }
 		const std::string protocol() { return "prpl-myspace"; }
 		bool isValidUsername(const std::string &username);
 		void prepareUserName(std::string &username);
