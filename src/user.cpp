@@ -1288,7 +1288,7 @@ void User::receivedPresence(const Presence &stanza) {
 					Tag *tag;
 					for (std::map<std::string, RosterRow>::iterator u = m_roster.begin(); u != m_roster.end() ; u++) {
 						if ((*u).second.online){
-							std::string name((*u).second.uin);
+							std::string name((*u).first);
 							std::for_each( name.begin(), name.end(), replaceBadJidCharacters() );
 							tag = new Tag("presence");
 							tag->addAttribute( "to", m_jid + "/" + stanza.from().resource() );
