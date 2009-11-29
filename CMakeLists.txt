@@ -81,6 +81,7 @@ set(spectrum_SRCS
 	src/searchhandler.cpp
 	src/searchrepeater.cpp
 	src/spectrum_util.cpp
+	src/spectrumbuddy.cpp
 	src/statshandler.cpp
 	src/striphtmltags.cpp
 	src/sql.cpp
@@ -129,6 +130,7 @@ set(spectrum_MOC_HDRS
 	src/searchhandler.h
 	src/searchrepeater.h
 	src/spectrum_util.h
+	src/spectrumbuddy.h
 	src/statshandler.h
 	src/striphtmltags.h
 	src/sql.h
