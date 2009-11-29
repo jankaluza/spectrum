@@ -36,3 +36,24 @@ long SpectrumBuddy::getId() {
 	return m_id;
 }
 
+std::string SpectrumBuddy::getAlias() {
+	std::string alias;
+	if (purple_buddy_get_server_alias(m_buddy))
+		alias = (std::string) purple_buddy_get_server_alias(m_buddy);
+	else
+		alias = (std::string) purple_buddy_get_alias(m_buddy);
+	return alias;
+}
+
+std::string SpectrumBuddy::getName() {
+	return std::string(purple_buddy_get_name(m_buddy));
+}
+
+std::string SpectrumBuddy::getSafeName() {
+	std::string name = getName();
+	std::for_each( name.begin(), name.end(), replaceBadJidCharacters() );
+	return name;
+}
+
+
+
