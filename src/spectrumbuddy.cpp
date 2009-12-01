@@ -59,5 +59,9 @@ std::string SpectrumBuddy::getSafeName() {
 	return name;
 }
 
+std::string SpectrumBuddy::getJid() {
+	return getSafeName() + "@" + GlooxMessageHandler::instance()->jid() + "/bot";
+}
+
 
 

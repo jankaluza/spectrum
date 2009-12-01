@@ -50,6 +50,7 @@ class SpectrumBuddy {
 		std::string getAlias();
 		std::string getName();
 		std::string getSafeName();
+		std::string getJid();
 
 	private:
 		long m_id;

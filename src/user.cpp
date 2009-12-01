@@ -594,24 +594,18 @@ void User::purpleBuddyCreated(PurpleBuddy *buddy) {
 	if (buddy==NULL || m_loadingBuddiesFromDB)
 		return;
 	buddy->node.ui_data = (void *) new SpectrumBuddy(-1, buddy);
-	std::string alias;
-	if (purple_buddy_get_server_alias(buddy))
-		alias = (std::string) purple_buddy_get_server_alias(buddy);
-	else
-		alias = (std::string) purple_buddy_get_alias(buddy);
-
-	std::string name(purple_buddy_get_name(buddy));
-	std::for_each( name.begin(), name.end(), replaceBadJidCharacters() );
+	SpectrumBuddy *s_buddy = (SpectrumBuddy *) buddy->node.ui_data;
+	
+	std::string alias = s_buddy->getAlias();
+	std::string name = s_buddy->getSafeName();
 
 	Log(m_jid, "purpleBuddyChanged: " << name << " ("<< alias <<")");
 
-	if (m_syncTimer==0 && !m_rosterXCalled) {
+	if (m_syncTimer == 0 && !m_rosterXCalled) {
 		m_syncTimer = purple_timeout_add_seconds(12, sync_cb, this);
 	}
 
-	bool inRoster = isInRoster(name,"");
-
-	if (!inRoster) {
+	if (!isInRoster(name, "")) {
 		if (findResourceWithFeature(GLOOX_FEATURE_ROSTERX)) {
 			if (!m_rosterXCalled) {
 				m_subscribeCache[name] = buddy;
@@ -629,7 +623,7 @@ void User::purpleBuddyCreated(PurpleBuddy *buddy) {
 			Log(m_jid, "Not in roster => sending subscribe");
 			Tag *tag = new Tag("presence");
 			tag->addAttribute("type", "subscribe");
-			tag->addAttribute("from", name + "@" + p->jid());
+			tag->addAttribute("from", s_buddy->getJid());
 			tag->addAttribute("to", m_jid);
 			Tag *nick = new Tag("nick", alias);
 			nick->addAttribute("xmlns","http://jabber.org/protocol/nick");
