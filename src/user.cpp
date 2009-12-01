@@ -280,32 +280,22 @@ bool User::isOpenedConversation(const std::string &name) {
 Tag *User::generatePresenceStanza(PurpleBuddy *buddy) {
 	if (buddy == NULL)
 		return NULL;
-	std::string alias;
-	if (purple_buddy_get_server_alias(buddy))
-		alias = (std::string) purple_buddy_get_server_alias(buddy);
-	else
-		alias = (std::string) purple_buddy_get_alias(buddy);
+	SpectrumBuddy *s_buddy = (SpectrumBuddy *) buddy->node.ui_data;
 
-	std::string name(purple_buddy_get_name(buddy));
-	std::for_each( name.begin(), name.end(), replaceBadJidCharacters() );
-	PurplePresence *pres = purple_buddy_get_presence(buddy);
-	if (pres == NULL)
+	std::string alias = s_buddy->getAlias();
+	std::string name = s_buddy->getSafeName();
+
+	int s;
+	std::string statusMessage;
+	if (!s_buddy->getStatus(s, statusMessage))
 		return NULL;
-	PurpleStatus *stat = purple_presence_get_active_status(pres);
-	if (stat == NULL)
-		return NULL;
-	int s = purple_status_type_get_primitive(purple_status_get_type(stat));
-	const char *statusMessage = purple_status_get_attr_string(stat, "message");
 
 	Log(m_jid, "Generating presence stanza for user " << name);
 	Tag *tag = new Tag("presence");
 	tag->addAttribute("from", name + "@" + p->jid() + "/bot");
 
-	if (statusMessage != NULL) {
-		std::string _status(statusMessage);
-		Log(m_jid, "Raw status message: " << _status);
-		tag->addChild( new Tag("status", stripHTMLTags(_status)) );
-	}
+	if (!statusMessage.empty())
+		tag->addChild( new Tag("status", statusMessage) );
 
 	switch(s) {
 		case PURPLE_STATUS_AVAILABLE: {
@@ -634,37 +624,46 @@ void User::purpleBuddyCreated(PurpleBuddy *buddy) {
 }
 
 void User::purpleBuddyStatusChanged(PurpleBuddy *buddy, PurpleStatus *status, PurpleStatus *old_status) {
+	SpectrumBuddy *s_buddy = (SpectrumBuddy *) buddy->node.ui_data;
+	std::string name = s_buddy->getName();
+
 	Tag *tag = generatePresenceStanza(buddy);
 	if (tag) {
 		tag->addAttribute("to", m_jid);
 		p->j->send(tag);
 	}
-	if (!m_roster[std::string(purple_buddy_get_name(buddy))].online)
+	if (!m_roster[name].online)
 		p->userManager()->buddyOnline();
-	m_roster[std::string(purple_buddy_get_name(buddy))].online = true;
+	m_roster[name].online = true;
 }
 
 void User::purpleBuddySignedOn(PurpleBuddy *buddy) {
+	SpectrumBuddy *s_buddy = (SpectrumBuddy *) buddy->node.ui_data;
+	std::string name = s_buddy->getName();
+
 	Tag *tag = generatePresenceStanza(buddy);
 	if (tag) {
 		tag->addAttribute("to", m_jid);
 		p->j->send(tag);
 	}
-	if (!m_roster[std::string(purple_buddy_get_name(buddy))].online) {
+	if (!m_roster[name].online) {
 		p->userManager()->buddyOnline();
-		m_roster[std::string(purple_buddy_get_name(buddy))].online = true;
+		m_roster[name].online = true;
 	}
 }
 
 void User::purpleBuddySignedOff(PurpleBuddy *buddy) {
+	SpectrumBuddy *s_buddy = (SpectrumBuddy *) buddy->node.ui_data;
+	std::string name = s_buddy->getName();
+
 	Tag *tag = generatePresenceStanza(buddy);
 	if (tag) {
 		tag->addAttribute("to", m_jid);
 		p->j->send(tag);
 	}
-	if (m_roster[std::string(purple_buddy_get_name(buddy))].online) {
+	if (m_roster[name].online) {
 		p->userManager()->buddyOffline();
-		m_roster[std::string(purple_buddy_get_name(buddy))].online = false;
+		m_roster[name].online = false;
 	}
 }
 
@@ -760,7 +759,7 @@ void User::purpleConversationWriteIM(PurpleConversation *conv, const char *who, 
 		m.erase(0,6);
 		m.erase(m.length() - 7, 7);
 	}
-	Log("TEST", m << " " << message);
+
 	std::string res = m_conversations[name].resource;
 	if (hasFeature(GLOOX_FEATURE_XHTML_IM, res) && m != message) {
 		p->parser()->getTag("<body>" + m + "</body>", sendXhtmlTag, stanzaTag);
@@ -768,8 +767,6 @@ void User::purpleConversationWriteIM(PurpleConversation *conv, const char *who, 
 		g_free(strip);
 		return;
 	}
-
-	Log("STANZATAG", stanzaTag->xml());
 
 	p->j->send(stanzaTag);
 	g_free(newline);

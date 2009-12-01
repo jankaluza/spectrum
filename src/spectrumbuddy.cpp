@@ -25,6 +25,7 @@
 #include "sql.h"
 #include "usermanager.h"
 #include "caps.h"
+#include "striphtmltags.h"
 
 SpectrumBuddy::SpectrumBuddy(long id, PurpleBuddy *buddy) : m_id(id), m_buddy(buddy) {
 }
@@ -63,5 +64,21 @@ std::string SpectrumBuddy::getJid() {
 	return getSafeName() + "@" + GlooxMessageHandler::instance()->jid() + "/bot";
 }
 
+bool SpectrumBuddy::getStatus(int &status, std::string &statusMessage) {
+	PurplePresence *pres = purple_buddy_get_presence(m_buddy);
+	if (pres == NULL)
+		return false;
+	PurpleStatus *stat = purple_presence_get_active_status(pres);
+	if (stat == NULL)
+		return false;
+	status = purple_status_type_get_primitive(purple_status_get_type(stat));
+	const char *message = purple_status_get_attr_string(stat, "message");
 
-
+	if (message != NULL) {
+		statusMessage = std::string(message);
+		stripHTMLTags(statusMessage);
+	}
+	else
+		statusMessage = "";
+	return true;
+}
