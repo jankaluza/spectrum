@@ -36,6 +36,10 @@ long SpectrumBuddy::getId() {
 	return m_id;
 }
 
+void SpectrumBuddy::setId(long id) {
+	m_id = id;
+}
+
 std::string SpectrumBuddy::getAlias() {
 	std::string alias;
 	if (purple_buddy_get_server_alias(m_buddy))

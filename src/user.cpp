@@ -76,14 +76,14 @@ static gboolean storeBuddy(gpointer key, gpointer v, gpointer data) {
 	else
 		alias = (std::string) purple_buddy_get_alias(buddy);
 	long id;
-	if (buddy->node.ui_data) {
-		SpectrumBuddy *s_buddy = (SpectrumBuddy *) buddy->node.ui_data;
+	SpectrumBuddy *s_buddy = (SpectrumBuddy *) buddy->node.ui_data;
+	if (s_buddy->getId() != -1) {
 		id = s_buddy->getId();
 		user->p->sql()->addBuddy(user->storageId(), name, "both", purple_group_get_name(purple_buddy_get_group(buddy)) ? std::string(purple_group_get_name(purple_buddy_get_group(buddy))) : std::string("Buddies"), alias);
 	}
 	else {
 		id = user->p->sql()->addBuddy(user->storageId(), name, "both", purple_group_get_name(purple_buddy_get_group(buddy)) ? std::string(purple_group_get_name(purple_buddy_get_group(buddy))) : std::string("Buddies"), alias);
-		buddy->node.ui_data = (void *) new SpectrumBuddy(id, buddy);
+		s_buddy->setId(id);
 	}
 	Log("buddyListSaveNode", id << " " << name << " " << alias);
 	SaveData *s = new SaveData;
@@ -593,6 +593,7 @@ void User::purpleBuddyRemoved(PurpleBuddy *buddy) {
 void User::purpleBuddyCreated(PurpleBuddy *buddy) {
 	if (buddy==NULL || m_loadingBuddiesFromDB)
 		return;
+	buddy->node.ui_data = (void *) new SpectrumBuddy(-1, buddy);
 	std::string alias;
 	if (purple_buddy_get_server_alias(buddy))
 		alias = (std::string) purple_buddy_get_server_alias(buddy);

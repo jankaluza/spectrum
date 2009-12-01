@@ -506,7 +506,9 @@ static void buddyListRemoveNode(PurpleBlistNode *node) {
 		long id = 0;
 		if (buddy->node.ui_data) {
 			SpectrumBuddy *s_buddy = (SpectrumBuddy *) buddy->node.ui_data;
-			id = s_buddy->getId();
+			if (s_buddy->getId() != -1) {
+				id = s_buddy->getId();
+			}
 		}
 		std::string name(purple_buddy_get_name(buddy));
 		GlooxMessageHandler::instance()->sql()->removeBuddy(user->storageId(), name, id);
