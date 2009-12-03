@@ -115,7 +115,6 @@ class User {
 		void receivedChatState(const std::string &uin, const std::string &state);
 
 		// Libpurple callbacks
-		void purpleBuddyChanged(PurpleBuddy *buddy);
 		void purpleBuddyRemoved(PurpleBuddy *buddy);
 		void purpleBuddyCreated(PurpleBuddy *buddy);
 		void purpleBuddyStatusChanged(PurpleBuddy *buddy, PurpleStatus *status, PurpleStatus *old_status);

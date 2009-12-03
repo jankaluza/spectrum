@@ -1538,15 +1538,6 @@ void GlooxMessageHandler::purpleChatRemoveUsers(PurpleConversation *conv, GList 
 	}
 }
 
-void GlooxMessageHandler::purpleBuddyChanged(PurpleBuddy* buddy) {
-	if (buddy != NULL) {
-		PurpleAccount *a = purple_buddy_get_account(buddy);
-		User *user = userManager()->getUserByAccount(a);
-		if (user != NULL)
-			user->purpleBuddyChanged(buddy);
-	}
-}
-
 bool GlooxMessageHandler::hasCaps(const std::string &ver) {
 	std::map<std::string,int> ::iterator iter = capsCache.begin();
 	iter = capsCache.find(ver);

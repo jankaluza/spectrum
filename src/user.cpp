@@ -207,9 +207,7 @@ bool User::syncCallback() {
  * otherwise returns false.
  */
 bool User::hasFeature(int feature, const std::string &resource) {
-	const std::string &caps =
-			m_resources[resource.empty() ? m_resource : resource].capsVersion;
-
+	const std::string &caps = m_resources[resource.empty() ? m_resource : resource].capsVersion;
 	return !caps.empty() && (p->capsCache[caps] & feature);
 }
 
@@ -485,84 +483,6 @@ void User::purpleReauthorizeBuddy(PurpleBuddy *buddy) {
 				}
 			}
 			g_list_free(ll);
-		}
-	}
-}
-
-/*
- * Called when something related to this buddy changed...
- */
-void User::purpleBuddyChanged(PurpleBuddy *buddy){
-	// Facebook is just broken today. it adds broken buddies before logged into network.
-	if (buddy==NULL || (m_connected == false && p->configuration().protocol == "facebook") || m_loadingBuddiesFromDB)
-		return;
-	std::string alias;
-	if (purple_buddy_get_server_alias(buddy))
-		alias = (std::string) purple_buddy_get_server_alias(buddy);
-	else
-		alias = (std::string) purple_buddy_get_alias(buddy);
-
-	std::string name(purple_buddy_get_name(buddy));
-	std::for_each( name.begin(), name.end(), replaceBadJidCharacters() );
-	PurplePresence *pres = purple_buddy_get_presence(buddy);
-	if (pres == NULL)
-		return;
-	PurpleStatus *stat = purple_presence_get_active_status(pres);
-	if (stat == NULL)
-		return;
-	int s = purple_status_type_get_primitive(purple_status_get_type(stat));
-
-	Log(m_jid, "purpleBuddyChanged: " << name << " ("<< alias <<") (" << s << ")");
-
-	if (m_syncTimer==0 && !m_rosterXCalled) {
-		m_syncTimer = purple_timeout_add_seconds(4, sync_cb, this);
-	}
-
-	// bool inRoster = purple_blist_node_get_bool(&buddy->node, "inRoster");
-	// if (!inRoster) {
-	bool inRoster = isInRoster(name,"");
-	// 	purple_blist_node_set_bool(&buddy->node, "inRoster", true);
-	// }
-
-	if (!inRoster) {
-		if (findResourceWithFeature(GLOOX_FEATURE_ROSTERX)) {
-			if (!m_rosterXCalled) {
-				m_subscribeCache[name] = buddy;
-				Log(m_jid, "Not in roster => adding to rosterX cache");
-			}
-			else {
-				Log(m_jid, "Not in roster => sending rosterx");
-				if (m_syncTimer == 0) {
-					m_syncTimer = purple_timeout_add_seconds(4, sync_cb, this);
-				}
-				m_subscribeCache[name] = buddy;
-			}
-		}
-		else {
-			Log(m_jid, "Not in roster => sending subscribe");
-			Tag *tag = new Tag("presence");
-			tag->addAttribute("type", "subscribe");
-			tag->addAttribute("from", name + "@" + p->jid());
-			tag->addAttribute("to", m_jid);
-			Tag *nick = new Tag("nick", alias);
-			nick->addAttribute("xmlns","http://jabber.org/protocol/nick");
-			tag->addChild(nick);
-			p->j->send(tag);
-		}
-	}
-	else {
-		Tag *tag = generatePresenceStanza(buddy);
-		if (tag) {
-			if (tag->xml() == m_roster[name].lastPresence) {
-				Log(m_jid, "Not sending this presence, because we've already sent it before.");
-				delete tag;
-				return;
-			}
-			else {
-				m_roster[name].lastPresence.assign(tag->xml());
-			}
-			tag->addAttribute("to", m_jid);
-			p->j->send(tag);
 		}
 	}
 }
@@ -1124,7 +1044,11 @@ void User::receivedSubscription(const Subscription &subscription) {
 					}
 					// user is in ICQ contact list so we can inform jabber user
 					// about status
-					purpleBuddyChanged(buddy);
+					Tag *tag = generatePresenceStanza(buddy);
+					if (tag) {
+						tag->addAttribute("to", m_jid);
+						p->j->send(tag);
+					}
 				}
 			}
 			// it can be reauthorization...
