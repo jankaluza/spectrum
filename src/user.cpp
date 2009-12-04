@@ -33,6 +33,7 @@
 #include "striphtmltags.h"
 #include "sql.h"
 #include "caps.h"
+#include "spectrumbuddy.h"
 
 Resource DummyResource;
 
@@ -50,7 +51,7 @@ static void save_settings(gpointer k, gpointer v, gpointer data) {
 	std::string key((char *) k);
 	SaveData *s = (SaveData *) data;
 	User *user = s->user;
-	long id = *s->id;
+	long id = s->id;
 	if (purple_value_get_type(value) == PURPLE_TYPE_BOOLEAN) {
 		if (purple_value_get_boolean(value))
 			user->p->sql()->addBuddySetting(user->storageId(), id, key, "1", purple_value_get_type(value));
@@ -76,18 +77,18 @@ static gboolean storeBuddy(gpointer key, gpointer v, gpointer data) {
 		alias = (std::string) purple_buddy_get_alias(buddy);
 	long id;
 	if (buddy->node.ui_data) {
-		long *p = (long *) buddy->node.ui_data;
-		id = *p;
+		SpectrumBuddy *s_buddy = (SpectrumBuddy *) buddy->node.ui_data;
+		id = s_buddy->getId();
 		user->p->sql()->addBuddy(user->storageId(), name, "both", purple_group_get_name(purple_buddy_get_group(buddy)) ? std::string(purple_group_get_name(purple_buddy_get_group(buddy))) : std::string("Buddies"), alias);
 	}
 	else {
 		id = user->p->sql()->addBuddy(user->storageId(), name, "both", purple_group_get_name(purple_buddy_get_group(buddy)) ? std::string(purple_group_get_name(purple_buddy_get_group(buddy))) : std::string("Buddies"), alias);
-		buddy->node.ui_data = (void *) new long(id);
+		buddy->node.ui_data = (void *) new SpectrumBuddy(id, buddy);
 	}
 	Log("buddyListSaveNode", id << " " << name << " " << alias);
 	SaveData *s = new SaveData;
 	s->user = user;
-	s->id = (long *) buddy->node.ui_data;
+	s->id = id;
 	g_hash_table_foreach(buddy->node.settings, save_settings, s);
 	delete s;
 	return TRUE;
@@ -1192,8 +1193,8 @@ void User::receivedSubscription(const Subscription &subscription) {
 				Log(m_jid, "unsubscribed presence => removing this contact from legacy network");
 				long id = 0;
 				if (buddy->node.ui_data) {
-					long *p = (long *) buddy->node.ui_data;
-					id = *p;
+					SpectrumBuddy *s_buddy = (SpectrumBuddy *) buddy->node.ui_data;
+					id = s_buddy->getId();
 				}
 				p->sql()->removeBuddy(m_userID, subscription.to().username(), id);
 				// thi contact is in ICQ contact list, so we can remove him/her
@@ -1283,6 +1284,19 @@ void User::receivedPresence(const Presence &stanza) {
 							}
 						}
 					}
+					// send unavailable to online users
+					Tag *tag;
+					for (std::map<std::string, RosterRow>::iterator u = m_roster.begin(); u != m_roster.end() ; u++) {
+						if ((*u).second.online){
+							std::string name((*u).first);
+							std::for_each( name.begin(), name.end(), replaceBadJidCharacters() );
+							tag = new Tag("presence");
+							tag->addAttribute( "to", m_jid + "/" + stanza.from().resource() );
+							tag->addAttribute( "type", "unavailable" );
+							tag->addAttribute( "from", name + "@" + p->jid() + "/bot");
+							p->j->send( tag );
+						}
+					}
 				}
 			}
 			if (m_connected) {
@@ -1322,6 +1336,21 @@ void User::receivedPresence(const Presence &stanza) {
 				}
 				if (m_resources[resource].priority > m_resources[m_resource].priority)
 					m_resource = resource;
+
+				for (std::map<std::string, RosterRow>::iterator u = m_roster.begin(); u != m_roster.end() ; u++) {
+					if ((*u).second.online){
+						std::string name((*u).second.uin);
+						std::for_each( name.begin(), name.end(), replaceJidCharacters() );
+						PurpleBuddy *buddy = purple_find_buddy(m_account, name.c_str());
+						if (buddy) {
+							Tag *probe = generatePresenceStanza(buddy);
+							if (probe) {
+								probe->addAttribute("to", stanza.from().full());
+								p->j->send(probe);
+							}
+						}
+					}
+				}
 			}
 
 			Log(m_jid, "resource: " << m_resource);

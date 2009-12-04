@@ -39,58 +39,17 @@ typedef enum { 	SUBSCRIPTION_NONE = 0,
 				SUBSCRIPTION_ASK
 				} SpectrumSubscriptionType;
 
-// Function used as GDestroyNotify for GHashTable
-void SpectrumBuddyFree(gpointer data);
-
 // Wrapper for PurpleBuddy
 class SpectrumBuddy {
 	public:
-		SpectrumBuddy();
-		SpectrumBuddy(const std::string &uin);
-		SpectrumBuddy(User *user, PurpleBuddy *buddy);
+		SpectrumBuddy(long id, PurpleBuddy *buddy);
 		~SpectrumBuddy();
-
-		void setUser(User *user);
-		User *getUser();
-
-		void setBuddy(PurpleBuddy *buddy);
 		
-		void setOffline();
-		void setOnline();
-		bool isOnline();
-
-		void setId(long id);
 		long getId();
-
-		void setUin(const std::string &uin);
-		const std::string &getUin();
-		const std::string getSafeUin();
-
-		void setSubscription(SpectrumSubscriptionType subscription);
-		SpectrumSubscriptionType &getSubscription();
-
-		void setNickname(const std::string &nickname);
-		const std::string &getNickname();
-
-		void setGroup(const std::string &group);
-		const std::string &getGroup();
-
-		const std::string getJid();
-		const std::string getBareJid();
-
-		void store(PurpleBuddy *buddy = NULL);
-		void remove();
 
 	private:
 		long m_id;
-		std::string m_uin;
-		std::string m_nickname;
-		std::string m_group;
-		SpectrumSubscriptionType m_subscription;
-		bool m_online;
-		std::string m_lastPresence;
 		PurpleBuddy *m_buddy;
-		User *m_user;
 };
 
 #endif

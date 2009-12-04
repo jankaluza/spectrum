@@ -46,6 +46,7 @@
 #include "user.h"
 #include "filetransfermanager.h"
 #include "localization.h"
+#include "spectrumbuddy.h"
 
 #include "parser.h"
 #include "commands.h"
@@ -248,8 +249,8 @@ static void NodeRemoved(PurpleBlistNode *node, gpointer null) {
 		return;
 	PurpleBuddy *buddy = (PurpleBuddy *) node;
 	if (buddy->node.ui_data) {
-		long *id = (long *) buddy->node.ui_data;
-		delete id;
+		SpectrumBuddy *s_buddy = (SpectrumBuddy *) buddy->node.ui_data;
+		delete s_buddy;
 	}
 }
 
@@ -504,8 +505,8 @@ static void buddyListRemoveNode(PurpleBlistNode *node) {
 		if (user->loadingBuddiesFromDB()) return;
 		long id = 0;
 		if (buddy->node.ui_data) {
-			long *p = (long *) buddy->node.ui_data;
-			id = *p;
+			SpectrumBuddy *s_buddy = (SpectrumBuddy *) buddy->node.ui_data;
+			id = s_buddy->getId();
 		}
 		std::string name(purple_buddy_get_name(buddy));
 		GlooxMessageHandler::instance()->sql()->removeBuddy(user->storageId(), name, id);

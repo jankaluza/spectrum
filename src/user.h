@@ -83,7 +83,7 @@ class User;
 
 struct SaveData {
 	User *user;
-	long *id;
+	long id;
 };
 
 class User {
