@@ -46,6 +46,12 @@ class SpectrumBuddy {
 		~SpectrumBuddy();
 		
 		long getId();
+		void setId(long id);
+		std::string getAlias();
+		std::string getName();
+		std::string getSafeName();
+		std::string getJid();
+		bool getStatus(int &status, std::string &statusMessage);
 
 	private:
 		long m_id;

@@ -76,14 +76,14 @@ static gboolean storeBuddy(gpointer key, gpointer v, gpointer data) {
 	else
 		alias = (std::string) purple_buddy_get_alias(buddy);
 	long id;
-	if (buddy->node.ui_data) {
-		SpectrumBuddy *s_buddy = (SpectrumBuddy *) buddy->node.ui_data;
+	SpectrumBuddy *s_buddy = (SpectrumBuddy *) buddy->node.ui_data;
+	if (s_buddy->getId() != -1) {
 		id = s_buddy->getId();
 		user->p->sql()->addBuddy(user->storageId(), name, "both", purple_group_get_name(purple_buddy_get_group(buddy)) ? std::string(purple_group_get_name(purple_buddy_get_group(buddy))) : std::string("Buddies"), alias);
 	}
 	else {
 		id = user->p->sql()->addBuddy(user->storageId(), name, "both", purple_group_get_name(purple_buddy_get_group(buddy)) ? std::string(purple_group_get_name(purple_buddy_get_group(buddy))) : std::string("Buddies"), alias);
-		buddy->node.ui_data = (void *) new SpectrumBuddy(id, buddy);
+		s_buddy->setId(id);
 	}
 	Log("buddyListSaveNode", id << " " << name << " " << alias);
 	SaveData *s = new SaveData;
@@ -207,9 +207,7 @@ bool User::syncCallback() {
  * otherwise returns false.
  */
 bool User::hasFeature(int feature, const std::string &resource) {
-	const std::string &caps =
-			m_resources[resource.empty() ? m_resource : resource].capsVersion;
-
+	const std::string &caps = m_resources[resource.empty() ? m_resource : resource].capsVersion;
 	return !caps.empty() && (p->capsCache[caps] & feature);
 }
 
@@ -280,32 +278,22 @@ bool User::isOpenedConversation(const std::string &name) {
 Tag *User::generatePresenceStanza(PurpleBuddy *buddy) {
 	if (buddy == NULL)
 		return NULL;
-	std::string alias;
-	if (purple_buddy_get_server_alias(buddy))
-		alias = (std::string) purple_buddy_get_server_alias(buddy);
-	else
-		alias = (std::string) purple_buddy_get_alias(buddy);
+	SpectrumBuddy *s_buddy = (SpectrumBuddy *) buddy->node.ui_data;
 
-	std::string name(purple_buddy_get_name(buddy));
-	std::for_each( name.begin(), name.end(), replaceBadJidCharacters() );
-	PurplePresence *pres = purple_buddy_get_presence(buddy);
-	if (pres == NULL)
+	std::string alias = s_buddy->getAlias();
+	std::string name = s_buddy->getSafeName();
+
+	int s;
+	std::string statusMessage;
+	if (!s_buddy->getStatus(s, statusMessage))
 		return NULL;
-	PurpleStatus *stat = purple_presence_get_active_status(pres);
-	if (stat == NULL)
-		return NULL;
-	int s = purple_status_type_get_primitive(purple_status_get_type(stat));
-	const char *statusMessage = purple_status_get_attr_string(stat, "message");
 
 	Log(m_jid, "Generating presence stanza for user " << name);
 	Tag *tag = new Tag("presence");
 	tag->addAttribute("from", name + "@" + p->jid() + "/bot");
 
-	if (statusMessage != NULL) {
-		std::string _status(statusMessage);
-		Log(m_jid, "Raw status message: " << _status);
-		tag->addChild( new Tag("status", stripHTMLTags(_status)) );
-	}
+	if (!statusMessage.empty())
+		tag->addChild( new Tag("status", statusMessage) );
 
 	switch(s) {
 		case PURPLE_STATUS_AVAILABLE: {
@@ -500,84 +488,6 @@ void User::purpleReauthorizeBuddy(PurpleBuddy *buddy) {
 }
 
 /*
- * Called when something related to this buddy changed...
- */
-void User::purpleBuddyChanged(PurpleBuddy *buddy){
-	// Facebook is just broken today. it adds broken buddies before logged into network.
-	if (buddy==NULL || (m_connected == false && p->configuration().protocol == "facebook") || m_loadingBuddiesFromDB)
-		return;
-	std::string alias;
-	if (purple_buddy_get_server_alias(buddy))
-		alias = (std::string) purple_buddy_get_server_alias(buddy);
-	else
-		alias = (std::string) purple_buddy_get_alias(buddy);
-
-	std::string name(purple_buddy_get_name(buddy));
-	std::for_each( name.begin(), name.end(), replaceBadJidCharacters() );
-	PurplePresence *pres = purple_buddy_get_presence(buddy);
-	if (pres == NULL)
-		return;
-	PurpleStatus *stat = purple_presence_get_active_status(pres);
-	if (stat == NULL)
-		return;
-	int s = purple_status_type_get_primitive(purple_status_get_type(stat));
-
-	Log(m_jid, "purpleBuddyChanged: " << name << " ("<< alias <<") (" << s << ")");
-
-	if (m_syncTimer==0 && !m_rosterXCalled) {
-		m_syncTimer = purple_timeout_add_seconds(4, sync_cb, this);
-	}
-
-	// bool inRoster = purple_blist_node_get_bool(&buddy->node, "inRoster");
-	// if (!inRoster) {
-	bool inRoster = isInRoster(name,"");
-	// 	purple_blist_node_set_bool(&buddy->node, "inRoster", true);
-	// }
-
-	if (!inRoster) {
-		if (findResourceWithFeature(GLOOX_FEATURE_ROSTERX)) {
-			if (!m_rosterXCalled) {
-				m_subscribeCache[name] = buddy;
-				Log(m_jid, "Not in roster => adding to rosterX cache");
-			}
-			else {
-				Log(m_jid, "Not in roster => sending rosterx");
-				if (m_syncTimer == 0) {
-					m_syncTimer = purple_timeout_add_seconds(4, sync_cb, this);
-				}
-				m_subscribeCache[name] = buddy;
-			}
-		}
-		else {
-			Log(m_jid, "Not in roster => sending subscribe");
-			Tag *tag = new Tag("presence");
-			tag->addAttribute("type", "subscribe");
-			tag->addAttribute("from", name + "@" + p->jid());
-			tag->addAttribute("to", m_jid);
-			Tag *nick = new Tag("nick", alias);
-			nick->addAttribute("xmlns","http://jabber.org/protocol/nick");
-			tag->addChild(nick);
-			p->j->send(tag);
-		}
-	}
-	else {
-		Tag *tag = generatePresenceStanza(buddy);
-		if (tag) {
-			if (tag->xml() == m_roster[name].lastPresence) {
-				Log(m_jid, "Not sending this presence, because we've already sent it before.");
-				delete tag;
-				return;
-			}
-			else {
-				m_roster[name].lastPresence.assign(tag->xml());
-			}
-			tag->addAttribute("to", m_jid);
-			p->j->send(tag);
-		}
-	}
-}
-
-/*
  * Called when PurpleBuddy is removed.
  */
 void User::purpleBuddyRemoved(PurpleBuddy *buddy) {
@@ -593,24 +503,19 @@ void User::purpleBuddyRemoved(PurpleBuddy *buddy) {
 void User::purpleBuddyCreated(PurpleBuddy *buddy) {
 	if (buddy==NULL || m_loadingBuddiesFromDB)
 		return;
-	std::string alias;
-	if (purple_buddy_get_server_alias(buddy))
-		alias = (std::string) purple_buddy_get_server_alias(buddy);
-	else
-		alias = (std::string) purple_buddy_get_alias(buddy);
+	buddy->node.ui_data = (void *) new SpectrumBuddy(-1, buddy);
+	SpectrumBuddy *s_buddy = (SpectrumBuddy *) buddy->node.ui_data;
 
-	std::string name(purple_buddy_get_name(buddy));
-	std::for_each( name.begin(), name.end(), replaceBadJidCharacters() );
+	std::string alias = s_buddy->getAlias();
+	std::string name = s_buddy->getSafeName();
 
 	Log(m_jid, "purpleBuddyChanged: " << name << " ("<< alias <<")");
 
-	if (m_syncTimer==0 && !m_rosterXCalled) {
+	if (m_syncTimer == 0 && !m_rosterXCalled) {
 		m_syncTimer = purple_timeout_add_seconds(12, sync_cb, this);
 	}
 
-	bool inRoster = isInRoster(name,"");
-
-	if (!inRoster) {
+	if (!isInRoster(name, "")) {
 		if (findResourceWithFeature(GLOOX_FEATURE_ROSTERX)) {
 			if (!m_rosterXCalled) {
 				m_subscribeCache[name] = buddy;
@@ -628,7 +533,7 @@ void User::purpleBuddyCreated(PurpleBuddy *buddy) {
 			Log(m_jid, "Not in roster => sending subscribe");
 			Tag *tag = new Tag("presence");
 			tag->addAttribute("type", "subscribe");
-			tag->addAttribute("from", name + "@" + p->jid());
+			tag->addAttribute("from", s_buddy->getJid());
 			tag->addAttribute("to", m_jid);
 			Tag *nick = new Tag("nick", alias);
 			nick->addAttribute("xmlns","http://jabber.org/protocol/nick");
@@ -639,37 +544,46 @@ void User::purpleBuddyCreated(PurpleBuddy *buddy) {
 }
 
 void User::purpleBuddyStatusChanged(PurpleBuddy *buddy, PurpleStatus *status, PurpleStatus *old_status) {
+	SpectrumBuddy *s_buddy = (SpectrumBuddy *) buddy->node.ui_data;
+	std::string name = s_buddy->getName();
+
 	Tag *tag = generatePresenceStanza(buddy);
 	if (tag) {
 		tag->addAttribute("to", m_jid);
 		p->j->send(tag);
 	}
-	if (!m_roster[std::string(purple_buddy_get_name(buddy))].online)
+	if (!m_roster[name].online)
 		p->userManager()->buddyOnline();
-	m_roster[std::string(purple_buddy_get_name(buddy))].online = true;
+	m_roster[name].online = true;
 }
 
 void User::purpleBuddySignedOn(PurpleBuddy *buddy) {
+	SpectrumBuddy *s_buddy = (SpectrumBuddy *) buddy->node.ui_data;
+	std::string name = s_buddy->getName();
+
 	Tag *tag = generatePresenceStanza(buddy);
 	if (tag) {
 		tag->addAttribute("to", m_jid);
 		p->j->send(tag);
 	}
-	if (!m_roster[std::string(purple_buddy_get_name(buddy))].online) {
+	if (!m_roster[name].online) {
 		p->userManager()->buddyOnline();
-		m_roster[std::string(purple_buddy_get_name(buddy))].online = true;
+		m_roster[name].online = true;
 	}
 }
 
 void User::purpleBuddySignedOff(PurpleBuddy *buddy) {
+	SpectrumBuddy *s_buddy = (SpectrumBuddy *) buddy->node.ui_data;
+	std::string name = s_buddy->getName();
+
 	Tag *tag = generatePresenceStanza(buddy);
 	if (tag) {
 		tag->addAttribute("to", m_jid);
 		p->j->send(tag);
 	}
-	if (m_roster[std::string(purple_buddy_get_name(buddy))].online) {
+	if (m_roster[name].online) {
 		p->userManager()->buddyOffline();
-		m_roster[std::string(purple_buddy_get_name(buddy))].online = false;
+		m_roster[name].online = false;
 	}
 }
 
@@ -765,7 +679,7 @@ void User::purpleConversationWriteIM(PurpleConversation *conv, const char *who, 
 		m.erase(0,6);
 		m.erase(m.length() - 7, 7);
 	}
-	Log("TEST", m << " " << message);
+
 	std::string res = m_conversations[name].resource;
 	if (hasFeature(GLOOX_FEATURE_XHTML_IM, res) && m != message) {
 		p->parser()->getTag("<body>" + m + "</body>", sendXhtmlTag, stanzaTag);
@@ -773,8 +687,6 @@ void User::purpleConversationWriteIM(PurpleConversation *conv, const char *who, 
 		g_free(strip);
 		return;
 	}
-
-	Log("STANZATAG", stanzaTag->xml());
 
 	p->j->send(stanzaTag);
 	g_free(newline);
@@ -1132,7 +1044,11 @@ void User::receivedSubscription(const Subscription &subscription) {
 					}
 					// user is in ICQ contact list so we can inform jabber user
 					// about status
-					purpleBuddyChanged(buddy);
+					Tag *tag = generatePresenceStanza(buddy);
+					if (tag) {
+						tag->addAttribute("to", m_jid);
+						p->j->send(tag);
+					}
 				}
 			}
 			// it can be reauthorization...

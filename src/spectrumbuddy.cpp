@@ -25,6 +25,7 @@
 #include "sql.h"
 #include "usermanager.h"
 #include "caps.h"
+#include "striphtmltags.h"
 
 SpectrumBuddy::SpectrumBuddy(long id, PurpleBuddy *buddy) : m_id(id), m_buddy(buddy) {
 }
@@ -36,3 +37,48 @@ long SpectrumBuddy::getId() {
 	return m_id;
 }
 
+void SpectrumBuddy::setId(long id) {
+	m_id = id;
+}
+
+std::string SpectrumBuddy::getAlias() {
+	std::string alias;
+	if (purple_buddy_get_server_alias(m_buddy))
+		alias = (std::string) purple_buddy_get_server_alias(m_buddy);
+	else
+		alias = (std::string) purple_buddy_get_alias(m_buddy);
+	return alias;
+}
+
+std::string SpectrumBuddy::getName() {
+	return std::string(purple_buddy_get_name(m_buddy));
+}
+
+std::string SpectrumBuddy::getSafeName() {
+	std::string name = getName();
+	std::for_each( name.begin(), name.end(), replaceBadJidCharacters() );
+	return name;
+}
+
+std::string SpectrumBuddy::getJid() {
+	return getSafeName() + "@" + GlooxMessageHandler::instance()->jid() + "/bot";
+}
+
+bool SpectrumBuddy::getStatus(int &status, std::string &statusMessage) {
+	PurplePresence *pres = purple_buddy_get_presence(m_buddy);
+	if (pres == NULL)
+		return false;
+	PurpleStatus *stat = purple_presence_get_active_status(pres);
+	if (stat == NULL)
+		return false;
+	status = purple_status_type_get_primitive(purple_status_get_type(stat));
+	const char *message = purple_status_get_attr_string(stat, "message");
+
+	if (message != NULL) {
+		statusMessage = std::string(message);
+		stripHTMLTags(statusMessage);
+	}
+	else
+		statusMessage = "";
+	return true;
+}

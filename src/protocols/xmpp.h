@@ -30,7 +30,7 @@ class XMPPProtocol : AbstractProtocol
 	public:
 		XMPPProtocol(GlooxMessageHandler *main);
 		~XMPPProtocol();
-		const std::string gatewayIdentity() { return "jabber"; }
+		const std::string gatewayIdentity() { return "xmpp"; }
 		const std::string protocol() { return "prpl-jabber"; }
 		bool isValidUsername(const std::string &username);
 		void prepareUserName(std::string &username);

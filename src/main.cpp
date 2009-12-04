@@ -506,7 +506,9 @@ static void buddyListRemoveNode(PurpleBlistNode *node) {
 		long id = 0;
 		if (buddy->node.ui_data) {
 			SpectrumBuddy *s_buddy = (SpectrumBuddy *) buddy->node.ui_data;
-			id = s_buddy->getId();
+			if (s_buddy->getId() != -1) {
+				id = s_buddy->getId();
+			}
 		}
 		std::string name(purple_buddy_get_name(buddy));
 		GlooxMessageHandler::instance()->sql()->removeBuddy(user->storageId(), name, id);
@@ -1533,15 +1535,6 @@ void GlooxMessageHandler::purpleChatRemoveUsers(PurpleConversation *conv, GList 
 		if (user->isConnected()) {
 			user->purpleChatRemoveUsers(conv, users);
 		}
-	}
-}
-
-void GlooxMessageHandler::purpleBuddyChanged(PurpleBuddy* buddy) {
-	if (buddy != NULL) {
-		PurpleAccount *a = purple_buddy_get_account(buddy);
-		User *user = userManager()->getUserByAccount(a);
-		if (user != NULL)
-			user->purpleBuddyChanged(buddy);
 	}
 }
 
