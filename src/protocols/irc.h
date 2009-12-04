@@ -39,7 +39,7 @@ class IRCProtocol : AbstractProtocol
 	public:
 		IRCProtocol(GlooxMessageHandler *main);
 		~IRCProtocol();
-		const std::string gatewayIdentity() { return "conference"; }
+		const std::string gatewayIdentity() { return "irc"; }
 		const std::string protocol() { return "prpl-irc"; }
 		bool isValidUsername(const std::string &username) { return true; }
 		void prepareUserName(std::string &username) { }
