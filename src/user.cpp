@@ -115,7 +115,7 @@ static void sendXhtmlTag(Tag *tag, Tag *stanzaTag) {
 	GlooxMessageHandler::instance()->j->send(stanzaTag);
 }
 
-User::User(GlooxMessageHandler *parent, JID jid, const std::string &username, const std::string &password, const std::string &userKey, long id) {
+User::User(GlooxMessageHandler *parent, JID jid, const std::string &username, const std::string &password, const std::string &userKey, long id) : RosterManager(this) {
 	p = parent;
 	m_jid = jid.bare();
 	Resource r;
@@ -230,22 +230,6 @@ bool User::hasTransportFeature(int feature) {
 }
 
 /*
- * Returns true if user with UIN `name` and subscription `subscription` is
- * in roster. If subscription.empty(), returns true on any subsciption.
- */
-bool User::isInRoster(const std::string &name,const std::string &subscription) {
-	std::map<std::string,RosterRow>::iterator iter = m_roster.begin();
-	iter = m_roster.find(name);
-	if (iter != m_roster.end()) {
-		if (subscription.empty())
-			return true;
-		if (m_roster[name].subscription == subscription)
-			return true;
-	}
-	return false;
-}
-
-/*
  * Returns true if exists auth request from user with uin `name`.
  */
 bool User::hasAuthRequest(const std::string &name){
@@ -269,102 +253,6 @@ bool User::isOpenedConversation(const std::string &name) {
 	if (iter != m_conversations.end())
 		return true;
 	return false;
-}
-
-/*
- * Generates presence stanza for PurpleBuddy `buddy`. This will
- * create whole <presence> stanza without 'to' attribute.
- */
-Tag *User::generatePresenceStanza(PurpleBuddy *buddy) {
-	if (buddy == NULL)
-		return NULL;
-	SpectrumBuddy *s_buddy = (SpectrumBuddy *) buddy->node.ui_data;
-
-	std::string alias = s_buddy->getAlias();
-	std::string name = s_buddy->getSafeName();
-
-	int s;
-	std::string statusMessage;
-	if (!s_buddy->getStatus(s, statusMessage))
-		return NULL;
-
-	Log(m_jid, "Generating presence stanza for user " << name);
-	Tag *tag = new Tag("presence");
-	tag->addAttribute("from", name + "@" + p->jid() + "/bot");
-
-	if (!statusMessage.empty())
-		tag->addChild( new Tag("status", statusMessage) );
-
-	switch(s) {
-		case PURPLE_STATUS_AVAILABLE: {
-			break;
-		}
-		case PURPLE_STATUS_AWAY: {
-			tag->addChild( new Tag("show", "away" ) );
-			break;
-		}
-		case PURPLE_STATUS_UNAVAILABLE: {
-			tag->addChild( new Tag("show", "dnd" ) );
-			break;
-		}
-		case PURPLE_STATUS_EXTENDED_AWAY: {
-			tag->addChild( new Tag("show", "xa" ) );
-			break;
-		}
-		case PURPLE_STATUS_OFFLINE: {
-			tag->addAttribute( "type", "unavailable" );
-			break;
-		}
-	}
-
-	// caps
-	Tag *c = new Tag("c");
-	c->addAttribute("xmlns", "http://jabber.org/protocol/caps");
-	c->addAttribute("hash", "sha-1");
-	c->addAttribute("node", "http://spectrum.im/transport");
-	c->addAttribute("ver", p->configuration().hash);
-	tag->addChild(c);
-
-	if (hasTransportFeature(TRANSPORT_FEATURE_AVATARS)) {
-		// vcard-temp:x:update
-		char *avatarHash = NULL;
-		PurpleBuddyIcon *icon = purple_buddy_icons_find(m_account, purple_buddy_get_name(buddy));
-		if (icon != NULL) {
-			avatarHash = purple_buddy_icon_get_full_path(icon);
-			Log(m_jid, "avatarHash");
-		}
-
-		if (purple_value_get_boolean(getSetting("enable_avatars"))) {
-			Tag *x = new Tag("x");
-			x->addAttribute("xmlns","vcard-temp:x:update");
-			if (avatarHash != NULL) {
-				Log(m_jid, "Got avatar hash");
-				// Check if it's patched libpurple which saves icons to directories
-				char *hash = strrchr(avatarHash,'/');
-				std::string h;
-				if (hash) {
-					char *dot;
-					hash++;
-					dot = strchr(hash, '.');
-					if (dot)
-						*dot = '\0';
-					x->addChild(new Tag("photo", (std::string) hash));
-				}
-				else
-					x->addChild(new Tag("photo", (std::string) avatarHash));
-			}
-			else {
-				Log(m_jid, "no avatar hash");
-				x->addChild(new Tag("photo"));
-			}
-			tag->addChild(x);
-		}
-		
-		if (avatarHash)
-			g_free(avatarHash);
-	}
-
-	return tag;
 }
 
 /*
@@ -410,7 +298,7 @@ void User::sendRosterX()
 			user.subscription = "ask";
 			user.online = false;
 			user.lastPresence = "";
-			m_roster[name] = user;
+			addRosterItem(user);
 // 			p->sql()->addUserToRoster(m_jid, name, "ask");
 
 			item = new Tag("item");
@@ -439,20 +327,20 @@ void User::sendRosterX()
  */
 void User::syncContacts()
 {
-	PurpleBuddy *buddy;
-	Log(m_jid, "Syncing contacts with legacy network.");
-	for (std::map<std::string, RosterRow>::iterator u = m_roster.begin(); u != m_roster.end() ; u++) {
-		std::string name((*u).second.uin);
-		std::for_each( name.begin(), name.end(), replaceJidCharacters() );
-		buddy = purple_find_buddy(m_account, name.c_str());
-		// buddy is not in blist, so it's not on server
-		if (!buddy) {
-			// add buddy to server
-			buddy = purple_buddy_new(m_account, (*u).second.uin.c_str(), (*u).second.uin.c_str());
-			purple_blist_add_buddy(buddy, NULL, NULL ,NULL);
-			purple_account_add_buddy(m_account, buddy);
-		}
-	}
+// 	PurpleBuddy *buddy;
+// 	Log(m_jid, "Syncing contacts with legacy network.");
+// 	for (std::map<std::string, RosterRow>::iterator u = m_roster.begin(); u != m_roster.end() ; u++) {
+// 		std::string name((*u).second.uin);
+// 		std::for_each( name.begin(), name.end(), replaceJidCharacters() );
+// 		buddy = purple_find_buddy(m_account, name.c_str());
+// 		// buddy is not in blist, so it's not on server
+// 		if (!buddy) {
+// 			// add buddy to server
+// 			buddy = purple_buddy_new(m_account, (*u).second.uin.c_str(), (*u).second.uin.c_str());
+// 			purple_blist_add_buddy(buddy, NULL, NULL ,NULL);
+// 			purple_account_add_buddy(m_account, buddy);
+// 		}
+// 	}
 }
 
 void User::purpleReauthorizeBuddy(PurpleBuddy *buddy) {
@@ -552,9 +440,10 @@ void User::purpleBuddyStatusChanged(PurpleBuddy *buddy, PurpleStatus *status, Pu
 		tag->addAttribute("to", m_jid);
 		p->j->send(tag);
 	}
-	if (!m_roster[name].online)
+	RosterRow item = getRosterItem(name);
+	if (!item.online)
 		p->userManager()->buddyOnline();
-	m_roster[name].online = true;
+	item.online = true;
 }
 
 void User::purpleBuddySignedOn(PurpleBuddy *buddy) {
@@ -566,9 +455,10 @@ void User::purpleBuddySignedOn(PurpleBuddy *buddy) {
 		tag->addAttribute("to", m_jid);
 		p->j->send(tag);
 	}
-	if (!m_roster[name].online) {
+	RosterRow item = getRosterItem(name);
+	if (!item.online) {
 		p->userManager()->buddyOnline();
-		m_roster[name].online = true;
+		item.online = true;
 	}
 }
 
@@ -581,9 +471,10 @@ void User::purpleBuddySignedOff(PurpleBuddy *buddy) {
 		tag->addAttribute("to", m_jid);
 		p->j->send(tag);
 	}
-	if (m_roster[name].online) {
+	RosterRow item = getRosterItem(name);
+	if (item.online) {
 		p->userManager()->buddyOffline();
-		m_roster[name].online = false;
+		item.online = false;
 	}
 }
 
@@ -957,7 +848,7 @@ void User::connect() {
 	m_account->ui_data = this;
 
 	m_loadingBuddiesFromDB = true;
-	m_roster = p->sql()->getBuddies(m_userID, m_account);
+	loadBuddies();
 	m_loadingBuddiesFromDB = false;
 
 	m_connectionStart = time(NULL);
@@ -1035,11 +926,11 @@ void User::receivedSubscription(const Subscription &subscription) {
 						user.subscription = "both";
 						user.online = false;
 						user.lastPresence = "";
-						m_roster[subscription.to().username()] = user;
+						addRosterItem(user);
 						p->sql()->addBuddy(m_userID, (std::string) subscription.to().username(), "both");
 					}
 					else {
-						m_roster[subscription.to().username()].subscription = "both";
+						getRosterItem(subscription.to().username()).subscription = "both";
 						p->sql()->updateBuddySubscription(m_userID, (std::string) subscription.to().username(), "both");
 					}
 					// user is in ICQ contact list so we can inform jabber user
@@ -1065,7 +956,8 @@ void User::receivedSubscription(const Subscription &subscription) {
 				purpleReauthorizeBuddy(b);
 			}
 			if (isInRoster(subscription.to().username(), "")) {
-				if (m_roster[subscription.to().username()].subscription == "ask") {
+				RosterRow row = getRosterItem(subscription.to().username());
+				if (row.subscription == "ask") {
 					Tag *reply = new Tag("presence");
 					reply->addAttribute( "to", subscription.from().bare() );
 					reply->addAttribute( "from", subscription.to().bare() );
@@ -1119,11 +1011,8 @@ void User::receivedSubscription(const Subscription &subscription) {
 			} else {
 				// this contact is not in ICQ contact list, so there is nothing to remove...
 			}
-			if (isInRoster(subscription.to().username(),"")) {
-				// this contact is in our local roster, so we have to remove her/him
-				Log(m_jid, "removing this contact from local roster");
-				m_roster.erase(subscription.to().username());
-			}
+			removeFromLocalRoster(subscription.to().username());
+
 			// inform user about removing this contact
 			Tag *tag = new Tag("presence");
 			tag->addAttribute("to", subscription.from().bare());
@@ -1200,19 +1089,7 @@ void User::receivedPresence(const Presence &stanza) {
 							}
 						}
 					}
-					// send unavailable to online users
-					Tag *tag;
-					for (std::map<std::string, RosterRow>::iterator u = m_roster.begin(); u != m_roster.end() ; u++) {
-						if ((*u).second.online){
-							std::string name((*u).first);
-							std::for_each( name.begin(), name.end(), replaceBadJidCharacters() );
-							tag = new Tag("presence");
-							tag->addAttribute( "to", m_jid + "/" + stanza.from().resource() );
-							tag->addAttribute( "type", "unavailable" );
-							tag->addAttribute( "from", name + "@" + p->jid() + "/bot");
-							p->j->send( tag );
-						}
-					}
+					sendUnavailablePresenceToAll();
 				}
 			}
 			if (m_connected) {
@@ -1253,20 +1130,7 @@ void User::receivedPresence(const Presence &stanza) {
 				if (m_resources[resource].priority > m_resources[m_resource].priority)
 					m_resource = resource;
 
-				for (std::map<std::string, RosterRow>::iterator u = m_roster.begin(); u != m_roster.end() ; u++) {
-					if ((*u).second.online){
-						std::string name((*u).second.uin);
-						std::for_each( name.begin(), name.end(), replaceJidCharacters() );
-						PurpleBuddy *buddy = purple_find_buddy(m_account, name.c_str());
-						if (buddy) {
-							Tag *probe = generatePresenceStanza(buddy);
-							if (probe) {
-								probe->addAttribute("to", stanza.from().full());
-								p->j->send(probe);
-							}
-						}
-					}
-				}
+				sendPresenceToAll(stanza.from().full());
 			}
 
 			Log(m_jid, "resource: " << m_resource);
@@ -1370,21 +1234,7 @@ User::~User(){
 	if (m_account)
 		purple_account_set_enabled(m_account, PURPLE_UI, FALSE);
 
-	// send unavailable to online users
-	Tag *tag;
-	for (std::map<std::string, RosterRow>::iterator u = m_roster.begin(); u != m_roster.end() ; u++) {
-		if ((*u).second.online){
-			std::string name((*u).second.uin);
-			std::for_each( name.begin(), name.end(), replaceBadJidCharacters() );
-			tag = new Tag("presence");
-			tag->addAttribute( "to", m_jid );
-			tag->addAttribute( "type", "unavailable" );
-			tag->addAttribute( "from", name + "@" + p->jid() + "/bot");
-			p->j->send( tag );
-			p->userManager()->buddyOffline();
-			(*u).second.online = false;
-		}
-	}
+	sendUnavailablePresenceToAll();
 
 	GList *iter;
 	for (iter = purple_get_conversations(); iter; ) {
@@ -1420,8 +1270,6 @@ User::~User(){
 	
 	if (m_storageTimer != 0)
 		purple_timeout_remove(m_storageTimer);
-
-	m_roster.clear();
 
 	m_conversations.clear();
 	m_authRequests.clear();

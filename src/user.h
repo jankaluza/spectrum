@@ -28,10 +28,11 @@
 #include <glib.h>
 #include "purple.h"
 #include "account.h"
+class RosterManager;
+#include "rostermanager.h"
 
 class GlooxMessageHandler;
 class FiletransferRepeater;
-class RosterManager;
 
 class RosterRow;
 
@@ -86,7 +87,7 @@ struct SaveData {
 	long id;
 };
 
-class User {
+class User : public RosterManager {
 	public:
 		User(GlooxMessageHandler *parent, JID jid, const std::string &username, const std::string &password, const std::string &userKey, long id);
 		~User();
@@ -98,12 +99,8 @@ class User {
 
 		// Utils
 		bool syncCallback();
-		bool isInRoster(const std::string &name, const std::string &subscription);
 		bool isOpenedConversation(const std::string &name);
 		bool hasFeature(int feature, const std::string &resource = "");
-
-		// XMPP stuff
-		Tag *generatePresenceStanza(PurpleBuddy *buddy);
 
 		// Libpurple stuff
 		void purpleReauthorizeBuddy(PurpleBuddy *buddy);
@@ -181,7 +178,7 @@ class User {
 		const std::string & resource() { return m_resource; }
 		AdhocData & adhocData() { return m_adhocData; }
 		void setAdhocData(AdhocData data) { m_adhocData = data; }
-		std::map<std::string,RosterRow> & roster() { return m_roster; }
+
 		const char *getLang() { return m_lang; }
 		void setLang(const char *lang) { m_lang = lang; }
 		GHashTable *settings() { return m_settings; }
@@ -222,7 +219,6 @@ class User {
 		time_t m_connectionStart;	// connection start timestamp
 		GHashTable *m_mucs;			// MUCs
 		GHashTable *m_filetransfers;
-		std::map<std::string,RosterRow> m_roster;	// jabber roster of this user
 		std::map<std::string,Resource> m_resources;	// list of all resources which are connected to the transport
 		std::map<std::string,authRequest> m_authRequests;	// list of authorization requests (holds callbacks and user data)
 		std::map<std::string,Conversation> m_conversations; // list of opened conversations

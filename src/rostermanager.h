@@ -24,7 +24,6 @@
 #include <string>
 #include "purple.h"
 #include "account.h"
-#include "user.h"
 #include "glib.h"
 #include "gloox/tag.h"
 #include <algorithm>
@@ -33,52 +32,26 @@ using namespace gloox;
 
 class SpectrumBuddy;
 class GlooxMessageHandler;
-class SpectrumTimer;
+class User;
+struct RosterRow;
 
 class RosterManager {
 	public:
-		RosterManager(GlooxMessageHandler *m, User *user);
+		RosterManager(User *user);
 		~RosterManager();
-
-		bool isInRoster(SpectrumBuddy *buddy);
 		
-		bool addBuddy(PurpleBuddy *buddy);
-		bool addBuddy(SpectrumBuddy *buddy);
-		void removeBuddy(SpectrumBuddy *buddy);
-		void storeBuddy(PurpleBuddy *);
-		void storeBuddy(SpectrumBuddy *);
-
-		SpectrumBuddy *getBuddy(const std::string &name);
+		void sendUnavailablePresenceToAll();
+		void sendPresenceToAll(const std::string &to);
+		void removeFromLocalRoster(const std::string &uin);
+		Tag *generatePresenceStanza(PurpleBuddy *buddy);
+		RosterRow &getRosterItem(const std::string &uin);
+		void addRosterItem(RosterRow item);
 		void loadBuddies();
-
-		void handleSubscribed(const std::string &uin, const std::string &from);
-		void handleSubscribe(const std::string &uin, const std::string &from);
-		void handleUnsubscribe(const std::string &uin, const std::string &from);
-		void handleBuddyStatusChanged(PurpleBuddy *buddy, PurpleStatus *status, PurpleStatus *old_status);
-		void handleBuddySignedOn(PurpleBuddy *buddy);
-		void handleBuddySignedOff(PurpleBuddy *buddy);
-
-		
-		bool storageTimeout();
-		bool subscribeBuddies();
-
-		bool loadingBuddies() { return m_loadingBuddies; }
-		User *getUser() { return m_user; }
-		GHashTable *storageCache() { return m_storageCache; }
+		bool isInRoster(const std::string &name, const std::string &subscription);
 
 	private:
-		GlooxMessageHandler *m_main;
-		GHashTable *m_roster;
-		GHashTable *m_storageCache;
+		std::map<std::string,RosterRow> m_roster;
 		User *m_user;
-		SpectrumTimer *m_syncTimer;
-		SpectrumTimer *m_storageTimer;
-		int m_cacheSize;
-		int m_oldCacheSize;
-		bool m_loadingBuddies;
-		
-		SpectrumBuddy* purpleBuddyToSpectrumBuddy(PurpleBuddy *buddy, bool create = FALSE);
-		static gboolean subscribeBuddiesWrapper(void *rosterManager, void *data);
 
 };
 

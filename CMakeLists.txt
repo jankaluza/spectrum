@@ -78,6 +78,7 @@ set(spectrum_SRCS
 	src/muchandler.cpp
 	src/parser.cpp
 	src/registerhandler.cpp
+	src/rostermanager.cpp
 	src/searchhandler.cpp
 	src/searchrepeater.cpp
 	src/spectrum_util.cpp
@@ -127,6 +128,7 @@ set(spectrum_MOC_HDRS
 	src/muchandler.h
 	src/parser.h
 	src/registerhandler.h
+	src/rostermanager.h
 	src/searchhandler.h
 	src/searchrepeater.h
 	src/spectrum_util.h
