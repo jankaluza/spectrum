@@ -27,7 +27,7 @@
 #include "caps.h"
 #include "striphtmltags.h"
 
-SpectrumBuddy::SpectrumBuddy(long id, PurpleBuddy *buddy) : m_id(id), m_buddy(buddy) {
+SpectrumBuddy::SpectrumBuddy(long id, PurpleBuddy *buddy) : m_id(id), m_online(false), m_buddy(buddy), m_subscription("both") {
 }
 
 SpectrumBuddy::~SpectrumBuddy() {
@@ -82,3 +82,24 @@ bool SpectrumBuddy::getStatus(int &status, std::string &statusMessage) {
 		statusMessage = "";
 	return true;
 }
+
+bool SpectrumBuddy::isOnline() {
+	return m_online;
+}
+
+void SpectrumBuddy::setOnline() {
+	m_online = true;
+}
+
+void SpectrumBuddy::setOffline() {
+	m_online = false;
+}
+
+void SpectrumBuddy::setSubscription(const std::string &subscription) {
+	m_subscription = subscription;
+}
+
+const std::string &SpectrumBuddy::getSubscription() {
+	return m_subscription;
+}
+

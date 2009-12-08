@@ -292,13 +292,7 @@ void User::sendRosterX()
 				alias = (std::string) purple_buddy_get_server_alias(buddy);
 			else
 				alias = (std::string) purple_buddy_get_alias(buddy);
-			user.id = -1;
-			user.jid = m_jid;
-			user.uin = name;
-			user.subscription = "ask";
-			user.online = false;
-			user.lastPresence = "";
-			addRosterItem(user);
+			addRosterItem(buddy);
 // 			p->sql()->addUserToRoster(m_jid, name, "ask");
 
 			item = new Tag("item");
@@ -440,10 +434,11 @@ void User::purpleBuddyStatusChanged(PurpleBuddy *buddy, PurpleStatus *status, Pu
 		tag->addAttribute("to", m_jid);
 		p->j->send(tag);
 	}
-	RosterRow item = getRosterItem(name);
-	if (!item.online)
+
+	if (!s_buddy->isOnline()) {
 		p->userManager()->buddyOnline();
-	item.online = true;
+		s_buddy->setOnline();
+	}
 }
 
 void User::purpleBuddySignedOn(PurpleBuddy *buddy) {
@@ -455,10 +450,10 @@ void User::purpleBuddySignedOn(PurpleBuddy *buddy) {
 		tag->addAttribute("to", m_jid);
 		p->j->send(tag);
 	}
-	RosterRow item = getRosterItem(name);
-	if (!item.online) {
+
+	if (!s_buddy->isOnline()) {
 		p->userManager()->buddyOnline();
-		item.online = true;
+		s_buddy->setOnline();
 	}
 }
 
@@ -471,10 +466,10 @@ void User::purpleBuddySignedOff(PurpleBuddy *buddy) {
 		tag->addAttribute("to", m_jid);
 		p->j->send(tag);
 	}
-	RosterRow item = getRosterItem(name);
-	if (item.online) {
+
+	if (s_buddy->isOnline()) {
 		p->userManager()->buddyOffline();
-		item.online = false;
+		s_buddy->setOffline();
 	}
 }
 
@@ -919,18 +914,11 @@ void User::receivedSubscription(const Subscription &subscription) {
 					Log(m_jid, "adding this user to local roster and sending presence");
 					if (!isInRoster(subscription.to().username(),"ask")) {
 						// add user to mysql database and to local cache
-						RosterRow user;
-						user.id = -1;
-						user.jid = m_jid;
-						user.uin = subscription.to().username();
-						user.subscription = "both";
-						user.online = false;
-						user.lastPresence = "";
-						addRosterItem(user);
+						addRosterItem(buddy);
 						p->sql()->addBuddy(m_userID, (std::string) subscription.to().username(), "both");
 					}
 					else {
-						getRosterItem(subscription.to().username()).subscription = "both";
+						getRosterItem(subscription.to().username())->setSubscription("both");
 						p->sql()->updateBuddySubscription(m_userID, (std::string) subscription.to().username(), "both");
 					}
 					// user is in ICQ contact list so we can inform jabber user
@@ -956,8 +944,8 @@ void User::receivedSubscription(const Subscription &subscription) {
 				purpleReauthorizeBuddy(b);
 			}
 			if (isInRoster(subscription.to().username(), "")) {
-				RosterRow row = getRosterItem(subscription.to().username());
-				if (row.subscription == "ask") {
+				SpectrumBuddy *s_buddy = getRosterItem(subscription.to().username());
+				if (s_buddy->getSubscription() == "ask") {
 					Tag *reply = new Tag("presence");
 					reply->addAttribute( "to", subscription.from().bare() );
 					reply->addAttribute( "from", subscription.to().bare() );

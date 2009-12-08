@@ -555,23 +555,22 @@ UserRow SQLClass::getUserByJid(const std::string &jid){
 	return user;
 }
 
-std::map<std::string,RosterRow> SQLClass::getBuddies(long userId, PurpleAccount *account){
-	std::map<std::string,RosterRow> rows;
+GHashTable *SQLClass::getBuddies(long userId, PurpleAccount *account){
+	GHashTable *roster = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
 	m_stmt_getBuddies.user_id = userId;
 	bool buddiesLoaded = false;
 	int i = 0;
 	
-	if (account) {
-		m_stmt_getBuddiesSettings.user_id = userId;
-		STATEMENT_EXECUTE_BEGIN();
-			m_stmt_getBuddiesSettings.stmt->execute();
-		STATEMENT_EXECUTE_END(m_stmt_getBuddiesSettings.stmt, getBuddies(userId, account));
-	}
+	m_stmt_getBuddiesSettings.user_id = userId;
+	STATEMENT_EXECUTE_BEGIN();
+		m_stmt_getBuddiesSettings.stmt->execute();
+	STATEMENT_EXECUTE_END(m_stmt_getBuddiesSettings.stmt, getBuddies(userId, account));
 
 	STATEMENT_EXECUTE_BEGIN();
 		do {
 			if (!m_stmt_getBuddies.stmt->execute())
 				break;
+			// TODO: REMOVE ME AND REPlACE ALL MY OCCURS IN THIS FUNCTION
 			RosterRow user;
 			user.id = m_stmt_getBuddies.resId;
 // 			user.jid = m_stmt_getBuddies.resJid;
@@ -584,7 +583,7 @@ std::map<std::string,RosterRow> SQLClass::getBuddies(long userId, PurpleAccount 
 			user.online = false;
 			user.lastPresence = "";
 
-			if (!buddiesLoaded && account) {
+// 			if (!buddiesLoaded) {
 				// create group
 				std::string group = user.group.empty() ? "Buddies" : user.group;
 				PurpleGroup *g = purple_find_group(group.c_str());
@@ -592,14 +591,14 @@ std::map<std::string,RosterRow> SQLClass::getBuddies(long userId, PurpleAccount 
 					g = purple_group_new(group.c_str());
 					purple_blist_add_group(g, NULL);
 				}
-
-				if (!purple_find_buddy_in_group(account, user.uin.c_str(), g)) {
+				PurpleBuddy *buddy = purple_find_buddy_in_group(account, user.uin.c_str(), g);
+				if (!buddy) {
 					// create contact
 					PurpleContact *contact = purple_contact_new();
 					purple_blist_add_contact(contact, g, NULL);
 
 // 						create buddy
-					PurpleBuddy *buddy = purple_buddy_new(account, user.uin.c_str(), user.nickname.c_str());
+					buddy = purple_buddy_new(account, user.uin.c_str(), user.nickname.c_str());
 					buddy->node.ui_data = (void *) new SpectrumBuddy(user.id, buddy);
 					purple_blist_add_buddy(buddy, contact, g, NULL);
 					GHashTable *settings = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, (GDestroyNotify) purple_value_destroy);
@@ -627,12 +626,15 @@ std::map<std::string,RosterRow> SQLClass::getBuddies(long userId, PurpleAccount 
 					// set settings
 					g_hash_table_destroy(buddy->node.settings);
 					buddy->node.settings = settings;
+					
+					buddy->node.ui_data = (void *) new SpectrumBuddy(m_stmt_getBuddies.resId, buddy);
 				}
 				else
 					buddiesLoaded = true;
-			}
+// 			}
 
-			rows[std::string(m_stmt_getBuddies.resUin)] = user;
+// 			rows[std::string(m_stmt_getBuddies.resUin)] = user;
+			g_hash_table_replace(roster, g_strdup(m_stmt_getBuddies.resUin.c_str()), buddy->node.ui_data);
 			m_stmt_getBuddies.stmt->execute();
 		} while (!m_stmt_getBuddies.stmt->done());
 	STATEMENT_EXECUTE_END(m_stmt_getBuddies.stmt, getBuddies(userId, account));
@@ -642,7 +644,7 @@ std::map<std::string,RosterRow> SQLClass::getBuddies(long userId, PurpleAccount 
 	m_stmt_getBuddiesSettings.resValue.clear();
 	m_stmt_getBuddiesSettings.resVar.clear();
 
-	return rows;
+	return roster;
 }
 
 // settings

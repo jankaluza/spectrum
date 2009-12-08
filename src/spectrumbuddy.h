@@ -52,10 +52,21 @@ class SpectrumBuddy {
 		std::string getSafeName();
 		std::string getJid();
 		bool getStatus(int &status, std::string &statusMessage);
+		
+		bool isOnline();
+		void setOnline();
+		void setOffline();
+		
+		void setSubscription(const std::string &subscription);
+		const std::string &getSubscription();
+		
+		PurpleBuddy *getBuddy() { return m_buddy; }
 
 	private:
 		long m_id;
+		bool m_online;
 		PurpleBuddy *m_buddy;
+		std::string m_subscription;
 };
 
 #endif

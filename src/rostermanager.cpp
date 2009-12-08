@@ -28,29 +28,73 @@
 #include "caps.h"
 #include "spectrumtimer.h"
 
+struct SendPresenceToAllData {
+	RosterManager *manager;
+	std::string to;
+};
+
 RosterRow DummyRosterRow;
+
+static void sendUnavailablePresence(gpointer key, gpointer v, gpointer data) {
+	SpectrumBuddy *s_buddy = (SpectrumBuddy *) v;
+	SendPresenceToAllData *d = (SendPresenceToAllData *) data;
+// 	RosterManager *manager = d->manager;
+	std::string &to = d->to;
+
+	if (s_buddy->isOnline()) {
+		std::string name = s_buddy->getSafeName();
+		Tag *tag = new Tag("presence");
+		tag->addAttribute( "to", to );
+		tag->addAttribute( "type", "unavailable" );
+		tag->addAttribute( "from", s_buddy->getJid());
+		GlooxMessageHandler::instance()->j->send( tag );
+		GlooxMessageHandler::instance()->userManager()->buddyOffline();
+		s_buddy->setOffline();
+	}
+}
+
+static void sendCurrentPresence(gpointer key, gpointer v, gpointer data) {
+	SpectrumBuddy *s_buddy = (SpectrumBuddy *) v;
+	SendPresenceToAllData *d = (SendPresenceToAllData *) data;
+	RosterManager *manager = d->manager;
+	std::string &to = d->to;
+	if (s_buddy->isOnline()) {
+		std::string name = s_buddy->getSafeName();
+		PurpleBuddy *buddy = s_buddy->getBuddy();
+		if (buddy) {
+			Tag *tag = manager->generatePresenceStanza(buddy);
+			if (tag) {
+				tag->addAttribute("to", to);
+				GlooxMessageHandler::instance()->j->send(tag);
+			}
+		}
+	}
+}
 
 RosterManager::RosterManager(User *user) {
 	m_user = user;
 }
 
 RosterManager::~RosterManager() {
-	m_roster.clear();
+	g_hash_table_destroy(m_roster);
 }
 
 /*
  * Returns true if user with UIN `name` and subscription `subscription` is
  * in roster. If subscription.empty(), returns true on any subsciption.
  */
-bool RosterManager::isInRoster(const std::string &name,const std::string &subscription) {
-	std::map<std::string,RosterRow>::iterator iter = m_roster.begin();
-	iter = m_roster.find(name);
-	if (iter != m_roster.end()) {
-		if (subscription.empty())
-			return true;
-		if (m_roster[name].subscription == subscription)
-			return true;
-	}
+bool RosterManager::isInRoster(const std::string &name, const std::string &subscription) {
+// 	std::map<std::string,RosterRow>::iterator iter = m_roster.begin();
+// 	iter = m_roster.find(name);
+// 	if (iter != m_roster.end()) {
+// 		if (subscription.empty())
+// 			return true;
+// 		if (m_roster[name].subscription == subscription)
+// 			return true;
+// 	}
+
+	if (g_hash_table_lookup(m_roster, name.c_str()))
+		return true;
 	return false;
 }
 
@@ -152,55 +196,39 @@ Tag *RosterManager::generatePresenceStanza(PurpleBuddy *buddy) {
 }
 
 void RosterManager::sendUnavailablePresenceToAll() {
-	Tag *tag;
-	for (std::map<std::string, RosterRow>::iterator u = m_roster.begin(); u != m_roster.end() ; u++) {
-		if ((*u).second.online){
-			std::string name((*u).first);
-			std::for_each( name.begin(), name.end(), replaceBadJidCharacters() );
-			tag = new Tag("presence");
-			tag->addAttribute( "to", m_user->jid() );
-			tag->addAttribute( "type", "unavailable" );
-			tag->addAttribute( "from", name + "@" + GlooxMessageHandler::instance()->jid() + "/bot");
-			GlooxMessageHandler::instance()->j->send( tag );
-			GlooxMessageHandler::instance()->userManager()->buddyOffline();
-			(*u).second.online = false;
-		}
-	}
+	SendPresenceToAllData *data = new SendPresenceToAllData;
+	data->manager = this;
+	data->to = m_user->jid();
+	g_hash_table_foreach(m_roster, sendUnavailablePresence, data);
+	delete data;
 }
 
 void RosterManager::sendPresenceToAll(const std::string &to) {
-	for (std::map<std::string, RosterRow>::iterator u = m_roster.begin(); u != m_roster.end() ; u++) {
-		if ((*u).second.online){
-			std::string name((*u).second.uin);
-			std::for_each( name.begin(), name.end(), replaceJidCharacters() );
-			PurpleBuddy *buddy = purple_find_buddy(m_user->account(), name.c_str());
-			if (buddy) {
-				Tag *probe = generatePresenceStanza(buddy);
-				if (probe) {
-					probe->addAttribute("to", to);
-					GlooxMessageHandler::instance()->j->send(probe);
-				}
-			}
-		}
-	}
+	SendPresenceToAllData *data = new SendPresenceToAllData;
+	data->manager = this;
+	data->to = to;
+	g_hash_table_foreach(m_roster, sendCurrentPresence, data);
+	delete data;
 }
 
 void RosterManager::removeFromLocalRoster(const std::string &uin) {
-	if (isInRoster(uin,"")) {
-		// this contact is in our local roster, so we have to remove her/him
-		Log(m_user->jid(), "removing this contact from local roster");
-		m_roster.erase(uin);
-	}
+	if (!g_hash_table_lookup(m_roster, uin.c_str()))
+		return;
+	g_hash_table_remove(m_roster, uin.c_str());
 }
 
-RosterRow &RosterManager::getRosterItem(const std::string &uin) {
-	if (isInRoster(uin, ""))
-		return m_roster[uin];
-	return DummyRosterRow;
+SpectrumBuddy *RosterManager::getRosterItem(const std::string &uin) {
+	SpectrumBuddy *s_buddy = (SpectrumBuddy *) g_hash_table_lookup(m_roster, uin.c_str());
+	return s_buddy;
 }
 
-void RosterManager::addRosterItem(RosterRow item) {
-	m_roster[item.uin] = item;
+void RosterManager::addRosterItem(PurpleBuddy *buddy) {
+	if (g_hash_table_lookup(m_roster, purple_buddy_get_name(buddy)))
+		return;
+	if (buddy->node.ui_data)
+		g_hash_table_replace(m_roster, g_strdup(purple_buddy_get_name(buddy)), buddy->node.ui_data);
+	else
+		Log(std::string(purple_buddy_get_name(buddy)), "This buddy has not set SpectrumBuddy!!!");
 }
 void RosterManager::loadBuddies() {
 	m_roster = GlooxMessageHandler::instance()->sql()->getBuddies(m_user->storageId(), m_user->account());

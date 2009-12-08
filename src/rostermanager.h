@@ -44,13 +44,13 @@ class RosterManager {
 		void sendPresenceToAll(const std::string &to);
 		void removeFromLocalRoster(const std::string &uin);
 		Tag *generatePresenceStanza(PurpleBuddy *buddy);
-		RosterRow &getRosterItem(const std::string &uin);
-		void addRosterItem(RosterRow item);
+		SpectrumBuddy *getRosterItem(const std::string &uin);
+		void addRosterItem(PurpleBuddy *buddy);
 		void loadBuddies();
 		bool isInRoster(const std::string &name, const std::string &subscription);
 
 	private:
-		std::map<std::string,RosterRow> m_roster;
+		GHashTable *m_roster;
 		User *m_user;
 
 };
