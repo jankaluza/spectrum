@@ -27,6 +27,7 @@
 #include "glib.h"
 #include "gloox/tag.h"
 #include <algorithm>
+#include "abstractuser.h"
 
 using namespace gloox;
 
@@ -37,7 +38,7 @@ struct RosterRow;
 
 class RosterManager {
 	public:
-		RosterManager(User *user);
+		RosterManager(AbstractUser *user);
 		~RosterManager();
 		
 		void sendUnavailablePresenceToAll();
@@ -46,12 +47,12 @@ class RosterManager {
 		Tag *generatePresenceStanza(PurpleBuddy *buddy);
 		SpectrumBuddy *getRosterItem(const std::string &uin);
 		void addRosterItem(PurpleBuddy *buddy);
-		void loadBuddies();
+		void setRoster(GHashTable *roster);
 		bool isInRoster(const std::string &name, const std::string &subscription);
 
 	private:
 		GHashTable *m_roster;
-		User *m_user;
+		AbstractUser *m_user;
 
 };
 

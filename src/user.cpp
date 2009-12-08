@@ -843,7 +843,7 @@ void User::connect() {
 	m_account->ui_data = this;
 
 	m_loadingBuddiesFromDB = true;
-	loadBuddies();
+	setRoster(GlooxMessageHandler::instance()->sql()->getBuddies(storageId(), account()));
 	m_loadingBuddiesFromDB = false;
 
 	m_connectionStart = time(NULL);

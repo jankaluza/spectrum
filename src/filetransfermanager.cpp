@@ -23,6 +23,7 @@
 #include "filetransferrepeater.h"
 #include "log.h"
 #include "main.h"
+#include "user.h"
 
 void FileTransferManager::setSIProfileFT(gloox::SIProfileFT *sipft,GlooxMessageHandler *parent) {
 	m_sip = sipft;
@@ -36,7 +37,7 @@ void FileTransferManager::handleFTRequest (const JID &from, const JID &to, const
 	m_info[sid].size = size;
 	std::string uname = to.username();
 	std::for_each( uname.begin(), uname.end(), replaceJidCharacters() );
-	User *user = p->userManager()->getUserByJID(from.bare());
+	User *user = (User *) p->userManager()->getUserByJID(from.bare());
 	if (user) {
 		if (user->account()){
 			if (user->isConnected()){
@@ -86,7 +87,7 @@ void FileTransferManager::handleFTBytestream (Bytestream *bs) {
 			}
 			filename = p->configuration().filetransferCache + "/" + bs->target().username() + "-" + p->j->getID() + "-" + filename;
 		}
-		User *user = p->userManager()->getUserByJID(bs->initiator().bare());
+		User *user = (User *) p->userManager()->getUserByJID(bs->initiator().bare());
 		Log("a", "wants user" << bs->initiator().bare());
 		FiletransferRepeater *repeater = NULL;
 		if (user) {
@@ -95,7 +96,7 @@ void FileTransferManager::handleFTBytestream (Bytestream *bs) {
 			if (!repeater) return;
 		}
 		else {
-			User *user = p->userManager()->getUserByJID(bs->target().bare());
+			User *user = (User *) p->userManager()->getUserByJID(bs->target().bare());
 			if (!user)
 				return;
 			repeater = user->removeFiletransfer(bs->initiator().username());

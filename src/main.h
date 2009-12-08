@@ -93,6 +93,7 @@ class AdhocRepeater;
 class GlooxSearchHandler;
 class GlooxParser;
 class AccountCollector;
+class Transport;
 
 struct User;
 struct UserRow;
@@ -166,7 +167,6 @@ struct Configuration {
 		return !protocol.empty();
 	}
 };
-
 
 /*
  * Main transport class. It inits libpurple and Gloox, runs event loop and handles almost all signals.
@@ -289,6 +289,7 @@ private:
 	UserManager *m_userManager;					// UserManager class
 	bool m_firstConnection;						// true if transporConnect is called for first time
 	static GlooxMessageHandler* m_pInstance;
+	Transport *m_transport;
 	GMainLoop *m_loop;
 };
 

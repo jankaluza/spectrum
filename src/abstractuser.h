@@ -18,36 +18,25 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02111-1301  USA
  */
 
-#ifndef USERMANAGER_H
-#define USERMANAGER_H
+#ifndef _ABSTRACT_USER_H
+#define _ABSTRACT_USER_H
 
 #include <string>
-#include "purple.h"
+#include <list>
 #include "account.h"
-#include "abstractuser.h"
-#include "glib.h"
+#include "value.h"
 
-class GlooxMessageHandler;
-
-class UserManager
+class AbstractUser
 {
 	public:
-		UserManager();
-		~UserManager();
-		AbstractUser *getUserByJID(std::string barejid);
-		AbstractUser *getUserByAccount(PurpleAccount *account);
-		void addUser(AbstractUser *user) { g_hash_table_replace(m_users, g_strdup(user->userKey().c_str()), user); }
-		void removeUser(AbstractUser *user);
-		void removeUserTimer(AbstractUser *user);
-		void buddyOnline();
-		void buddyOffline();
-		long onlineUserCount();
-		int userCount() { return g_hash_table_size(m_users); }
-
-	private:
-		GHashTable *m_users;	// key = JID; value = User*
-		long m_onlineBuddies;
-		AbstractUser *m_cachedUser;
+		virtual ~AbstractUser() {}
+		virtual const std::string &userKey() = 0;
+		virtual PurpleAccount *account() = 0;
+		virtual const std::string &jid() = 0;
+		virtual PurpleValue *getSetting(const char *key) = 0;
+		virtual bool hasTransportFeature(int feature) = 0;
+		
+		guint removeTimer;
 
 };
 

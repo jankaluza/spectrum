@@ -26,6 +26,7 @@
 #include "usermanager.h"
 #include "caps.h"
 #include "striphtmltags.h"
+#include "transport.h"
 
 SpectrumBuddy::SpectrumBuddy(long id, PurpleBuddy *buddy) : m_id(id), m_online(false), m_buddy(buddy), m_subscription("both") {
 }
@@ -61,7 +62,7 @@ std::string SpectrumBuddy::getSafeName() {
 }
 
 std::string SpectrumBuddy::getJid() {
-	return getSafeName() + "@" + GlooxMessageHandler::instance()->jid() + "/bot";
+	return getSafeName() + "@" + Transport::instance()->jid() + "/bot";
 }
 
 bool SpectrumBuddy::getStatus(int &status, std::string &statusMessage) {

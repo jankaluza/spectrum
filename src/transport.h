@@ -18,37 +18,33 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02111-1301  USA
  */
 
-#ifndef USERMANAGER_H
-#define USERMANAGER_H
-
+#ifndef TRANSPORT_H
+#define TRANSPORT_H
+#include <iostream>
 #include <string>
-#include "purple.h"
-#include "account.h"
-#include "abstractuser.h"
-#include "glib.h"
+#include "gloox/tag.h"
 
-class GlooxMessageHandler;
+using namespace gloox;
+class UserManager;
 
-class UserManager
-{
+
+class Transport {
 	public:
-		UserManager();
-		~UserManager();
-		AbstractUser *getUserByJID(std::string barejid);
-		AbstractUser *getUserByAccount(PurpleAccount *account);
-		void addUser(AbstractUser *user) { g_hash_table_replace(m_users, g_strdup(user->userKey().c_str()), user); }
-		void removeUser(AbstractUser *user);
-		void removeUserTimer(AbstractUser *user);
-		void buddyOnline();
-		void buddyOffline();
-		long onlineUserCount();
-		int userCount() { return g_hash_table_size(m_users); }
-
+		Transport(const std::string jid);
+		~Transport();
+		static Transport *instance() { return m_pInstance; }
+		void send(Tag *tag);
+		UserManager *userManager();
+		const std::string &hash();
+		
+		const std::string &jid() { return m_jid; }
+		
+		
 	private:
-		GHashTable *m_users;	// key = JID; value = User*
-		long m_onlineBuddies;
-		AbstractUser *m_cachedUser;
-
+		std::string m_jid;
+		std::string m_hash;
+		UserManager *m_userManager;
+		static Transport *m_pInstance;
 };
 
 #endif

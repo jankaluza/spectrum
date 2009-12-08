@@ -19,6 +19,8 @@ set(glib_DIR "${CMAKE_SOURCE_DIR}/cmake_modules")
 find_package(glib REQUIRED)
 set(libpoco_DIR "${CMAKE_SOURCE_DIR}/cmake_modules")
 find_package(libpoco REQUIRED)
+set(cppunit_DIR "${CMAKE_SOURCE_DIR}/cmake_modules")
+find_package(cppunit)
 
 FIND_LIBRARY(GETTEXTPO_LIBRARY NAMES gettextpo)
 find_path(GETTEXTPO_INCLUDE_DIR NAMES gettext-po.h
@@ -87,6 +89,7 @@ set(spectrum_SRCS
 	src/striphtmltags.cpp
 	src/sql.cpp
 	src/thread.cpp
+	src/transport.cpp
 	src/user.cpp
 	src/usermanager.cpp
 	src/vcardhandler.cpp
@@ -137,6 +140,7 @@ set(spectrum_MOC_HDRS
 	src/striphtmltags.h
 	src/sql.h
 	src/thread.h
+	src/transport.h
 	src/user.h
 	src/usermanager.h
 	src/vcardhandler.h
@@ -174,6 +178,64 @@ if (EXISTS .git)
 else (EXISTS .git)
 	file(APPEND src/transport_config.h "#define VERSION \"0.1\"\n")
 endif (EXISTS .git)
+
+
+
+
+
+
+
+
+
+
+
+
+if (CPPUNIT_FOUND)
+
+include_directories(${CPPUNIT_INCLUDE_DIR})
+
+set(spectrum_tests_SRCS
+	src/tests/main.cpp
+	src/tests/spectrumbuddytest.cpp
+	src/tests/rostermanagertest.cpp
+	src/tests/transporttest.cpp
+	src/tests/testinguser.cpp
+	
+	src/rostermanager.cpp
+	src/spectrumbuddy.cpp
+	src/striphtmltags.cpp
+	src/spectrum_util.cpp
+	src/usermanager.cpp
+	src/log.cpp
+)
+
+set(spectrum_tests_MOC_HDRS
+	src/tests/spectrumbuddytest.h
+	src/tests/rostermanagertest.h
+	src/tests/testinguser.h
+	
+	src/rostermanager.h
+	src/spectrumbuddy.h
+	src/striphtmltags.h
+	src/spectrum_util.h
+	src/transport.h
+)
+
+add_executable(spectrum_tests ${spectrum_tests_SRCS} ${lrelease_outputs})
+
+if(DEFINED WITH_STATIC_GLOOX)
+	target_link_libraries(spectrum_tests ${WITH_STATIC_GLOOX} -lgnutls ${PURPLE_LIBRARY} ${CPPUNIT_LIBRARY} ${GLIB2_LIBRARIES} ${GETTEXTPO_LIBRARY} ${LIBPOCO_LIBRARIES} -export-dynamic)
+else(DEFINED WITH_STATIC_GLOOX)
+	target_link_libraries(spectrum_tests ${GLOOX_LIBRARIES} ${PURPLE_LIBRARY} ${CPPUNIT_LIBRARY} ${GLIB2_LIBRARIES} ${GETTEXTPO_LIBRARY} ${LIBPOCO_LIBRARIES} -export-dynamic)
+endif(DEFINED WITH_STATIC_GLOOX)
+
+endif (CPPUNIT_FOUND)
+
+
+
+
+
+
 
 INSTALL(TARGETS spectrum
     RUNTIME DESTINATION bin

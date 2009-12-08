@@ -24,6 +24,7 @@
 #include "usermanager.h"
 #include "log.h"
 #include "sql.h"
+#include "user.h"
 
 static gboolean ui_got_data(gpointer data){
 	PurpleXfer *xfer = (PurpleXfer*) data;
@@ -390,7 +391,7 @@ void FiletransferRepeater::handleFTReceiveBytestream(Bytestream *bs, const std::
 	if (filename.empty())
 		m_resender = new ReceiveFileStraight(bs, 0, this);
 	else {
-		User *user = m_main->userManager()->getUserByJID(bs->initiator().bare());
+		User *user = (User *) m_main->userManager()->getUserByJID(bs->initiator().bare());
 		m_resender = new ReceiveFile(bs, 0, filename, user, this);
 	}
 }
@@ -401,7 +402,7 @@ void FiletransferRepeater::handleFTSendBytestream(Bytestream *bs, const std::str
 	if (filename.empty())
 		m_resender = new SendFileStraight(bs, 0, this);
 	else {
-		User *user = m_main->userManager()->getUserByJID(bs->initiator().bare());
+		User *user = (User *) m_main->userManager()->getUserByJID(bs->initiator().bare());
 		m_resender = new SendFile(bs, 0, filename, user, this);
 	}
 	purple_timeout_add_seconds(3,&ui_got_data,m_xfer);

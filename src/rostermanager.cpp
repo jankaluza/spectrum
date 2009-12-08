@@ -27,6 +27,7 @@
 #include "usermanager.h"
 #include "caps.h"
 #include "spectrumtimer.h"
+#include "transport.h"
 
 struct SendPresenceToAllData {
 	RosterManager *manager;
@@ -47,8 +48,8 @@ static void sendUnavailablePresence(gpointer key, gpointer v, gpointer data) {
 		tag->addAttribute( "to", to );
 		tag->addAttribute( "type", "unavailable" );
 		tag->addAttribute( "from", s_buddy->getJid());
-		GlooxMessageHandler::instance()->j->send( tag );
-		GlooxMessageHandler::instance()->userManager()->buddyOffline();
+		Transport::instance()->send( tag );
+		Transport::instance()->userManager()->buddyOffline();
 		s_buddy->setOffline();
 	}
 }
@@ -65,13 +66,13 @@ static void sendCurrentPresence(gpointer key, gpointer v, gpointer data) {
 			Tag *tag = manager->generatePresenceStanza(buddy);
 			if (tag) {
 				tag->addAttribute("to", to);
-				GlooxMessageHandler::instance()->j->send(tag);
+				Transport::instance()->send( tag );
 			}
 		}
 	}
 }
 
-RosterManager::RosterManager(User *user) {
+RosterManager::RosterManager(AbstractUser *user) {
 	m_user = user;
 }
 
@@ -105,7 +106,6 @@ bool RosterManager::isInRoster(const std::string &name, const std::string &subsc
 Tag *RosterManager::generatePresenceStanza(PurpleBuddy *buddy) {
 	if (buddy == NULL)
 		return NULL;
-	GlooxMessageHandler *p = GlooxMessageHandler::instance();
 	SpectrumBuddy *s_buddy = (SpectrumBuddy *) buddy->node.ui_data;
 
 	std::string alias = s_buddy->getAlias();
@@ -118,7 +118,7 @@ Tag *RosterManager::generatePresenceStanza(PurpleBuddy *buddy) {
 
 	Log(m_user->jid(), "Generating presence stanza for user " << name);
 	Tag *tag = new Tag("presence");
-	tag->addAttribute("from", name + "@" + p->jid() + "/bot");
+	tag->addAttribute("from", name + "@" + Transport::instance()->jid() + "/bot");
 
 	if (!statusMessage.empty())
 		tag->addChild( new Tag("status", statusMessage) );
@@ -150,7 +150,7 @@ Tag *RosterManager::generatePresenceStanza(PurpleBuddy *buddy) {
 	c->addAttribute("xmlns", "http://jabber.org/protocol/caps");
 	c->addAttribute("hash", "sha-1");
 	c->addAttribute("node", "http://spectrum.im/transport");
-	c->addAttribute("ver", p->configuration().hash);
+	c->addAttribute("ver", Transport::instance()->hash());
 	tag->addChild(c);
 
 	if (m_user->hasTransportFeature(TRANSPORT_FEATURE_AVATARS)) {
@@ -230,7 +230,8 @@ void RosterManager::addRosterItem(PurpleBuddy *buddy) {
 	else
 		Log(std::string(purple_buddy_get_name(buddy)), "This buddy has not set SpectrumBuddy!!!");
 }
-void RosterManager::loadBuddies() {
-	m_roster = GlooxMessageHandler::instance()->sql()->getBuddies(m_user->storageId(), m_user->account());
+
+void RosterManager::setRoster(GHashTable *roster) {
+	m_roster = roster;
 }
 

@@ -84,10 +84,10 @@ void GlooxDiscoHandler::handleDiscoInfo(const JID &jid, const Disco::Info &info,
 	JID j(versions[context].jid);
 	if (p->protocol()->isMUC(NULL, j.bare())) {
 		std::string server = j.username().substr(j.username().find("%") + 1, j.username().length() - j.username().find("%"));
-		user = p->userManager()->getUserByJID(jid.bare() + server);
+		user = (User *) p->userManager()->getUserByJID(jid.bare() + server);
 	}
 	else {
-		user = p->userManager()->getUserByJID(jid.bare());
+		user = (User *) p->userManager()->getUserByJID(jid.bare());
 	}
 	if (user==NULL){
 		std::cout << "no user?! wtf...";

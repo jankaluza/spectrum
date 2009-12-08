@@ -27,6 +27,7 @@
 #include <gloox/siprofileft.h>
 #include <glib.h>
 #include "purple.h"
+#include "abstractuser.h"
 #include "account.h"
 class RosterManager;
 #include "rostermanager.h"
@@ -87,7 +88,7 @@ struct SaveData {
 	long id;
 };
 
-class User : public RosterManager {
+class User : public AbstractUser, RosterManager {
 	public:
 		User(GlooxMessageHandler *parent, JID jid, const std::string &username, const std::string &password, const std::string &userKey, long id);
 		~User();

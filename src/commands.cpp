@@ -44,7 +44,7 @@ static void get_settings(gpointer key, gpointer v, gpointer data) {
 
 static PurpleCmdRet settings_command_cb(PurpleConversation *conv, const char *cmd, char **args, char **error, void *data) {
 	GString *s = NULL;
-	User *user = GlooxMessageHandler::instance()->userManager()->getUserByAccount(purple_conversation_get_account(conv));
+	User *user = (User *) GlooxMessageHandler::instance()->userManager()->getUserByAccount(purple_conversation_get_account(conv));
 	if (!user)
 		return PURPLE_CMD_RET_OK;
 	if (args[0] != NULL) {
@@ -97,7 +97,7 @@ static PurpleCmdRet settings_command_cb(PurpleConversation *conv, const char *cm
 static PurpleCmdRet help_command_cb(PurpleConversation *conv, const char *cmd, char **args, char **error, void *data) {
 	GList *l, *text;
 	GString *s;
-	User *user = GlooxMessageHandler::instance()->userManager()->getUserByAccount(purple_conversation_get_account(conv));
+	User *user = (User *) GlooxMessageHandler::instance()->userManager()->getUserByAccount(purple_conversation_get_account(conv));
 	if (!user)
 		return PURPLE_CMD_RET_OK;
 

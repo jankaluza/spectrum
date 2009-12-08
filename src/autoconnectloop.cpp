@@ -74,7 +74,7 @@ bool AutoConnectLoop::restoreNextConnection() {
 
 	Log("connection restorer", "Checking next account");
 	if (purple_presence_is_online(account->presence)) {
-		user = main->userManager()->getUserByAccount(account);
+		user = (User *) main->userManager()->getUserByAccount(account);
 		if (user == NULL) {
 			Log("connection restorer", "Sending probe presence to "<< JID((std::string)purple_account_get_string(account,"lastUsedJid","")).bare());
 			Tag *stanza = new Tag("presence");
