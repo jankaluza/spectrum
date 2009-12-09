@@ -51,6 +51,8 @@ void RosterManagerTest::sendUnavailablePresenceToAll() {
 	users.push_back("user1%example.com@icq.localhost/bot");
 	users.push_back("user2%example.com@icq.localhost/bot");
 
+	CPPUNIT_ASSERT_MESSAGE ("Nothing was sent #1", m_tags.size() != 0);
+	
 	while (m_tags.size() != 0) {
 		Tag *tag = m_tags.front();
 		CPPUNIT_ASSERT (tag->name() == "presence");
@@ -64,5 +66,29 @@ void RosterManagerTest::sendUnavailablePresenceToAll() {
 		m_tags.remove(tag);
 		delete tag;
 	}
-	CPPUNIT_ASSERT_MESSAGE ("Presence for one or more users from roster was not send", users.size() == 0);
+	CPPUNIT_ASSERT_MESSAGE ("Presence for one or more users from roster was not sent", users.size() == 0);
+	
+	m_buddy1->setOffline();
+	m_buddy2->setOnline();
+	Transport::instance()->clearTags();
+	m_manager->sendUnavailablePresenceToAll();
+	m_tags = Transport::instance()->getTags();
+
+	CPPUNIT_ASSERT_MESSAGE ("Nothing was sent #2", m_tags.size() != 0);
+
+	while (m_tags.size() != 0) {
+		Tag *tag = m_tags.front();
+		CPPUNIT_ASSERT (tag->name() == "presence");
+		CPPUNIT_ASSERT (tag->findAttribute("type") == "unavailable");
+		CPPUNIT_ASSERT (tag->findAttribute("to") == "user@example.com");
+		CPPUNIT_ASSERT_MESSAGE ("Presence sent, but it's nof for m_buddy2",
+								tag->findAttribute("from") == "user2%example.com@icq.localhost/bot");
+		users.remove(tag->findAttribute("from"));
+
+		m_tags.remove(tag);
+		delete tag;
+	}
+
+	
+	
 }

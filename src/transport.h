@@ -39,6 +39,7 @@ class Transport {
 		
 		const std::string &jid() { return m_jid; }
 		std::list <Tag *> &getTags() { return m_tags; }
+		void clearTags() { m_tags.clear(); }
 		
 		
 	private:
