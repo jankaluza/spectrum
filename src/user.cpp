@@ -944,7 +944,7 @@ void User::receivedSubscription(const Subscription &subscription) {
 				purpleReauthorizeBuddy(b);
 			}
 			if (isInRoster(subscription.to().username(), "")) {
-				SpectrumBuddy *s_buddy = getRosterItem(subscription.to().username());
+				SpectrumBuddy *s_buddy = (SpectrumBuddy *) getRosterItem(subscription.to().username());
 				if (s_buddy->getSubscription() == "ask") {
 					Tag *reply = new Tag("presence");
 					reply->addAttribute( "to", subscription.from().bare() );

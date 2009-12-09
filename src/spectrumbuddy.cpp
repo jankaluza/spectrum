@@ -28,19 +28,12 @@
 #include "striphtmltags.h"
 #include "transport.h"
 
-SpectrumBuddy::SpectrumBuddy(long id, PurpleBuddy *buddy) : m_id(id), m_online(false), m_buddy(buddy), m_subscription("both") {
+SpectrumBuddy::SpectrumBuddy(long id, PurpleBuddy *buddy) : AbstractSpectrumBuddy(id), m_buddy(buddy) {
 }
 
 SpectrumBuddy::~SpectrumBuddy() {
 }
 
-long SpectrumBuddy::getId() {
-	return m_id;
-}
-
-void SpectrumBuddy::setId(long id) {
-	m_id = id;
-}
 
 std::string SpectrumBuddy::getAlias() {
 	std::string alias;
@@ -53,16 +46,6 @@ std::string SpectrumBuddy::getAlias() {
 
 std::string SpectrumBuddy::getName() {
 	return std::string(purple_buddy_get_name(m_buddy));
-}
-
-std::string SpectrumBuddy::getSafeName() {
-	std::string name = getName();
-	std::for_each( name.begin(), name.end(), replaceBadJidCharacters() );
-	return name;
-}
-
-std::string SpectrumBuddy::getJid() {
-	return getSafeName() + "@" + Transport::instance()->jid() + "/bot";
 }
 
 bool SpectrumBuddy::getStatus(int &status, std::string &statusMessage) {
@@ -83,24 +66,3 @@ bool SpectrumBuddy::getStatus(int &status, std::string &statusMessage) {
 		statusMessage = "";
 	return true;
 }
-
-bool SpectrumBuddy::isOnline() {
-	return m_online;
-}
-
-void SpectrumBuddy::setOnline() {
-	m_online = true;
-}
-
-void SpectrumBuddy::setOffline() {
-	m_online = false;
-}
-
-void SpectrumBuddy::setSubscription(const std::string &subscription) {
-	m_subscription = subscription;
-}
-
-const std::string &SpectrumBuddy::getSubscription() {
-	return m_subscription;
-}
-

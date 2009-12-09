@@ -17,6 +17,7 @@ class RosterManagerTest : public CPPUNIT_NS :: TestFixture
 {
 	CPPUNIT_TEST_SUITE (RosterManagerTest);
 	CPPUNIT_TEST (setRoster);
+	CPPUNIT_TEST (sendUnavailablePresenceToAll);
 	CPPUNIT_TEST_SUITE_END ();
 
 	public:
@@ -24,13 +25,15 @@ class RosterManagerTest : public CPPUNIT_NS :: TestFixture
 		void tearDown (void);
 
 	protected:
-		void setRoster (void);
+		void setRoster();
+		void sendUnavailablePresenceToAll();
 		
 	private:
 		SpectrumBuddyTest *m_buddy1;
 		SpectrumBuddyTest *m_buddy2;
 		RosterManager *m_manager;
 		TestingUser *m_user;
+		std::list <Tag *> m_tags;
 };
 
 CPPUNIT_TEST_SUITE_REGISTRATION (RosterManagerTest);

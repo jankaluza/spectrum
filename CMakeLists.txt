@@ -59,6 +59,7 @@ endif(CMAKE_BUILD_TYPE MATCHES Debug)
 
 set(spectrum_SRCS
 	src/accountcollector.cpp
+	src/abstractspectrumbuddy.cpp
 	src/adhoc/adhocadmin.cpp
 	src/adhoc/adhochandler.cpp
 	src/adhoc/adhocrepeater.cpp
@@ -108,6 +109,7 @@ set(spectrum_SRCS
 
 set(spectrum_MOC_HDRS
 	src/abstractpurplerequest.h
+	src/abstractspectrumbuddy.h
 	src/accountcollector.h
 	src/adhoc/adhocadmin.h
 	src/adhoc/adhoccommandhandler.h
@@ -201,8 +203,8 @@ set(spectrum_tests_SRCS
 	src/tests/transporttest.cpp
 	src/tests/testinguser.cpp
 	
+	src/abstractspectrumbuddy.cpp
 	src/rostermanager.cpp
-	src/spectrumbuddy.cpp
 	src/striphtmltags.cpp
 	src/spectrum_util.cpp
 	src/usermanager.cpp
@@ -214,8 +216,8 @@ set(spectrum_tests_MOC_HDRS
 	src/tests/rostermanagertest.h
 	src/tests/testinguser.h
 	
+	src/abstractspectrumbuddy.h
 	src/rostermanager.h
-	src/spectrumbuddy.h
 	src/striphtmltags.h
 	src/spectrum_util.h
 	src/transport.h

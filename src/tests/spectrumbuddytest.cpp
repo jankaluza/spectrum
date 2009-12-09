@@ -1,6 +1,6 @@
 #include "spectrumbuddytest.h"
 
-SpectrumBuddyTest::SpectrumBuddyTest(long id, PurpleBuddy *buddy) : SpectrumBuddy(id, NULL) {
+SpectrumBuddyTest::SpectrumBuddyTest(long id, PurpleBuddy *buddy) : AbstractSpectrumBuddy(id) {
 }
 
 std::string SpectrumBuddyTest::getAlias() {

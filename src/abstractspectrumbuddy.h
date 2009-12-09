@@ -18,8 +18,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02111-1301  USA
  */
 
-#ifndef SPECTRUM_ROSTERMANAGER_H
-#define SPECTRUM_ROSTERMANAGER_H
+#ifndef ABSTRACT_SPECTRUM_BUDDY_H
+#define ABSTRACT_SPECTRUM_BUDDY_H
 
 #include <string>
 #include "purple.h"
@@ -27,30 +27,47 @@
 #include "glib.h"
 #include "gloox/tag.h"
 #include <algorithm>
-#include "abstractuser.h"
+
+class User;
 
 using namespace gloox;
 
-class AbstractSpectrumBuddy;
+typedef enum { 	SUBSCRIPTION_NONE = 0,
+				SUBSCRIPTION_TO,
+				SUBSCRIPTION_FROM,
+				SUBSCRIPTION_BOTH,
+				SUBSCRIPTION_ASK
+				} SpectrumSubscriptionType;
 
-class RosterManager {
+// Wrapper for PurpleBuddy
+class AbstractSpectrumBuddy {
 	public:
-		RosterManager(AbstractUser *user);
-		~RosterManager();
+		AbstractSpectrumBuddy(long id);
+		~AbstractSpectrumBuddy();
 		
-		void sendUnavailablePresenceToAll();
-		void sendPresenceToAll(const std::string &to);
-		void removeFromLocalRoster(const std::string &uin);
-		Tag *generatePresenceStanza(PurpleBuddy *buddy);
-		AbstractSpectrumBuddy *getRosterItem(const std::string &uin);
-		void addRosterItem(PurpleBuddy *buddy);
-		void setRoster(GHashTable *roster);
-		bool isInRoster(const std::string &name, const std::string &subscription);
+		long getId();
+		void setId(long id);
+		
+		std::string getSafeName();
+		std::string getJid();
+		
+		
+		bool isOnline();
+		void setOnline();
+		void setOffline();
+		
+		void setSubscription(const std::string &subscription);
+		const std::string &getSubscription();
+		
+		virtual PurpleBuddy *getBuddy() = 0;
+		virtual std::string getName() = 0;
+		virtual std::string getAlias() = 0;
+		virtual bool getStatus(int &status, std::string &statusMessage) = 0;
 
 	private:
-		GHashTable *m_roster;
-		AbstractUser *m_user;
-
+		long m_id;
+		bool m_online;
+		std::string m_subscription;
 };
 
 #endif

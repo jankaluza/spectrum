@@ -38,11 +38,13 @@ class Transport {
 		const std::string &hash();
 		
 		const std::string &jid() { return m_jid; }
+		std::list <Tag *> &getTags() { return m_tags; }
 		
 		
 	private:
 		std::string m_jid;
 		std::string m_hash;
+		std::list <Tag *> m_tags;
 		UserManager *m_userManager;
 		static Transport *m_pInstance;
 };

@@ -27,46 +27,23 @@
 #include "glib.h"
 #include "gloox/tag.h"
 #include <algorithm>
-
-class User;
+#include "abstractspectrumbuddy.h"
 
 using namespace gloox;
 
-typedef enum { 	SUBSCRIPTION_NONE = 0,
-				SUBSCRIPTION_TO,
-				SUBSCRIPTION_FROM,
-				SUBSCRIPTION_BOTH,
-				SUBSCRIPTION_ASK
-				} SpectrumSubscriptionType;
-
 // Wrapper for PurpleBuddy
-class SpectrumBuddy {
+class SpectrumBuddy : public AbstractSpectrumBuddy {
 	public:
 		SpectrumBuddy(long id, PurpleBuddy *buddy);
 		~SpectrumBuddy();
-		
-		long getId();
-		void setId(long id);
+
 		std::string getAlias();
 		std::string getName();
-		std::string getSafeName();
-		std::string getJid();
 		bool getStatus(int &status, std::string &statusMessage);
-		
-		bool isOnline();
-		void setOnline();
-		void setOffline();
-		
-		void setSubscription(const std::string &subscription);
-		const std::string &getSubscription();
-		
 		PurpleBuddy *getBuddy() { return m_buddy; }
 
 	private:
-		long m_id;
-		bool m_online;
 		PurpleBuddy *m_buddy;
-		std::string m_subscription;
 };
 
 #endif

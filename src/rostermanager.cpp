@@ -19,11 +19,9 @@
  */
 
 #include "rostermanager.h"
-#include "spectrumbuddy.h"
+#include "abstractspectrumbuddy.h"
 #include "main.h"
-#include "user.h"
 #include "log.h"
-#include "sql.h"
 #include "usermanager.h"
 #include "caps.h"
 #include "spectrumtimer.h"
@@ -34,10 +32,8 @@ struct SendPresenceToAllData {
 	std::string to;
 };
 
-RosterRow DummyRosterRow;
-
 static void sendUnavailablePresence(gpointer key, gpointer v, gpointer data) {
-	SpectrumBuddy *s_buddy = (SpectrumBuddy *) v;
+	AbstractSpectrumBuddy *s_buddy = (AbstractSpectrumBuddy *) v;
 	SendPresenceToAllData *d = (SendPresenceToAllData *) data;
 // 	RosterManager *manager = d->manager;
 	std::string &to = d->to;
@@ -55,7 +51,7 @@ static void sendUnavailablePresence(gpointer key, gpointer v, gpointer data) {
 }
 
 static void sendCurrentPresence(gpointer key, gpointer v, gpointer data) {
-	SpectrumBuddy *s_buddy = (SpectrumBuddy *) v;
+	AbstractSpectrumBuddy *s_buddy = (AbstractSpectrumBuddy *) v;
 	SendPresenceToAllData *d = (SendPresenceToAllData *) data;
 	RosterManager *manager = d->manager;
 	std::string &to = d->to;
@@ -106,7 +102,7 @@ bool RosterManager::isInRoster(const std::string &name, const std::string &subsc
 Tag *RosterManager::generatePresenceStanza(PurpleBuddy *buddy) {
 	if (buddy == NULL)
 		return NULL;
-	SpectrumBuddy *s_buddy = (SpectrumBuddy *) buddy->node.ui_data;
+	AbstractSpectrumBuddy *s_buddy = (AbstractSpectrumBuddy *) buddy->node.ui_data;
 
 	std::string alias = s_buddy->getAlias();
 	std::string name = s_buddy->getSafeName();
@@ -217,8 +213,8 @@ void RosterManager::removeFromLocalRoster(const std::string &uin) {
 	g_hash_table_remove(m_roster, uin.c_str());
 }
 
-SpectrumBuddy *RosterManager::getRosterItem(const std::string &uin) {
-	SpectrumBuddy *s_buddy = (SpectrumBuddy *) g_hash_table_lookup(m_roster, uin.c_str());
+AbstractSpectrumBuddy *RosterManager::getRosterItem(const std::string &uin) {
+	AbstractSpectrumBuddy *s_buddy = (AbstractSpectrumBuddy *) g_hash_table_lookup(m_roster, uin.c_str());
 	return s_buddy;
 }
 
@@ -228,7 +224,7 @@ void RosterManager::addRosterItem(PurpleBuddy *buddy) {
 	if (buddy->node.ui_data)
 		g_hash_table_replace(m_roster, g_strdup(purple_buddy_get_name(buddy)), buddy->node.ui_data);
 	else
-		Log(std::string(purple_buddy_get_name(buddy)), "This buddy has not set SpectrumBuddy!!!");
+		Log(std::string(purple_buddy_get_name(buddy)), "This buddy has not set AbstractSpectrumBuddy!!!");
 }
 
 void RosterManager::setRoster(GHashTable *roster) {

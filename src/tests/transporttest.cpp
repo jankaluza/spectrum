@@ -14,8 +14,7 @@ Transport::~Transport() {
 }
 
 void Transport::send(Tag *tag) {
-	std::cout << tag->xml();
-	delete tag;
+	m_tags.push_back(tag);
 }
 
 UserManager *Transport::userManager() {

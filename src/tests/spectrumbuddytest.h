@@ -3,18 +3,19 @@
 
 #include <cppunit/TestFixture.h>
 #include <cppunit/extensions/HelperMacros.h>
-#include "../spectrumbuddy.h"
+#include "../abstractspectrumbuddy.h"
 #include "blist.h"
 
 using namespace std;
 
-class SpectrumBuddyTest : public SpectrumBuddy {
+class SpectrumBuddyTest : public AbstractSpectrumBuddy {
 	public:
 		SpectrumBuddyTest(long id, PurpleBuddy *buddy);
 
 		std::string getAlias();
 		std::string getName();
 		bool getStatus(int &status, std::string &statusMessage);
+		PurpleBuddy *getBuddy() { return NULL; }
 		
 		// these functions are only in SpectrumBuddyTest class
 		void setAlias(const std::string &alias);
