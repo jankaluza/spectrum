@@ -430,7 +430,7 @@ void User::purpleBuddyStatusChanged(PurpleBuddy *buddy, PurpleStatus *status, Pu
 	SpectrumBuddy *s_buddy = (SpectrumBuddy *) buddy->node.ui_data;
 	std::string name = s_buddy->getName();
 
-	Tag *tag = generatePresenceStanza(buddy);
+	Tag *tag = s_buddy->generatePresenceStanza(m_features);
 	if (tag) {
 		tag->addAttribute("to", m_jid);
 		p->j->send(tag);
@@ -446,7 +446,7 @@ void User::purpleBuddySignedOn(PurpleBuddy *buddy) {
 	SpectrumBuddy *s_buddy = (SpectrumBuddy *) buddy->node.ui_data;
 	std::string name = s_buddy->getName();
 
-	Tag *tag = generatePresenceStanza(buddy);
+	Tag *tag = s_buddy->generatePresenceStanza(m_features);
 	if (tag) {
 		tag->addAttribute("to", m_jid);
 		p->j->send(tag);
@@ -462,7 +462,7 @@ void User::purpleBuddySignedOff(PurpleBuddy *buddy) {
 	SpectrumBuddy *s_buddy = (SpectrumBuddy *) buddy->node.ui_data;
 	std::string name = s_buddy->getName();
 
-	Tag *tag = generatePresenceStanza(buddy);
+	Tag *tag = s_buddy->generatePresenceStanza(m_features);
 	if (tag) {
 		tag->addAttribute("to", m_jid);
 		p->j->send(tag);
@@ -924,7 +924,8 @@ void User::receivedSubscription(const Subscription &subscription) {
 					}
 					// user is in ICQ contact list so we can inform jabber user
 					// about status
-					Tag *tag = generatePresenceStanza(buddy);
+					SpectrumBuddy *s_buddy = (SpectrumBuddy *) buddy->node.ui_data;
+					Tag *tag = s_buddy->generatePresenceStanza(m_features);
 					if (tag) {
 						tag->addAttribute("to", m_jid);
 						p->j->send(tag);
@@ -1040,7 +1041,8 @@ void User::receivedPresence(const Presence &stanza) {
 			std::for_each( name.begin(), name.end(), replaceJidCharacters() );
 			PurpleBuddy *buddy = purple_find_buddy(m_account, name.c_str());
 			if (buddy) {
-				Tag *probe = generatePresenceStanza(buddy);
+				SpectrumBuddy *s_buddy = (SpectrumBuddy *) buddy->node.ui_data;
+				Tag *probe = s_buddy->generatePresenceStanza(m_features);
 				if (probe) {
 					probe->addAttribute("to", stanza.from().full());
 					p->j->send(probe);

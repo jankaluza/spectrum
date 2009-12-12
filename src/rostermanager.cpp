@@ -70,10 +70,6 @@ RosterManager::~RosterManager() {
 	g_hash_table_destroy(m_roster);
 }
 
-/*
- * Returns true if user with UIN `name` and subscription `subscription` is
- * in roster. If subscription.empty(), returns true on any subsciption.
- */
 bool RosterManager::isInRoster(const std::string &name, const std::string &subscription) {
 // 	std::map<std::string,RosterRow>::iterator iter = m_roster.begin();
 // 	iter = m_roster.find(name);
@@ -87,17 +83,6 @@ bool RosterManager::isInRoster(const std::string &name, const std::string &subsc
 	if (g_hash_table_lookup(m_roster, name.c_str()))
 		return true;
 	return false;
-}
-
-/*
- * Generates presence stanza for PurpleBuddy `buddy`. This will
- * create whole <presence> stanza without 'to' attribute.
- */
-Tag *RosterManager::generatePresenceStanza(PurpleBuddy *buddy) {
-	if (buddy == NULL)
-		return NULL;
-	AbstractSpectrumBuddy *s_buddy = (AbstractSpectrumBuddy *) buddy->node.ui_data;
-	return s_buddy->generatePresenceStanza(m_user->getFeatures());
 }
 
 void RosterManager::sendUnavailablePresenceToAll() {

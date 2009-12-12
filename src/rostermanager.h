@@ -33,18 +33,31 @@ using namespace gloox;
 
 class AbstractSpectrumBuddy;
 
+// Manages all SpectrumBuddies in user's roster.
 class RosterManager {
 	public:
 		RosterManager(AbstractUser *user);
 		~RosterManager();
-		
+
+		// Sends unavailable presence of all online buddies.
 		void sendUnavailablePresenceToAll();
+		
+		// Sends current presence of all buddies.
 		void sendPresenceToAll(const std::string &to);
+		
+		// Remove buddy from local roster.
 		void removeFromLocalRoster(const std::string &uin);
-		Tag *generatePresenceStanza(PurpleBuddy *buddy);
+		
+		// Returns buddy with name `uin`.
 		AbstractSpectrumBuddy *getRosterItem(const std::string &uin);
+		
+		// Adds new buddy to roster.
 		void addRosterItem(PurpleBuddy *buddy);
+		
+		// Sets roster. RosterManager will free it by itself.
 		void setRoster(GHashTable *roster);
+		
+		// Returns true if buddy with this name and subscription is in roster.
 		bool isInRoster(const std::string &name, const std::string &subscription);
 
 	private:
