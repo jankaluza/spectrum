@@ -17,6 +17,7 @@ class TestingUser : public AbstractUser {
 		const std::string &jid() { return m_jid; }
 		PurpleValue *getSetting(const char *key) { return m_value; }
 		bool hasTransportFeature(int feature) { return true; }
+		int getFeatures() { return 256; }
 		
 	private:
 		PurpleValue *m_value;

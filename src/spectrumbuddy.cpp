@@ -66,3 +66,38 @@ bool SpectrumBuddy::getStatus(int &status, std::string &statusMessage) {
 		statusMessage = "";
 	return true;
 }
+
+std::string SpectrumBuddy::getIconHash() {
+	char *avatarHash = NULL;
+	PurpleBuddyIcon *icon = purple_buddy_icons_find(purple_buddy_get_account(m_buddy), purple_buddy_get_name(m_buddy));
+	if (icon) {
+		avatarHash = purple_buddy_icon_get_full_path(icon);
+		Log(getName(), "avatarHash");
+	}
+
+	if (avatarHash) {
+		Log(getName(), "Got avatar hash");
+		// Check if it's patched libpurple which saves icons to directories
+		char *hash = strrchr(avatarHash,'/');
+		std::string h;
+		if (hash) {
+			char *dot;
+			hash++;
+			dot = strchr(hash, '.');
+			if (dot)
+				*dot = '\0';
+
+			std::string ret(hash);
+			g_free(avatarHash);
+			return ret;
+		}
+		else {
+			std::string ret(avatarHash);
+			g_free(avatarHash);
+			return ret;
+		}
+	}
+
+	return "";
+}
+

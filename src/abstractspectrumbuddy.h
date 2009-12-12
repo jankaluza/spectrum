@@ -51,6 +51,7 @@ class AbstractSpectrumBuddy {
 		std::string getSafeName();
 		std::string getJid();
 		
+		Tag *generatePresenceStanza(int features);
 		
 		bool isOnline();
 		void setOnline();
@@ -63,6 +64,7 @@ class AbstractSpectrumBuddy {
 		virtual std::string getName() = 0;
 		virtual std::string getAlias() = 0;
 		virtual bool getStatus(int &status, std::string &statusMessage) = 0;
+		virtual std::string getIconHash() = 0;
 
 	private:
 		long m_id;

@@ -39,7 +39,6 @@ static void sendUnavailablePresence(gpointer key, gpointer v, gpointer data) {
 	std::string &to = d->to;
 
 	if (s_buddy->isOnline()) {
-		std::string name = s_buddy->getSafeName();
 		Tag *tag = new Tag("presence");
 		tag->addAttribute( "to", to );
 		tag->addAttribute( "type", "unavailable" );
@@ -56,7 +55,6 @@ static void sendCurrentPresence(gpointer key, gpointer v, gpointer data) {
 	RosterManager *manager = d->manager;
 	std::string &to = d->to;
 	if (s_buddy->isOnline()) {
-		std::string name = s_buddy->getSafeName();
 		PurpleBuddy *buddy = s_buddy->getBuddy();
 		if (buddy) {
 			Tag *tag = manager->generatePresenceStanza(buddy);
@@ -103,92 +101,7 @@ Tag *RosterManager::generatePresenceStanza(PurpleBuddy *buddy) {
 	if (buddy == NULL)
 		return NULL;
 	AbstractSpectrumBuddy *s_buddy = (AbstractSpectrumBuddy *) buddy->node.ui_data;
-
-	std::string alias = s_buddy->getAlias();
-	std::string name = s_buddy->getSafeName();
-
-	int s;
-	std::string statusMessage;
-	if (!s_buddy->getStatus(s, statusMessage))
-		return NULL;
-
-	Log(m_user->jid(), "Generating presence stanza for user " << name);
-	Tag *tag = new Tag("presence");
-	tag->addAttribute("from", name + "@" + Transport::instance()->jid() + "/bot");
-
-	if (!statusMessage.empty())
-		tag->addChild( new Tag("status", statusMessage) );
-
-	switch(s) {
-		case PURPLE_STATUS_AVAILABLE: {
-			break;
-		}
-		case PURPLE_STATUS_AWAY: {
-			tag->addChild( new Tag("show", "away" ) );
-			break;
-		}
-		case PURPLE_STATUS_UNAVAILABLE: {
-			tag->addChild( new Tag("show", "dnd" ) );
-			break;
-		}
-		case PURPLE_STATUS_EXTENDED_AWAY: {
-			tag->addChild( new Tag("show", "xa" ) );
-			break;
-		}
-		case PURPLE_STATUS_OFFLINE: {
-			tag->addAttribute( "type", "unavailable" );
-			break;
-		}
-	}
-
-	// caps
-	Tag *c = new Tag("c");
-	c->addAttribute("xmlns", "http://jabber.org/protocol/caps");
-	c->addAttribute("hash", "sha-1");
-	c->addAttribute("node", "http://spectrum.im/transport");
-	c->addAttribute("ver", Transport::instance()->hash());
-	tag->addChild(c);
-
-	if (m_user->hasTransportFeature(TRANSPORT_FEATURE_AVATARS)) {
-		// vcard-temp:x:update
-		char *avatarHash = NULL;
-		PurpleBuddyIcon *icon = purple_buddy_icons_find(m_user->account(), purple_buddy_get_name(buddy));
-		if (icon != NULL) {
-			avatarHash = purple_buddy_icon_get_full_path(icon);
-			Log(m_user->jid(), "avatarHash");
-		}
-
-		if (purple_value_get_boolean(m_user->getSetting("enable_avatars"))) {
-			Tag *x = new Tag("x");
-			x->addAttribute("xmlns","vcard-temp:x:update");
-			if (avatarHash != NULL) {
-				Log(m_user->jid(), "Got avatar hash");
-				// Check if it's patched libpurple which saves icons to directories
-				char *hash = strrchr(avatarHash,'/');
-				std::string h;
-				if (hash) {
-					char *dot;
-					hash++;
-					dot = strchr(hash, '.');
-					if (dot)
-						*dot = '\0';
-					x->addChild(new Tag("photo", (std::string) hash));
-				}
-				else
-					x->addChild(new Tag("photo", (std::string) avatarHash));
-			}
-			else {
-				Log(m_user->jid(), "no avatar hash");
-				x->addChild(new Tag("photo"));
-			}
-			tag->addChild(x);
-		}
-		
-		if (avatarHash)
-			g_free(avatarHash);
-	}
-
-	return tag;
+	return s_buddy->generatePresenceStanza(m_user->getFeatures());
 }
 
 void RosterManager::sendUnavailablePresenceToAll() {

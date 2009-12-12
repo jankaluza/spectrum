@@ -69,3 +69,62 @@ const std::string &AbstractSpectrumBuddy::getSubscription() {
 	return m_subscription;
 }
 
+Tag *AbstractSpectrumBuddy::generatePresenceStanza(int features) {
+	std::string alias = getAlias();
+	std::string name = getSafeName();
+
+	int s;
+	std::string statusMessage;
+	if (!getStatus(s, statusMessage))
+		return NULL;
+
+	Log(name, "Generating presence stanza.");
+	Tag *tag = new Tag("presence");
+	tag->addAttribute("from", getJid());
+
+	if (!statusMessage.empty())
+		tag->addChild( new Tag("status", statusMessage) );
+
+	switch(s) {
+		case PURPLE_STATUS_AVAILABLE: {
+			break;
+		}
+		case PURPLE_STATUS_AWAY: {
+			tag->addChild( new Tag("show", "away" ) );
+			break;
+		}
+		case PURPLE_STATUS_UNAVAILABLE: {
+			tag->addChild( new Tag("show", "dnd" ) );
+			break;
+		}
+		case PURPLE_STATUS_EXTENDED_AWAY: {
+			tag->addChild( new Tag("show", "xa" ) );
+			break;
+		}
+		case PURPLE_STATUS_OFFLINE: {
+			tag->addAttribute( "type", "unavailable" );
+			break;
+		}
+	}
+
+	// caps
+	Tag *c = new Tag("c");
+	c->addAttribute("xmlns", "http://jabber.org/protocol/caps");
+	c->addAttribute("hash", "sha-1");
+	c->addAttribute("node", "http://spectrum.im/transport");
+	c->addAttribute("ver", Transport::instance()->hash());
+	tag->addChild(c);
+
+	if (features & TRANSPORT_FEATURE_AVATARS) {
+		// vcard-temp:x:update
+		Tag *x = new Tag("x");
+		x->addAttribute("xmlns","vcard-temp:x:update");
+		x->addChild( new Tag("photo", getIconHash()) );
+		tag->addChild(x);
+	}
+
+	return tag;
+}
+
+
+

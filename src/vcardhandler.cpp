@@ -24,6 +24,7 @@
 #include "log.h"
 #include "gloox/vcard.h"
 #include "protocols/abstractprotocol.h"
+#include "transport.h"
 
 void base64encode(const unsigned char * input, int len, std::string & out)
 {

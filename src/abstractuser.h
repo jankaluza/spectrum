@@ -35,6 +35,7 @@ class AbstractUser
 		virtual const std::string &jid() = 0;
 		virtual PurpleValue *getSetting(const char *key) = 0;
 		virtual bool hasTransportFeature(int feature) = 0;
+		virtual int getFeatures() = 0;
 		
 		guint removeTimer;
 

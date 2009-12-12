@@ -34,6 +34,7 @@
 #include "sql.h"
 #include "caps.h"
 #include "spectrumbuddy.h"
+#include "transport.h"
 
 Resource DummyResource;
 

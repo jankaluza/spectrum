@@ -2,7 +2,6 @@
 // file: fractiontest.h
 #ifndef ROSTER_MANAGER_TEST_H
 #define ROSTER_MANAGER_TEST_H
-
 #include <cppunit/TestFixture.h>
 #include <cppunit/extensions/HelperMacros.h>
 #include "blist.h"
@@ -18,6 +17,7 @@ class RosterManagerTest : public CPPUNIT_NS :: TestFixture
 	CPPUNIT_TEST_SUITE (RosterManagerTest);
 	CPPUNIT_TEST (setRoster);
 	CPPUNIT_TEST (sendUnavailablePresenceToAll);
+	CPPUNIT_TEST (generatePresenceStanza);
 	CPPUNIT_TEST_SUITE_END ();
 
 	public:
@@ -27,6 +27,7 @@ class RosterManagerTest : public CPPUNIT_NS :: TestFixture
 	protected:
 		void setRoster();
 		void sendUnavailablePresenceToAll();
+		void generatePresenceStanza();
 		
 	private:
 		SpectrumBuddyTest *m_buddy1;

@@ -11,6 +11,10 @@ std::string SpectrumBuddyTest::getName() {
 	return m_name;
 }
 
+std::string SpectrumBuddyTest::getIconHash() {
+	return m_iconHash;
+}
+
 bool SpectrumBuddyTest::getStatus(int &status, std::string &statusMessage) {
 	if (m_status == -1)
 		return false;
@@ -33,6 +37,10 @@ void SpectrumBuddyTest::setStatus(int status) {
 
 void SpectrumBuddyTest::setStatusMessage(const std::string &statusMessage) {
 	m_statusMessage = statusMessage;
+}
+
+void SpectrumBuddyTest::setIconHash(const std::string &iconHash) {
+	m_iconHash = iconHash;
 }
 
 

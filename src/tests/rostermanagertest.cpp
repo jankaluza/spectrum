@@ -88,7 +88,42 @@ void RosterManagerTest::sendUnavailablePresenceToAll() {
 		m_tags.remove(tag);
 		delete tag;
 	}
-
-	
-	
 }
+
+void RosterManagerTest::generatePresenceStanza() {
+	setRoster();
+	m_buddy1->setStatus(PURPLE_STATUS_AVAILABLE);
+	m_buddy1->setStatusMessage("I'm here");
+	m_buddy1->setIconHash("somehash");
+	Tag *tag;
+	
+	tag = m_buddy1->generatePresenceStanza(TRANSPORT_FEATURE_AVATARS);
+	CPPUNIT_ASSERT (tag->name() == "presence");
+	CPPUNIT_ASSERT (tag->findAttribute("from") == "user1%example.com@icq.localhost/bot");
+	CPPUNIT_ASSERT (tag->findChild("show") == NULL);
+	CPPUNIT_ASSERT (tag->findChild("status") != NULL);
+	CPPUNIT_ASSERT (tag->findChild("status")->cdata() == "I'm here");
+	CPPUNIT_ASSERT (tag->findChild("x") != NULL);
+	CPPUNIT_ASSERT (tag->findChild("x")->findAttribute("xmlns") == "vcard-temp:x:update");
+	CPPUNIT_ASSERT (tag->findChild("x")->findChild("photo") != NULL);
+	CPPUNIT_ASSERT (tag->findChild("x")->findChild("photo")->cdata() == "somehash");
+
+	tag = m_buddy1->generatePresenceStanza(0);
+	CPPUNIT_ASSERT (tag->name() == "presence");
+	CPPUNIT_ASSERT (tag->findAttribute("from") == "user1%example.com@icq.localhost/bot");
+	CPPUNIT_ASSERT (tag->findChild("show") == NULL);
+	CPPUNIT_ASSERT (tag->findChild("status") != NULL);
+	CPPUNIT_ASSERT (tag->findChild("status")->cdata() == "I'm here");
+	CPPUNIT_ASSERT (tag->findChild("x") == NULL);
+	
+	m_buddy1->setStatus(PURPLE_STATUS_AWAY);
+	tag = m_buddy1->generatePresenceStanza(0);
+	CPPUNIT_ASSERT (tag->name() == "presence");
+	CPPUNIT_ASSERT (tag->findAttribute("from") == "user1%example.com@icq.localhost/bot");
+	CPPUNIT_ASSERT (tag->findChild("status") != NULL);
+	CPPUNIT_ASSERT (tag->findChild("status")->cdata() == "I'm here");
+	CPPUNIT_ASSERT (tag->findChild("show") != NULL);
+	CPPUNIT_ASSERT (tag->findChild("show")->cdata() == "away");
+	CPPUNIT_ASSERT (tag->findChild("x") == NULL);
+}
+

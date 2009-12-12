@@ -191,6 +191,7 @@ class User : public AbstractUser, RosterManager {
 		GHashTable *mucs() { return m_mucs; }
 		std::map<std::string,Conversation> conversations() { return m_conversations; }
 		void setFeatures(int f) { m_features = f; }
+		int getFeatures() { return m_features; }
 		long storageId() { return m_userID; }
 		bool loadingBuddiesFromDB() { return m_loadingBuddiesFromDB; }
 		GHashTable *storageCache() { return m_storageCache; }
