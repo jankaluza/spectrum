@@ -10,7 +10,7 @@ using namespace std;
 class TestingUser : public AbstractUser {
 	public:
 		TestingUser(const std::string &userKey, const std::string &jid);
-		~TestingUser() { delete m_value; }
+		~TestingUser() { purple_value_destroy(m_value); }
 
 		const std::string &userKey() { return m_userkey; }
 		PurpleAccount *account() { return NULL; }
