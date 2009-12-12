@@ -28,14 +28,13 @@
 #include "transport.h"
 
 struct SendPresenceToAllData {
-	RosterManager *manager;
+	int features;
 	std::string to;
 };
 
 static void sendUnavailablePresence(gpointer key, gpointer v, gpointer data) {
 	AbstractSpectrumBuddy *s_buddy = (AbstractSpectrumBuddy *) v;
 	SendPresenceToAllData *d = (SendPresenceToAllData *) data;
-// 	RosterManager *manager = d->manager;
 	std::string &to = d->to;
 
 	if (s_buddy->isOnline()) {
@@ -52,16 +51,13 @@ static void sendUnavailablePresence(gpointer key, gpointer v, gpointer data) {
 static void sendCurrentPresence(gpointer key, gpointer v, gpointer data) {
 	AbstractSpectrumBuddy *s_buddy = (AbstractSpectrumBuddy *) v;
 	SendPresenceToAllData *d = (SendPresenceToAllData *) data;
-	RosterManager *manager = d->manager;
+	int features = d->features;
 	std::string &to = d->to;
 	if (s_buddy->isOnline()) {
-		PurpleBuddy *buddy = s_buddy->getBuddy();
-		if (buddy) {
-			Tag *tag = manager->generatePresenceStanza(buddy);
-			if (tag) {
-				tag->addAttribute("to", to);
-				Transport::instance()->send( tag );
-			}
+		Tag *tag = s_buddy->generatePresenceStanza(features);
+		if (tag) {
+			tag->addAttribute("to", to);
+			Transport::instance()->send( tag );
 		}
 	}
 }
@@ -106,7 +102,7 @@ Tag *RosterManager::generatePresenceStanza(PurpleBuddy *buddy) {
 
 void RosterManager::sendUnavailablePresenceToAll() {
 	SendPresenceToAllData *data = new SendPresenceToAllData;
-	data->manager = this;
+	data->features = m_user->getFeatures();
 	data->to = m_user->jid();
 	g_hash_table_foreach(m_roster, sendUnavailablePresence, data);
 	delete data;
@@ -114,7 +110,7 @@ void RosterManager::sendUnavailablePresenceToAll() {
 
 void RosterManager::sendPresenceToAll(const std::string &to) {
 	SendPresenceToAllData *data = new SendPresenceToAllData;
-	data->manager = this;
+	data->features = m_user->getFeatures();
 	data->to = to;
 	g_hash_table_foreach(m_roster, sendCurrentPresence, data);
 	delete data;

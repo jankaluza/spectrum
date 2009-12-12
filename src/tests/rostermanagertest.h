@@ -16,8 +16,10 @@ class RosterManagerTest : public CPPUNIT_NS :: TestFixture
 {
 	CPPUNIT_TEST_SUITE (RosterManagerTest);
 	CPPUNIT_TEST (setRoster);
-	CPPUNIT_TEST (sendUnavailablePresenceToAll);
 	CPPUNIT_TEST (generatePresenceStanza);
+	CPPUNIT_TEST (sendUnavailablePresenceToAll);
+	CPPUNIT_TEST (sendPresenceToAll);
+	CPPUNIT_TEST (isInRoster);
 	CPPUNIT_TEST_SUITE_END ();
 
 	public:
@@ -26,8 +28,10 @@ class RosterManagerTest : public CPPUNIT_NS :: TestFixture
 
 	protected:
 		void setRoster();
-		void sendUnavailablePresenceToAll();
 		void generatePresenceStanza();
+		void sendUnavailablePresenceToAll();
+		void sendPresenceToAll();
+		void isInRoster();
 		
 	private:
 		SpectrumBuddyTest *m_buddy1;

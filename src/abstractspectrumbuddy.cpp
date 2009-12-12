@@ -78,7 +78,6 @@ Tag *AbstractSpectrumBuddy::generatePresenceStanza(int features) {
 	if (!getStatus(s, statusMessage))
 		return NULL;
 
-	Log(name, "Generating presence stanza.");
 	Tag *tag = new Tag("presence");
 	tag->addAttribute("from", getJid());
 
