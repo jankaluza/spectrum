@@ -48,7 +48,7 @@ std::string SpectrumBuddy::getName() {
 	return std::string(purple_buddy_get_name(m_buddy));
 }
 
-bool SpectrumBuddy::getStatus(int &status, std::string &statusMessage) {
+bool SpectrumBuddy::getStatus(PurpleStatusPrimitive &status, std::string &statusMessage) {
 	PurplePresence *pres = purple_buddy_get_presence(m_buddy);
 	if (pres == NULL)
 		return false;

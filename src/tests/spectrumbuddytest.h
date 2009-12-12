@@ -14,14 +14,14 @@ class SpectrumBuddyTest : public AbstractSpectrumBuddy {
 
 		std::string getAlias();
 		std::string getName();
-		bool getStatus(int &status, std::string &statusMessage);
+		bool getStatus(PurpleStatusPrimitive &status, std::string &statusMessage);
 		std::string getIconHash();
 		PurpleBuddy *getBuddy() { return NULL; }
 		
 		// these functions are only in SpectrumBuddyTest class
 		void setAlias(const std::string &alias);
 		void setName(const std::string &name);
-		void setStatus(int status);
+		void setStatus(PurpleStatusPrimitive status);
 		void setStatusMessage(const std::string &statusMessage);
 		void setIconHash(const std::string &iconHash);
 		
@@ -30,7 +30,7 @@ class SpectrumBuddyTest : public AbstractSpectrumBuddy {
 		std::string m_name;
 		std::string m_statusMessage;
 		std::string m_iconHash;
-		int m_status;
+		PurpleStatusPrimitive m_status;
 };
 
 #endif

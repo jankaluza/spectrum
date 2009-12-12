@@ -28,8 +28,6 @@
 #include "gloox/tag.h"
 #include <algorithm>
 
-class User;
-
 using namespace gloox;
 
 typedef enum { 	SUBSCRIPTION_NONE = 0,
@@ -39,31 +37,53 @@ typedef enum { 	SUBSCRIPTION_NONE = 0,
 				SUBSCRIPTION_ASK
 				} SpectrumSubscriptionType;
 
-// Wrapper for PurpleBuddy
+// Wrapper for PurpleBuddy.
 class AbstractSpectrumBuddy {
 	public:
 		AbstractSpectrumBuddy(long id);
 		~AbstractSpectrumBuddy();
 		
-		long getId();
+		// Sets/gets ID used to identify this buddy for example by storage backend.
 		void setId(long id);
+		long getId();
 		
+		// Returns name which doesn't contain unsafe characters, so it can be used.
+		// in JIDs.
 		std::string getSafeName();
+
+		// Returns full JID.
 		std::string getJid();
-		
+
+		// Generates whole <presence> stanza without "to" attribute. That attribute
+		// has to be added manually.
 		Tag *generatePresenceStanza(int features);
-		
-		bool isOnline();
+
+		// Sets online/offline state information.
 		void setOnline();
 		void setOffline();
 		
+		// Returns true if online.
+		bool isOnline();
+
+		// Sets/gets current subscription.
+		// TODO: rewrite me to use SpectrumSubscriptionType!
 		void setSubscription(const std::string &subscription);
 		const std::string &getSubscription();
-		
+
+		// Returns PurpleBuddy* connected with this SpectrumBuddy.
 		virtual PurpleBuddy *getBuddy() = 0;
+
+		// Returns buddy's name (so for example UIN for ICQ, JID for XMPP...).
 		virtual std::string getName() = 0;
+
+		// Returns buddy's alias (nickname).
 		virtual std::string getAlias() = 0;
-		virtual bool getStatus(int &status, std::string &statusMessage) = 0;
+
+		// Stores current status in `status` and current status message in `statusMessage`.
+		// Returns true if data can be stored.
+		virtual bool getStatus(PurpleStatusPrimitive &status, std::string &statusMessage) = 0;
+
+		// Returns SHA-1 hash of buddy icon (avatar) or empty string if there is no avatar.
 		virtual std::string getIconHash() = 0;
 
 	private:

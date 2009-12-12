@@ -19,9 +19,7 @@
  */
 
 #include "abstractspectrumbuddy.h"
-#include "main.h"
-#include "log.h"
-#include "striphtmltags.h"
+#include "main.h" // just for replaceBadJidCharacters
 #include "transport.h"
 
 AbstractSpectrumBuddy::AbstractSpectrumBuddy(long id) : m_id(id), m_online(false), m_subscription("both") {
@@ -30,12 +28,12 @@ AbstractSpectrumBuddy::AbstractSpectrumBuddy(long id) : m_id(id), m_online(false
 AbstractSpectrumBuddy::~AbstractSpectrumBuddy() {
 }
 
-long AbstractSpectrumBuddy::getId() {
-	return m_id;
-}
-
 void AbstractSpectrumBuddy::setId(long id) {
 	m_id = id;
+}
+
+long AbstractSpectrumBuddy::getId() {
+	return m_id;
 }
 
 std::string AbstractSpectrumBuddy::getSafeName() {
@@ -48,17 +46,16 @@ std::string AbstractSpectrumBuddy::getJid() {
 	return getSafeName() + "@" + Transport::instance()->jid() + "/bot";
 }
 
-
-bool AbstractSpectrumBuddy::isOnline() {
-	return m_online;
-}
-
 void AbstractSpectrumBuddy::setOnline() {
 	m_online = true;
 }
 
 void AbstractSpectrumBuddy::setOffline() {
 	m_online = false;
+}
+
+bool AbstractSpectrumBuddy::isOnline() {
+	return m_online;
 }
 
 void AbstractSpectrumBuddy::setSubscription(const std::string &subscription) {
@@ -73,7 +70,7 @@ Tag *AbstractSpectrumBuddy::generatePresenceStanza(int features) {
 	std::string alias = getAlias();
 	std::string name = getSafeName();
 
-	int s;
+	PurpleStatusPrimitive s;
 	std::string statusMessage;
 	if (!getStatus(s, statusMessage))
 		return NULL;
@@ -104,6 +101,8 @@ Tag *AbstractSpectrumBuddy::generatePresenceStanza(int features) {
 			tag->addAttribute( "type", "unavailable" );
 			break;
 		}
+		default:
+			break;
 	}
 
 	// caps
@@ -124,6 +123,3 @@ Tag *AbstractSpectrumBuddy::generatePresenceStanza(int features) {
 
 	return tag;
 }
-
-
-

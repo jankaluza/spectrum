@@ -15,7 +15,7 @@ std::string SpectrumBuddyTest::getIconHash() {
 	return m_iconHash;
 }
 
-bool SpectrumBuddyTest::getStatus(int &status, std::string &statusMessage) {
+bool SpectrumBuddyTest::getStatus(PurpleStatusPrimitive &status, std::string &statusMessage) {
 	if (m_status == -1)
 		return false;
 	status = m_status;
@@ -31,7 +31,7 @@ void SpectrumBuddyTest::setName(const std::string &name) {
 	m_name = name;
 }
 
-void SpectrumBuddyTest::setStatus(int status) {
+void SpectrumBuddyTest::setStatus(PurpleStatusPrimitive status) {
 	m_status = status;
 }
 
