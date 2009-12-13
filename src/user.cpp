@@ -47,65 +47,6 @@ static gboolean sync_cb(gpointer data) {
 	return d->syncCallback();
 }
 
-static void save_settings(gpointer k, gpointer v, gpointer data) {
-	PurpleValue *value = (PurpleValue *) v;
-	std::string key((char *) k);
-	SaveData *s = (SaveData *) data;
-	User *user = s->user;
-	long id = s->id;
-	if (purple_value_get_type(value) == PURPLE_TYPE_BOOLEAN) {
-		if (purple_value_get_boolean(value))
-			user->p->sql()->addBuddySetting(user->storageId(), id, key, "1", purple_value_get_type(value));
-		else
-			user->p->sql()->addBuddySetting(user->storageId(), id, key, "0", purple_value_get_type(value));
-	}
-	else if (purple_value_get_type(value) == PURPLE_TYPE_STRING) {
-		user->p->sql()->addBuddySetting(user->storageId(), id, key, purple_value_get_string(value), purple_value_get_type(value));
-	}
-}
-
-static gboolean storeBuddy(gpointer key, gpointer v, gpointer data) {
-	User *user = (User *) data;
-	PurpleBuddy *buddy = (PurpleBuddy *) v;
-	GHashTable *buddies = user->storageCache();
-	
-	// save PurpleBuddy
-	std::string alias;
-	std::string name(purple_buddy_get_name(buddy));
-	if (purple_buddy_get_server_alias(buddy))
-		alias = (std::string) purple_buddy_get_server_alias(buddy);
-	else
-		alias = (std::string) purple_buddy_get_alias(buddy);
-	long id;
-	SpectrumBuddy *s_buddy = (SpectrumBuddy *) buddy->node.ui_data;
-	if (s_buddy->getId() != -1) {
-		id = s_buddy->getId();
-		user->p->sql()->addBuddy(user->storageId(), name, "both", purple_group_get_name(purple_buddy_get_group(buddy)) ? std::string(purple_group_get_name(purple_buddy_get_group(buddy))) : std::string("Buddies"), alias);
-	}
-	else {
-		id = user->p->sql()->addBuddy(user->storageId(), name, "both", purple_group_get_name(purple_buddy_get_group(buddy)) ? std::string(purple_group_get_name(purple_buddy_get_group(buddy))) : std::string("Buddies"), alias);
-		s_buddy->setId(id);
-	}
-	Log("buddyListSaveNode", id << " " << name << " " << alias);
-	SaveData *s = new SaveData;
-	s->user = user;
-	s->id = id;
-	g_hash_table_foreach(buddy->node.settings, save_settings, s);
-	delete s;
-	return TRUE;
-}
-
-static gboolean storageTimeout(gpointer data) {
-	User *user = (User *) data;
-	GHashTable *buddies = user->storageCache();
-	if (g_hash_table_size(buddies) == 0) {
-		user->removeStorageTimer();
-		return FALSE;
-	}
-	g_hash_table_foreach_remove(buddies, storeBuddy, user);
-	return TRUE;
-}
-
 static void sendXhtmlTag(Tag *tag, Tag *stanzaTag) {
 	Tag *html = new Tag("html");
 	html->addAttribute("xmlns", "http://jabber.org/protocol/xhtml-im");
@@ -116,7 +57,7 @@ static void sendXhtmlTag(Tag *tag, Tag *stanzaTag) {
 	GlooxMessageHandler::instance()->j->send(stanzaTag);
 }
 
-User::User(GlooxMessageHandler *parent, JID jid, const std::string &username, const std::string &password, const std::string &userKey, long id) : RosterManager(this) {
+User::User(GlooxMessageHandler *parent, JID jid, const std::string &username, const std::string &password, const std::string &userKey, long id) : RosterManager(this), RosterStorage(this) {
 	p = parent;
 	m_jid = jid.bare();
 	Resource r;
@@ -137,12 +78,10 @@ User::User(GlooxMessageHandler *parent, JID jid, const std::string &username, co
 	m_connectionStart = time(NULL);
 	m_subscribeLastCount = -1;
 	m_reconnectCount = 0;
-	m_storageTimer = 0;
 	m_lang = NULL;
 	m_features = 0;
 	m_mucs = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
 	m_filetransfers = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
-	m_storageCache = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
 	PurpleValue *value;
 	
 	PurpleAccount *act = purple_accounts_find(m_username.c_str(), this->p->protocol()->protocol().c_str());
@@ -177,13 +116,6 @@ User::User(GlooxMessageHandler *parent, JID jid, const std::string &username, co
 	}
 
 	p->protocol()->onUserCreated(this);
-}
-
-void User::storeBuddy(PurpleBuddy *buddy) {
-	if (g_hash_table_lookup(m_storageCache, purple_buddy_get_name(buddy)) == NULL)
-		g_hash_table_replace(m_storageCache, g_strdup(purple_buddy_get_name(buddy)), buddy);
-	if (m_storageTimer == 0)
-		m_storageTimer = purple_timeout_add_seconds(10, &storageTimeout, this);
 }
 
 bool User::syncCallback() {
@@ -378,9 +310,8 @@ void User::purpleBuddyRemoved(PurpleBuddy *buddy) {
 	std::string name(purple_buddy_get_name(buddy));
 	std::for_each( name.begin(), name.end(), replaceBadJidCharacters() );
 	m_subscribeCache.erase(name);
-	
-	if (g_hash_table_lookup(m_storageCache, purple_buddy_get_name(buddy)) != NULL)
-		g_hash_table_remove(m_storageCache, purple_buddy_get_name(buddy));
+
+	removeBuddy(buddy);
 }
 
 void User::purpleBuddyCreated(PurpleBuddy *buddy) {
@@ -1258,9 +1189,6 @@ User::~User(){
 		Log(m_jid, "removing timer\n");
 		purple_timeout_remove(m_syncTimer);
 	}
-	
-	if (m_storageTimer != 0)
-		purple_timeout_remove(m_storageTimer);
 
 	m_conversations.clear();
 	m_authRequests.clear();

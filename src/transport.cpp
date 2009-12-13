@@ -19,3 +19,7 @@ UserManager *Transport::userManager() {
 const std::string &Transport::hash() {
 	return GlooxMessageHandler::instance()->configuration().hash;
 }
+
+SQLClass *Transport::sql() {
+	return GlooxMessageHandler::instance()->sql();
+}

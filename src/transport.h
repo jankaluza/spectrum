@@ -24,6 +24,10 @@
 #include <string>
 #include "gloox/tag.h"
 
+#ifndef TESTS
+#include "sql.h"
+#endif
+
 using namespace gloox;
 class UserManager;
 
@@ -45,10 +49,13 @@ class Transport {
 		void send(Tag *tag);
 		UserManager *userManager();
 		const std::string &hash();
-		
+#ifndef TESTS
+		SQLClass *sql();
+#endif
 		const std::string &jid() { return m_jid; }
 		std::list <Tag *> &getTags() { return m_tags; }
 		void clearTags() { m_tags.clear(); }
+		
 		
 		
 	private:

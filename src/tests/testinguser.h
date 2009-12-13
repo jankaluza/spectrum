@@ -18,6 +18,7 @@ class TestingUser : public AbstractUser {
 		PurpleValue *getSetting(const char *key) { return m_value; }
 		bool hasTransportFeature(int feature) { return true; }
 		int getFeatures() { return 256; }
+		long storageId() { return 1; }
 		
 	private:
 		PurpleValue *m_value;

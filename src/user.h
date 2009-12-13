@@ -31,6 +31,7 @@
 #include "account.h"
 class RosterManager;
 #include "rostermanager.h"
+#include "rosterstorage.h"
 
 class GlooxMessageHandler;
 class FiletransferRepeater;
@@ -83,12 +84,7 @@ struct Conversation {
 
 class User;
 
-struct SaveData {
-	User *user;
-	long id;
-};
-
-class User : public AbstractUser, RosterManager {
+class User : public AbstractUser, RosterManager, public RosterStorage {
 	public:
 		User(GlooxMessageHandler *parent, JID jid, const std::string &username, const std::string &password, const std::string &userKey, long id);
 		~User();
@@ -149,9 +145,6 @@ class User : public AbstractUser, RosterManager {
 		bool hasAuthRequest(const std::string &name);
 		void removeAuthRequest(const std::string &name);
 
-		// Storage
-		void storeBuddy(PurpleBuddy *buddy);
-
 		// bind IP
 		void setBindIP(const std::string& bindIP) { m_bindIP = bindIP; }
 
@@ -194,8 +187,6 @@ class User : public AbstractUser, RosterManager {
 		int getFeatures() { return m_features; }
 		long storageId() { return m_userID; }
 		bool loadingBuddiesFromDB() { return m_loadingBuddiesFromDB; }
-		GHashTable *storageCache() { return m_storageCache; }
-		void removeStorageTimer() { m_storageTimer = 0; }
 
 		guint removeTimer;
 
@@ -226,8 +217,6 @@ class User : public AbstractUser, RosterManager {
 		std::map<std::string,Conversation> m_conversations; // list of opened conversations
 		std::map<std::string,PurpleBuddy *> m_subscribeCache;	// cache for contacts for roster X
 		GHashTable *m_settings;		// user settings
-		GHashTable *m_storageCache;	// cache for storing PurpleBuddies
-		guint m_storageTimer;		// timer for storing
 		long m_userID;				// userID for Database
 		bool m_loadingBuddiesFromDB;
 };

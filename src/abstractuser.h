@@ -31,6 +31,7 @@ class AbstractUser
 	public:
 		virtual ~AbstractUser() {}
 		virtual const std::string &userKey() = 0;
+		virtual long storageId() = 0;
 		virtual PurpleAccount *account() = 0;
 		virtual const std::string &jid() = 0;
 		virtual PurpleValue *getSetting(const char *key) = 0;
