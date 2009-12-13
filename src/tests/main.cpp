@@ -5,11 +5,13 @@
 #include <cppunit/TestResultCollector.h>
 #include <cppunit/TestRunner.h>
 #include <cppunit/BriefTestProgressListener.h>
+#include "testingbackend.h"
 
 int main (int argc, char* argv[])
 {
 	
 	Transport *transport = new Transport("icq.localhost");
+	TestingBackend *backend = new TestingBackend();
 	// informs test-listener about testresults
 	CPPUNIT_NS :: TestResult testresult;
 
@@ -31,6 +33,7 @@ int main (int argc, char* argv[])
 	compileroutputter.write ();
 	
 	delete transport;
+	delete backend;
 
 	// return 0 if tests were successful
 	return collectedresults.wasSuccessful () ? 0 : 1;

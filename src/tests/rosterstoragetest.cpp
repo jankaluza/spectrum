@@ -1,6 +1,7 @@
 #include "rosterstoragetest.h"
 #include "rosterstorage.h"
 #include "transport.h"
+#include "testingbackend.h"
 
 void RosterStorageTest::setUp (void) {
 	m_buddy1 = new SpectrumBuddyTest(-1, NULL);
@@ -27,4 +28,13 @@ void RosterStorageTest::tearDown (void) {
 void RosterStorageTest::addRoster() {
  	m_storage->storeBuddy(m_buddy1);
 	m_storage->storeBuddy(m_buddy2);
+
+	CPPUNIT_ASSERT (m_storage->storeBuddies());
+
+	TestingBackend *backend = (TestingBackend *) Transport::instance()->sql();
+	std::map <std::string, Buddy> buddies = backend->getBuddies();
+
+	CPPUNIT_ASSERT (buddies.find("user1@example.com") != buddies.end());
+	CPPUNIT_ASSERT (buddies.find("user2@example.com") != buddies.end());
+
 }

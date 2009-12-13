@@ -208,6 +208,7 @@ set(spectrum_tests_SRCS
 	src/tests/testingbackend.cpp
 	src/tests/transporttest.cpp
 	src/tests/testinguser.cpp
+	src/tests/testingbackend.cpp
 	
 	src/abstractspectrumbuddy.cpp
 	src/rostermanager.cpp
@@ -225,6 +226,7 @@ set(spectrum_tests_MOC_HDRS
 	src/tests/rosterstoragetest.h
 	src/tests/testingbackend.h
 	src/tests/testinguser.h
+	src/tests/testingbackend.h
 	
 	src/abstractspectrumbuddy.h
 	src/rostermanager.h
