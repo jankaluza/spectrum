@@ -16,6 +16,7 @@ class SpectrumBuddyTest : public AbstractSpectrumBuddy {
 		std::string getName();
 		bool getStatus(PurpleStatusPrimitive &status, std::string &statusMessage);
 		std::string getIconHash();
+		std::string getGroup() { return "Buddies"; }
 		PurpleBuddy *getBuddy() { return NULL; }
 		
 		// these functions are only in SpectrumBuddyTest class

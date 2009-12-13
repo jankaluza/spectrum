@@ -101,3 +101,7 @@ std::string SpectrumBuddy::getIconHash() {
 	return "";
 }
 
+std::string SpectrumBuddy::getGroup() {
+	return purple_group_get_name(purple_buddy_get_group(m_buddy)) ? std::string(purple_group_get_name(purple_buddy_get_group(m_buddy))) : std::string("Buddies");
+}
+

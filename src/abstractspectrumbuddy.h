@@ -79,6 +79,9 @@ class AbstractSpectrumBuddy {
 		// Returns buddy's alias (nickname).
 		virtual std::string getAlias() = 0;
 
+		// Returns buddy's group name.
+		virtual std::string getGroup() = 0;
+
 		// Stores current status in `status` and current status message in `statusMessage`.
 		// Returns true if data can be stored.
 		virtual bool getStatus(PurpleStatusPrimitive &status, std::string &statusMessage) = 0;

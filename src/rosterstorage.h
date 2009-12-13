@@ -18,8 +18,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02111-1301  USA
  */
 
-#ifndef SPECTRUM_BUDDY_H
-#define SPECTRUM_BUDDY_H
+#ifndef SPECTRUM_ROSTERSTORAGE_H
+#define SPECTRUM_ROSTERSTORAGE_H
 
 #include <string>
 #include "purple.h"
@@ -27,25 +27,38 @@
 #include "glib.h"
 #include "gloox/tag.h"
 #include <algorithm>
+#include "abstractuser.h"
 #include "abstractspectrumbuddy.h"
 
 using namespace gloox;
 
-// Wrapper for PurpleBuddy
-class SpectrumBuddy : public AbstractSpectrumBuddy {
-	public:
-		SpectrumBuddy(long id, PurpleBuddy *buddy);
-		~SpectrumBuddy();
+struct SaveData {
+	AbstractUser *user;
+	long id;
+};
 
-		std::string getAlias();
-		std::string getName();
-		bool getStatus(PurpleStatusPrimitive &status, std::string &statusMessage);
-		std::string getIconHash();
-		std::string getGroup();
-		PurpleBuddy *getBuddy() { return m_buddy; }
+class RosterStorage {
+	public:
+		RosterStorage(AbstractUser *user);
+		~RosterStorage();
+
+		// Add buddy to store queue and store it in future. Nothing
+		// will happen if buddy is already added.
+		void storeBuddy(PurpleBuddy *buddy);
+		void storeBuddy(AbstractSpectrumBuddy *buddy);
+
+		// Store all buddies from queue immediately. Returns true
+		// if some buddies were stored.
+		bool storeBuddies();
+
+		// Remove buddy from storage queue.
+		void removeBuddy(PurpleBuddy *buddy);
+		void removeBuddy(AbstractSpectrumBuddy *buddy);
 
 	private:
-		PurpleBuddy *m_buddy;
+		AbstractUser *m_user;
+		GHashTable *m_storageCache;
+		guint m_storageTimer;
 };
 
 #endif
