@@ -87,6 +87,7 @@ set(spectrum_SRCS
 	src/searchrepeater.cpp
 	src/spectrum_util.cpp
 	src/spectrumbuddy.cpp
+	src/spectrumtimer.cpp
 	src/statshandler.cpp
 	src/striphtmltags.cpp
 	src/sql.cpp
@@ -140,6 +141,7 @@ set(spectrum_MOC_HDRS
 	src/searchrepeater.h
 	src/spectrum_util.h
 	src/spectrumbuddy.h
+	src/spectrumtimer.h
 	src/statshandler.h
 	src/striphtmltags.h
 	src/sql.h
@@ -212,6 +214,7 @@ set(spectrum_tests_SRCS
 	src/rosterstorage.cpp
 	src/striphtmltags.cpp
 	src/spectrum_util.cpp
+	src/spectrumtimer.cpp
 	src/usermanager.cpp
 	src/log.cpp
 )
@@ -228,6 +231,7 @@ set(spectrum_tests_MOC_HDRS
 	src/rosterstorage.h
 	src/striphtmltags.h
 	src/spectrum_util.h
+	src/spectrumtimer.h
 	src/transport.h
 )
 

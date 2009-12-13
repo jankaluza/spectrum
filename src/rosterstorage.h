@@ -32,6 +32,8 @@
 
 using namespace gloox;
 
+class SpectrumTimer;
+
 struct SaveData {
 	AbstractUser *user;
 	long id;
@@ -58,7 +60,7 @@ class RosterStorage {
 	private:
 		AbstractUser *m_user;
 		GHashTable *m_storageCache;
-		guint m_storageTimer;
+		SpectrumTimer *m_storageTimer;
 };
 
 #endif

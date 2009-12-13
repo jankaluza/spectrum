@@ -23,6 +23,7 @@
 #include "log.h"
 #include "transport.h"
 #include "spectrumbuddy.h"
+#include "spectrumtimer.h"
 
 extern LogClass Log_;
 
@@ -79,20 +80,18 @@ static gboolean storeAbstractSpectrumBuddy(gpointer key, gpointer v, gpointer da
 
 RosterStorage::RosterStorage(AbstractUser *user) : m_user(user) {
 	m_storageCache = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
-	m_storageTimer = 0;
+	m_storageTimer = new SpectrumTimer(10000, &storageTimeout, this);
 }
 
 RosterStorage::~RosterStorage() {
-	if (m_storageTimer != 0)
-		purple_timeout_remove(m_storageTimer);
+	delete m_storageTimer;
 	g_hash_table_destroy(m_storageCache);
 }
 
 void RosterStorage::storeBuddy(AbstractSpectrumBuddy *s_buddy) {
 	if (g_hash_table_lookup(m_storageCache, s_buddy->getName().c_str()) == NULL)
 		g_hash_table_replace(m_storageCache, g_strdup(s_buddy->getName().c_str()), s_buddy);
-	if (m_storageTimer == 0)
-		m_storageTimer = purple_timeout_add_seconds(10, &storageTimeout, this);
+	m_storageTimer->start();
 }
 
 void RosterStorage::storeBuddy(PurpleBuddy *buddy) {
@@ -102,7 +101,6 @@ void RosterStorage::storeBuddy(PurpleBuddy *buddy) {
 
 bool RosterStorage::storeBuddies() {
 	if (g_hash_table_size(m_storageCache) == 0) {
-		m_storageTimer = 0;
 		return false;
 	}
 	g_hash_table_foreach_remove(m_storageCache, storeAbstractSpectrumBuddy, m_user);
