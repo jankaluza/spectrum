@@ -20,6 +20,6 @@ const std::string &Transport::hash() {
 	return GlooxMessageHandler::instance()->configuration().hash;
 }
 
-SQLClass *Transport::sql() {
-	return GlooxMessageHandler::instance()->sql();
+AbstractBackend *Transport::sql() {
+	return (AbstractBackend *) GlooxMessageHandler::instance()->sql();
 }

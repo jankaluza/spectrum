@@ -1,6 +1,8 @@
 #include "transport.h"
 #include "main.h"
 #include "../usermanager.h"
+#include "../abstractbackend.h"
+#include "testingbackend.h"
 
 Transport* Transport::m_pInstance = NULL;
 
@@ -23,4 +25,8 @@ UserManager *Transport::userManager() {
 
 const std::string &Transport::hash() {
 	return m_hash;
+}
+
+AbstractBackend *Transport::sql() {
+	return (AbstractBackend *) TestingBackend::instance();
 }

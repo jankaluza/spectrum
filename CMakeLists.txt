@@ -202,11 +202,13 @@ set(spectrum_tests_SRCS
 	src/tests/main.cpp
 	src/tests/spectrumbuddytest.cpp
 	src/tests/rostermanagertest.cpp
+	src/tests/testingbackend.cpp
 	src/tests/transporttest.cpp
 	src/tests/testinguser.cpp
 	
 	src/abstractspectrumbuddy.cpp
 	src/rostermanager.cpp
+	src/rosterstorage.cpp
 	src/striphtmltags.cpp
 	src/spectrum_util.cpp
 	src/usermanager.cpp
@@ -216,10 +218,12 @@ set(spectrum_tests_SRCS
 set(spectrum_tests_MOC_HDRS
 	src/tests/spectrumbuddytest.h
 	src/tests/rostermanagertest.h
+	src/tests/testingbackend.h
 	src/tests/testinguser.h
 	
 	src/abstractspectrumbuddy.h
 	src/rostermanager.h
+	src/rosterstorage.h
 	src/striphtmltags.h
 	src/spectrum_util.h
 	src/transport.h
