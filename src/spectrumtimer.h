@@ -27,13 +27,28 @@
 
 typedef gboolean (*SpectrumTimerCallback)(void *);
 
+// Wrapper of purple_timeout_*.
+// SpectrumTimer calls callback function after some time. If callback function
+// returns true, timer will start again automatically and function is called
+// repeatedly.
 class SpectrumTimer {
 	public:
+		// Creates new Timer.
+		// `time` - in ms
+		// `callback` - function called after time.
+		// `data` - data passed to callback function
 		SpectrumTimer (int time, SpectrumTimerCallback callback, void *data = NULL);
 		~SpectrumTimer ();
-		
+
+		// Starts timer. If it's already started, nothing whill happen.
 		void start();
+
+		// Stops timer.  If it's already stopped, nothing whill happen.
 		void stop();
+
+		// Don't call this function by hand. It should be private, but it can't be,
+		// because purple_timout_add calls static function which has to call public
+		// SpectrumTimer::timeout().
 		gboolean timeout();
 
 	private:

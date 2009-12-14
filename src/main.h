@@ -93,6 +93,7 @@ class AdhocRepeater;
 class GlooxSearchHandler;
 class GlooxParser;
 class AccountCollector;
+class Transport;
 
 struct User;
 struct UserRow;
@@ -105,15 +106,6 @@ struct replaceBadJidCharacters {
 struct replaceJidCharacters {
 	void operator()(char& c) { if(c == '%') c = '@'; }
 };
-
-/*
- * Transport features used to configure transport.
- */
-typedef enum { 	TRANSPORT_FEATURE_TYPING_NOTIFY = 2,
-				TRANSPORT_FEATURE_AVATARS = 4,
-                TRANSPORT_MANGLE_STATUS = 8,
-				TRANSPORT_FEATURE_FILETRANSFER = 16
-				} TransportFeatures;
 
 typedef enum {	LOG_AREA_XML = 2,
 				LOG_AREA_PURPLE = 4,
@@ -166,7 +158,6 @@ struct Configuration {
 		return !protocol.empty();
 	}
 };
-
 
 /*
  * Main transport class. It inits libpurple and Gloox, runs event loop and handles almost all signals.
@@ -289,6 +280,7 @@ private:
 	UserManager *m_userManager;					// UserManager class
 	bool m_firstConnection;						// true if transporConnect is called for first time
 	static GlooxMessageHandler* m_pInstance;
+	Transport *m_transport;
 	GMainLoop *m_loop;
 };
 

@@ -24,7 +24,7 @@
 #include <string>
 #include "purple.h"
 #include "account.h"
-#include "user.h"
+#include "abstractuser.h"
 #include "glib.h"
 
 class GlooxMessageHandler;
@@ -32,23 +32,22 @@ class GlooxMessageHandler;
 class UserManager
 {
 	public:
-		UserManager(GlooxMessageHandler *m);
+		UserManager();
 		~UserManager();
-		User *getUserByJID(std::string barejid);
-		User *getUserByAccount(PurpleAccount *account);
-		void addUser(User *user) { g_hash_table_replace(m_users, g_strdup(user->userKey().c_str()), user); }
-		void removeUser(User *user);
-		void removeUserTimer(User *user);
+		AbstractUser *getUserByJID(std::string barejid);
+		AbstractUser *getUserByAccount(PurpleAccount *account);
+		void addUser(AbstractUser *user) { g_hash_table_replace(m_users, g_strdup(user->userKey().c_str()), user); }
+		void removeUser(AbstractUser *user);
+		void removeUserTimer(AbstractUser *user);
 		void buddyOnline();
 		void buddyOffline();
 		long onlineUserCount();
 		int userCount() { return g_hash_table_size(m_users); }
 
 	private:
-		GlooxMessageHandler *main;
 		GHashTable *m_users;	// key = JID; value = User*
 		long m_onlineBuddies;
-		User *m_cachedUser;
+		AbstractUser *m_cachedUser;
 
 };
 

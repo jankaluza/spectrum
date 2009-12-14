@@ -47,6 +47,7 @@
 #include "filetransfermanager.h"
 #include "localization.h"
 #include "spectrumbuddy.h"
+#include "transport.h"
 
 #include "parser.h"
 #include "commands.h"
@@ -269,7 +270,7 @@ static void * requestInput(const char *title, const char *primary,const char *se
 	if (primary) {
 		std::string primaryString(primary);
 		Log("purple", "primary string: " << primaryString);
-		User *user = GlooxMessageHandler::instance()->userManager()->getUserByAccount(account);
+		User *user = (User *) GlooxMessageHandler::instance()->userManager()->getUserByAccount(account);
 		if (!user) return NULL;
 		// Check if there is some adhocData. If it's there, this request will be handled by some handler registered to this data.
 		if (!user->adhocData().id.empty()) {
@@ -297,7 +298,7 @@ static void * requestInput(const char *title, const char *primary,const char *se
 }
 
 static void * notifySearchResults(PurpleConnection *gc, const char *title, const char *primary, const char *secondary, PurpleNotifySearchResults *results, gpointer user_data) {
-	User *user = GlooxMessageHandler::instance()->userManager()->getUserByAccount(purple_connection_get_account(gc));
+	User *user = (User *) GlooxMessageHandler::instance()->userManager()->getUserByAccount(purple_connection_get_account(gc));
 	if (!user) return NULL;
 	if (!user->adhocData().id.empty()) {
 		if (user->adhocData().callerType == CALLER_SEARCH) {
@@ -311,7 +312,7 @@ static void * notifySearchResults(PurpleConnection *gc, const char *title, const
 }
 
 static void *requestFields(const char *title, const char *primary, const char *secondary, PurpleRequestFields *fields, const char *ok_text, GCallback ok_cb, const char *cancel_text, GCallback cancel_cb, PurpleAccount *account, const char *who, PurpleConversation *conv, void *user_data) {
-	User *user = GlooxMessageHandler::instance()->userManager()->getUserByAccount(account);
+	User *user = (User *) GlooxMessageHandler::instance()->userManager()->getUserByAccount(account);
 	if (user && !user->adhocData().id.empty()) {
 		if (user->adhocData().callerType == CALLER_ADHOC) {
 			AdhocRepeater *repeater = new AdhocRepeater(GlooxMessageHandler::instance(), user, title ? std::string(title) : std::string(), primary ? std::string(primary) : std::string(), secondary ? std::string(secondary) : std::string(), fields, ok_cb, cancel_cb, user_data);
@@ -332,7 +333,7 @@ static void *requestFields(const char *title, const char *primary, const char *s
 }
 
 static void * requestAction(const char *title, const char *primary,const char *secondary, int default_action,PurpleAccount *account, const char *who,PurpleConversation *conv, void *user_data,size_t action_count, va_list actions){
-	User *user = GlooxMessageHandler::instance()->userManager()->getUserByAccount(account);
+	User *user = (User *) GlooxMessageHandler::instance()->userManager()->getUserByAccount(account);
 	if (user && !user->adhocData().id.empty()) {
 		AdhocRepeater *repeater = new AdhocRepeater(GlooxMessageHandler::instance(), user, title ? std::string(title) : std::string(), primary ? std::string(primary) : std::string(), secondary ? std::string(secondary) : std::string(), default_action, user_data, action_count, actions);
 		GlooxMessageHandler::instance()->adhoc()->registerSession(user->adhocData().from, repeater);
@@ -424,7 +425,7 @@ static void * notifyMessage(PurpleNotifyMsgType type, const char *title, const c
 	// TODO: We have to patch libpurple to be able to identify from which account the message came from...
 	// without this the function is quite useles...
 
-	// User *user = GlooxMessageHandler::instance()->userManager()->getUserByAccount(account);
+	// User *user = (User *) GlooxMessageHandler::instance()->userManager()->getUserByAccount(account);
 	// if (user && !user->adhocData().id.empty()) {
 	// 	AdhocRepeater *repeater = new AdhocRepeater(GlooxMessageHandler::instance(), user, title ? std::string(title):std::string(), primary ? std::string(primary):std::string(), secondary ? std::string(secondary):std::string(), default_action, user_data, action_count, actions);
 	// 	GlooxMessageHandler::instance()->adhoc()->registerSession(user->adhocData().from, repeater);
@@ -442,7 +443,7 @@ static void XferCreated(PurpleXfer *xfer) {
 	std::for_each( remote_user.begin(), remote_user.end(), replaceBadJidCharacters() );
 	
 	Log("xfercreated", "get user " << remote_user);
-	User *user = GlooxMessageHandler::instance()->userManager()->getUserByAccount(purple_xfer_get_account(xfer));
+	User *user = (User *) GlooxMessageHandler::instance()->userManager()->getUserByAccount(purple_xfer_get_account(xfer));
 	if (!user) return;
 
 	FiletransferRepeater *repeater = user->getFiletransfer(remote_user);
@@ -480,7 +481,7 @@ static void buddyListSaveNode(PurpleBlistNode *node) {
 		return;
 	PurpleBuddy *buddy = (PurpleBuddy *) node;
 	PurpleAccount *a = purple_buddy_get_account(buddy);
-	User *user = GlooxMessageHandler::instance()->userManager()->getUserByAccount(a);
+	User *user = (User *) GlooxMessageHandler::instance()->userManager()->getUserByAccount(a);
 	if (!user) return;
 	if (user->loadingBuddiesFromDB()) return;
 	user->storeBuddy(buddy);
@@ -500,7 +501,7 @@ static void buddyListRemoveNode(PurpleBlistNode *node) {
 		return;
 	PurpleBuddy *buddy = (PurpleBuddy *) node;
 	PurpleAccount *a = purple_buddy_get_account(buddy);
-	User *user = GlooxMessageHandler::instance()->userManager()->getUserByAccount(a);
+	User *user = (User *) GlooxMessageHandler::instance()->userManager()->getUserByAccount(a);
 	if (user != NULL) {
 		if (user->loadingBuddiesFromDB()) return;
 		long id = 0;
@@ -709,7 +710,7 @@ static PurpleCoreUiOps coreUiOps =
  */
 static gboolean connectUser(gpointer data) {
 	std::string name((char*)data);
-	User *user = GlooxMessageHandler::instance()->userManager()->getUserByJID(name);
+	User *user = (User *) GlooxMessageHandler::instance()->userManager()->getUserByJID(name);
 	if (user && user->readyForConnect() && !user->isConnected()) {
 		user->connect();
 	}
@@ -722,7 +723,7 @@ static gboolean connectUser(gpointer data) {
  */
 static gboolean reconnect(gpointer data) {
 	std::string name((char*)data);
-	User *user = GlooxMessageHandler::instance()->userManager()->getUserByJID(name);
+	User *user = (User *) GlooxMessageHandler::instance()->userManager()->getUserByJID(name);
 	if (user) {
 		user->connect();
 	}
@@ -797,6 +798,8 @@ GlooxMessageHandler::GlooxMessageHandler(const std::string &config) : MessageHan
 	}
 #endif
 
+	m_transport = new Transport(m_configuration.jid);
+
 	if (logfile) {
 		std::string l(logfile);
 		replace(l, "$jid", m_configuration.jid.c_str());
@@ -817,7 +820,7 @@ GlooxMessageHandler::GlooxMessageHandler(const std::string &config) : MessageHan
 	
 	m_loop = g_main_loop_new(NULL, FALSE);
 
-	m_userManager = new UserManager(this);
+	m_userManager = new UserManager();
 	m_searchHandler = NULL;
 
 	if (loaded && !initPurple())
@@ -894,6 +897,7 @@ GlooxMessageHandler::~GlooxMessageHandler(){
 		delete m_protocol;
 	if (m_searchHandler)
 		delete m_searchHandler;
+	delete m_transport;
 	delete j;
 }
 
@@ -953,7 +957,7 @@ void GlooxMessageHandler::onSessionCreateError(SessionCreateError error) {
 
 void GlooxMessageHandler::purpleConnectionError(PurpleConnection *gc,PurpleConnectionError reason,const char *text) {
 	PurpleAccount *account = purple_connection_get_account(gc);
-	User *user = userManager()->getUserByAccount(account);
+	User *user = (User *) userManager()->getUserByAccount(account);
 	if (user != NULL) {
 		Log(user->jid(), "Disconnected from legacy network because of error " << int(reason));
 		if (text)
@@ -987,7 +991,7 @@ void GlooxMessageHandler::purpleConnectionError(PurpleConnection *gc,PurpleConne
 }
 
 void GlooxMessageHandler::purpleBuddyTyping(PurpleAccount *account, const char *who){
-	User *user = userManager()->getUserByAccount(account);
+	User *user = (User *) userManager()->getUserByAccount(account);
 	if (user != NULL) {
 		user->purpleBuddyTyping((std::string)who);
 	}
@@ -999,7 +1003,7 @@ void GlooxMessageHandler::purpleBuddyTyping(PurpleAccount *account, const char *
 void GlooxMessageHandler::purpleBuddyRemoved(PurpleBuddy *buddy) {
 	if (buddy != NULL) {
 		PurpleAccount *a = purple_buddy_get_account(buddy);
-		User *user = userManager()->getUserByAccount(a);
+		User *user = (User *) userManager()->getUserByAccount(a);
 		if (user != NULL)
 			user->purpleBuddyRemoved(buddy);
 	}
@@ -1007,34 +1011,34 @@ void GlooxMessageHandler::purpleBuddyRemoved(PurpleBuddy *buddy) {
 
 void GlooxMessageHandler::purpleBuddyCreated(PurpleBuddy *buddy) {
 	PurpleAccount *a = purple_buddy_get_account(buddy);
-	User *user = userManager()->getUserByAccount(a);
+	User *user = (User *) userManager()->getUserByAccount(a);
 	if (user != NULL)
 		user->purpleBuddyCreated(buddy);
 }
 
 void GlooxMessageHandler::purpleBuddyStatusChanged(PurpleBuddy *buddy, PurpleStatus *status, PurpleStatus *old_status) {
 	PurpleAccount *a = purple_buddy_get_account(buddy);
-	User *user = userManager()->getUserByAccount(a);
+	User *user = (User *) userManager()->getUserByAccount(a);
 	if (user != NULL)
-		user->purpleBuddyStatusChanged(buddy, status, old_status);
+		user->handleBuddyStatusChanged(buddy, status, old_status);
 }
 
 void GlooxMessageHandler::purpleBuddySignedOn(PurpleBuddy *buddy) {
 	PurpleAccount *a = purple_buddy_get_account(buddy);
-	User *user = userManager()->getUserByAccount(a);
+	User *user = (User *) userManager()->getUserByAccount(a);
 	if (user != NULL)
-		user->purpleBuddySignedOn(buddy);
+		user->handleBuddySignedOn(buddy);
 }
 
 void GlooxMessageHandler::purpleBuddySignedOff(PurpleBuddy *buddy) {
 	PurpleAccount *a = purple_buddy_get_account(buddy);
-	User *user = userManager()->getUserByAccount(a);
+	User *user = (User *) userManager()->getUserByAccount(a);
 	if (user != NULL)
-		user->purpleBuddySignedOff(buddy);
+		user->handleBuddySignedOff(buddy);
 }
 
 void GlooxMessageHandler::purpleBuddyTypingStopped(PurpleAccount *account, const char *who) {
-	User *user = userManager()->getUserByAccount(account);
+	User *user = (User *) userManager()->getUserByAccount(account);
 	if (user != NULL) {
 		user->purpleBuddyTypingStopped((std::string) who);
 	}
@@ -1045,7 +1049,7 @@ void GlooxMessageHandler::purpleBuddyTypingStopped(PurpleAccount *account, const
 
 void GlooxMessageHandler::signedOn(PurpleConnection *gc, gpointer unused) {
 	PurpleAccount *account = purple_connection_get_account(gc);
-	User *user = userManager()->getUserByAccount(account);
+	User *user = (User *) userManager()->getUserByAccount(account);
 	if (user != NULL) {
 		Log(user->jid(), "logged in to legacy network");
 		user->connected();
@@ -1056,7 +1060,7 @@ void GlooxMessageHandler::purpleAuthorizeClose(void *data) {
 	authData *d = (authData*) data;
 	if (!d)
 		return;
-	User *user = userManager()->getUserByAccount(d->account);
+	User *user = (User *) userManager()->getUserByAccount(d->account);
 	if (user != NULL) {
 		Log(user->jid(), "purple wants to close authorizeRequest");
 		if (user->hasAuthRequest(d->who)) {
@@ -1072,7 +1076,7 @@ void GlooxMessageHandler::purpleAuthorizeClose(void *data) {
 void * GlooxMessageHandler::purpleAuthorizeReceived(PurpleAccount *account, const char *remote_user, const char *id, const char *alias, const char *message, gboolean on_list, PurpleAccountRequestAuthorizationCb authorize_cb, PurpleAccountRequestAuthorizationCb deny_cb, void *user_data){
 	if (account==NULL)
 		return NULL;
-	User *user = userManager()->getUserByAccount(account);
+	User *user = (User *) userManager()->getUserByAccount(account);
 	if (user != NULL) {
 		if (user->isConnected()) {
 			user->purpleAuthorizeReceived(account, remote_user, id, alias, message, on_list, authorize_cb, deny_cb, user_data);
@@ -1381,7 +1385,7 @@ void GlooxMessageHandler::purpleFileReceiveRequest(PurpleXfer *xfer) {
         }
     }
 
-	User *user = userManager()->getUserByAccount(purple_xfer_get_account(xfer));
+	User *user = (User *) userManager()->getUserByAccount(purple_xfer_get_account(xfer));
 	if (user != NULL) {
 		FiletransferRepeater *repeater = (FiletransferRepeater *) xfer->ui_data;
 		if (user->hasFeature(GLOOX_FEATURE_FILETRANSFER)) {
@@ -1399,7 +1403,7 @@ void GlooxMessageHandler::purpleFileReceiveComplete(PurpleXfer *xfer) {
 	if (purple_xfer_get_local_filename(xfer)) {
 		std::string localname(purple_xfer_get_local_filename(xfer));
 		std::string basename(g_path_get_basename(purple_xfer_get_local_filename(xfer)));
-		User *user = userManager()->getUserByAccount(purple_xfer_get_account(xfer));
+		User *user = (User *) userManager()->getUserByAccount(purple_xfer_get_account(xfer));
 		if (user != NULL) {
 			if (user->isConnected()) {
 				if (user->isVIP()) {
@@ -1423,7 +1427,7 @@ void GlooxMessageHandler::purpleFileReceiveComplete(PurpleXfer *xfer) {
 
 
 void GlooxMessageHandler::purpleMessageReceived(PurpleAccount* account, char * name, char *msg, PurpleConversation *conv, PurpleMessageFlags flags) {
-	User *user = userManager()->getUserByAccount(account);
+	User *user = (User *) userManager()->getUserByAccount(account);
 	if (user) {
 		if (user->isConnected()) {
 			user->purpleMessageReceived(account,name,msg,conv,flags);
@@ -1441,7 +1445,7 @@ void GlooxMessageHandler::purpleConversationWriteIM(PurpleConversation *conv, co
 	if (who == NULL)
 		return;
 	PurpleAccount *account = purple_conversation_get_account(conv);
-	User *user = userManager()->getUserByAccount(account);
+	User *user = (User *) userManager()->getUserByAccount(account);
 	if (user) {
 		if (user->isConnected()) {
 			m_stats->messageFromLegacy();
@@ -1460,7 +1464,7 @@ void GlooxMessageHandler::notifyEmail(PurpleConnection *gc,const char *subject, 
 	if (protocol()->notifyUsername().empty())
 		return;
 	PurpleAccount *account = purple_connection_get_account(gc);
-	User *user = userManager()->getUserByAccount(account);
+	User *user = (User *) userManager()->getUserByAccount(account);
 	if (user!=NULL) {
 		if (purple_value_get_boolean(user->getSetting("enable_notify_email"))) {
 			std::string text;
@@ -1483,7 +1487,7 @@ void GlooxMessageHandler::purpleConversationWriteChat(PurpleConversation *conv, 
 	if (who == NULL)
 		return;
 	PurpleAccount *account = purple_conversation_get_account(conv);
-	User *user = userManager()->getUserByAccount(account);
+	User *user = (User *) userManager()->getUserByAccount(account);
 	if (user) {
 		if (user->isConnected()) {
 			m_stats->messageFromLegacy();
@@ -1500,7 +1504,7 @@ void GlooxMessageHandler::purpleConversationWriteChat(PurpleConversation *conv, 
 
 void GlooxMessageHandler::purpleChatTopicChanged(PurpleConversation *conv, const char *who, const char *topic) {
 	PurpleAccount *account = purple_conversation_get_account(conv);
-	User *user = userManager()->getUserByAccount(account);
+	User *user = (User *) userManager()->getUserByAccount(account);
 	if (user) {
 		if (user->isConnected()) {
 			user->purpleChatTopicChanged(conv, who, topic);
@@ -1510,7 +1514,7 @@ void GlooxMessageHandler::purpleChatTopicChanged(PurpleConversation *conv, const
 
 void GlooxMessageHandler::purpleChatAddUsers(PurpleConversation *conv, GList *cbuddies, gboolean new_arrivals) {
 	PurpleAccount *account = purple_conversation_get_account(conv);
-	User *user = userManager()->getUserByAccount(account);
+	User *user = (User *) userManager()->getUserByAccount(account);
 	if (user) {
 		if (user->isConnected()) {
 			user->purpleChatAddUsers(conv, cbuddies, new_arrivals);
@@ -1520,7 +1524,7 @@ void GlooxMessageHandler::purpleChatAddUsers(PurpleConversation *conv, GList *cb
 
 void GlooxMessageHandler::purpleChatRenameUser(PurpleConversation *conv, const char *old_name, const char *new_name, const char *new_alias) {
 	PurpleAccount *account = purple_conversation_get_account(conv);
-	User *user = userManager()->getUserByAccount(account);
+	User *user = (User *) userManager()->getUserByAccount(account);
 	if (user) {
 		if (user->isConnected()){
 			user->purpleChatRenameUser(conv, old_name, new_name, new_alias);
@@ -1530,7 +1534,7 @@ void GlooxMessageHandler::purpleChatRenameUser(PurpleConversation *conv, const c
 
 void GlooxMessageHandler::purpleChatRemoveUsers(PurpleConversation *conv, GList *users) {
 	PurpleAccount *account = purple_conversation_get_account(conv);
-	User *user = userManager()->getUserByAccount(account);
+	User *user = (User *) userManager()->getUserByAccount(account);
 	if (user) {
 		if (user->isConnected()) {
 			user->purpleChatRemoveUsers(conv, users);
@@ -1560,10 +1564,10 @@ void GlooxMessageHandler::handleSubscription(const Subscription &stanza) {
 	User *user;
 	if (protocol()->isMUC(NULL, stanza.to().bare())) {
 		std::string server = stanza.to().username().substr(stanza.to().username().find("%") + 1, stanza.to().username().length() - stanza.to().username().find("%"));
-		user = userManager()->getUserByJID(stanza.from().bare() + server);
+		user = (User *) userManager()->getUserByJID(stanza.from().bare() + server);
 	}
 	else {
-		user = userManager()->getUserByJID(stanza.from().bare());
+		user = (User *) userManager()->getUserByJID(stanza.from().bare());
 	}
 	if (user)
 		user->receivedSubscription(stanza);
@@ -1620,10 +1624,10 @@ void GlooxMessageHandler::handlePresence(const Presence &stanza){
 	if (protocol()->isMUC(NULL, stanza.to().bare())) {
 		std::string server = stanza.to().username().substr(stanza.to().username().find("%") + 1, stanza.to().username().length() - stanza.to().username().find("%"));
 		userkey = stanza.from().bare() + server;
-		user = userManager()->getUserByJID(stanza.from().bare() + server);
+		user = (User *) userManager()->getUserByJID(stanza.from().bare() + server);
 	}
 	else {
-		user = userManager()->getUserByJID(stanza.from().bare());
+		user = (User *) userManager()->getUserByJID(stanza.from().bare());
 		userkey = stanza.from().bare();
 	}
 	if (user == NULL) {
@@ -1673,7 +1677,7 @@ void GlooxMessageHandler::handlePresence(const Presence &stanza){
 				user->setFeatures(isVip ? configuration().VIPFeatures : configuration().transportFeatures);
 				if (c != NULL)
 					if (hasCaps(c->findAttribute("ver")))
-						user->setResource(stanza.from().resource(), stanza.priority(), c->findAttribute("ver"));
+						user->setResource(stanza.from().resource(), stanza.priority(), capsCache[c->findAttribute("ver")]);
 
 				std::map<int,std::string> ::iterator iter = configuration().bindIPs.begin();
 				iter = configuration().bindIPs.find(lastIP);
@@ -1709,11 +1713,11 @@ void GlooxMessageHandler::handlePresence(const Presence &stanza){
 		user->receivedPresence(stanza);
 	}
 	if (stanza.to().username() == "" && user != NULL) {
-		if(stanza.presence() == Presence::Unavailable && user->isConnected() == true && user->resources().empty()) {
+		if(stanza.presence() == Presence::Unavailable && user->isConnected() == true && user->getResources().empty()) {
 			Log(stanza.from().full(), "Logging out");
 			m_userManager->removeUser(user);
 		}
-		else if (stanza.presence() == Presence::Unavailable && user->isConnected() == false && int(time(NULL)) > int(user->connectionStart()) + 10 && user->resources().empty()) {
+		else if (stanza.presence() == Presence::Unavailable && user->isConnected() == false && int(time(NULL)) > int(user->connectionStart()) + 10 && user->getResources().empty()) {
 			Log(stanza.from().full(), "Logging out, but he's not connected...");
 			m_userManager->removeUser(user);
 		}
@@ -1859,10 +1863,10 @@ void GlooxMessageHandler::handleMessage (const Message &msg, MessageSession *ses
 	User *user;
 	if (protocol()->isMUC(NULL, msg.to().bare())) {
 		std::string server = msg.to().username().substr(msg.to().username().find("%") + 1, msg.to().username().length() - msg.to().username().find("%"));
-		user = userManager()->getUserByJID(msg.from().bare() + server);
+		user = (User *) userManager()->getUserByJID(msg.from().bare() + server);
 	}
 	else {
-		user = userManager()->getUserByJID(msg.from().bare());
+		user = (User *) userManager()->getUserByJID(msg.from().bare());
 	}
 	if (user!=NULL) {
 		if (user->isConnected()) {

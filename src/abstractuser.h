@@ -18,34 +18,29 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02111-1301  USA
  */
 
-#ifndef SPECTRUM_BUDDY_H
-#define SPECTRUM_BUDDY_H
+#ifndef _ABSTRACT_USER_H
+#define _ABSTRACT_USER_H
 
 #include <string>
-#include "purple.h"
+#include <list>
 #include "account.h"
-#include "glib.h"
-#include "gloox/tag.h"
-#include <algorithm>
-#include "abstractspectrumbuddy.h"
+#include "value.h"
+#include "resourcemanager.h"
 
-using namespace gloox;
-
-// Wrapper for PurpleBuddy
-class SpectrumBuddy : public AbstractSpectrumBuddy {
+class AbstractUser : public ResourceManager
+{
 	public:
-		SpectrumBuddy(long id, PurpleBuddy *buddy);
-		~SpectrumBuddy();
+		virtual ~AbstractUser() {}
+		virtual const std::string &userKey() = 0;
+		virtual long storageId() = 0;
+		virtual PurpleAccount *account() = 0;
+		virtual const std::string &jid() = 0;
+		virtual PurpleValue *getSetting(const char *key) = 0;
+		virtual bool hasTransportFeature(int feature) = 0;
+		virtual int getFeatures() = 0;
+		
+		guint removeTimer;
 
-		std::string getAlias();
-		std::string getName();
-		bool getStatus(PurpleStatusPrimitive &status, std::string &statusMessage);
-		std::string getIconHash();
-		std::string getGroup();
-		PurpleBuddy *getBuddy() { return m_buddy; }
-
-	private:
-		PurpleBuddy *m_buddy;
 };
 
 #endif

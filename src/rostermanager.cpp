@@ -19,420 +19,295 @@
  */
 
 #include "rostermanager.h"
-#include "spectrumbuddy.h"
+#include "abstractspectrumbuddy.h"
 #include "main.h"
-#include "user.h"
 #include "log.h"
-#include "sql.h"
 #include "usermanager.h"
 #include "caps.h"
 #include "spectrumtimer.h"
+#include "transport.h"
 
-static gboolean sendUnavailablePresence(gpointer key, gpointer v, gpointer data) {
-	SpectrumBuddy *buddy = (SpectrumBuddy *) v;
-	User *user = (User *) data;
+struct SendPresenceToAllData {
+	int features;
+	std::string to;
+};
 
-	if (buddy->isOnline()) {
+static void sendUnavailablePresence(gpointer key, gpointer v, gpointer data) {
+	AbstractSpectrumBuddy *s_buddy = (AbstractSpectrumBuddy *) v;
+	SendPresenceToAllData *d = (SendPresenceToAllData *) data;
+	std::string &to = d->to;
+
+	if (s_buddy->isOnline()) {
 		Tag *tag = new Tag("presence");
-		tag->addAttribute( "to", user->jid() );
+		tag->addAttribute( "to", to );
 		tag->addAttribute( "type", "unavailable" );
-		tag->addAttribute( "from", buddy->getJid());
-		user->p->j->send( tag );
-		user->p->userManager()->buddyOffline();
-		buddy->setOffline();
-	}
-	
-	return TRUE;
-}
-
-static void sendSubscribePresence(gpointer key, gpointer v, gpointer data) {
-	SpectrumBuddy *buddy = (SpectrumBuddy *) v;
-	User *user = (User *) data;
-
-	Log(user->jid(), "Not in roster => sending subscribe");
-	Tag *tag = new Tag("presence");
-	tag->addAttribute("type", "subscribe");
-	tag->addAttribute("from", buddy->getBareJid());
-	tag->addAttribute("to", user->jid());
-	Tag *nick = new Tag("nick", buddy->getNickname());
-	nick->addAttribute("xmlns","http://jabber.org/protocol/nick");
-	tag->addChild(nick);
-	user->p->j->send(tag);
-}
-
-static void populateRIE(gpointer key, gpointer v, gpointer data) {
-	SpectrumBuddy *buddy = (SpectrumBuddy *) v;
-	if (buddy->getSubscription() == SUBSCRIPTION_NONE) {
-		Tag *x = (Tag *) data;
-
-		Tag *item = new Tag("item");
-		item->addAttribute("action", "add");
-		item->addAttribute("jid", buddy->getBareJid());
-		item->addAttribute("name", buddy->getNickname());
-		item->addChild( new Tag("group", buddy->getGroup()));
-		x->addChild(item);
-
-		buddy->setSubscription(SUBSCRIPTION_ASK);
-		buddy->store();
+		tag->addAttribute( "from", s_buddy->getJid());
+		Transport::instance()->send( tag );
+		Transport::instance()->userManager()->buddyOffline();
+		s_buddy->setOffline();
 	}
 }
 
-static gboolean storeAllBuddies(gpointer key, gpointer v, gpointer data) {
-	SpectrumBuddy *buddy = (SpectrumBuddy *) v;
-	buddy->store();
-	return TRUE;
-}
-
-static gboolean storageTimerTimeout(gpointer data) {
-	RosterManager *manager = (RosterManager *) data;
-	return manager->storageTimeout();
+static void sendCurrentPresence(gpointer key, gpointer v, gpointer data) {
+	AbstractSpectrumBuddy *s_buddy = (AbstractSpectrumBuddy *) v;
+	SendPresenceToAllData *d = (SendPresenceToAllData *) data;
+	int features = d->features;
+	std::string &to = d->to;
+	if (s_buddy->isOnline()) {
+		Tag *tag = s_buddy->generatePresenceStanza(features);
+		if (tag) {
+			tag->addAttribute("to", to);
+			Transport::instance()->send( tag );
+		}
+	}
 }
 
 static gboolean sync_cb(gpointer data) {
-	RosterManager *t = (RosterManager*) data;
-	return t->subscribeBuddies();
+	RosterManager *manager = (RosterManager *) data;
+	return manager->syncBuddiesCallback();
 }
 
-RosterManager::RosterManager(GlooxMessageHandler *m, User *user) {
-	m_main = m;
+RosterManager::RosterManager(AbstractUser *user) {
 	m_user = user;
-	m_roster = NULL;
-	m_syncTimer = new SpectrumTimer(10000, &sync_cb, this);
-	m_storageTimer = new SpectrumTimer(10000, &storageTimerTimeout, this);
-	m_cacheSize = 0;
-	m_oldCacheSize = -1;
-	m_storageCache = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
+	m_syncTimer = new SpectrumTimer(12000, &sync_cb, this);
+	m_subscribeLastCount = -1;
 }
 
 RosterManager::~RosterManager() {
-	g_hash_table_foreach_remove(m_roster, sendUnavailablePresence, m_user);
 	g_hash_table_destroy(m_roster);
-	
-	delete m_syncTimer;
-	delete m_storageTimer;
 }
 
-bool RosterManager::isInRoster(SpectrumBuddy *buddy) {
-	if (g_hash_table_lookup(m_roster, buddy->getUin().c_str()))
-		return TRUE;
-	return FALSE;
-}
-
-bool RosterManager::storageTimeout() {
-	
-	if (g_hash_table_size(m_storageCache) == 0) {
-		return FALSE;
-	}
-	g_hash_table_foreach_remove(m_storageCache, storeAllBuddies, m_user);
-	return TRUE;
-}
-
-bool RosterManager::subscribeBuddies() {
-	Log(m_user->jid(), "subscribeBuddies: currentBuddies count: " << m_cacheSize << " oldBuddies count: " << m_oldCacheSize);
-	if (m_cacheSize == m_oldCacheSize) {
-		if (m_cacheSize == 0)
-			return false;
-		if (m_user->findResourceWithFeature(GLOOX_FEATURE_ROSTERX)) {
-			Resource res = m_user->findResourceWithFeature(GLOOX_FEATURE_ROSTERX);
-			if (!res)
-				return false;
-
-			Tag *tag = new Tag("iq");
-			tag->addAttribute("to", m_user->jid() + "/" + res.name);
-			tag->addAttribute("type", "set");
-			tag->addAttribute("id", m_user->p->j->getID());
-			tag->addAttribute("from", m_user->p->jid());
-			Tag *x = new Tag("x");
-			x->addAttribute("xmlns", "http://jabber.org/protocol/rosterx");
-
-			g_hash_table_foreach(m_roster, populateRIE, x);
-
-			tag->addChild(x);
-			m_main->j->send(tag);
-		}
-		else
-			g_hash_table_foreach(m_roster, sendSubscribePresence, m_user);
-		m_oldCacheSize = -1;
-		m_cacheSize = 0;
-		return false;
-	}
-	m_oldCacheSize = m_cacheSize;
-	return true;
-}
-
-SpectrumBuddy *RosterManager::getBuddy(const std::string &name) {
-	SpectrumBuddy *buddy = (SpectrumBuddy *) g_hash_table_lookup(m_roster, name.c_str());
-	return buddy;
-}
-
-void RosterManager::loadBuddies() {
-	m_loadingBuddies = true;
-	m_roster = m_main->sql()->getBuddies(m_user->storageId(), m_user->account(), m_user);
-	m_loadingBuddies = false;
-}
-
-void RosterManager::handleSubscribed(const std::string &uin, const std::string &from) {
-	PurpleBuddy *buddy = purple_find_buddy(m_user->account(), uin.c_str());
-	if (buddy) {
-		SpectrumBuddy *s_buddy = purpleBuddyToSpectrumBuddy(buddy, true);
-		if (!isInRoster(s_buddy)) {
-			Log(m_user->jid(), "Adding buddy to roster: " << s_buddy->getUin() << " (" << s_buddy->getNickname() << ")");
-			g_hash_table_replace(m_roster, g_strdup(s_buddy->getUin().c_str()), s_buddy);
-		}
-		Log(m_user->jid(), "adding " << uin << " to local roster and sending presence");
-		if (s_buddy->getSubscription() == SUBSCRIPTION_ASK) {
-			s_buddy->setSubscription(SUBSCRIPTION_TO);
-			s_buddy->store();
-
-			Tag *reply = new Tag("presence");
-			reply->addAttribute( "to", from );
-			reply->addAttribute( "from", s_buddy->getJid() );
-			reply->addAttribute( "type", "subscribe" );
-			GlooxMessageHandler::instance()->j->send( reply );
-		}
-		else {
-			s_buddy->setSubscription(SUBSCRIPTION_BOTH);
-			s_buddy->store();
-		}
-		// user is in ICQ contact list so we can inform jabber user
-		// about status
-		// TODO: REWRITE FOR NEW API
-// 					purpleBuddyStatusChanged(buddy);
-	}
-	else {
-		Log(m_user->jid(), uin << " is not in legacy network contact list => nothing to be subscribed");
-	}
-	// it can be reauthorization...
-// 	if (buddy) {
-// 		purpleReauthorizeBuddy(buddy);
+bool RosterManager::isInRoster(const std::string &name, const std::string &subscription) {
+// 	std::map<std::string,RosterRow>::iterator iter = m_roster.begin();
+// 	iter = m_roster.find(name);
+// 	if (iter != m_roster.end()) {
+// 		if (subscription.empty())
+// 			return true;
+// 		if (m_roster[name].subscription == subscription)
+// 			return true;
 // 	}
-}
 
-void RosterManager::handleSubscribe(const std::string &uin, const std::string &from) {
-	PurpleBuddy *buddy = purple_find_buddy(m_user->account(), uin.c_str());
-// 	if (b) {
-// 		purpleReauthorizeBuddy(b);
-// 	}
-	if (buddy) {
-		SpectrumBuddy *s_buddy = purpleBuddyToSpectrumBuddy(buddy, true);
-		if (isInRoster(s_buddy)) {
-			if (s_buddy->getSubscription() == SUBSCRIPTION_ASK) {
-				Tag *reply = new Tag("presence");
-				reply->addAttribute( "to", from );
-				reply->addAttribute( "from", s_buddy->getJid() );
-				reply->addAttribute( "type", "subscribe" );
-				GlooxMessageHandler::instance()->j->send( reply );
-			}
-			Tag *reply = new Tag("presence");
-			reply->addAttribute( "to", from );
-			reply->addAttribute( "from", s_buddy->getJid() );
-			reply->addAttribute( "type", "subscribed" );
-			GlooxMessageHandler::instance()->j->send( reply );
-			s_buddy->setSubscription(SUBSCRIPTION_FROM);
-			s_buddy->store();
-		}
-		else {
-			Log(m_user->jid(), "subscribe presence, not in roster, adding to legacy network " << s_buddy->getUin());
-			g_hash_table_replace(m_roster, g_strdup(s_buddy->getUin().c_str()), s_buddy);
-			PurpleBuddy *buddy = purple_buddy_new(m_user->account(), uin.c_str(), uin.c_str());
-			purple_blist_add_buddy(buddy, NULL, NULL ,NULL);
-			purple_account_add_buddy(m_user->account(), buddy);
-		}
-	}
-}
-
-void RosterManager::handleUnsubscribe(const std::string &uin, const std::string &from) {
-	PurpleBuddy *buddy = purple_find_buddy(m_user->account(), uin.c_str());
-	Log(m_user->jid(), "unsubscribe/unsubscribed presence " << uin);
-
-	SpectrumBuddy *s_buddy;
-	if (buddy) {
-		Log(m_user->jid(), "unsubscribed presence => removing this contact from legacy network");
-		s_buddy = purpleBuddyToSpectrumBuddy(buddy);
-	} else {
-		s_buddy = new SpectrumBuddy(uin);
-	}
-
-	Tag *tag = new Tag("presence");
-	tag->addAttribute( "to", from );
-	tag->addAttribute( "from", s_buddy->getJid() );
-	tag->addAttribute( "type", "unsubscribed" );
-	GlooxMessageHandler::instance()->j->send( tag );
-
-	removeBuddy(s_buddy);
-}
-
-<<<<<<< HEAD:src/rostermanager.cpp
-void RosterManager::handleBuddyStatusChanged(PurpleBuddy *buddy, PurpleStatus *status, PurpleStatus *old_status) {
-	SpectrumBuddy *s_buddy = purpleBuddyToSpectrumBuddy(buddy);
-	if (!s_buddy->isOnline())
-		m_main->userManager()->buddyOnline();
-	s_buddy->setOnline();
-	Log("buddy", "setting online " << (getBuddy(s_buddy->getUin().c_str()) == s_buddy));
-}
-
-void RosterManager::handleBuddySignedOn(PurpleBuddy *buddy) {
-	SpectrumBuddy *s_buddy = purpleBuddyToSpectrumBuddy(buddy);
-	if (!s_buddy->isOnline())
-		m_main->userManager()->buddyOnline();
-	s_buddy->setOnline();
-	Log("buddy", "setting online " << (getBuddy(s_buddy->getUin().c_str()) == s_buddy));
-}
-
-void RosterManager::handleBuddySignedOff(PurpleBuddy *buddy) {
-	SpectrumBuddy *s_buddy = purpleBuddyToSpectrumBuddy(buddy);
-	if (s_buddy->isOnline())
-		m_main->userManager()->buddyOffline();
-	Log("buddy", "setting offline " << isInRoster(s_buddy));
-	s_buddy->setOffline();
-}
-
-void RosterManager::buddyRemoved(PurpleBuddy *buddy) {
-	if (g_hash_table_lookup(m_storageCache, purple_buddy_get_name(buddy)) != NULL)
-		g_hash_table_remove(m_storageCache, purple_buddy_get_name(buddy));
-	SpectrumBuddy *s_buddy = purpleBuddyToSpectrumBuddy(buddy, true);
-	if (isInRoster(s_buddy))
-		s_buddy->setBuddy(NULL);
-<<<<<<< HEAD:src/rostermanager.cpp
-// 	else
-// 		delete s_buddy;
-}
-
-void RosterManager::handleBuddyCreated(PurpleBuddy *buddy) {
-	addBuddy(buddy);
-=======
-	else
-		delete buddy;
-	
->>>>>>> 1392e31... Cleaner code in user.cpp:src/rostermanager.cpp
-}
-
-bool RosterManager::addBuddy(SpectrumBuddy *buddy) {
-=======
-void RosterManager::addBuddy(SpectrumBuddy *buddy) {
->>>>>>> 0452a02... Fixed crash when PurpleBuddy was removed, but it was still used by SpectrumBuddy. Fixed RIE spam when last buddy was not added to roster from DB.:src/rostermanager.cpp
-	// Add Buddy strategy:
-	// SpectrumBuddy here has subscription = SUBSCRIPTION_NONE.
-	// 1. We add it to roster and activate timer which will call sync_cb after some time.
-	// 2. If there are no new buddies in compare to last sync_cb call, we will change
-	// subscription to SUBSCRIPTION_ASK, save buddies to DB and send subscribe requests
-	// to user.
-	// 3. a) If user sends 'subscribed' presence (that's in case his client doesn't support RIE),
-	// we change subscription according to this table:
-	// SUBSCRIPTION_ASK -> SUBSCRIPTION_TO
-	// SUBSCRIPTION_TO -> SUBSCRIPTION_BOTH
-	// SUBSCRIPTION_FROM -> SUBSCRIPTION_BOTH
-	// and if subscribtion was SUBSCRIBE_ASK, we also send 'subscribe' presence
-	// 3. b) If user sends 'subscribe' presence (that's in case his client supports RIE),
-	// we answer with 'subscribed' and change subscription according to this table:
-	// SUBSCRIPTION_ASK -> SUBSCRIPTION_FROM
-	// and if subscription was SUBSCRIBE_ASK, we also send 'subcribe' request
-<<<<<<< HEAD:src/rostermanager.cpp
-	if (m_loadingBuddies)
-		return false;
-=======
->>>>>>> 0452a02... Fixed crash when PurpleBuddy was removed, but it was still used by SpectrumBuddy. Fixed RIE spam when last buddy was not added to roster from DB.:src/rostermanager.cpp
-	if (!isInRoster(buddy)) {
-		Log(m_user->jid(), "Adding buddy to roster: " << buddy->getUin() << " ("<< buddy->getNickname() <<")");
-
-		g_hash_table_replace(m_roster, g_strdup(buddy->getUin().c_str()), buddy);
-		m_cacheSize++;
-		buddy->setUser(m_user);
-
-		m_syncTimer->start();
+	if (g_hash_table_lookup(m_roster, name.c_str()))
 		return true;
-	}
 	return false;
 }
 
-bool RosterManager::addBuddy(PurpleBuddy *buddy) {
-	SpectrumBuddy *s_buddy = purpleBuddyToSpectrumBuddy(buddy);
-	if (!s_buddy)
-		s_buddy = new SpectrumBuddy(m_user, buddy);
-<<<<<<< HEAD:src/rostermanager.cpp
-	if (!addBuddy(s_buddy)) {
-// 		delete s_buddy;
+void RosterManager::sendUnavailablePresenceToAll() {
+	SendPresenceToAllData *data = new SendPresenceToAllData;
+	data->features = m_user->getFeatures();
+	data->to = m_user->jid();
+	g_hash_table_foreach(m_roster, sendUnavailablePresence, data);
+	delete data;
+}
+
+void RosterManager::sendPresenceToAll(const std::string &to) {
+	SendPresenceToAllData *data = new SendPresenceToAllData;
+	data->features = m_user->getFeatures();
+	data->to = to;
+	g_hash_table_foreach(m_roster, sendCurrentPresence, data);
+	delete data;
+}
+
+void RosterManager::removeFromLocalRoster(const std::string &uin) {
+	if (!g_hash_table_lookup(m_roster, uin.c_str()))
+		return;
+	g_hash_table_remove(m_roster, uin.c_str());
+}
+
+AbstractSpectrumBuddy *RosterManager::getRosterItem(const std::string &uin) {
+	AbstractSpectrumBuddy *s_buddy = (AbstractSpectrumBuddy *) g_hash_table_lookup(m_roster, uin.c_str());
+	return s_buddy;
+}
+
+void RosterManager::addRosterItem(PurpleBuddy *buddy) {
+	if (g_hash_table_lookup(m_roster, purple_buddy_get_name(buddy)))
+		return;
+	if (buddy->node.ui_data)
+		g_hash_table_replace(m_roster, g_strdup(purple_buddy_get_name(buddy)), buddy->node.ui_data);
+	else
+		Log(std::string(purple_buddy_get_name(buddy)), "This buddy has not set AbstractSpectrumBuddy!!!");
+}
+
+void RosterManager::setRoster(GHashTable *roster) {
+	m_roster = roster;
+}
+
+void RosterManager::sendPresence(AbstractSpectrumBuddy *s_buddy, const std::string &resource) {
+	std::string name = s_buddy->getName();
+
+	Tag *tag = s_buddy->generatePresenceStanza(m_user->getFeatures());
+	if (tag) {
+		tag->addAttribute("to", m_user->jid() + std::string(resource.empty() ? "" : "/" + resource));
+		Transport::instance()->send(tag);
+	}
+}
+
+void RosterManager::sendPresence(const std::string &name, const std::string &resource) {
+	AbstractSpectrumBuddy *s_buddy = getRosterItem(name);
+	if (s_buddy) {
+		sendPresence(s_buddy);
+	}
+	else {
+		Log(m_user->jid(), "answering to probe presence with unavailable presence");
+		Tag *tag = new Tag("presence");
+		tag->addAttribute("to", m_user->jid() + std::string(resource.empty() ? "" : "/" + resource));
+		tag->addAttribute("from", s_buddy->getJid());
+		tag->addAttribute("type", "unavailable");
+		Transport::instance()->send(tag);
+	}
+}
+
+void RosterManager::handleBuddySignedOn(AbstractSpectrumBuddy *s_buddy) {
+	sendPresence(s_buddy);
+	s_buddy->setOnline();
+}
+
+void RosterManager::handleBuddySignedOn(PurpleBuddy *buddy) {
+	AbstractSpectrumBuddy *s_buddy = (AbstractSpectrumBuddy *) buddy->node.ui_data;
+	handleBuddySignedOn(s_buddy);
+}
+
+void RosterManager::handleBuddySignedOff(AbstractSpectrumBuddy *s_buddy) {
+	sendPresence(s_buddy);
+	s_buddy->setOffline();
+}
+
+void RosterManager::handleBuddySignedOff(PurpleBuddy *buddy) {
+	AbstractSpectrumBuddy *s_buddy = (AbstractSpectrumBuddy *) buddy->node.ui_data;
+	handleBuddySignedOff(s_buddy);
+}
+
+void RosterManager::handleBuddyStatusChanged(AbstractSpectrumBuddy *s_buddy, PurpleStatus *status, PurpleStatus *old_status) {
+	sendPresence(s_buddy);
+	s_buddy->setOnline();
+}
+
+void RosterManager::handleBuddyStatusChanged(PurpleBuddy *buddy, PurpleStatus *status, PurpleStatus *old_status) {
+	AbstractSpectrumBuddy *s_buddy = (AbstractSpectrumBuddy *) buddy->node.ui_data;
+	handleBuddyStatusChanged(s_buddy, status, old_status);
+}
+
+void RosterManager::handleBuddyRemoved(AbstractSpectrumBuddy *s_buddy) {
+	m_subscribeCache.erase(s_buddy->getSafeName());
+}
+
+void RosterManager::handleBuddyRemoved(PurpleBuddy *buddy) {
+	AbstractSpectrumBuddy *s_buddy = (AbstractSpectrumBuddy *) buddy->node.ui_data;
+	handleBuddyCreated(s_buddy);
+}
+
+void RosterManager::handleBuddyCreated(AbstractSpectrumBuddy *s_buddy) {
+	std::string alias = s_buddy->getAlias();
+	std::string name = s_buddy->getSafeName();
+	if (name.empty())
+		return;
+
+	Log(m_user->jid(), "handleBuddyCreated: " << name << " ("<< alias <<")");
+
+	if (!isInRoster(name, "")) {
+		m_syncTimer->start();
+		Log(m_user->jid(), "Not in roster => adding to subscribe cache");
+		m_subscribeCache[name] = s_buddy;
+// 		if (m_user->findResourceWithFeature(GLOOX_FEATURE_ROSTERX)) {
+// 			Log(m_jid, "Not in roster => sending rosterx");
+// 			m_subscribeCache[name] = s_buddy;
+// 		}
+// 		else {
+// 			Log(m_jid, "Not in roster => sending subscribe");
+// 			Tag *tag = new Tag("presence");
+// 			tag->addAttribute("type", "subscribe");
+// 			tag->addAttribute("from", s_buddy->getJid());
+// 			tag->addAttribute("to", m_jid);
+// 			Tag *nick = new Tag("nick", alias);
+// 			nick->addAttribute("xmlns","http://jabber.org/protocol/nick");
+// 			tag->addChild(nick);
+// 			p->j->send(tag);
+// 		}
+	}
+}
+
+bool RosterManager::syncBuddiesCallback() {
+	Log(m_user->jid(), "sync_cb lastCount: " << m_subscribeLastCount << "cacheSize: " << int(m_subscribeCache.size()));
+	if (m_subscribeLastCount == int(m_subscribeCache.size())) {
+		sendNewBuddies();
 		return false;
 	}
-	return true;
-=======
-	if (!addBuddy(s_buddy))
-		delete s_buddy;
->>>>>>> 1392e31... Cleaner code in user.cpp:src/rostermanager.cpp
+	else {
+		m_subscribeLastCount = int(m_subscribeCache.size());
+		return true;
+	}
 }
 
-void RosterManager::removeBuddy(SpectrumBuddy *buddy) {
-	buddy->remove();
-	if (isInRoster(buddy))
-		g_hash_table_remove(m_roster, buddy->getUin().c_str());
-// 	else
-// 		delete buddy;
-}
-
-void RosterManager::storeBuddy(PurpleBuddy *buddy) {
-	if (m_loadingBuddies)
+void RosterManager::sendNewBuddies() {
+	if (int(m_subscribeCache.size()) == 0)
 		return;
-	SpectrumBuddy *s_buddy;
-	if (!isInRoster(purple_buddy_get_name(buddy))) {
-		s_buddy = purpleBuddyToSpectrumBuddy(buddy, true);
-		if (!addBuddy(s_buddy)) {}
-// 			delete s_buddy;
+
+	Log(m_user->jid(), "Sending rosterX");
+
+	Resource res = m_user->findResourceWithFeature(GLOOX_FEATURE_ROSTERX);
+	if (res) {
+		Tag *tag = new Tag("iq");
+		tag->addAttribute("to", m_user->jid() + "/" + res.name);
+		tag->addAttribute("type", "set");
+		tag->addAttribute("id", Transport::instance()->getId());
+		tag->addAttribute("from", Transport::instance()->jid());
+		Tag *x = new Tag("x");
+		x->addAttribute("xmlns", "http://jabber.org/protocol/rosterx");
+		
+		Tag *item;
+		std::map<std::string, AbstractSpectrumBuddy *>::iterator it = m_subscribeCache.begin();
+		while (it != m_subscribeCache.end()) {
+			AbstractSpectrumBuddy *s_buddy = (*it).second;
+			std::string jid = s_buddy->getBareJid();
+			std::string alias = s_buddy->getAlias();
+
+			addRosterItem(s_buddy->getBuddy());
+
+			item = new Tag("item");
+			item->addAttribute("action", "add");
+			item->addAttribute("jid", jid);
+			item->addAttribute("name", alias);
+			item->addChild( new Tag("group", s_buddy->getGroup()));
+			x->addChild(item);
+			it++;
+		}
+		tag->addChild(x);
+		Log("rosterx stanza", tag->xml() << "\n");
+		Transport::instance()->send(tag);
 	}
 	else {
-		s_buddy = purpleBuddyToSpectrumBuddy(buddy);
-		if (s_buddy)
-			storeBuddy(s_buddy);
+		std::map<std::string, AbstractSpectrumBuddy *>::iterator it = m_subscribeCache.begin();
+		while (it != m_subscribeCache.end()) {
+			AbstractSpectrumBuddy *s_buddy = (*it).second;
+			std::string alias = s_buddy->getAlias();
+
+			Tag *tag = new Tag("presence");
+			tag->addAttribute("type", "subscribe");
+			tag->addAttribute("from", s_buddy->getJid());
+			tag->addAttribute("to", Transport::instance()->jid());
+			Tag *nick = new Tag("nick", alias);
+			nick->addAttribute("xmlns","http://jabber.org/protocol/nick");
+			tag->addChild(nick);
+			Transport::instance()->send(tag);
+
+			addRosterItem(s_buddy->getBuddy());
+			it++;
+		}
 	}
+
+	m_subscribeCache.clear();
+	m_subscribeLastCount = -1;
 }
 
-void RosterManager::storeBuddy(SpectrumBuddy *buddy) {
-	if (m_loadingBuddies)
+void RosterManager::handlePresence(const Presence &stanza) {
+	Tag *stanzaTag = stanza.tag();
+	if (!stanzaTag)
 		return;
-	if (!isInRoster(buddy))
-		g_hash_table_replace(m_storageCache, g_strdup(buddy->getUin().c_str()), buddy);
-	m_storageTimer->start();
-}
 
-<<<<<<< HEAD:src/rostermanager.cpp
-void RosterManager::removeBuddy(PurpleBuddy *buddy) {
-	if (m_loadingBuddies)
-		return;
-	SpectrumBuddy *s_buddy;
-	if (buddy->node.ui_data == NULL) {
-		s_buddy = purpleBuddyToSpectrumBuddy(buddy);
-		removeBuddy(s_buddy);
-	}
-	else {
-		s_buddy = purpleBuddyToSpectrumBuddy(buddy);
-		removeBuddy(s_buddy);
+	// Probe presence
+	if (stanza.subtype() == Presence::Probe && stanza.to().username() != "") {
+		std::string name(stanza.to().username());
+		std::for_each( name.begin(), name.end(), replaceJidCharacters() );
+		sendPresence(name);
 	}
 }
-
-SpectrumBuddy* RosterManager::purpleBuddyToSpectrumBuddy(PurpleBuddy *buddy, bool create) {
-// 	if (buddy->node.ui_data) {
-// 		return (SpectrumBuddy *) buddy->node.ui_data;
-// 	}
-	std::string uin(purple_buddy_get_name(buddy));
-	SpectrumBuddy *s_buddy = getBuddy(uin);
-	if (s_buddy) {
-		s_buddy->setBuddy(buddy);
-		return s_buddy;
-	}
-	if (create) {
-		s_buddy = new SpectrumBuddy(m_user, buddy);
-		return s_buddy;
-	}
-	return NULL;
-=======
-SpectrumBuddy* RosterManager::purpleBuddyToSpectrumBuddy(PurpleBuddy *buddy) {
-	if (buddy->node.ui_data)
-		return (SpectrumBuddy *) buddy->node.ui_data;
-	SpectrumBuddy *s_buddy = new SpectrumBuddy();
-	s_buddy->setUser(m_user);
-	s_buddy->setBuddy(buddy);
-	return s_buddy;
->>>>>>> 0452a02... Fixed crash when PurpleBuddy was removed, but it was still used by SpectrumBuddy. Fixed RIE spam when last buddy was not added to roster from DB.:src/rostermanager.cpp
-}
-	
-	
-

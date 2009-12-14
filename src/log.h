@@ -64,7 +64,10 @@ class LogClass : public LogHandler {
 	private:
 		std::ofstream m_file;
 };
-
-#define Log(HEAD,STRING) LogMessage(Log_.fileStream()).Get(HEAD) << STRING;
+#ifdef TESTS
+	#define Log(HEAD,STRING) 
+#else
+	#define Log(HEAD,STRING) LogMessage(Log_.fileStream()).Get(HEAD) << STRING;
+#endif
 
 #endif

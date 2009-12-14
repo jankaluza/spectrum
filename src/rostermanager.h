@@ -24,61 +24,86 @@
 #include <string>
 #include "purple.h"
 #include "account.h"
-#include "user.h"
 #include "glib.h"
 #include "gloox/tag.h"
+#include "gloox/presence.h"
 #include <algorithm>
+#include "abstractuser.h"
 
 using namespace gloox;
 
-class SpectrumBuddy;
-class GlooxMessageHandler;
+class AbstractSpectrumBuddy;
 class SpectrumTimer;
 
+// Manages all SpectrumBuddies in user's roster.
 class RosterManager {
 	public:
-		RosterManager(GlooxMessageHandler *m, User *user);
+		RosterManager(AbstractUser *user);
 		~RosterManager();
 
-		bool isInRoster(SpectrumBuddy *buddy);
+		// Sends unavailable presence of all online buddies.
+		void sendUnavailablePresenceToAll();
 		
-		bool addBuddy(PurpleBuddy *buddy);
-		bool addBuddy(SpectrumBuddy *buddy);
-		void removeBuddy(SpectrumBuddy *buddy);
-		void storeBuddy(PurpleBuddy *);
-		void storeBuddy(SpectrumBuddy *);
+		// Sends current presence of all buddies.
+		void sendPresenceToAll(const std::string &to);
+		
+		// Remove buddy from local roster.
+		void removeFromLocalRoster(const std::string &uin);
+		
+		// Returns buddy with name `uin`.
+		AbstractSpectrumBuddy *getRosterItem(const std::string &uin);
+		
+		// Adds new buddy to roster.
+		void addRosterItem(PurpleBuddy *buddy);
+		
+		// Sets roster. RosterManager will free it by itself.
+		void setRoster(GHashTable *roster);
+		
+		// Returns true if buddy with this name and subscription is in roster.
+		bool isInRoster(const std::string &name, const std::string &subscription);
 
-		SpectrumBuddy *getBuddy(const std::string &name);
-		void loadBuddies();
+		// Sends current presence of buddy `s_buddy`.
+		void sendPresence(AbstractSpectrumBuddy *s_buddy, const std::string &resource = "");
+		
+		// Sends current presene of buddy. If he doesn't exist, unavailable presence
+		// is send.
+		void sendPresence(const std::string &name, const std::string &resource = "");
 
-		void handleSubscribed(const std::string &uin, const std::string &from);
-		void handleSubscribe(const std::string &uin, const std::string &from);
-		void handleUnsubscribe(const std::string &uin, const std::string &from);
-		void handleBuddyStatusChanged(PurpleBuddy *buddy, PurpleStatus *status, PurpleStatus *old_status);
+		// Called when buddy signed on.
+		void handleBuddySignedOn(AbstractSpectrumBuddy *s_buddy);
 		void handleBuddySignedOn(PurpleBuddy *buddy);
+
+		// Called when buddy signed off.
+		void handleBuddySignedOff(AbstractSpectrumBuddy *s_buddy);
 		void handleBuddySignedOff(PurpleBuddy *buddy);
 
-		
-		bool storageTimeout();
-		bool subscribeBuddies();
+		// Called when buddy's status changed.
+		void handleBuddyStatusChanged(AbstractSpectrumBuddy *s_buddy, PurpleStatus *status, PurpleStatus *old_status);
+		void handleBuddyStatusChanged(PurpleBuddy *buddy, PurpleStatus *status, PurpleStatus *old_status);
 
-		bool loadingBuddies() { return m_loadingBuddies; }
-		User *getUser() { return m_user; }
-		GHashTable *storageCache() { return m_storageCache; }
+		// Called when buddy is created.
+		void handleBuddyCreated(AbstractSpectrumBuddy *s_buddy);
+
+		// Called when buddy is removed
+		void handleBuddyRemoved(AbstractSpectrumBuddy *buddy);
+		void handleBuddyRemoved(PurpleBuddy *buddy);
+
+		// Checks if there are new buddies in queue and sends them to user.
+		// Do not call this function by yourself.
+		bool syncBuddiesCallback();
+
+		// Sends buddies from subscribeCache to end user.
+		void sendNewBuddies();
+		
+		// Handles presence stanza
+		void handlePresence(const Presence &presence);
 
 	private:
-		GlooxMessageHandler *m_main;
 		GHashTable *m_roster;
-		GHashTable *m_storageCache;
-		User *m_user;
+		AbstractUser *m_user;
 		SpectrumTimer *m_syncTimer;
-		SpectrumTimer *m_storageTimer;
-		int m_cacheSize;
-		int m_oldCacheSize;
-		bool m_loadingBuddies;
-		
-		SpectrumBuddy* purpleBuddyToSpectrumBuddy(PurpleBuddy *buddy, bool create = FALSE);
-		static gboolean subscribeBuddiesWrapper(void *rosterManager, void *data);
+		std::map <std::string, AbstractSpectrumBuddy *> m_subscribeCache;
+		int m_subscribeLastCount;
 
 };
 

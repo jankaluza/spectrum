@@ -77,7 +77,7 @@ Disco::ItemList GlooxAdhocHandler::handleDiscoNodeItems( const JID &_from, const
 
 	// it's adhoc request for transport
 	if (to == main->jid()) {
-		User *user = main->userManager()->getUserByJID(from);
+		User *user = (User *) main->userManager()->getUserByJID(from);
 		std::list<std::string> const &admins = main->configuration().admins;
 		// add internal commands from m_handlers
 		for(std::map<std::string, adhocCommand>::iterator u = m_handlers.begin(); u != m_handlers.end() ; u++) {
@@ -112,7 +112,7 @@ Disco::ItemList GlooxAdhocHandler::handleDiscoNodeItems( const JID &_from, const
 	}
 	// it's request for some PurpleBuddy
 	else {
-		User *user = main->userManager()->getUserByJID(from);
+		User *user = (User *) main->userManager()->getUserByJID(from);
 		if (user) {
 			if (user->isConnected() && purple_account_get_connection(user->account())) {
 				Log("GlooxAdhocHandler", user->getLang());
@@ -161,7 +161,7 @@ bool GlooxAdhocHandler::handleIq( const IQ &stanza ) {
 		return false;
 	}
 
-	User *user = main->userManager()->getUserByJID(from);
+	User *user = (User *) main->userManager()->getUserByJID(from);
 	// check if we have existing session for this jid
 	if (hasSession(stanza.from().full())) {
 		if( m_sessions[stanza.from().full()]->handleIq(stanza) ) {

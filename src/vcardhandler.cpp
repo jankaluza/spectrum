@@ -20,9 +20,11 @@
 
 #include "vcardhandler.h"
 #include "usermanager.h"
+#include "user.h"
 #include "log.h"
 #include "gloox/vcard.h"
 #include "protocols/abstractprotocol.h"
+#include "transport.h"
 
 void base64encode(const unsigned char * input, int len, std::string & out)
 {
@@ -107,7 +109,7 @@ bool GlooxVCardHandler::handleIq (const IQ &stanza){
 	if (stanza.to().username()=="")
 		return false;
 
-	User *user = p->userManager()->getUserByJID(stanza.from().bare());
+	User *user = (User *) p->userManager()->getUserByJID(stanza.from().bare());
 	if (user==NULL)
 		return false;
 	if (!user->isConnected()){
@@ -138,7 +140,7 @@ bool GlooxVCardHandler::hasVCardRequest(const std::string &name){
 
 void GlooxVCardHandler::userInfoArrived(PurpleConnection *gc, const std::string &who, PurpleNotifyUserInfo *user_info){
 	GList *vcardEntries = purple_notify_user_info_get_entries(user_info);
-	User *user = p->userManager()->getUserByAccount(purple_connection_get_account(gc));
+	User *user = (User *) p->userManager()->getUserByAccount(purple_connection_get_account(gc));
 
 	if (user!=NULL){
 		if (!user->isConnected())

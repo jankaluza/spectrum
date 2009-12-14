@@ -151,11 +151,8 @@ bool IRCProtocol::onPresenceReceived(User *user, const Presence &stanza) {
 // 				}
 			}
 			else {
-				if (!user->resources().empty() && int(time(NULL))>int(user->connectionStart())+10){
-					std::map<std::string,Resource> ::iterator iter = user->resources().begin();
-					iter = user->resources().begin();
-					std::string res = (*iter).first;
-					user->setActiveResource(res);
+				if (!user->getResources().empty() && int(time(NULL))>int(user->connectionStart())+10){
+					user->setActiveResource();
 				}
 				else if (user->account()){
 					Log(user->jid(), "disconecting2");
@@ -164,28 +161,17 @@ bool IRCProtocol::onPresenceReceived(User *user, const Presence &stanza) {
 			}
 		} else {
 			std::string resource = stanza.from().resource();
-			std::map<std::string,Resource> ::iterator iter = user->resources().begin();
-			iter = user->resources().find(resource);
-			if(iter == user->resources().end()){
-				user->resources()[resource].priority = stanza.priority();
-				Tag *c = stanzaTag->findChildWithAttrib("xmlns","http://jabber.org/protocol/caps");
-				// presence has caps
-				if (c!=NULL){
-					if (m_main->hasCaps(c->findAttribute("ver"))){
-						user->resources()[resource].capsVersion = c->findAttribute("ver");
-					}
-				}
-				if (user->resources()[resource].priority > user->resources()[user->resource()].priority)
-					user->setActiveResource(resource);
+			if (user->hasResource(resource)) {
+				user->setResource(stanza);
 			}
 
-			Log(user->jid(), "resource: " << user->resource());
+			Log(user->jid(), "resource: " << user->getResource().name);
 			if (!user->isConnected()) {
 				// we are not connected to legacy network, so we should do it when disco#info arrive :)
-				Log(user->jid(), "connecting: resource=" << user->resource());
+				Log(user->jid(), "connecting: resource=" << user->getResource().name);
 				if (user->readyForConnect()==false){
 					user->setReadyForConnect(true);
-					if (user->getResource().capsVersion.empty()){
+					if (user->getResource().caps == -1){
 						// caps not arrived yet, so we can't connect just now and we have to wait for caps
 					}
 					else{

@@ -74,7 +74,7 @@ void GlooxSearchHandler::searchResultsArrived(const std::string &from, PurpleNot
 }
 
 bool GlooxSearchHandler::handleIq (const IQ &iq) {
-	User *user = p->userManager()->getUserByJID(iq.from().bare());
+	User *user = (User *) p->userManager()->getUserByJID(iq.from().bare());
 	if (!user) return true;
 
 	if(iq.subtype() == IQ::Get) {

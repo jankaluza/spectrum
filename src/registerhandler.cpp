@@ -39,7 +39,7 @@ GlooxRegisterHandler::~GlooxRegisterHandler(){
 
 bool GlooxRegisterHandler::handleIq (const IQ &iq){
 	Log("GlooxRegisterHandler", iq.from().full() << ": iq:register received (" << iq.subtype() << ")");
-	User *user = p->userManager()->getUserByJID(iq.from().bare());
+	User *user = (User *) p->userManager()->getUserByJID(iq.from().bare());
 	if (p->configuration().onlyForVIP){
 		std::list<std::string> const &x = p->configuration().allowedServers;
 		if (std::find(x.begin(), x.end(), iq.from().server()) == x.end()) {
@@ -220,17 +220,17 @@ bool GlooxRegisterHandler::handleIq (const IQ &iq){
 				x->addAttribute("xmlns","http://jabber.org/protocol/rosterx");
 
 				std::map<std::string,RosterRow> roster;
-				roster = p->sql()->getBuddies(res.id);
-				Tag *item;
-				// add users which are added to roster
-				for(std::map<std::string, RosterRow>::iterator u = roster.begin(); u != roster.end() ; u++){
-					if (!(*u).second.uin.empty()){
-						item = new Tag("item");
-						item->addAttribute("action","delete");
-						item->addAttribute("jid",(*u).second.uin+"@"+p->jid());
-						x->addChild(item);
-					}
-				}
+// 				roster = p->sql()->getBuddies(res.id);
+// 				Tag *item;
+// 				// add users which are added to roster
+// 				for(std::map<std::string, RosterRow>::iterator u = roster.begin(); u != roster.end() ; u++){
+// 					if (!(*u).second.uin.empty()){
+// 						item = new Tag("item");
+// 						item->addAttribute("action","delete");
+// 						item->addAttribute("jid",(*u).second.uin+"@"+p->jid());
+// 						x->addChild(item);
+// 					}
+// 				}
 
 				tag->addChild(x);
 				std::cout << "* sending " << tag->xml() << "\n";

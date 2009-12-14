@@ -27,11 +27,14 @@
 #include <gloox/siprofileft.h>
 #include <glib.h>
 #include "purple.h"
+#include "abstractuser.h"
 #include "account.h"
+class RosterManager;
+#include "rostermanager.h"
+#include "rosterstorage.h"
 
 class GlooxMessageHandler;
 class FiletransferRepeater;
-class RosterManager;
 
 class RosterRow;
 
@@ -65,15 +68,6 @@ struct subscribeContact {
 	std::string	group;
 };
 
-struct Resource {
-	int priority;
-	std::string capsVersion;
-	std::string name;
-	operator bool() const {
-		return !name.empty();
-	}
-};
-
 struct Conversation {
 	PurpleConversation *conv;
 	std::string resource;
@@ -81,29 +75,16 @@ struct Conversation {
 
 class User;
 
-struct SaveData {
-	User *user;
-	long id;
-};
-
-class User {
+class User : public AbstractUser, public RosterManager, public RosterStorage {
 	public:
 		User(GlooxMessageHandler *parent, JID jid, const std::string &username, const std::string &password, const std::string &userKey, long id);
 		~User();
 
 		void connect();
-		void sendRosterX();
-		void syncContacts();
 		bool hasTransportFeature(int feature); // TODO: move me to p->hasTransportFeature and rewrite my API
 
 		// Utils
-		bool syncCallback();
-		bool isInRoster(const std::string &name, const std::string &subscription);
 		bool isOpenedConversation(const std::string &name);
-		bool hasFeature(int feature, const std::string &resource = "");
-
-		// XMPP stuff
-		Tag *generatePresenceStanza(PurpleBuddy *buddy);
 
 		// Libpurple stuff
 		void purpleReauthorizeBuddy(PurpleBuddy *buddy);
@@ -117,9 +98,6 @@ class User {
 		// Libpurple callbacks
 		void purpleBuddyRemoved(PurpleBuddy *buddy);
 		void purpleBuddyCreated(PurpleBuddy *buddy);
-		void purpleBuddyStatusChanged(PurpleBuddy *buddy, PurpleStatus *status, PurpleStatus *old_status);
-		void purpleBuddySignedOn(PurpleBuddy *buddy);
-		void purpleBuddySignedOff(PurpleBuddy *buddy);
 		void purpleMessageReceived(PurpleAccount* account,char * name,char *msg,PurpleConversation *conv,PurpleMessageFlags flags);
 		void purpleConversationWriteIM(PurpleConversation *conv, const char *who, const char *msg, PurpleMessageFlags flags, time_t mtime);
 		void purpleConversationWriteChat(PurpleConversation *conv, const char *who, const char *msg, PurpleMessageFlags flags, time_t mtime);
@@ -151,37 +129,22 @@ class User {
 		bool hasAuthRequest(const std::string &name);
 		void removeAuthRequest(const std::string &name);
 
-		// Storage
-		void storeBuddy(PurpleBuddy *buddy);
-
 		// bind IP
 		void setBindIP(const std::string& bindIP) { m_bindIP = bindIP; }
 
 		// connection start
 		time_t connectionStart() { return m_connectionStart; }
 
-		void setResource(const std::string &resource, int priority = -256, const std::string &caps = "") {
-			if (priority != -256) m_resources[resource].priority = priority;
-			if (!caps.empty()) m_resources[resource].capsVersion = caps;
-			m_resources[resource].name = resource;
-		}
-		void setActiveResource(const std::string &resource) { m_resource = resource; }
-		bool hasResource(const std::string &r) {return m_resources.find(r) != m_resources.end(); }
-		Resource & getResource(const std::string &r = "") { if (r.empty()) return m_resources[m_resource]; else return m_resources[r];}
-		Resource & findResourceWithFeature(int feature);
-
 		PurpleAccount *account() { return m_account; }
-		std::map<std::string,Resource> & resources() { return m_resources; }
 		int reconnectCount() { return m_reconnectCount; }
 		bool isVIP() { return m_vip; }
 		bool readyForConnect() { return m_readyForConnect; }
 		void setReadyForConnect(bool ready) { m_readyForConnect = ready; }
 		const std::string & username() { return m_username; }
 		const std::string & jid() { return m_jid; }
-		const std::string & resource() { return m_resource; }
 		AdhocData & adhocData() { return m_adhocData; }
 		void setAdhocData(AdhocData data) { m_adhocData = data; }
-		std::map<std::string,RosterRow> & roster() { return m_roster; }
+
 		const char *getLang() { return m_lang; }
 		void setLang(const char *lang) { m_lang = lang; }
 		GHashTable *settings() { return m_settings; }
@@ -193,10 +156,9 @@ class User {
 		GHashTable *mucs() { return m_mucs; }
 		std::map<std::string,Conversation> conversations() { return m_conversations; }
 		void setFeatures(int f) { m_features = f; }
+		int getFeatures() { return m_features; }
 		long storageId() { return m_userID; }
 		bool loadingBuddiesFromDB() { return m_loadingBuddiesFromDB; }
-		GHashTable *storageCache() { return m_storageCache; }
-		void removeStorageTimer() { m_storageTimer = 0; }
 
 		guint removeTimer;
 
@@ -216,20 +178,14 @@ class User {
 		std::string m_password;		// password used to connect to legacy network
 		std::string m_username;		// legacy network user name
 		std::string m_jid;			// Jabber ID of this user
-		std::string m_resource;		// active resource
 		const char *m_lang;			// xml:lang
 		int m_features;
 		time_t m_connectionStart;	// connection start timestamp
 		GHashTable *m_mucs;			// MUCs
 		GHashTable *m_filetransfers;
-		std::map<std::string,RosterRow> m_roster;	// jabber roster of this user
-		std::map<std::string,Resource> m_resources;	// list of all resources which are connected to the transport
 		std::map<std::string,authRequest> m_authRequests;	// list of authorization requests (holds callbacks and user data)
 		std::map<std::string,Conversation> m_conversations; // list of opened conversations
-		std::map<std::string,PurpleBuddy *> m_subscribeCache;	// cache for contacts for roster X
 		GHashTable *m_settings;		// user settings
-		GHashTable *m_storageCache;	// cache for storing PurpleBuddies
-		guint m_storageTimer;		// timer for storing
 		long m_userID;				// userID for Database
 		bool m_loadingBuddiesFromDB;
 };

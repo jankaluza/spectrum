@@ -22,10 +22,12 @@
 #include "main.h"
 #include "log.h"
 
+#ifndef TESTS
 static gboolean _callback(gpointer data) {
 	SpectrumTimer *t = (SpectrumTimer*) data;
 	return t->timeout();
 }
+#endif
 
 SpectrumTimer::SpectrumTimer (int time, SpectrumTimerCallback callback, void *data) {
 	m_data = data;
@@ -40,16 +42,22 @@ SpectrumTimer::~SpectrumTimer() {
 
 void SpectrumTimer::start() {
 	if (m_id == 0) {
+#ifdef TESTS
+		m_id = 1;
+#else
 		if (m_timeout >= 1000)
 			m_id = purple_timeout_add_seconds(m_timeout / 1000, _callback, this);
 		else
 			m_id = purple_timeout_add(m_timeout, _callback, this);
+#endif
 	}
 }
 
 void SpectrumTimer::stop() {
 	if (m_id != 0) {
+#ifndef TESTS
 		purple_timeout_remove(m_id);
+#endif
 		m_id = 0;
 	}
 }

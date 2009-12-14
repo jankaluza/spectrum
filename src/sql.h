@@ -31,6 +31,7 @@
 #include <glib.h>
 #include "purple.h"
 #include <account.h>
+#include "abstractbackend.h"
 
 #include "Poco/Data/SessionFactory.h"
 #include "Poco/Data/Session.h"
@@ -196,14 +197,7 @@ struct addSettingStatement {
 	Poco::Int32 user_id;
 	std::string var;
 	std::string value;
-	int type;struct addBuddySettingStatement {
-	Poco::Int32 user_id;
-	Poco::Int32 buddy_id;
-	std::string var;
 	int type;
-	std::string value;
-	Poco::Data::Statement *stmt;
-};
 
 	Poco::Data::Statement *stmt;
 };
@@ -252,7 +246,7 @@ struct removeBuddySettingsStatement {
 /*
  * SQL storage backend. Uses libdbi for communication with SQL servers.
  */
-class SQLClass {
+class SQLClass : public AbstractBackend {
 	public:
 		SQLClass(GlooxMessageHandler *parent, bool upgrade = false);
 		~SQLClass();
@@ -282,7 +276,7 @@ class SQLClass {
 		void addBuddySetting(long userId, long buddyId, const std::string &key, const std::string &value, PurpleType type);
 
 		UserRow getUserByJid(const std::string &jid);
-		std::map<std::string,RosterRow> getBuddies(long userId, PurpleAccount *account = NULL);
+		GHashTable *getBuddies(long userId, PurpleAccount *account = NULL);
 		bool loaded() { return m_loaded; }
 		
 	private:

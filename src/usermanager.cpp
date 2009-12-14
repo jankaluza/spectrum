@@ -24,14 +24,13 @@
 #include "log.h"
 
 static gboolean deleteUser(gpointer data){
-	User *user = (User*) data;
+	AbstractUser *user = (AbstractUser*) data;
 	delete user;
 	Log("logout", "delete user; called => user is sucesfully removed");
 	return FALSE;
 }
 
-UserManager::UserManager(GlooxMessageHandler *m){
-	main = m;
+UserManager::UserManager() {
 	m_users = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
 	m_cachedUser = NULL;
 	m_onlineBuddies = 0;
@@ -41,21 +40,21 @@ UserManager::~UserManager(){
 	g_hash_table_destroy(m_users);
 }
 
-User *UserManager::getUserByJID(std::string barejid){
+AbstractUser *UserManager::getUserByJID(std::string barejid){
 	if (m_cachedUser && barejid == m_cachedUser->userKey()) {
 		return m_cachedUser;
 	}
-	User *user = (User*) g_hash_table_lookup(m_users, barejid.c_str());
+	AbstractUser *user = (AbstractUser*) g_hash_table_lookup(m_users, barejid.c_str());
 	m_cachedUser = user;
 	return user;
 }
 
-User *UserManager::getUserByAccount(PurpleAccount * account){
+AbstractUser *UserManager::getUserByAccount(PurpleAccount * account){
 	if (account == NULL) return NULL;
-	return (User *) account->ui_data;
+	return (AbstractUser *) account->ui_data;
 }
 
-void UserManager::removeUser(User *user){
+void UserManager::removeUser(AbstractUser *user){
 	Log("logout", "removing user");
 	g_hash_table_remove(m_users, user->userKey().c_str());
 	if (m_cachedUser && user->userKey() == m_cachedUser->userKey()) {
@@ -67,7 +66,7 @@ void UserManager::removeUser(User *user){
 	Log("logout", "delete user; called => user is sucesfully removed");
 }
 
-void UserManager::removeUserTimer(User *user){
+void UserManager::removeUserTimer(AbstractUser *user){
 	Log("logout", "removing user by timer");
 	g_hash_table_remove(m_users, user->userKey().c_str());
 	if (m_cachedUser && user->userKey() == m_cachedUser->userKey()) {

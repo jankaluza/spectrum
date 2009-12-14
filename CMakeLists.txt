@@ -19,6 +19,8 @@ set(glib_DIR "${CMAKE_SOURCE_DIR}/cmake_modules")
 find_package(glib REQUIRED)
 set(libpoco_DIR "${CMAKE_SOURCE_DIR}/cmake_modules")
 find_package(libpoco REQUIRED)
+set(cppunit_DIR "${CMAKE_SOURCE_DIR}/cmake_modules")
+find_package(cppunit)
 
 FIND_LIBRARY(INTL_LIBRARY NAMES intl)
 find_path(INTL_INCLUDE_DIR NAMES libintl.h)
@@ -53,6 +55,7 @@ endif(CMAKE_BUILD_TYPE MATCHES Debug)
 
 set(spectrum_SRCS
 	src/accountcollector.cpp
+	src/abstractspectrumbuddy.cpp
 	src/adhoc/adhocadmin.cpp
 	src/adhoc/adhochandler.cpp
 	src/adhoc/adhocrepeater.cpp
@@ -74,14 +77,19 @@ set(spectrum_SRCS
 	src/muchandler.cpp
 	src/parser.cpp
 	src/registerhandler.cpp
+	src/resourcemanager.cpp
+	src/rostermanager.cpp
+	src/rosterstorage.cpp
 	src/searchhandler.cpp
 	src/searchrepeater.cpp
 	src/spectrum_util.cpp
 	src/spectrumbuddy.cpp
+	src/spectrumtimer.cpp
 	src/statshandler.cpp
 	src/striphtmltags.cpp
 	src/sql.cpp
 	src/thread.cpp
+	src/transport.cpp
 	src/user.cpp
 	src/usermanager.cpp
 	src/vcardhandler.cpp
@@ -100,6 +108,7 @@ set(spectrum_SRCS
 
 set(spectrum_MOC_HDRS
 	src/abstractpurplerequest.h
+	src/abstractspectrumbuddy.h
 	src/accountcollector.h
 	src/adhoc/adhocadmin.h
 	src/adhoc/adhoccommandhandler.h
@@ -123,14 +132,19 @@ set(spectrum_MOC_HDRS
 	src/muchandler.h
 	src/parser.h
 	src/registerhandler.h
+	src/resourcemanager.h
+	src/rostermanager.h
+	src/rosterstorage.h
 	src/searchhandler.h
 	src/searchrepeater.h
 	src/spectrum_util.h
 	src/spectrumbuddy.h
+	src/spectrumtimer.h
 	src/statshandler.h
 	src/striphtmltags.h
 	src/sql.h
 	src/thread.h
+	src/transport.h
 	src/user.h
 	src/usermanager.h
 	src/vcardhandler.h
@@ -168,6 +182,76 @@ if (EXISTS .git)
 else (EXISTS .git)
 	file(APPEND src/transport_config.h "#define VERSION \"0.1\"\n")
 endif (EXISTS .git)
+
+
+
+
+
+
+
+
+
+
+
+
+if (CPPUNIT_FOUND)
+
+include_directories(${CPPUNIT_INCLUDE_DIR})
+
+set(spectrum_tests_SRCS
+	src/tests/main.cpp
+	src/tests/spectrumbuddytest.cpp
+	src/tests/rostermanagertest.cpp
+	src/tests/rosterstoragetest.cpp
+	src/tests/testingbackend.cpp
+	src/tests/transporttest.cpp
+	src/tests/testinguser.cpp
+	
+	src/abstractspectrumbuddy.cpp
+	src/rostermanager.cpp
+	src/rosterstorage.cpp
+	src/resourcemanager.cpp
+	src/striphtmltags.cpp
+	src/spectrum_util.cpp
+	src/spectrumtimer.cpp
+	src/usermanager.cpp
+	src/log.cpp
+)
+
+set(spectrum_tests_MOC_HDRS
+	src/tests/spectrumbuddytest.h
+	src/tests/rostermanagertest.h
+	src/tests/rosterstoragetest.h
+	src/tests/testingbackend.h
+	src/tests/testinguser.h
+	
+	src/abstractspectrumbuddy.h
+	src/rostermanager.h
+	src/rosterstorage.h
+	src/striphtmltags.h
+	src/spectrum_util.h
+	src/spectrumtimer.h
+	src/transport.h
+)
+
+add_executable(spectrum_tests ${spectrum_tests_SRCS} ${lrelease_outputs})
+set_target_properties(spectrum_tests PROPERTIES COMPILE_FLAGS -DTESTS)
+
+if(DEFINED WITH_STATIC_GLOOX)
+	target_link_libraries(spectrum_tests ${WITH_STATIC_GLOOX} -lgnutls ${PURPLE_LIBRARY} ${CPPUNIT_LIBRARY} ${GLIB2_LIBRARIES} ${GETTEXTPO_LIBRARY} ${LIBPOCO_LIBRARIES} -export-dynamic)
+else(DEFINED WITH_STATIC_GLOOX)
+	target_link_libraries(spectrum_tests ${GLOOX_LIBRARIES} ${PURPLE_LIBRARY} ${CPPUNIT_LIBRARY} ${GLIB2_LIBRARIES} ${GETTEXTPO_LIBRARY} ${LIBPOCO_LIBRARIES} -export-dynamic)
+endif(DEFINED WITH_STATIC_GLOOX)
+
+
+
+endif (CPPUNIT_FOUND)
+
+
+
+
+
+
 
 INSTALL(TARGETS spectrum
     RUNTIME DESTINATION bin
