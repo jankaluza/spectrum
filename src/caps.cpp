@@ -95,9 +95,9 @@ void GlooxDiscoHandler::handleDiscoInfo(const JID &jid, const Disco::Info &info,
 	else{
 		if (user->hasResource(jid.resource())) {
 			std::cout << "1" << "\n";
-			if (user->getResource(jid.resource()).capsVersion.empty()){
+			if (user->getResource(jid.resource()).caps == -1) {
 				std::cout << "2" << "\n";
-				user->setResource(jid.resource(), -256, versions[context].version);
+				user->setResource(jid.resource(), -256, feature);
 				if (user->readyForConnect()) {
 					std::cout << "3" << "\n";
 					user->connect();

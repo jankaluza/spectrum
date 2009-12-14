@@ -51,6 +51,7 @@ class Transport {
 		AbstractBackend *sql();
 		const std::string &jid() { return m_jid; }
 		std::string getId();
+		int getFeatures(const std::string &ver);
 		std::list <Tag *> &getTags() { return m_tags; }
 		void clearTags() { m_tags.clear(); }
 		

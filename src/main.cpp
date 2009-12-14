@@ -1677,7 +1677,7 @@ void GlooxMessageHandler::handlePresence(const Presence &stanza){
 				user->setFeatures(isVip ? configuration().VIPFeatures : configuration().transportFeatures);
 				if (c != NULL)
 					if (hasCaps(c->findAttribute("ver")))
-						user->setResource(stanza.from().resource(), stanza.priority(), c->findAttribute("ver"));
+						user->setResource(stanza.from().resource(), stanza.priority(), capsCache[c->findAttribute("ver")]);
 
 				std::map<int,std::string> ::iterator iter = configuration().bindIPs.begin();
 				iter = configuration().bindIPs.find(lastIP);
@@ -1713,11 +1713,11 @@ void GlooxMessageHandler::handlePresence(const Presence &stanza){
 		user->receivedPresence(stanza);
 	}
 	if (stanza.to().username() == "" && user != NULL) {
-		if(stanza.presence() == Presence::Unavailable && user->isConnected() == true && user->resources().empty()) {
+		if(stanza.presence() == Presence::Unavailable && user->isConnected() == true && user->getResources().empty()) {
 			Log(stanza.from().full(), "Logging out");
 			m_userManager->removeUser(user);
 		}
-		else if (stanza.presence() == Presence::Unavailable && user->isConnected() == false && int(time(NULL)) > int(user->connectionStart()) + 10 && user->resources().empty()) {
+		else if (stanza.presence() == Presence::Unavailable && user->isConnected() == false && int(time(NULL)) > int(user->connectionStart()) + 10 && user->getResources().empty()) {
 			Log(stanza.from().full(), "Logging out, but he's not connected...");
 			m_userManager->removeUser(user);
 		}

@@ -36,8 +36,6 @@
 #include "spectrumbuddy.h"
 #include "transport.h"
 
-Resource DummyResource;
-
 static void sendXhtmlTag(Tag *tag, Tag *stanzaTag) {
 	Tag *html = new Tag("html");
 	html->addAttribute("xmlns", "http://jabber.org/protocol/xhtml-im");
@@ -51,10 +49,12 @@ static void sendXhtmlTag(Tag *tag, Tag *stanzaTag) {
 User::User(GlooxMessageHandler *parent, JID jid, const std::string &username, const std::string &password, const std::string &userKey, long id) : RosterManager(this), RosterStorage(this) {
 	p = parent;
 	m_jid = jid.bare();
-	Resource r;
 	m_userID = id;
-	m_resources[jid.resource()] = r;
-	m_resource = jid.resource();
+
+	Resource r;
+	setResource(jid.resource());
+	setActiveResource(jid.resource());
+
 	m_username = username;
 	m_password = password;
 	m_userKey = userKey;
@@ -107,23 +107,6 @@ User::User(GlooxMessageHandler *parent, JID jid, const std::string &username, co
 	}
 
 	p->protocol()->onUserCreated(this);
-}
-
-/*
- * Returns true if main JID for this User has feature `feature`,
- * otherwise returns false.
- */
-bool User::hasFeature(int feature, const std::string &resource) {
-	const std::string &caps = m_resources[resource.empty() ? m_resource : resource].capsVersion;
-	return !caps.empty() && (p->capsCache[caps] & feature);
-}
-
-Resource & User::findResourceWithFeature(int feature) {
-	for (std::map<std::string, Resource>::iterator u = m_resources.begin(); u != m_resources.end() ; u++){
-		if (hasFeature(feature, (*u).first))
-			return getResource((*u).first);
-	}
-	return DummyResource;
 }
 
 /*
@@ -771,31 +754,6 @@ void User::receivedPresence(const Presence &stanza) {
 		Log("LANG", lang << " " << lang.c_str());
 	}
 
-	if (m_connected) {
-		// respond to probe presence
-		if (stanza.subtype() == Presence::Probe && stanza.to().username() != "") {
-			std::string name(stanza.to().username());
-			std::for_each( name.begin(), name.end(), replaceJidCharacters() );
-			PurpleBuddy *buddy = purple_find_buddy(m_account, name.c_str());
-			if (buddy) {
-				SpectrumBuddy *s_buddy = (SpectrumBuddy *) buddy->node.ui_data;
-				Tag *probe = s_buddy->generatePresenceStanza(m_features);
-				if (probe) {
-					probe->addAttribute("to", stanza.from().full());
-					p->j->send(probe);
-				}
-			}
-			else {
-				Log(m_jid, "answering to probe presence with unavailable presence");
-				Tag *tag = new Tag("presence");
-				tag->addAttribute("to", stanza.from().full());
-				tag->addAttribute("from", stanza.to().bare() + "/bot");
-				tag->addAttribute("type", "unavailable");
-				p->j->send(tag);
-			}
-		}
-	}
-
 	if (p->protocol()->onPresenceReceived(this, stanza)) {
 		delete stanzaTag;
 		return;
@@ -805,12 +763,10 @@ void User::receivedPresence(const Presence &stanza) {
 	if (stanza.to().username() == ""  || ((p->protocol()->tempAccountsAllowed()) || p->protocol()->isMUC(NULL, stanza.to().bare()))) {
 		if (stanza.presence() == Presence::Unavailable) {
 			// disconnect from legacy network if we are connected
-			std::map<std::string,Resource> ::iterator iter = m_resources.begin();
 			if (stanza.to().username() == "") {
 				if ((m_connected == false && int(time(NULL)) > int(m_connectionStart) + 10) || m_connected == true) {
-					iter = m_resources.find(stanza.from().resource());
-					if (iter != m_resources.end()) {
-						m_resources.erase(stanza.from().resource());
+					if (hasResource(stanza.from().resource())) {
+						removeResource(stanza.from().resource());
 						for (std::map<std::string, Conversation>::iterator u = m_conversations.begin(); u != m_conversations.end() ; u++) {
 							if ((*u).second.resource == stanza.from().resource()) {
 								m_conversations[(*u).first].resource = "";
@@ -821,21 +777,19 @@ void User::receivedPresence(const Presence &stanza) {
 				}
 			}
 			if (m_connected) {
-				if (m_resources.empty() || (p->protocol()->tempAccountsAllowed() && g_hash_table_size(m_mucs) == 0)){
+				if (getResources().empty() || (p->protocol()->tempAccountsAllowed() && g_hash_table_size(m_mucs) == 0)){
 					Log(m_jid, "disconecting");
 					purple_account_disconnect(m_account);
 					p->userManager()->removeUserTimer(this);
 				}
 				else {
-					iter = m_resources.begin();
-					m_resource=(*iter).first;
+					setActiveResource();
 				}
 // 				m_connected=false;
 			}
 			else {
-				if (!m_resources.empty() && int(time(NULL)) > int(m_connectionStart) + 10) {
-					iter = m_resources.begin();
-					m_resource=(*iter).first;
+				if (!getResources().empty() && int(time(NULL)) > int(m_connectionStart) + 10) {
+					setActiveResource();
 				}
 				else if (m_account) {
 					Log(m_jid, "disconecting2");
@@ -843,31 +797,18 @@ void User::receivedPresence(const Presence &stanza) {
 				}
 			}
 		} else {
-			std::string resource=stanza.from().resource();
-			std::map<std::string,Resource> ::iterator iter = m_resources.begin();
-			iter = m_resources.find(resource);
-			if (iter == m_resources.end()) {
-				m_resources[resource].priority = stanza.priority();
-				Tag *c = stanzaTag->findChildWithAttrib("xmlns", "http://jabber.org/protocol/caps");
-				// presence has caps
-				if (c != NULL) {
-					if (p->hasCaps(c->findAttribute("ver"))) {
-						m_resources[resource].capsVersion = c->findAttribute("ver");
-					}
-				}
-				if (m_resources[resource].priority > m_resources[m_resource].priority)
-					m_resource = resource;
-
+			if (hasResource(stanza.from().resource())) {
+				setResource(stanza); // update this resource
 				sendPresenceToAll(stanza.from().full());
 			}
 
-			Log(m_jid, "resource: " << m_resource);
+			Log(m_jid, "resource: " << getResource().name);
 			if (!m_connected) {
 				// we are not connected to legacy network, so we should do it when disco#info arrive :)
-				Log(m_jid, "connecting: resource=" << m_resource);
+				Log(m_jid, "connecting: resource=" << getResource().name);
 				if (m_readyForConnect == false) {
 					m_readyForConnect = true;
-					if (m_resources[m_resource].capsVersion.empty()) {
+					if (getResource().caps == -1) {
 						// caps not arrived yet, so we can't connect just now and we have to wait for caps
 					}
 					else {
@@ -936,7 +877,7 @@ void User::receivedPresence(const Presence &stanza) {
 				p->j->send(tag);
 			}
 		} else {
-			if (m_resource.empty()) {
+			if (getResources().empty()) {
 				Tag *tag = new Tag("presence");
 				tag->addAttribute("to", stanza.from().bare());
 				tag->addAttribute("type", "unavailable");
@@ -954,7 +895,7 @@ void User::addFiletransfer( const JID& to, const std::string& sid, SIProfileFT::
 	Log("filetransfer", "adding FT Class as jid:" << std::string(to.bare() == m_jid ? from.username() : to.username()));
 }
 void User::addFiletransfer( const JID& to ) {
-	FiletransferRepeater *ft = new FiletransferRepeater(p, to, m_jid + "/" + m_resource);
+	FiletransferRepeater *ft = new FiletransferRepeater(p, to, m_jid + "/" + getResource().name);
 	g_hash_table_replace(m_filetransfers, g_strdup(to.username().c_str()), ft);
 }
 

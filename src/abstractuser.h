@@ -25,17 +25,9 @@
 #include <list>
 #include "account.h"
 #include "value.h"
+#include "resourcemanager.h"
 
-struct Resource {
-	int priority;
-	std::string capsVersion;
-	std::string name;
-	operator bool() const {
-		return !name.empty();
-	}
-};
-
-class AbstractUser
+class AbstractUser : public ResourceManager
 {
 	public:
 		virtual ~AbstractUser() {}
@@ -46,7 +38,6 @@ class AbstractUser
 		virtual PurpleValue *getSetting(const char *key) = 0;
 		virtual bool hasTransportFeature(int feature) = 0;
 		virtual int getFeatures() = 0;
-		virtual Resource & findResourceWithFeature(int feature) = 0;
 		
 		guint removeTimer;
 

@@ -85,7 +85,6 @@ class User : public AbstractUser, public RosterManager, public RosterStorage {
 
 		// Utils
 		bool isOpenedConversation(const std::string &name);
-		bool hasFeature(int feature, const std::string &resource = "");
 
 		// Libpurple stuff
 		void purpleReauthorizeBuddy(PurpleBuddy *buddy);
@@ -136,25 +135,13 @@ class User : public AbstractUser, public RosterManager, public RosterStorage {
 		// connection start
 		time_t connectionStart() { return m_connectionStart; }
 
-		void setResource(const std::string &resource, int priority = -256, const std::string &caps = "") {
-			if (priority != -256) m_resources[resource].priority = priority;
-			if (!caps.empty()) m_resources[resource].capsVersion = caps;
-			m_resources[resource].name = resource;
-		}
-		void setActiveResource(const std::string &resource) { m_resource = resource; }
-		bool hasResource(const std::string &r) {return m_resources.find(r) != m_resources.end(); }
-		Resource & getResource(const std::string &r = "") { if (r.empty()) return m_resources[m_resource]; else return m_resources[r];}
-		Resource & findResourceWithFeature(int feature);
-
 		PurpleAccount *account() { return m_account; }
-		std::map<std::string,Resource> & resources() { return m_resources; }
 		int reconnectCount() { return m_reconnectCount; }
 		bool isVIP() { return m_vip; }
 		bool readyForConnect() { return m_readyForConnect; }
 		void setReadyForConnect(bool ready) { m_readyForConnect = ready; }
 		const std::string & username() { return m_username; }
 		const std::string & jid() { return m_jid; }
-		const std::string & resource() { return m_resource; }
 		AdhocData & adhocData() { return m_adhocData; }
 		void setAdhocData(AdhocData data) { m_adhocData = data; }
 
@@ -191,13 +178,11 @@ class User : public AbstractUser, public RosterManager, public RosterStorage {
 		std::string m_password;		// password used to connect to legacy network
 		std::string m_username;		// legacy network user name
 		std::string m_jid;			// Jabber ID of this user
-		std::string m_resource;		// active resource
 		const char *m_lang;			// xml:lang
 		int m_features;
 		time_t m_connectionStart;	// connection start timestamp
 		GHashTable *m_mucs;			// MUCs
 		GHashTable *m_filetransfers;
-		std::map<std::string,Resource> m_resources;	// list of all resources which are connected to the transport
 		std::map<std::string,authRequest> m_authRequests;	// list of authorization requests (holds callbacks and user data)
 		std::map<std::string,Conversation> m_conversations; // list of opened conversations
 		GHashTable *m_settings;		// user settings

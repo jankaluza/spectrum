@@ -132,12 +132,27 @@ void RosterManager::setRoster(GHashTable *roster) {
 	m_roster = roster;
 }
 
-void RosterManager::sendPresence(AbstractSpectrumBuddy *s_buddy) {
+void RosterManager::sendPresence(AbstractSpectrumBuddy *s_buddy, const std::string &resource) {
 	std::string name = s_buddy->getName();
 
 	Tag *tag = s_buddy->generatePresenceStanza(m_user->getFeatures());
 	if (tag) {
-		tag->addAttribute("to", m_user->jid());
+		tag->addAttribute("to", m_user->jid() + std::string(resource.empty() ? "" : "/" + resource));
+		Transport::instance()->send(tag);
+	}
+}
+
+void RosterManager::sendPresence(const std::string &name, const std::string &resource) {
+	AbstractSpectrumBuddy *s_buddy = getRosterItem(name);
+	if (s_buddy) {
+		sendPresence(s_buddy);
+	}
+	else {
+		Log(m_user->jid(), "answering to probe presence with unavailable presence");
+		Tag *tag = new Tag("presence");
+		tag->addAttribute("to", m_user->jid() + std::string(resource.empty() ? "" : "/" + resource));
+		tag->addAttribute("from", s_buddy->getJid());
+		tag->addAttribute("type", "unavailable");
 		Transport::instance()->send(tag);
 	}
 }
@@ -282,4 +297,17 @@ void RosterManager::sendNewBuddies() {
 
 	m_subscribeCache.clear();
 	m_subscribeLastCount = -1;
+}
+
+void RosterManager::handlePresence(const Presence &stanza) {
+	Tag *stanzaTag = stanza.tag();
+	if (!stanzaTag)
+		return;
+
+	// Probe presence
+	if (stanza.subtype() == Presence::Probe && stanza.to().username() != "") {
+		std::string name(stanza.to().username());
+		std::for_each( name.begin(), name.end(), replaceJidCharacters() );
+		sendPresence(name);
+	}
 }

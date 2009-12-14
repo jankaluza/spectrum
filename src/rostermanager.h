@@ -26,6 +26,7 @@
 #include "account.h"
 #include "glib.h"
 #include "gloox/tag.h"
+#include "gloox/presence.h"
 #include <algorithm>
 #include "abstractuser.h"
 
@@ -62,7 +63,11 @@ class RosterManager {
 		bool isInRoster(const std::string &name, const std::string &subscription);
 
 		// Sends current presence of buddy `s_buddy`.
-		void sendPresence(AbstractSpectrumBuddy *s_buddy);
+		void sendPresence(AbstractSpectrumBuddy *s_buddy, const std::string &resource = "");
+		
+		// Sends current presene of buddy. If he doesn't exist, unavailable presence
+		// is send.
+		void sendPresence(const std::string &name, const std::string &resource = "");
 
 		// Called when buddy signed on.
 		void handleBuddySignedOn(AbstractSpectrumBuddy *s_buddy);
@@ -89,6 +94,9 @@ class RosterManager {
 
 		// Sends buddies from subscribeCache to end user.
 		void sendNewBuddies();
+		
+		// Handles presence stanza
+		void handlePresence(const Presence &presence);
 
 	private:
 		GHashTable *m_roster;
