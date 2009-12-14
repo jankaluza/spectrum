@@ -50,6 +50,7 @@ class Transport {
 		const std::string &hash();
 		AbstractBackend *sql();
 		const std::string &jid() { return m_jid; }
+		std::string getId();
 		std::list <Tag *> &getTags() { return m_tags; }
 		void clearTags() { m_tags.clear(); }
 		

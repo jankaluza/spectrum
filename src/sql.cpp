@@ -635,7 +635,7 @@ GHashTable *SQLClass::getBuddies(long userId, PurpleAccount *account){
 
 // 			rows[std::string(m_stmt_getBuddies.resUin)] = user;
 			g_hash_table_replace(roster, g_strdup(m_stmt_getBuddies.resUin.c_str()), buddy->node.ui_data);
-			m_stmt_getBuddies.stmt->execute();
+// 			m_stmt_getBuddies.stmt->execute();
 		} while (!m_stmt_getBuddies.stmt->done());
 	STATEMENT_EXECUTE_END(m_stmt_getBuddies.stmt, getBuddies(userId, account));
 

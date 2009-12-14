@@ -30,3 +30,7 @@ const std::string &Transport::hash() {
 AbstractBackend *Transport::sql() {
 	return (AbstractBackend *) TestingBackend::instance();
 }
+
+std::string Transport::getId() {
+	return "id1";
+}

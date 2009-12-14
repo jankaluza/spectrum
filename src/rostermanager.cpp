@@ -62,8 +62,15 @@ static void sendCurrentPresence(gpointer key, gpointer v, gpointer data) {
 	}
 }
 
+static gboolean sync_cb(gpointer data) {
+	RosterManager *manager = (RosterManager *) data;
+	return manager->syncBuddiesCallback();
+}
+
 RosterManager::RosterManager(AbstractUser *user) {
 	m_user = user;
+	m_syncTimer = new SpectrumTimer(12000, &sync_cb, this);
+	m_subscribeLastCount = -1;
 }
 
 RosterManager::~RosterManager() {
@@ -125,3 +132,154 @@ void RosterManager::setRoster(GHashTable *roster) {
 	m_roster = roster;
 }
 
+void RosterManager::sendPresence(AbstractSpectrumBuddy *s_buddy) {
+	std::string name = s_buddy->getName();
+
+	Tag *tag = s_buddy->generatePresenceStanza(m_user->getFeatures());
+	if (tag) {
+		tag->addAttribute("to", m_user->jid());
+		Transport::instance()->send(tag);
+	}
+}
+
+void RosterManager::handleBuddySignedOn(AbstractSpectrumBuddy *s_buddy) {
+	sendPresence(s_buddy);
+	s_buddy->setOnline();
+}
+
+void RosterManager::handleBuddySignedOn(PurpleBuddy *buddy) {
+	AbstractSpectrumBuddy *s_buddy = (AbstractSpectrumBuddy *) buddy->node.ui_data;
+	handleBuddySignedOn(s_buddy);
+}
+
+void RosterManager::handleBuddySignedOff(AbstractSpectrumBuddy *s_buddy) {
+	sendPresence(s_buddy);
+	s_buddy->setOffline();
+}
+
+void RosterManager::handleBuddySignedOff(PurpleBuddy *buddy) {
+	AbstractSpectrumBuddy *s_buddy = (AbstractSpectrumBuddy *) buddy->node.ui_data;
+	handleBuddySignedOff(s_buddy);
+}
+
+void RosterManager::handleBuddyStatusChanged(AbstractSpectrumBuddy *s_buddy, PurpleStatus *status, PurpleStatus *old_status) {
+	sendPresence(s_buddy);
+	s_buddy->setOnline();
+}
+
+void RosterManager::handleBuddyStatusChanged(PurpleBuddy *buddy, PurpleStatus *status, PurpleStatus *old_status) {
+	AbstractSpectrumBuddy *s_buddy = (AbstractSpectrumBuddy *) buddy->node.ui_data;
+	handleBuddyStatusChanged(s_buddy, status, old_status);
+}
+
+void RosterManager::handleBuddyRemoved(AbstractSpectrumBuddy *s_buddy) {
+	m_subscribeCache.erase(s_buddy->getSafeName());
+}
+
+void RosterManager::handleBuddyRemoved(PurpleBuddy *buddy) {
+	AbstractSpectrumBuddy *s_buddy = (AbstractSpectrumBuddy *) buddy->node.ui_data;
+	handleBuddyCreated(s_buddy);
+}
+
+void RosterManager::handleBuddyCreated(AbstractSpectrumBuddy *s_buddy) {
+	std::string alias = s_buddy->getAlias();
+	std::string name = s_buddy->getSafeName();
+	if (name.empty())
+		return;
+
+	Log(m_user->jid(), "handleBuddyCreated: " << name << " ("<< alias <<")");
+
+	if (!isInRoster(name, "")) {
+		m_syncTimer->start();
+		Log(m_user->jid(), "Not in roster => adding to subscribe cache");
+		m_subscribeCache[name] = s_buddy;
+// 		if (m_user->findResourceWithFeature(GLOOX_FEATURE_ROSTERX)) {
+// 			Log(m_jid, "Not in roster => sending rosterx");
+// 			m_subscribeCache[name] = s_buddy;
+// 		}
+// 		else {
+// 			Log(m_jid, "Not in roster => sending subscribe");
+// 			Tag *tag = new Tag("presence");
+// 			tag->addAttribute("type", "subscribe");
+// 			tag->addAttribute("from", s_buddy->getJid());
+// 			tag->addAttribute("to", m_jid);
+// 			Tag *nick = new Tag("nick", alias);
+// 			nick->addAttribute("xmlns","http://jabber.org/protocol/nick");
+// 			tag->addChild(nick);
+// 			p->j->send(tag);
+// 		}
+	}
+}
+
+bool RosterManager::syncBuddiesCallback() {
+	Log(m_user->jid(), "sync_cb lastCount: " << m_subscribeLastCount << "cacheSize: " << int(m_subscribeCache.size()));
+	if (m_subscribeLastCount == int(m_subscribeCache.size())) {
+		sendNewBuddies();
+		return false;
+	}
+	else {
+		m_subscribeLastCount = int(m_subscribeCache.size());
+		return true;
+	}
+}
+
+void RosterManager::sendNewBuddies() {
+	if (int(m_subscribeCache.size()) == 0)
+		return;
+
+	Log(m_user->jid(), "Sending rosterX");
+
+	Resource res = m_user->findResourceWithFeature(GLOOX_FEATURE_ROSTERX);
+	if (res) {
+		Tag *tag = new Tag("iq");
+		tag->addAttribute("to", m_user->jid() + "/" + res.name);
+		tag->addAttribute("type", "set");
+		tag->addAttribute("id", Transport::instance()->getId());
+		tag->addAttribute("from", Transport::instance()->jid());
+		Tag *x = new Tag("x");
+		x->addAttribute("xmlns", "http://jabber.org/protocol/rosterx");
+		
+		Tag *item;
+		std::map<std::string, AbstractSpectrumBuddy *>::iterator it = m_subscribeCache.begin();
+		while (it != m_subscribeCache.end()) {
+			AbstractSpectrumBuddy *s_buddy = (*it).second;
+			std::string jid = s_buddy->getBareJid();
+			std::string alias = s_buddy->getAlias();
+
+			addRosterItem(s_buddy->getBuddy());
+
+			item = new Tag("item");
+			item->addAttribute("action", "add");
+			item->addAttribute("jid", jid);
+			item->addAttribute("name", alias);
+			item->addChild( new Tag("group", s_buddy->getGroup()));
+			x->addChild(item);
+			it++;
+		}
+		tag->addChild(x);
+		Log("rosterx stanza", tag->xml() << "\n");
+		Transport::instance()->send(tag);
+	}
+	else {
+		std::map<std::string, AbstractSpectrumBuddy *>::iterator it = m_subscribeCache.begin();
+		while (it != m_subscribeCache.end()) {
+			AbstractSpectrumBuddy *s_buddy = (*it).second;
+			std::string alias = s_buddy->getAlias();
+
+			Tag *tag = new Tag("presence");
+			tag->addAttribute("type", "subscribe");
+			tag->addAttribute("from", s_buddy->getJid());
+			tag->addAttribute("to", Transport::instance()->jid());
+			Tag *nick = new Tag("nick", alias);
+			nick->addAttribute("xmlns","http://jabber.org/protocol/nick");
+			tag->addChild(nick);
+			Transport::instance()->send(tag);
+
+			addRosterItem(s_buddy->getBuddy());
+			it++;
+		}
+	}
+
+	m_subscribeCache.clear();
+	m_subscribeLastCount = -1;
+}

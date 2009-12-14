@@ -1020,21 +1020,21 @@ void GlooxMessageHandler::purpleBuddyStatusChanged(PurpleBuddy *buddy, PurpleSta
 	PurpleAccount *a = purple_buddy_get_account(buddy);
 	User *user = (User *) userManager()->getUserByAccount(a);
 	if (user != NULL)
-		user->purpleBuddyStatusChanged(buddy, status, old_status);
+		user->handleBuddyStatusChanged(buddy, status, old_status);
 }
 
 void GlooxMessageHandler::purpleBuddySignedOn(PurpleBuddy *buddy) {
 	PurpleAccount *a = purple_buddy_get_account(buddy);
 	User *user = (User *) userManager()->getUserByAccount(a);
 	if (user != NULL)
-		user->purpleBuddySignedOn(buddy);
+		user->handleBuddySignedOn(buddy);
 }
 
 void GlooxMessageHandler::purpleBuddySignedOff(PurpleBuddy *buddy) {
 	PurpleAccount *a = purple_buddy_get_account(buddy);
 	User *user = (User *) userManager()->getUserByAccount(a);
 	if (user != NULL)
-		user->purpleBuddySignedOff(buddy);
+		user->handleBuddySignedOff(buddy);
 }
 
 void GlooxMessageHandler::purpleBuddyTypingStopped(PurpleAccount *account, const char *who) {

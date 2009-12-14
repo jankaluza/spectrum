@@ -21,6 +21,7 @@
 #include "abstractspectrumbuddy.h"
 #include "main.h" // just for replaceBadJidCharacters
 #include "transport.h"
+#include "usermanager.h"
 
 AbstractSpectrumBuddy::AbstractSpectrumBuddy(long id) : m_id(id), m_online(false), m_subscription("both") {
 }
@@ -42,15 +43,27 @@ std::string AbstractSpectrumBuddy::getSafeName() {
 	return name;
 }
 
+std::string AbstractSpectrumBuddy::getBareJid() {
+	return getSafeName() + "@" + Transport::instance()->jid();
+}
+
 std::string AbstractSpectrumBuddy::getJid() {
 	return getSafeName() + "@" + Transport::instance()->jid() + "/bot";
 }
 
 void AbstractSpectrumBuddy::setOnline() {
+#ifndef TESTS
+	if (!m_online)
+		Transport::instance()->userManager()->buddyOnline();
+#endif
 	m_online = true;
 }
 
 void AbstractSpectrumBuddy::setOffline() {
+#ifndef TESTS
+	if (m_online)
+		Transport::instance()->userManager()->buddyOffline();
+#endif
 	m_online = false;
 }
 

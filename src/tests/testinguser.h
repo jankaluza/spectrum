@@ -19,11 +19,13 @@ class TestingUser : public AbstractUser {
 		bool hasTransportFeature(int feature) { return true; }
 		int getFeatures() { return 256; }
 		long storageId() { return 1; }
+		Resource & findResourceWithFeature(int feature) { return m_resource; }
 		
 	private:
 		PurpleValue *m_value;
 		std::string m_userkey;
 		std::string m_jid;
+		Resource m_resource;
 };
 
 #endif

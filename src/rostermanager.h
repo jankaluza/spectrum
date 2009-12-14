@@ -32,6 +32,7 @@
 using namespace gloox;
 
 class AbstractSpectrumBuddy;
+class SpectrumTimer;
 
 // Manages all SpectrumBuddies in user's roster.
 class RosterManager {
@@ -60,9 +61,41 @@ class RosterManager {
 		// Returns true if buddy with this name and subscription is in roster.
 		bool isInRoster(const std::string &name, const std::string &subscription);
 
+		// Sends current presence of buddy `s_buddy`.
+		void sendPresence(AbstractSpectrumBuddy *s_buddy);
+
+		// Called when buddy signed on.
+		void handleBuddySignedOn(AbstractSpectrumBuddy *s_buddy);
+		void handleBuddySignedOn(PurpleBuddy *buddy);
+
+		// Called when buddy signed off.
+		void handleBuddySignedOff(AbstractSpectrumBuddy *s_buddy);
+		void handleBuddySignedOff(PurpleBuddy *buddy);
+
+		// Called when buddy's status changed.
+		void handleBuddyStatusChanged(AbstractSpectrumBuddy *s_buddy, PurpleStatus *status, PurpleStatus *old_status);
+		void handleBuddyStatusChanged(PurpleBuddy *buddy, PurpleStatus *status, PurpleStatus *old_status);
+
+		// Called when buddy is created.
+		void handleBuddyCreated(AbstractSpectrumBuddy *s_buddy);
+
+		// Called when buddy is removed
+		void handleBuddyRemoved(AbstractSpectrumBuddy *buddy);
+		void handleBuddyRemoved(PurpleBuddy *buddy);
+
+		// Checks if there are new buddies in queue and sends them to user.
+		// Do not call this function by yourself.
+		bool syncBuddiesCallback();
+
+		// Sends buddies from subscribeCache to end user.
+		void sendNewBuddies();
+
 	private:
 		GHashTable *m_roster;
 		AbstractUser *m_user;
+		SpectrumTimer *m_syncTimer;
+		std::map <std::string, AbstractSpectrumBuddy *> m_subscribeCache;
+		int m_subscribeLastCount;
 
 };
 

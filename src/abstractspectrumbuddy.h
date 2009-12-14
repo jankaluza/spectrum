@@ -51,6 +51,9 @@ class AbstractSpectrumBuddy {
 		// in JIDs.
 		std::string getSafeName();
 
+		// Returns bare JID.
+		std::string getBareJid();
+
 		// Returns full JID.
 		std::string getJid();
 

@@ -38,15 +38,6 @@
 
 Resource DummyResource;
 
-/*
- * Called when contact list has been received from legacy network.
- */
-static gboolean sync_cb(gpointer data) {
-	User *d;
-	d = (User*) data;
-	return d->syncCallback();
-}
-
 static void sendXhtmlTag(Tag *tag, Tag *stanzaTag) {
 	Tag *html = new Tag("html");
 	html->addAttribute("xmlns", "http://jabber.org/protocol/xhtml-im");
@@ -118,23 +109,6 @@ User::User(GlooxMessageHandler *parent, JID jid, const std::string &username, co
 	p->protocol()->onUserCreated(this);
 }
 
-bool User::syncCallback() {
-	Log(jid(), "sync_cb lastCount: " << m_subscribeLastCount << "cacheSize: " << int(m_subscribeCache.size()));
-	// we have to check, if all users arrived and repeat this call if not
-	if (m_subscribeLastCount == int(m_subscribeCache.size())) {
-		// We don't want to do it, because user could remove contacts from different client.
-		// This was originally written to import JIT local contacts to ICQ servers
-		// TODO: Make me allowable by config file...
-		// syncContacts();
-		sendRosterX();
-		return FALSE;
-	}
-	else {
-		m_subscribeLastCount = int(m_subscribeCache.size());
-		return TRUE;
-	}
-}
-
 /*
  * Returns true if main JID for this User has feature `feature`,
  * otherwise returns false.
@@ -188,88 +162,6 @@ bool User::isOpenedConversation(const std::string &name) {
 	return false;
 }
 
-/*
- * Re-requests authorization for buddy if we can do it (if buddy is not authorized).
- */
-void User::sendRosterX()
-{
-	m_rosterXCalled = true;
-	m_syncTimer = 0;
-	bool send = false;
-	if (int(m_subscribeCache.size()) == 0)
-		return;
-	Log(m_jid, "Sending rosterX");
-	Tag *tag = new Tag("iq");
-	Resource res = findResourceWithFeature(GLOOX_FEATURE_ROSTERX);
-	if (!res)
-		return;
-	tag->addAttribute("to", m_jid + "/" + res.name);
-	tag->addAttribute("type", "set");
-	tag->addAttribute("id", p->j->getID());
-	tag->addAttribute("from", p->jid());
-	Tag *x = new Tag("x");
-	x->addAttribute("xmlns", "http://jabber.org/protocol/rosterx");
-	Tag *item;
-
-	// add these users to roster db with subscription=ask
-	std::map<std::string,PurpleBuddy*>::iterator it = m_subscribeCache.begin();
-	while (it != m_subscribeCache.end()) {
-		PurpleBuddy *buddy = (*it).second;
-		std::string name(purple_buddy_get_name(buddy));
-		std::for_each(name.begin(), name.end(), replaceBadJidCharacters());
-		if (!name.empty() && !isInRoster(name,"")) {
-			send = true;
-			RosterRow user;
-			std::string alias;
-			if (purple_buddy_get_server_alias(buddy))
-				alias = (std::string) purple_buddy_get_server_alias(buddy);
-			else
-				alias = (std::string) purple_buddy_get_alias(buddy);
-			addRosterItem(buddy);
-// 			p->sql()->addUserToRoster(m_jid, name, "ask");
-
-			item = new Tag("item");
-			item->addAttribute("action", "add");
-			item->addAttribute("jid",name + "@" + p->jid());
-			item->addAttribute("name", alias);
-			item->addChild( new Tag("group", (std::string) purple_group_get_name(purple_buddy_get_group(buddy))));
-			x->addChild(item);
-		}
-		it++;
-	}
-	tag->addChild(x);
-	std::cout << tag->xml() << "\n";
-	if (send)
-		p->j->send(tag);
-	else
-		delete tag;
-
-	m_subscribeCache.clear();
-	m_subscribeLastCount = -1;
-}
-
-/*
- * Adds contacts which are not in legacy network, but which are in local jabber roster,
- * to the legacy network.
- */
-void User::syncContacts()
-{
-// 	PurpleBuddy *buddy;
-// 	Log(m_jid, "Syncing contacts with legacy network.");
-// 	for (std::map<std::string, RosterRow>::iterator u = m_roster.begin(); u != m_roster.end() ; u++) {
-// 		std::string name((*u).second.uin);
-// 		std::for_each( name.begin(), name.end(), replaceJidCharacters() );
-// 		buddy = purple_find_buddy(m_account, name.c_str());
-// 		// buddy is not in blist, so it's not on server
-// 		if (!buddy) {
-// 			// add buddy to server
-// 			buddy = purple_buddy_new(m_account, (*u).second.uin.c_str(), (*u).second.uin.c_str());
-// 			purple_blist_add_buddy(buddy, NULL, NULL ,NULL);
-// 			purple_account_add_buddy(m_account, buddy);
-// 		}
-// 	}
-}
-
 void User::purpleReauthorizeBuddy(PurpleBuddy *buddy) {
 	if (!m_connected)
 		return;
@@ -306,11 +198,7 @@ void User::purpleReauthorizeBuddy(PurpleBuddy *buddy) {
  * Called when PurpleBuddy is removed.
  */
 void User::purpleBuddyRemoved(PurpleBuddy *buddy) {
-	// we should remove pointer to buddy from subscribCache
-	std::string name(purple_buddy_get_name(buddy));
-	std::for_each( name.begin(), name.end(), replaceBadJidCharacters() );
-	m_subscribeCache.erase(name);
-
+	handleBuddyRemoved(buddy);
 	removeBuddy(buddy);
 }
 
@@ -320,89 +208,7 @@ void User::purpleBuddyCreated(PurpleBuddy *buddy) {
 	buddy->node.ui_data = (void *) new SpectrumBuddy(-1, buddy);
 	SpectrumBuddy *s_buddy = (SpectrumBuddy *) buddy->node.ui_data;
 	
-	std::string alias = s_buddy->getAlias();
-	std::string name = s_buddy->getSafeName();
-
-	Log(m_jid, "purpleBuddyChanged: " << name << " ("<< alias <<")");
-
-	if (m_syncTimer == 0 && !m_rosterXCalled) {
-		m_syncTimer = purple_timeout_add_seconds(12, sync_cb, this);
-	}
-
-	if (!isInRoster(name, "")) {
-		if (findResourceWithFeature(GLOOX_FEATURE_ROSTERX)) {
-			if (!m_rosterXCalled) {
-				m_subscribeCache[name] = buddy;
-				Log(m_jid, "Not in roster => adding to rosterX cache");
-			}
-			else {
-				Log(m_jid, "Not in roster => sending rosterx");
-				if (m_syncTimer == 0) {
-					m_syncTimer = purple_timeout_add_seconds(12, sync_cb, this);
-				}
-				m_subscribeCache[name] = buddy;
-			}
-		}
-		else {
-			Log(m_jid, "Not in roster => sending subscribe");
-			Tag *tag = new Tag("presence");
-			tag->addAttribute("type", "subscribe");
-			tag->addAttribute("from", s_buddy->getJid());
-			tag->addAttribute("to", m_jid);
-			Tag *nick = new Tag("nick", alias);
-			nick->addAttribute("xmlns","http://jabber.org/protocol/nick");
-			tag->addChild(nick);
-			p->j->send(tag);
-		}
-	}
-}
-
-void User::purpleBuddyStatusChanged(PurpleBuddy *buddy, PurpleStatus *status, PurpleStatus *old_status) {
-	SpectrumBuddy *s_buddy = (SpectrumBuddy *) buddy->node.ui_data;
-	std::string name = s_buddy->getName();
-
-	Tag *tag = s_buddy->generatePresenceStanza(m_features);
-	if (tag) {
-		tag->addAttribute("to", m_jid);
-		p->j->send(tag);
-	}
-
-	if (!s_buddy->isOnline()) {
-		p->userManager()->buddyOnline();
-		s_buddy->setOnline();
-	}
-}
-
-void User::purpleBuddySignedOn(PurpleBuddy *buddy) {
-	SpectrumBuddy *s_buddy = (SpectrumBuddy *) buddy->node.ui_data;
-	std::string name = s_buddy->getName();
-
-	Tag *tag = s_buddy->generatePresenceStanza(m_features);
-	if (tag) {
-		tag->addAttribute("to", m_jid);
-		p->j->send(tag);
-	}
-
-	if (!s_buddy->isOnline()) {
-		p->userManager()->buddyOnline();
-		s_buddy->setOnline();
-	}
-}
-
-void User::purpleBuddySignedOff(PurpleBuddy *buddy) {
-	SpectrumBuddy *s_buddy = (SpectrumBuddy *) buddy->node.ui_data;
-	std::string name = s_buddy->getName();
-
-	Tag *tag = s_buddy->generatePresenceStanza(m_features);
-	if (tag) {
-		tag->addAttribute("to", m_jid);
-		p->j->send(tag);
-	}
-
-	if (s_buddy->isOnline()) {
-		p->userManager()->buddyOffline();
-		s_buddy->setOffline();
-	}
+	handleBuddyCreated(s_buddy);
 }
 
 /*

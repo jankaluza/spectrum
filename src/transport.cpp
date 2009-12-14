@@ -23,3 +23,7 @@ const std::string &Transport::hash() {
 AbstractBackend *Transport::sql() {
 	return (AbstractBackend *) GlooxMessageHandler::instance()->sql();
 }
+
+std::string Transport::getId() {
+	return GlooxMessageHandler::instance()->j->getID();
+}

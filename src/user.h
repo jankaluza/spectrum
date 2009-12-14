@@ -68,15 +68,6 @@ struct subscribeContact {
 	std::string	group;
 };
 
-struct Resource {
-	int priority;
-	std::string capsVersion;
-	std::string name;
-	operator bool() const {
-		return !name.empty();
-	}
-};
-
 struct Conversation {
 	PurpleConversation *conv;
 	std::string resource;
@@ -84,18 +75,15 @@ struct Conversation {
 
 class User;
 
-class User : public AbstractUser, RosterManager, public RosterStorage {
+class User : public AbstractUser, public RosterManager, public RosterStorage {
 	public:
 		User(GlooxMessageHandler *parent, JID jid, const std::string &username, const std::string &password, const std::string &userKey, long id);
 		~User();
 
 		void connect();
-		void sendRosterX();
-		void syncContacts();
 		bool hasTransportFeature(int feature); // TODO: move me to p->hasTransportFeature and rewrite my API
 
 		// Utils
-		bool syncCallback();
 		bool isOpenedConversation(const std::string &name);
 		bool hasFeature(int feature, const std::string &resource = "");
 
@@ -111,9 +99,6 @@ class User : public AbstractUser, RosterManager, public RosterStorage {
 		// Libpurple callbacks
 		void purpleBuddyRemoved(PurpleBuddy *buddy);
 		void purpleBuddyCreated(PurpleBuddy *buddy);
-		void purpleBuddyStatusChanged(PurpleBuddy *buddy, PurpleStatus *status, PurpleStatus *old_status);
-		void purpleBuddySignedOn(PurpleBuddy *buddy);
-		void purpleBuddySignedOff(PurpleBuddy *buddy);
 		void purpleMessageReceived(PurpleAccount* account,char * name,char *msg,PurpleConversation *conv,PurpleMessageFlags flags);
 		void purpleConversationWriteIM(PurpleConversation *conv, const char *who, const char *msg, PurpleMessageFlags flags, time_t mtime);
 		void purpleConversationWriteChat(PurpleConversation *conv, const char *who, const char *msg, PurpleMessageFlags flags, time_t mtime);
@@ -215,7 +200,6 @@ class User : public AbstractUser, RosterManager, public RosterStorage {
 		std::map<std::string,Resource> m_resources;	// list of all resources which are connected to the transport
 		std::map<std::string,authRequest> m_authRequests;	// list of authorization requests (holds callbacks and user data)
 		std::map<std::string,Conversation> m_conversations; // list of opened conversations
-		std::map<std::string,PurpleBuddy *> m_subscribeCache;	// cache for contacts for roster X
 		GHashTable *m_settings;		// user settings
 		long m_userID;				// userID for Database
 		bool m_loadingBuddiesFromDB;
