@@ -19,10 +19,6 @@
  */
 
 #include "abstractconversation.h"
-#include "main.h" // just for replaceBadJidCharacters
-#include "transport.h"
-#include "usermanager.h"
-
 
 void AbstractConversation::setResource(const std::string &resource) {
 	m_resource = resource;
@@ -30,4 +26,8 @@ void AbstractConversation::setResource(const std::string &resource) {
 
 const std::string &AbstractConversation::getResource() {
 	return m_resource;
+}
+
+SpectrumConversationType &AbstractConversation::getType() {
+	return m_type;
 }

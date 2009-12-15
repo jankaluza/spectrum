@@ -41,23 +41,37 @@ class AbstractConversation {
 	public:
 		AbstractConversation(SpectrumConversationType type) { m_type = type; m_resource = ""; }
 		AbstractConversation() {};
-		
+
+		// Sets the resource associated with this conversation.
 		void setResource(const std::string &resource);
+
+		// Returns current resource.
 		const std::string &getResource();
-		
-		SpectrumConversationType &getType() { return m_type; }
-		
+
+		// Returns type of conversation.
+		SpectrumConversationType &getType();
+
+		// Handles message which should be resend to XMPP user.
+		virtual void handleMessage(AbstractUser *user, const char *who, const char *msg, PurpleMessageFlags flags, time_t mtime) = 0;
+
+		// Called when new users join the room.
 		virtual void addUsers(AbstractUser *user, GList *cbuddies) {}
+
+		// Called when some user is renamed.
 		virtual void renameUser(AbstractUser *user, const char *old_name, const char *new_name, const char *new_alias) {}
+
+		// Called when some user is removed.
 		virtual void removeUsers(AbstractUser *user, GList *users) {}
+
+		// Called when some the topic is changed.
 		virtual void changeTopic(AbstractUser *user, const char *who, const char *topic) {}
 
-		virtual void handleMessage(AbstractUser *user, const char *who, const char *msg, PurpleMessageFlags flags, time_t mtime) = 0;
+		// Returns pointer to PurpleConversation associated with this conversation.
 		virtual PurpleConversation *getConv() = 0;
 	
 	private:
-		std::string m_resource;
-		SpectrumConversationType m_type;
+		std::string m_resource;				// Current resource.
+		SpectrumConversationType m_type;	// Conversation type.
 };
 
 #endif

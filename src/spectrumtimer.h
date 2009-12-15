@@ -52,10 +52,10 @@ class SpectrumTimer {
 		gboolean timeout();
 
 	private:
-		void *m_data;
-		SpectrumTimerCallback m_callback;
-		int m_timeout;
-		guint m_id;
+		void *m_data;						// Data to be passed to callback.
+		SpectrumTimerCallback m_callback;	// Callback which is called on timeout.
+		int m_timeout;						// Miliseconds.
+		guint m_id;							// Timer ID.
 };
 
 #endif

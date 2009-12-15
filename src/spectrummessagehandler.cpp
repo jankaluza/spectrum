@@ -244,6 +244,9 @@ void SpectrumMessageHandler::removeConversationResource(const std::string &resou
 	}
 }
 
+bool SpectrumMessageHandler::hasOpenedMUC() {
+	return m_mucs != 0;
+}
 
 std::string SpectrumMessageHandler::getConversationName(PurpleConversation *conv) {
 	std::string name(purple_conversation_get_name(conv));

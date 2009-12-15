@@ -31,17 +31,20 @@
 
 using namespace gloox;
 
-// Wrapper for PurpleConversation.
+// Class representing IM Conversation
 class SpectrumConversation : public AbstractConversation {
 	public:
 		SpectrumConversation(PurpleConversation *conv, SpectrumConversationType type);
 		~SpectrumConversation();
 
+		// Handles message which should be resend to XMPP user.
 		void handleMessage(AbstractUser *user, const char *who, const char *msg, PurpleMessageFlags flags, time_t mtime);
+
+		// Returns pointer to PurpleConversation associated with this conversation.
 		PurpleConversation *getConv() { return m_conv; }
 
 	private:
-		PurpleConversation *m_conv;
+		PurpleConversation *m_conv;		// Conversation associated with this class.
 };
 
 #endif

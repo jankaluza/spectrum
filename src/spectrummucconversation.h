@@ -31,30 +31,42 @@
 
 using namespace gloox;
 
-// Wrapper for PurpleConversation.
+// Class representing MUC Conversation.
 class SpectrumMUCConversation : public AbstractConversation {
 	public:
 		SpectrumMUCConversation(PurpleConversation *conv, const std::string &jid, const std::string &resource);
 		~SpectrumMUCConversation();
 
+		// Handles message which should be resend to XMPP user.
 		void handleMessage(AbstractUser *user, const char *who, const char *msg, PurpleMessageFlags flags, time_t mtime);
+
+		// Called when new users join the room.
 		void addUsers(AbstractUser *user, GList *cbuddies);
+
+		// Called when some user is renamed.
 		void renameUser(AbstractUser *user, const char *old_name, const char *new_name, const char *new_alias);
+
+		// Called when some user is removed.
 		void removeUsers(AbstractUser *user, GList *users);
+
+		// Called when some the topic is changed.
 		void changeTopic(AbstractUser *user, const char *who, const char *topic);
+
+		// Returns pointer to PurpleConversation associated with this conversation.
 		PurpleConversation *getConv() { return m_conv; }
+
+		// Sends current topic to XMPP user.
 		void sendTopic(AbstractUser *user);
-		
+
 	private:
-		PurpleConversation *m_conv;
-		Tag *m_lastPresence;
-		std::string m_nickname;
-		std::string m_jid;
-		bool m_connected;
-		std::string m_topic;
-		std::string m_topicUser;
-		std::string m_resource;
-		
+		PurpleConversation *m_conv;		// Conversation associated with this class.
+		Tag *m_lastPresence;			// Last presence from XMPP user.
+		std::string m_nickname;			// XMPP user nickname.
+		std::string m_jid;				// Bare JID of the room (e.g. #room%server@irc.localhost).
+		bool m_connected;				// True if addUsers has been called.
+		std::string m_topic;			// Current topic.
+		std::string m_topicUser;		// Name of user who set topic.
+		std::string m_resource;			// Current XMPP user's resource.
 };
 
 #endif

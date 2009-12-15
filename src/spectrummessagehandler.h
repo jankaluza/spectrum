@@ -47,16 +47,23 @@ class SpectrumMessageHandler {
 
 		// Adds new conversation to database.
 		void addConversation(PurpleConversation *conv, AbstractConversation *s_conv, const std::string &key = "");
-		
+
+		// Removes and destroyes conversation.
 		void removeConversation(const std::string &name);
 
 		// Returns true if the conversation with name exists.
 		bool isOpenedConversation(const std::string &name);
-		
+
+		// Removes resource from conversations. New messages will not be sent to this resource anymore.
+		void removeConversationResource(const std::string &resource);
+
+		// Returns true if there is some groupchat conversation opened.
+		bool hasOpenedMUC();
+
 		// Called by libpurple when new message for non-existing Conversation has been received.
 		void handlePurpleMessage(PurpleAccount* account, char * name, char *msg, PurpleConversation *conv, PurpleMessageFlags flags);
 
-		
+		// Handles messages from Jabber side.
 		void handleMessage(const Message& msg);
 
 		// Called by libpurple when there is new IM message to be written to Conversation.
@@ -65,14 +72,17 @@ class SpectrumMessageHandler {
 		// Called by libpurple when there is new groupchat message to be written to Conversation.
 		void handleWriteChat(PurpleConversation *conv, const char *who, const char *msg, PurpleMessageFlags flags, time_t mtime);
 
+		// Called when buddy in room is renamed.
 		void purpleChatRenameUser(PurpleConversation *conv, const char *old_name, const char *new_name, const char *new_alias);
+
+		// Called when buddy leaves the room.
 		void purpleChatRemoveUsers(PurpleConversation *conv, GList *users);
+
+		// Called when new buddies comes to room.
 		void purpleChatAddUsers(PurpleConversation *conv, GList *cbuddies, gboolean new_arrivals);
+
+		// Called when topic is changed.
 		void purpleChatTopicChanged(PurpleConversation *conv, const char *who, const char *topic);
-		
-		void removeConversationResource(const std::string &resource);
-		
-		bool hasOpenedMUC() { return m_mucs != 0; }
 
 	private:
 		std::string getConversationName(PurpleConversation *conv);
