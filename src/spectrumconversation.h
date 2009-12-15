@@ -18,34 +18,30 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02111-1301  USA
  */
 
-#ifndef _HI_GG_PROTOCOL_H
-#define _HI_GG_PROTOCOL_H
+#ifndef SPECTRUM_CONVERSATION_H
+#define SPECTRUM_CONVERSATION_H
 
-#include "abstractprotocol.h"
+#include <string>
+#include "purple.h"
+#include "account.h"
+#include "glib.h"
+#include "gloox/tag.h"
+#include <algorithm>
+#include "abstractconversation.h"
 
-class GlooxMessageHandler;
+using namespace gloox;
 
-class GGProtocol : AbstractProtocol
-{
+// Wrapper for PurpleConversation.
+class SpectrumConversation : public AbstractConversation {
 	public:
-		GGProtocol(GlooxMessageHandler *main);
-		~GGProtocol();
-		const std::string gatewayIdentity() { return "gadu-gadu"; }
-		const std::string protocol() { return "prpl-gg"; }
-		bool isValidUsername(const std::string &username);
-		void prepareUserName(std::string &username);
-		std::list<std::string> transportFeatures();
-		std::list<std::string> buddyFeatures();
-		std::string text(const std::string &key);
-		Tag *getVCardTag(AbstractUser *user, GList *vcardEntries) { return NULL; }
-		bool isMUC(AbstractUser *user, const std::string &jid) { return false; }
+		SpectrumConversation(PurpleConversation *conv, SpectrumConversationType type);
+		~SpectrumConversation();
+
+		void handleMessage(AbstractUser *user, const char *who, const char *msg, PurpleMessageFlags flags, time_t mtime);
+		PurpleConversation *getConv() { return m_conv; }
 
 	private:
-		GlooxMessageHandler *m_main;
-		std::list<std::string> m_transportFeatures;
-		std::list<std::string> m_buddyFeatures;
-
+		PurpleConversation *m_conv;
 };
 
 #endif
-

@@ -18,31 +18,16 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02111-1301  USA
  */
 
-#ifndef _ABSTRACT_USER_H
-#define _ABSTRACT_USER_H
+#include "abstractconversation.h"
+#include "main.h" // just for replaceBadJidCharacters
+#include "transport.h"
+#include "usermanager.h"
 
-#include <string>
-#include <list>
-#include "account.h"
-#include "value.h"
-#include "resourcemanager.h"
 
-class AbstractUser : public ResourceManager
-{
-	public:
-		virtual ~AbstractUser() {}
-		virtual const std::string &userKey() = 0;
-		virtual long storageId() = 0;
-		virtual PurpleAccount *account() = 0;
-		virtual const std::string &jid() = 0;
-		virtual PurpleValue *getSetting(const char *key) = 0;
-		virtual bool hasTransportFeature(int feature) = 0;
-		virtual int getFeatures() = 0;
-		virtual const std::string &username() = 0;
-		const char *getLang() { return "en"; }
-		
-		guint removeTimer;
+void AbstractConversation::setResource(const std::string &resource) {
+	m_resource = resource;
+}
 
-};
-
-#endif
+const std::string &AbstractConversation::getResource() {
+	return m_resource;
+}

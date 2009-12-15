@@ -46,17 +46,17 @@ class IRCProtocol : AbstractProtocol
 		std::list<std::string> transportFeatures();
 		std::list<std::string> buddyFeatures();
 		std::string text(const std::string &key);
-		Tag *getVCardTag(User *user, GList *vcardEntries);
-		bool isMUC(User *user, const std::string &jid) { return jid.find("%") != std::string::npos; }
+		Tag *getVCardTag(AbstractUser *user, GList *vcardEntries);
+		bool isMUC(AbstractUser *user, const std::string &jid) { return jid.find("%") != std::string::npos; }
 		bool tempAccountsAllowed() { return true; }
 		bool changeNickname(const std::string &nick, PurpleConversation *conv);
 
 		// SIGNALS
 
-		void onUserCreated(User *user);
-		void onConnected(User *user);
-		void onDestroy(User *user);
-		bool onPresenceReceived(User *user, const Presence &stanza);
+		void onUserCreated(AbstractUser *user);
+		void onConnected(AbstractUser *user);
+		void onDestroy(AbstractUser *user);
+		bool onPresenceReceived(AbstractUser *user, const Presence &stanza);
 
 	private:
 		GlooxMessageHandler *m_main;

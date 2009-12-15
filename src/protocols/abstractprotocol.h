@@ -25,7 +25,7 @@
 #include <list>
 #include "glib.h"
 #include "gloox/tag.h"
-#include "../user.h"
+#include "../abstractuser.h"
 #include "../spectrum_util.h"
 #include "../log.h"
 #include "../localization.h"
@@ -71,11 +71,11 @@ class AbstractProtocol
 		/*
 		 * Returns VCard Tag*
 		 */
-		virtual Tag *getVCardTag(User *user, GList *vcardEntries) = 0;
+		virtual Tag *getVCardTag(AbstractUser *user, GList *vcardEntries) = 0;
 		/*
 		 * Returns true if this jid is jid of MUC
 		 */
-		virtual bool isMUC(User *user, const std::string &jid) = 0 ;
+		virtual bool isMUC(AbstractUser *user, const std::string &jid) = 0 ;
 		/*
 		 * Returns the username of contact from which notifications will be sent
 		 */
@@ -102,23 +102,23 @@ class AbstractProtocol
 		/*
 		 * Called when new user is created
 		 */
-		virtual void onUserCreated(User *user) { }
+		virtual void onUserCreated(AbstractUser *user) { }
 		/*
 		 * Called when user gets connected
 		 */
-		virtual void onConnected(User *user) { }
+		virtual void onConnected(AbstractUser *user) { }
 		/*
 		 * Called when user class is getting destroyed
 		 */
-		virtual void onDestroy(User *user) { }
+		virtual void onDestroy(AbstractUser *user) { }
 		/*
 		 * Presence Received. Returns true if the presence was handled.
 		 */
-		virtual bool onPresenceReceived(User *user, const Presence &stanza) { return false; }
+		virtual bool onPresenceReceived(AbstractUser *user, const Presence &stanza) { return false; }
 		/*
 		 * Called on purple_request_input.
 		 */
-		virtual void onPurpleRequestInput(User *user, const char *title, const char *primary,const char *secondary, const char *default_value,gboolean multiline, gboolean masked, gchar *hint,const char *ok_text, GCallback ok_cb,const char *cancel_text, GCallback cancel_cb, PurpleAccount *account, const char *who,PurpleConversation *conv, void *user_data) { }
+		virtual void onPurpleRequestInput(AbstractUser *user, const char *title, const char *primary,const char *secondary, const char *default_value,gboolean multiline, gboolean masked, gchar *hint,const char *ok_text, GCallback ok_cb,const char *cancel_text, GCallback cancel_cb, PurpleAccount *account, const char *who,PurpleConversation *conv, void *user_data) { }
 };
 
 #endif

@@ -18,31 +18,34 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02111-1301  USA
  */
 
-#ifndef _ABSTRACT_USER_H
-#define _ABSTRACT_USER_H
+#ifndef SPECTRUM_MUCCONVERSATION_H
+#define SPECTRUM_MUCCONVERSATION_H
 
 #include <string>
-#include <list>
+#include "purple.h"
 #include "account.h"
-#include "value.h"
-#include "resourcemanager.h"
+#include "glib.h"
+#include "gloox/tag.h"
+#include <algorithm>
+#include "abstractconversation.h"
 
-class AbstractUser : public ResourceManager
-{
+using namespace gloox;
+
+// Wrapper for PurpleConversation.
+class SpectrumMUCConversation : public AbstractConversation {
 	public:
-		virtual ~AbstractUser() {}
-		virtual const std::string &userKey() = 0;
-		virtual long storageId() = 0;
-		virtual PurpleAccount *account() = 0;
-		virtual const std::string &jid() = 0;
-		virtual PurpleValue *getSetting(const char *key) = 0;
-		virtual bool hasTransportFeature(int feature) = 0;
-		virtual int getFeatures() = 0;
-		virtual const std::string &username() = 0;
-		const char *getLang() { return "en"; }
-		
-		guint removeTimer;
+		SpectrumMUCConversation(PurpleConversation *conv, const std::string &jid);
+		~SpectrumMUCConversation();
 
+		void handleMessage(AbstractUser *user, const char *who, const char *msg, PurpleMessageFlags flags, time_t mtime);
+		void addUsers(AbstractUser *user, GList *cbuddies);
+		void renameUser(AbstractUser *user, const char *old_name, const char *new_name, const char *new_alias);
+		void removeUsers(AbstractUser *user, GList *users);
+		PurpleConversation *getConv() { return m_conv; }
+		
+	private:
+		PurpleConversation *m_conv;
+		std::string m_jid;
 };
 
 #endif
