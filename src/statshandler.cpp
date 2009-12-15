@@ -199,63 +199,75 @@ bool GlooxStatsHandler::handleIq (const IQ &stanza){
 
 		long users = p->userManager()->onlineUserCount();
 
-		t = new Tag("stat");
-		t->addAttribute("name","uptime");
-		t->addAttribute("units","seconds");
-		t->addAttribute("value",seconds - m_startTime);
-		query->addChild(t);
-
-		t = new Tag("stat");
-		t->addAttribute("name","users/registered");
-		t->addAttribute("units","users");
-		t->addAttribute("value",out.str());
-		query->addChild(t);
-
-		t = new Tag("stat");
-		t->addAttribute("name","users/online");
-		t->addAttribute("units","users");
-		t->addAttribute("value",p->userManager()->userCount());
-		query->addChild(t);
-
-		t = new Tag("stat");
-		t->addAttribute("name","legacy-network-users/registered");
-		t->addAttribute("units","users");
-		t->addAttribute("value",registeredUsers);
-		query->addChild(t);
-
-		t = new Tag("stat");
-		t->addAttribute("name","legacy-network-users/online");
-		t->addAttribute("units","users");
-		t->addAttribute("value",users);
-		query->addChild(t);
-
-
-		t = new Tag("stat");
-		t->addAttribute("name","messages/in");
-		t->addAttribute("units","messages");
-		t->addAttribute("value",m_messagesIn);
-		query->addChild(t);
-
-		t = new Tag("stat");
-		t->addAttribute("name","messages/out");
-		t->addAttribute("units","messages");
-		t->addAttribute("value",m_messagesOut);
-		query->addChild(t);
-
+		for (std::list<Tag*>::iterator i = stats.begin(); i != stats.end(); i++) {
+			std::string name = (*i)->findAttribute("name");
+			if (name == "uptime") {
+				t = new Tag("stat");
+				t->addAttribute("name","uptime");
+				t->addAttribute("units","seconds");
+				t->addAttribute("value",seconds - m_startTime);
+				query->addChild(t);
+			} else if (name == "users/registered") {
+				t = new Tag("stat");
+				t->addAttribute("name","users/registered");
+				t->addAttribute("units","users");
+				t->addAttribute("value",out.str());
+				query->addChild(t);
+			} else if (name == "users/online") {
+				t = new Tag("stat");
+				t->addAttribute("name","users/online");
+				t->addAttribute("units","users");
+				t->addAttribute("value",p->userManager()->userCount());
+				query->addChild(t);
+			} else if (name == "legacy-network-users/registered") {
+				t = new Tag("stat");
+				t->addAttribute("name","legacy-network-users/registered");
+				t->addAttribute("units","users");
+				t->addAttribute("value",registeredUsers);
+				query->addChild(t);
+			} else if (name == "legacy-network-users/online") {
+				t = new Tag("stat");
+				t->addAttribute("name","legacy-network-users/online");
+				t->addAttribute("units","users");
+				t->addAttribute("value",users);
+				query->addChild(t);
+			} else if (name == "messages/in") {
+				t = new Tag("stat");
+				t->addAttribute("name","messages/in");
+				t->addAttribute("units","messages");
+				t->addAttribute("value",m_messagesIn);
+				query->addChild(t);
+			} else if (name == "messages/out") {
+				t = new Tag("stat");
+				t->addAttribute("name","messages/out");
+				t->addAttribute("units","messages");
+				t->addAttribute("value",m_messagesOut);
+				query->addChild(t);
 #ifndef WIN32
-		double vm, rss;
-		std::stringstream rss_stream;
-		process_mem_usage(vm, rss);
-		rss_stream << rss;
+			} else if (name == "memory-usage") {
+				double vm, rss;
+				std::stringstream rss_stream;
+				process_mem_usage(vm, rss);
+				rss_stream << rss;
 
-		t = new Tag("stat");
-		t->addAttribute("name","memory-usage");
-		t->addAttribute("units","KB");
-		t->addAttribute("value", rss_stream.str());
-		query->addChild(t);
+				t = new Tag("stat");
+				t->addAttribute("name","memory-usage");
+				t->addAttribute("units","KB");
+				t->addAttribute("value", rss_stream.str());
+				query->addChild(t);
+			}
 #endif
-		s->addChild(query);
+			else {
+				t = new Tag("stat");
+				t->addAttribute("name", name);
+				Tag *error = new Tag("error", "Not Found");
+				error->setAttribute("code", "503");
+				t->addChild(error);
+				query->addChild(t);
+			}
+		}
 
+		s->addChild(query);
 		p->j->send(s);
 
 	}
