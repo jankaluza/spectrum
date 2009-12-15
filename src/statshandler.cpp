@@ -261,7 +261,7 @@ bool GlooxStatsHandler::handleIq (const IQ &stanza){
 				t = new Tag("stat");
 				t->addAttribute("name", name);
 				Tag *error = new Tag("error", "Not Found");
-				error->setAttribute("code", "503");
+				error->addAttribute("code", "503");
 				t->addChild(error);
 				query->addChild(t);
 			}
