@@ -71,6 +71,7 @@ RosterManager::RosterManager(AbstractUser *user) {
 	m_user = user;
 	m_syncTimer = new SpectrumTimer(12000, &sync_cb, this);
 	m_subscribeLastCount = -1;
+	m_roster = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
 }
 
 RosterManager::~RosterManager() {
@@ -129,6 +130,8 @@ void RosterManager::addRosterItem(PurpleBuddy *buddy) {
 }
 
 void RosterManager::setRoster(GHashTable *roster) {
+	if (m_roster)
+		g_hash_table_destroy(m_roster);
 	m_roster = roster;
 }
 

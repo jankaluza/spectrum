@@ -82,6 +82,11 @@ void RosterManagerTest::generatePresenceStanza() {
 
 
 void RosterManagerTest::sendUnavailablePresenceToAll() {
+	m_manager->sendUnavailablePresenceToAll();
+	m_tags = Transport::instance()->getTags();
+	
+	CPPUNIT_ASSERT (m_tags.size() == 0);
+	
 	setRoster();
 	m_manager->sendUnavailablePresenceToAll();
 	m_tags = Transport::instance()->getTags();
