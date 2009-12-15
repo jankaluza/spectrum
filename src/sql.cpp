@@ -629,8 +629,8 @@ GHashTable *SQLClass::getBuddies(long userId, PurpleAccount *account){
 				}
 				else
 					buddiesLoaded = true;
-			if (!buddy->node.ui_data)
-				buddy->node.ui_data = (void *) new SpectrumBuddy(user.id, buddy);
+// 			if (!buddy->node.ui_data)
+// 				buddy->node.ui_data = (void *) new SpectrumBuddy(user.id, buddy);
 // 			}
 
 // 			rows[std::string(m_stmt_getBuddies.resUin)] = user;
