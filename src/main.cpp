@@ -492,7 +492,6 @@ static void buddyListNewNode(PurpleBlistNode *node) {
 	if (!PURPLE_BLIST_NODE_IS_BUDDY(node))
 		return;
 	PurpleBuddy *buddy = (PurpleBuddy *) node;
-	buddy->node.ui_data = NULL;
 	GlooxMessageHandler::instance()->purpleBuddyCreated(buddy);
 }
 

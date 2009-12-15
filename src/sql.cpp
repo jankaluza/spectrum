@@ -602,7 +602,7 @@ GHashTable *SQLClass::getBuddies(long userId, PurpleAccount *account){
 					buddy->node.ui_data = (void *) new SpectrumBuddy(user.id, buddy);
 					purple_blist_add_buddy(buddy, contact, g, NULL);
 					GHashTable *settings = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, (GDestroyNotify) purple_value_destroy);
-					std::cout << "ADDING BUDDY " << " " << user.id << " " << user.uin << "\n";
+					std::cout << "ADDING BUDDY " << " " << user.id << " " << user.uin << " " << buddy << " " << buddy->node.ui_data << "\n";
 					while(i < (int) m_stmt_getBuddiesSettings.resId.size()) {
 						std::cout << m_stmt_getBuddiesSettings.resId[i] << "\n";
 						if (m_stmt_getBuddiesSettings.resId[i] == user.id) {
@@ -626,11 +626,11 @@ GHashTable *SQLClass::getBuddies(long userId, PurpleAccount *account){
 					// set settings
 					g_hash_table_destroy(buddy->node.settings);
 					buddy->node.settings = settings;
-					
-					buddy->node.ui_data = (void *) new SpectrumBuddy(m_stmt_getBuddies.resId, buddy);
 				}
 				else
 					buddiesLoaded = true;
+			if (!buddy->node.ui_data)
+				buddy->node.ui_data = (void *) new SpectrumBuddy(user.id, buddy);
 // 			}
 
 // 			rows[std::string(m_stmt_getBuddies.resUin)] = user;

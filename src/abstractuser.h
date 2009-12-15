@@ -43,16 +43,17 @@ class AbstractUser : public ResourceManager
 		virtual GHashTable *settings() = 0;
 		virtual bool isConnectedInRoom(const std::string &room) = 0;
 		virtual bool isConnected() = 0;
-		virtual std::string getRoomResource(const std::string &room) = 0;
-		virtual void setRoomResource(const std::string &room, const std::string &resource) = 0;
 		
 		void setProtocolData(void *protocolData) { m_protocolData = protocolData; }
 		void *protocolData() { return m_protocolData; }
+		std::string getRoomResource(const std::string &room) { return m_roomResources[room]; }
+		void setRoomResource(const std::string &room, const std::string &resource) { m_roomResources[room] = resource; }
 		
 		guint removeTimer;
 
 	private:
 		void *m_protocolData;
+		std::map<std::string, std::string> m_roomResources;
 		
 };
 

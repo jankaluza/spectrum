@@ -166,9 +166,8 @@ void User::purpleBuddyRemoved(PurpleBuddy *buddy) {
 void User::purpleBuddyCreated(PurpleBuddy *buddy) {
 	if (buddy==NULL || m_loadingBuddiesFromDB)
 		return;
-	buddy->node.ui_data = (void *) new SpectrumBuddy(-1, buddy);
 	SpectrumBuddy *s_buddy = (SpectrumBuddy *) buddy->node.ui_data;
-	
+
 	handleBuddyCreated(s_buddy);
 }
 

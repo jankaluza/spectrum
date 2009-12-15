@@ -141,8 +141,6 @@ class User : public AbstractUser, public RosterManager, public RosterStorage, pu
 		long storageId() { return m_userID; }
 		bool loadingBuddiesFromDB() { return m_loadingBuddiesFromDB; }
 		bool isConnectedInRoom(const std::string &room) { return isOpenedConversation(room); }
-		std::string getRoomResource(const std::string &room) { return m_roomResources[room]; }
-		void setRoomResource(const std::string &room, const std::string &resource) { m_roomResources[room] = resource; }
 
 		guint removeTimer;
 
@@ -168,7 +166,6 @@ class User : public AbstractUser, public RosterManager, public RosterStorage, pu
 		std::map<std::string,authRequest> m_authRequests;	// list of authorization requests (holds callbacks and user data)
 		GHashTable *m_settings;		// user settings
 		long m_userID;				// userID for Database
-		std::map <std::string, std::string> m_roomResources;
 		bool m_loadingBuddiesFromDB;
 };
 
