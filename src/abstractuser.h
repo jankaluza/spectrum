@@ -40,9 +40,20 @@ class AbstractUser : public ResourceManager
 		virtual int getFeatures() = 0;
 		virtual const std::string &username() = 0;
 		const char *getLang() { return "en"; }
+		virtual GHashTable *settings() = 0;
+		virtual bool isConnectedInRoom(const std::string &room) = 0;
+		virtual bool isConnected() = 0;
+		virtual std::string getRoomResource(const std::string &room) = 0;
+		virtual void setRoomResource(const std::string &room, const std::string &resource) = 0;
+		
+		void setProtocolData(void *protocolData) { m_protocolData = protocolData; }
+		void *protocolData() { return m_protocolData; }
 		
 		guint removeTimer;
 
+	private:
+		void *m_protocolData;
+		
 };
 
 #endif

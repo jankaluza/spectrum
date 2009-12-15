@@ -47,10 +47,10 @@ class AbstractConversation {
 		
 		SpectrumConversationType &getType() { return m_type; }
 		
-		void addUsers(AbstractUser *user, GList *cbuddies) {}
-		void renameUser(AbstractUser *user, const char *old_name, const char *new_name, const char *new_alias) {}
-		void removeUsers(AbstractUser *user, GList *users) {}
-		void changeTopic(AbstractUser *user, const char *who, const char *topic) {}
+		virtual void addUsers(AbstractUser *user, GList *cbuddies) {}
+		virtual void renameUser(AbstractUser *user, const char *old_name, const char *new_name, const char *new_alias) {}
+		virtual void removeUsers(AbstractUser *user, GList *users) {}
+		virtual void changeTopic(AbstractUser *user, const char *who, const char *topic) {}
 
 		virtual void handleMessage(AbstractUser *user, const char *who, const char *msg, PurpleMessageFlags flags, time_t mtime) = 0;
 		virtual PurpleConversation *getConv() = 0;

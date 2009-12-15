@@ -73,67 +73,83 @@ bool IRCProtocol::changeNickname(const std::string &nick, PurpleConversation *co
 }
 
 void IRCProtocol::onUserCreated(AbstractUser *user) {
-// 	PurpleValue *value;
-// 	if ( (value = user->getSetting("nickserv")) == NULL ) {
-// 		m_main->sql()->addSetting(user->storageId(), "nickserv", "", PURPLE_TYPE_STRING);
-// 		value = purple_value_new(PURPLE_TYPE_STRING);
-// 		purple_value_set_string(value, "");
-// 		g_hash_table_replace(user->settings(), g_strdup("nickserv"), value);
-// 	}
-// 	user->setProtocolData(new IRCProtocolData());
+	PurpleValue *value;
+	if ( (value = user->getSetting("nickserv")) == NULL ) {
+		m_main->sql()->addSetting(user->storageId(), "nickserv", "", PURPLE_TYPE_STRING);
+		value = purple_value_new(PURPLE_TYPE_STRING);
+		purple_value_set_string(value, "");
+		g_hash_table_replace(user->settings(), g_strdup("nickserv"), value);
+	}
+	user->setProtocolData(new IRCProtocolData());
 }
 
 void IRCProtocol::onConnected(AbstractUser *user) {
-// 	IRCProtocolData *data = (IRCProtocolData *) user->protocolData();
-// 	const char *n = purple_value_get_string(user->getSetting("nickserv"));
-// 	std::string nickserv(n ? n : "");
-// 	if (!nickserv.empty()) {
-// 		// receivedMessage will send PM according to resource, so it doesn't matter what's before it... :)
-// 		Message msg(Message::Chat, JID("#test%test@server.cz/NickServ"), "identify " + nickserv);
-// 		msg.setFrom(user->jid());
-// 		user->receivedMessage(msg);
-// 	}
-// 
-// 	for (std::list <Tag*>::iterator it = data->autoConnectRooms.begin(); it != data->autoConnectRooms.end() ; it++ ) {
-// 		Tag *stanza = (*it);
+	IRCProtocolData *data = (IRCProtocolData *) user->protocolData();
+	const char *n = purple_value_get_string(user->getSetting("nickserv"));
+	std::string nickserv(n ? n : "");
+	if (!nickserv.empty()) {
+		// receivedMessage will send PM according to resource, so it doesn't matter what's before it... :)
+		Message msg(Message::Chat, JID("#test%test@server.cz/NickServ"), "identify " + nickserv);
+		msg.setFrom(user->jid());
+		GlooxMessageHandler::instance()->handleMessage(msg);
+	}
+
+	for (std::list <Tag*>::iterator it = data->autoConnectRooms.begin(); it != data->autoConnectRooms.end() ; it++ ) {
+		Tag *stanza = (*it);
+		GHashTable *comps = NULL;
+		std::string name = JID(stanza->findAttribute("to")).username();
+		std::string nickname = JID(stanza->findAttribute("to")).resource();
+
+		PurpleConnection *gc = purple_account_get_connection(user->account());
+		if (PURPLE_PLUGIN_PROTOCOL_INFO(gc->prpl)->chat_info_defaults != NULL) {
+			if (name.find("%") != std::string::npos)
+				name = name.substr(0, name.find("%"));
+			comps = PURPLE_PLUGIN_PROTOCOL_INFO(gc->prpl)->chat_info_defaults(gc, name.c_str());
+		}
+		if (comps) {
+			user->setRoomResource(name, JID(stanza->findAttribute("from")).resource());
+			serv_join_chat(gc, comps);
+		}
+
 // 		MUCHandler *muc = new MUCHandler(user, JID(stanza->findAttribute("to")).bare(), JID(stanza->findAttribute("from")).full());
 // 		g_hash_table_replace(user->mucs(), g_strdup(JID(stanza->findAttribute("to")).username().c_str()), muc);
 // 		Tag * ret = muc->handlePresence(stanza);
 // 		if (ret)
 // 			m_main->j->send(ret);
 // 		delete (*it);
-// 	};
+	};
 }
 
 bool IRCProtocol::onPresenceReceived(AbstractUser *user, const Presence &stanza) {
-// 	Tag *stanzaTag = stanza.tag();
-// 	if (stanza.to().username()!="") {
-// 		IRCProtocolData *data = (IRCProtocolData *) user->protocolData();
-// 		GHashTable *m_mucs = user->mucs();
-// 		MUCHandler *muc = (MUCHandler*) g_hash_table_lookup(m_mucs, stanza.to().username().c_str());
-// 		if (muc) {
-// 			Tag * ret = muc->handlePresence(stanza);
-// 			if (ret)
-// 				m_main->j->send(ret);
-// 			if (stanza.presence() == Presence::Unavailable) {
-// 				g_hash_table_remove(m_mucs, stanza.to().username().c_str());
-// 				user->conversations().erase(stanza.to().username());
-// 				delete muc;
-// 			}
-// 		}
-// 		else if (isMUC(user, stanza.to().bare()) && stanza.presence() != Presence::Unavailable) {
-// 			if (user->isConnected()) {
-// 				MUCHandler *muc = new MUCHandler(user, stanza.to().bare(), stanza.from().full());
-// 				g_hash_table_replace(m_mucs, g_strdup(stanza.to().username().c_str()), muc);
-// 				Tag * ret = muc->handlePresence(stanza);
-// 				if (ret)
-// 					m_main->j->send(ret);
-// 			}
-// 			else {
-// 				data->autoConnectRooms.push_back(stanza.tag());
-// 			}
-// 		}
-// 	}
+	Tag *stanzaTag = stanza.tag();
+	if (stanza.to().username() != "") {
+		IRCProtocolData *data = (IRCProtocolData *) user->protocolData();
+		if (user->isConnectedInRoom(stanza.to().username().c_str())) {
+		}
+		else if (isMUC(user, stanza.to().bare()) && stanza.presence() != Presence::Unavailable) {
+			if (user->isConnected()) {
+				GHashTable *comps = NULL;
+				std::string name = JID(stanzaTag->findAttribute("to")).username();
+				std::string nickname = JID(stanzaTag->findAttribute("to")).resource();
+
+				PurpleConnection *gc = purple_account_get_connection(user->account());
+				if (PURPLE_PLUGIN_PROTOCOL_INFO(gc->prpl)->chat_info_defaults != NULL) {
+					if (name.find("%") != std::string::npos)
+						name = name.substr(0, name.find("%"));
+					comps = PURPLE_PLUGIN_PROTOCOL_INFO(gc->prpl)->chat_info_defaults(gc, name.c_str());
+				}
+				if (comps) {
+					user->setRoomResource(name, JID(stanzaTag->findAttribute("from")).resource());
+					serv_join_chat(gc, comps);
+				}
+				
+				
+			}
+			else {
+				data->autoConnectRooms.push_back(stanza.tag());
+			}
+		}
+	}
 // 
 // 	// this presence is for the transport
 // 	if ( !tempAccountsAllowed() || isMUC(NULL, stanza.to().bare()) ){
@@ -224,12 +240,12 @@ bool IRCProtocol::onPresenceReceived(AbstractUser *user, const Presence &stanza)
 // 		}
 // 	}
 // 	delete stanzaTag;
-// 	return true;
+	return false;
 }
 
 
 void IRCProtocol::onDestroy(AbstractUser *user) {
-// 	IRCProtocolData *data = (IRCProtocolData *) user->protocolData();
-// 	delete data;
+	IRCProtocolData *data = (IRCProtocolData *) user->protocolData();
+	delete data;
 }
 

@@ -47,6 +47,8 @@ class SpectrumMessageHandler {
 
 		// Adds new conversation to database.
 		void addConversation(PurpleConversation *conv, AbstractConversation *s_conv, const std::string &key = "");
+		
+		void removeConversation(const std::string &name);
 
 		// Returns true if the conversation with name exists.
 		bool isOpenedConversation(const std::string &name);

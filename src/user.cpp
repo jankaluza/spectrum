@@ -504,6 +504,10 @@ void User::receivedPresence(const Presence &stanza) {
 		return;
 	}
 
+	if (stanza.to().username() != ""  && ((p->protocol()->tempAccountsAllowed()) || p->protocol()->isMUC(NULL, stanza.to().bare())) && stanza.presence() == Presence::Unavailable) {
+		removeConversation(stanza.to().username());
+	}
+
 	// this presence is for the transport
 	if (stanza.to().username() == ""  || ((p->protocol()->tempAccountsAllowed()) || p->protocol()->isMUC(NULL, stanza.to().bare()))) {
 		if (stanza.presence() == Presence::Unavailable) {

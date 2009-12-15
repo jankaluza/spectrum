@@ -136,19 +136,19 @@ class User : public AbstractUser, public RosterManager, public RosterStorage, pu
 
 		GlooxMessageHandler *p;
 		const std::string & userKey() { return m_userKey; }
-		void setProtocolData(void *protocolData) { m_protocolData = protocolData; }
-		void *protocolData() { return m_protocolData; }
 		void setFeatures(int f) { m_features = f; }
 		int getFeatures() { return m_features; }
 		long storageId() { return m_userID; }
 		bool loadingBuddiesFromDB() { return m_loadingBuddiesFromDB; }
+		bool isConnectedInRoom(const std::string &room) { return isOpenedConversation(room); }
+		std::string getRoomResource(const std::string &room) { return m_roomResources[room]; }
+		void setRoomResource(const std::string &room, const std::string &resource) { m_roomResources[room] = resource; }
 
 		guint removeTimer;
 
 	private:
 		std::string m_userKey;
 		PurpleAccount *m_account;	// PurpleAccount to which this user is connected
-		void *m_protocolData;
 		guint m_syncTimer;			// timer used for syncing purple buddy list and roster
 		int m_subscribeLastCount;	// number of buddies which was in subscribeCache in previous iteration of m_syncTimer
 		bool m_vip;					// true if the user is VIP
@@ -168,6 +168,7 @@ class User : public AbstractUser, public RosterManager, public RosterStorage, pu
 		std::map<std::string,authRequest> m_authRequests;	// list of authorization requests (holds callbacks and user data)
 		GHashTable *m_settings;		// user settings
 		long m_userID;				// userID for Database
+		std::map <std::string, std::string> m_roomResources;
 		bool m_loadingBuddiesFromDB;
 };
 

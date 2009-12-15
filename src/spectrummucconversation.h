@@ -34,18 +34,27 @@ using namespace gloox;
 // Wrapper for PurpleConversation.
 class SpectrumMUCConversation : public AbstractConversation {
 	public:
-		SpectrumMUCConversation(PurpleConversation *conv, const std::string &jid);
+		SpectrumMUCConversation(PurpleConversation *conv, const std::string &jid, const std::string &resource);
 		~SpectrumMUCConversation();
 
 		void handleMessage(AbstractUser *user, const char *who, const char *msg, PurpleMessageFlags flags, time_t mtime);
 		void addUsers(AbstractUser *user, GList *cbuddies);
 		void renameUser(AbstractUser *user, const char *old_name, const char *new_name, const char *new_alias);
 		void removeUsers(AbstractUser *user, GList *users);
+		void changeTopic(AbstractUser *user, const char *who, const char *topic);
 		PurpleConversation *getConv() { return m_conv; }
+		void sendTopic(AbstractUser *user);
 		
 	private:
 		PurpleConversation *m_conv;
+		Tag *m_lastPresence;
+		std::string m_nickname;
 		std::string m_jid;
+		bool m_connected;
+		std::string m_topic;
+		std::string m_topicUser;
+		std::string m_resource;
+		
 };
 
 #endif

@@ -68,6 +68,17 @@ void SpectrumMessageHandler::addConversation(PurpleConversation *conv, AbstractC
 		m_mucs++;
 }
 
+void SpectrumMessageHandler::removeConversation(const std::string &name) {
+	if (!isOpenedConversation(name))
+		return;
+	if (m_conversations[name]->getType() == SPECTRUM_CONV_GROUPCHAT)
+		m_mucs--;
+	PurpleConversation *conv = m_conversations[name]->getConv();
+	purple_conversation_destroy(conv);
+	delete m_conversations[name];
+	m_conversations.erase(name);
+}
+
 void SpectrumMessageHandler::handleWriteIM(PurpleConversation *conv, const char *who, const char *msg, PurpleMessageFlags flags, time_t mtime) {
 	if (who == NULL)
 		return;
@@ -94,7 +105,7 @@ void SpectrumMessageHandler::handleWriteChat(PurpleConversation *conv, const cha
 
 	if (!isOpenedConversation(name)) {
 #ifndef TESTS
-		addConversation(conv, new SpectrumMUCConversation(conv, name));
+		addConversation(conv, new SpectrumMUCConversation(conv, name + "@" + Transport::instance()->jid(), m_user->getRoomResource(std::string(purple_conversation_get_name(conv)))));
 #endif
 	}
 
@@ -105,7 +116,7 @@ void SpectrumMessageHandler::purpleChatAddUsers(PurpleConversation *conv, GList 
 	std::string name = getConversationName(conv);
 	if (!isOpenedConversation(name)) {
 #ifndef TESTS
-		addConversation(conv, new SpectrumMUCConversation(conv, name));
+		addConversation(conv, new SpectrumMUCConversation(conv, name + "@" + Transport::instance()->jid(), m_user->getRoomResource(std::string(purple_conversation_get_name(conv)))));
 #endif
 	}
 	m_conversations[name]->addUsers(m_user, cbuddies);
@@ -115,7 +126,7 @@ void SpectrumMessageHandler::purpleChatTopicChanged(PurpleConversation *conv, co
 	std::string name = getConversationName(conv);
 	if (!isOpenedConversation(name)) {
 #ifndef TESTS
-		addConversation(conv, new SpectrumMUCConversation(conv, name));
+		addConversation(conv, new SpectrumMUCConversation(conv, name + "@" + Transport::instance()->jid(), m_user->getRoomResource(std::string(purple_conversation_get_name(conv)))));
 #endif
 	}
 	m_conversations[name]->changeTopic(m_user, who, topic);
@@ -125,7 +136,7 @@ void SpectrumMessageHandler::purpleChatRenameUser(PurpleConversation *conv, cons
 	std::string name = getConversationName(conv);
 	if (!isOpenedConversation(name)) {
 #ifndef TESTS
-		addConversation(conv, new SpectrumMUCConversation(conv, name));
+		addConversation(conv, new SpectrumMUCConversation(conv, name + "@" + Transport::instance()->jid(), m_user->getRoomResource(std::string(purple_conversation_get_name(conv)))));
 #endif
 	}
 	m_conversations[name]->renameUser(m_user, old_name, new_name, new_alias);
@@ -135,7 +146,7 @@ void SpectrumMessageHandler::purpleChatRemoveUsers(PurpleConversation *conv, GLi
 	std::string name = getConversationName(conv);
 	if (!isOpenedConversation(name)) {
 #ifndef TESTS
-		addConversation(conv, new SpectrumMUCConversation(conv, name));
+		addConversation(conv, new SpectrumMUCConversation(conv, name + "@" + Transport::instance()->jid(), m_user->getRoomResource(std::string(purple_conversation_get_name(conv)))));
 #endif
 	}
 	m_conversations[name]->removeUsers(m_user, users);
