@@ -1,0 +1,11 @@
+/*---:[ ie7.css for the Copyblogger theme ]:---*/
+
+#content { padding: 0 5.9em 0 0; }
+
+h1, h2 { line-height: 1.43em; } /* IE 6 and 7 do not hold the grid properly without this fudged declaration */
+
+#rss { margin: 0 0 0.9em 0; }
+
+li.widget li { width: 15.5em; }
+
+dl#comment_list dt { width: 46.8em; }

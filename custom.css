@@ -1,0 +1,170 @@
+/*---:[ custom styles for the Copyblogger theme that YOU define ]:---*/
+/*---:[ ------------------------------------------------------- ]:---*/
+
+/*---:[ to change the body background, the default font, and the default font color... ]:---*/
+/*---:[ NOTE: if you change the body background color, you will need to update your image files also ]:---*/
+/*---:[ Download the image template (.psd) with the Organic theme package at http://www.copyblogger.com/downloads/organic.zip ]:---*/
+
+body.custom { background: #fff; color: #222; font-family: Verdana, sans-serif; }
+
+/*---:[ uncomment the following lines only if you've uploaded updated image files to the a folder called "custom" within your copyblogger theme directory ]:---*/
+
+/* 
+.custom .add_comment { background: url('custom/icon_comment.gif') 0 50% no-repeat; }
+
+.custom #rss { background: url('custom/rss.gif') 50% 0 no-repeat; }
+
+.custom li.widget li, .custom li.linkcat li { background: url('custom/bullet.gif') 0 0.4167em no-repeat; }
+
+.custom dl#comment_list dt { background: url('custom/comment_top.gif') 0 100% no-repeat; }
+
+.custom dl#comment_list dt.author { background: url('custom/comment_author_top.gif') 0 100% no-repeat; }
+
+.custom dl#comment_list dd { background: #dfdfdf url('custom/comment_bottom.gif') 0 100% no-repeat; }
+
+.custom dl#comment_list dd.author { background: #f6f4c9 url('custom/comment_author_bottom.gif') 0 100% no-repeat; }
+*/
+
+
+/*---:[ to change the colors of the header and footer... ]:---*/
+
+.custom #header { background: #000; border-bottom-color: #a90000; color: #fff; }
+
+.custom #footer { background: #000; border-top-color: #a90000; color: #fff; }
+
+
+/*---:[ to change link colors and behaviors... ]:---*/
+
+.custom a { color: #a90000; }
+
+.custom a:visited { color: #777; }
+
+.custom a:hover { color: #a90000; }
+
+	/*---:[ site title (logo) in the header ]:---*/
+	
+	.custom #logo a { color: #fff; font-family: "American Typewriter", "Trebuchet MS", Verdana, sans-serif; }
+	
+	/*---:[ navigation links in the header ]:---*/
+
+	.custom #nav ul li a, .custom #nav ul li a:visited { color: #a90000; }
+
+	.custom #nav ul li a:hover, .custom #nav ul li a.current:hover { color: #fff !important; background: #a90000; } /* leave the !important declaration */
+
+	.custom #nav ul li a.current, .custom #nav ul li a.current:visited { color: #a90000; }
+
+	/*---:[ headline link colors on the main page, archive pages, and search pages ]:---*/
+
+	.custom h2 a, .custom h2 a:visited { color: #a90000; }
+
+	.custom h2 a:hover { color: #000; }
+	
+	/*---:[ category links located underneath headlines ]:---*/
+	
+	.custom .post_date a, .custom .post_date a:visited { color: #000; }
+	
+	.custom .post_date a:hover { color: #000; background: #ccc; }
+	
+	/*---:[ link behavior within posts ]:---*/
+	
+	.custom .entry a, .custom .entry a:visited { border-color: #bbb; }
+	
+	.custom .entry a:hover { color: #fff; background: #a90000; }
+	
+	/*---:[ link to comments that follows posts on the main page, archive pages, and search pages ]:---*/
+	
+	.custom .post_meta a:hover { color: #000; border-color: #a90000; }
+	
+	/*---:[ inter-post navigation (found at the bottom of main pages or at the top of single post pages) ]:---*/
+	
+	.custom .navigation a:hover { color: #000; border-color: #a90000; }
+	
+	/*---:[ sidebar link colors ]:---*/
+	
+	.custom li.widget li a:hover, .custom li.linkcat li a:hover { color: #000; border-color: #a90000; }
+	
+	/*---:[ calendar widget link colors ]:---*/
+	
+	.custom table#wp-calendar td a, .custom table#wp-calendar td a:visited { color: #a90000; }
+	
+	.custom table#wp-calendar td a:hover { color: #a90000; }
+	
+	/*---:[ comment permalink colors (precedes the commenter's name on each comment) ]:---*/
+	
+	.custom dl#comment_list dt .comment_num a, .custom dl#comment_list dt .comment_num a:visited { color: #999; }
+	
+	.custom dl#comment_list dt .comment_num a:hover { color: #a90000; }
+	
+	/*---:[ comment author's link colors ]:---*/
+	
+	.custom dl#comment_list dt strong a, .custom dl#comment_list dt strong a:visited { color: #000; border-color: #999; }
+	
+	.custom dl#comment_list dt strong a:hover { color: #000; border-color: #a90000; }
+	
+	/*---:[ footer link colors ]:---*/
+	
+	.custom #footer a, .custom #footer a:visited { color: #fff; border-color: #a90000; }
+
+	.custom #footer a:hover { color: #fff; border-color: #fff; }
+
+
+/*---:[ to change all of the gray double-borders in one fell swoop... ]:---*/
+
+.custom .page h1, .custom #sidebar h2, #comments h3.comment_intro, .custom .post_date, .custom .post_meta, .custom .page .entry { border-color: #ccc; }
+
+
+/*---:[ other stuff you may want to change... ]:---*/
+
+	/*---:[ headlines ]:---*/
+
+	.custom h1, .custom h2, .custom h3, .custom h4 { font-weight: bold; font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; }
+
+	.custom h1, .custom h2 { color: #a90000; }
+	
+	.custom .archive h1 { color: #000; }
+	
+	.custom #sidebar h2 { color: #000; }
+
+	.custom h3, .custom h4 { color: #000; }
+
+	/*---:[ in-post stuff ]:---*/
+
+	.custom blockquote { font-family: Georgia, "Times New Roman", Times, serif; color: #555; border-color: #a90000; }
+
+	.custom blockquote.right, .custom blockquote.left { border-color: #ccc; } /* These are pullquotes */
+
+	.custom code { color: #090; font-family: Courier, "Courier New", monospace; }
+
+	.custom .post_date { color: #aaa; }
+
+	.custom img.frame { border-color: #ddd; }
+
+	/*---:[ calendar widget ]:---*/
+
+	.custom table#wp-calendar caption { border-color: #ccc; }
+
+	.custom table#wp-calendar th { color: #666; border-color: #ccc; }
+
+	.custom table#wp-calendar td { color: #999; }
+
+	/*---:[ comments ]:---*/
+
+	.custom dl#comment_list dt { color: #999; }
+
+		.custom dl#comment_list dt strong { color: #000; } /* Comment author's name */
+
+	/*---:[ comment form elements ]:---*/
+
+	.custom #comment_form .text_input { color: #a90000; font-family: Verdana, sans-serif; border-top-color: #999; border-left-color: #999; border-right-color: #eee; border-bottom-color: #eee; }
+
+	.custom #comment_form .text_input:focus { border-top-color: #666; border-left-color: #666; border-right-color: #ddd; border-bottom-color: #ddd; }
+	
+	.custom #comment_form .form_submit { color: #000; font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; } /* This is the submit button on the comment form */
+	
+	.custom #comment_form .form_submit:hover { color: #a90000; }
+	
+	/*---:[ search form ]:---*/
+	
+	.custom #search_form .search_input { color: #777; font-family: Verdana, sans-serif; border-color: #999; border-right-color: #eee; border-bottom-color: #eee; }
+	
+	.custom #search_form .search_input:focus { border-top-color: #666; border-left-color: #666; border-right-color: #ddd; border-bottom-color: #ddd; }

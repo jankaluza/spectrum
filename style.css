@@ -1,0 +1,322 @@
+/*
+Theme Name:		Copyblogger
+Theme URI:		http://www.copyblogger.com
+Description:	The design that launched a thousand emails gets a ubiquitous hairdo. By <a href="http://pearsonified.com">Chris Pearson</a>.
+Version:		1.0
+Author:			Chris Pearson
+Author URI:		http://pearsonified.com/
+*/
+
+body { background: #fff; color: #222; font: 62.5% Verdana, sans-serif; }
+
+* { padding: 0; margin: 0; }
+
+
+
+/*---:[ global typography elements ]:---*/
+
+a { color: #a90000; text-decoration: none; }
+
+a:visited { color: #777; text-decoration: none; }
+
+a:hover { color: #a90000; text-decoration: none; }
+	
+a img { border: none; }
+	
+blockquote { margin: 0 0 1.5385em 1.5em; padding: 0 0 0 0.7692em; font-family: Georgia, "Times New Roman", Times, serif; color: #555; border-left: 0.2308em solid #a90000; }
+
+abbr, acronym { font-size: 0.8462em; line-height: 1.0em; border-bottom: 1px dotted #999; text-transform: uppercase; letter-spacing: 1px; cursor: help; }
+
+code { color: #090; font-family: Courier, "Courier New", monospace; line-height: 1.0em; }
+
+pre { margin: 0 0 1.5385em 0; padding: 0.7692em; font-size: 1.3em; overflow: auto; background: #ececec; }
+
+p.unstyled { font-size: 1.3em; }
+
+p.center { text-align: center; }
+
+/*---:[ these styles apply to the flickrRSS plugin, which is not yet fully supported ]:---*/
+
+.flickr_blue { color: #007ae4; text-transform: lowercase; }
+
+.flickr_pink { color: #ff2a96; text-transform: lowercase; }
+
+
+
+/*---:[ headlines ]:---*/
+
+h1, h2, h3, h4 { font: bold 1.0em "Helvetica Neue", Helvetica, Arial, sans-serif; }
+	
+h1, h2 { font-size: 2.8em; line-height: 1.4286em; letter-spacing: -1px; color: #a90000; }
+
+	h2 a, h2 a:visited { color: #a90000; }
+	
+	h2 a:hover { color: #000; }
+	
+	.page h1 { margin: 0 0 0.6071em 0; border-bottom: 0.10714em double #ccc; }
+	
+	.archive h1 { font-size: 2.4em; line-height: 1.66667em; margin: 0 0 1.66667em 0; color: #000; }
+	
+	#sidebar h2 { font-size: 1.5em; line-height: 1.5556em; margin: 0 0 0.5em 0; border-bottom: 0.166667em double #ccc; color: #000; }
+	
+h3 { font-size: 1.3846em; line-height: 1.1111em; color: #000; }
+
+	.entry h3 { margin: 1.6667em 0 0.5556em 0; }
+	
+	#comments h3 { font-size: 1.8em; }
+	
+	#comments h3.comment_intro { margin: 0 0 1.11111em 0; padding: 2.05556em 0 0 0; border-top: 0.166667em double #ccc; }
+
+	#comments h3#respond { margin: 2.2222em 0 0 0; }
+	
+h4 { font-size: 1.1538em; line-height: 1.3333em; color: #000; }
+
+
+
+/*---:[ core layout elements ]:---*/
+
+#header { background: #000; border-bottom: 0.8em solid #a90000; color: #fff; }
+
+#container { width: 72.8em; margin: 0 auto; }
+	
+	#content_box { width: 72.8em; }
+	
+		#content { width: 46.8em; padding: 0 6em 0 0; float: left; }
+		
+		#sidebar { width: 20em; float: left; }
+		
+#footer { padding: 1.5em 0; background: #000; border-top: 0.5em solid #a90000; color: #fff; }
+
+
+
+/*---:[ #header styles ]:---*/
+
+#logo { width: 72.8em; margin: 0 auto; }
+	
+	#logo a { font: normal 5.0em "American Typewriter", "Trebuchet MS", Verdana, sans-serif; color: #fff; }
+		
+	#logo h1, #logo #tagline { display: none; font: normal 1.6em "Helvetica Neue", Helvetica, Arial, sans-serif; }
+
+
+
+/*---:[ nav menu styles ]:---*/
+
+#nav { width: 72.8em; margin: 0 0 50px 0; }
+
+	#nav ul { list-style: none; }
+
+		#nav ul li { font-size: 1.6em; float: left; }
+	
+			#nav ul li a, #nav ul li a:visited { display: block; padding: 0.3125em 0.8125em 0.5em 0.8125em; color: #a90000; }
+	
+			#nav ul li a:hover, #nav ul li a.current:hover { color: #fff !important; background: #a90000; text-decoration: none !important; }
+		
+			#nav ul li a.current, #nav ul li a.current:visited { color: #a90000; text-decoration: underline; }
+
+
+
+/*---:[ content styles ]:---*/
+
+.post_date { font-size: 1.1em; line-height: 1.5455em; margin: 0 0 1.8182em 0; color: #aaa; border-bottom: 0.2727em double #ccc; }
+
+	.post_date a, .post_date a:visited { color: #000; padding: 0.0909em; }
+	
+	.post_date a:hover { color: #000; background: #ccc; }
+
+.entry { font-size: 1.3em; line-height: 1.5385em; }
+	
+	.entry a, .entry a:visited { padding: 1px 0; border-bottom: 1px solid #bbb; }
+	
+	.entry a:hover { padding: 1px 0; color: #fff; background: #a90000; border-bottom: none; }
+	
+	.entry p { margin: 0 0 1.5385em 0; }
+
+	.entry ul, .entry ol { margin: 0 0 1.5385em 3.0em; }
+	
+	.entry ul { list-style-type: disc; }
+	
+		.entry li { }
+		
+			.entry ul li ul, .entry ul li ol, .entry ol li ul, .entry ol li ol { margin: 0 0 0 1.5em; }
+	
+	.entry dl { margin: 0 0 1.5385em 0; }
+			
+		.entry dt { font-weight: bold; }
+		
+		.entry dd { margin: 0 0 0 1.5em; }
+		
+	.entry sup, .entry sub { line-height: 1.0em; }
+		
+	.entry blockquote.right, .entry blockquote.left { width: 13.6875em; padding: 0.4375em 0; font-size: 1.2308em; line-height: 1.25em; border: 0.0625em solid #ccc; border-width: 0.0625em 0; text-align: center; }
+	
+	.entry blockquote.right { margin: 0 0 0 0.9375em; float: right; clear: right; }
+	
+	.entry blockquote.left { margin: 0 0.9375em 0 0; float: left; clear: left; }
+
+		.entry blockquote.right p, .entry blockquote.left p { margin: 0 !important; }
+		
+	.entry .ad { margin: 0 0 0 1.1538em; float: right; clear: right; }
+	
+		.entry .ad_left { margin: 0 1.1538em 0 0; float: left; clear: left; }
+
+	.entry img { }
+
+	.entry img.left { margin: 0 1.1538em 0 0; float: left; clear: left; }
+	
+	.entry img.right { margin: 0 0 0 1.1538em; float: right; clear: right; }
+	
+	.entry img.center { display: block; margin: 0 auto 1.5385em auto; clear: both; }
+
+	.entry img.frame { border: 0.3846em solid #ddd; }
+	
+	.entry img.stack { clear: none !important; }
+
+.post_meta { margin: 0 0 4.5385em 0; padding: 0.3846em 0 0 0; border-top: 0.23077em double #ccc; font-size: 1.3em; line-height: 1.0em; clear: both; }
+	
+	.add_comment { padding: 0 0 0 1.6154em; background: url('images/icon_comment.gif') 0 50% no-repeat; font-weight: bold; }
+
+	.post_meta a:hover { color: #000; border-bottom: 1px solid #a90000; }
+
+.page .entry { margin: 0 0 3.0769em 0; border-bottom: 0.23077em double #ccc; }
+
+.navigation { width: 39em; margin: 0 0 3.3333em 0; font-size: 1.2em; line-height: 1.6667em; }
+	
+	.navigation a:hover { color: #000; border-bottom: 1px solid #a90000; }
+	
+	.next { text-align: right; }
+
+
+
+/*---:[ sidebar styles ]:---*/
+
+#rss { width: 20em; height: 70px; margin: 0 0 1.0em 0; background: url('images/rss.gif') 50% 0 no-repeat; text-align: center; }
+
+	#rss a { display: block; width: 48px; height: 48px; margin: 0 auto; }
+
+ul.sidebar_list { list-style: none; }
+
+	ul.sidebar_list li.widget, ul.sidebar_list li.linkcat { width: 16.6667em; margin: 0 0 2.5em 0; font-size: 1.2em; line-height: 1.6667em; float: left; }
+
+		li.widget p { margin: 0 0 1.66667em 0; }
+		
+		li.widget ul, li.linkcat ul { list-style: none; margin: 0 0 0.8333em 0; }
+		
+			li.widget li, li.linkcat li { padding: 0 0 0 1.16667em; background: url('images/bullet.gif') 0 0.4167em no-repeat; }
+					
+				li.widget li a:hover, li.linkcat li a:hover { color: #000; border-bottom: 1px solid #a90000; }
+				
+		/*---:[ special widget styles ]:---*/
+		
+		#calendar_wrap { width: 16.3333em; margin: 0 0 0.8333em 0; padding: 0 0.166667em; }
+		
+		table#wp-calendar { width: 16.3333em; border-collapse: collapse; }
+		
+			table#wp-calendar caption { font-weight: bold; line-height: 1.58333em; border-bottom: 0.08333em solid #ccc; }
+		
+			table#wp-calendar th { width: 2.3333em; font-size: 1.0em; line-height: 1.58333em; border-bottom: 0.08333em solid #ccc; color: #666; text-align: center; }
+			
+			table#wp-calendar td { width: 2.3333em; line-height: 1.66667em; color: #999; text-align: center; }
+			
+				table#wp-calendar td a, table#wp-calendar td a:visited { color: #a90000; font-weight: bold; }
+				
+				table#wp-calendar td a:hover { text-decoration: underline; }
+				
+			table#wp-calendar td#next, table#wp-calendar td#prev { width: 7.0em; }
+		
+		/*---:[ the following styles are for the flickrRSS plugin, which is not yet fully supported ]:---*/
+		
+		li.widget ul.flickr_stream { list-style: none; margin: 0; padding: 0 10px; }
+		
+			li.widget ul.flickr_stream li { margin: 0; padding: 0 5px 5px 0; display: inline; }
+			
+				li.widget ul.flickr_stream li a img { padding: 3px; }
+				
+				li.widget ul.flickr_stream li a:hover img { background: #ff2a96; border-bottom: none; }
+	
+
+
+/*---:[ footer styles ]:---*/
+
+#footer p { font-weight: bold; font-size: 1.0em; text-transform: uppercase; text-align: center; }
+
+#footer a, #footer a:visited { color: #fff; border-bottom: 1px solid #a90000; }
+
+#footer a:hover { color: #fff; border-bottom: 1px solid #fff; }
+
+
+
+/*---:[ comment styles ]:---*/
+
+#comments { width: 46.8em; }
+
+	dl#comment_list { margin: 0 0 0 0; }
+		
+		dl#comment_list dt { padding: 0 0 33px 0; background: url('images/comment_top.gif') 0 100% no-repeat; font-size: 1.1em; line-height: 1.8182em; color: #999; }
+		
+		dl#comment_list dt.author { background: url('images/comment_author_top.gif') 0 100% no-repeat; }
+		
+			dl#comment_list dt .comment_num { padding: 0 0.3636em 0 0; }
+			
+				dl#comment_list dt .comment_num a, dl#comment_list dt .comment_num a:visited { color: #999; }
+				
+				dl#comment_list dt .comment_num a:hover { color: #a90000; }
+				
+			dl#comment_list dt strong { font-size: 1.4545em; color: #000; }
+				
+				dl#comment_list dt strong a, dl#comment_list dt strong a:visited { color: #000; border-bottom: 1px dotted #999; }
+				
+				dl#comment_list dt strong a:hover { color: #000; border-bottom: 1px solid #a90000; }
+		
+		dl#comment_list dd { width: 428px; padding: 0 20px; margin: 0 0 1.5385em; background: #dfdfdf url('images/comment_bottom.gif') 0 100% no-repeat; }
+		
+		dl#comment_list dd.author { background: #f6f4c9 url('images/comment_author_bottom.gif') 0 100% no-repeat; }
+		
+			dl#comment_list dd.entry p, dl#comment_list dd.entry ul, dl#comment_list dd.entry ol, dl#comment_list dd.entry blockquote { margin-bottom: 1.1538em; }
+
+
+
+/*---:[ comment form styles ]:---*/
+
+p.log_in { margin: 0 0 3.07692em 0; }
+
+#comment_form { width: 46.8em; margin: 0 0 4.0em 0; }
+
+	#comment_form a:hover { text-decoration: underline; }
+
+	#comment_form p { padding: 0.7692em 0; }
+	
+		#comment_form label { padding: 0 0 0 0.83333em; font-size: 1.2em; }
+
+		#comment_form .text_input { width: 15.3846em; padding: 0.23077em; color: #a90000; font: bold 1.3em Verdana, sans-serif; border-top: 0.15385em solid #999; border-left: 0.15385em solid #999; border-right: 0.07692em solid #eee; border-bottom: 0.07692em solid #eee; }
+		
+		#comment_form .text_input:focus { border-top-color: #666; border-left-color: #666; border-right-color: #ddd; border-bottom-color: #ddd; }
+		
+		#comment_form .text_area { width: 32.9231em; }
+
+		#comment_form p.subscribe-to-comments { font-size: 1.3em; }
+		
+			#comment_form p.subscribe-to-comments label { font-size: 1.0em; }
+
+		#comment_form .form_submit { padding: 0.5em; background: url('images/submit_bg.gif') repeat-x; color: #000; border: 0.21429em double #999; border-top-color: #ccc; border-left-color: #ccc; font: bold 1.4em/1.0em "Helvetica Neue", Helvetica, Arial, sans-serif; cursor: pointer; }
+		
+		#comment_form .form_submit:hover { color: #a90000; }
+			
+			
+
+/*---:[ search form styles ]:---*/
+
+#search_form { margin: 0 0 0.5833em 0; }
+
+html[xmlns*=""] body:last-child #search_form { margin: 0 0 0.75em 0; } /* This is a hack for Safari */
+
+	#search_form .search_input { width: 15.91667em; padding: 0.25em; color: #777; font: normal 1.0em Verdana, Arial, Helvetica, sans-serif; border: 0.083333em solid #999; border-right-color: #eee; border-bottom-color: #eee; }
+	
+	#search_form .search_input:focus { border-top-color: #666; border-left-color: #666; border-right-color: #ddd; border-bottom-color: #ddd; }
+	
+	#content .search_input { font-size: 0.9231em !important; }
+		
+
+
+/*---:[ self-clearing floats courtesy of Dan Cederholm at simplebits.com ]:---*/
+
+#header:after, #logo:after, #nav:after, #content_box:after, .page .entry:after, #comments:after, dl#comment_list dd:after, #comment_form:after { display: block; height: 0; content: "."; visibility: hidden; clear: both; }
