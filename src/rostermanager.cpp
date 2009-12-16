@@ -277,7 +277,7 @@ void RosterManager::sendNewBuddies() {
 			Tag *tag = new Tag("presence");
 			tag->addAttribute("type", "subscribe");
 			tag->addAttribute("from", s_buddy->getJid());
-			tag->addAttribute("to", Transport::instance()->jid());
+			tag->addAttribute("to", m_user->jid());
 			Tag *nick = new Tag("nick", alias);
 			nick->addAttribute("xmlns","http://jabber.org/protocol/nick");
 			tag->addChild(nick);

@@ -291,7 +291,7 @@ void RosterManagerTest::handleBuddySignedOff() {
 	CPPUNIT_ASSERT (!m_buddy1->isOnline());
 }
 
-void RosterManagerTest::handleBuddyCreated() {
+void RosterManagerTest::handleBuddyCreatedRIE() {
 	m_manager->handleBuddyCreated(m_buddy1);
 	CPPUNIT_ASSERT(Transport::instance()->getTags().empty());
 
@@ -309,15 +309,81 @@ void RosterManagerTest::handleBuddyCreated() {
 	CPPUNIT_ASSERT_MESSAGE ("There has to be 1 RIE stanza sent", m_tags.size() == 1);
 
 	Tag *tag = m_tags.front();
-	// <iq to='user@example.com/psi' type='set' id='id1' from='icq.localhost'>
-	//  <x xmlns='http://jabber.org/protocol/rosterx'>
-	//   <item action='add' jid='user1%example.com@icq.localhost' name='Frank'><group>Buddies</group></item>
-	//   <item action='add' jid='user2%example.com@icq.localhost' name='Bob'><group>Buddies</group></item>
-	//  </x>
-	// </iq>
+	CPPUNIT_ASSERT (tag->name() == "iq");
+	CPPUNIT_ASSERT (tag->findAttribute("to") == "user@example.com/psi");
+	CPPUNIT_ASSERT (tag->findAttribute("type") == "set");
+	CPPUNIT_ASSERT (tag->findAttribute("from") == "icq.localhost");
+	CPPUNIT_ASSERT (tag->findChild("x") != NULL);
+	CPPUNIT_ASSERT (tag->findChild("x")->findAttribute("xmlns") == "http://jabber.org/protocol/rosterx");
+	CPPUNIT_ASSERT (tag->findChild("x")->children().size() != 0);
+	for (std::list<Tag *>::const_iterator i = tag->findChild("x")->children().begin(); i != tag->findChild("x")->children().end(); i++) {
+		Tag *item = *i;
+		CPPUNIT_ASSERT (item->name() == "item");
+		CPPUNIT_ASSERT (item->findAttribute("jid") == "user1%example.com@icq.localhost" ||
+						item->findAttribute("jid") == "user2%example.com@icq.localhost");
+		if (item->findAttribute("jid") == "user1%example.com@icq.localhost")
+			CPPUNIT_ASSERT (item->findAttribute("name") == "Frank");
+		else
+			CPPUNIT_ASSERT (item->findAttribute("name") == "Bob");
+		CPPUNIT_ASSERT (item->findChild("group") != NULL);
+		CPPUNIT_ASSERT (item->findChild("group")->cdata() == "Buddies");
+	}
 
 	delete m_tags.front();
 	m_tags.clear();
 	Transport::instance()->clearTags();
+	
+	CPPUNIT_ASSERT (m_manager->isInRoster("user1@example.com", ""));
+	CPPUNIT_ASSERT (m_manager->isInRoster("user2@example.com", ""));
+	
+}
+
+void RosterManagerTest::handleBuddyCreatedSubscribe() {
+	m_user->setResource("psi", 10, 0); // no features => it should send subscribe instead of RIE.
+	m_manager->handleBuddyCreated(m_buddy1);
+	CPPUNIT_ASSERT(Transport::instance()->getTags().empty());
+
+	m_manager->syncBuddiesCallback();
+	CPPUNIT_ASSERT(Transport::instance()->getTags().empty());
+
+	m_manager->handleBuddyCreated(m_buddy2);
+
+	m_manager->syncBuddiesCallback();
+	CPPUNIT_ASSERT(Transport::instance()->getTags().empty());
+	
+	m_manager->syncBuddiesCallback();
+	m_tags = Transport::instance()->getTags();
+
+	CPPUNIT_ASSERT_MESSAGE ("There has to be 2 subscribe stanza sent", m_tags.size() == 2);
+
+	std::list <std::string> users;
+	users.push_back("user1%example.com@icq.localhost/bot");
+	users.push_back("user2%example.com@icq.localhost/bot");
+
+	while (m_tags.size() != 0) {
+		Tag *tag = m_tags.front();
+		// <presence type='subscribe' from='user1%example.com@icq.localhost/bot' to='icq.localhost'>
+		//   <nick xmlns='http://jabber.org/protocol/nick'>Frank</nick>
+		// </presence>
+		CPPUNIT_ASSERT (tag->name() == "presence");
+		CPPUNIT_ASSERT (tag->findAttribute("type") == "subscribe");
+		CPPUNIT_ASSERT (tag->findAttribute("to") == "user@example.com");
+		CPPUNIT_ASSERT_MESSAGE ("Presence for user who is not in roster",
+								find(users.begin(), users.end(), tag->findAttribute("from")) != users.end());
+		CPPUNIT_ASSERT (tag->findChild("nick") != NULL);
+		CPPUNIT_ASSERT (tag->findChild("nick")->findAttribute("xmlns") == "http://jabber.org/protocol/nick");
+		if (tag->findAttribute("from") == "user1%example.com@icq.localhost/bot")
+			CPPUNIT_ASSERT (tag->findChild("nick")->cdata() == "Frank");
+		else
+			CPPUNIT_ASSERT (tag->findChild("nick")->cdata() == "Bob");
+		users.remove(tag->findAttribute("from"));
+		m_tags.remove(tag);
+		delete tag;
+	}
+	CPPUNIT_ASSERT_MESSAGE ("Presence for one or more users from roster was not sent", users.size() == 0);
+	Transport::instance()->clearTags();
+	
+	CPPUNIT_ASSERT (m_manager->isInRoster("user1@example.com", ""));
+	CPPUNIT_ASSERT (m_manager->isInRoster("user2@example.com", ""));
 	
 }
