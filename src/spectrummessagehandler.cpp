@@ -221,14 +221,14 @@ void SpectrumMessageHandler::handleMessage(const Message& msg) {
 
 	// send this message
 	gchar *_markup = g_markup_escape_text(body.c_str(), -1);
-	std::string markup(_markup);
-	g_free(_markup);
+
 	if (purple_conversation_get_type(conv) == PURPLE_CONV_TYPE_IM) {
 		PurpleConvIm *im = purple_conversation_get_im_data(conv);
-		purple_conv_im_send(im, markup.c_str());
+		purple_conv_im_send(im, _markup);
 	}
 	else if (purple_conversation_get_type(conv) == PURPLE_CONV_TYPE_CHAT) {
-		purple_conv_chat_send(PURPLE_CONV_CHAT(conv), markup.c_str());
+		purple_conv_chat_send(PURPLE_CONV_CHAT(conv), _markup);
+	g_free(_markup);
 // 		Message s(Message::Groupchat, msg.from().full(), body);
 // 		s.setFrom(msg.to().full());
 // 		Tag *xx = s.tag();
