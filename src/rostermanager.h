@@ -54,13 +54,14 @@ class RosterManager {
 		AbstractSpectrumBuddy *getRosterItem(const std::string &uin);
 		
 		// Adds new buddy to roster.
+		void addRosterItem(AbstractSpectrumBuddy *s_buddy);
 		void addRosterItem(PurpleBuddy *buddy);
 		
 		// Sets roster. RosterManager will free it by itself.
 		void setRoster(GHashTable *roster);
 		
 		// Returns true if buddy with this name and subscription is in roster.
-		bool isInRoster(const std::string &name, const std::string &subscription);
+		bool isInRoster(const std::string &name, const std::string &subscription = "");
 
 		// Sends current presence of buddy `s_buddy`.
 		void sendPresence(AbstractSpectrumBuddy *s_buddy, const std::string &resource = "");
