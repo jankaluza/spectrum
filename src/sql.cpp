@@ -564,13 +564,10 @@ GHashTable *SQLClass::getBuddies(long userId, PurpleAccount *account){
 	m_stmt_getBuddiesSettings.user_id = userId;
 	STATEMENT_EXECUTE_BEGIN();
 		m_stmt_getBuddiesSettings.stmt->execute();
-		std::cout << "SETTING 1 " << "\n";
 	STATEMENT_EXECUTE_END(m_stmt_getBuddiesSettings.stmt, getBuddies(userId, account));
-	std::cout << "SETTING 2 " << "\n";
 
 	STATEMENT_EXECUTE_BEGIN();
 		do {
-			std::cout << "SETTING 3 " << "\n";
 			if (!m_stmt_getBuddies.stmt->execute())
 				break;
 			// TODO: REMOVE ME AND REPlACE ALL MY OCCURS IN THIS FUNCTION
@@ -595,7 +592,6 @@ GHashTable *SQLClass::getBuddies(long userId, PurpleAccount *account){
 					purple_blist_add_group(g, NULL);
 				}
 				PurpleBuddy *buddy = purple_find_buddy_in_group(account, user.uin.c_str(), g);
-				std::cout << "BEFORE ADDING BUDDY " << " " << user.id << " " << user.uin << "\n";
 				if (!buddy) {
 					// create contact
 					PurpleContact *contact = purple_contact_new();
@@ -606,11 +602,10 @@ GHashTable *SQLClass::getBuddies(long userId, PurpleAccount *account){
 					buddy->node.ui_data = (void *) new SpectrumBuddy(user.id, buddy);
 					purple_blist_add_buddy(buddy, contact, g, NULL);
 					GHashTable *settings = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, (GDestroyNotify) purple_value_destroy);
-					std::cout << "ADDING BUDDY " << " " << user.id << " " << user.uin << " " << buddy << " " << buddy->node.ui_data << "\n";
+					Log("ADDING BUDDY ", " " << user.id << " " << user.uin << " " << buddy << " " << buddy->node.ui_data);
 					while(i < (int) m_stmt_getBuddiesSettings.resId.size()) {
-						std::cout << m_stmt_getBuddiesSettings.resId[i] << "\n";
 						if (m_stmt_getBuddiesSettings.resId[i] == user.id) {
-							std::cout << "ADDING SETTING " << m_stmt_getBuddiesSettings.resVar[i] << "\n";
+							Log("ADDING SETTING ", m_stmt_getBuddiesSettings.resVar[i]);
 							PurpleType type = (PurpleType) m_stmt_getBuddiesSettings.resType[i];
 							PurpleValue *value;
 							if (type == PURPLE_TYPE_BOOLEAN) {
