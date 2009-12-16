@@ -564,10 +564,13 @@ GHashTable *SQLClass::getBuddies(long userId, PurpleAccount *account){
 	m_stmt_getBuddiesSettings.user_id = userId;
 	STATEMENT_EXECUTE_BEGIN();
 		m_stmt_getBuddiesSettings.stmt->execute();
+		std::cout << "SETTING 1 " << "\n";
 	STATEMENT_EXECUTE_END(m_stmt_getBuddiesSettings.stmt, getBuddies(userId, account));
+	std::cout << "SETTING 2 " << "\n";
 
 	STATEMENT_EXECUTE_BEGIN();
 		do {
+			std::cout << "SETTING 3 " << "\n";
 			if (!m_stmt_getBuddies.stmt->execute())
 				break;
 			// TODO: REMOVE ME AND REPlACE ALL MY OCCURS IN THIS FUNCTION
@@ -592,6 +595,7 @@ GHashTable *SQLClass::getBuddies(long userId, PurpleAccount *account){
 					purple_blist_add_group(g, NULL);
 				}
 				PurpleBuddy *buddy = purple_find_buddy_in_group(account, user.uin.c_str(), g);
+				std::cout << "BEFORE ADDING BUDDY " << " " << user.id << " " << user.uin << "\n";
 				if (!buddy) {
 					// create contact
 					PurpleContact *contact = purple_contact_new();

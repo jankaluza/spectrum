@@ -216,21 +216,6 @@ void RosterManager::handleBuddyCreated(AbstractSpectrumBuddy *s_buddy) {
 		m_syncTimer->start();
 		Log(m_user->jid(), "Not in roster => adding to subscribe cache");
 		m_subscribeCache[name] = s_buddy;
-// 		if (m_user->findResourceWithFeature(GLOOX_FEATURE_ROSTERX)) {
-// 			Log(m_jid, "Not in roster => sending rosterx");
-// 			m_subscribeCache[name] = s_buddy;
-// 		}
-// 		else {
-// 			Log(m_jid, "Not in roster => sending subscribe");
-// 			Tag *tag = new Tag("presence");
-// 			tag->addAttribute("type", "subscribe");
-// 			tag->addAttribute("from", s_buddy->getJid());
-// 			tag->addAttribute("to", m_jid);
-// 			Tag *nick = new Tag("nick", alias);
-// 			nick->addAttribute("xmlns","http://jabber.org/protocol/nick");
-// 			tag->addChild(nick);
-// 			p->j->send(tag);
-// 		}
 	}
 }
 

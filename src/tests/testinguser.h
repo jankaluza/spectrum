@@ -19,7 +19,6 @@ class TestingUser : public AbstractUser {
 		bool hasTransportFeature(int feature) { return true; }
 		int getFeatures() { return 256; }
 		long storageId() { return 1; }
-		Resource & findResourceWithFeature(int feature) { return m_resource; }
 		const std::string &username() { return m_username; }
 		GHashTable *settings() { return m_settings; }
 		bool isConnectedInRoom(const std::string &room) { return false; }
@@ -31,7 +30,6 @@ class TestingUser : public AbstractUser {
 		std::string m_username;
 		std::string m_userkey;
 		std::string m_jid;
-		Resource m_resource;
 };
 
 #endif

@@ -290,3 +290,34 @@ void RosterManagerTest::handleBuddySignedOff() {
 	
 	CPPUNIT_ASSERT (!m_buddy1->isOnline());
 }
+
+void RosterManagerTest::handleBuddyCreated() {
+	m_manager->handleBuddyCreated(m_buddy1);
+	CPPUNIT_ASSERT(Transport::instance()->getTags().empty());
+
+	m_manager->syncBuddiesCallback();
+	CPPUNIT_ASSERT(Transport::instance()->getTags().empty());
+
+	m_manager->handleBuddyCreated(m_buddy2);
+
+	m_manager->syncBuddiesCallback();
+	CPPUNIT_ASSERT(Transport::instance()->getTags().empty());
+	
+	m_manager->syncBuddiesCallback();
+	m_tags = Transport::instance()->getTags();
+
+	CPPUNIT_ASSERT_MESSAGE ("There has to be 1 RIE stanza sent", m_tags.size() == 1);
+
+	Tag *tag = m_tags.front();
+	// <iq to='user@example.com/psi' type='set' id='id1' from='icq.localhost'>
+	//  <x xmlns='http://jabber.org/protocol/rosterx'>
+	//   <item action='add' jid='user1%example.com@icq.localhost' name='Frank'><group>Buddies</group></item>
+	//   <item action='add' jid='user2%example.com@icq.localhost' name='Bob'><group>Buddies</group></item>
+	//  </x>
+	// </iq>
+
+	delete m_tags.front();
+	m_tags.clear();
+	Transport::instance()->clearTags();
+	
+}
