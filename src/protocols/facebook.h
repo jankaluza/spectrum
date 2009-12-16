@@ -38,14 +38,14 @@ class FacebookProtocol : AbstractProtocol
 		std::list<std::string> transportFeatures();
 		std::list<std::string> buddyFeatures();
 		std::string text(const std::string &key);
-		Tag *getVCardTag(User *user, GList *vcardEntries);
-		bool isMUC(User *user, const std::string &jid) { return false; }
+		Tag *getVCardTag(AbstractUser *user, GList *vcardEntries);
+		bool isMUC(AbstractUser *user, const std::string &jid) { return false; }
 		const std::string notifyUsername() { return "info"; }
 		const std::string userSearchAction() { return "Search for buddies..."; }
 
 		const std::string userSearchColumn() { return "ID"; }
 
-		void onPurpleRequestInput(User *user, const char *title, const char *primary,const char *secondary, const char *default_value,gboolean multiline, gboolean masked, gchar *hint,const char *ok_text, GCallback ok_cb,const char *cancel_text, GCallback cancel_cb, PurpleAccount *account, const char *who,PurpleConversation *conv, void *user_data);
+		void onPurpleRequestInput(AbstractUser *user, const char *title, const char *primary,const char *secondary, const char *default_value,gboolean multiline, gboolean masked, gchar *hint,const char *ok_text, GCallback ok_cb,const char *cancel_text, GCallback cancel_cb, PurpleAccount *account, const char *who,PurpleConversation *conv, void *user_data);
 
 	private:
 		GlooxMessageHandler *m_main;

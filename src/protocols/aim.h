@@ -37,8 +37,8 @@ class AIMProtocol : AbstractProtocol
 		std::list<std::string> transportFeatures();
 		std::list<std::string> buddyFeatures();
 		std::string text(const std::string &key);
-		Tag *getVCardTag(User *user, GList *vcardEntries) { return NULL; }
-		bool isMUC(User *user, const std::string &jid) { return false; }
+		Tag *getVCardTag(AbstractUser *user, GList *vcardEntries) { return NULL; }
+		bool isMUC(AbstractUser *user, const std::string &jid) { return false; }
 	private:
 		GlooxMessageHandler *m_main;
 		std::list<std::string> m_transportFeatures;

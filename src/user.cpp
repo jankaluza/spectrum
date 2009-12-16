@@ -36,17 +36,7 @@
 #include "spectrumbuddy.h"
 #include "transport.h"
 
-static void sendXhtmlTag(Tag *tag, Tag *stanzaTag) {
-	Tag *html = new Tag("html");
-	html->addAttribute("xmlns", "http://jabber.org/protocol/xhtml-im");
-	Tag *body = tag->clone();
-	body->addAttribute("xmlns", "http://www.w3.org/1999/xhtml");
-	html->addChild(body);
-	stanzaTag->addChild(html);
-	GlooxMessageHandler::instance()->j->send(stanzaTag);
-}
-
-User::User(GlooxMessageHandler *parent, JID jid, const std::string &username, const std::string &password, const std::string &userKey, long id) : RosterManager(this), RosterStorage(this) {
+User::User(GlooxMessageHandler *parent, JID jid, const std::string &username, const std::string &password, const std::string &userKey, long id) : RosterManager(this), RosterStorage(this), SpectrumMessageHandler(this) {
 	p = parent;
 	m_jid = jid.bare();
 	m_userID = id;
@@ -71,7 +61,6 @@ User::User(GlooxMessageHandler *parent, JID jid, const std::string &username, co
 	m_reconnectCount = 0;
 	m_lang = NULL;
 	m_features = 0;
-	m_mucs = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
 	m_filetransfers = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
 	PurpleValue *value;
 	
@@ -134,17 +123,6 @@ void User::removeAuthRequest(const std::string &name) {
 	m_authRequests.erase(name);
 }
 
-/*
- * Returns true if exists opened conversation with user with uin `name`.
- */
-bool User::isOpenedConversation(const std::string &name) {
-	std::map<std::string, Conversation>::iterator iter = m_conversations.begin();
-	iter = m_conversations.find(name);
-	if (iter != m_conversations.end())
-		return true;
-	return false;
-}
-
 void User::purpleReauthorizeBuddy(PurpleBuddy *buddy) {
 	if (!m_connected)
 		return;
@@ -190,158 +168,8 @@ void User::purpleBuddyCreated(PurpleBuddy *buddy) {
 		return;
 	buddy->node.ui_data = (void *) new SpectrumBuddy(-1, buddy);
 	SpectrumBuddy *s_buddy = (SpectrumBuddy *) buddy->node.ui_data;
-	
+
 	handleBuddyCreated(s_buddy);
-}
-
-/*
- * Called when new message has been received.
- */
-void User::purpleMessageReceived(PurpleAccount* account,char * name,char *msg,PurpleConversation *conv,PurpleMessageFlags flags) {
-	// new message grom legacy network has been received
-	if (conv == NULL) {
-		// make conversation if it doesn't exist
-		conv = purple_conversation_new(PURPLE_CONV_TYPE_IM, account, name);
-		m_conversations[(std::string)name].conv = conv;
-	}
-}
-
-void User::purpleConversationWriteChat(PurpleConversation *conv, const char *who, const char *msg, PurpleMessageFlags flags, time_t mtime) {
-	if (who == NULL || flags & PURPLE_MESSAGE_SYSTEM)
-		return;
-
-	std::string name(purple_conversation_get_name(conv));
-	std::transform(name.begin(), name.end(), name.begin(),(int(*)(int)) std::tolower);
-	name = name + "%" + JID(m_username).server();
-	MUCHandler *muc = (MUCHandler*) g_hash_table_lookup(m_mucs, name.c_str());
-	if (!isOpenedConversation(name)) {
-		m_conversations[name].conv = conv;
-		if (muc)
-			muc->setConversation(conv);
-	}
-
-	if (muc) {
-		muc->messageReceived(who, msg, flags, mtime);
-	}
-}
-
-void User::purpleConversationWriteIM(PurpleConversation *conv, const char *who, const char *msg, PurpleMessageFlags flags, time_t mtime) {
-	if (who == NULL)
-		return;
-
-	if (flags & PURPLE_MESSAGE_SEND)
-		return;
-
-	std::string name = (std::string) purple_conversation_get_name(conv);
-
-	size_t pos = name.find("/");
-	if (pos != std::string::npos)
-		name.erase((int) pos, name.length() - (int) pos);
-
-	if (name.empty())
-		return;
-	std::for_each( name.begin(), name.end(), replaceBadJidCharacters() );
-	std::transform(name.begin(), name.end(), name.begin(),(int(*)(int)) std::tolower);
-	// new message from legacy network has been received
-	if (!isOpenedConversation(name)) {
-		m_conversations[name].conv = conv;
-	}
-
-	Log(m_jid, "purpleConversationWriteIM:" << name << msg);
-
-	// send message to user
-	char *newline = purple_strdup_withhtml(msg);
-	char *strip = purple_markup_strip_html(newline);
-
-	std::string message(strip);
-	std::string to;
-	if (m_conversations[name].resource.empty())
-		to = m_jid;
-	else
-		to = m_jid + "/" + m_conversations[name].resource;
-	Message s(Message::Chat, to, message);
-	s.setFrom(name + std::string(g_hash_table_size(m_mucs) == 0 ? "" : ("%" + JID(m_username).server())) + "@" + p->jid() + "/bot");
-
-	// chatstates
-	if (purple_value_get_boolean(getSetting("enable_chatstate"))) {
-		if (hasFeature(GLOOX_FEATURE_CHATSTATES, m_conversations[name].resource)) {
-			ChatState *c = new ChatState(ChatStateActive);
-			s.addExtension(c);
-		}
-	}
-
-	// Delayed messages, we have to count with some delay
-	if ((unsigned long) time(NULL)-10 > (unsigned long) mtime && (unsigned long) time(NULL) - 31536000 > (unsigned long) mtime) {
-		char buf[80];
-		strftime(buf, sizeof(buf), "%Y-%m-%dT%H:%M:%SZ", gmtime(&mtime));
-		std::string timestamp(buf);
-		DelayedDelivery *d = new DelayedDelivery(name + "@" + p->jid() + "/bot", timestamp);
-		s.addExtension(d);
-	}
-
-	Tag *stanzaTag = s.tag();
-
-	std::string m(msg);
-	if (m.find("<body>") == 0) {
-		m.erase(0,6);
-		m.erase(m.length() - 7, 7);
-	}
-
-	std::string res = m_conversations[name].resource;
-	if (hasFeature(GLOOX_FEATURE_XHTML_IM, res) && m != message) {
-		p->parser()->getTag("<body>" + m + "</body>", sendXhtmlTag, stanzaTag);
-		g_free(newline);
-		g_free(strip);
-		return;
-	}
-
-	p->j->send(stanzaTag);
-	g_free(newline);
-	g_free(strip);
-}
-
-void User::purpleChatTopicChanged(PurpleConversation *conv, const char *who, const char *topic) {
-	std::string name(purple_conversation_get_name(conv));
-	std::transform(name.begin(), name.end(), name.begin(),(int(*)(int)) std::tolower);
-	name = name + "%" + JID(m_username).server();
-	MUCHandler *muc = (MUCHandler*) g_hash_table_lookup(m_mucs, name.c_str());
-	if (muc) {
-		muc->topicChanged(who, topic);
-	}
-}
-
-void User::purpleChatAddUsers(PurpleConversation *conv, GList *cbuddies, gboolean new_arrivals) {
-	std::string name(purple_conversation_get_name(conv));
-	std::transform(name.begin(), name.end(), name.begin(),(int(*)(int)) std::tolower);
-	name = name + "%" + JID(m_username).server();
-	MUCHandler *muc = (MUCHandler*) g_hash_table_lookup(m_mucs, name.c_str());
-	if (!muc)
-		return;
-	if (!isOpenedConversation(name)) {
-		m_conversations[name].conv = conv;
-		muc->setConversation(conv);
-	}
-	muc->addUsers(cbuddies);
-}
-
-void User::purpleChatRenameUser(PurpleConversation *conv, const char *old_name, const char *new_name, const char *new_alias) {
-	std::string name(purple_conversation_get_name(conv));
-	std::transform(name.begin(), name.end(), name.begin(),(int(*)(int)) std::tolower);
-	name = name + "%" + JID(m_username).server();
-	MUCHandler *muc = (MUCHandler*) g_hash_table_lookup(m_mucs, name.c_str());
-	if (muc) {
-		muc->renameUser(old_name, new_name, new_alias);
-	}
-}
-
-void User::purpleChatRemoveUsers(PurpleConversation *conv, GList *users) {
-	std::string name(purple_conversation_get_name(conv));
-	std::transform(name.begin(), name.end(), name.begin(),(int(*)(int)) std::tolower);
-	name = name + "%" + JID(m_username).server();
-	MUCHandler *muc = (MUCHandler*) g_hash_table_lookup(m_mucs, name.c_str());
-	if (muc) {
-		muc->removeUsers(users);
-	}
 }
 
 PurpleValue * User::getSetting(const char *key) {
@@ -426,89 +254,6 @@ void User::receivedChatState(const std::string &uin,const std::string &state){
 		serv_send_typing(purple_account_get_connection(m_account),uin.c_str(),PURPLE_TYPED);
 	else
 		serv_send_typing(purple_account_get_connection(m_account),uin.c_str(),PURPLE_NOT_TYPING);
-}
-
-/*
- * Received new message from jabber user.
- */
-void User::receivedMessage(const Message& msg){
-	PurpleConversation * conv;
-	std::string username = msg.to().username();
-	if (!p->protocol()->isMUC(this, username)) {
-		std::for_each( username.begin(), username.end(), replaceJidCharacters() );
-	}
-	else if (!msg.to().resource().empty() && msg.to().resource() != "bot") {
-		username = msg.to().resource();
-	}
-	else if (msg.to().resource() == "bot") {
-		size_t pos = username.find("%");
-		if (pos != std::string::npos)
-			username.erase((int) pos, username.length() - (int) pos);
-	}
-	// open new conversation or get the opened one
-	if (!isOpenedConversation(username)) {
-		conv = purple_conversation_new(PURPLE_CONV_TYPE_IM,m_account,username.c_str());
-		m_conversations[username].conv = conv;
-		m_conversations[username].resource = msg.from().resource();
-	}
-	else {
-		conv = m_conversations[username].conv;
-		m_conversations[username].resource = msg.from().resource();
-	}
-	std::string body = msg.body();
-
-	if (body.find("/transport") == 0) {
-		PurpleCmdStatus status;
-		char *error = NULL;
-		body.erase(0, 11);
-		status = purple_cmd_do_command(conv, body.c_str(), body.c_str(), &error);
-
-		switch (status) {
-			case PURPLE_CMD_STATUS_OK:
-				break;
-			case PURPLE_CMD_STATUS_NOT_FOUND:
-				{
-					purple_conversation_write(conv, "transport", tr(getLang(),_("Transport: Unknown command.")), PURPLE_MESSAGE_RECV, time(NULL));
-					break;
-				}
-			case PURPLE_CMD_STATUS_WRONG_ARGS:
-				purple_conversation_write(conv, "transport", tr(getLang(),_("Syntax Error:  You typed the wrong number of arguments to that command.")), PURPLE_MESSAGE_RECV, time(NULL));
-				break;
-			case PURPLE_CMD_STATUS_FAILED:
-				purple_conversation_write(conv, "transport", tr(getLang(),error ? error : _("Your command failed for an unknown reason.")), PURPLE_MESSAGE_RECV, time(NULL));
-				break;
-			case PURPLE_CMD_STATUS_WRONG_TYPE:
-				if(purple_conversation_get_type(conv) == PURPLE_CONV_TYPE_IM)
-					purple_conversation_write(conv, "transport", tr(getLang(),_("That command only works in Groupchats, not IMs.")), PURPLE_MESSAGE_RECV, time(NULL));
-				else
-					purple_conversation_write(conv, "transport", tr(getLang(),_("That command only works in IMs, not Groupchats.")), PURPLE_MESSAGE_RECV, time(NULL));
-				break;
-			case PURPLE_CMD_STATUS_WRONG_PRPL:
-				purple_conversation_write(conv, "transport", tr(getLang(),_("That command doesn't work on this protocol.")), PURPLE_MESSAGE_RECV, time(NULL));
-				break;
-		}
-
-		if (error)
-			g_free(error);
-		return;
-	}
-
-	// send this message
-	gchar *_markup = g_markup_escape_text(body.c_str(), -1);
-	std::string markup(_markup);
-	g_free(_markup);
-	if (purple_conversation_get_type(conv) == PURPLE_CONV_TYPE_IM) {
-		PurpleConvIm *im = purple_conversation_get_im_data(conv);
-		purple_conv_im_send(im, markup.c_str());
-	}
-	else if (purple_conversation_get_type(conv) == PURPLE_CONV_TYPE_CHAT) {
-		purple_conv_chat_send(PURPLE_CONV_CHAT(conv), markup.c_str());
-// 		Message s(Message::Groupchat, msg.from().full(), body);
-// 		s.setFrom(msg.to().full());
-// 		Tag *xx = s.tag();
-// 		std::cout << "MESSAGE" << xx->xml() << "\n";
-// 		p->j->send( xx );
-	}
 }
 
 /*
@@ -759,6 +504,10 @@ void User::receivedPresence(const Presence &stanza) {
 		return;
 	}
 
+	if (stanza.to().username() != ""  && ((p->protocol()->tempAccountsAllowed()) || p->protocol()->isMUC(NULL, stanza.to().bare())) && stanza.presence() == Presence::Unavailable) {
+		removeConversation(stanza.to().username());
+	}
+
 	// this presence is for the transport
 	if (stanza.to().username() == ""  || ((p->protocol()->tempAccountsAllowed()) || p->protocol()->isMUC(NULL, stanza.to().bare()))) {
 		if (stanza.presence() == Presence::Unavailable) {
@@ -767,17 +516,13 @@ void User::receivedPresence(const Presence &stanza) {
 				if ((m_connected == false && int(time(NULL)) > int(m_connectionStart) + 10) || m_connected == true) {
 					if (hasResource(stanza.from().resource())) {
 						removeResource(stanza.from().resource());
-						for (std::map<std::string, Conversation>::iterator u = m_conversations.begin(); u != m_conversations.end() ; u++) {
-							if ((*u).second.resource == stanza.from().resource()) {
-								m_conversations[(*u).first].resource = "";
-							}
-						}
+						removeConversationResource(stanza.from().resource());
 					}
 					sendUnavailablePresenceToAll();
 				}
 			}
 			if (m_connected) {
-				if (getResources().empty() || (p->protocol()->tempAccountsAllowed() && g_hash_table_size(m_mucs) == 0)){
+				if (getResources().empty() || (p->protocol()->tempAccountsAllowed() && !hasOpenedMUC())){
 					Log(m_jid, "disconecting");
 					purple_account_disconnect(m_account);
 					p->userManager()->removeUserTimer(this);
@@ -937,9 +682,7 @@ User::~User(){
 		purple_timeout_remove(m_syncTimer);
 	}
 
-	m_conversations.clear();
 	m_authRequests.clear();
-	g_hash_table_destroy(m_mucs);
 	g_hash_table_destroy(m_settings);
 	g_hash_table_destroy(m_filetransfers);
 

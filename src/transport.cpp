@@ -31,3 +31,12 @@ std::string Transport::getId() {
 int Transport::getFeatures(const std::string &ver) {
 	return GlooxMessageHandler::instance()->capsCache[ver];
 }
+
+GlooxParser *Transport::parser() {
+	return GlooxMessageHandler::instance()->parser();
+}
+
+AbstractProtocol *Transport::protocol() {
+	return GlooxMessageHandler::instance()->protocol();
+}
+

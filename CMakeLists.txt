@@ -56,6 +56,7 @@ endif(CMAKE_BUILD_TYPE MATCHES Debug)
 set(spectrum_SRCS
 	src/accountcollector.cpp
 	src/abstractspectrumbuddy.cpp
+	src/abstractconversation.cpp
 	src/adhoc/adhocadmin.cpp
 	src/adhoc/adhochandler.cpp
 	src/adhoc/adhocrepeater.cpp
@@ -74,7 +75,8 @@ set(spectrum_SRCS
 	src/localization.cpp
 	src/log.cpp
 	src/main.cpp
-	src/muchandler.cpp
+	src/spectrummessagehandler.cpp
+# 	src/muchandler.cpp
 	src/parser.cpp
 	src/registerhandler.cpp
 	src/resourcemanager.cpp
@@ -84,6 +86,8 @@ set(spectrum_SRCS
 	src/searchrepeater.cpp
 	src/spectrum_util.cpp
 	src/spectrumbuddy.cpp
+	src/spectrumconversation.cpp
+	src/spectrummucconversation.cpp
 	src/spectrumtimer.cpp
 	src/statshandler.cpp
 	src/striphtmltags.cpp
@@ -109,6 +113,7 @@ set(spectrum_SRCS
 set(spectrum_MOC_HDRS
 	src/abstractpurplerequest.h
 	src/abstractspectrumbuddy.h
+	src/abstractconversation.h
 	src/accountcollector.h
 	src/adhoc/adhocadmin.h
 	src/adhoc/adhoccommandhandler.h
@@ -129,7 +134,9 @@ set(spectrum_MOC_HDRS
 	src/localization.h
 	src/log.h
 	src/main.h
-	src/muchandler.h
+	src/spectrummessagehandler.h
+	src/spectrumconversation.h
+# 	src/muchandler.h
 	src/parser.h
 	src/registerhandler.h
 	src/resourcemanager.h
@@ -173,15 +180,19 @@ endif(DEFINED WITH_STATIC_GLOOX)
 message(STATUS "Transport will be installed into: " ${CMAKE_INSTALL_PREFIX})
 file(APPEND src/transport_config.h "#define INSTALL_DIR \"" ${CMAKE_INSTALL_PREFIX} "\"\n")
 
-if (EXISTS .git)
-	execute_process(COMMAND git rev-parse HEAD
-					OUTPUT_VARIABLE GIT_REVISION
-					OUTPUT_STRIP_TRAILING_WHITESPACE
-	)
-	file(APPEND src/transport_config.h "#define VERSION \"0.1-git-" ${GIT_REVISION} "\"\n")
-else (EXISTS .git)
-	file(APPEND src/transport_config.h "#define VERSION \"0.1\"\n")
-endif (EXISTS .git)
+if (DEFINED SPECTRUM_VERSION)
+	file(APPEND src/transport_config.h "#define VERSION \"" ${SPECTRUM_VERSION} "\"\n")
+else (DEFINED SPECTRUM_VERSION)
+	if (EXISTS .git)
+		execute_process(COMMAND git rev-parse HEAD
+						OUTPUT_VARIABLE GIT_REVISION
+						OUTPUT_STRIP_TRAILING_WHITESPACE
+		)
+		file(APPEND src/transport_config.h "#define VERSION \"0.1-git-" ${GIT_REVISION} "\"\n")
+	else (EXISTS .git)
+		file(APPEND src/transport_config.h "#define VERSION \"0.1\"\n")
+	endif (EXISTS .git)
+endif (DEFINED SPECTRUM_VERSION)
 
 
 

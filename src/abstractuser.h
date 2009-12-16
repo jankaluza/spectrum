@@ -38,9 +38,23 @@ class AbstractUser : public ResourceManager
 		virtual PurpleValue *getSetting(const char *key) = 0;
 		virtual bool hasTransportFeature(int feature) = 0;
 		virtual int getFeatures() = 0;
+		virtual const std::string &username() = 0;
+		const char *getLang() { return "en"; }
+		virtual GHashTable *settings() = 0;
+		virtual bool isConnectedInRoom(const std::string &room) = 0;
+		virtual bool isConnected() = 0;
+		
+		void setProtocolData(void *protocolData) { m_protocolData = protocolData; }
+		void *protocolData() { return m_protocolData; }
+		std::string getRoomResource(const std::string &room) { return m_roomResources[room]; }
+		void setRoomResource(const std::string &room, const std::string &resource) { m_roomResources[room] = resource; }
 		
 		guint removeTimer;
 
+	private:
+		void *m_protocolData;
+		std::map<std::string, std::string> m_roomResources;
+		
 };
 
 #endif

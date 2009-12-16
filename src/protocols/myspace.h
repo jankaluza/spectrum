@@ -38,12 +38,12 @@ class MyspaceProtocol : AbstractProtocol
 		std::list<std::string> transportFeatures();
 		std::list<std::string> buddyFeatures();
 		std::string text(const std::string &key);
-		Tag *getVCardTag(User *user, GList *vcardEntries) { return NULL; }
-		bool isMUC(User *user, const std::string &jid) { return false; }
+		Tag *getVCardTag(AbstractUser *user, GList *vcardEntries) { return NULL; }
+		bool isMUC(AbstractUser *user, const std::string &jid) { return false; }
 // 		std::string notifyUsername() { return "info"; }
 // 		std::string userSearchAction() { return "Search for buddies..."; }
 
-		void onConnected(User *user);
+		void onConnected(AbstractUser *user);
 // 		std::string userSearchColumn() { return "ID"; }
 
 	private:

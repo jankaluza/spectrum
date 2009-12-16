@@ -71,6 +71,7 @@ RosterManager::RosterManager(AbstractUser *user) {
 	m_user = user;
 	m_syncTimer = new SpectrumTimer(12000, &sync_cb, this);
 	m_subscribeLastCount = -1;
+	m_roster = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
 }
 
 RosterManager::~RosterManager() {
@@ -119,22 +120,27 @@ AbstractSpectrumBuddy *RosterManager::getRosterItem(const std::string &uin) {
 	return s_buddy;
 }
 
-void RosterManager::addRosterItem(PurpleBuddy *buddy) {
-	if (g_hash_table_lookup(m_roster, purple_buddy_get_name(buddy)))
+void RosterManager::addRosterItem(AbstractSpectrumBuddy *s_buddy) {
+	if (isInRoster(s_buddy->getName()))
 		return;
-	if (buddy->node.ui_data)
-		g_hash_table_replace(m_roster, g_strdup(purple_buddy_get_name(buddy)), buddy->node.ui_data);
+	g_hash_table_replace(m_roster, g_strdup(s_buddy->getName().c_str()), s_buddy);
+}
+
+void RosterManager::addRosterItem(PurpleBuddy *buddy) {
+	AbstractSpectrumBuddy *s_buddy = (AbstractSpectrumBuddy *) buddy;
+	if (s_buddy)
+		addRosterItem(s_buddy);
 	else
 		Log(std::string(purple_buddy_get_name(buddy)), "This buddy has not set AbstractSpectrumBuddy!!!");
 }
 
 void RosterManager::setRoster(GHashTable *roster) {
+	if (m_roster)
+		g_hash_table_destroy(m_roster);
 	m_roster = roster;
 }
 
 void RosterManager::sendPresence(AbstractSpectrumBuddy *s_buddy, const std::string &resource) {
-	std::string name = s_buddy->getName();
-
 	Tag *tag = s_buddy->generatePresenceStanza(m_user->getFeatures());
 	if (tag) {
 		tag->addAttribute("to", m_user->jid() + std::string(resource.empty() ? "" : "/" + resource));
@@ -145,13 +151,15 @@ void RosterManager::sendPresence(AbstractSpectrumBuddy *s_buddy, const std::stri
 void RosterManager::sendPresence(const std::string &name, const std::string &resource) {
 	AbstractSpectrumBuddy *s_buddy = getRosterItem(name);
 	if (s_buddy) {
-		sendPresence(s_buddy);
+		sendPresence(s_buddy, resource);
 	}
 	else {
+		std::string n(name);
+		std::for_each( n.begin(), n.end(), replaceBadJidCharacters() );
 		Log(m_user->jid(), "answering to probe presence with unavailable presence");
 		Tag *tag = new Tag("presence");
 		tag->addAttribute("to", m_user->jid() + std::string(resource.empty() ? "" : "/" + resource));
-		tag->addAttribute("from", s_buddy->getJid());
+		tag->addAttribute("from", n + "@" + Transport::instance()->jid());
 		tag->addAttribute("type", "unavailable");
 		Transport::instance()->send(tag);
 	}
@@ -188,17 +196,17 @@ void RosterManager::handleBuddyStatusChanged(PurpleBuddy *buddy, PurpleStatus *s
 }
 
 void RosterManager::handleBuddyRemoved(AbstractSpectrumBuddy *s_buddy) {
-	m_subscribeCache.erase(s_buddy->getSafeName());
+	m_subscribeCache.erase(s_buddy->getName());
 }
 
 void RosterManager::handleBuddyRemoved(PurpleBuddy *buddy) {
 	AbstractSpectrumBuddy *s_buddy = (AbstractSpectrumBuddy *) buddy->node.ui_data;
-	handleBuddyCreated(s_buddy);
+	handleBuddyRemoved(s_buddy);
 }
 
 void RosterManager::handleBuddyCreated(AbstractSpectrumBuddy *s_buddy) {
 	std::string alias = s_buddy->getAlias();
-	std::string name = s_buddy->getSafeName();
+	std::string name = s_buddy->getName();
 	if (name.empty())
 		return;
 
@@ -208,21 +216,6 @@ void RosterManager::handleBuddyCreated(AbstractSpectrumBuddy *s_buddy) {
 		m_syncTimer->start();
 		Log(m_user->jid(), "Not in roster => adding to subscribe cache");
 		m_subscribeCache[name] = s_buddy;
-// 		if (m_user->findResourceWithFeature(GLOOX_FEATURE_ROSTERX)) {
-// 			Log(m_jid, "Not in roster => sending rosterx");
-// 			m_subscribeCache[name] = s_buddy;
-// 		}
-// 		else {
-// 			Log(m_jid, "Not in roster => sending subscribe");
-// 			Tag *tag = new Tag("presence");
-// 			tag->addAttribute("type", "subscribe");
-// 			tag->addAttribute("from", s_buddy->getJid());
-// 			tag->addAttribute("to", m_jid);
-// 			Tag *nick = new Tag("nick", alias);
-// 			nick->addAttribute("xmlns","http://jabber.org/protocol/nick");
-// 			tag->addChild(nick);
-// 			p->j->send(tag);
-// 		}
 	}
 }
 
@@ -261,7 +254,7 @@ void RosterManager::sendNewBuddies() {
 			std::string jid = s_buddy->getBareJid();
 			std::string alias = s_buddy->getAlias();
 
-			addRosterItem(s_buddy->getBuddy());
+			addRosterItem(s_buddy);
 
 			item = new Tag("item");
 			item->addAttribute("action", "add");
@@ -284,13 +277,13 @@ void RosterManager::sendNewBuddies() {
 			Tag *tag = new Tag("presence");
 			tag->addAttribute("type", "subscribe");
 			tag->addAttribute("from", s_buddy->getJid());
-			tag->addAttribute("to", Transport::instance()->jid());
+			tag->addAttribute("to", m_user->jid());
 			Tag *nick = new Tag("nick", alias);
 			nick->addAttribute("xmlns","http://jabber.org/protocol/nick");
 			tag->addChild(nick);
 			Transport::instance()->send(tag);
 
-			addRosterItem(s_buddy->getBuddy());
+			addRosterItem(s_buddy);
 			it++;
 		}
 	}

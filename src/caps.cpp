@@ -24,6 +24,7 @@
 #include "main.h"
 #include "sql.h"
 #include "usermanager.h"
+#include "user.h"
 #include "protocols/abstractprotocol.h"
 
 GlooxDiscoHandler::GlooxDiscoHandler(GlooxMessageHandler *parent) : DiscoHandler(){

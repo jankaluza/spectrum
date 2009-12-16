@@ -32,6 +32,7 @@
 class RosterManager;
 #include "rostermanager.h"
 #include "rosterstorage.h"
+#include "spectrummessagehandler.h"
 
 class GlooxMessageHandler;
 class FiletransferRepeater;
@@ -68,14 +69,9 @@ struct subscribeContact {
 	std::string	group;
 };
 
-struct Conversation {
-	PurpleConversation *conv;
-	std::string resource;
-};
-
 class User;
 
-class User : public AbstractUser, public RosterManager, public RosterStorage {
+class User : public AbstractUser, public RosterManager, public RosterStorage, public SpectrumMessageHandler {
 	public:
 		User(GlooxMessageHandler *parent, JID jid, const std::string &username, const std::string &password, const std::string &userKey, long id);
 		~User();
@@ -83,28 +79,17 @@ class User : public AbstractUser, public RosterManager, public RosterStorage {
 		void connect();
 		bool hasTransportFeature(int feature); // TODO: move me to p->hasTransportFeature and rewrite my API
 
-		// Utils
-		bool isOpenedConversation(const std::string &name);
-
 		// Libpurple stuff
 		void purpleReauthorizeBuddy(PurpleBuddy *buddy);
 
 		// Gloox callbacks
 		void receivedPresence(const Presence &presence);
 		void receivedSubscription(const Subscription &subscription);
-		void receivedMessage(const Message& msg);
 		void receivedChatState(const std::string &uin, const std::string &state);
 
 		// Libpurple callbacks
 		void purpleBuddyRemoved(PurpleBuddy *buddy);
 		void purpleBuddyCreated(PurpleBuddy *buddy);
-		void purpleMessageReceived(PurpleAccount* account,char * name,char *msg,PurpleConversation *conv,PurpleMessageFlags flags);
-		void purpleConversationWriteIM(PurpleConversation *conv, const char *who, const char *msg, PurpleMessageFlags flags, time_t mtime);
-		void purpleConversationWriteChat(PurpleConversation *conv, const char *who, const char *msg, PurpleMessageFlags flags, time_t mtime);
-		void purpleChatTopicChanged(PurpleConversation *conv, const char *who, const char *topic);
-		void purpleChatRenameUser(PurpleConversation *conv, const char *old_name, const char *new_name, const char *new_alias);
-		void purpleChatRemoveUsers(PurpleConversation *conv, GList *users);
-		void purpleChatAddUsers(PurpleConversation *conv, GList *cbuddies, gboolean new_arrivals);
 		void purpleAuthorizeReceived(PurpleAccount *account,const char *remote_user,const char *id,const char *alias,const char *message,gboolean on_list,PurpleAccountRequestAuthorizationCb authorize_cb,PurpleAccountRequestAuthorizationCb deny_cb,void *user_data);
 		void purpleBuddyTypingStopped(const std::string &uin);
 		void purpleBuddyTyping(const std::string &uin);
@@ -151,21 +136,17 @@ class User : public AbstractUser, public RosterManager, public RosterStorage {
 
 		GlooxMessageHandler *p;
 		const std::string & userKey() { return m_userKey; }
-		void setProtocolData(void *protocolData) { m_protocolData = protocolData; }
-		void *protocolData() { return m_protocolData; }
-		GHashTable *mucs() { return m_mucs; }
-		std::map<std::string,Conversation> conversations() { return m_conversations; }
 		void setFeatures(int f) { m_features = f; }
 		int getFeatures() { return m_features; }
 		long storageId() { return m_userID; }
 		bool loadingBuddiesFromDB() { return m_loadingBuddiesFromDB; }
+		bool isConnectedInRoom(const std::string &room) { return isOpenedConversation(room); }
 
 		guint removeTimer;
 
 	private:
 		std::string m_userKey;
 		PurpleAccount *m_account;	// PurpleAccount to which this user is connected
-		void *m_protocolData;
 		guint m_syncTimer;			// timer used for syncing purple buddy list and roster
 		int m_subscribeLastCount;	// number of buddies which was in subscribeCache in previous iteration of m_syncTimer
 		bool m_vip;					// true if the user is VIP
@@ -181,10 +162,8 @@ class User : public AbstractUser, public RosterManager, public RosterStorage {
 		const char *m_lang;			// xml:lang
 		int m_features;
 		time_t m_connectionStart;	// connection start timestamp
-		GHashTable *m_mucs;			// MUCs
 		GHashTable *m_filetransfers;
 		std::map<std::string,authRequest> m_authRequests;	// list of authorization requests (holds callbacks and user data)
-		std::map<std::string,Conversation> m_conversations; // list of opened conversations
 		GHashTable *m_settings;		// user settings
 		long m_userID;				// userID for Database
 		bool m_loadingBuddiesFromDB;

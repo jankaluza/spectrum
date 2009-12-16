@@ -200,7 +200,7 @@ static gboolean transferFinished(gpointer data) {
 			}
 			Message s(Message::Chat, receive->target(), "Uzivatel Vam poslal soubor '"+basename+"'. Muzete jej stahnout z adresy http://soumar.jabbim.cz/icq/" + basename +" .");
 			s.setFrom(user->jid());
-			user->receivedMessage(s);
+			user->handleMessage(s);
 		}
 	}
 	receive->dispose();

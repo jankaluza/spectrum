@@ -23,6 +23,8 @@
 #include <iostream>
 #include <string>
 #include "gloox/tag.h"
+#include "parser.h"
+#include "protocols/abstractprotocol.h"
 
 #include "abstractbackend.h"
 
@@ -54,6 +56,8 @@ class Transport {
 		int getFeatures(const std::string &ver);
 		std::list <Tag *> &getTags() { return m_tags; }
 		void clearTags() { m_tags.clear(); }
+		GlooxParser *parser();
+		AbstractProtocol *protocol();
 		
 		
 		

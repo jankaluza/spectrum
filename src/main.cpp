@@ -492,7 +492,6 @@ static void buddyListNewNode(PurpleBlistNode *node) {
 	if (!PURPLE_BLIST_NODE_IS_BUDDY(node))
 		return;
 	PurpleBuddy *buddy = (PurpleBuddy *) node;
-	buddy->node.ui_data = NULL;
 	GlooxMessageHandler::instance()->purpleBuddyCreated(buddy);
 }
 
@@ -1430,7 +1429,7 @@ void GlooxMessageHandler::purpleMessageReceived(PurpleAccount* account, char * n
 	User *user = (User *) userManager()->getUserByAccount(account);
 	if (user) {
 		if (user->isConnected()) {
-			user->purpleMessageReceived(account,name,msg,conv,flags);
+			user->handlePurpleMessage(account,name,msg,conv,flags);
 		}
 		else {
 			Log(user->jid(),"purpleMessageReceived called for unconnected user..."  << msg);
@@ -1449,7 +1448,7 @@ void GlooxMessageHandler::purpleConversationWriteIM(PurpleConversation *conv, co
 	if (user) {
 		if (user->isConnected()) {
 			m_stats->messageFromLegacy();
-			user->purpleConversationWriteIM(conv, who, message, flags, mtime);
+			user->handleWriteIM(conv, who, message, flags, mtime);
 		}
 		else {
 			Log(user->jid(), "purpleConversationWriteIM called for unconnected user..." << message);
@@ -1491,7 +1490,7 @@ void GlooxMessageHandler::purpleConversationWriteChat(PurpleConversation *conv, 
 	if (user) {
 		if (user->isConnected()) {
 			m_stats->messageFromLegacy();
-			user->purpleConversationWriteChat(conv, who, message, flags, mtime);
+			user->handleWriteChat(conv, who, message, flags, mtime);
 		}
 		else {
 			Log(user->jid(), "purpleConversationWriteIM called for unconnected user...");
@@ -1880,7 +1879,7 @@ void GlooxMessageHandler::handleMessage (const Message &msg, MessageSession *ses
 			}
 			if (msgTag->findChild("body") != NULL) {
 				m_stats->messageFromJabber();
-				user->receivedMessage(msg);
+				user->handleMessage(msg);
 			}
 			else {
 				// handle activity; TODO: move me to another function or better file

@@ -28,6 +28,7 @@
 #include "usermanager.h"
 #include "accountcollector.h"
 #include "protocols/abstractprotocol.h"
+#include "user.h"
 
 GlooxRegisterHandler::GlooxRegisterHandler(GlooxMessageHandler *parent) : IqHandler(){
 	p=parent;
