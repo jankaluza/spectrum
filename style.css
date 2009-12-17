@@ -53,6 +53,8 @@ h1, h2 { font-size: 2.8em; line-height: 1.4286em; letter-spacing: -1px; color: #
 	
 	h2 a:hover { color: #000; }
 	
+	h1 { border-bottom: 0.10714em double #ccc; }
+	
 	.page h1 { margin: 0 0 0.6071em 0; border-bottom: 0.10714em double #ccc; }
 	
 	.archive h1 { font-size: 2.4em; line-height: 1.66667em; margin: 0 0 1.66667em 0; color: #000; }
