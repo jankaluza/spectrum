@@ -22,12 +22,16 @@ find_package(libpoco REQUIRED)
 set(cppunit_DIR "${CMAKE_SOURCE_DIR}/cmake_modules")
 find_package(cppunit)
 
-FIND_LIBRARY(INTL_LIBRARY NAMES intl)
+#
+# find the needed parts for gettext and friends
+#
+include(FindGettext)
+find_library(INTL_LIBRARY NAMES intl)
 find_path(INTL_INCLUDE_DIR NAMES libintl.h)
 
 if(INTL_LIBRARY AND INTL_INCLUDE_DIR)
-	include_directories(${INTL_INCLUDE_DIR})
-	message(STATUS "libintl found: " ${INTL_LIBRARY})
+    include_directories(${INTL_INCLUDE_DIR})
+    message(STATUS "libintl found: " ${INTL_LIBRARY} " " ${INTL_INCLUDE_DIR})
 else(INTL_LIBRARY AND INTL_INCLUDE_DIR)
 	message(FATAL_ERROR "no libintl")
 endif(INTL_LIBRARY AND INTL_INCLUDE_DIR)
@@ -172,9 +176,9 @@ set(spectrum_MOC_HDRS
 add_executable(spectrum ${spectrum_SRCS} ${lrelease_outputs})
 
 if(DEFINED WITH_STATIC_GLOOX)
-	target_link_libraries(spectrum ${WITH_STATIC_GLOOX} -lgnutls ${PURPLE_LIBRARY} ${GLIB2_LIBRARIES} ${LIBPOCO_LIBRARIES} -export-dynamic)
+	target_link_libraries(spectrum ${WITH_STATIC_GLOOX} -lgnutls ${PURPLE_LIBRARY} ${GLIB2_LIBRARIES} ${LIBPOCO_LIBRARIES} ${INTL_LIBRARY} -export-dynamic)
 else(DEFINED WITH_STATIC_GLOOX)
-	target_link_libraries(spectrum ${GLOOX_LIBRARIES} ${PURPLE_LIBRARY} ${GLIB2_LIBRARIES} ${LIBPOCO_LIBRARIES} -export-dynamic)
+	target_link_libraries(spectrum ${GLOOX_LIBRARIES} ${PURPLE_LIBRARY} ${GLIB2_LIBRARIES} ${LIBPOCO_LIBRARIES} ${INTL_LIBRARY} -export-dynamic)
 endif(DEFINED WITH_STATIC_GLOOX)
 
 message(STATUS "Transport will be installed into: " ${CMAKE_INSTALL_PREFIX})
@@ -249,9 +253,9 @@ add_executable(spectrum_tests ${spectrum_tests_SRCS} ${lrelease_outputs})
 set_target_properties(spectrum_tests PROPERTIES COMPILE_FLAGS -DTESTS)
 
 if(DEFINED WITH_STATIC_GLOOX)
-	target_link_libraries(spectrum_tests ${WITH_STATIC_GLOOX} -lgnutls ${PURPLE_LIBRARY} ${CPPUNIT_LIBRARY} ${GLIB2_LIBRARIES} ${GETTEXTPO_LIBRARY} ${LIBPOCO_LIBRARIES} -export-dynamic)
+	target_link_libraries(spectrum_tests ${WITH_STATIC_GLOOX} -lgnutls ${PURPLE_LIBRARY} ${CPPUNIT_LIBRARY} ${GLIB2_LIBRARIES} ${GETTEXTPO_LIBRARY} ${LIBPOCO_LIBRARIES} ${INTL_LIBRARY} -export-dynamic)
 else(DEFINED WITH_STATIC_GLOOX)
-	target_link_libraries(spectrum_tests ${GLOOX_LIBRARIES} ${PURPLE_LIBRARY} ${CPPUNIT_LIBRARY} ${GLIB2_LIBRARIES} ${GETTEXTPO_LIBRARY} ${LIBPOCO_LIBRARIES} -export-dynamic)
+	target_link_libraries(spectrum_tests ${GLOOX_LIBRARIES} ${PURPLE_LIBRARY} ${CPPUNIT_LIBRARY} ${GLIB2_LIBRARIES} ${GETTEXTPO_LIBRARY} ${LIBPOCO_LIBRARIES} ${INTL_LIBRARY} -export-dynamic)
 endif(DEFINED WITH_STATIC_GLOOX)
 
 
