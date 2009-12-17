@@ -2,8 +2,6 @@
 layout: default
 title: Building from source code
 ---
-
-# Building from source code
   
 Before building Spectrum from source code, you need to install the following dependencies:
 
@@ -22,15 +20,12 @@ For SpectrumCtl (script for easier starting/stopping Spectrum instances), you ha
 
 Once you have these dependencies installed, you can get Spectrum’s source code:
 
-``
-git clone git://github.com/hanzz/spectrum.git
-``
+	git clone git://github.com/hanzz/spectrum.git
 
 After you have downloaded the source code, you can build Spectrum:
 
-``
-cd spectrum
-cmake .
-make
-sudo make install
-``
+
+	cd spectrum
+	cmake .
+	make
+	sudo make install
