@@ -50,6 +50,9 @@ class TestingBackend : public AbstractBackend {
 		}
 
 		std::map <std::string, Buddy> &getBuddies() { return m_buddies; }
+		void reset() {
+			m_buddies.clear();
+		}
 
 	private:
 		std::map <std::string, Buddy> m_buddies;

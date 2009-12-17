@@ -13,7 +13,8 @@ class RosterStorage;
 class RosterStorageTest : public CPPUNIT_NS :: TestFixture
 {
 	CPPUNIT_TEST_SUITE (RosterStorageTest);
-	CPPUNIT_TEST (addRoster);
+	CPPUNIT_TEST (storeBuddies);
+	CPPUNIT_TEST (storeBuddiesRemove);
 	CPPUNIT_TEST_SUITE_END ();
 
 	public:
@@ -21,7 +22,8 @@ class RosterStorageTest : public CPPUNIT_NS :: TestFixture
 		void tearDown (void);
 
 	protected:
-		void addRoster();
+		void storeBuddies();
+		void storeBuddiesRemove();
 
 	private:
 		SpectrumBuddyTest *m_buddy1;

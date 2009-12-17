@@ -23,9 +23,12 @@ void RosterStorageTest::tearDown (void) {
 	delete m_buddy2;
 	delete m_storage;
 	delete m_user;
+	
+	TestingBackend *backend = (TestingBackend *) Transport::instance()->sql();
+	backend->reset();
 }
 
-void RosterStorageTest::addRoster() {
+void RosterStorageTest::storeBuddies() {
  	m_storage->storeBuddy(m_buddy1);
 	m_storage->storeBuddy(m_buddy2);
 
@@ -35,6 +38,21 @@ void RosterStorageTest::addRoster() {
 	std::map <std::string, Buddy> buddies = backend->getBuddies();
 
 	CPPUNIT_ASSERT (buddies.find("user1@example.com") != buddies.end());
+	CPPUNIT_ASSERT (buddies.find("user2@example.com") != buddies.end());
+
+}
+
+void RosterStorageTest::storeBuddiesRemove() {
+ 	m_storage->storeBuddy(m_buddy1);
+	m_storage->removeBuddy(m_buddy1);
+	m_storage->storeBuddy(m_buddy2);
+
+	CPPUNIT_ASSERT (m_storage->storeBuddies());
+
+	TestingBackend *backend = (TestingBackend *) Transport::instance()->sql();
+	std::map <std::string, Buddy> buddies = backend->getBuddies();
+
+	CPPUNIT_ASSERT (buddies.find("user1@example.com") == buddies.end());
 	CPPUNIT_ASSERT (buddies.find("user2@example.com") != buddies.end());
 
 }
