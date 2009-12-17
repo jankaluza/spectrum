@@ -1,6 +1,9 @@
 ---
 layout: default
-title: Spectrum Documentation
+title: Documentation
 ---
 
-# test #
+# Documentation
+
+## Installation
+[Building from source code – platform independent](building-from-source-code)
