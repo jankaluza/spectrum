@@ -4,6 +4,6 @@ title: Documentation
 ---
 
 # Documentation
-
-## Installation
-[Building from source code – platform independent](building-from-source-code)
+  
+### Installation
+[Building from source code](building-from-source-code) – platform independent
