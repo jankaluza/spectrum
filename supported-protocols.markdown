@@ -1,3 +1,8 @@
+---
+layout: default
+title: Supported protocols
+---
+
 This is the list of currently supported protocols and supported features:
 
 ? - The feature should be supported, but we don't have any volunteer to test it, so if you are using transport for this network and you want to help us, please contact us.
