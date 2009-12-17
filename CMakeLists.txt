@@ -216,6 +216,7 @@ include_directories(${CPPUNIT_INCLUDE_DIR})
 set(spectrum_tests_SRCS
 	src/tests/main.cpp
 	src/tests/spectrumbuddytest.cpp
+	src/tests/resourcemanagertest.cpp
 	src/tests/rostermanagertest.cpp
 	src/tests/rosterstoragetest.cpp
 	src/tests/testingbackend.cpp
@@ -235,6 +236,7 @@ set(spectrum_tests_SRCS
 
 set(spectrum_tests_MOC_HDRS
 	src/tests/spectrumbuddytest.h
+	src/tests/resourcemanagertest.h
 	src/tests/rostermanagertest.h
 	src/tests/rosterstoragetest.h
 	src/tests/testingbackend.h

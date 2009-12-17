@@ -37,6 +37,8 @@ void ResourceManager::setResource(const std::string &resource, int priority, int
 	if (caps != -1)
 		m_resources[resource].caps = caps;
 	m_resources[resource].name = resource;
+
+	setActiveResource();
 }
 
 void ResourceManager::setResource(const Presence &stanza) {
@@ -48,15 +50,19 @@ void ResourceManager::setResource(const Presence &stanza) {
 	if (c != NULL) {
 		m_resources[resource].caps = Transport::instance()->getFeatures(c->findAttribute("ver"));
 	}
-	if (m_resources[resource].priority > m_resources[m_resource].priority)
-		m_resource = resource;
+	setActiveResource();
 	delete stanzaTag;
 }
 
 void ResourceManager::setActiveResource(const std::string &resource) {
 	if (resource.empty()) {
-		std::map <std::string, Resource>::iterator iter = m_resources.begin();
-		m_resource = (*iter).first;
+		int highest = -256;
+		for (std::map <std::string, Resource>::iterator iter = m_resources.begin(); iter != m_resources.end(); iter++) {
+			if ((*iter).second.priority > highest) {
+				highest = (*iter).second.priority;
+				m_resource = (*iter).first;
+			}
+		}
 	}
 	else
 		m_resource = resource;
@@ -94,4 +100,5 @@ const std::map <std::string, Resource> &ResourceManager::getResources() {
 
 void ResourceManager::removeResource(const std::string &resource) {
 	m_resources.erase(resource);
+	setActiveResource();
 }
