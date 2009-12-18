@@ -248,6 +248,19 @@ bool SpectrumMessageHandler::hasOpenedMUC() {
 	return m_mucs != 0;
 }
 
+void SpectrumMessageHandler::handleChatState(const std::string &uin, const std::string &state) {
+	if (!m_user->hasFeature(GLOOX_FEATURE_CHATSTATES) || !m_user->hasTransportFeature(TRANSPORT_FEATURE_TYPING_NOTIFY))
+		return;
+	Log(m_user->jid(), "Sending " << state << " message to " << uin);
+	if (state == "composing")
+		serv_send_typing(purple_account_get_connection(m_user->account()),uin.c_str(),PURPLE_TYPING);
+	else if (state == "paused")
+		serv_send_typing(purple_account_get_connection(m_user->account()),uin.c_str(),PURPLE_TYPED);
+	else
+		serv_send_typing(purple_account_get_connection(m_user->account()),uin.c_str(),PURPLE_NOT_TYPING);
+}
+
+
 std::string SpectrumMessageHandler::getConversationName(PurpleConversation *conv) {
 	std::string name(purple_conversation_get_name(conv));
 	if (purple_conversation_get_type(conv) == PURPLE_CONV_TYPE_IM) {

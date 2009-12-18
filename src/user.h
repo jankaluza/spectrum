@@ -63,33 +63,26 @@ struct authRequest {
 	void *user_data;
 };
 
-struct subscribeContact {
-	std::string uin;
-	std::string alias;
-	std::string	group;
-};
-
 class User;
 
+// Representation of XMPP User
 class User : public AbstractUser, public RosterManager, public RosterStorage, public SpectrumMessageHandler {
 	public:
 		User(GlooxMessageHandler *parent, JID jid, const std::string &username, const std::string &password, const std::string &userKey, long id);
 		~User();
 
+		// Connects the user to legacy network.
 		void connect();
-		bool hasTransportFeature(int feature); // TODO: move me to p->hasTransportFeature and rewrite my API
 
-		// Libpurple stuff
-		void purpleReauthorizeBuddy(PurpleBuddy *buddy);
+		// Returns true if user has this TransportFeature.
+		bool hasTransportFeature(int feature);
 
-		// Gloox callbacks
+		// Handles received presence.
 		void receivedPresence(const Presence &presence);
-		void receivedSubscription(const Subscription &subscription);
-		void receivedChatState(const std::string &uin, const std::string &state);
 
-		// Libpurple callbacks
-		void purpleBuddyRemoved(PurpleBuddy *buddy);
-		void purpleBuddyCreated(PurpleBuddy *buddy);
+		// Handles subscription.
+		void receivedSubscription(const Subscription &subscription);
+
 		void purpleAuthorizeReceived(PurpleAccount *account,const char *remote_user,const char *id,const char *alias,const char *message,gboolean on_list,PurpleAccountRequestAuthorizationCb authorize_cb,PurpleAccountRequestAuthorizationCb deny_cb,void *user_data);
 		void purpleBuddyTypingStopped(const std::string &uin);
 		void purpleBuddyTyping(const std::string &uin);

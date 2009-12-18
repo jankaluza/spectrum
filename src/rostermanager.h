@@ -56,7 +56,10 @@ class RosterManager {
 		// Adds new buddy to roster.
 		void addRosterItem(AbstractSpectrumBuddy *s_buddy);
 		void addRosterItem(PurpleBuddy *buddy);
-		
+
+		// Loads buddies from storage.
+		void loadRoster();
+
 		// Sets roster. RosterManager will free it by itself.
 		void setRoster(GHashTable *roster);
 		
@@ -84,6 +87,7 @@ class RosterManager {
 
 		// Called when buddy is created.
 		void handleBuddyCreated(AbstractSpectrumBuddy *s_buddy);
+		void handleBuddyCreated(PurpleBuddy *buddy);
 
 		// Called when buddy is removed
 		void handleBuddyRemoved(AbstractSpectrumBuddy *buddy);
@@ -105,6 +109,7 @@ class RosterManager {
 		SpectrumTimer *m_syncTimer;
 		std::map <std::string, AbstractSpectrumBuddy *> m_subscribeCache;
 		int m_subscribeLastCount;
+		bool m_loadingFromDB;
 
 };
 

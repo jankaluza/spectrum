@@ -66,6 +66,9 @@ class SpectrumMessageHandler {
 		// Handles messages from Jabber side.
 		void handleMessage(const Message& msg);
 
+		// Handles chatstate notification from Jabber side.
+		void handleChatState(const std::string &uin, const std::string &chatstate);
+
 		// Called by libpurple when there is new IM message to be written to Conversation.
 		void handleWriteIM(PurpleConversation *conv, const char *who, const char *msg, PurpleMessageFlags flags, time_t mtime);
 

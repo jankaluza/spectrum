@@ -123,55 +123,6 @@ void User::removeAuthRequest(const std::string &name) {
 	m_authRequests.erase(name);
 }
 
-void User::purpleReauthorizeBuddy(PurpleBuddy *buddy) {
-	if (!m_connected)
-		return;
-	if (!buddy)
-		return;
-	if (!m_account)
-		return;
-	GList *l, *ll;
-	std::string name(purple_buddy_get_name(buddy));
-	std::for_each( name.begin(), name.end(), replaceBadJidCharacters() );
-	if (purple_account_get_connection(m_account)) {
-		PurplePluginProtocolInfo *prpl_info = PURPLE_PLUGIN_PROTOCOL_INFO(purple_account_get_connection(m_account)->prpl);
-		if (prpl_info && prpl_info->blist_node_menu) {
-			for (l = ll = prpl_info->blist_node_menu((PurpleBlistNode*)buddy); l; l = l->next) {
-				if (l->data) {
-					PurpleMenuAction *act = (PurpleMenuAction *) l->data;
-					if (act->label) {
-						Log(m_jid, (std::string)act->label);
-						if ((std::string) act->label == "Re-request Authorization") {
-							Log(m_jid, "rerequesting authorization for " << name);
-							((GSourceFunc) act->callback) (act->data);
-							break;
-						}
-					}
-					purple_menu_action_free(act);
-				}
-			}
-			g_list_free(ll);
-		}
-	}
-}
-
-/*
- * Called when PurpleBuddy is removed.
- */
-void User::purpleBuddyRemoved(PurpleBuddy *buddy) {
-	handleBuddyRemoved(buddy);
-	removeBuddy(buddy);
-}
-
-void User::purpleBuddyCreated(PurpleBuddy *buddy) {
-	if (buddy==NULL || m_loadingBuddiesFromDB)
-		return;
-	buddy->node.ui_data = (void *) new SpectrumBuddy(-1, buddy);
-	SpectrumBuddy *s_buddy = (SpectrumBuddy *) buddy->node.ui_data;
-
-	handleBuddyCreated(s_buddy);
-}
-
 PurpleValue * User::getSetting(const char *key) {
 	PurpleValue *value = (PurpleValue *) g_hash_table_lookup(m_settings, key);
 	return value;
@@ -242,21 +193,6 @@ void User::purpleBuddyTyping(const std::string &uin){
 }
 
 /*
- * Received Chatstate notification from jabber user :).
- */
-void User::receivedChatState(const std::string &uin,const std::string &state){
-	if (!hasFeature(GLOOX_FEATURE_CHATSTATES) || !hasTransportFeature(TRANSPORT_FEATURE_TYPING_NOTIFY))
-		return;
-	Log(m_jid, "Sending " << state << " message to " << uin);
-	if (state == "composing")
-		serv_send_typing(purple_account_get_connection(m_account),uin.c_str(),PURPLE_TYPING);
-	else if (state == "paused")
-		serv_send_typing(purple_account_get_connection(m_account),uin.c_str(),PURPLE_TYPED);
-	else
-		serv_send_typing(purple_account_get_connection(m_account),uin.c_str(),PURPLE_NOT_TYPING);
-}
-
-/*
  * Somebody wants to authorize us from the legacy network.
  */
 void User::purpleAuthorizeReceived(PurpleAccount *account,const char *remote_user,const char *id,const char *alias,const char *message,gboolean on_list,PurpleAccountRequestAuthorizationCb authorize_cb,PurpleAccountRequestAuthorizationCb deny_cb,void *user_data){
@@ -309,7 +245,7 @@ void User::connect() {
 	m_account->ui_data = this;
 
 	m_loadingBuddiesFromDB = true;
-	setRoster(GlooxMessageHandler::instance()->sql()->getBuddies(storageId(), account()));
+	loadRoster();
 	m_loadingBuddiesFromDB = false;
 
 	m_connectionStart = time(NULL);
@@ -397,19 +333,11 @@ void User::receivedSubscription(const Subscription &subscription) {
 					}
 				}
 			}
-			// it can be reauthorization...
-			if (buddy) {
-				purpleReauthorizeBuddy(buddy);
-			}
 			return;
 		}
 		else if (subscription.subtype() == Subscription::Subscribe) {
 			std::string name(subscription.to().username());
 			std::for_each( name.begin(), name.end(), replaceJidCharacters() );
-			PurpleBuddy *b = purple_find_buddy(m_account, name.c_str());
-			if (b) {
-				purpleReauthorizeBuddy(b);
-			}
 			if (isInRoster(subscription.to().username(), "")) {
 				SpectrumBuddy *s_buddy = (SpectrumBuddy *) getRosterItem(subscription.to().username());
 				if (s_buddy->getSubscription() == "ask") {

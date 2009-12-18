@@ -27,6 +27,10 @@
 #include "spectrumtimer.h"
 #include "transport.h"
 
+#ifndef TESTS
+#include "spectrumbuddy.h"
+#endif
+
 struct SendPresenceToAllData {
 	int features;
 	std::string to;
@@ -72,6 +76,7 @@ RosterManager::RosterManager(AbstractUser *user) {
 	m_syncTimer = new SpectrumTimer(12000, &sync_cb, this);
 	m_subscribeLastCount = -1;
 	m_roster = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
+	m_loadingFromDB = false;
 }
 
 RosterManager::~RosterManager() {
@@ -138,6 +143,12 @@ void RosterManager::setRoster(GHashTable *roster) {
 	if (m_roster)
 		g_hash_table_destroy(m_roster);
 	m_roster = roster;
+}
+
+void RosterManager::loadRoster() {
+	m_loadingFromDB = true;
+	setRoster(Transport::instance()->sql()->getBuddies(m_user->storageId(), m_user->account()));
+	m_loadingFromDB = false;
 }
 
 void RosterManager::sendPresence(AbstractSpectrumBuddy *s_buddy, const std::string &resource) {
@@ -218,6 +229,17 @@ void RosterManager::handleBuddyCreated(AbstractSpectrumBuddy *s_buddy) {
 		m_subscribeCache[name] = s_buddy;
 	}
 }
+
+void RosterManager::handleBuddyCreated(PurpleBuddy *buddy) {
+	if (buddy==NULL || m_loadingFromDB)
+		return;
+#ifndef TESTS
+	buddy->node.ui_data = (void *) new SpectrumBuddy(-1, buddy);
+	SpectrumBuddy *s_buddy = (SpectrumBuddy *) buddy->node.ui_data;
+	handleBuddyCreated(s_buddy);
+#endif
+}
+
 
 bool RosterManager::syncBuddiesCallback() {
 	Log(m_user->jid(), "sync_cb lastCount: " << m_subscribeLastCount << "cacheSize: " << int(m_subscribeCache.size()));

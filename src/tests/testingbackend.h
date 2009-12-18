@@ -49,6 +49,8 @@ class TestingBackend : public AbstractBackend {
 			m_buddies[uin].nickname = nickname;
 			return 1;
 		}
+		
+		GHashTable *getBuddies(long userId, PurpleAccount *account) { return NULL; }
 
 		std::map <std::string, Buddy> &getBuddies() { return m_buddies; }
 		void reset() {
