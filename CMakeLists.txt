@@ -217,6 +217,7 @@ set(spectrum_tests_SRCS
 	src/tests/main.cpp
 	src/tests/spectrumbuddytest.cpp
 	src/tests/spectrumconversationtest.cpp
+	src/tests/spectrummucconversationtest.cpp
 	src/tests/resourcemanagertest.cpp
 	src/tests/rostermanagertest.cpp
 	src/tests/rosterstoragetest.cpp
@@ -233,6 +234,7 @@ set(spectrum_tests_SRCS
 	src/striphtmltags.cpp
 	src/spectrum_util.cpp
 	src/spectrumconversation.cpp
+	src/spectrummucconversation.cpp
 	src/spectrumtimer.cpp
 	src/usermanager.cpp
 	src/log.cpp
@@ -241,6 +243,7 @@ set(spectrum_tests_SRCS
 set(spectrum_tests_MOC_HDRS
 	src/tests/spectrumbuddytest.h
 	src/tests/spectrumconversationtest.h
+	src/tests/spectrummucconversationtest.h
 	src/tests/resourcemanagertest.h
 	src/tests/rostermanagertest.h
 	src/tests/rosterstoragetest.h
@@ -255,6 +258,7 @@ set(spectrum_tests_MOC_HDRS
 	src/striphtmltags.h
 	src/spectrum_util.h
 	src/spectrumconversation.h
+	src/spectrummucconversation.h
 	src/spectrumtimer.h
 	src/transport.h
 )

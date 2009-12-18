@@ -69,7 +69,7 @@ void SpectrumMUCConversation::addUsers(AbstractUser *user, GList *cbuddies) {
 		Tag *item = new Tag("item");
 
 
-		if (flags & PURPLE_CBFLAGS_OP) {
+		if (flags & PURPLE_CBFLAGS_OP || flags & PURPLE_CBFLAGS_HALFOP) {
 			item->addAttribute("affiliation", "admin");
 			item->addAttribute("role", "moderator");
 		}
