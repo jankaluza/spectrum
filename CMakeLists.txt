@@ -216,18 +216,25 @@ include_directories(${CPPUNIT_INCLUDE_DIR})
 set(spectrum_tests_SRCS
 	src/tests/main.cpp
 	src/tests/spectrumbuddytest.cpp
+	src/tests/spectrumconversationtest.cpp
+	src/tests/spectrummucconversationtest.cpp
+	src/tests/resourcemanagertest.cpp
 	src/tests/rostermanagertest.cpp
 	src/tests/rosterstoragetest.cpp
 	src/tests/testingbackend.cpp
 	src/tests/transporttest.cpp
 	src/tests/testinguser.cpp
 	
+	src/abstractconversation.cpp
 	src/abstractspectrumbuddy.cpp
+	src/parser.cpp
 	src/rostermanager.cpp
 	src/rosterstorage.cpp
 	src/resourcemanager.cpp
 	src/striphtmltags.cpp
 	src/spectrum_util.cpp
+	src/spectrumconversation.cpp
+	src/spectrummucconversation.cpp
 	src/spectrumtimer.cpp
 	src/usermanager.cpp
 	src/log.cpp
@@ -235,16 +242,23 @@ set(spectrum_tests_SRCS
 
 set(spectrum_tests_MOC_HDRS
 	src/tests/spectrumbuddytest.h
+	src/tests/spectrumconversationtest.h
+	src/tests/spectrummucconversationtest.h
+	src/tests/resourcemanagertest.h
 	src/tests/rostermanagertest.h
 	src/tests/rosterstoragetest.h
 	src/tests/testingbackend.h
 	src/tests/testinguser.h
 	
+	src/abstractconversation.h
 	src/abstractspectrumbuddy.h
+	src/parser.h
 	src/rostermanager.h
 	src/rosterstorage.h
 	src/striphtmltags.h
 	src/spectrum_util.h
+	src/spectrumconversation.h
+	src/spectrummucconversation.h
 	src/spectrumtimer.h
 	src/transport.h
 )

@@ -1003,8 +1003,10 @@ void GlooxMessageHandler::purpleBuddyRemoved(PurpleBuddy *buddy) {
 	if (buddy != NULL) {
 		PurpleAccount *a = purple_buddy_get_account(buddy);
 		User *user = (User *) userManager()->getUserByAccount(a);
-		if (user != NULL)
-			user->purpleBuddyRemoved(buddy);
+		if (user != NULL) {
+			user->handleBuddyRemoved(buddy);
+			user->removeBuddy(buddy);
+		}
 	}
 }
 
@@ -1012,7 +1014,7 @@ void GlooxMessageHandler::purpleBuddyCreated(PurpleBuddy *buddy) {
 	PurpleAccount *a = purple_buddy_get_account(buddy);
 	User *user = (User *) userManager()->getUserByAccount(a);
 	if (user != NULL)
-		user->purpleBuddyCreated(buddy);
+		user->handleBuddyCreated(buddy);
 }
 
 void GlooxMessageHandler::purpleBuddyStatusChanged(PurpleBuddy *buddy, PurpleStatus *status, PurpleStatus *old_status) {
@@ -1875,7 +1877,7 @@ void GlooxMessageHandler::handleMessage (const Message &msg, MessageSession *ses
 			if (chatstates != NULL) {
 				std::string username = msg.to().username();
 				std::for_each( username.begin(), username.end(), replaceJidCharacters() );
-				user->receivedChatState(username, chatstates->name());
+				user->handleChatState(username, chatstates->name());
 			}
 			if (msgTag->findChild("body") != NULL) {
 				m_stats->messageFromJabber();

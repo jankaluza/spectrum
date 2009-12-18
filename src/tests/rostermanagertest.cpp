@@ -387,3 +387,50 @@ void RosterManagerTest::handleBuddyCreatedSubscribe() {
 	CPPUNIT_ASSERT (m_manager->isInRoster("user2@example.com", ""));
 	
 }
+
+void RosterManagerTest::handleBuddyCreatedRemove() {
+	m_manager->handleBuddyCreated(m_buddy1);
+	CPPUNIT_ASSERT(Transport::instance()->getTags().empty());
+
+	m_manager->syncBuddiesCallback();
+	CPPUNIT_ASSERT(Transport::instance()->getTags().empty());
+
+	m_manager->handleBuddyCreated(m_buddy2);
+
+	m_manager->syncBuddiesCallback();
+	CPPUNIT_ASSERT(Transport::instance()->getTags().empty());
+	
+	m_manager->handleBuddyRemoved(m_buddy1);
+	
+	m_manager->syncBuddiesCallback();
+	CPPUNIT_ASSERT(Transport::instance()->getTags().empty());
+
+	m_manager->syncBuddiesCallback();
+	m_tags = Transport::instance()->getTags();
+
+	CPPUNIT_ASSERT_MESSAGE ("There has to be 1 RIE stanza sent", m_tags.size() == 1);
+
+	Tag *tag = m_tags.front();
+	CPPUNIT_ASSERT (tag->name() == "iq");
+	CPPUNIT_ASSERT (tag->findAttribute("to") == "user@example.com/psi");
+	CPPUNIT_ASSERT (tag->findAttribute("type") == "set");
+	CPPUNIT_ASSERT (tag->findAttribute("from") == "icq.localhost");
+	CPPUNIT_ASSERT (tag->findChild("x") != NULL);
+	CPPUNIT_ASSERT (tag->findChild("x")->findAttribute("xmlns") == "http://jabber.org/protocol/rosterx");
+	CPPUNIT_ASSERT (tag->findChild("x")->children().size() != 0);
+	for (std::list<Tag *>::const_iterator i = tag->findChild("x")->children().begin(); i != tag->findChild("x")->children().end(); i++) {
+		Tag *item = *i;
+		CPPUNIT_ASSERT (item->name() == "item");
+		CPPUNIT_ASSERT (item->findAttribute("jid") == "user2%example.com@icq.localhost");
+		CPPUNIT_ASSERT (item->findAttribute("name") == "Bob");
+		CPPUNIT_ASSERT (item->findChild("group") != NULL);
+		CPPUNIT_ASSERT (item->findChild("group")->cdata() == "Buddies");
+	}
+
+	delete m_tags.front();
+	m_tags.clear();
+	Transport::instance()->clearTags();
+	
+	CPPUNIT_ASSERT (m_manager->isInRoster("user2@example.com", ""));
+	
+}
