@@ -25,6 +25,7 @@
 #include "gloox/tag.h"
 
 #include "../abstractbackend.h"
+#include "../parser.h"
 
 struct Buddy {
 	long id;
@@ -36,7 +37,7 @@ struct Buddy {
 
 class TestingBackend : public AbstractBackend {
 	public:
-		TestingBackend() { m_pInstance = this; }
+		TestingBackend() { m_pInstance = this; m_parser = new GlooxParser(); }
 		~TestingBackend() {}
 		static TestingBackend *instance() { return m_pInstance; }
 		void addBuddySetting(long userId, long buddyId, const std::string &key, const std::string &value, PurpleType type) {} 
@@ -53,10 +54,13 @@ class TestingBackend : public AbstractBackend {
 		void reset() {
 			m_buddies.clear();
 		}
+		
+		GlooxParser *getParser() { return m_parser; }
 
 	private:
 		std::map <std::string, Buddy> m_buddies;
 		static TestingBackend *m_pInstance;
+		GlooxParser *m_parser;
 };
 
 #endif
