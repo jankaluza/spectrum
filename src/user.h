@@ -52,17 +52,6 @@ struct AdhocData {
 	AdhocDataCallerType callerType;
 };
 
-struct authData{
-	PurpleAccount *account;
-	std::string who;
-};
-
-struct authRequest {
-	PurpleAccountRequestAuthorizationCb authorize_cb;
-	PurpleAccountRequestAuthorizationCb deny_cb;
-	void *user_data;
-};
-
 class User;
 
 // Representation of XMPP User
@@ -80,10 +69,6 @@ class User : public AbstractUser, public RosterManager, public RosterStorage, pu
 		// Handles received presence.
 		void receivedPresence(const Presence &presence);
 
-		// Handles subscription.
-		void receivedSubscription(const Subscription &subscription);
-
-		void purpleAuthorizeReceived(PurpleAccount *account,const char *remote_user,const char *id,const char *alias,const char *message,gboolean on_list,PurpleAccountRequestAuthorizationCb authorize_cb,PurpleAccountRequestAuthorizationCb deny_cb,void *user_data);
 		void purpleBuddyTypingStopped(const std::string &uin);
 		void purpleBuddyTyping(const std::string &uin);
 		void connected();
@@ -102,10 +87,6 @@ class User : public AbstractUser, public RosterManager, public RosterStorage, pu
 		// Settings
 		PurpleValue *getSetting(const char *key);
 		void updateSetting(const std::string &key, PurpleValue *value);
-
-		// Authorization requests
-		bool hasAuthRequest(const std::string &name);
-		void removeAuthRequest(const std::string &name);
 
 		// bind IP
 		void setBindIP(const std::string& bindIP) { m_bindIP = bindIP; }
@@ -156,7 +137,6 @@ class User : public AbstractUser, public RosterManager, public RosterStorage, pu
 		int m_features;
 		time_t m_connectionStart;	// connection start timestamp
 		GHashTable *m_filetransfers;
-		std::map<std::string,authRequest> m_authRequests;	// list of authorization requests (holds callbacks and user data)
 		GHashTable *m_settings;		// user settings
 		long m_userID;				// userID for Database
 		bool m_loadingBuddiesFromDB;

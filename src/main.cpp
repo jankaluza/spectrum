@@ -1058,16 +1058,13 @@ void GlooxMessageHandler::signedOn(PurpleConnection *gc, gpointer unused) {
 }
 
 void GlooxMessageHandler::purpleAuthorizeClose(void *data) {
-	authData *d = (authData*) data;
+	authRequest *d = (authRequest *) data;
 	if (!d)
 		return;
 	User *user = (User *) userManager()->getUserByAccount(d->account);
 	if (user != NULL) {
-		Log(user->jid(), "purple wants to close authorizeRequest");
-		if (user->hasAuthRequest(d->who)) {
-			Log(user->jid(), "closing authorizeRequest");
-			user->removeAuthRequest(d->who);
-		}
+		Log(user->jid(), "closing authorizeRequest");
+		user->removeAuthRequest(d->who);
 	}
 	else {
 		Log("purple", "purpleAuthorizationClose called, but user does not exist!!!");
@@ -1080,11 +1077,7 @@ void * GlooxMessageHandler::purpleAuthorizeReceived(PurpleAccount *account, cons
 	User *user = (User *) userManager()->getUserByAccount(account);
 	if (user != NULL) {
 		if (user->isConnected()) {
-			user->purpleAuthorizeReceived(account, remote_user, id, alias, message, on_list, authorize_cb, deny_cb, user_data);
-			authData *data = new authData;
-			data->account = account;
-			data->who.assign(remote_user);
-			return data;
+			return user->handleAuthorizationRequest(account, remote_user, id, alias, message, on_list, authorize_cb, deny_cb, user_data);
 		}
 		else {
 			Log(user->jid(), "purpleAuthorizeReceived called for unconnected user...");
@@ -1571,7 +1564,7 @@ void GlooxMessageHandler::handleSubscription(const Subscription &stanza) {
 		user = (User *) userManager()->getUserByJID(stanza.from().bare());
 	}
 	if (user)
-		user->receivedSubscription(stanza);
+		user->handleSubscription(stanza);
 
 }
 
