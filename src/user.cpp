@@ -178,31 +178,6 @@ void User::purpleBuddyTyping(const std::string &uin){
 }
 
 /*
- * Somebody wants to authorize us from the legacy network.
- */
-void User::purpleAuthorizeReceived(PurpleAccount *account,const char *remote_user,const char *id,const char *alias,const char *message,gboolean on_list,PurpleAccountRequestAuthorizationCb authorize_cb,PurpleAccountRequestAuthorizationCb deny_cb,void *user_data){
-	authRequest req;
-	req.authorize_cb = authorize_cb;
-	req.deny_cb = deny_cb;
-	req.user_data = user_data;
-	m_authRequests[std::string(remote_user)] = req;
-	Log(m_jid, "purpleAuthorizeReceived: " << std::string(remote_user) << "on_list:" << on_list);
-	// send subscribe presence to user
-	Tag *tag = new Tag("presence");
-	tag->addAttribute("type", "subscribe" );
-	tag->addAttribute("from", (std::string) remote_user + "@" + p->jid());
-	tag->addAttribute("to", m_jid);
-
-	if (alias) {
-		Tag *nick = new Tag("nick", (std::string) alias);
-		nick->addAttribute("xmlns","http://jabber.org/protocol/nick");
-		tag->addChild(nick);
-	}
-
-	p->j->send(tag);
-}
-
-/*
  * Called when we're ready to connect (we know caps)
  */
 void User::connect() {
@@ -477,7 +452,6 @@ User::~User(){
 		purple_timeout_remove(m_syncTimer);
 	}
 
-	m_authRequests.clear();
 	g_hash_table_destroy(m_settings);
 	g_hash_table_destroy(m_filetransfers);
 
