@@ -93,8 +93,13 @@ bool RosterManager::isInRoster(const std::string &name, const std::string &subsc
 // 			return true;
 // 	}
 
-	if (g_hash_table_lookup(m_roster, name.c_str()))
-		return true;
+	AbstractSpectrumBuddy *s_buddy = (AbstractSpectrumBuddy *) g_hash_table_lookup(m_roster, name.c_str());
+
+	if (s_buddy) {
+		if (subscription.empty())
+			return true;
+		return subscription == s_buddy->getSubscription();
+	}
 	return false;
 }
 
@@ -276,6 +281,7 @@ void RosterManager::sendNewBuddies() {
 			std::string jid = s_buddy->getBareJid();
 			std::string alias = s_buddy->getAlias();
 
+			s_buddy->setSubscription("ask");
 			addRosterItem(s_buddy);
 
 			item = new Tag("item");
@@ -305,6 +311,7 @@ void RosterManager::sendNewBuddies() {
 			tag->addChild(nick);
 			Transport::instance()->send(tag);
 
+			s_buddy->setSubscription("ask");
 			addRosterItem(s_buddy);
 			it++;
 		}
@@ -324,5 +331,160 @@ void RosterManager::handlePresence(const Presence &stanza) {
 		std::string name(stanza.to().username());
 		std::for_each( name.begin(), name.end(), replaceJidCharacters() );
 		sendPresence(name);
+	}
+}
+
+authRequest *RosterManager::handleAuthorizationRequest(PurpleAccount *account, const char *remote_user, const char *id, const char *alias, const char *message, gboolean on_list, PurpleAccountRequestAuthorizationCb authorize_cb, PurpleAccountRequestAuthorizationCb deny_cb, void *user_data) {
+	std::string name(remote_user);
+	
+	authRequest *req = new authRequest;
+	req->authorize_cb = authorize_cb;
+	req->deny_cb = deny_cb;
+	req->user_data = user_data;
+	req->account = m_user->account();
+	req->who = name;
+	m_authRequests[name] = req;
+
+	Log(m_user->jid(), "purpleAuthorizeReceived: " << name << "on_list:" << on_list);
+	// send subscribe presence to user
+	Tag *tag = new Tag("presence");
+	tag->addAttribute("type", "subscribe" );
+	tag->addAttribute("from", name + "@" + Transport::instance()->jid());
+	tag->addAttribute("to", m_user->jid());
+
+	if (alias) {
+		Tag *nick = new Tag("nick", std::string(alias));
+		nick->addAttribute("xmlns","http://jabber.org/protocol/nick");
+		tag->addChild(nick);
+	}
+
+	Transport::instance()->send(tag);
+	return req;
+}
+
+void RosterManager::removeAuthRequest(const std::string &remote_user) {
+	if (m_authRequests.find(remote_user) == m_authRequests.end())
+		return;
+	delete m_authRequests[remote_user];
+	m_authRequests.erase(remote_user);
+}
+
+bool RosterManager::hasAuthRequest(const std::string &remote_user) {
+	return m_authRequests.find(remote_user) != m_authRequests.end();
+}
+
+void RosterManager::handleSubscription(const Subscription &subscription) {
+	std::string remote_user(subscription.to().username());
+	std::for_each( remote_user.begin(), remote_user.end(), replaceJidCharacters() );
+
+	if (m_user->isConnected()) {
+		if (subscription.subtype() == Subscription::Subscribed) {
+			if (hasAuthRequest(remote_user)) {
+				Log(m_user->jid(), "subscribed presence for authRequest arrived => accepting the request");
+				m_authRequests[remote_user]->authorize_cb(m_authRequests[remote_user]->user_data);
+				removeAuthRequest(remote_user);
+			}
+			PurpleBuddy *buddy = purple_find_buddy(m_user->account(), remote_user.c_str());
+			if (!isInRoster(remote_user, "both")) {
+				if (buddy) {
+					Log(m_user->jid(), "adding this user to local roster and sending presence");
+					if (!isInRoster(subscription.to().username())) {
+						// add user to mysql database and to local cache
+						addRosterItem(buddy);
+						p->sql()->addBuddy(m_userID, (std::string) subscription.to().username(), "both");
+					}
+					else {
+						getRosterItem(subscription.to().username())->setSubscription("both");
+						p->sql()->updateBuddySubscription(m_userID, (std::string) subscription.to().username(), "both");
+					}
+					// user is in ICQ contact list so we can inform jabber user
+					// about status
+					SpectrumBuddy *s_buddy = (SpectrumBuddy *) buddy->node.ui_data;
+					Tag *tag = s_buddy->generatePresenceStanza(m_features);
+					if (tag) {
+						tag->addAttribute("to", m_jid);
+						p->j->send(tag);
+					}
+				} else {
+					Log(m_user->jid(), "user is not in legacy network contact lists => nothing to be subscribed");
+					// this user is not in ICQ contact list... It's nothing to do here,
+					// because there is no user to authorize
+				}
+			}
+			return;
+		}
+		else if (subscription.subtype() == Subscription::Subscribe) {
+			std::string name(subscription.to().username());
+			std::for_each( name.begin(), name.end(), replaceJidCharacters() );
+			if (isInRoster(subscription.to().username(), "")) {
+				SpectrumBuddy *s_buddy = (SpectrumBuddy *) getRosterItem(subscription.to().username());
+				if (s_buddy->getSubscription() == "ask") {
+					Tag *reply = new Tag("presence");
+					reply->addAttribute( "to", subscription.from().bare() );
+					reply->addAttribute( "from", subscription.to().bare() );
+					reply->addAttribute( "type", "subscribe" );
+					p->j->send( reply );
+				}
+				Log(m_jid, "subscribe presence; user is already in roster => sending subscribed");
+				// username is in local roster (he/her is in ICQ roster too),
+				// so we should send subscribed presence
+				Tag *reply = new Tag("presence");
+				reply->addAttribute( "to", subscription.from().bare() );
+				reply->addAttribute( "from", subscription.to().bare() );
+				reply->addAttribute( "type", "subscribed" );
+				p->j->send( reply );
+			}
+			else {
+				Log(m_jid, "subscribe presence; user is not in roster => adding to legacy network");
+				// this user is not in local roster, so we have to send add_buddy request
+				// to our legacy network and wait for response
+				std::string name(subscription.to().username());
+				std::for_each( name.begin(), name.end(), replaceJidCharacters() );
+				PurpleBuddy *buddy = purple_buddy_new(m_account, name.c_str(), name.c_str());
+				purple_blist_add_buddy(buddy, NULL, NULL ,NULL);
+				purple_account_add_buddy(m_account, buddy);
+			}
+			return;
+		} else if(subscription.subtype() == Subscription::Unsubscribe || subscription.subtype() == Subscription::Unsubscribed) {
+			std::string name(subscription.to().username());
+			std::for_each( name.begin(), name.end(), replaceJidCharacters() );
+			PurpleBuddy *buddy = purple_find_buddy(m_account, name.c_str());
+			if (subscription.subtype() == Subscription::Unsubscribed) {
+				// user respond to auth request from legacy network and deny it
+				if (hasAuthRequest((std::string) subscription.to().username())) {
+					Log(m_jid, "unsubscribed presence for authRequest arrived => rejecting the request");
+					m_authRequests[(std::string) subscription.to().username()].deny_cb(m_authRequests[(std::string) subscription.to().username()].user_data);
+					m_authRequests.erase(subscription.to().username());
+					return;
+				}
+			}
+			if (buddy) {
+				Log(m_jid, "unsubscribed presence => removing this contact from legacy network");
+				long id = 0;
+				if (buddy->node.ui_data) {
+					SpectrumBuddy *s_buddy = (SpectrumBuddy *) buddy->node.ui_data;
+					id = s_buddy->getId();
+				}
+				p->sql()->removeBuddy(m_userID, subscription.to().username(), id);
+				// thi contact is in ICQ contact list, so we can remove him/her
+				purple_account_remove_buddy(m_account, buddy, purple_buddy_get_group(buddy));
+				purple_blist_remove_buddy(buddy);
+			} else {
+				// this contact is not in ICQ contact list, so there is nothing to remove...
+			}
+			removeFromLocalRoster(subscription.to().username());
+
+			// inform user about removing this contact
+			Tag *tag = new Tag("presence");
+			tag->addAttribute("to", subscription.from().bare());
+			tag->addAttribute("from", subscription.to().username() + "@" + p->jid() + "/bot");
+			if(subscription.subtype() == Subscription::Unsubscribe) {
+				tag->addAttribute( "type", "unsubscribe" );
+			} else {
+				tag->addAttribute( "type", "unsubscribed" );
+			}
+			p->j->send( tag );
+			return;
+		}
 	}
 }
