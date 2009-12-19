@@ -83,9 +83,9 @@ h4 { font-size: 1.1538em; line-height: 1.3333em; color: #000; }
 	
 	#content_box { width: 72.8em; }
 	
-		#content { width: 46.8em; padding: 0 6em 0 0; float: left; }
+		#content { width: 72.8em; padding: 0 6em 0 0; float: left; }
 		
-		#sidebar { width: 20em; float: left; }
+		#sidebar { width: 0em; float: left; }
 		
 #footer { padding: 1.5em 0; background: #000; border-top: 0.5em solid #a90000; color: #fff; }
 
