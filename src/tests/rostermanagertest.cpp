@@ -19,16 +19,16 @@ void RosterManagerTest::setUp (void) {
 }
 
 void RosterManagerTest::tearDown (void) {
- 	delete m_buddy1;
- 	delete m_buddy2;
- 	delete m_manager;
- 	delete m_user;
-	
- 	while (m_tags.size() != 0) {
- 		Tag *tag = m_tags.front();
- 		m_tags.remove(tag);
- 		delete tag;
- 	}
+	delete m_buddy1;
+	delete m_buddy2;
+	delete m_manager;
+	delete m_user;
+
+	while (m_tags.size() != 0) {
+		Tag *tag = m_tags.front();
+		m_tags.remove(tag);
+		delete tag;
+	}
 	Transport::instance()->clearTags();
 }
 
@@ -433,4 +433,8 @@ void RosterManagerTest::handleBuddyCreatedRemove() {
 	
 	CPPUNIT_ASSERT (m_manager->isInRoster("user2@example.com", ""));
 	
+}
+
+void RosterManagerTest::handleSubscriptionSubscribe() {
+	Subscription s(Subscription::Subscribe, JID("user1%example.com@icq.localhost"));
 }

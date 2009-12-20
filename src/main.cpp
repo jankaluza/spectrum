@@ -1015,6 +1015,8 @@ void GlooxMessageHandler::purpleBuddyCreated(PurpleBuddy *buddy) {
 	User *user = (User *) userManager()->getUserByAccount(a);
 	if (user != NULL)
 		user->handleBuddyCreated(buddy);
+	else
+		buddy->node.ui_data = (void *) new SpectrumBuddy(-1, buddy);
 }
 
 void GlooxMessageHandler::purpleBuddyStatusChanged(PurpleBuddy *buddy, PurpleStatus *status, PurpleStatus *old_status) {
