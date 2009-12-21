@@ -26,6 +26,7 @@
 #include "glib.h"
 #include "purple.h"
 #include "account.h"
+#include "configfile.h"
 
 class GlooxMessageHandler;
 

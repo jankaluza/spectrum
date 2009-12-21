@@ -29,13 +29,17 @@ Configuration DummyConfiguration;
 
 ConfigFile::ConfigFile(const std::string &config) {
 
-	int flags;
 	m_loaded = true;
 	m_jid = "";
 	m_protocol = "";
 
 	keyfile = g_key_file_new ();
-	flags = G_KEY_FILE_KEEP_COMMENTS | G_KEY_FILE_KEEP_TRANSLATIONS;
+	if (!config.empty())
+		loadFromFile(config);
+}
+
+void ConfigFile::loadFromFile(const std::string &config) {
+	int flags = G_KEY_FILE_KEEP_COMMENTS | G_KEY_FILE_KEEP_TRANSLATIONS;
 
 	if (!g_key_file_load_from_file (keyfile, config.c_str(), (GKeyFileFlags)flags, NULL)) {
 		if (!g_key_file_load_from_file (keyfile, std::string("/etc/spectrum/" + config + ".cfg").c_str(), (GKeyFileFlags)flags, NULL))
@@ -44,6 +48,15 @@ ConfigFile::ConfigFile(const std::string &config) {
 			Log("loadConfigFile", std::string("/etc/spectrum/" + config + ".cfg") << " or ./" << config);
 			m_loaded = false;
 		}
+	}
+}
+
+void ConfigFile::loadFromData(const std::string &data) {
+	int flags = G_KEY_FILE_KEEP_COMMENTS | G_KEY_FILE_KEEP_TRANSLATIONS;
+
+	if (!g_key_file_load_from_data (keyfile, data.c_str(), (int) data.size(), (GKeyFileFlags) flags, NULL)) {
+		Log("loadConfigFile", "Bad data");
+		m_loaded = false;
 	}
 }
 
@@ -69,8 +82,16 @@ bool ConfigFile::loadString(std::string &variable, const std::string &section, c
 }
 
 bool ConfigFile::loadInteger(int &variable, const std::string &section, const std::string &key, int def) {
-	if (g_key_file_get_integer(keyfile, section.c_str(), key.c_str(), NULL))
-		variable = (int) g_key_file_get_integer(keyfile, section.c_str(), key.c_str(), NULL);
+	if (g_key_file_has_key(keyfile, section.c_str(), key.c_str(), NULL)) {
+		GError *error = NULL;
+		variable = (int) g_key_file_get_integer(keyfile, section.c_str(), key.c_str(), &error);
+		if (error) {
+			if (error->code == G_KEY_FILE_ERROR_INVALID_VALUE)
+				Log("loadConfigFile", "Value of key `" << key << "` in [" << section << "] section is not integer.");
+			g_error_free(error);
+			return false;
+		}
+	}
 	else {
 		if (def == INT_MAX) {
 			Log("loadConfigFile", "You have to specify `" << key << "` in [" << section << "] section of config file.");

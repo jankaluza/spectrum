@@ -24,6 +24,7 @@
 #include "purple.h"
 #include <gloox/iqhandler.h>
 #include <gloox/clientbase.h>
+#include "configfile.h"
 
 class GlooxMessageHandler;
 

@@ -214,6 +214,7 @@ if (CPPUNIT_FOUND)
 include_directories(${CPPUNIT_INCLUDE_DIR})
 
 set(spectrum_tests_SRCS
+	src/tests/configfiletest.cpp
 	src/tests/main.cpp
 	src/tests/spectrumbuddytest.cpp
 	src/tests/spectrumconversationtest.cpp
@@ -227,6 +228,7 @@ set(spectrum_tests_SRCS
 	
 	src/abstractconversation.cpp
 	src/abstractspectrumbuddy.cpp
+	src/configfile.cpp
 	src/parser.cpp
 	src/rostermanager.cpp
 	src/rosterstorage.cpp
@@ -241,6 +243,7 @@ set(spectrum_tests_SRCS
 )
 
 set(spectrum_tests_MOC_HDRS
+	src/tests/configfiletest.h
 	src/tests/spectrumbuddytest.h
 	src/tests/spectrumconversationtest.h
 	src/tests/spectrummucconversationtest.h
@@ -252,6 +255,7 @@ set(spectrum_tests_MOC_HDRS
 	
 	src/abstractconversation.h
 	src/abstractspectrumbuddy.h
+	src/configfile.h
 	src/parser.h
 	src/rostermanager.h
 	src/rosterstorage.h

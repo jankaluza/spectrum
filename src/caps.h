@@ -24,6 +24,7 @@
 #include <sstream>
 #include <iostream>
 #include "purple.h"
+#include "configfile.h"
 
 #include <gloox/iqhandler.h>
 #include <gloox/discohandler.h>

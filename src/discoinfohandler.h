@@ -26,6 +26,7 @@
 #include <gloox/discohandler.h>
 #include "purple.h"
 #include <glib.h>
+#include "configfile.h"
 class GlooxMessageHandler;
 
 using namespace gloox;
