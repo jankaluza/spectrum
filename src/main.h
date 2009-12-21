@@ -107,10 +107,6 @@ struct replaceBadJidCharacters {
 struct replaceJidCharacters {
 	void operator()(char& c) { if(c == '%') c = '@'; }
 };
-
-typedef enum {	LOG_AREA_XML = 2,
-				LOG_AREA_PURPLE = 4,
-				} LogAreas;
 				
 /*
  * Enum used by gloox::StanzaExtension to identify StanzaExtension by Gloox.

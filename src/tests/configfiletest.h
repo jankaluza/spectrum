@@ -14,6 +14,7 @@ class ConfigFileTest : public CPPUNIT_NS :: TestFixture
 	CPPUNIT_TEST (loadString);
 	CPPUNIT_TEST (loadBoolean);
 	CPPUNIT_TEST (loadInteger);
+	CPPUNIT_TEST (getConfig);
 	CPPUNIT_TEST_SUITE_END ();
 
 	public:
@@ -24,6 +25,7 @@ class ConfigFileTest : public CPPUNIT_NS :: TestFixture
 		void loadString();
 		void loadBoolean();
 		void loadInteger();
+		void getConfig();
 
 	private:
 		ConfigFile *m_file;

@@ -10,6 +10,11 @@
 
 using namespace gloox;
 
+
+typedef enum {	LOG_AREA_XML = 2,
+				LOG_AREA_PURPLE = 4,
+				} LogAreas;
+
 class LogClass;
 
 class LogMessage
