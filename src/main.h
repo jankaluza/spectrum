@@ -130,6 +130,8 @@ struct Configuration {
 	int port;				// server port
 	
 	int logAreas;			// logging areas
+	std::string logfile;
+	std::string pid_f;
 
 	bool onlyForVIP;		// true if transport is only for users in VIP users database
 	bool VIPEnabled;
@@ -243,17 +245,13 @@ public:
 	GlooxGatewayHandler *gatewayHandler;
 	SOCKS5BytestreamServer* ftServer;
 	GMainLoop *loop() { return m_loop; }
+	bool loadConfigFile(const std::string &config = "");
 
 private:
 	/*
 	 * Inits libpurple and PurpleCmd API. Returns true if libpurple was sucefully loaded.
 	 */
 	bool initPurple();
-
-	/*
-	 * Loads config file or profile. Returns true if config file is loaded.
-	 */
-	bool loadConfigFile(const std::string &config);
 
 	/*
 	 * Loads m_protocol class. Returns true if protocol is loaded.
@@ -282,6 +280,7 @@ private:
 	static GlooxMessageHandler* m_pInstance;
 	Transport *m_transport;
 	GMainLoop *m_loop;
+	std::string m_config;
 };
 
 #endif

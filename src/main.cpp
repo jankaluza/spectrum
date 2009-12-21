@@ -41,6 +41,7 @@
 #include "vcardhandler.h"
 #include "gatewayhandler.h"
 #include "caps.h"
+#include "configfile.h"
 #include "spectrum_util.h"
 #include "sql.h"
 #include "user.h"
@@ -754,6 +755,7 @@ static gboolean transportDataReceived(GIOChannel *source, GIOCondition condition
 
 GlooxMessageHandler::GlooxMessageHandler(const std::string &config) : MessageHandler(),ConnectionListener(),PresenceHandler(),SubscriptionHandler() {
 	m_pInstance = this;
+	m_config = config;
 	m_firstConnection = true;
 	ftManager = NULL;
 	ft = NULL;
@@ -798,14 +800,6 @@ GlooxMessageHandler::GlooxMessageHandler(const std::string &config) : MessageHan
 #endif
 
 	m_transport = new Transport(m_configuration.jid);
-
-	if (logfile) {
-		std::string l(logfile);
-		replace(l, "$jid", m_configuration.jid.c_str());
-		logfile = g_strdup(l.c_str());
-		g_mkdir_with_parents(g_path_get_dirname(logfile), 0755);
-		Log_.setLogFile(l);
-	}
 
 	if (loaded) {
 		m_sql = new SQLClass(this, upgrade_db);	
@@ -1013,10 +1007,10 @@ void GlooxMessageHandler::purpleBuddyRemoved(PurpleBuddy *buddy) {
 void GlooxMessageHandler::purpleBuddyCreated(PurpleBuddy *buddy) {
 	PurpleAccount *a = purple_buddy_get_account(buddy);
 	User *user = (User *) userManager()->getUserByAccount(a);
+	buddy->node.ui_data = (void *) new SpectrumBuddy(-1, buddy);
 	if (user != NULL)
 		user->handleBuddyCreated(buddy);
-	else
-		buddy->node.ui_data = (void *) new SpectrumBuddy(-1, buddy);
+		
 }
 
 void GlooxMessageHandler::purpleBuddyStatusChanged(PurpleBuddy *buddy, PurpleStatus *status, PurpleStatus *old_status) {
@@ -1091,276 +1085,20 @@ void * GlooxMessageHandler::purpleAuthorizeReceived(PurpleAccount *account, cons
 	return NULL;
 }
 
-/*
- * Load config file and parses it and save result to m_configuration
- */
 bool GlooxMessageHandler::loadConfigFile(const std::string &config) {
-	GKeyFile *keyfile;
-	int flags;
-  	char **bind;
-	char *value;
-	int i;
-
-	keyfile = g_key_file_new ();
-	flags = G_KEY_FILE_KEEP_COMMENTS | G_KEY_FILE_KEEP_TRANSLATIONS;
-
-	if (!g_key_file_load_from_file (keyfile, config.c_str(), (GKeyFileFlags)flags, NULL)) {
-		if (!g_key_file_load_from_file (keyfile, std::string("/etc/spectrum/" + config + ".cfg").c_str(), (GKeyFileFlags)flags, NULL))
-		{
-			Log("loadConfigFile", "Can't load config file!");
-			Log("loadConfigFile", std::string("/etc/spectrum/" + config + ".cfg") << " or ./" << config);
-
-			g_key_file_free(keyfile);
-			return false;
-		}
-	}
-
-	if ((value = g_key_file_get_string(keyfile, "service","protocol", NULL)) != NULL) {
-		m_configuration.protocol = std::string(value);
-		g_free(value);
-	}
-	else {
-		Log("loadConfigFile", "You have to specify `protocol` in [service] part of config file.");
+	ConfigFile cfg(config.empty() ? m_config : config);
+	m_configuration = cfg.getConfiguration();
+	if (!m_configuration)
 		return false;
-	}
 
-	if ((value = g_key_file_get_string(keyfile, "service","name", NULL)) != NULL) {
-		m_configuration.discoName = std::string(value);
-		g_free(value);
-	}
-	else {
-		Log("loadConfigFile", "You have to specify `name` in [service] part of config file.");
-		return false;
-	}
-
-	if ((value = g_key_file_get_string(keyfile, "service","server", NULL)) != NULL) {
-		m_configuration.server = std::string(value);
-		g_free(value);
-	}
-	else {
-		Log("loadConfigFile", "You have to specify `server` in [service] part of config file.");
-		return false;
-	}
+	if (!lock_file)
+		lock_file = g_strdup(m_configuration.pid_f.c_str());
+	if (logfile)
+		m_configuration.logfile = std::string(logfile);
 	
-	if ((value = g_key_file_get_string(keyfile, "service","password", NULL)) != NULL) {
-		m_configuration.password = std::string(value);
-		g_free(value);
-	}
-	else {
-		Log("loadConfigFile", "You have to specify `password` in [service] part of config file.");
-		return false;
-	}
+	if (!m_configuration.logfile.empty())
+		Log_.setLogFile(m_configuration.logfile);
 	
-	if ((value = g_key_file_get_string(keyfile, "service","jid", NULL)) != NULL) {
-		m_configuration.jid = std::string(value);
-		g_free(value);
-	}
-	else {
-		Log("loadConfigFile", "You have to specify `jid` in [service] part of config file.");
-		return false;
-	}
-	
-	if (g_key_file_get_integer(keyfile, "service","port", NULL))
-		m_configuration.port = (int)g_key_file_get_integer(keyfile, "service","port", NULL);
-	else {
-		Log("loadConfigFile", "You have to specify `port` in [service] part of config file.");
-		return false;
-	}
-	
-	if ((value = g_key_file_get_string(keyfile, "service","filetransfer_cache", NULL)) != NULL) {
-		m_configuration.filetransferCache = std::string(value);
-		g_free(value);
-	}
-	else {
-		Log("loadConfigFile", "You have to specify `filetransfer_cache` in [service] part of config file.");
-		return false;
-	}
-
-	if (lock_file == NULL) {
-		if ((value = g_key_file_get_string(keyfile, "service","pid_file", NULL)) != NULL) {
-			std::string pid_f(value);
-			replace(pid_f, "$jid", m_configuration.jid.c_str());
-			g_mkdir_with_parents(g_path_get_dirname(pid_f.c_str()), 0755);
-			lock_file = g_strdup(pid_f.c_str());
-		}
-		else {
-			lock_file = g_strdup(std::string("/var/run/spectrum/" + m_configuration.jid).c_str());
-			g_mkdir_with_parents("/var/run/spectrum", 0755);
-		}
-	}
-
-	if ((value = g_key_file_get_string(keyfile, "database","type", NULL)) != NULL) {
-		m_configuration.sqlType = std::string(value);
-		g_free(value);
-	}
-	else {
-		Log("loadConfigFile", "You have to specify `type` in [database] part of config file.");
-		return false;
-	}
-	
-	if ((value = g_key_file_get_string(keyfile, "database","host", NULL)) != NULL) {
-		m_configuration.sqlHost = std::string(value);
-		g_free(value);
-	}
-	else if (m_configuration.sqlType == "sqlite")
-		m_configuration.sqlHost = "";
-	else {
-		Log("loadConfigFile", "You have to specify `host` in [database] part of config file.");
-		return false;
-	}
-	
-	if ((value = g_key_file_get_string(keyfile, "database","password", NULL)) != NULL) {
-		m_configuration.sqlPassword = std::string(value);
-		g_free(value);
-	}
-	else if (m_configuration.sqlType == "sqlite")
-		m_configuration.sqlPassword = "";
-	else {
-		Log("loadConfigFile", "You have to specify `password` in [database] part of config file.");
-		return false;
-	}
-	
-	if ((value = g_key_file_get_string(keyfile, "database","user", NULL)) != NULL) {
-		m_configuration.sqlUser = std::string(value);
-		g_free(value);
-	}
-	else if (m_configuration.sqlType == "sqlite")
-		m_configuration.sqlUser = "";
-	else {
-		Log("loadConfigFile", "You have to specify `user` in [database] part of config file.");
-		return false;
-	}
-	
-	if ((value = g_key_file_get_string(keyfile, "database","database", NULL)) != NULL) {
-		m_configuration.sqlDb = std::string(value);
-		g_free(value);
-		replace(m_configuration.sqlDb, "$jid", m_configuration.jid.c_str());
-		g_mkdir_with_parents(g_path_get_dirname(m_configuration.sqlDb.c_str()), 0755);
-	}
-	else {
-		Log("loadConfigFile", "You have to specify `database` in [database] part of config file.");
-		return false;
-	}
-	
-	if ((value = g_key_file_get_string(keyfile, "database","prefix", NULL)) != NULL) {
-		m_configuration.sqlPrefix = std::string(value);
-		g_free(value);
-	}
-	else if (m_configuration.sqlType == "sqlite")
-		m_configuration.sqlPrefix = "";
-	else {
-		Log("loadConfigFile", "You have to specify `prefix` in [database] part of config file.");
-		return false;
-	}
-
-	if ((value = g_key_file_get_string(keyfile, "purple","userdir", NULL)) != NULL) {
-		m_configuration.userDir = std::string(value);
-		g_free(value);
-		replace(m_configuration.userDir, "$jid", m_configuration.jid.c_str());
-		g_mkdir_with_parents(g_path_get_dirname(m_configuration.userDir.c_str()), 0755);
-	}
-	else {
-		Log("loadConfigFile", "You have to specify `userdir` in [purple] part of config file.");
-		return false;
-	}
-		
-
-	if (g_key_file_has_key(keyfile,"service","language",NULL))
-		m_configuration.language = g_key_file_get_string(keyfile, "service","language", NULL);
-	else
-		m_configuration.language = "en";
-
-	if(g_key_file_has_key(keyfile,"service","only_for_vip",NULL))
-		m_configuration.onlyForVIP=g_key_file_get_boolean(keyfile, "service","only_for_vip", NULL);
-	else
-		m_configuration.onlyForVIP=false;
-
-	if(g_key_file_has_key(keyfile,"service","vip_mode",NULL))
-		m_configuration.VIPEnabled=g_key_file_get_boolean(keyfile, "service","vip_mode", NULL);
-	else
-		m_configuration.VIPEnabled=false;
-
-	if(g_key_file_has_key(keyfile,"service","transport_features",NULL)) {
-		bind = g_key_file_get_string_list (keyfile,"service","transport_features",NULL, NULL);
-		m_configuration.transportFeatures = 0;
-		for (i = 0; bind[i]; i++){
-			std::string feature(bind[i]);
-			if (feature == "avatars")
-				m_configuration.transportFeatures = m_configuration.transportFeatures | TRANSPORT_FEATURE_AVATARS;
-			else if (feature == "chatstate")
-				m_configuration.transportFeatures = m_configuration.transportFeatures | TRANSPORT_FEATURE_TYPING_NOTIFY;
-			else if (feature == "filetransfer")
-				m_configuration.transportFeatures = m_configuration.transportFeatures | TRANSPORT_FEATURE_FILETRANSFER;
-		}
-		g_strfreev (bind);
-	}
-	else m_configuration.transportFeatures = TRANSPORT_FEATURE_AVATARS | TRANSPORT_FEATURE_FILETRANSFER | TRANSPORT_FEATURE_TYPING_NOTIFY;
-
-	if(g_key_file_has_key(keyfile,"service","vip_features",NULL)) {
-		bind = g_key_file_get_string_list (keyfile,"service","vip_features",NULL, NULL);
-		m_configuration.VIPFeatures = 0;
-		for (i = 0; bind[i]; i++){
-			std::string feature(bind[i]);
-			if (feature == "avatars")
-				m_configuration.VIPFeatures |= TRANSPORT_FEATURE_AVATARS;
-			else if (feature == "chatstate")
-				m_configuration.VIPFeatures |= TRANSPORT_FEATURE_TYPING_NOTIFY;
-			else if (feature == "filetransfer")
-				m_configuration.VIPFeatures |= TRANSPORT_FEATURE_FILETRANSFER;
-		}
-		g_strfreev (bind);
-	}
-	else m_configuration.VIPFeatures = TRANSPORT_FEATURE_AVATARS | TRANSPORT_FEATURE_FILETRANSFER | TRANSPORT_FEATURE_TYPING_NOTIFY;
-
-	if(g_key_file_has_key(keyfile,"service","use_proxy",NULL))
-		m_configuration.useProxy=g_key_file_get_boolean(keyfile, "service","use_proxy", NULL);
-	else
-		m_configuration.useProxy = false;
-
-	if (g_key_file_has_key(keyfile,"logging","log_file",NULL)) {
-		logfile = g_key_file_get_string(keyfile, "logging","log_file", NULL);
-	}
-	
-	if (g_key_file_has_key(keyfile,"logging","log_areas",NULL)) {
-		bind = g_key_file_get_string_list (keyfile,"logging","log_areas", NULL, NULL);
-		m_configuration.logAreas = 0;
-		for (i = 0; bind[i]; i++) {
-			std::string feature(bind[i]);
-			if (feature == "xml") {
-				m_configuration.logAreas = m_configuration.logAreas | LOG_AREA_XML;
-			}
-			else if (feature == "purple")
-				m_configuration.logAreas = m_configuration.logAreas | LOG_AREA_PURPLE;
-		}
-		g_strfreev (bind);
-	}
-	else m_configuration.logAreas = LOG_AREA_XML | LOG_AREA_PURPLE;
-	
-	if(g_key_file_has_key(keyfile,"purple","bind",NULL)) {
-		bind = g_key_file_get_string_list (keyfile,"purple","bind",NULL, NULL);
-		for (i = 0; bind[i]; i++){
-			m_configuration.bindIPs[i] = (std::string)bind[i];
-		}
-		g_strfreev (bind);
-	}
-
-	if(g_key_file_has_key(keyfile,"service","allowed_servers",NULL)) {
-		bind = g_key_file_get_string_list(keyfile, "service", "allowed_servers", NULL, NULL);
-		for (i = 0; bind[i]; i++){
-			m_configuration.allowedServers.push_back((std::string) bind[i]);
-		}
-		g_strfreev (bind);
-	}
-
-	if(g_key_file_has_key(keyfile,"service","admins",NULL)) {
-		bind = g_key_file_get_string_list(keyfile, "service", "admins", NULL, NULL);
-		for (i = 0; bind[i]; i++){
-			m_configuration.admins.push_back((std::string) bind[i]);
-		}
-		g_strfreev (bind);
-	}
-
-	g_key_file_free(keyfile);
 	return true;
 }
 
@@ -2003,10 +1741,7 @@ bool GlooxMessageHandler::initPurple(){
 GlooxMessageHandler* GlooxMessageHandler::m_pInstance = NULL;
 
 static void spectrum_sigint_handler(int sig) {
-// 	g_timeout_add(0, &deleteMain, NULL);
 	delete GlooxMessageHandler::instance();
-
-	return;
 }
 
 static void spectrum_sigchld_handler(int sig)
@@ -2023,6 +1758,10 @@ static void spectrum_sigchld_handler(int sig)
 		snprintf(errmsg, BUFSIZ, "Warning: waitpid() returned %d", pid);
 		perror(errmsg);
 	}
+}
+
+static void spectrum_sighup_handler(int sig) {
+	GlooxMessageHandler::instance()->loadConfigFile();
 }
 
 int main( int argc, char* argv[] ) {
@@ -2063,9 +1802,16 @@ int main( int argc, char* argv[] ) {
 			return -1;
 		}
 
+		if (signal(SIGHUP, spectrum_sighup_handler) == SIG_ERR) {
+			std::cout << "SIGHUP handler can't be set\n";
+			g_option_context_free(context);
+			return -1;
+		}
+
 		std::string config(argv[1]);
 		new GlooxMessageHandler(config);
 	}
 	g_option_context_free(context);
 }
+
 
