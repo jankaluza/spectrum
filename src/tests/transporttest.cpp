@@ -3,6 +3,7 @@
 #include "../usermanager.h"
 #include "../abstractbackend.h"
 #include "testingbackend.h"
+#include "testingprotocol.h"
 
 Transport* Transport::m_pInstance = NULL;
 
@@ -37,4 +38,8 @@ std::string Transport::getId() {
 
 GlooxParser *Transport::parser() {
 	return TestingBackend::instance()->getParser();
+}
+
+AbstractProtocol *Transport::protocol() {
+	return (AbstractProtocol *) TestingProtocol::instance();
 }

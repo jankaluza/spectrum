@@ -216,6 +216,7 @@ if (CPPUNIT_FOUND)
 include_directories(${CPPUNIT_INCLUDE_DIR})
 
 set(spectrum_tests_SRCS
+	src/tests/capabilityhandlertest.cpp
 	src/tests/configfiletest.cpp
 	src/tests/main.cpp
 	src/tests/spectrumbuddytest.cpp
@@ -225,11 +226,13 @@ set(spectrum_tests_SRCS
 	src/tests/rostermanagertest.cpp
 	src/tests/rosterstoragetest.cpp
 	src/tests/testingbackend.cpp
+	src/tests/testingprotocol.cpp
 	src/tests/transporttest.cpp
 	src/tests/testinguser.cpp
 	
 	src/abstractconversation.cpp
 	src/abstractspectrumbuddy.cpp
+	src/capabilityhandler.cpp
 	src/capabilitymanager.cpp
 	src/configfile.cpp
 	src/parser.cpp
@@ -246,6 +249,7 @@ set(spectrum_tests_SRCS
 )
 
 set(spectrum_tests_MOC_HDRS
+	src/tests/capabilityhandlertest.h
 	src/tests/configfiletest.h
 	src/tests/spectrumbuddytest.h
 	src/tests/spectrumconversationtest.h
@@ -254,10 +258,12 @@ set(spectrum_tests_MOC_HDRS
 	src/tests/rostermanagertest.h
 	src/tests/rosterstoragetest.h
 	src/tests/testingbackend.h
+	src/tests/testingprotocol.h
 	src/tests/testinguser.h
 	
 	src/abstractconversation.h
 	src/abstractspectrumbuddy.h
+	src/capabilityhandler.h
 	src/capabilitymanager.h
 	src/configfile.h
 	src/parser.h
@@ -319,5 +325,6 @@ INSTALL(FILES
 # 	${CMAKE_CURRENT_SOURCE_DIR}/data/defaults.conf
 # 	DESTINATION share/fatrat/data
 # 	)
+
 
 
