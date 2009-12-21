@@ -24,7 +24,7 @@
 #include "log.h"
 #include "sql.h"
 #include "usermanager.h"
-#include "caps.h"
+
 #include "striphtmltags.h"
 #include "transport.h"
 

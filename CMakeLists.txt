@@ -69,7 +69,7 @@ set(spectrum_SRCS
 	src/adhoc/dataforms.cpp
 	src/autoconnectloop.cpp
 	src/capabilitymanager.cpp
-	src/caps.cpp
+	src/capabilityhandler.cpp
 	src/commands.cpp
 	src/configfile.cpp
 	src/discoinfohandler.cpp
@@ -129,7 +129,7 @@ set(spectrum_MOC_HDRS
 	src/adhoc/autoconnectloop.h
 	src/adhoc/dataforms.h
 	src/capabilitymanager.h
-	src/caps.h
+	src/capabilityhandler.h
 	src/commands.h
 	src/configfile.h
 	src/discoinfohandler.h

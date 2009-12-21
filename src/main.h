@@ -78,7 +78,7 @@ using namespace gloox;
 extern Localization localization;
 extern LogClass Log_;
 
-class GlooxDiscoHandler;
+class CapabilityHandler;
 class GlooxDiscoInfoHandler;
 class GlooxRegisterHandler;
 class GlooxXPingHandler;
@@ -211,7 +211,7 @@ private:
 	SQLClass *m_sql;							// storage class
 	AccountCollector *m_collector;
 
-	GlooxDiscoHandler *m_discoHandler;			// disco stanza handler
+	CapabilityHandler *m_discoHandler;			// disco stanza handler
 	GlooxDiscoInfoHandler *m_discoInfoHandler;	// disco#info handler
  	GlooxRegisterHandler *m_reg;				// jabber:iq:register handler
 	GlooxStatsHandler *m_stats;					// Statistic Gathering handler (xep-0039)

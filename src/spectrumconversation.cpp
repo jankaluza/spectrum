@@ -20,7 +20,7 @@
 
 #include "spectrumconversation.h"
 #include "main.h" // just for replaceBadJidCharacters
-#include "caps.h"
+#include "capabilityhandler.h"
 #include "gloox/chatstate.h"
 #include "transport.h"
 #include "usermanager.h"

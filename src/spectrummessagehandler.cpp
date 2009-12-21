@@ -23,7 +23,7 @@
 #include "main.h"
 #include "log.h"
 #include "usermanager.h"
-#include "caps.h"
+#include "capabilityhandler.h"
 #include "spectrumtimer.h"
 #include "transport.h"
 #include "gloox/chatstate.h"

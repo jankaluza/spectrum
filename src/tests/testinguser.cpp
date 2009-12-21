@@ -1,5 +1,5 @@
 #include "testinguser.h"
-#include "caps.h"
+#include "../capabilityhandler.h"
 
 TestingUser::TestingUser(const std::string &userkey, const std::string &jid) {
 	setResource("psi", 10, GLOOX_FEATURE_ROSTERX);

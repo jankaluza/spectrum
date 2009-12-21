@@ -2,7 +2,7 @@
 #include "resourcemanager.h"
 #include "transport.h"
 #include "testingbackend.h"
-#include "../caps.h"
+#include "../capabilityhandler.h"
 
 void ResourceManagerTest::setUp (void) {
 	m_manager = new ResourceManager();

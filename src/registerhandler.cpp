@@ -24,7 +24,7 @@
 #include <gloox/registration.h>
 #include <glib.h>
 #include "sql.h"
-#include "caps.h"
+#include "capabilityhandler.h"
 #include "usermanager.h"
 #include "accountcollector.h"
 #include "protocols/abstractprotocol.h"

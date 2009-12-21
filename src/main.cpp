@@ -40,7 +40,7 @@
 #include "statshandler.h"
 #include "vcardhandler.h"
 #include "gatewayhandler.h"
-#include "caps.h"
+#include "capabilityhandler.h"
 #include "configfile.h"
 #include "spectrum_util.h"
 #include "sql.h"
@@ -823,7 +823,7 @@ GlooxMessageHandler::GlooxMessageHandler(const std::string &config) : MessageHan
 
 	if (loaded) {
 
-		m_discoHandler = new GlooxDiscoHandler();
+		m_discoHandler = new CapabilityHandler();
 
 		m_discoInfoHandler = new GlooxDiscoInfoHandler(this);
 		j->registerIqHandler(m_discoInfoHandler,ExtDiscoInfo);
