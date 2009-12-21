@@ -22,9 +22,11 @@ class TestingUser : public AbstractUser {
 		const std::string &username() { return m_username; }
 		GHashTable *settings() { return m_settings; }
 		bool isConnectedInRoom(const std::string &room) { return false; }
-		bool isConnected() { return true; }
-		bool readyForConnect() { return false; }
-		void connect() {}
+		bool isConnected() { return m_connected; }
+		void setConnected(bool connected) { m_connected = connected; }
+		bool readyForConnect() { return m_readyForConnect; }
+		void setReadyForConnect(bool connected) { m_readyForConnect = connected; }
+		void connect() { m_connected = true;}
 
 	private:
 		PurpleValue *m_value;
@@ -32,6 +34,8 @@ class TestingUser : public AbstractUser {
 		std::string m_username;
 		std::string m_userkey;
 		std::string m_jid;
+		bool m_readyForConnect;
+		bool m_connected;
 };
 
 #endif

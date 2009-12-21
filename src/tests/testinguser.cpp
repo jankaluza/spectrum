@@ -11,6 +11,8 @@ TestingUser::TestingUser(const std::string &userkey, const std::string &jid) {
 	m_username = "user";
 	m_settings = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, (GDestroyNotify) purple_value_destroy);
 	g_hash_table_replace(m_settings, g_strdup("enable_avatars"), m_value);
+	m_connected = true;
+	m_readyForConnect = false;
 }
 
 
