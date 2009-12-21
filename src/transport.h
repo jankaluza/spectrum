@@ -27,6 +27,7 @@
 #include "protocols/abstractprotocol.h"
 
 #include "abstractbackend.h"
+#include "capabilitymanager.h"
 
 
 using namespace gloox;
@@ -42,7 +43,7 @@ typedef enum { 	TRANSPORT_FEATURE_TYPING_NOTIFY = 2,
 				} TransportFeatures;
 
 
-class Transport {
+class Transport : public CapabilityManager {
 	public:
 		Transport(const std::string jid);
 		~Transport();
@@ -53,7 +54,6 @@ class Transport {
 		AbstractBackend *sql();
 		const std::string &jid() { return m_jid; }
 		std::string getId();
-		int getFeatures(const std::string &ver);
 		std::list <Tag *> &getTags() { return m_tags; }
 		void clearTags() { m_tags.clear(); }
 		GlooxParser *parser();

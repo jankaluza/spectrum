@@ -35,10 +35,6 @@ std::string Transport::getId() {
 	return "id1";
 }
 
-int Transport::getFeatures(const std::string &ver) {
-	return 0;
-}
-
 GlooxParser *Transport::parser() {
 	return TestingBackend::instance()->getParser();
 }

@@ -28,10 +28,6 @@ std::string Transport::getId() {
 	return GlooxMessageHandler::instance()->j->getID();
 }
 
-int Transport::getFeatures(const std::string &ver) {
-	return GlooxMessageHandler::instance()->capsCache[ver];
-}
-
 GlooxParser *Transport::parser() {
 	return GlooxMessageHandler::instance()->parser();
 }

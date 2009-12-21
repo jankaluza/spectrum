@@ -23,6 +23,8 @@ class TestingUser : public AbstractUser {
 		GHashTable *settings() { return m_settings; }
 		bool isConnectedInRoom(const std::string &room) { return false; }
 		bool isConnected() { return true; }
+		bool readyForConnect() { return false; }
+		void connect() {}
 
 	private:
 		PurpleValue *m_value;

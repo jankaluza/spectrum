@@ -136,11 +136,6 @@ public:
 	void transportConnect();
 
 	/*
-	 * Returns true if we have cached features (capabilities) of client with version string `ver`.
-	 */
-	bool hasCaps(const std::string &ver);
-
-	/*
 	 * Callbacks for libpurple UI-ops.
 	 */
 	void purpleConnectionError(PurpleConnection *gc, PurpleConnectionError reason, const char *text);
@@ -195,7 +190,6 @@ public:
 	SIProfileFT* ft;
 	Component *j;
 	int lastIP;
-	std::map <std::string,int> capsCache;
 	GlooxGatewayHandler *gatewayHandler;
 	SOCKS5BytestreamServer* ftServer;
 	GMainLoop *loop() { return m_loop; }

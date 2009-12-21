@@ -43,6 +43,8 @@ class AbstractUser : public ResourceManager
 		virtual GHashTable *settings() = 0;
 		virtual bool isConnectedInRoom(const std::string &room) = 0;
 		virtual bool isConnected() = 0;
+		virtual bool readyForConnect() = 0;
+		virtual void connect() = 0;
 		
 		void setProtocolData(void *protocolData) { m_protocolData = protocolData; }
 		void *protocolData() { return m_protocolData; }

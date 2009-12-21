@@ -68,6 +68,7 @@ set(spectrum_SRCS
 	src/adhoc/adhoctag.cpp
 	src/adhoc/dataforms.cpp
 	src/autoconnectloop.cpp
+	src/capabilitymanager.cpp
 	src/caps.cpp
 	src/commands.cpp
 	src/configfile.cpp
@@ -127,6 +128,7 @@ set(spectrum_MOC_HDRS
 	src/adhoc/adhoctag.h
 	src/adhoc/autoconnectloop.h
 	src/adhoc/dataforms.h
+	src/capabilitymanager.h
 	src/caps.h
 	src/commands.h
 	src/configfile.h
@@ -228,6 +230,7 @@ set(spectrum_tests_SRCS
 	
 	src/abstractconversation.cpp
 	src/abstractspectrumbuddy.cpp
+	src/capabilitymanager.cpp
 	src/configfile.cpp
 	src/parser.cpp
 	src/rostermanager.cpp
@@ -255,6 +258,7 @@ set(spectrum_tests_MOC_HDRS
 	
 	src/abstractconversation.h
 	src/abstractspectrumbuddy.h
+	src/capabilitymanager.h
 	src/configfile.h
 	src/parser.h
 	src/rostermanager.h

@@ -28,7 +28,8 @@
 
 #include <gloox/iqhandler.h>
 #include <gloox/discohandler.h>
-class GlooxMessageHandler;
+
+extern LogClass Log_;
 
 typedef enum { 	GLOOX_FEATURE_ROSTERX = 2,
 				GLOOX_FEATURE_XHTML_IM = 4,
@@ -43,22 +44,31 @@ struct Version {
 	std::string jid;
 };
 
-class GlooxDiscoHandler : public DiscoHandler
-{
+// Handler for disco#info stanzas.
+class GlooxDiscoHandler : public DiscoHandler {
+	public:
+		GlooxDiscoHandler();
+		~GlooxDiscoHandler();
 
-public:
-	GlooxDiscoHandler(GlooxMessageHandler *parent);
-	~GlooxDiscoHandler();
-// 	void handleDiscoInfoResult(Stanza *stanza,int context);
-// 	void handleDiscoItemsResult(Stanza *stanza,int context);
-// 	void handleDiscoError(Stanza *stanza,int context);
-	void handleDiscoInfo(const JID &jid, const Disco::Info &info, int context);
-	void handleDiscoItems(const JID &jid, const Disco::Items &items, int context);
-	void handleDiscoError(const JID &jid, const Error *error, int context);
-	bool hasVersion(int i);
-	GlooxMessageHandler *p;
-	std::map<int,Version> versions;
-	int version;
+		// Handles disco#info.
+		void handleDiscoInfo(const JID &jid, const Disco::Info &info, int context);
+
+		// Handles disco#items.
+		void handleDiscoItems(const JID &jid, const Disco::Items &items, int context);
+
+		// Handles disco erros.
+		void handleDiscoError(const JID &jid, const Error *error, int context);
+
+		// Setups handler for disco#info responce from `jid`, which should contain capabilities
+		// known by `client`. Returns handler's descriptor.
+		int waitForCapabilities(const std::string &client, const std::string &jid);
+		
+		// Returns true 
+		bool hasVersion(int i);
+
+	private:
+		std::map <int, Version> m_versions;
+		int m_nextVersion;
 };
 
 #endif

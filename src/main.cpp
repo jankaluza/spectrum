@@ -760,7 +760,6 @@ GlooxMessageHandler::GlooxMessageHandler(const std::string &config) : MessageHan
 	ftManager = NULL;
 	ft = NULL;
 	lastIP = 0;
-	capsCache["_default"] = 0;
 	m_parser = NULL;
 	m_sql = NULL;
 	m_collector = NULL;
@@ -824,7 +823,7 @@ GlooxMessageHandler::GlooxMessageHandler(const std::string &config) : MessageHan
 
 	if (loaded) {
 
-		m_discoHandler = new GlooxDiscoHandler(this);
+		m_discoHandler = new GlooxDiscoHandler();
 
 		m_discoInfoHandler = new GlooxDiscoInfoHandler(this);
 		j->registerIqHandler(m_discoInfoHandler,ExtDiscoInfo);
@@ -1276,14 +1275,6 @@ void GlooxMessageHandler::purpleChatRemoveUsers(PurpleConversation *conv, GList 
 	}
 }
 
-bool GlooxMessageHandler::hasCaps(const std::string &ver) {
-	std::map<std::string,int> ::iterator iter = capsCache.begin();
-	iter = capsCache.find(ver);
-	if(iter != capsCache.end())
-		return true;
-	return false;
-}
-
 void GlooxMessageHandler::handleSubscription(const Subscription &stanza) {
 	// answer to subscibe
 	if(stanza.subtype() == Subscription::Subscribe && stanza.to().username() == "") {
@@ -1320,36 +1311,16 @@ void GlooxMessageHandler::handlePresence(const Presence &stanza){
 		Tag *stanzaTag = stanza.tag();
 		if (!stanzaTag) return;
 		Tag *c = stanzaTag->findChildWithAttrib("xmlns","http://jabber.org/protocol/caps");
-		// presence has caps
-		if (c != NULL) {
-			// caps is not chached
-			if (!hasCaps(c->findAttribute("ver"))) {
-				// ask for caps
-				std::string id = j->getID();
-				Log(stanza.from().full(), "asking for caps with ID: " << id);
-				m_discoHandler->versions[m_discoHandler->version].version = c->findAttribute("ver");
-				m_discoHandler->versions[m_discoHandler->version].jid = stanza.to().full();
-				std::string node;
-				node = c->findAttribute("node") + std::string("#") + c->findAttribute("ver");
-				j->disco()->getDiscoInfo(stanza.from(), node, m_discoHandler, m_discoHandler->version, id);
-				m_discoHandler->version++;
-			}
-			else {
-				std::string id = j->getID();
-				Log(stanza.from().full(), "asking for disco#info with ID: " << id);
-				m_discoHandler->versions[m_discoHandler->version].version = stanza.from().full();
-				m_discoHandler->versions[m_discoHandler->version].jid = stanza.to().full();
-				j->disco()->getDiscoInfo(stanza.from(), "", m_discoHandler, m_discoHandler->version, id);
-				m_discoHandler->version++;
-			}
+		Log(stanza.from().full(), "asking for caps/disco#info");
+		// Presence has caps and caps are not cached.
+		if (c != NULL && !Transport::instance()->hasClientCapabilities(c->findAttribute("ver"))) {
+			int context = m_discoHandler->waitForCapabilities(c->findAttribute("ver"), stanza.to().full());
+			std::string node = c->findAttribute("node") + std::string("#") + c->findAttribute("ver");;
+			j->disco()->getDiscoInfo(stanza.from(), node, m_discoHandler, context, j->getID());
 		}
 		else {
-			std::string id = j->getID();
-			Log(stanza.from().full(), "asking for disco#info with ID: " << id);
-			m_discoHandler->versions[m_discoHandler->version].version = stanza.from().full();
-			m_discoHandler->versions[m_discoHandler->version].jid = stanza.to().full();
-			j->disco()->getDiscoInfo(stanza.from(), "", m_discoHandler, m_discoHandler->version, id);
-			m_discoHandler->version++;
+			int context = m_discoHandler->waitForCapabilities(stanza.from().full(), stanza.to().full());
+			j->disco()->getDiscoInfo(stanza.from(), "", m_discoHandler, context, j->getID());
 		}
 		delete stanzaTag;
 	}
@@ -1410,8 +1381,8 @@ void GlooxMessageHandler::handlePresence(const Presence &stanza){
 				}
 				user->setFeatures(isVip ? configuration().VIPFeatures : configuration().transportFeatures);
 				if (c != NULL)
-					if (hasCaps(c->findAttribute("ver")))
-						user->setResource(stanza.from().resource(), stanza.priority(), capsCache[c->findAttribute("ver")]);
+					if (Transport::instance()->hasClientCapabilities(c->findAttribute("ver")))
+						user->setResource(stanza.from().resource(), stanza.priority(), Transport::instance()->getCapabilities(c->findAttribute("ver")));
 
 				std::map<int,std::string> ::iterator iter = configuration().bindIPs.begin();
 				iter = configuration().bindIPs.find(lastIP);

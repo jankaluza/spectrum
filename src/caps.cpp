@@ -21,123 +21,85 @@
 #include "caps.h"
 #include <gloox/clientbase.h>
 #include <glib.h>
-#include "main.h"
+#include "transport.h"
 #include "sql.h"
 #include "usermanager.h"
 #include "user.h"
 #include "protocols/abstractprotocol.h"
+#include "log.h"
 
-GlooxDiscoHandler::GlooxDiscoHandler(GlooxMessageHandler *parent) : DiscoHandler(){
-	p=parent;
-	version = 0;
+GlooxDiscoHandler::GlooxDiscoHandler() : DiscoHandler() {
+	m_nextVersion = 0;
 }
 
 GlooxDiscoHandler::~GlooxDiscoHandler(){
 }
 
 bool GlooxDiscoHandler::hasVersion(int name){
-	std::map<int,Version> ::iterator iter = versions.begin();
-	iter = versions.find(name);
-	if(iter != versions.end())
-		return true;
-	return false;
+	return m_versions.find(name) != m_versions.end();
 }
 
-// 	void handleDiscoInfo(const JID &jid, const Disco::Info &info, int context);
-// 	void handleDiscoItems(const JID &jid, const Disco::Items &items, int context);
-// 	void handleDiscoError(const JID &jid, const Error *error, int context);
+int GlooxDiscoHandler::waitForCapabilities(const std::string &client, const std::string &jid) {
+	m_nextVersion++;
+	m_versions[m_nextVersion].version = client;
+	m_versions[m_nextVersion].jid = jid;
+	return m_nextVersion;
+}
 
 void GlooxDiscoHandler::handleDiscoInfo(const JID &jid, const Disco::Info &info, int context) {
-// 	if (stanza->id().empty())
-// 		return;
 	if (!hasVersion(context))
 		return;
-// 	Tag *query = stanza->findChildWithAttrib("xmlns","http://jabber.org/protocol/disco#info");
-// 	if (query==NULL)
-// 		return;
-	//if (query->findChild("identity") && query->findChild("identity")->findChild("category") && !query->findChild("identity")->findChildWithAttrib("category","client"))
-		//return;
 	Tag *query = info.tag();
 	if (query->findChild("identity") && !query->findChildWithAttrib("category","client")) {
 		delete query;
 		return;
 	}
-	int feature=0;
+
+	int capabilities = 0;
+
 	std::list<Tag*> features = query->findChildren("feature");
-		for (std::list<Tag*>::const_iterator it = features.begin(); it != features.end(); ++it) {
-// 			std::cout << *it << std::endl;
-			if ((*it)->findAttribute("var")=="http://jabber.org/protocol/rosterx"){
-				feature=feature|GLOOX_FEATURE_ROSTERX;
-			}
-			else if ((*it)->findAttribute("var")=="http://jabber.org/protocol/xhtml-im"){
-				feature=feature|GLOOX_FEATURE_XHTML_IM;
-			}
-			else if ((*it)->findAttribute("var")=="http://jabber.org/protocol/si/profile/file-transfer"){
-				feature=feature|GLOOX_FEATURE_FILETRANSFER;
-			}
-			else if ((*it)->findAttribute("var")=="http://jabber.org/protocol/chatstates"){
-				feature=feature|GLOOX_FEATURE_CHATSTATES;
-			}
+	for (std::list<Tag*>::const_iterator it = features.begin(); it != features.end(); ++it) {
+		if ((*it)->findAttribute("var") == "http://jabber.org/protocol/rosterx") {
+			capabilities |= GLOOX_FEATURE_ROSTERX;
 		}
-	std::cout << "*** FEATURES ARRIVED: " << feature << "\n";
-	p->capsCache[versions[context].version]=feature;
-	User *user;
-	JID j(versions[context].jid);
-	if (p->protocol()->isMUC(NULL, j.bare())) {
+		else if ((*it)->findAttribute("var") == "http://jabber.org/protocol/xhtml-im") {
+			capabilities |= GLOOX_FEATURE_XHTML_IM;
+		}
+		else if ((*it)->findAttribute("var") == "http://jabber.org/protocol/si/profile/file-transfer") {
+			capabilities |= GLOOX_FEATURE_FILETRANSFER;
+		}
+		else if ((*it)->findAttribute("var") == "http://jabber.org/protocol/chatstates") {
+			capabilities |= GLOOX_FEATURE_CHATSTATES;
+		}
+	}
+	
+	Log("*** FEATURES ARRIVED: ", capabilities);
+	Transport::instance()->setClientCapabilities(m_versions[context].version, capabilities);
+
+	JID j(m_versions[context].jid);
+	AbstractUser *user;
+	if (Transport::instance()->protocol()->isMUC(NULL, j.bare())) {
 		std::string server = j.username().substr(j.username().find("%") + 1, j.username().length() - j.username().find("%"));
-		user = (User *) p->userManager()->getUserByJID(jid.bare() + server);
+		user = (AbstractUser *) Transport::instance()->userManager()->getUserByJID(jid.bare() + server);
 	}
 	else {
-		user = (User *) p->userManager()->getUserByJID(jid.bare());
+		user = (AbstractUser *) Transport::instance()->userManager()->getUserByJID(jid.bare());
 	}
-	if (user==NULL){
-		std::cout << "no user?! wtf...";
-	}
-	else{
-		if (user->hasResource(jid.resource())) {
-			std::cout << "1" << "\n";
-			if (user->getResource(jid.resource()).caps == -1) {
-				std::cout << "2" << "\n";
-				user->setResource(jid.resource(), -256, feature);
-				if (user->readyForConnect()) {
-					std::cout << "3" << "\n";
-					user->connect();
-				}
+	if (user && user->hasResource(jid.resource())) {
+		if (user->getResource(jid.resource()).caps == -1) {
+			user->setResource(jid.resource(), -256, capabilities);
+			if (user->readyForConnect()) {
+				user->connect();
 			}
 		}
 	}
 	// TODO: CACHE CAPS IN DATABASE ACCORDING TO VERSION
-	versions.erase(context);
+	m_versions.erase(context);
 	delete query;
 }
 
-void GlooxDiscoHandler::handleDiscoItems(const JID &jid, const Disco::Items &items, int context){
-
+void GlooxDiscoHandler::handleDiscoItems(const JID &jid, const Disco::Items &items, int context) {
 }
 
-void GlooxDiscoHandler::handleDiscoError(const JID &jid, const Error *error, int context){
-// // 	if (stanza->id().empty())
-// // 		return;
-// // 	if (!hasVersion(context))
-// // 		return;
-// // 	Tag *query = stanza->findChildWithAttrib("xmlns","http://jabber.org/protocol/disco#info");
-// // 	if (query==NULL)
-// // 		return;
-// 	// we are now using timeout
-// 	return;
-// 	int feature=0;
-// 	p->capsCache[versions[stanza->id()]]=feature;
-// 	std::cout << "*** FEATURES ERROR received: " << feature << "\n";
-// 	User *user = p->userManager()->getUserByJID(stanza->from().bare());
-// 	if (user==NULL){
-// 		std::cout << "no user?! wtf...";
-// 	}
-// 	else{
-// 		if (user->capsVersion().empty()){
-// 			user->setCapsVersion(versions[stanza->id()]);
-// 			if (user->readyForConnect())
-// 				user->connect();
-// 		}
-// 	}
-// 	versions.erase(stanza->id());
+void GlooxDiscoHandler::handleDiscoError(const JID &jid, const Error *error, int context) {
 }
