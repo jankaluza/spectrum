@@ -26,8 +26,14 @@ find_package(cppunit)
 # find the needed parts for gettext and friends
 #
 include(FindGettext)
-find_library(INTL_LIBRARY NAMES intl)
-find_path(INTL_INCLUDE_DIR NAMES libintl.h)
+find_library(INTL_LIBRARY NAMES intl
+	PATHS /usr/pkg/lib /usr/lib
+	NO_DEFAULT_PATH
+	)
+find_path(INTL_INCLUDE_DIR NAMES libintl.h
+	PATHS /usr/pkg/include /usr/include
+	NO_DEFAULT_PATH
+	)
 
 if(INTL_LIBRARY AND INTL_INCLUDE_DIR)
     include_directories(${INTL_INCLUDE_DIR})
