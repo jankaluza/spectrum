@@ -22,6 +22,7 @@
 #define FILETRANSFERMANAGER_H
 
 // #include "sendfile.h"
+#include "configfile.h"
 #include "thread.h"
 #include "purple.h"
 

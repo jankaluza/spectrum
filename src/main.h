@@ -67,6 +67,7 @@
 
 #include "transport_config.h"
 #include "localization.h"
+#include "configfile.h"
 
 #define PURPLE_UI "spectrum"
 #define tr(lang,STRING)    localization.translate(lang,STRING)
@@ -106,10 +107,6 @@ struct replaceBadJidCharacters {
 struct replaceJidCharacters {
 	void operator()(char& c) { if(c == '%') c = '@'; }
 };
-
-typedef enum {	LOG_AREA_XML = 2,
-				LOG_AREA_PURPLE = 4,
-				} LogAreas;
 				
 /*
  * Enum used by gloox::StanzaExtension to identify StanzaExtension by Gloox.
@@ -117,47 +114,6 @@ typedef enum {	LOG_AREA_XML = 2,
 typedef enum {	ExtGateway = 1024,
 				ExtStats = 1025
 } MyStanzaExtensions;
-
-/*
- * Struct used for storing transport configuration.
- */
-struct Configuration {
-	std::string discoName;	// name which will be shown in service discovery
-	std::string protocol;	// protocol used for transporting
-	std::string server;		// address of server to bind to
-	std::string password;	// server password
-	std::string jid;		// JID of this transport
-	int port;				// server port
-	
-	int logAreas;			// logging areas
-
-	bool onlyForVIP;		// true if transport is only for users in VIP users database
-	bool VIPEnabled;
-	int transportFeatures;
-	std::string language;
-	int VIPFeatures;
-	bool useProxy;
-	std::list <std::string> allowedServers;
-	std::list <std::string> admins;
-	std::map<int,std::string> bindIPs;	// IP address to which libpurple should bind connections
-
-	std::string userDir;	// directory used as .tmp directory for avatars and other libpurple stuff
-	std::string filetransferCache;	// directory where files are saved
-	std::string base64Dir;	// TODO: I'm depracted, remove me
-
-	std::string sqlHost;	// database host
-	std::string sqlPassword;	// database password
-	std::string sqlUser;	// database user
-	std::string sqlDb;		// database database
-	std::string sqlPrefix;	// database prefix used for tables
-	std::string sqlType;	// database type
-	
-	std::string hash; 		// version hash used for caps
-	
-	operator bool() const {
-		return !protocol.empty();
-	}
-};
 
 /*
  * Main transport class. It inits libpurple and Gloox, runs event loop and handles almost all signals.
@@ -243,17 +199,13 @@ public:
 	GlooxGatewayHandler *gatewayHandler;
 	SOCKS5BytestreamServer* ftServer;
 	GMainLoop *loop() { return m_loop; }
+	bool loadConfigFile(const std::string &config = "");
 
 private:
 	/*
 	 * Inits libpurple and PurpleCmd API. Returns true if libpurple was sucefully loaded.
 	 */
 	bool initPurple();
-
-	/*
-	 * Loads config file or profile. Returns true if config file is loaded.
-	 */
-	bool loadConfigFile(const std::string &config);
 
 	/*
 	 * Loads m_protocol class. Returns true if protocol is loaded.
@@ -282,6 +234,7 @@ private:
 	static GlooxMessageHandler* m_pInstance;
 	Transport *m_transport;
 	GMainLoop *m_loop;
+	std::string m_config;
 };
 
 #endif

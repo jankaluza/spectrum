@@ -27,6 +27,7 @@ class RosterManagerTest : public CPPUNIT_NS :: TestFixture
 	CPPUNIT_TEST (handleBuddyCreatedRIE);
 	CPPUNIT_TEST (handleBuddyCreatedSubscribe);
 	CPPUNIT_TEST (handleBuddyCreatedRemove);
+	CPPUNIT_TEST (handleSubscriptionSubscribe);
 	CPPUNIT_TEST_SUITE_END ();
 
 	public:
@@ -46,6 +47,7 @@ class RosterManagerTest : public CPPUNIT_NS :: TestFixture
 		void handleBuddyCreatedRIE();
 		void handleBuddyCreatedSubscribe();
 		void handleBuddyCreatedRemove();
+		void handleSubscriptionSubscribe();
 		
 	private:
 		SpectrumBuddyTest *m_buddy1;

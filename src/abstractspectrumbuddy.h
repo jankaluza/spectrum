@@ -27,6 +27,7 @@
 #include "glib.h"
 #include "gloox/tag.h"
 #include <algorithm>
+#include "configfile.h"
 
 using namespace gloox;
 

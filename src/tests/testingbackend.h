@@ -57,6 +57,9 @@ class TestingBackend : public AbstractBackend {
 			m_buddies.clear();
 		}
 		
+		void updateBuddySubscription(long userId, const std::string &uin, const std::string &subscription) {}
+		void removeBuddy(long userId, const std::string &uin, long buddy_id) {}
+		
 		GlooxParser *getParser() { return m_parser; }
 
 	private:

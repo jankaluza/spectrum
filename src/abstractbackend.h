@@ -33,6 +33,8 @@ class AbstractBackend
 		virtual void addBuddySetting(long userId, long buddyId, const std::string &key, const std::string &value, PurpleType type) = 0;
 		virtual long addBuddy(long userId, const std::string &uin, const std::string &subscription, const std::string &group = "Buddies", const std::string &nickname = "") = 0;
 		virtual GHashTable *getBuddies(long userId, PurpleAccount *account) = 0;
+		virtual void updateBuddySubscription(long userId, const std::string &uin, const std::string &subscription) = 0;
+		virtual void removeBuddy(long userId, const std::string &uin, long buddy_id) = 0;
 
 };
 
