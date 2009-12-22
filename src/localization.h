@@ -35,6 +35,8 @@ class Localization {
 			    { return translate(lang, key.c_str()); }
 	bool loadLocale(const std::string &lang)
 			    { return false; };
+    private:
+	GHashTable *m_locales;
 };
 
 #endif
