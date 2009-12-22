@@ -1463,7 +1463,7 @@ void GlooxMessageHandler::onConnect() {
     m_configuration.hash = Base64::encode64( sha.binary() );
 
 	if (m_firstConnection) {
-// 		new AutoConnectLoop(this);
+		new AutoConnectLoop();
 		m_firstConnection = false;
 	}
 }

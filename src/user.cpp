@@ -94,6 +94,8 @@ User::User(GlooxMessageHandler *parent, JID jid, const std::string &username, co
 		purple_value_set_boolean(value, true);
 		g_hash_table_replace(m_settings, g_strdup("enable_chatstate"), value);
 	}
+	
+	Transport::instance()->sql()->setUserOnline(m_userID, true);
 
 	p->protocol()->onUserCreated(this);
 }
@@ -454,6 +456,8 @@ User::~User(){
 
 	g_hash_table_destroy(m_settings);
 	g_hash_table_destroy(m_filetransfers);
+	
+	Transport::instance()->sql()->setUserOnline(m_userID, false);
 
 	p->protocol()->onDestroy(this);
 }

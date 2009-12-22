@@ -54,6 +54,8 @@ SQLClass::SQLClass(GlooxMessageHandler *parent, bool upgrade) {
 	m_stmt_getBuddiesSettings.stmt = NULL;
 	m_stmt_addBuddySetting.stmt = NULL;
 	m_stmt_getSettings.stmt = NULL;
+	m_stmt_getOnlineUsers.stmt = NULL;
+	m_stmt_setUserOnline.stmt = NULL;
 	
 	m_error = 0;
 	
@@ -228,6 +230,13 @@ void SQLClass::createStatements() {
 												into(m_stmt_getSettings.resType),
 												into(m_stmt_getSettings.resVar),
 												into(m_stmt_getSettings.resValue) ) );
+	if (!m_stmt_getOnlineUsers.stmt)
+		m_stmt_getOnlineUsers.stmt = new Statement( ( STATEMENT("SELECT jid FROM " + p->configuration().sqlPrefix + "users WHERE online=1"),
+													into(m_stmt_getOnlineUsers.resUsers) ) );
+	if (!m_stmt_setUserOnline.stmt)
+		m_stmt_setUserOnline.stmt = new Statement( ( STATEMENT("UPDATE " + p->configuration().sqlPrefix + "users SET online=? WHERE id=?"),
+														use(m_stmt_setUserOnline.online),
+														use(m_stmt_setUserOnline.user_id) ) );
 }
 
 void SQLClass::addUser(const std::string &jid,const std::string &uin,const std::string &password,const std::string &language){
@@ -261,6 +270,8 @@ void SQLClass::removeStatements() {
 	delete m_stmt_getBuddiesSettings.stmt;
 	delete m_stmt_addBuddySetting.stmt;
 	delete m_stmt_getSettings.stmt;
+	delete m_stmt_getOnlineUsers.stmt;
+	delete m_stmt_setUserOnline.stmt;
 	
 	m_stmt_addUser.stmt = NULL;
 	m_stmt_updateUserPassword.stmt = NULL;
@@ -279,6 +290,8 @@ void SQLClass::removeStatements() {
 	m_stmt_getBuddiesSettings.stmt = NULL;
 	m_stmt_addBuddySetting.stmt = NULL;
 	m_stmt_getSettings.stmt = NULL;
+	m_stmt_getOnlineUsers.stmt = NULL;
+	m_stmt_setUserOnline.stmt = NULL;
 }
 
 void SQLClass::reconnect() {
@@ -711,5 +724,20 @@ void SQLClass::addBuddySetting(long userId, long buddyId, const std::string &key
 	STATEMENT_EXECUTE_BEGIN();
 		m_stmt_addBuddySetting.stmt->execute();
 	STATEMENT_EXECUTE_END(m_stmt_addBuddySetting.stmt, addBuddySetting(userId, buddyId, key, value, type));
+}
+
+std::vector<std::string> SQLClass::getOnlineUsers() {
+	STATEMENT_EXECUTE_BEGIN();
+		m_stmt_getOnlineUsers.stmt->execute();
+	STATEMENT_EXECUTE_END(m_stmt_getOnlineUsers.stmt, getOnlineUsers());
+	return m_stmt_getOnlineUsers.resUsers;
+}
+
+void SQLClass::setUserOnline(long userId, bool online) {
+	m_stmt_setUserOnline.user_id = userId;
+	m_stmt_setUserOnline.online = online;
+	STATEMENT_EXECUTE_BEGIN();
+		m_stmt_setUserOnline.stmt->execute();
+	STATEMENT_EXECUTE_END(m_stmt_setUserOnline.stmt, setUserOnline(userId, online));
 }
 

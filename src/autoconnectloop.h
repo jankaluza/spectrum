@@ -22,26 +22,28 @@
 #define AUTOCONNECTLOOP_H
 
 #include <string>
+#include <vector>
 #include <map>
 #include "glib.h"
 #include "purple.h"
 #include "account.h"
 #include "configfile.h"
+#include "spectrumtimer.h"
 
-class GlooxMessageHandler;
-
-class AutoConnectLoop
-{
+// Connects accounts automatically after Spectrum start.
+// Accounts are connected one by one by timer.
+class AutoConnectLoop {
 	public:
-		AutoConnectLoop(GlooxMessageHandler *m);
+		AutoConnectLoop();
 		~AutoConnectLoop();
-		void purpleAccountRemoved(const PurpleAccount *account);
+
+		// Restore next account connection.
+		// Returns true if there are more accounts to be connected.
 		bool restoreNextConnection();
 
 	private:
-		GlooxMessageHandler *main;
-		GList *m_account;
-
+		std::vector <std::string> m_users;
+		SpectrumTimer *m_timer;
 };
 
 #endif
