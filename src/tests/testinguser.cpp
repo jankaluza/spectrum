@@ -13,6 +13,7 @@ TestingUser::TestingUser(const std::string &userkey, const std::string &jid) {
 	g_hash_table_replace(m_settings, g_strdup("enable_avatars"), m_value);
 	m_connected = true;
 	m_readyForConnect = false;
+	removeTimer = 0;
 }
 
 

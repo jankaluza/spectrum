@@ -54,6 +54,10 @@ AbstractUser *UserManager::getUserByAccount(PurpleAccount * account){
 	return (AbstractUser *) account->ui_data;
 }
 
+void UserManager::addUser(AbstractUser *user) {
+	g_hash_table_replace(m_users, g_strdup(user->userKey().c_str()), user);
+}
+
 void UserManager::removeUser(AbstractUser *user){
 	Log("logout", "removing user");
 	g_hash_table_remove(m_users, user->userKey().c_str());
@@ -84,6 +88,10 @@ void UserManager::buddyOffline() {
 	m_onlineBuddies--;
 }
 
-long UserManager::onlineUserCount(){
+long UserManager::onlineBuddiesCount() {
 	return m_onlineBuddies;
+}
+
+int UserManager::userCount() {
+	return g_hash_table_size(m_users);
 }
