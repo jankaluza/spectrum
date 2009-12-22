@@ -825,7 +825,7 @@ GlooxMessageHandler::GlooxMessageHandler(const std::string &config) : MessageHan
 
 		m_discoHandler = new CapabilityHandler();
 
-		m_discoInfoHandler = new GlooxDiscoInfoHandler(this);
+		m_discoInfoHandler = new GlooxDiscoInfoHandler();
 		j->registerIqHandler(m_discoInfoHandler,ExtDiscoInfo);
 
 		m_adhoc = new GlooxAdhocHandler(this);

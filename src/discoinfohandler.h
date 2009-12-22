@@ -27,21 +27,16 @@
 #include "purple.h"
 #include <glib.h>
 #include "configfile.h"
-class GlooxMessageHandler;
 
 using namespace gloox;
 
-
-class GlooxDiscoInfoHandler : public IqHandler
-{
-
-public:
-	GlooxDiscoInfoHandler(GlooxMessageHandler *parent);
-	~GlooxDiscoInfoHandler();
-	bool handleIq (const IQ &iq);
-	void handleIqID (const IQ &iq, int context);
-	GlooxMessageHandler *p;
-
+class GlooxDiscoInfoHandler : public IqHandler {
+	public:
+		GlooxDiscoInfoHandler();
+		~GlooxDiscoInfoHandler();
+		bool handleIq (const IQ &iq);
+		bool handleIq (Tag *stanzaTag);
+		void handleIqID (const IQ &iq, int context);
 };
 
 #endif

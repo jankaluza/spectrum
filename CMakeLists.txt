@@ -219,6 +219,7 @@ set(spectrum_tests_SRCS
 	src/tests/autoconnectlooptest.cpp
 	src/tests/capabilityhandlertest.cpp
 	src/tests/configfiletest.cpp
+	src/tests/discoinfohandlertest.cpp
 	src/tests/main.cpp
 	src/tests/spectrumbuddytest.cpp
 	src/tests/spectrumconversationtest.cpp
@@ -237,6 +238,7 @@ set(spectrum_tests_SRCS
 	src/capabilityhandler.cpp
 	src/capabilitymanager.cpp
 	src/configfile.cpp
+	src/discoinfohandler.cpp
 	src/parser.cpp
 	src/rostermanager.cpp
 	src/rosterstorage.cpp
@@ -254,6 +256,7 @@ set(spectrum_tests_MOC_HDRS
 	src/tests/autoconnectlooptest.h
 	src/tests/capabilityhandlertest.h
 	src/tests/configfiletest.h
+	src/tests/discoinfohandler.h
 	src/tests/spectrumbuddytest.h
 	src/tests/spectrumconversationtest.h
 	src/tests/spectrummucconversationtest.h
@@ -270,6 +273,7 @@ set(spectrum_tests_MOC_HDRS
 	src/capabilityhandler.h
 	src/capabilitymanager.h
 	src/configfile.h
+	src/discoinfohandler.h
 	src/parser.h
 	src/rostermanager.h
 	src/rosterstorage.h
