@@ -28,6 +28,8 @@
 #include <glib.h>
 #include "configfile.h"
 
+extern LogClass Log_;
+
 using namespace gloox;
 
 class GlooxDiscoInfoHandler : public IqHandler {

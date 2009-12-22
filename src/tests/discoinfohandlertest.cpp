@@ -32,7 +32,7 @@ Tag *GlooxDiscoInfoHandlerTest::getCorrectTag(const std::string &to) {
 }
 
 void GlooxDiscoInfoHandlerTest::handleIq() {
-	Tag *iq = getCorrectTag("icq.localhost");
+	Tag *iq = getCorrectTag("buddy1@icq.localhost");
 	m_handler->handleIq(iq);
 	m_tags = Transport::instance()->getTags();
 	

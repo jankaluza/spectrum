@@ -21,6 +21,7 @@
 #include "discoinfohandler.h"
 #include "protocols/abstractprotocol.h"
 #include "transport.h"
+#include "log.h"
 
 GlooxDiscoInfoHandler::GlooxDiscoInfoHandler() : IqHandler() {
 }
@@ -39,7 +40,7 @@ bool GlooxDiscoInfoHandler::handleIq(Tag *stanzaTag) {
 	if (stanzaTag->findAttribute("type") != "get")
 		return true;
 
-	if (JID(stanzaTag->findAttribute("to")).username() == "") {
+	if (JID(stanzaTag->findAttribute("to")).username() != "") {
 		Tag *query = stanzaTag->findChildWithAttrib("xmlns", "http://jabber.org/protocol/disco#info");
 		if (query) {
 			IQ _s(IQ::Result, stanzaTag->findAttribute("from"), stanzaTag->findAttribute("id"));
@@ -57,7 +58,7 @@ bool GlooxDiscoInfoHandler::handleIq(Tag *stanzaTag) {
 			t->addAttribute("type",Transport::instance()->protocol()->gatewayIdentity());
 			query2->addChild(t);
 
-			std::list <std::string> features = Transport::instance()->protocol()->transportFeatures();
+			std::list <std::string> features = Transport::instance()->protocol()->buddyFeatures();
 			for (std::list <std::string>::iterator it = features.begin(); it != features.end(); it++) {
 				t = new Tag("feature");
 				t->addAttribute("var", *it);
