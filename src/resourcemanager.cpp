@@ -48,7 +48,7 @@ void ResourceManager::setResource(const Presence &stanza) {
 	Tag *c = stanzaTag->findChildWithAttrib("xmlns", "http://jabber.org/protocol/caps");
 	// presence has caps
 	if (c != NULL) {
-		m_resources[resource].caps = Transport::instance()->getFeatures(c->findAttribute("ver"));
+		m_resources[resource].caps = Transport::instance()->getCapabilities(c->findAttribute("ver"));
 	}
 	setActiveResource();
 	delete stanzaTag;

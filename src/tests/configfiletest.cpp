@@ -1,6 +1,6 @@
 #include "configfiletest.h"
 #include "configfile.h"
-#include "../caps.h"
+#include "../capabilityhandler.h"
 #include "transport.h"
 #include "log.h"
 

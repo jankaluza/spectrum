@@ -6,12 +6,14 @@
 #include <cppunit/TestRunner.h>
 #include <cppunit/BriefTestProgressListener.h>
 #include "testingbackend.h"
+#include "testingprotocol.h"
 
 int main (int argc, char* argv[])
 {
 	
 	Transport *transport = new Transport("icq.localhost");
 	TestingBackend *backend = new TestingBackend();
+	TestingProtocol *protocol = new TestingProtocol();
 	// informs test-listener about testresults
 	CPPUNIT_NS :: TestResult testresult;
 
@@ -32,6 +34,7 @@ int main (int argc, char* argv[])
 	CPPUNIT_NS :: CompilerOutputter compileroutputter (&collectedresults, std::cerr);
 	compileroutputter.write ();
 	
+	delete protocol;
 	delete transport;
 	delete backend;
 

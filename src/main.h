@@ -78,7 +78,7 @@ using namespace gloox;
 extern Localization localization;
 extern LogClass Log_;
 
-class GlooxDiscoHandler;
+class CapabilityHandler;
 class GlooxDiscoInfoHandler;
 class GlooxRegisterHandler;
 class GlooxXPingHandler;
@@ -136,11 +136,6 @@ public:
 	void transportConnect();
 
 	/*
-	 * Returns true if we have cached features (capabilities) of client with version string `ver`.
-	 */
-	bool hasCaps(const std::string &ver);
-
-	/*
 	 * Callbacks for libpurple UI-ops.
 	 */
 	void purpleConnectionError(PurpleConnection *gc, PurpleConnectionError reason, const char *text);
@@ -195,7 +190,6 @@ public:
 	SIProfileFT* ft;
 	Component *j;
 	int lastIP;
-	std::map <std::string,int> capsCache;
 	GlooxGatewayHandler *gatewayHandler;
 	SOCKS5BytestreamServer* ftServer;
 	GMainLoop *loop() { return m_loop; }
@@ -217,7 +211,7 @@ private:
 	SQLClass *m_sql;							// storage class
 	AccountCollector *m_collector;
 
-	GlooxDiscoHandler *m_discoHandler;			// disco stanza handler
+	CapabilityHandler *m_discoHandler;			// disco stanza handler
 	GlooxDiscoInfoHandler *m_discoInfoHandler;	// disco#info handler
  	GlooxRegisterHandler *m_reg;				// jabber:iq:register handler
 	GlooxStatsHandler *m_stats;					// Statistic Gathering handler (xep-0039)

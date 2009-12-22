@@ -26,57 +26,62 @@
 #include <iostream>
 #include "limits.h"
 
-/*
- * Struct used for storing transport configuration.
- */
+
+// Structure used for storing transport configuration.
 struct Configuration {
-	std::string discoName;	// name which will be shown in service discovery
-	std::string protocol;	// protocol used for transporting
-	std::string server;		// address of server to bind to
-	std::string password;	// server password
-	std::string jid;		// JID of this transport
-	int port;				// server port
+	std::string discoName;			// Name for service discovery.
+	std::string protocol;			// Libpurple protocol.
+	std::string server;				// XMPP server address.
+	std::string password;			// Password to connect server.
+	std::string jid;				// Spectrum JID.
+	int port;						// Server port.
 	
-	int logAreas;			// logging areas
-	std::string logfile;
-	std::string pid_f;
+	int logAreas;					// Logging areas.
+	std::string logfile;			// Logging file.
+	std::string pid_f;				// File to store PID.
 
-	bool onlyForVIP;		// true if transport is only for users in VIP users database
-	bool VIPEnabled;
-	int transportFeatures;
-	std::string language;
-	int VIPFeatures;
-	bool useProxy;
-	std::list <std::string> allowedServers;
-	std::list <std::string> admins;
-	std::map<int,std::string> bindIPs;	// IP address to which libpurple should bind connections
+	bool onlyForVIP;				// True if transport is only for VIP.
+	bool VIPEnabled;				// True if VIP mode is enabled.
+	int transportFeatures;			// Transport features for all users.
+	int VIPFeatures;				// Transport features for VIP users.
+	std::string language;			// Default language.
+	bool useProxy;					// True if transport has to use proxy to connect legacy network.
 
-	std::string userDir;	// directory used as .tmp directory for avatars and other libpurple stuff
-	std::string filetransferCache;	// directory where files are saved
-	std::string base64Dir;	// TODO: I'm depracted, remove me
+	std::string userDir;			// Directory used to store avatars.
+	std::string filetransferCache;	// Directory where transfered files are stored.
 
-	std::string sqlHost;	// database host
-	std::string sqlPassword;	// database password
-	std::string sqlUser;	// database user
-	std::string sqlDb;		// database database
-	std::string sqlPrefix;	// database prefix used for tables
-	std::string sqlType;	// database type
+	std::string sqlHost;			// Database host.
+	std::string sqlPassword;		// Database password.
+	std::string sqlUser;			// Database user.
+	std::string sqlDb;				// Database name.
+	std::string sqlPrefix;			// Prefix for database tables.
+	std::string sqlType;			// Type of database.
 	
-	std::string hash; 		// version hash used for caps
+	std::string hash; 				// Version hash used for caps.
 	
+	std::list <std::string> allowedServers;		// Hostnames which are allowed to connect.
+	std::list <std::string> admins;				// JIDs of Spectrum administrators
+	std::map<int,std::string> bindIPs;			// IP addresses used to bind connections.
+
 	operator bool() const {
 		return !protocol.empty();
 	}
 };
 
+// Loads Spectrum config file, parses it and stores into Configuration structure.
 class ConfigFile {
 	public:
-		ConfigFile(const std::string &filename);
+		// If filename is provided, loadFromFile is called automatically.
+		ConfigFile(const std::string &filename = "");
 		~ConfigFile();
-		
+
+		// Loads configuration from files.
 		void loadFromFile(const std::string &file);
+
+		// Loads configuration from data.
 		void loadFromData(const std::string &data);
-		
+
+		// Returns parsed configuration.
 		Configuration getConfiguration();
 
 #ifndef TESTS

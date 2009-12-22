@@ -32,7 +32,7 @@
 #include "accountcollector.h"
 #include "striphtmltags.h"
 #include "sql.h"
-#include "caps.h"
+#include "capabilityhandler.h"
 #include "spectrumbuddy.h"
 #include "transport.h"
 

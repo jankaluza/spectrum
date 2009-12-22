@@ -1,7 +1,7 @@
 #include "spectrummucconversationtest.h"
 #include "spectrummucconversation.h"
 #include "transport.h"
-#include "../caps.h"
+#include "../capabilityhandler.h"
 
 void SpectrumMUCConversationTest::setUp (void) {
 	m_user = new TestingUser("key", "user@example.com");
