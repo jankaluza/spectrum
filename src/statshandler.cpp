@@ -197,7 +197,7 @@ bool GlooxStatsHandler::handleIq (const IQ &stanza){
 
 		time_t seconds = time(NULL);
 
-		long users = p->userManager()->onlineUserCount();
+		long users = p->userManager()->onlineBuddiesCount();
 
 		for (std::list<Tag*>::iterator i = stats.begin(); i != stats.end(); i++) {
 			std::string name = (*i)->findAttribute("name");

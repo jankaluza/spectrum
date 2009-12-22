@@ -29,20 +29,39 @@
 
 class GlooxMessageHandler;
 
+// Class for managing XMPP users.
 class UserManager
 {
 	public:
 		UserManager();
 		~UserManager();
+
+		// Returns user by JID.
 		AbstractUser *getUserByJID(std::string barejid);
+
+		// Returns user by PurpleAccount.
 		AbstractUser *getUserByAccount(PurpleAccount *account);
-		void addUser(AbstractUser *user) { g_hash_table_replace(m_users, g_strdup(user->userKey().c_str()), user); }
+
+		// Adds new user to manager.
+		void addUser(AbstractUser *user);
+
+		// Removes user immediately.
 		void removeUser(AbstractUser *user);
+
+		// Removes user from GLib's event loop. (setups timer with 0 timeout).
 		void removeUserTimer(AbstractUser *user);
+
+		// Sets buddy online.
 		void buddyOnline();
+
+		// Sets buddy offline.
 		void buddyOffline();
-		long onlineUserCount();
-		int userCount() { return g_hash_table_size(m_users); }
+
+		// Returns count of online buddies.
+		long onlineBuddiesCount();
+
+		// Returns count of online users;
+		int userCount();
 
 	private:
 		GHashTable *m_users;	// key = JID; value = User*
