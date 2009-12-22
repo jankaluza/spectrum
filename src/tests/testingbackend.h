@@ -60,13 +60,16 @@ class TestingBackend : public AbstractBackend {
 		void updateBuddySubscription(long userId, const std::string &uin, const std::string &subscription) {}
 		void removeBuddy(long userId, const std::string &uin, long buddy_id) {}
 		
-		std::vector<std::string> getOnlineUsers() { std::vector<std::string> test; return test;}
+		std::vector<std::string> getOnlineUsers() { return m_onlineUsers; }
+		void addOnlineUser(const std::string &jid) { m_onlineUsers.push_back(jid); }
+		void clearOnlineUsers() { m_onlineUsers.clear(); }
 		void setUserOnline(long userId, bool online) {}
 		
 		GlooxParser *getParser() { return m_parser; }
 
 	private:
 		std::map <std::string, Buddy> m_buddies;
+		std::vector<std::string> m_onlineUsers;
 		static TestingBackend *m_pInstance;
 		GlooxParser *m_parser;
 };

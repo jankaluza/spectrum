@@ -216,6 +216,7 @@ if (CPPUNIT_FOUND)
 include_directories(${CPPUNIT_INCLUDE_DIR})
 
 set(spectrum_tests_SRCS
+	src/tests/autoconnectlooptest.cpp
 	src/tests/capabilityhandlertest.cpp
 	src/tests/configfiletest.cpp
 	src/tests/main.cpp
@@ -232,6 +233,7 @@ set(spectrum_tests_SRCS
 	
 	src/abstractconversation.cpp
 	src/abstractspectrumbuddy.cpp
+	src/autoconnectloop.cpp
 	src/capabilityhandler.cpp
 	src/capabilitymanager.cpp
 	src/configfile.cpp
@@ -249,6 +251,7 @@ set(spectrum_tests_SRCS
 )
 
 set(spectrum_tests_MOC_HDRS
+	src/tests/autoconnectlooptest.h
 	src/tests/capabilityhandlertest.h
 	src/tests/configfiletest.h
 	src/tests/spectrumbuddytest.h
@@ -263,6 +266,7 @@ set(spectrum_tests_MOC_HDRS
 	
 	src/abstractconversation.h
 	src/abstractspectrumbuddy.h
+	src/autoconnectloop.h
 	src/capabilityhandler.h
 	src/capabilitymanager.h
 	src/configfile.h
