@@ -24,21 +24,18 @@
 #include "purple.h"
 #include <gloox/iqhandler.h>
 
-class GlooxMessageHandler;
-class RosterRow;
-
 using namespace gloox;
 
 class GlooxRegisterHandler : public IqHandler {
 	public:
-		GlooxRegisterHandler(GlooxMessageHandler *parent);
+		GlooxRegisterHandler();
 		~GlooxRegisterHandler();
 		bool handleIq (const IQ &iq);
+		bool handleIq (Tag *iqTag);
 		void handleIqID (const IQ &iq, int context);
 
-		GlooxMessageHandler *p;
 	private:
-		void sendError(int code, const std::string &error, const IQ &iq);
+		void sendError(int code, const std::string &error, Tag *iqTag);
 };
 
 #endif

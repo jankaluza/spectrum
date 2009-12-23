@@ -463,13 +463,13 @@ long SQLClass::getRegisteredUsersRosterCount(){
 	return r;
 }
 
-void SQLClass::updateUserPassword(const std::string &jid,const std::string &password,const std::string &language) {
+void SQLClass::updateUser(const std::string &jid,const std::string &password,const std::string &language) {
 	m_stmt_updateUserPassword.jid.assign(jid);
 	m_stmt_updateUserPassword.password.assign(password);
 	m_stmt_updateUserPassword.language.assign(language);
 	STATEMENT_EXECUTE_BEGIN();
 		m_stmt_updateUserPassword.stmt->execute();
-	STATEMENT_EXECUTE_END(m_stmt_updateUserPassword.stmt, updateUserPassword(jid, password, language));
+	STATEMENT_EXECUTE_END(m_stmt_updateUserPassword.stmt, updateUser(jid, password, language));
 }
 
 void SQLClass::removeBuddy(long userId, const std::string &uin, long buddy_id) {

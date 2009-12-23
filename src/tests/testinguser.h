@@ -27,6 +27,7 @@ class TestingUser : public AbstractUser {
 		bool readyForConnect() { return m_readyForConnect; }
 		void setReadyForConnect(bool connected) { m_readyForConnect = connected; }
 		void connect() { m_connected = true;}
+		void disconnected() {}
 
 	private:
 		PurpleValue *m_value;

@@ -36,3 +36,11 @@ AbstractProtocol *Transport::protocol() {
 	return GlooxMessageHandler::instance()->protocol();
 }
 
+Configuration &Transport::getConfiguration() {
+	return GlooxMessageHandler::instance()->configuration();
+}
+
+void Transport::registerStanzaExtension(StanzaExtension *extension) {
+	return GlooxMessageHandler::instance()->j->registerStanzaExtension(extension);
+}
+

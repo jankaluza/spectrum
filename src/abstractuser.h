@@ -45,6 +45,7 @@ class AbstractUser : public ResourceManager
 		virtual bool isConnected() = 0;
 		virtual bool readyForConnect() = 0;
 		virtual void connect() = 0;
+		virtual void disconnected() = 0;
 		
 		void setProtocolData(void *protocolData) { m_protocolData = protocolData; }
 		void *protocolData() { return m_protocolData; }

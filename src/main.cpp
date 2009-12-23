@@ -846,7 +846,7 @@ GlooxMessageHandler::GlooxMessageHandler(const std::string &config) : MessageHan
 		j->registerConnectionListener(this);
 		gatewayHandler = new GlooxGatewayHandler(this);
 		j->registerIqHandler(gatewayHandler, ExtGateway);
-		m_reg = new GlooxRegisterHandler(this);
+		m_reg = new GlooxRegisterHandler();
 		j->registerIqHandler(m_reg, ExtRegistration);
 		m_stats = new GlooxStatsHandler(this);
 		j->registerIqHandler(m_stats, ExtStats);
