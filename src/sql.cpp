@@ -56,6 +56,7 @@ SQLClass::SQLClass(GlooxMessageHandler *parent, bool upgrade) {
 	m_stmt_getSettings.stmt = NULL;
 	m_stmt_getOnlineUsers.stmt = NULL;
 	m_stmt_setUserOnline.stmt = NULL;
+	m_stmt_removeBuddySettings.stmt = NULL;
 	
 	m_error = 0;
 	
@@ -263,6 +264,7 @@ void SQLClass::removeStatements() {
 	delete m_stmt_removeUser.stmt;
 	delete m_stmt_removeUserBuddies.stmt;
 	delete m_stmt_addBuddy.stmt;
+	delete m_stmt_removeBuddySettings.stmt;
 #ifdef WITH_SQLITE
 	delete m_stmt_updateBuddy.stmt;
 #endif
@@ -296,6 +298,7 @@ void SQLClass::removeStatements() {
 	m_stmt_getSettings.stmt = NULL;
 	m_stmt_getOnlineUsers.stmt = NULL;
 	m_stmt_setUserOnline.stmt = NULL;
+	m_stmt_removeBuddySettings.stmt = NULL;
 }
 
 void SQLClass::reconnect() {
