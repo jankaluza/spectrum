@@ -22,69 +22,46 @@
 #include "main.h"
 #include "log.h"
 #include "usermanager.h"
+#include "transport.h"
 
 /*
  * Callback which is called periodically and restoring connections.
  */
 static gboolean iter(gpointer data){
 	AutoConnectLoop *loop = (AutoConnectLoop*) data;
-	if (loop->restoreNextConnection())
-		return TRUE;
-// 	delete loop;
-	return FALSE;
+	return loop->restoreNextConnection();
 }
 
-static void account_removed(const PurpleAccount *account, gpointer user_data) {
-	AutoConnectLoop *loop = (AutoConnectLoop*) user_data;
-	loop->purpleAccountRemoved(account);
-}
-
-AutoConnectLoop::AutoConnectLoop(GlooxMessageHandler *m){
-	main = m;
-	static int conn_handle;
+AutoConnectLoop::AutoConnectLoop() {
+	m_users = Transport::instance()->sql()->getOnlineUsers();
+	m_timer = new SpectrumTimer(1000, iter, this);
+	m_timer->start();
 	
-	m_account = purple_accounts_get_all();
-	if (m_account != NULL) {
-		purple_signal_connect(purple_accounts_get_handle(), "account-removed", &conn_handle, PURPLE_CALLBACK(account_removed), this);
-		g_timeout_add(10000,&iter,this);
-	}
-	else
+	if (m_users.size() == 0)
 		delete this;
 }
 
 AutoConnectLoop::~AutoConnectLoop() {
 	Log("connection restorer", "Restorer deleted");
-}
-
-void AutoConnectLoop::purpleAccountRemoved(const PurpleAccount *account) {
-	if (m_account)
-		if (account == m_account->data)
-			m_account = m_account->next;
+	delete m_timer;
 }
 
 bool AutoConnectLoop::restoreNextConnection() {
-// 	Stanza * stanza;
-	User *user;
-	PurpleAccount *account;
-	Log("connection restorer", "Restoring new connection");
-	if (m_account == NULL)
+	if (m_users.size() == 0)
 		return false;
+	std::string jid = m_users.back();
+	m_users.pop_back();
 
-	account = (PurpleAccount *) m_account->data;
-
-	Log("connection restorer", "Checking next account");
-	if (purple_presence_is_online(account->presence)) {
-		user = (User *) main->userManager()->getUserByAccount(account);
-		if (user == NULL) {
-			Log("connection restorer", "Sending probe presence to "<< JID((std::string)purple_account_get_string(account,"lastUsedJid","")).bare());
-			Tag *stanza = new Tag("presence");
-			stanza->addAttribute( "to", JID((std::string)purple_account_get_string(account,"lastUsedJid","")).bare());
-			stanza->addAttribute( "type", "probe");
-			stanza->addAttribute( "from", main->jid());
-			main->j->send(stanza);
-			m_account = m_account->next;
-			return true;
-		}
+	Log("connection restorer", "Checking next jid " << jid);
+	AbstractUser *user = Transport::instance()->userManager()->getUserByJID(jid);
+	if (user == NULL) {
+		Log("connection restorer", "Sending probe presence to " << jid);
+		Tag *stanza = new Tag("presence");
+		stanza->addAttribute( "to", jid);
+		stanza->addAttribute( "type", "probe");
+		stanza->addAttribute( "from", Transport::instance()->jid());
+		Transport::instance()->send(stanza);
+		return true;
 	}
 	Log("connection restorer", "There is no other account to be checked => stopping Restorer");
 	return false;

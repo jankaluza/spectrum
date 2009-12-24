@@ -825,7 +825,7 @@ GlooxMessageHandler::GlooxMessageHandler(const std::string &config) : MessageHan
 
 		m_discoHandler = new CapabilityHandler();
 
-		m_discoInfoHandler = new GlooxDiscoInfoHandler(this);
+		m_discoInfoHandler = new GlooxDiscoInfoHandler();
 		j->registerIqHandler(m_discoInfoHandler,ExtDiscoInfo);
 
 		m_adhoc = new GlooxAdhocHandler(this);
@@ -1463,7 +1463,7 @@ void GlooxMessageHandler::onConnect() {
     m_configuration.hash = Base64::encode64( sha.binary() );
 
 	if (m_firstConnection) {
-// 		new AutoConnectLoop(this);
+		new AutoConnectLoop();
 		m_firstConnection = false;
 	}
 }

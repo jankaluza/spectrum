@@ -25,6 +25,7 @@
 #include <list>
 #include "account.h"
 #include "value.h"
+#include <vector>
 
 class AbstractBackend
 {
@@ -35,6 +36,8 @@ class AbstractBackend
 		virtual GHashTable *getBuddies(long userId, PurpleAccount *account) = 0;
 		virtual void updateBuddySubscription(long userId, const std::string &uin, const std::string &subscription) = 0;
 		virtual void removeBuddy(long userId, const std::string &uin, long buddy_id) = 0;
+		virtual std::vector<std::string> getOnlineUsers() = 0;
+		virtual void setUserOnline(long userId, bool online) = 0;
 
 };
 

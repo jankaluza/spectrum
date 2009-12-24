@@ -222,8 +222,10 @@ if (CPPUNIT_FOUND)
 include_directories(${CPPUNIT_INCLUDE_DIR})
 
 set(spectrum_tests_SRCS
+	src/tests/autoconnectlooptest.cpp
 	src/tests/capabilityhandlertest.cpp
 	src/tests/configfiletest.cpp
+	src/tests/discoinfohandlertest.cpp
 	src/tests/main.cpp
 	src/tests/spectrumbuddytest.cpp
 	src/tests/spectrumconversationtest.cpp
@@ -238,9 +240,11 @@ set(spectrum_tests_SRCS
 	
 	src/abstractconversation.cpp
 	src/abstractspectrumbuddy.cpp
+	src/autoconnectloop.cpp
 	src/capabilityhandler.cpp
 	src/capabilitymanager.cpp
 	src/configfile.cpp
+	src/discoinfohandler.cpp
 	src/parser.cpp
 	src/rostermanager.cpp
 	src/rosterstorage.cpp
@@ -255,8 +259,10 @@ set(spectrum_tests_SRCS
 )
 
 set(spectrum_tests_MOC_HDRS
+	src/tests/autoconnectlooptest.h
 	src/tests/capabilityhandlertest.h
 	src/tests/configfiletest.h
+	src/tests/discoinfohandler.h
 	src/tests/spectrumbuddytest.h
 	src/tests/spectrumconversationtest.h
 	src/tests/spectrummucconversationtest.h
@@ -269,9 +275,11 @@ set(spectrum_tests_MOC_HDRS
 	
 	src/abstractconversation.h
 	src/abstractspectrumbuddy.h
+	src/autoconnectloop.h
 	src/capabilityhandler.h
 	src/capabilitymanager.h
 	src/configfile.h
+	src/discoinfohandler.h
 	src/parser.h
 	src/rostermanager.h
 	src/rosterstorage.h

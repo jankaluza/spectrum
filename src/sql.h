@@ -243,6 +243,18 @@ struct removeBuddySettingsStatement {
 	Poco::Data::Statement *stmt;
 };
 
+struct setUserOnlineStatement {
+	Poco::Int32 user_id;
+	bool online;
+	Poco::Data::Statement *stmt;
+};
+
+struct getOnlineUsersStatement {
+	Poco::Data::Statement *stmt;
+	
+	std::vector<std::string> resUsers;
+};
+
 /*
  * SQL storage backend. Uses libdbi for communication with SQL servers.
  */
@@ -278,6 +290,8 @@ class SQLClass : public AbstractBackend {
 		UserRow getUserByJid(const std::string &jid);
 		GHashTable *getBuddies(long userId, PurpleAccount *account = NULL);
 		bool loaded() { return m_loaded; }
+		std::vector<std::string> getOnlineUsers();
+		void setUserOnline(long userId, bool online);
 		
 	private:
 		/*
@@ -302,6 +316,8 @@ class SQLClass : public AbstractBackend {
 		getSettingsStatement m_stmt_getSettings;
 		addBuddySettingStatement m_stmt_addBuddySetting;
 		removeBuddySettingsStatement m_stmt_removeBuddySettings;
+		setUserOnlineStatement m_stmt_setUserOnline;
+		getOnlineUsersStatement m_stmt_getOnlineUsers;
 
 		Poco::Data::Session *m_sess;
 		Poco::UInt64 m_version;
