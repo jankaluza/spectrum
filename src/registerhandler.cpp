@@ -243,7 +243,7 @@ bool GlooxRegisterHandler::handleIq(Tag *iqTag) {
 				std::cout << "* sending " << tag->xml() << "\n";
 				Transport::instance()->send(tag);
 				if (res.id != -1) {
-					Transport::instance()->sql()->removeUser(from.bare());
+					Transport::instance()->sql()->removeUser(res.id);
 				}
 // 				if (account)
 // 					Transport::instance()->collector()->collectNow(account, true);

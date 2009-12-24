@@ -127,8 +127,8 @@ void SQLClass::createStatements() {
 												use(m_stmt_removeBuddy.user_id),
 												use(m_stmt_removeBuddy.uin) ) );
 	if (!m_stmt_removeUser.stmt)
-		m_stmt_removeUser.stmt = new Statement( ( STATEMENT("DELETE FROM " + p->configuration().sqlPrefix + "users WHERE jid=?"),
-												use(m_stmt_removeUser.jid) ) );
+		m_stmt_removeUser.stmt = new Statement( ( STATEMENT("DELETE FROM " + p->configuration().sqlPrefix + "users WHERE id=?"),
+												use(m_stmt_removeUser.userId) ) );
 	if (!m_stmt_removeUserBuddies.stmt)
 		m_stmt_removeUserBuddies.stmt = new Statement( ( STATEMENT("DELETE FROM " + p->configuration().sqlPrefix + "buddies WHERE user_id=?"),
 														use(m_stmt_removeUserBuddies.user_id) ) );
@@ -482,11 +482,15 @@ void SQLClass::removeBuddy(long userId, const std::string &uin, long buddy_id) {
 	STATEMENT_EXECUTE_END(m_stmt_removeBuddy.stmt, removeBuddy(userId, uin, buddy_id));
 }
 
-void SQLClass::removeUser(const std::string &jid) {
-	m_stmt_removeUser.jid.assign(jid);
+void SQLClass::removeUser(long userId) {
+	m_stmt_removeUser.userId = userId;
 	STATEMENT_EXECUTE_BEGIN();
 		m_stmt_removeUser.stmt->execute();
-	STATEMENT_EXECUTE_END(m_stmt_removeUser.stmt, removeUser(jid));
+		*m_sess << "DELETE FROM " + p->configuration().sqlPrefix + "buddies WHERE user_id=?", use(m_stmt_removeUser.userId), now;
+		*m_sess << "DELETE FROM " + p->configuration().sqlPrefix + "buddies_settings WHERE user_id=?", use(m_stmt_removeUser.userId), now;
+		*m_sess << "DELETE FROM " + p->configuration().sqlPrefix + "users_settings WHERE user_id=?", use(m_stmt_removeUser.userId), now;
+	STATEMENT_EXECUTE_END(m_stmt_removeUser.stmt, removeUser(userId));
+
 }
 
 void SQLClass::removeUserBuddies(long userId) {

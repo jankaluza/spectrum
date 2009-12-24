@@ -48,7 +48,7 @@ class AbstractBackend {
 		virtual void setUserOnline(long userId, bool online) = 0;
 		virtual UserRow getUserByJid(const std::string &jid) = 0;
 		virtual void addUser(const std::string &jid, const std::string &uin, const std::string &password, const std::string &language) = 0;
-		virtual void removeUser(const std::string &jid) = 0;
+		virtual void removeUser(long userId) = 0;
 		virtual void updateUser(const std::string &jid,const std::string &password, const std::string &language) = 0;
 
 };

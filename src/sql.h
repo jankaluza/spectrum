@@ -123,7 +123,7 @@ struct removeBuddyStatement {
 };
 
 struct removeUserStatement {
-	std::string jid;
+	Poco::Int32 userId;
 	Poco::Data::Statement *stmt;
 };
 
@@ -254,7 +254,7 @@ class SQLClass : public AbstractBackend {
 
 		void addUser(const std::string &jid, const std::string &uin, const std::string &password, const std::string &language);
 		void addDownload(const std::string &filename, const std::string &vip);
-		void removeUser(const std::string &jid);
+		void removeUser(long userId);
 		void updateUser(const std::string &jid,const std::string &password, const std::string &language);
 		void removeUserBuddies(long userId);
 		long addBuddy(long userId, const std::string &uin, const std::string &subscription, const std::string &group = "Buddies", const std::string &nickname = "");
