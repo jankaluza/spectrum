@@ -66,9 +66,9 @@ class TestingBackend : public AbstractBackend {
 		void setUserOnline(long userId, bool online) {}
 
 		UserRow getUserByJid(const std::string &jid) { UserRow user; return user; }
-		void addUser(const std::string &jid, const std::string &uin, const std::string &password, const std::string &language) {}
+		void addUser(const std::string &jid, const std::string &uin, const std::string &password, const std::string &language, const std::string &encoding) {}
 		void removeUser(long userId) {}
-		void updateUser(const std::string &jid,const std::string &password, const std::string &language) {}
+		void updateUser(const UserRow &user) {}
 		
 		GlooxParser *getParser() { return m_parser; }
 

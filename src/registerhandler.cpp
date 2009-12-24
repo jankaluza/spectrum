@@ -130,6 +130,16 @@ bool GlooxRegisterHandler::handleIq(Tag *iqTag) {
 		option->addChild( new Tag("value", "en") );
 		field->addChild(option);
 
+		field = new Tag("field");
+		field->addAttribute("type", "text-single");
+		field->addAttribute("var", "encoding");
+		field->addAttribute("label", "Encoding");
+		if (res.id!=-1)
+			field->addChild( new Tag("value", res.encoding) );
+		else
+			field->addChild( new Tag("value", Transport::instance()->getConfiguration().encoding) );
+		x->addChild(field);
+
 		if (res.id != -1) {
 			field = new Tag("field");
 			field->addAttribute("type", "boolean");
@@ -151,9 +161,11 @@ bool GlooxRegisterHandler::handleIq(Tag *iqTag) {
 		Tag *usernametag;
 		Tag *passwordtag;
 		Tag *languagetag;
+		Tag *encodingtag;
 		std::string username("");
 		std::string password("");
 		std::string language("");
+		std::string encoding("");
 
 		UserRow res = Transport::instance()->sql()->getUserByJid(from.bare());
 		
@@ -177,6 +189,8 @@ bool GlooxRegisterHandler::handleIq(Tag *iqTag) {
 					password = v->cdata();
 				else if (key == "language")
 					language = v->cdata();
+				else if (key == "encoding")
+					encoding = v->cdata();
 				else if (key == "unregister")
 					remove = atoi(v->cdata().c_str());
 			}
@@ -187,11 +201,17 @@ bool GlooxRegisterHandler::handleIq(Tag *iqTag) {
 			usernametag = query->findChild("username");
 			passwordtag = query->findChild("password");
 			languagetag = query->findChild("language");
+			encodingtag = query->findChild("encoding");
 
 			if (languagetag)
 				language = languagetag->cdata();
 			else
 				language = Transport::instance()->getConfiguration().language;
+
+			if (encodingtag)
+				encoding = encodingtag->cdata();
+			else
+				encoding = Transport::instance()->getConfiguration().encoding;
 
 			if (usernametag==NULL || passwordtag==NULL) {
 				sendError(406, "not-acceptable", iqTag);
@@ -302,13 +322,17 @@ bool GlooxRegisterHandler::handleIq(Tag *iqTag) {
 
 		if (res.id == -1) {
 			Log("GlooxRegisterHandler", "adding new user: "<< jid << ", " << username << ", " << password << ", " << language);
-			Transport::instance()->sql()->addUser(jid,username,password,language);
+			Transport::instance()->sql()->addUser(jid,username,password,language,encoding);
 			sendsubscribe = true;
 		}
 		else {
 			// change passwordhttp://soumar.jabbim.cz/phpmyadmin/index.php
 			Log("GlooxRegisterHandler", "changing user password: "<< jid << ", " << username << ", " << password);
-			Transport::instance()->sql()->updateUser(from.bare(),password,language);
+			res.jid = from.bare();
+			res.password = password;
+			res.language = language;
+			res.encoding = encoding;
+			Transport::instance()->sql()->updateUser(res);
 		}
 
 		Tag *reply = new Tag( "iq" );

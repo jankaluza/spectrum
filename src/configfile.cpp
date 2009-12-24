@@ -173,6 +173,7 @@ Configuration ConfigFile::getConfiguration() {
 
 
 	loadString(configuration.language, "service", "language", "en");
+	loadString(configuration.encoding, "service", "encoding", "");
 	loadString(configuration.logfile, "logging", "log_file", "");
 	loadBoolean(configuration.onlyForVIP, "service", "only_for_vip", false);
 	loadBoolean(configuration.VIPEnabled, "service", "vip_mode", false);

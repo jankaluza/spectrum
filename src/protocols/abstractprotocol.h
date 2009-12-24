@@ -96,6 +96,8 @@ class AbstractProtocol
 		 * Change nickname in room. Returns true if the nickname has to be changed in all rooms user is in.
 		 */
 		virtual bool changeNickname(const std::string &nick, PurpleConversation *conv) { return true; }
+		
+		virtual std::string defaultEncoding() { return "utf8"; }
 
 		// SIGNALS
 
