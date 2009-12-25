@@ -295,3 +295,122 @@ void RegisterHandlerTest::handleIqRegisterLegacyNoPassword() {
 	CPPUNIT_ASSERT (tag->findChild("error")->findChild("not-acceptable") != NULL);
 	CPPUNIT_ASSERT (tag->findChild("error")->findChild("not-acceptable")->findAttribute("xmlns") == "urn:ietf:params:xml:ns:xmpp-stanzas");
 }
+
+void RegisterHandlerTest::handleIqRegisterLegacyNoUsername() {
+	Configuration cfg;
+	cfg.onlyForVIP = true;
+	cfg.allowedServers.push_back("spectrum.im");
+	cfg.language = "en";
+	cfg.encoding = "windows-1250";
+	m_backend->setConfiguration(cfg);
+	
+	Tag *iq = new Tag("iq");
+	iq->addAttribute("from", "user@spectrum.im/psi");
+	iq->addAttribute("to", "icq.localhost");
+	iq->addAttribute("type", "set");
+	iq->addAttribute("id", "reg1");
+	Tag *query = new Tag("query");
+	query->addAttribute("xmlns", "jabber:iq:register");
+	query->addChild( new Tag("username", "") );
+	query->addChild( new Tag("password", "secret") );
+	iq->addChild(query);
+	
+	m_handler->handleIq(iq);
+
+	m_tags = Transport::instance()->getTags();
+	CPPUNIT_ASSERT (m_tags.size() == 1);
+
+	Tag *tag = m_tags.front();
+	
+	CPPUNIT_ASSERT (tag->name() == "iq");
+	CPPUNIT_ASSERT (tag->findAttribute("type") == "error");
+	CPPUNIT_ASSERT (tag->findAttribute("id") == "reg1");
+	CPPUNIT_ASSERT (tag->findAttribute("from") == "icq.localhost");
+	CPPUNIT_ASSERT (tag->findAttribute("to") == "user@spectrum.im/psi");
+	CPPUNIT_ASSERT (tag->findChild("error") != NULL);
+	CPPUNIT_ASSERT (tag->findChild("error")->findAttribute("code") == "406");
+	CPPUNIT_ASSERT (tag->findChild("error")->findAttribute("type") == "modify");
+	CPPUNIT_ASSERT (tag->findChild("error")->findChild("not-acceptable") != NULL);
+	CPPUNIT_ASSERT (tag->findChild("error")->findChild("not-acceptable")->findAttribute("xmlns") == "urn:ietf:params:xml:ns:xmpp-stanzas");
+}
+
+void RegisterHandlerTest::handleIqRegisterXData() {
+	Configuration cfg;
+	cfg.onlyForVIP = true;
+	cfg.allowedServers.push_back("spectrum.im");
+	cfg.language = "en";
+	cfg.encoding = "windows-1250";
+	m_backend->setConfiguration(cfg);
+	
+	Tag *iq = new Tag("iq");
+	iq->addAttribute("from", "user@spectrum.im/psi");
+	iq->addAttribute("to", "icq.localhost");
+	iq->addAttribute("type", "set");
+	iq->addAttribute("id", "reg1");
+	Tag *query = new Tag("query");
+	query->addAttribute("xmlns", "jabber:iq:register");
+	Tag *x = new Tag("x");
+	x->addAttribute("xmlns", "jabber:x:data");
+	x->addAttribute("type", "submit");
+
+	Tag *field = new Tag("field");
+	field->addAttribute("type", "hidden");
+	field->addAttribute("var", "FORM_TYPE");
+	field->addChild( new Tag("value", "jabber:iq:register") );
+	x->addChild(field);
+
+	field = new Tag("field");
+	field->addAttribute("type", "text-single");
+	field->addAttribute("var", "username");
+	field->addAttribute("label", "Network username");
+	field->addChild( new Tag("required") );
+	field->addChild( new Tag("value", "someuin") );
+	x->addChild(field);
+
+	field = new Tag("field");
+	field->addAttribute("type", "text-private");
+	field->addAttribute("var", "password");
+	field->addAttribute("label", "Password");
+	field->addChild( new Tag("value", "secret") );
+	x->addChild(field);
+
+	field = new Tag("field");
+	field->addAttribute("type", "list-single");
+	field->addAttribute("var", "language");
+	field->addAttribute("label", "Language");
+	field->addChild( new Tag("value", "cs") );
+	x->addChild(field);
+
+	field = new Tag("field");
+	field->addAttribute("type", "text-single");
+	field->addAttribute("var", "encoding");
+	field->addAttribute("label", "Encoding");
+	field->addChild( new Tag("value", "windows-1250") );
+	x->addChild(field);
+	query->addChild(x);
+	iq->addChild(query);
+
+	UserRow row = m_backend->getUserByJid("user@spectrum.im");
+	CPPUNIT_ASSERT (row.id == -1);
+	
+	m_handler->handleIq(iq);
+	
+	m_tags = Transport::instance()->getTags();
+	CPPUNIT_ASSERT (m_tags.size() == 2);
+	
+	Tag *tag = m_tags.front();
+	CPPUNIT_ASSERT (tag->name() == "iq");
+	CPPUNIT_ASSERT (tag->findAttribute("type") == "result");
+	CPPUNIT_ASSERT (tag->findAttribute("from") == "icq.localhost");
+	CPPUNIT_ASSERT (tag->findAttribute("to") == "user@spectrum.im/psi");
+	CPPUNIT_ASSERT (tag->findAttribute("id") == "reg1");
+	
+	tag = m_tags.back();
+	CPPUNIT_ASSERT (tag->name() == "presence");
+	CPPUNIT_ASSERT (tag->findAttribute("type") == "subscribe");
+	CPPUNIT_ASSERT (tag->findAttribute("to") == "user@spectrum.im");
+	CPPUNIT_ASSERT (tag->findAttribute("from") == "icq.localhost");
+	
+	row = m_backend->getUserByJid("user@spectrum.im");
+	CPPUNIT_ASSERT (row.id != -1);
+}

@@ -19,6 +19,7 @@ class RegisterHandlerTest : public CPPUNIT_NS :: TestFixture
 	CPPUNIT_TEST (handleIqGetExistingUser);
 	CPPUNIT_TEST (handleIqRegisterLegacy);
 	CPPUNIT_TEST (handleIqRegisterLegacyNoPassword);
+	CPPUNIT_TEST (handleIqRegisterXData);
 	CPPUNIT_TEST_SUITE_END ();
 
 	public:
@@ -31,6 +32,8 @@ class RegisterHandlerTest : public CPPUNIT_NS :: TestFixture
 		void handleIqGetExistingUser();
 		void handleIqRegisterLegacy();
 		void handleIqRegisterLegacyNoPassword();
+		void handleIqRegisterLegacyNoUsername();
+		void handleIqRegisterXData();
 
 	private:
 		GlooxRegisterHandler *m_handler;
