@@ -27,8 +27,17 @@
 #include "value.h"
 #include <vector>
 
-class AbstractBackend
-{
+struct UserRow {
+	long id;
+	std::string jid;
+	std::string uin;
+	std::string password;
+	std::string language;
+	std::string encoding;
+};
+
+// Abstract storage backend.
+class AbstractBackend {
 	public:
 		virtual ~AbstractBackend() {}
 		virtual void addBuddySetting(long userId, long buddyId, const std::string &key, const std::string &value, PurpleType type) = 0;
@@ -38,6 +47,10 @@ class AbstractBackend
 		virtual void removeBuddy(long userId, const std::string &uin, long buddy_id) = 0;
 		virtual std::vector<std::string> getOnlineUsers() = 0;
 		virtual void setUserOnline(long userId, bool online) = 0;
+		virtual UserRow getUserByJid(const std::string &jid) = 0;
+		virtual void addUser(const std::string &jid, const std::string &uin, const std::string &password, const std::string &language, const std::string &encoding) = 0;
+		virtual void removeUser(long userId) = 0;
+		virtual void updateUser(const UserRow &user) = 0;
 
 };
 

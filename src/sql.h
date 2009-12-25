@@ -79,17 +79,6 @@ using namespace gloox;
 	m_error = 0;
 
 /*
- * Structure which represents XMPP User
- */
-struct UserRow {
-	long id;
-	std::string jid;
-	std::string uin;
-	std::string password;
-	std::string language;
-};
-
-/*
  * Structure which represents one buddy in roster (one roster row)
  */
 struct RosterRow {
@@ -116,6 +105,7 @@ struct addUserStatement {
 	std::string uin;
 	std::string password;
 	std::string language;
+	std::string encoding;
 	Poco::Data::Statement *stmt;
 };
 
@@ -124,6 +114,7 @@ struct updateUserPasswordStatement {
 	std::string uin;
 	std::string password;
 	std::string language;
+	std::string encoding;
 	Poco::Data::Statement *stmt;
 };
 
@@ -134,7 +125,7 @@ struct removeBuddyStatement {
 };
 
 struct removeUserStatement {
-	std::string jid;
+	Poco::Int32 userId;
 	Poco::Data::Statement *stmt;
 };
 
@@ -179,6 +170,7 @@ struct getUserByJidStatement {
 	std::string resJid;
 	std::string resUin;
 	std::string resPassword;
+	std::string resEncoding;
 };
 
 struct getBuddiesStatement {
@@ -263,10 +255,10 @@ class SQLClass : public AbstractBackend {
 		SQLClass(GlooxMessageHandler *parent, bool upgrade = false);
 		~SQLClass();
 
-		void addUser(const std::string &jid, const std::string &uin, const std::string &password, const std::string &language);
+		void addUser(const std::string &jid, const std::string &uin, const std::string &password, const std::string &language, const std::string &encoding);
 		void addDownload(const std::string &filename, const std::string &vip);
-		void removeUser(const std::string &jid);
-		void updateUserPassword(const std::string &jid,const std::string &password, const std::string &language);
+		void removeUser(long userId);
+		void updateUser(const UserRow &user);
 		void removeUserBuddies(long userId);
 		long addBuddy(long userId, const std::string &uin, const std::string &subscription, const std::string &group = "Buddies", const std::string &nickname = "");
 		void updateBuddySubscription(long userId, const std::string &uin, const std::string &subscription);

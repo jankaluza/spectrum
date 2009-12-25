@@ -19,7 +19,6 @@
  */
 
 #include "registerhandler.h"
-#include "main.h"
 #include <gloox/clientbase.h>
 #include <gloox/registration.h>
 #include <glib.h>
@@ -29,50 +28,58 @@
 #include "accountcollector.h"
 #include "protocols/abstractprotocol.h"
 #include "user.h"
+#include "transport.h"
 
-GlooxRegisterHandler::GlooxRegisterHandler(GlooxMessageHandler *parent) : IqHandler(){
-	p=parent;
-	p->j->registerStanzaExtension( new Registration::Query() );
+GlooxRegisterHandler::GlooxRegisterHandler() : IqHandler() {
+	Transport::instance()->registerStanzaExtension( new Registration::Query() );
 }
 
 GlooxRegisterHandler::~GlooxRegisterHandler(){
 }
 
-bool GlooxRegisterHandler::handleIq (const IQ &iq){
-	Log("GlooxRegisterHandler", iq.from().full() << ": iq:register received (" << iq.subtype() << ")");
-	User *user = (User *) p->userManager()->getUserByJID(iq.from().bare());
-	if (p->configuration().onlyForVIP){
-		std::list<std::string> const &x = p->configuration().allowedServers;
-		if (std::find(x.begin(), x.end(), iq.from().server()) == x.end()) {
+bool GlooxRegisterHandler::handleIq(const IQ &iq) {
+	Tag *iqTag = iq.tag();
+	if (!iqTag) return true;
+	return handleIq(iqTag);
+}
+
+bool GlooxRegisterHandler::handleIq(Tag *iqTag) {
+	Log("GlooxRegisterHandler", iqTag->findAttribute("from") << ": iq:register received (" << iqTag->findAttribute("type") << ")");
+	
+	JID from(iqTag->findAttribute("from"));
+	
+	AbstractUser *user = Transport::instance()->userManager()->getUserByJID(from.bare());
+	if (Transport::instance()->getConfiguration().onlyForVIP) {
+		std::list<std::string> const &x = Transport::instance()->getConfiguration().allowedServers;
+		if (std::find(x.begin(), x.end(), from.server()) == x.end()) {
 			Log("GlooxRegisterHandler", "This user has no permissions to register an account");
-			sendError(400, "bad-request", iq);
+			sendError(400, "bad-request", iqTag);
 			return false;
 		}
 	}
 
-
 	// send registration form
-	if(iq.subtype() == IQ::Get) {
+	if (iqTag->findAttribute("type") == "get") {
 		Tag *reply = new Tag( "iq" );
-		reply->addAttribute( "id", iq.id() );
+		reply->addAttribute( "id", iqTag->findAttribute("id") );
 		reply->addAttribute( "type", "result" );
-		reply->addAttribute( "to", iq.from().full() );
-		reply->addAttribute( "from", p->jid() );
+		reply->addAttribute( "to", iqTag->findAttribute("from") );
+		reply->addAttribute( "from", Transport::instance()->jid() );
 		Tag *query = new Tag( "query" );
 		query->addAttribute( "xmlns", "jabber:iq:register" );
-		UserRow res = p->sql()->getUserByJid(iq.from().bare());
+		UserRow res = Transport::instance()->sql()->getUserByJid(from.bare());
 
 		if (res.id == -1) {
 			Log("GlooxRegisterHandler", "* sending registration form; user is not registered");
-			query->addChild( new Tag("instructions", p->protocol()->text("instructions")) );
+			query->addChild( new Tag("instructions", Transport::instance()->protocol()->text("instructions")) );
 			query->addChild( new Tag("username") );
 			query->addChild( new Tag("password") );
 		}
 		else {
 			Log("GlooxRegisterHandler", "* sending registration form; user is registered");
-			query->addChild( new Tag("instructions", p->protocol()->text("instructions")) );
+			query->addChild( new Tag("instructions", Transport::instance()->protocol()->text("instructions")) );
 			query->addChild( new Tag("registered") );
-			query->addChild( new Tag("username",res.uin));
+			query->addChild( new Tag("username", res.uin));
 			query->addChild( new Tag("password"));
 		}
 
@@ -80,7 +87,7 @@ bool GlooxRegisterHandler::handleIq (const IQ &iq){
 		x->addAttribute("xmlns", "jabber:x:data");
 		x->addAttribute("type", "form");
 		x->addChild( new Tag("title", "Registration") );
-		x->addChild( new Tag("instructions", p->protocol()->text("instructions")) );
+		x->addChild( new Tag("instructions", Transport::instance()->protocol()->text("instructions")) );
 
 		Tag *field = new Tag("field");
 		field->addAttribute("type", "hidden");
@@ -110,7 +117,7 @@ bool GlooxRegisterHandler::handleIq (const IQ &iq){
 		if (res.id!=-1)
 			field->addChild( new Tag("value", res.language) );
 		else
-			field->addChild( new Tag("value", p->configuration().language) );
+			field->addChild( new Tag("value", Transport::instance()->getConfiguration().language) );
 		x->addChild(field);
 
 		Tag *option = new Tag("option");
@@ -123,6 +130,16 @@ bool GlooxRegisterHandler::handleIq (const IQ &iq){
 		option->addChild( new Tag("value", "en") );
 		field->addChild(option);
 
+		field = new Tag("field");
+		field->addAttribute("type", "text-single");
+		field->addAttribute("var", "encoding");
+		field->addAttribute("label", "Encoding");
+		if (res.id!=-1)
+			field->addChild( new Tag("value", res.encoding) );
+		else
+			field->addChild( new Tag("value", Transport::instance()->getConfiguration().encoding) );
+		x->addChild(field);
+
 		if (res.id != -1) {
 			field = new Tag("field");
 			field->addAttribute("type", "boolean");
@@ -134,22 +151,23 @@ bool GlooxRegisterHandler::handleIq (const IQ &iq){
 
 		query->addChild(x);
 		reply->addChild(query);
-		p->j->send( reply );
+		Transport::instance()->send( reply );
 		return true;
 	}
-	else if(iq.subtype() == IQ::Set) {
+	else if (iqTag->findAttribute("type") == "set") {
 		bool sendsubscribe = false;
 		bool remove = false;
-		Tag *iqTag = iq.tag();
 		Tag *query;
 		Tag *usernametag;
 		Tag *passwordtag;
 		Tag *languagetag;
+		Tag *encodingtag;
 		std::string username("");
 		std::string password("");
 		std::string language("");
+		std::string encoding("");
 
-		UserRow res = p->sql()->getUserByJid(iq.from().bare());
+		UserRow res = Transport::instance()->sql()->getUserByJid(from.bare());
 		
 		query = iqTag->findChild( "query" );
 		if (!query) return true;
@@ -171,6 +189,8 @@ bool GlooxRegisterHandler::handleIq (const IQ &iq){
 					password = v->cdata();
 				else if (key == "language")
 					language = v->cdata();
+				else if (key == "encoding")
+					encoding = v->cdata();
 				else if (key == "unregister")
 					remove = atoi(v->cdata().c_str());
 			}
@@ -181,14 +201,20 @@ bool GlooxRegisterHandler::handleIq (const IQ &iq){
 			usernametag = query->findChild("username");
 			passwordtag = query->findChild("password");
 			languagetag = query->findChild("language");
+			encodingtag = query->findChild("encoding");
 
 			if (languagetag)
 				language = languagetag->cdata();
 			else
-				language = p->configuration().language;
+				language = Transport::instance()->getConfiguration().language;
+
+			if (encodingtag)
+				encoding = encodingtag->cdata();
+			else
+				encoding = Transport::instance()->getConfiguration().encoding;
 
 			if (usernametag==NULL || passwordtag==NULL) {
-				sendError(406, "not-acceptable", iq);
+				sendError(406, "not-acceptable", iqTag);
 				return false;
 			}
 			else {
@@ -212,68 +238,67 @@ bool GlooxRegisterHandler::handleIq (const IQ &iq){
 			if (true){
 				std::cout << "* sending rosterX\n";
 				Tag *tag = new Tag("message");
-				tag->addAttribute( "to", iq.from().bare() );
-				std::string from;
-				from.append(p->jid());
-				tag->addAttribute( "from", from );
+				tag->addAttribute( "to", from.bare() );
+				std::string _from;
+				_from.append(Transport::instance()->jid());
+				tag->addAttribute( "from", _from );
 				tag->addChild(new Tag("body","removing users"));
 				Tag *x = new Tag("x");
 				x->addAttribute("xmlns","http://jabber.org/protocol/rosterx");
 
 				std::map<std::string,RosterRow> roster;
-// 				roster = p->sql()->getBuddies(res.id);
+// 				roster = Transport::instance()->sql()->getBuddies(res.id);
 // 				Tag *item;
 // 				// add users which are added to roster
 // 				for(std::map<std::string, RosterRow>::iterator u = roster.begin(); u != roster.end() ; u++){
 // 					if (!(*u).second.uin.empty()){
 // 						item = new Tag("item");
 // 						item->addAttribute("action","delete");
-// 						item->addAttribute("jid",(*u).second.uin+"@"+p->jid());
+// 						item->addAttribute("jid",(*u).second.uin+"@"+Transport::instance()->jid());
 // 						x->addChild(item);
 // 					}
 // 				}
 
 				tag->addChild(x);
 				std::cout << "* sending " << tag->xml() << "\n";
-				p->j->send(tag);
+				Transport::instance()->send(tag);
 				if (res.id != -1) {
-					p->sql()->removeUser(iq.from().bare());
-					p->sql()->removeUserBuddies(res.id);
+					Transport::instance()->sql()->removeUser(res.id);
 				}
 // 				if (account)
-// 					p->collector()->collectNow(account, true);
+// 					Transport::instance()->collector()->collectNow(account, true);
 			}
 			else{
 				// TODO: remove contacts from roster with unsubscribe presence
 // 					for(std::map<std::string, RosterRow>::iterator u = user->roster.begin(); u != user->roster.end() ; u++){
 // 						item = new Tag("item");
 // 						item->addAttribute("action","delete");
-// 						item->addAttribute("jid",(*u).uin+"@"+p->jid());
+// 						item->addAttribute("jid",(*u).uin+"@"+Transport::instance()->jid());
 // 						x->addChild(item);
 // 					}
 			}
 
 			if (user != NULL) {
-				p->userManager()->removeUser(user);
+				Transport::instance()->userManager()->removeUser(user);
 			}
 			Tag *reply = new Tag("iq");
 			reply->addAttribute( "type", "result" );
-			reply->addAttribute( "from", p->jid() );
-			reply->addAttribute( "to", iq.from().full() );
-			reply->addAttribute( "id", iq.id() );
-			p->j->send( reply );
+			reply->addAttribute( "from", Transport::instance()->jid() );
+			reply->addAttribute( "to", iqTag->findAttribute("from") );
+			reply->addAttribute( "id", iqTag->findAttribute("id") );
+			Transport::instance()->send( reply );
 
 			reply = new Tag( "presence" );
 			reply->addAttribute( "type", "unsubscribe" );
-			reply->addAttribute( "from", p->jid() );
-			reply->addAttribute( "to", iq.from().full() );
-			p->j->send( reply );
+			reply->addAttribute( "from", Transport::instance()->jid() );
+			reply->addAttribute( "to", iqTag->findAttribute("from") );
+			Transport::instance()->send( reply );
 
 			reply = new Tag("presence");
 			reply->addAttribute( "type", "unsubscribed" );
-			reply->addAttribute( "to", iq.from().full() );
-			reply->addAttribute( "from", p->jid() );
-			p->j->send( reply );
+			reply->addAttribute( "to", iqTag->findAttribute("from") );
+			reply->addAttribute( "from", Transport::instance()->jid() );
+			Transport::instance()->send( reply );
 
 			delete iqTag;
 			return true;
@@ -281,47 +306,51 @@ bool GlooxRegisterHandler::handleIq (const IQ &iq){
 
 		// Register or change password
 
-		std::string jid = iq.from().bare();
+		std::string jid = from.bare();
 
 		if (username.empty() || password.empty()) {
-			sendError(406, "not-acceptable", iq);
+			sendError(406, "not-acceptable", iqTag);
 			return false;
 		}
 
-		p->protocol()->prepareUserName(username);
-		if (!p->protocol()->isValidUsername(username)) {
+		Transport::instance()->protocol()->prepareUserName(username);
+		if (!Transport::instance()->protocol()->isValidUsername(username)) {
 			Log("GlooxRegisterHandler", "This is now valid username: "<< username);
-			sendError(400, "bad-request", iq);
+			sendError(400, "bad-request", iqTag);
 			return false;
 		}
 
 		if (res.id == -1) {
 			Log("GlooxRegisterHandler", "adding new user: "<< jid << ", " << username << ", " << password << ", " << language);
-			p->sql()->addUser(jid,username,password,language);
+			Transport::instance()->sql()->addUser(jid,username,password,language,encoding);
 			sendsubscribe = true;
 		}
 		else {
 			// change passwordhttp://soumar.jabbim.cz/phpmyadmin/index.php
 			Log("GlooxRegisterHandler", "changing user password: "<< jid << ", " << username << ", " << password);
-			p->sql()->updateUserPassword(iq.from().bare(),password,language);
+			res.jid = from.bare();
+			res.password = password;
+			res.language = language;
+			res.encoding = encoding;
+			Transport::instance()->sql()->updateUser(res);
 		}
 
 		Tag *reply = new Tag( "iq" );
-		reply->addAttribute( "id", iq.id() );
+		reply->addAttribute( "id", iqTag->findAttribute("id") );
 		reply->addAttribute( "type", "result" );
-		reply->addAttribute( "to", iq.from().full() );
-		reply->addAttribute( "from", p->jid() );
+		reply->addAttribute( "to", iqTag->findAttribute("from") );
+		reply->addAttribute( "from", Transport::instance()->jid() );
 		Tag *rquery = new Tag( "query" );
 		rquery->addAttribute( "xmlns", "jabber:iq:register" );
 		reply->addChild(rquery);
-		p->j->send( reply );
+		Transport::instance()->send( reply );
 
 		if (sendsubscribe) {
 			reply = new Tag("presence");
-			reply->addAttribute( "from", p->jid() );
-			reply->addAttribute( "to", iq.from().bare() );
+			reply->addAttribute( "from", Transport::instance()->jid() );
+			reply->addAttribute( "to", from.bare() );
 			reply->addAttribute( "type", "subscribe" );
-			p->j->send( reply );
+			Transport::instance()->send( reply );
 		}
 		delete iqTag;
 		return true;
@@ -333,22 +362,22 @@ void GlooxRegisterHandler::handleIqID (const IQ &iq, int context){
 	std::cout << "IQ ID IQ ID IQ ID\n";
 }
 
-void GlooxRegisterHandler::sendError(int code, const std::string &err, const IQ &iq) {
-	Tag *iq2 = new Tag("iq");
-	iq2->addAttribute("type","error");
-	iq2->addAttribute("from", p->jid());
-	iq2->addAttribute("to", iq.from().full());
-	iq2->addAttribute("id", iq.id());
+void GlooxRegisterHandler::sendError(int code, const std::string &err, Tag *iqTag) {
+	Tag *iq = new Tag("iq");
+	iq->addAttribute("type", "error");
+	iq->addAttribute("from", Transport::instance()->jid());
+	iq->addAttribute("to", iqTag->findAttribute("from"));
+	iq->addAttribute("id", iqTag->findAttribute("id"));
 
 	Tag *error = new Tag("error");
-	error->addAttribute("code",code);
-	error->addAttribute("type","modify");
+	error->addAttribute("code", code);
+	error->addAttribute("type", "modify");
 	Tag *bad = new Tag(err);
-	bad->addAttribute("xmlns","urn:ietf:params:xml:ns:xmpp-stanzas");
+	bad->addAttribute("xmlns", "urn:ietf:params:xml:ns:xmpp-stanzas");
 
 	error->addChild(bad);
-	iq2->addChild(error);
+	iq->addChild(error);
 
-	p->j->send(iq2);
+	Transport::instance()->send(iq);
 }
 

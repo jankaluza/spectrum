@@ -846,7 +846,7 @@ GlooxMessageHandler::GlooxMessageHandler(const std::string &config) : MessageHan
 		j->registerConnectionListener(this);
 		gatewayHandler = new GlooxGatewayHandler(this);
 		j->registerIqHandler(gatewayHandler, ExtGateway);
-		m_reg = new GlooxRegisterHandler(this);
+		m_reg = new GlooxRegisterHandler();
 		j->registerIqHandler(m_reg, ExtRegistration);
 		m_stats = new GlooxStatsHandler(this);
 		j->registerIqHandler(m_stats, ExtStats);
@@ -931,6 +931,10 @@ bool GlooxMessageHandler::loadProtocol(){
 		m_searchHandler = new GlooxSearchHandler(this);
 		j->registerIqHandler(m_searchHandler, ExtSearch);
 	}
+	
+	if (m_configuration.encoding.empty())
+		m_configuration.encoding = m_protocol->defaultEncoding();
+	
 	return true;
 }
 
@@ -1354,7 +1358,7 @@ void GlooxMessageHandler::handlePresence(const Presence &stanza){
 			}
 			else {
 				if(res.id==-1 && protocol()->tempAccountsAllowed()) {
-					sql()->addUser(userkey,stanza.from().username(),"","en");
+					sql()->addUser(userkey,stanza.from().username(),"","en",m_configuration.encoding);
 					res = sql()->getUserByJid(userkey);
 				}
 				bool isVip = sql()->isVIP(stanza.from().bare());

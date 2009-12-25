@@ -34,6 +34,7 @@ struct Configuration {
 	std::string server;				// XMPP server address.
 	std::string password;			// Password to connect server.
 	std::string jid;				// Spectrum JID.
+	std::string encoding;			// Default encoding.
 	int port;						// Server port.
 	
 	int logAreas;					// Logging areas.

@@ -56,6 +56,7 @@ SQLClass::SQLClass(GlooxMessageHandler *parent, bool upgrade) {
 	m_stmt_getSettings.stmt = NULL;
 	m_stmt_getOnlineUsers.stmt = NULL;
 	m_stmt_setUserOnline.stmt = NULL;
+	m_stmt_removeBuddySettings.stmt = NULL;
 	
 	m_error = 0;
 	
@@ -112,23 +113,25 @@ SQLClass::~SQLClass() {
 void SQLClass::createStatements() {
 	// Prepared statements
 	if (!m_stmt_addUser.stmt)
-		m_stmt_addUser.stmt = new Statement( ( STATEMENT("INSERT INTO " + p->configuration().sqlPrefix + "users (jid, uin, password, language) VALUES (?, ?, ?, ?)"),
+		m_stmt_addUser.stmt = new Statement( ( STATEMENT("INSERT INTO " + p->configuration().sqlPrefix + "users (jid, uin, password, language, encoding) VALUES (?, ?, ?, ?, ?)"),
 											use(m_stmt_addUser.jid),
 											use(m_stmt_addUser.uin),
 											use(m_stmt_addUser.password),
-											use(m_stmt_addUser.language) ) );
+											use(m_stmt_addUser.language),
+											use(m_stmt_addUser.encoding) ) );
 	if (!m_stmt_updateUserPassword.stmt)
-		m_stmt_updateUserPassword.stmt = new Statement( ( STATEMENT("UPDATE " + p->configuration().sqlPrefix + "users SET password=?, language=? WHERE jid=?"),
+		m_stmt_updateUserPassword.stmt = new Statement( ( STATEMENT("UPDATE " + p->configuration().sqlPrefix + "users SET password=?, language=?, encoding=? WHERE jid=?"),
 														use(m_stmt_updateUserPassword.password),
 														use(m_stmt_updateUserPassword.language),
+														use(m_stmt_updateUserPassword.encoding),
 														use(m_stmt_updateUserPassword.jid) ) );
 	if (!m_stmt_removeBuddy.stmt)
 		m_stmt_removeBuddy.stmt = new Statement( ( STATEMENT("DELETE FROM " + p->configuration().sqlPrefix + "buddies WHERE user_id=? AND uin=?"),
 												use(m_stmt_removeBuddy.user_id),
 												use(m_stmt_removeBuddy.uin) ) );
 	if (!m_stmt_removeUser.stmt)
-		m_stmt_removeUser.stmt = new Statement( ( STATEMENT("DELETE FROM " + p->configuration().sqlPrefix + "users WHERE jid=?"),
-												use(m_stmt_removeUser.jid) ) );
+		m_stmt_removeUser.stmt = new Statement( ( STATEMENT("DELETE FROM " + p->configuration().sqlPrefix + "users WHERE id=?"),
+												use(m_stmt_removeUser.userId) ) );
 	if (!m_stmt_removeUserBuddies.stmt)
 		m_stmt_removeUserBuddies.stmt = new Statement( ( STATEMENT("DELETE FROM " + p->configuration().sqlPrefix + "buddies WHERE user_id=?"),
 														use(m_stmt_removeUserBuddies.user_id) ) );
@@ -164,12 +167,13 @@ void SQLClass::createStatements() {
 															use(m_stmt_updateBuddySubscription.user_id),
 															use(m_stmt_updateBuddySubscription.uin) ) );
 	if (!m_stmt_getUserByJid.stmt)
-		m_stmt_getUserByJid.stmt = new Statement( ( STATEMENT("SELECT id, jid, uin, password FROM " + p->configuration().sqlPrefix + "users WHERE jid=?"),
+		m_stmt_getUserByJid.stmt = new Statement( ( STATEMENT("SELECT id, jid, uin, password, encoding FROM " + p->configuration().sqlPrefix + "users WHERE jid=?"),
 													use(m_stmt_getUserByJid.jid),
 													into(m_stmt_getUserByJid.resId, -1),
 													into(m_stmt_getUserByJid.resJid),
 													into(m_stmt_getUserByJid.resUin),
 													into(m_stmt_getUserByJid.resPassword),
+													into(m_stmt_getUserByJid.resEncoding),
 													limit(1),
 													range(0, 1) ) );
 	if (!m_stmt_getBuddies.stmt)
@@ -239,11 +243,12 @@ void SQLClass::createStatements() {
 														use(m_stmt_setUserOnline.user_id) ) );
 }
 
-void SQLClass::addUser(const std::string &jid,const std::string &uin,const std::string &password,const std::string &language){
+void SQLClass::addUser(const std::string &jid,const std::string &uin,const std::string &password,const std::string &language, const std::string &encoding){
 	m_stmt_addUser.jid.assign(jid);
 	m_stmt_addUser.uin.assign(uin);
 	m_stmt_addUser.password.assign(password);
 	m_stmt_addUser.language.assign(language);
+	m_stmt_addUser.encoding.assign(encoding);
 	try {
 		m_stmt_addUser.stmt->execute();
 	}
@@ -259,6 +264,7 @@ void SQLClass::removeStatements() {
 	delete m_stmt_removeUser.stmt;
 	delete m_stmt_removeUserBuddies.stmt;
 	delete m_stmt_addBuddy.stmt;
+	delete m_stmt_removeBuddySettings.stmt;
 #ifdef WITH_SQLITE
 	delete m_stmt_updateBuddy.stmt;
 #endif
@@ -292,6 +298,7 @@ void SQLClass::removeStatements() {
 	m_stmt_getSettings.stmt = NULL;
 	m_stmt_getOnlineUsers.stmt = NULL;
 	m_stmt_setUserOnline.stmt = NULL;
+	m_stmt_removeBuddySettings.stmt = NULL;
 }
 
 void SQLClass::reconnect() {
@@ -463,13 +470,14 @@ long SQLClass::getRegisteredUsersRosterCount(){
 	return r;
 }
 
-void SQLClass::updateUserPassword(const std::string &jid,const std::string &password,const std::string &language) {
-	m_stmt_updateUserPassword.jid.assign(jid);
-	m_stmt_updateUserPassword.password.assign(password);
-	m_stmt_updateUserPassword.language.assign(language);
+void SQLClass::updateUser(const UserRow &user) {
+	m_stmt_updateUserPassword.jid.assign(user.jid);
+	m_stmt_updateUserPassword.password.assign(user.password);
+	m_stmt_updateUserPassword.language.assign(user.language);
+	m_stmt_updateUserPassword.encoding.assign(user.encoding);
 	STATEMENT_EXECUTE_BEGIN();
 		m_stmt_updateUserPassword.stmt->execute();
-	STATEMENT_EXECUTE_END(m_stmt_updateUserPassword.stmt, updateUserPassword(jid, password, language));
+	STATEMENT_EXECUTE_END(m_stmt_updateUserPassword.stmt, updateUser(user));
 }
 
 void SQLClass::removeBuddy(long userId, const std::string &uin, long buddy_id) {
@@ -482,11 +490,15 @@ void SQLClass::removeBuddy(long userId, const std::string &uin, long buddy_id) {
 	STATEMENT_EXECUTE_END(m_stmt_removeBuddy.stmt, removeBuddy(userId, uin, buddy_id));
 }
 
-void SQLClass::removeUser(const std::string &jid) {
-	m_stmt_removeUser.jid.assign(jid);
+void SQLClass::removeUser(long userId) {
+	m_stmt_removeUser.userId = userId;
 	STATEMENT_EXECUTE_BEGIN();
 		m_stmt_removeUser.stmt->execute();
-	STATEMENT_EXECUTE_END(m_stmt_removeUser.stmt, removeUser(jid));
+		*m_sess << "DELETE FROM " + p->configuration().sqlPrefix + "buddies WHERE user_id=?", use(m_stmt_removeUser.userId), now;
+		*m_sess << "DELETE FROM " + p->configuration().sqlPrefix + "buddies_settings WHERE user_id=?", use(m_stmt_removeUser.userId), now;
+		*m_sess << "DELETE FROM " + p->configuration().sqlPrefix + "users_settings WHERE user_id=?", use(m_stmt_removeUser.userId), now;
+	STATEMENT_EXECUTE_END(m_stmt_removeUser.stmt, removeUser(userId));
+
 }
 
 void SQLClass::removeUserBuddies(long userId) {
@@ -560,6 +572,7 @@ UserRow SQLClass::getUserByJid(const std::string &jid){
 				user.jid = m_stmt_getUserByJid.resJid;
 				user.uin = m_stmt_getUserByJid.resUin;
 				user.password = m_stmt_getUserByJid.resPassword;
+				user.encoding = m_stmt_getUserByJid.resEncoding;
 				m_stmt_getUserByJid.stmt->execute();
 			} while (!m_stmt_getUserByJid.stmt->done());
 		}

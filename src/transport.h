@@ -28,7 +28,7 @@
 
 #include "abstractbackend.h"
 #include "capabilitymanager.h"
-
+#include "configfile.h"
 
 using namespace gloox;
 class UserManager;
@@ -58,7 +58,8 @@ class Transport : public CapabilityManager {
 		void clearTags() { m_tags.clear(); }
 		GlooxParser *parser();
 		AbstractProtocol *protocol();
-		
+		Configuration &getConfiguration();
+		void registerStanzaExtension(StanzaExtension *extension);
 		
 		
 	private:

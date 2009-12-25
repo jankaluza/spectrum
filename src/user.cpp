@@ -198,10 +198,11 @@ void User::connect() {
 	else {
 		Log(m_jid, "creating new account");
 		m_account = purple_account_new(m_username.c_str(), this->p->protocol()->protocol().c_str());
-		purple_account_set_string(m_account,"encoding","windows-1250");
 
 		purple_accounts_add(m_account);
 	}
+
+	purple_account_set_string(m_account, "encoding", Transport::instance()->getConfiguration().encoding.c_str());
 
 	m_account->ui_data = this;
 
