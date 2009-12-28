@@ -4,7 +4,11 @@ import os, sys
 from spectrum import *
 from optparse import *
 
-parser = OptionParser()
+description='''spectrumctl can be used to control your spectrum-instances.
+Valid actions are start, stop, restart and reload. By default, spectrumctl 
+acts on all transports defined in /etc/spectrum/'''
+
+parser = OptionParser( usage='Usage: %prog [options] action', version='0.1', description=description)
 parser.add_option( '-c', '--config', metavar='FILE',
 	help = 'Only act on transport configured in FILE' )
 parser.add_option( '-d', '--config-dir', metavar='DIR', default='/etc/spectrum',
