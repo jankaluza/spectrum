@@ -172,7 +172,7 @@ class FiletransferRepeater {
 		void fileRecvStart();
 		void handleFTReceiveBytestream(Bytestream *bs, const std::string &filename = "");
 		void handleFTSendBytestream(Bytestream *bs, const std::string &filename = "");
-		void gotData(const std::string &data);
+		bool gotData(const std::string &data);
 		std::string requestFT();
 
 		bool isSending() { return m_send; }

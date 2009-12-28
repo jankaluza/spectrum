@@ -302,12 +302,14 @@ void ReceiveFileStraight::exec() {
 }
 
 void ReceiveFileStraight::handleBytestreamData(gloox::Bytestream *s5b, const std::string &data) {
+	bool w;
 	getMutex()->lock();
 // 	m_file.write(data.c_str(), data.size());
-	m_parent->gotData(data);
-	m_parent->ready();
+	w = m_parent->gotData(data);
 	getMutex()->unlock();
-	wait();
+	if (w) {
+		wait();
+	}
 }
 
 void ReceiveFileStraight::handleBytestreamError(gloox::Bytestream *s5b, const gloox::IQ &iq) {
@@ -373,7 +375,7 @@ void FiletransferRepeater::fileSendStart() {
 void FiletransferRepeater::fileRecvStart() {
 	Log("SendFileStraight", "fileRecvStart!" << m_from.full() << " " << m_to.full());
 	if (m_resender)
-		purple_timeout_add_seconds(0,&ui_got_data,m_xfer);
+	purple_timeout_add_seconds(0,&ui_got_data,m_xfer);
 }
 
 std::string FiletransferRepeater::requestFT() {
@@ -404,19 +406,23 @@ void FiletransferRepeater::handleFTSendBytestream(Bytestream *bs, const std::str
 	}
 }
 
-void FiletransferRepeater::gotData(const std::string &data) {
+bool FiletransferRepeater::gotData(const std::string &data) {
 	std::cout << "FiletransferRepeater::gotData\n";
+	if (m_buffer.size() == 0)
+		ready();
 	m_buffer.append(std::string(data));
+	
 	if (m_wantsData) {
 		m_wantsData = false;
 		purple_timeout_add(0,&ui_got_data,m_xfer);
 	}
 	else if (m_send) {
-		std::cout << "WakUP\n";
+		std::cout << "WakeUP\n";
 		m_resender->wakeUp();
 	}
 	else
 		std::cout << "got data but don't want them yet\n";
+	return m_buffer.size() > 5000;
 }
 
 void FiletransferRepeater::ready() {

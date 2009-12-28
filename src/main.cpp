@@ -531,35 +531,53 @@ static gssize XferWrite(PurpleXfer *xfer, const guchar *buffer, gssize size) {
 	return size;
 }
 
+static void XferNotSent(PurpleXfer *xfer, const guchar *buffer, gsize size) {
+	Log("REPEATER", "xferNotSent" << size);
+	FiletransferRepeater *repeater = (FiletransferRepeater *) xfer->ui_data;
+	if (repeater->getResender())
+		repeater->getResender()->getMutex()->lock();
+	repeater->getBuffer() = std::string((char *) buffer, size) + repeater->getBuffer();
+	repeater->ready();
+	if (repeater->getResender())
+		repeater->getResender()->getMutex()->unlock();
+}
+
 static gssize XferRead(PurpleXfer *xfer, guchar **buffer, gssize size) {
 	Log("REPEATER", "xferRead");
 	FiletransferRepeater *repeater = (FiletransferRepeater *) xfer->ui_data;
 	if (!repeater->getResender()) {
 		Log("REPEATER", "No resender, setting up wantsData");
-		repeater->wantsData();
+// 		repeater->wantsData();
 		return 0;
 	}
 	repeater->getResender()->getMutex()->lock();
 	if (repeater->getBuffer().empty()) {
 		Log("REPEATER", "buffer is empty, setting wantsData = true");
-		repeater->wantsData();
+// 		repeater->wantsData();
 		repeater->getResender()->getMutex()->unlock();
 		return 0;
 	}
 	else {
 		std::string data;
 		if ((gssize) repeater->getBuffer().size() > size) {
-			data = repeater->getBuffer().substr(0, size);
+			data = std::string(repeater->getBuffer().substr(0, size));
 			repeater->getBuffer().erase(0, size);
 		}
 		else {
-			data = repeater->getBuffer();
+			data = std::string(repeater->getBuffer());
 			repeater->getBuffer().erase();
 		}
 		(*buffer) = (guchar *) g_malloc0(data.size());
+		std::cout << "DATA:" << data << "\n";
 		memcpy((*buffer), data.c_str(), data.size());
+		bool wakeup = false;
+		wakeup = repeater->getBuffer().size() < 1000;
+		if (wakeup) {
+			repeater->getResender()->wakeUp();
+		}
 		repeater->getResender()->getMutex()->unlock();
 		Log("REPEATER", "Passing data to libpurple, size:" << data.size());
+		
 		return data.size();
 	}
 }
@@ -641,7 +659,7 @@ static PurpleXferUiOps xferUiOps =
 	NULL,
 	XferWrite,
 	XferRead,
-	NULL
+	XferNotSent
 };
 
 static PurpleConnectionUiOps conn_ui_ops =
