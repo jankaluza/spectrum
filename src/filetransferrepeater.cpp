@@ -24,16 +24,18 @@
 #include "usermanager.h"
 #include "log.h"
 #include "sql.h"
-#include "user.h"
+#include "abstractuser.h"
+#include "transport.h"
 
 static gboolean ui_got_data(gpointer data){
 	PurpleXfer *xfer = (PurpleXfer*) data;
 	purple_xfer_ui_ready(xfer);
+	std::cout << "READY!!\n";
 	return FALSE;
 }
 
 
-SendFile::SendFile(Bytestream *stream, int size, const std::string &filename, User *user, FiletransferRepeater *manager) {
+SendFile::SendFile(Bytestream *stream, int size, const std::string &filename, AbstractUser *user, FiletransferRepeater *manager) {
     std::cout << "SendFile::SendFile" << " Constructor.\n";
     m_stream = stream;
     m_size = size;
@@ -94,7 +96,7 @@ void SendFile::exec() {
 }
 
 void SendFile::dispose() {
-	m_parent->parent()->ft->dispose(m_stream);
+	Transport::instance()->disposeBytestream(m_stream);
 }
 
 void SendFile::handleBytestreamData(gloox::Bytestream *s5b, const std::string &data) {
@@ -136,7 +138,9 @@ void SendFileStraight::exec() {
     while (true) {
 		if (m_stream->isOpen()){
 			std::string data;
+			std::cout << "BEFORE MUTEX LOCK\n";
 			getMutex()->lock();
+			std::cout << "TRYING TO SEND\n";
 			std::string t;
 			if (m_parent->getBuffer().empty()) {
 				empty = true;
@@ -157,6 +161,7 @@ void SendFileStraight::exec() {
 			}
 			else
 				wait();
+// 				sleep(1);
 		}
 		else {
 			std::cout << "stream not open!\n";
@@ -185,29 +190,23 @@ void SendFileStraight::handleBytestreamClose(gloox::Bytestream *s5b) {
 
 static gboolean transferFinished(gpointer data) {
 	ReceiveFile *receive = (ReceiveFile *) data;
-	User *user = receive->user();
+	AbstractUser *user = receive->user();
 	std::string filename(receive->filename());
 	Log(user->jid(), "trying to send file "<< filename);
 	if (user->account()){
 		if (user->isConnected()){
 			Log(user->jid(), "sending download message");
 			std::string basename(g_path_get_basename(filename.c_str()));
-			if (user->isVIP()) {
-				user->p->sql()->addDownload(basename,"1");
-			}
-			else {
-				user->p->sql()->addDownload(basename,"0");
-			}
 			Message s(Message::Chat, receive->target(), "Uzivatel Vam poslal soubor '"+basename+"'. Muzete jej stahnout z adresy http://soumar.jabbim.cz/icq/" + basename +" .");
 			s.setFrom(user->jid());
-			user->handleMessage(s);
+// 			user->handleMessage(s); TODO!
 		}
 	}
 	receive->dispose();
 	return FALSE;
 }
 
-ReceiveFile::ReceiveFile(gloox::Bytestream *stream, int size, const std::string &filename, User *user, FiletransferRepeater *manager) {
+ReceiveFile::ReceiveFile(gloox::Bytestream *stream, int size, const std::string &filename, AbstractUser *user, FiletransferRepeater *manager) {
     m_stream = stream;
     m_size = size;
 	m_filename = filename;
@@ -228,7 +227,7 @@ ReceiveFile::~ReceiveFile() {
 }
 
 void ReceiveFile::dispose() {
-	m_parent->parent()->ft->dispose(m_stream);
+	Transport::instance()->disposeBytestream(m_stream);
 }
 
 void ReceiveFile::exec() {
@@ -331,8 +330,7 @@ void ReceiveFileStraight::handleBytestreamClose(gloox::Bytestream *s5b) {
 	}
 }
 
-FiletransferRepeater::FiletransferRepeater(GlooxMessageHandler *main, const JID& to, const std::string& sid, SIProfileFT::StreamType type, const JID& from, long size) {
-	m_main = main;
+FiletransferRepeater::FiletransferRepeater(const JID& to, const std::string& sid, SIProfileFT::StreamType type, const JID& from, long size) {
 	m_size = size;
 	m_to = to;
 	m_sid = sid;
@@ -344,8 +342,7 @@ FiletransferRepeater::FiletransferRepeater(GlooxMessageHandler *main, const JID&
 	m_send = false;
 }
 
-FiletransferRepeater::FiletransferRepeater(GlooxMessageHandler *main, const JID& from, const JID& to) {
-	m_main = main;
+FiletransferRepeater::FiletransferRepeater(const JID& from, const JID& to) {
 	m_to = to;
 	m_from = from;
 	m_buffer = "";
@@ -369,20 +366,20 @@ void FiletransferRepeater::fileSendStart() {
 	Log("ReceiveFileStraight", "fileSendStart!" << m_from.full() << " " << m_to.full());
 	Log("ReceiveFileStraight", m_sid);
 	Log("ReceiveFileStraight", m_type);
-	m_main->ft->acceptFT(m_to, m_sid, m_type, m_from.resource().empty() ? std::string(m_from.bare() + "/bot") : m_from);
+	
+	Transport::instance()->acceptFT(m_to, m_sid, m_type, m_from.resource().empty() ? std::string(m_from.bare() + "/bot") : m_from);
 }
 
 void FiletransferRepeater::fileRecvStart() {
 	Log("SendFileStraight", "fileRecvStart!" << m_from.full() << " " << m_to.full());
+	if (m_resender)
+		purple_timeout_add_seconds(0,&ui_got_data,m_xfer);
 }
 
 std::string FiletransferRepeater::requestFT() {
 // 	purple_xfer_request_accepted(xfer, std::string(filename).c_str());
 	std::string filename(purple_xfer_get_filename(m_xfer));
-	m_sid = m_main->ft->requestFT(m_to, filename, purple_xfer_get_size(m_xfer), EmptyString, EmptyString, EmptyString, EmptyString, SIProfileFT::FTTypeAll, m_from);
-	m_main->ftManager->m_info[m_sid].filename = filename;
-	m_main->ftManager->m_info[m_sid].size = purple_xfer_get_size(m_xfer);
-	m_main->ftManager->m_info[m_sid].straight = true;
+	m_sid = Transport::instance()->requestFT(m_to, filename, purple_xfer_get_size(m_xfer), EmptyString, EmptyString, EmptyString, EmptyString, SIProfileFT::FTTypeAll, m_from);
 	return m_sid;
 }
 
@@ -391,7 +388,7 @@ void FiletransferRepeater::handleFTReceiveBytestream(Bytestream *bs, const std::
 	if (filename.empty())
 		m_resender = new ReceiveFileStraight(bs, 0, this);
 	else {
-		User *user = (User *) m_main->userManager()->getUserByJID(bs->initiator().bare());
+		AbstractUser *user = Transport::instance()->userManager()->getUserByJID(bs->initiator().bare());
 		m_resender = new ReceiveFile(bs, 0, filename, user, this);
 	}
 }
@@ -402,22 +399,28 @@ void FiletransferRepeater::handleFTSendBytestream(Bytestream *bs, const std::str
 	if (filename.empty())
 		m_resender = new SendFileStraight(bs, 0, this);
 	else {
-		User *user = (User *) m_main->userManager()->getUserByJID(bs->initiator().bare());
+		AbstractUser *user = Transport::instance()->userManager()->getUserByJID(bs->initiator().bare());
 		m_resender = new SendFile(bs, 0, filename, user, this);
 	}
-	purple_timeout_add_seconds(3,&ui_got_data,m_xfer);
 }
 
 void FiletransferRepeater::gotData(const std::string &data) {
+	std::cout << "FiletransferRepeater::gotData\n";
 	m_buffer.append(std::string(data));
 	if (m_wantsData) {
 		m_wantsData = false;
 		purple_timeout_add(0,&ui_got_data,m_xfer);
 	}
-	else if (m_send)
+	else if (m_send) {
+		std::cout << "WakUP\n";
 		m_resender->wakeUp();
+	}
 	else
 		std::cout << "got data but don't want them yet\n";
+}
+
+void FiletransferRepeater::ready() {
+	purple_timeout_add(0,&ui_got_data,m_xfer);
 }
 
 

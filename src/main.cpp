@@ -535,6 +535,7 @@ static gssize XferRead(PurpleXfer *xfer, guchar **buffer, gssize size) {
 	Log("REPEATER", "xferRead");
 	FiletransferRepeater *repeater = (FiletransferRepeater *) xfer->ui_data;
 	if (!repeater->getResender()) {
+		Log("REPEATER", "No resender, setting up wantsData");
 		repeater->wantsData();
 		return 0;
 	}
@@ -558,6 +559,7 @@ static gssize XferRead(PurpleXfer *xfer, guchar **buffer, gssize size) {
 		(*buffer) = (guchar *) g_malloc0(data.size());
 		memcpy((*buffer), data.c_str(), data.size());
 		repeater->getResender()->getMutex()->unlock();
+		Log("REPEATER", "Passing data to libpurple, size:" << data.size());
 		return data.size();
 	}
 }
@@ -834,7 +836,7 @@ GlooxMessageHandler::GlooxMessageHandler(const std::string &config) : MessageHan
 
 		ftManager = new FileTransferManager();
 		ft = new SIProfileFT(j, ftManager);
-		ftManager->setSIProfileFT(ft, this);
+		ftManager->setSIProfileFT(ft);
 		ftServer = new SOCKS5BytestreamServer(j->logInstance(), 8000, configuration().bindIPs[0]);
 		if( ftServer->listen() != ConnNoError ) {}
 		ft->addStreamHost( j->jid(), configuration().bindIPs[0], 8000 );

@@ -33,10 +33,9 @@
 #include "thread.h"
 #include <fstream>
 
-class User;
-extern Localization localization;
+class AbstractUser;
 
-class GlooxMessageHandler;
+extern Localization localization;
 
 using namespace gloox;
 
@@ -72,7 +71,7 @@ class AbstractResendClass {
 
 class ReceiveFile : public AbstractResendClass, public BytestreamDataHandler, public Thread {
 	public:
-		ReceiveFile(Bytestream *stream, int size, const std::string &filename, User *user, FiletransferRepeater *manager);
+		ReceiveFile(Bytestream *stream, int size, const std::string &filename, AbstractUser *user, FiletransferRepeater *manager);
 		~ReceiveFile();
 
 		void exec();
@@ -82,7 +81,7 @@ class ReceiveFile : public AbstractResendClass, public BytestreamDataHandler, pu
 		void handleBytestreamClose(Bytestream *s5b);
 
 		const std::string &filename() { return m_filename; }
-		User *user () { return m_user; }
+		AbstractUser *user () { return m_user; }
 		const std::string &target() { return m_target; }
 		void dispose();
 
@@ -92,7 +91,7 @@ class ReceiveFile : public AbstractResendClass, public BytestreamDataHandler, pu
 		std::string m_target;
 		int m_size;
 		bool m_finished;
-		User *m_user;
+		AbstractUser *m_user;
 		FiletransferRepeater *m_parent;
 		std::ofstream m_file;
 };
@@ -121,7 +120,7 @@ class ReceiveFileStraight : public AbstractResendClass, public BytestreamDataHan
 
 class SendFile : public AbstractResendClass, public BytestreamDataHandler, public Thread {
 	public:
-		SendFile(Bytestream *stream, int size, const std::string &filename, User *user, FiletransferRepeater *manager);
+		SendFile(Bytestream *stream, int size, const std::string &filename, AbstractUser *user, FiletransferRepeater *manager);
 		~SendFile();
 
 		void exec();
@@ -131,13 +130,13 @@ class SendFile : public AbstractResendClass, public BytestreamDataHandler, publi
 		void handleBytestreamClose(Bytestream *s5b);
 
 		const std::string &filename() { return m_filename; }
-		User *user() { return m_user; }
+		AbstractUser *user() { return m_user; }
 		void dispose();
 
 	private:
 		Bytestream *m_stream;
 		std::string m_filename;
-		User *m_user;
+		AbstractUser *m_user;
 		int m_size;
 		FiletransferRepeater *m_parent;
 		std::ofstream m_file;
@@ -164,8 +163,8 @@ class SendFileStraight : public AbstractResendClass, public BytestreamDataHandle
 class FiletransferRepeater {
 
 	public:
-		FiletransferRepeater(GlooxMessageHandler *main, const JID& to, const std::string& sid, SIProfileFT::StreamType type, const JID& from, long size);
-		FiletransferRepeater(GlooxMessageHandler *main, const JID& from, const JID& to);
+		FiletransferRepeater(const JID& to, const std::string& sid, SIProfileFT::StreamType type, const JID& from, long size);
+		FiletransferRepeater(const JID& from, const JID& to);
 		~FiletransferRepeater() {}
 
 		void registerXfer(PurpleXfer *xfer);
@@ -181,12 +180,10 @@ class FiletransferRepeater {
 		std::string & getBuffer() { return m_buffer; }
 		AbstractResendClass *getResender() { return m_resender; }
 		void wantsData() { m_wantsData = true; if (m_resender) m_resender->wakeUp(); }
-		void ready() { purple_xfer_ui_ready(m_xfer); }
+		void ready();
 		std::ofstream m_file;
-		GlooxMessageHandler *parent() { return m_main; }
 
 	private:
-		GlooxMessageHandler *m_main;
 		JID m_to;
 		std::string m_sid;
 		SIProfileFT::StreamType m_type;

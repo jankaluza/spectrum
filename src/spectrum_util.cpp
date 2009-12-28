@@ -78,3 +78,20 @@ void replace(std::string &str, const char *from, const char *to)
 		index = str.find(from, index + to_len);
 	}
 }
+
+const std::string generateUUID() {
+	int tmp = g_random_int();
+	int a = 0x4000 | (tmp & 0xFFF); /* 0x4000 to 0x4FFF */
+	tmp >>= 12;
+	int b = ((1 << 3) << 12) | (tmp & 0x3FFF); /* 0x8000 to 0xBFFF */
+
+	tmp = g_random_int();
+	char *uuid = g_strdup_printf("%08x-%04x-%04x-%04x-%04x%08x",
+			g_random_int(),
+			tmp & 0xFFFF,
+			a, b,
+			(tmp >> 16) & 0xFFFF, g_random_int());
+	std::string ret(uuid);
+	g_free(uuid);
+	return ret;
+}
