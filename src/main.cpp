@@ -568,13 +568,15 @@ static gssize XferRead(PurpleXfer *xfer, guchar **buffer, gssize size) {
 			repeater->getBuffer().erase();
 		}
 		(*buffer) = (guchar *) g_malloc0(data.size());
-		std::cout << "DATA:" << data << "\n";
 		memcpy((*buffer), data.c_str(), data.size());
 		bool wakeup = false;
 		wakeup = repeater->getBuffer().size() < 1000;
 		if (wakeup) {
+			Log("REPEATER", "WakeUP");
 			repeater->getResender()->wakeUp();
 		}
+		else
+			repeater->ready();
 		repeater->getResender()->getMutex()->unlock();
 		Log("REPEATER", "Passing data to libpurple, size:" << data.size());
 		
