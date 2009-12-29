@@ -169,6 +169,7 @@ void SendFileStraight::exec() {
 		if (m_stream->recv(2000) != ConnNoError)
 			break;
     }
+    std::cout << "STOPPING THREAD!\n";
 //     delete this;
 }
 
@@ -412,17 +413,56 @@ bool FiletransferRepeater::gotData(const std::string &data) {
 		ready();
 	m_buffer.append(std::string(data));
 	
-	if (m_wantsData) {
-		m_wantsData = false;
-		purple_timeout_add(0,&ui_got_data,m_xfer);
-	}
-	else if (m_send) {
+	if (m_send) {
 		std::cout << "WakeUP\n";
 		m_resender->wakeUp();
 	}
-	else
-		std::cout << "got data but don't want them yet\n";
 	return m_buffer.size() > 5000;
+}
+
+void FiletransferRepeater::handleLibpurpleData(const std::string &data) {
+	if (m_resender)
+		m_resender->getMutex()->lock();
+	m_buffer.append(std::string(data));
+	m_resender->wakeUp();
+	if (m_resender)
+		m_resender->getMutex()->unlock();
+}
+
+void FiletransferRepeater::handleDataNotSent(const std::string &data) {
+	if (m_resender)
+		m_resender->getMutex()->lock();
+	m_buffer = data + m_buffer;
+	ready();
+	if (m_resender)
+		m_resender->getMutex()->unlock();
+}
+
+int FiletransferRepeater::getDataToSend(std::string &data, gssize size) {
+	if (m_resender)
+		m_resender->getMutex()->lock();
+
+	if ((gssize) m_buffer.size() > size) {
+		data = m_buffer.substr(0, size);
+		m_buffer.erase(0, size);
+	}
+	else {
+		data = std::string(m_buffer);
+		m_buffer.erase();
+	}
+
+	if (m_buffer.size() < 1000) {
+		Log("REPEATER", "WakeUP");
+		if (m_resender)
+			m_resender->wakeUp();
+	}
+	else
+		ready();
+	
+	if (m_resender)
+		m_resender->getMutex()->unlock();
+
+	return data.size();
 }
 
 void FiletransferRepeater::ready() {

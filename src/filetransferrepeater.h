@@ -173,6 +173,9 @@ class FiletransferRepeater {
 		void handleFTReceiveBytestream(Bytestream *bs, const std::string &filename = "");
 		void handleFTSendBytestream(Bytestream *bs, const std::string &filename = "");
 		bool gotData(const std::string &data);
+		void handleLibpurpleData(const std::string &data);
+		void handleDataNotSent(const std::string &data);
+		int getDataToSend(std::string &data, gssize size);
 		std::string requestFT();
 
 		bool isSending() { return m_send; }

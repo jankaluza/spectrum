@@ -523,65 +523,29 @@ static gssize XferWrite(PurpleXfer *xfer, const guchar *buffer, gssize size) {
 	std::cout << "gotData\n";
 	FiletransferRepeater *repeater = (FiletransferRepeater *) xfer->ui_data;
 	std::string d((char *) buffer, size);
-	if (repeater->getResender())
-		repeater->getResender()->getMutex()->lock();
-	repeater->gotData(d);
-	if (repeater->getResender())
-		repeater->getResender()->getMutex()->unlock();
+	repeater->handleLibpurpleData(d);
 	return size;
 }
 
 static void XferNotSent(PurpleXfer *xfer, const guchar *buffer, gsize size) {
 	Log("REPEATER", "xferNotSent" << size);
 	FiletransferRepeater *repeater = (FiletransferRepeater *) xfer->ui_data;
-	if (repeater->getResender())
-		repeater->getResender()->getMutex()->lock();
-	repeater->getBuffer() = std::string((char *) buffer, size) + repeater->getBuffer();
-	repeater->ready();
-	if (repeater->getResender())
-		repeater->getResender()->getMutex()->unlock();
+	std::string d((char *) buffer, size);
+	repeater->handleDataNotSent(d);
 }
 
 static gssize XferRead(PurpleXfer *xfer, guchar **buffer, gssize size) {
 	Log("REPEATER", "xferRead");
 	FiletransferRepeater *repeater = (FiletransferRepeater *) xfer->ui_data;
-	if (!repeater->getResender()) {
-		Log("REPEATER", "No resender, setting up wantsData");
-// 		repeater->wantsData();
+	std::string data;
+	int data_size = repeater->getDataToSend(data, size);
+	if (data_size == 0)
 		return 0;
-	}
-	repeater->getResender()->getMutex()->lock();
-	if (repeater->getBuffer().empty()) {
-		Log("REPEATER", "buffer is empty, setting wantsData = true");
-// 		repeater->wantsData();
-		repeater->getResender()->getMutex()->unlock();
-		return 0;
-	}
-	else {
-		std::string data;
-		if ((gssize) repeater->getBuffer().size() > size) {
-			data = std::string(repeater->getBuffer().substr(0, size));
-			repeater->getBuffer().erase(0, size);
-		}
-		else {
-			data = std::string(repeater->getBuffer());
-			repeater->getBuffer().erase();
-		}
-		(*buffer) = (guchar *) g_malloc0(data.size());
-		memcpy((*buffer), data.c_str(), data.size());
-		bool wakeup = false;
-		wakeup = repeater->getBuffer().size() < 1000;
-		if (wakeup) {
-			Log("REPEATER", "WakeUP");
-			repeater->getResender()->wakeUp();
-		}
-		else
-			repeater->ready();
-		repeater->getResender()->getMutex()->unlock();
-		Log("REPEATER", "Passing data to libpurple, size:" << data.size());
-		
-		return data.size();
-	}
+	(*buffer) = (guchar *) g_malloc0(data_size);
+	memcpy((*buffer), data.c_str(), data_size);
+	Log("REPEATER", "Passing data to libpurple, size:" << data_size);
+	
+	return data.size();
 }
 
 /*
