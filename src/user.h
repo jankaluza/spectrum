@@ -74,11 +74,6 @@ class User : public AbstractUser, public RosterManager, public RosterStorage, pu
 		void connected();
 		void disconnected();
 
-		// Filetransfers
-		void addFiletransfer( const JID& to, const std::string& sid, SIProfileFT::StreamType type, const JID& from, long size );
-		void addFiletransfer( const JID& from );
-		FiletransferRepeater* removeFiletransfer(const std::string &from) { FiletransferRepeater *repeater = (FiletransferRepeater *) g_hash_table_lookup(m_filetransfers, from.c_str()); if (repeater) g_hash_table_remove(m_filetransfers, from.c_str()); return repeater; }
-		FiletransferRepeater* getFiletransfer(const std::string &from) { FiletransferRepeater *repeater = (FiletransferRepeater *) g_hash_table_lookup(m_filetransfers, from.c_str()); return repeater; }
 		std::string actionData;
 
 		// Connected
@@ -136,7 +131,6 @@ class User : public AbstractUser, public RosterManager, public RosterStorage, pu
 		const char *m_lang;			// xml:lang
 		int m_features;
 		time_t m_connectionStart;	// connection start timestamp
-		GHashTable *m_filetransfers;
 		GHashTable *m_settings;		// user settings
 		long m_userID;				// userID for Database
 		bool m_loadingBuddiesFromDB;

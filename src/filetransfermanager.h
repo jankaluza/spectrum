@@ -21,68 +21,48 @@
 #ifndef FILETRANSFERMANAGER_H
 #define FILETRANSFERMANAGER_H
 
-// #include "sendfile.h"
 #include "configfile.h"
 #include "thread.h"
 #include "purple.h"
 
 #include <sys/stat.h>
 #include <sys/types.h>
-class GlooxMessageHandler;
-
 #include <gloox/siprofilefthandler.h>
 #include <gloox/siprofileft.h>
 #include <gloox/jid.h>
-
 #include <iostream>
 #include <algorithm>
 
 using namespace gloox;
 
-struct progress {
-	std::string filename;
-	bool incoming;
-	int state;
-	gloox::JID from;
-	gloox::JID to;
-	std::string user;
-	gloox::Bytestream *stream;
-
-};
-
 class FileTransferManager : public gloox::SIProfileFTHandler {
 	public:
-		struct Info {
-			std::string filename;
-			int size;
-			bool straight;
-		};
+		FileTransferManager();
+		~FileTransferManager();
 
-		std::map<std::string, Info> m_info;
-
-		std::list<std::string> m_sendlist;
-		
-		~FileTransferManager() {delete mutex;}
-
-		GlooxMessageHandler *p;
-		gloox::SIProfileFT *m_sip;
-		MyMutex *mutex;
-		std::map<std::string, progress> m_progress;
-		void setSIProfileFT(gloox::SIProfileFT *sipft,GlooxMessageHandler *parent);
-
-// 		void handleFTRequest(   const gloox::JID &from,const gloox::JID &to, const std::string &id, const std::string &sid, const std::string &name,
-//                              long size, const std::string &hash, const std::string &date, const std::string &mimetype,
-//                              const std::string &desc, int stypes, long offset, long length);
-
-// 		void handleFTRequestError(gloox::Stanza *stanza, const std::string &sid);
-
-// 		void handleFTSOCKS5Bytestream(gloox::SOCKS5Bytestream *s5b);
+		void setSIProfileFT(gloox::SIProfileFT *sipft);
 		void handleFTRequest (const JID &from, const JID &to, const std::string &sid, const std::string &name, long size, const std::string &hash, const std::string &date, const std::string &mimetype, const std::string &desc, int stypes);
 		void handleFTRequestError (const IQ &iq, const std::string &sid) {}
 		void handleFTBytestream (Bytestream *bs);
 		const std::string handleOOBRequestResult (const JID &from, const JID &to, const std::string &sid) { return ""; }
 
 		void sendFile(const std::string &jid, const std::string &from, const std::string &name, const std::string &file);
-	};
+		void setInfo(const std::string &r_sid, const std::string &name, long size, bool straight) {
+			m_info[r_sid].filename = name;
+			m_info[r_sid].size = size;
+			m_info[r_sid].straight = straight;
+		}
+
+	private:
+		struct Info {
+			std::string filename;
+			int size;
+			bool straight;
+		};
+
+		gloox::SIProfileFT *m_sip;
+		std::list<std::string> m_sendlist;
+		std::map<std::string, Info> m_info;
+};
 #endif
 

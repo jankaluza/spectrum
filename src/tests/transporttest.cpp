@@ -5,6 +5,8 @@
 #include "testingbackend.h"
 #include "testingprotocol.h"
 
+Configuration configuration;
+
 Transport* Transport::m_pInstance = NULL;
 
 Transport::Transport(const std::string jid) { m_jid = jid; m_pInstance = this;
@@ -42,4 +44,12 @@ GlooxParser *Transport::parser() {
 
 AbstractProtocol *Transport::protocol() {
 	return (AbstractProtocol *) TestingProtocol::instance();
+}
+
+Configuration &Transport::getConfiguration() {
+	return TestingBackend::instance()->getConfiguration();
+}
+
+void Transport::registerStanzaExtension(StanzaExtension *stanza) {
+	delete stanza;
 }

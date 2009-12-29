@@ -19,62 +19,46 @@
  */
 
 #include "filetransfermanager.h"
-#include "usermanager.h"
+#include "transport.h"
 #include "filetransferrepeater.h"
 #include "log.h"
 #include "main.h"
-#include "user.h"
+#include "abstractuser.h"
+#include "usermanager.h"
 
-void FileTransferManager::setSIProfileFT(gloox::SIProfileFT *sipft,GlooxMessageHandler *parent) {
+FileTransferManager::FileTransferManager() {
+}
+
+FileTransferManager::~FileTransferManager() {
+}
+
+void FileTransferManager::setSIProfileFT(gloox::SIProfileFT *sipft) {
 	m_sip = sipft;
-	p = parent;
-	mutex = new MyMutex();
 }
 
 void FileTransferManager::handleFTRequest (const JID &from, const JID &to, const std::string &sid, const std::string &name, long size, const std::string &hash, const std::string &date, const std::string &mimetype, const std::string &desc, int stypes) {
-	std::cout << "Received file transfer request from " << from.full() << " " << to.full() << " " << sid << ".\n";
+	Log("Received file transfer request from ", from.full() << " " << to.full() << " " << sid);
 	m_info[sid].filename = name;
 	m_info[sid].size = size;
+
 	std::string uname = to.username();
 	std::for_each( uname.begin(), uname.end(), replaceJidCharacters() );
-	User *user = (User *) p->userManager()->getUserByJID(from.bare());
-	if (user) {
-		if (user->account()){
-			if (user->isConnected()){
-				bool send = false;
-				PurplePlugin *prpl = NULL;
-				PurplePluginProtocolInfo *prpl_info = NULL;
-				PurpleConnection *gc = purple_account_get_connection(user->account());
 
-				if(gc)
-					prpl = purple_connection_get_prpl(gc);
-
-				if(prpl)
-					prpl_info = PURPLE_PLUGIN_PROTOCOL_INFO(prpl);
-
-				if (prpl_info && prpl_info->send_file) {
-					if (!prpl_info->can_receive_file || prpl_info->can_receive_file(gc, uname.c_str())) {
-						send = true;
-					}
-				}
-				if (send) {
-					user->addFiletransfer(from, sid, SIProfileFT::FTTypeS5B, to, size);
-					serv_send_file(purple_account_get_connection(user->account()), uname.c_str(), name.c_str());
-					m_info[sid].straight = true;
-				}
-				else {
-					user->addFiletransfer(from, sid, SIProfileFT::FTTypeS5B, to, size);
-					m_sip->acceptFT(from, sid, SIProfileFT::FTTypeS5B, to);
-					m_info[sid].straight = false;
-				}
-			}
+	AbstractUser *user = Transport::instance()->userManager()->getUserByJID(from.bare());
+	if (user && user->account() && user->isConnected()) {
+		user->addFiletransfer(from, sid, SIProfileFT::FTTypeS5B, to, size);
+		m_info[sid].straight = Transport::instance()->canSendFile(user->account(), uname);
+		if (m_info[sid].straight) {
+			serv_send_file(purple_account_get_connection(user->account()), uname.c_str(), name.c_str());
+		}
+		else {
+			m_sip->acceptFT(from, sid, SIProfileFT::FTTypeS5B, to);
 		}
 	}
 }
 
-
 void FileTransferManager::handleFTBytestream (Bytestream *bs) {
-	Log("a", "handleFTBytestream");
+	Log("handleFTBytestream", "target:" << bs->target().full() << " initiator:" << bs->initiator().full());
 	if (std::find(m_sendlist.begin(), m_sendlist.end(), bs->target().full()) == m_sendlist.end()) {
 		std::string filename = "";
 		if (m_info[bs->sid()].straight == false) {
@@ -85,18 +69,17 @@ void FileTransferManager::handleFTBytestream (Bytestream *bs) {
 					*it = '_';
 				}
 			}
-			filename = p->configuration().filetransferCache + "/" + bs->target().username() + "-" + p->j->getID() + "-" + filename;
+			filename = Transport::instance()->getConfiguration().filetransferCache + "/" + bs->target().username() + "-" + Transport::instance()->getId() + "-" + filename;
 		}
-		User *user = (User *) p->userManager()->getUserByJID(bs->initiator().bare());
-		Log("a", "wants user" << bs->initiator().bare());
+		AbstractUser *user = Transport::instance()->userManager()->getUserByJID(bs->initiator().bare());
 		FiletransferRepeater *repeater = NULL;
 		if (user) {
-			Log("a", "wants repeater" << bs->target().username());
+			Log("handleFTBytestream", "wants repeater " << bs->target().username());
 			repeater = user->removeFiletransfer(bs->target().username());
 			if (!repeater) return;
 		}
 		else {
-			User *user = (User *) p->userManager()->getUserByJID(bs->target().bare());
+			AbstractUser *user = Transport::instance()->userManager()->getUserByJID(bs->target().bare());
 			if (!user)
 				return;
 			repeater = user->removeFiletransfer(bs->initiator().username());
@@ -107,15 +90,7 @@ void FileTransferManager::handleFTBytestream (Bytestream *bs) {
 			repeater->handleFTSendBytestream(bs, filename);
 		else
 			repeater->handleFTReceiveBytestream(bs, filename);
-// 		}
     } else {
-		// zatim to nepotrebujem u odchozich filu
-// 		mutex->lock();
-// 		m_progress[s5b->sid()].filename=m_info[s5b->sid()].filename;
-// 		m_progress[s5b->sid()].incoming=false;
-// 		m_progress[s5b->sid()].state=0;
-// 		mutex->unlock();
-//         new SendFile(bs, m_info[bs->sid()].filename, m_info[bs->sid()].size,mutex,this);
         m_sendlist.erase(std::find(m_sendlist.begin(), m_sendlist.end(), bs->target().full()));
     }
     m_info.erase(bs->sid());

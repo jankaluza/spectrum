@@ -523,43 +523,29 @@ static gssize XferWrite(PurpleXfer *xfer, const guchar *buffer, gssize size) {
 	std::cout << "gotData\n";
 	FiletransferRepeater *repeater = (FiletransferRepeater *) xfer->ui_data;
 	std::string d((char *) buffer, size);
-	if (repeater->getResender())
-		repeater->getResender()->getMutex()->lock();
-	repeater->gotData(d);
-	if (repeater->getResender())
-		repeater->getResender()->getMutex()->unlock();
+	repeater->handleLibpurpleData(d);
 	return size;
+}
+
+static void XferNotSent(PurpleXfer *xfer, const guchar *buffer, gsize size) {
+	Log("REPEATER", "xferNotSent" << size);
+	FiletransferRepeater *repeater = (FiletransferRepeater *) xfer->ui_data;
+	std::string d((char *) buffer, size);
+	repeater->handleDataNotSent(d);
 }
 
 static gssize XferRead(PurpleXfer *xfer, guchar **buffer, gssize size) {
 	Log("REPEATER", "xferRead");
 	FiletransferRepeater *repeater = (FiletransferRepeater *) xfer->ui_data;
-	if (!repeater->getResender()) {
-		repeater->wantsData();
+	std::string data;
+	int data_size = repeater->getDataToSend(data, size);
+	if (data_size == 0)
 		return 0;
-	}
-	repeater->getResender()->getMutex()->lock();
-	if (repeater->getBuffer().empty()) {
-		Log("REPEATER", "buffer is empty, setting wantsData = true");
-		repeater->wantsData();
-		repeater->getResender()->getMutex()->unlock();
-		return 0;
-	}
-	else {
-		std::string data;
-		if ((gssize) repeater->getBuffer().size() > size) {
-			data = repeater->getBuffer().substr(0, size);
-			repeater->getBuffer().erase(0, size);
-		}
-		else {
-			data = repeater->getBuffer();
-			repeater->getBuffer().erase();
-		}
-		(*buffer) = (guchar *) g_malloc0(data.size());
-		memcpy((*buffer), data.c_str(), data.size());
-		repeater->getResender()->getMutex()->unlock();
-		return data.size();
-	}
+	(*buffer) = (guchar *) g_malloc0(data_size);
+	memcpy((*buffer), data.c_str(), data_size);
+	Log("REPEATER", "Passing data to libpurple, size:" << data_size);
+	
+	return data.size();
 }
 
 /*
@@ -639,7 +625,7 @@ static PurpleXferUiOps xferUiOps =
 	NULL,
 	XferWrite,
 	XferRead,
-	NULL
+	XferNotSent
 };
 
 static PurpleConnectionUiOps conn_ui_ops =
@@ -834,7 +820,7 @@ GlooxMessageHandler::GlooxMessageHandler(const std::string &config) : MessageHan
 
 		ftManager = new FileTransferManager();
 		ft = new SIProfileFT(j, ftManager);
-		ftManager->setSIProfileFT(ft, this);
+		ftManager->setSIProfileFT(ft);
 		ftServer = new SOCKS5BytestreamServer(j->logInstance(), 8000, configuration().bindIPs[0]);
 		if( ftServer->listen() != ConnNoError ) {}
 		ft->addStreamHost( j->jid(), configuration().bindIPs[0], 8000 );

@@ -61,7 +61,6 @@ User::User(GlooxMessageHandler *parent, JID jid, const std::string &username, co
 	m_reconnectCount = 0;
 	m_lang = NULL;
 	m_features = 0;
-	m_filetransfers = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
 	PurpleValue *value;
 	
 	PurpleAccount *act = purple_accounts_find(m_username.c_str(), this->p->protocol()->protocol().c_str());
@@ -407,16 +406,6 @@ void User::receivedPresence(const Presence &stanza) {
 	delete stanzaTag;
 }
 
-void User::addFiletransfer( const JID& to, const std::string& sid, SIProfileFT::StreamType type, const JID& from, long size ) {
-	FiletransferRepeater *ft = new FiletransferRepeater(p, to, sid, type, from, size);
-	g_hash_table_replace(m_filetransfers, g_strdup(to.bare() == m_jid ? from.username().c_str() : to.username().c_str()), ft);
-	Log("filetransfer", "adding FT Class as jid:" << std::string(to.bare() == m_jid ? from.username() : to.username()));
-}
-void User::addFiletransfer( const JID& to ) {
-	FiletransferRepeater *ft = new FiletransferRepeater(p, to, m_jid + "/" + getResource().name);
-	g_hash_table_replace(m_filetransfers, g_strdup(to.username().c_str()), ft);
-}
-
 User::~User(){
 	if (m_account)
 		purple_account_set_enabled(m_account, PURPLE_UI, FALSE);
@@ -456,7 +445,6 @@ User::~User(){
 	}
 
 	g_hash_table_destroy(m_settings);
-	g_hash_table_destroy(m_filetransfers);
 	
 	Transport::instance()->sql()->setUserOnline(m_userID, false);
 

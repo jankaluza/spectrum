@@ -220,6 +220,10 @@ bool GlooxRegisterHandler::handleIq(Tag *iqTag) {
 			else {
 				username = usernametag->cdata();
 				password = passwordtag->cdata();
+				if (username.empty() || password.empty()) {
+					sendError(406, "not-acceptable", iqTag);
+					return false;
+				}
 			}
 		}
 

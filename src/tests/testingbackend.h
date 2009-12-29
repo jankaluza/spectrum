@@ -26,6 +26,7 @@
 
 #include "../abstractbackend.h"
 #include "../parser.h"
+#include "../configfile.h"
 
 struct Buddy {
 	long id;
@@ -55,6 +56,9 @@ class TestingBackend : public AbstractBackend {
 		std::map <std::string, Buddy> &getBuddies() { return m_buddies; }
 		void reset() {
 			m_buddies.clear();
+			m_users.clear();
+			Configuration cfg;
+			m_configuration = cfg;
 		}
 		
 		void updateBuddySubscription(long userId, const std::string &uin, const std::string &subscription) {}
@@ -65,14 +69,28 @@ class TestingBackend : public AbstractBackend {
 		void clearOnlineUsers() { m_onlineUsers.clear(); }
 		void setUserOnline(long userId, bool online) {}
 
-		UserRow getUserByJid(const std::string &jid) { UserRow user; return user; }
-		void addUser(const std::string &jid, const std::string &uin, const std::string &password, const std::string &language, const std::string &encoding) {}
+		UserRow getUserByJid(const std::string &jid) {
+			UserRow row;
+			row.id = -1;
+			if (m_users.find(jid) == m_users.end())
+				return row;
+			else
+				return m_users[jid];
+		}
+		void addUser(const std::string &jid, const std::string &uin, const std::string &password, const std::string &language, const std::string &encoding) {
+			UserRow row = {1, jid, uin, password, language, encoding};
+			m_users[jid] = row;
+		}
 		void removeUser(long userId) {}
 		void updateUser(const UserRow &user) {}
 		
 		GlooxParser *getParser() { return m_parser; }
+		Configuration &getConfiguration() { return m_configuration; }
+		void setConfiguration(const Configuration &conf) { m_configuration = conf; }
 
 	private:
+		Configuration m_configuration;
+		std::map <std::string, UserRow> m_users;
 		std::map <std::string, Buddy> m_buddies;
 		std::vector<std::string> m_onlineUsers;
 		static TestingBackend *m_pInstance;
