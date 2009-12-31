@@ -48,7 +48,7 @@ struct authRequest {
 class RosterManager {
 	public:
 		RosterManager(AbstractUser *user);
-		~RosterManager();
+		virtual ~RosterManager();
 
 		// Sends unavailable presence of all online buddies.
 		void sendUnavailablePresenceToAll();

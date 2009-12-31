@@ -42,7 +42,7 @@ struct SaveData {
 class RosterStorage {
 	public:
 		RosterStorage(AbstractUser *user);
-		~RosterStorage();
+		virtual ~RosterStorage();
 
 		// Add buddy to store queue and store it in future. Nothing
 		// will happen if buddy is already added.

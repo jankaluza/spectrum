@@ -43,7 +43,7 @@ struct Conversation {
 class SpectrumMessageHandler {
 	public:
 		SpectrumMessageHandler(AbstractUser *user);
-		~SpectrumMessageHandler();
+		virtual ~SpectrumMessageHandler();
 
 		// Adds new conversation to database.
 		void addConversation(PurpleConversation *conv, AbstractConversation *s_conv, const std::string &key = "");
