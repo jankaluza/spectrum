@@ -35,7 +35,7 @@ using namespace gloox;
 class SpectrumConversation : public AbstractConversation {
 	public:
 		SpectrumConversation(PurpleConversation *conv, SpectrumConversationType type);
-		~SpectrumConversation();
+		virtual ~SpectrumConversation();
 
 		// Handles message which should be resend to XMPP user.
 		void handleMessage(AbstractUser *user, const char *who, const char *msg, PurpleMessageFlags flags, time_t mtime);

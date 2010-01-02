@@ -34,7 +34,7 @@ class AbstractUser : public ResourceManager
 {
 	public:
 		AbstractUser() { m_filetransfers = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL); }
-		~AbstractUser() { g_hash_table_destroy(m_filetransfers); }
+		virtual ~AbstractUser() { g_hash_table_destroy(m_filetransfers); }
 		virtual const std::string &userKey() = 0;
 		virtual long storageId() = 0;
 		virtual PurpleAccount *account() = 0;

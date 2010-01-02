@@ -44,29 +44,23 @@ class FiletransferRepeater;
 class AbstractResendClass {
 	public:
 		AbstractResendClass() {
-			m_mutex = new MyMutex();
-#ifdef HAVE_PTHREADS
-			m_cond = new WaitCondition();
-#endif
+			m_mutex = g_mutex_new();
+			m_cond = g_cond_new();
 		}
-		~AbstractResendClass() { delete m_mutex; }
+		~AbstractResendClass() { g_mutex_free(m_mutex); g_cond_free(m_cond); }
 
-		MyMutex *getMutex() { return m_mutex; }
+		GMutex *getMutex() { return m_mutex; }
 		void wait() {
-#ifdef HAVE_PTHREADS
-			m_cond->wait();
-#endif
+			g_cond_wait(m_cond, m_mutex);
 		}
 
 		void wakeUp() {
-#ifdef HAVE_PTHREADS
-			m_cond->wakeUp();
-#endif
+			g_cond_signal(m_cond);
 		}
 
 	private:
-		MyMutex *m_mutex;
-		WaitCondition *m_cond;
+		GMutex *m_mutex;
+		GCond *m_cond;
 };
 
 class ReceiveFile : public AbstractResendClass, public BytestreamDataHandler, public Thread {
@@ -148,6 +142,7 @@ class SendFileStraight : public AbstractResendClass, public BytestreamDataHandle
 		~SendFileStraight();
 
 		void exec();
+		bool send();
 		void handleBytestreamData(Bytestream *s5b, const std::string &data);
 		void handleBytestreamError(Bytestream *s5b, const IQ &iq);
 		void handleBytestreamOpen(Bytestream *s5b);
@@ -173,14 +168,15 @@ class FiletransferRepeater {
 		void handleFTReceiveBytestream(Bytestream *bs, const std::string &filename = "");
 		void handleFTSendBytestream(Bytestream *bs, const std::string &filename = "");
 		bool gotData(const std::string &data);
-		void handleLibpurpleData(const std::string &data);
-		void handleDataNotSent(const std::string &data);
-		int getDataToSend(std::string &data, gssize size);
+		gssize handleLibpurpleData(const guchar *data, gssize size);
+		void handleDataNotSent(const guchar *data, gssize size);
+		int getDataToSend(guchar **data, gssize size);
+		int getDataToSend(std::string &data);
 		std::string requestFT();
 
 		bool isSending() { return m_send; }
 
-		std::string & getBuffer() { return m_buffer; }
+		std::string & getBuffer() { return a; }
 		AbstractResendClass *getResender() { return m_resender; }
 		void wantsData() { m_wantsData = true; if (m_resender) m_resender->wakeUp(); }
 		void ready();
@@ -194,9 +190,11 @@ class FiletransferRepeater {
 		long m_size;
 		PurpleXfer *m_xfer;
 		bool m_send;
+		std::string a;
 
 
-		std::string m_buffer;
+		guchar *m_buffer;
+		int m_buffer_size;
 		AbstractResendClass *m_resender;
 		bool m_wantsData;
 

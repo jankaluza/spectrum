@@ -38,7 +38,7 @@ class SpectrumTimer {
 		// `callback` - function called after time.
 		// `data` - data passed to callback function
 		SpectrumTimer (int time, SpectrumTimerCallback callback, void *data = NULL);
-		~SpectrumTimer ();
+		virtual ~SpectrumTimer ();
 
 		// Starts timer. If it's already started, nothing whill happen.
 		void start();

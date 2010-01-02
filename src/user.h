@@ -58,7 +58,7 @@ class User;
 class User : public AbstractUser, public RosterManager, public RosterStorage, public SpectrumMessageHandler {
 	public:
 		User(GlooxMessageHandler *parent, JID jid, const std::string &username, const std::string &password, const std::string &userKey, long id);
-		~User();
+		virtual ~User();
 
 		// Connects the user to legacy network.
 		void connect();

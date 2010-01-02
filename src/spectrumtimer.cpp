@@ -37,6 +37,7 @@ SpectrumTimer::SpectrumTimer (int time, SpectrumTimerCallback callback, void *da
 }
 
 SpectrumTimer::~SpectrumTimer() {
+	std::cout << "TIMEOUT DESTRUCTOR\n";
 	stop();
 }
 

@@ -35,6 +35,14 @@ static gboolean ui_got_data(gpointer data){
 }
 
 
+static gboolean getData(gpointer data){
+// 	FiletransferRepeater *repeater = (FiletransferRepeater *) data;
+// 	std::string d;
+// 	repeater->getDataToSend(d, 320000);
+	return FALSE;
+}
+
+
 SendFile::SendFile(Bytestream *stream, int size, const std::string &filename, AbstractUser *user, FiletransferRepeater *manager) {
     std::cout << "SendFile::SendFile" << " Constructor.\n";
     m_stream = stream;
@@ -74,7 +82,7 @@ void SendFile::exec() {
 // 			getBuffer().erase();
 // 			}
 // 			m_file.read(input, 200024);
-			getMutex()->lock();
+			g_mutex_lock(getMutex());
 			std::string t;
 			if (m_parent->getBuffer().empty())
 				empty = true;
@@ -83,7 +91,7 @@ void SendFile::exec() {
 				t = std::string(m_parent->getBuffer());
 				m_parent->getBuffer().erase();
 			}
-			getMutex()->unlock();
+			g_mutex_unlock(getMutex());
 			if (!empty) {
 				m_file.write(t.c_str(), t.size());
 			}
@@ -115,6 +123,15 @@ void SendFile::handleBytestreamClose(gloox::Bytestream *s5b) {
 	std::cout << "socks stream error\n";
 }
 
+static gpointer sendFileStraightCallback(gpointer data) {
+	SendFileStraight *resender = (SendFileStraight *) data;
+	while (true) {
+		if (!resender->send())
+			break;
+	}
+	return NULL;
+}
+
 SendFileStraight::SendFileStraight(Bytestream *stream, int size, FiletransferRepeater *manager) {
     std::cout << "SendFileStraight::SendFileStraight" << " Constructor.\n";
     m_stream = stream;
@@ -123,54 +140,41 @@ SendFileStraight::SendFileStraight(Bytestream *stream, int size, FiletransferRep
 	m_parent = manager;
 	if (m_stream->connect())
 		std::cout << "stream connected\n";
-    run();
+    g_thread_create(&sendFileStraightCallback, this, false, NULL);
 }
 
 SendFileStraight::~SendFileStraight() {
 
 }
 
-void SendFileStraight::exec() {
-    std::cout << "SendFileStraight::exec Starting transfer.\n";
+void SendFileStraight::exec() { }
+
+bool SendFileStraight::send() {
 //     char input[200024];
-	int ret;
-	bool empty;
-    while (true) {
-		if (m_stream->isOpen()){
-			std::string data;
-			std::cout << "BEFORE MUTEX LOCK\n";
-			getMutex()->lock();
-			std::cout << "TRYING TO SEND\n";
-			std::string t;
-			if (m_parent->getBuffer().empty()) {
-				empty = true;
-			}
-			else {
-				empty = false;
-				t = std::string(m_parent->getBuffer());
-				m_parent->getBuffer().erase();
-			}
-			m_parent->ready();
-			getMutex()->unlock();
-			if (!empty) {
-				ret = m_stream->send(t);
-				if(ret<1){
-					std::cout << "error in sending or sending probably finished\n";
-					break;
-				};
-			}
-			else
-				wait();
-// 				sleep(1);
+	if (m_stream->isOpen()){
+		std::cout << "BEFORE MUTEX LOCK\n";
+		g_mutex_lock(getMutex());
+		std::cout << "TRYING TO SEND\n";
+		std::string data;
+		int size = m_parent->getDataToSend(data);
+		
+		if (size != 0) {
+			int ret = m_stream->send(data);
+			if (ret < 1) {
+				std::cout << "error in sending or sending probably finished\n";
+				return false;
+			};
 		}
-		else {
-			std::cout << "stream not open!\n";
-		}
-		if (m_stream->recv(2000) != ConnNoError)
-			break;
-    }
-    std::cout << "STOPPING THREAD!\n";
-//     delete this;
+		else
+			wait();
+		g_mutex_unlock(getMutex());
+	}
+	else {
+		std::cout << "stream not open!\n";
+	}
+	if (m_stream->recv(2000) != ConnNoError)
+		return false;
+	return true;
 }
 
 void SendFileStraight::handleBytestreamData(gloox::Bytestream *s5b, const std::string &data) {
@@ -269,6 +273,14 @@ void ReceiveFile::handleBytestreamClose(gloox::Bytestream *s5b) {
 	}
 }
 
+static gpointer receiveFunc(gpointer data) {
+	gloox::Bytestream *stream = (gloox::Bytestream *) data;
+	while (true) {
+		if (stream->recv() != ConnNoError)
+			break;
+	}
+	return NULL;
+}
 
 ReceiveFileStraight::ReceiveFileStraight(gloox::Bytestream *stream, int size, FiletransferRepeater *manager) {
     m_stream = stream;
@@ -280,7 +292,9 @@ ReceiveFileStraight::ReceiveFileStraight(gloox::Bytestream *stream, int size, Fi
 //         Log().Get("ReceiveFileStraight") << "connection can't be established!";
         return;
     }
-    run();
+//     run();
+	g_thread_create(&receiveFunc, m_stream, false, NULL);
+	
 }
 
 ReceiveFileStraight::~ReceiveFileStraight() {
@@ -304,13 +318,13 @@ void ReceiveFileStraight::exec() {
 
 void ReceiveFileStraight::handleBytestreamData(gloox::Bytestream *s5b, const std::string &data) {
 	bool w;
-	getMutex()->lock();
+	g_mutex_lock(getMutex());
 // 	m_file.write(data.c_str(), data.size());
 	w = m_parent->gotData(data);
-	getMutex()->unlock();
 	if (w) {
 		wait();
 	}
+	g_mutex_unlock(getMutex());
 }
 
 void ReceiveFileStraight::handleBytestreamError(gloox::Bytestream *s5b, const gloox::IQ &iq) {
@@ -339,7 +353,8 @@ FiletransferRepeater::FiletransferRepeater(const JID& to, const std::string& sid
 	m_sid = sid;
 	m_type = type;
 	m_from = from;
-	m_buffer = "";
+	m_buffer = (guchar *) g_malloc0(65535);
+	m_buffer_size = 0;
 	m_wantsData = false;
 	m_resender = NULL;
 	m_send = false;
@@ -348,7 +363,8 @@ FiletransferRepeater::FiletransferRepeater(const JID& to, const std::string& sid
 FiletransferRepeater::FiletransferRepeater(const JID& from, const JID& to) {
 	m_to = to;
 	m_from = from;
-	m_buffer = "";
+	m_buffer = (guchar *) g_malloc0(65535);
+	m_buffer_size = 0;
 	m_type = SIProfileFT::FTTypeS5B;
 	m_resender = NULL;
 	m_size = -1;
@@ -376,7 +392,7 @@ void FiletransferRepeater::fileSendStart() {
 void FiletransferRepeater::fileRecvStart() {
 	Log("SendFileStraight", "fileRecvStart!" << m_from.full() << " " << m_to.full());
 	if (m_resender)
-	purple_timeout_add_seconds(0,&ui_got_data,m_xfer);
+	g_timeout_add_seconds(0,&ui_got_data,m_xfer);
 }
 
 std::string FiletransferRepeater::requestFT() {
@@ -408,65 +424,118 @@ void FiletransferRepeater::handleFTSendBytestream(Bytestream *bs, const std::str
 }
 
 bool FiletransferRepeater::gotData(const std::string &data) {
-	std::cout << "FiletransferRepeater::gotData\n";
-	if (m_buffer.size() == 0)
+	std::cout << "FiletransferRepeater::gotData " << data.size() << "\n";
+	if (m_buffer_size == 0)
 		ready();
-	m_buffer.append(std::string(data));
+	guchar *c = m_buffer + m_buffer_size;
+	memcpy(c, data.c_str(), data.size());
+	m_buffer_size += data.size();
+
+// 	for (unsigned int i = 0; i < data.size(); i++) {
+// 		m_buffer->append("a");
+// 	}
 	
 	if (m_send) {
 		std::cout << "WakeUP\n";
 		m_resender->wakeUp();
 	}
-	return m_buffer.size() > 5000;
+	bool wait = m_buffer_size > 5000;
+// 	if (wait)
+// 		g_timeout_add(7,&getData,this);
+	return wait;
 }
 
-void FiletransferRepeater::handleLibpurpleData(const std::string &data) {
+gssize FiletransferRepeater::handleLibpurpleData(const guchar *data, gssize size) {
+	std::cout << "FiletransferRepeater::handleLibpurpleData " << m_buffer_size + size << "\n";
 	if (m_resender)
-		m_resender->getMutex()->lock();
-	m_buffer.append(std::string(data));
+		g_mutex_lock(m_resender->getMutex());
+	gssize data_size = size;
+	if (m_buffer_size + data_size > 65535) {
+		data_size = 65535 - m_buffer_size;
+		std::cout << "new data_size is " << data_size << "\n";
+	}
+
+	guchar *c = m_buffer + m_buffer_size;
+	memcpy(c, data, data_size);
+	m_buffer_size += data_size;
+
 	m_resender->wakeUp();
+
 	if (m_resender)
-		m_resender->getMutex()->unlock();
+		g_mutex_unlock(m_resender->getMutex());
+	return data_size;
 }
 
-void FiletransferRepeater::handleDataNotSent(const std::string &data) {
+void FiletransferRepeater::handleDataNotSent(const guchar *data, gssize size) {
 	if (m_resender)
-		m_resender->getMutex()->lock();
-	m_buffer = data + m_buffer;
+		g_mutex_lock(m_resender->getMutex());
+
+	// Move data from zero to `size` (shift right)
+	guchar *oldbufferdata = m_buffer + size;
+	memcpy(oldbufferdata, m_buffer, m_buffer_size);
+	m_buffer_size = m_buffer_size + size;
+
+	// Copy data to buffer
+	memcpy(m_buffer, data, size);
+	
 	ready();
 	if (m_resender)
-		m_resender->getMutex()->unlock();
+		g_mutex_unlock(m_resender->getMutex());
 }
 
-int FiletransferRepeater::getDataToSend(std::string &data, gssize size) {
+int FiletransferRepeater::getDataToSend(guchar **data, gssize size) {
 	if (m_resender)
-		m_resender->getMutex()->lock();
+		g_mutex_lock(m_resender->getMutex());
+	std::cout << "buffer size:" << m_buffer_size << "\n";
+	int data_size = 0;
 
-	if ((gssize) m_buffer.size() > size) {
-		data = m_buffer.substr(0, size);
-		m_buffer.erase(0, size);
+	if ((gssize) m_buffer_size > size) {
+		// Store `size` bytes into `data`.
+		(*data) = (guchar *) g_malloc0(size);
+		memcpy((*data), m_buffer, size);
+		data_size = (int) size;
+
+		// Replace sent data with the new one (just shift substring in m_buffer starting at `size` left to zero).
+		guchar *newbufferdata = m_buffer + size;
+		memcpy(m_buffer, newbufferdata, m_buffer_size - size);
+		m_buffer_size = m_buffer_size - size;
 	}
 	else {
-		data = std::string(m_buffer);
-		m_buffer.erase();
+		(*data) = (guchar *) g_malloc0(m_buffer_size);
+		memcpy((*data), m_buffer, m_buffer_size);
+		data_size = (int) m_buffer_size;
+		m_buffer_size = 0;
 	}
 
-	if (m_buffer.size() < 1000) {
+	bool wakeUp = m_buffer_size < 1000;
+	
+	if (wakeUp) {
 		Log("REPEATER", "WakeUP");
 		if (m_resender)
 			m_resender->wakeUp();
-	}
+		}
 	else
 		ready();
 	
 	if (m_resender)
-		m_resender->getMutex()->unlock();
+		g_mutex_unlock(m_resender->getMutex());
 
-	return data.size();
+	return data_size;
+}
+
+int FiletransferRepeater::getDataToSend(std::string &data) {
+	int size = 0;
+	if (m_buffer_size != 0) {
+		data.assign((char *) m_buffer, m_buffer_size);
+		size = m_buffer_size;
+		m_buffer_size = 0;
+	}
+	ready();
+	return size;
 }
 
 void FiletransferRepeater::ready() {
-	purple_timeout_add(0,&ui_got_data,m_xfer);
+	g_timeout_add(0, &ui_got_data, m_xfer);
 }
 
 

@@ -58,6 +58,7 @@ if(CMAKE_BUILD_TYPE MATCHES Debug)
 	ADD_DEFINITIONS(-ggdb)
 	ADD_DEFINITIONS(-DDEBUG)
 	ADD_DEFINITIONS(-Wall)
+# 	ADD_DEFINITIONS(-pedantic)
 	message(STATUS "Build type is set to Debug")
 endif(CMAKE_BUILD_TYPE MATCHES Debug)
 

@@ -84,6 +84,7 @@ RosterStorage::RosterStorage(AbstractUser *user) : m_user(user) {
 }
 
 RosterStorage::~RosterStorage() {
+	std::cout << "ROSTERSTORAGE DESTRUCTOR\n";
 	delete m_storageTimer;
 	g_hash_table_destroy(m_storageCache);
 }

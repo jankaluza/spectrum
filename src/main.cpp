@@ -522,30 +522,24 @@ static void buddyListSaveAccount(PurpleAccount *account) {
 static gssize XferWrite(PurpleXfer *xfer, const guchar *buffer, gssize size) {
 	std::cout << "gotData\n";
 	FiletransferRepeater *repeater = (FiletransferRepeater *) xfer->ui_data;
-	std::string d((char *) buffer, size);
-	repeater->handleLibpurpleData(d);
-	return size;
+	return repeater->handleLibpurpleData(buffer, size);
 }
 
 static void XferNotSent(PurpleXfer *xfer, const guchar *buffer, gsize size) {
 	Log("REPEATER", "xferNotSent" << size);
 	FiletransferRepeater *repeater = (FiletransferRepeater *) xfer->ui_data;
-	std::string d((char *) buffer, size);
-	repeater->handleDataNotSent(d);
+	repeater->handleDataNotSent(buffer, size);
 }
 
 static gssize XferRead(PurpleXfer *xfer, guchar **buffer, gssize size) {
 	Log("REPEATER", "xferRead");
 	FiletransferRepeater *repeater = (FiletransferRepeater *) xfer->ui_data;
-	std::string data;
-	int data_size = repeater->getDataToSend(data, size);
+	int data_size = repeater->getDataToSend(buffer, size);
 	if (data_size == 0)
 		return 0;
-	(*buffer) = (guchar *) g_malloc0(data_size);
-	memcpy((*buffer), data.c_str(), data_size);
 	Log("REPEATER", "Passing data to libpurple, size:" << data_size);
 	
-	return data.size();
+	return data_size;
 }
 
 /*
@@ -797,6 +791,7 @@ GlooxMessageHandler::GlooxMessageHandler(const std::string &config) : MessageHan
 	j->logInstance().registerLogHandler(LogLevelDebug, LogAreaXmlIncoming | LogAreaXmlOutgoing, &Log_);
 	
 	m_loop = g_main_loop_new(NULL, FALSE);
+	g_thread_init(NULL);
 
 	m_userManager = new UserManager();
 	m_searchHandler = NULL;
@@ -1362,10 +1357,11 @@ void GlooxMessageHandler::handlePresence(const Presence &stanza){
 				else {
 					if (purple_accounts_find(res.uin.c_str(), protocol()->protocol().c_str()) != NULL) {
 						PurpleAccount *act = purple_accounts_find(res.uin.c_str(), protocol()->protocol().c_str());
-						if (userManager()->getUserByAccount(act)) {
-							Log(stanza.from().full(), "This account is already connected by another jid " << user->jid());
-							return;
-						}
+// 						user = (User *) userManager()->getUserByAccount(act);
+// 						if (user) {
+// 							Log(stanza.from().full(), "This account is already connected by another jid " << user->jid());
+// 							return;
+// 						}
 					}
 					user = new User(this, stanza.from(), res.uin, res.password, stanza.from().bare(), res.id);
 				}
