@@ -26,7 +26,7 @@ except ImportError:
 
 class spectrum():
 	def __init__( self, config_path ):
-		self.config_path = config_path
+		self.config_path = os.path.normpath( config_path )
 		self.config = spectrumconfigparser.SpectrumConfigParser()
 		self.config.read( config_path )
 		self.pid_file = self.config.get( 'service', 'pid_file' )
