@@ -56,6 +56,15 @@ class spectrum():
 	def su_cmd( self, cmd ):
 		return [ 'su', 'spectrum', '-s', '/bin/bash', '-c', ' '.join( cmd ) ]
 
+	def list( self ):
+		pid = self.get_pid()
+		if pid == -1:
+			pid = '-'
+		proto = self.config.get( 'service', 'protocol' )
+		host = self.get_jid()
+		status = self.status()[1]
+		return (pid, proto, host, status)
+
 	def status( self, pid=None ):
 		"""
 		Determines if the instance is running.
