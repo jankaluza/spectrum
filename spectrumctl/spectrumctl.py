@@ -58,7 +58,6 @@ def act( instance ):
 if options.config:
 	instance = spectrum.spectrum( options.config )
 	ret = act( instance )
-	print ret
 	sys.exit( ret )
 else:
 	if not os.path.exists( options.config_dir ):
