@@ -37,6 +37,12 @@ class spectrum():
 		"""
 		return self.config.get( 'service', 'jid' )
 
+	def enabled( self ):
+		if int( self.config.get( 'service', 'enable' ) ) == 0:
+			return False
+		else:
+			return True
+
 	def get_pid( self ):
 		"""
 		Get the pid of the service, returns -1 if pid does not exist or

@@ -47,6 +47,10 @@ elif action not in dir( spectrum.spectrum ):
 	print( "Unknown action." )
 
 def act( instance ):
+	if not instance.enabled():
+		if not options.quiet:
+			print( "%s is disabled in config-file." %(instance.get_jid()) )
+		return 0
 	if not options.quiet:
 		print( "%s %s..."%(action.title(), instance.get_jid()) ),
 	# print( "%s %s..."%(action.title(), instance.get_jid()), end='' ) #python3
