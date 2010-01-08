@@ -19,10 +19,8 @@ set -e
 
 USER=spectrum
 CONFSDIR=/etc/spectrum/
-DAEMON=/usr/local/bin/spectrum
-LOGPATH=/var/log/spectrum
+DAEMON=/usr/bin/spectrum
 PIDPATH=/var/run/spectrum
-
 
 test -x "$DAEMON" || exit 0
 
@@ -40,39 +38,59 @@ check_user() {
 
 . /lib/lsb/init-functions
 
-case "$1" in
-  start)
-    check_user
+start() {
     for i in $CONFSDIR/* ; do
       if grep "enable" $i | grep "=" | grep "1" > /dev/null ; then
         CONF=`basename $i`
         log_daemon_msg "Starting spectrum instance:" "$CONF"
-        if start-stop-daemon --start --quiet --oknodo --pidfile "$PIDPATH/$CONF.pid" --chuid "$USER" --exec "$DAEMON" --make-pidfile --background -- "$CONFSDIR/$CONF" -l "$LOGPATH/$CONF.log" -n ; then
-          log_end_msg 0
-        else
-          log_end_msg 1
-        fi
+	spectrumctl --su $USER -q -c $i start
+	log_end_msg $?
       fi
     done
-    ;;
-  stop)
+}
+
+stop() {
     for i in $CONFSDIR/* ; do
       if grep "enable" $i | grep "=" | grep "1" > /dev/null ; then
         CONF=`basename $i`
         log_daemon_msg "Stopping spectrum instance:" "$CONF"
-        if start-stop-daemon --stop --retry 30 --quiet --oknodo --pidfile "$PIDPATH/$CONF.pid"; then
-          if [ -e "$PIDPATH/$CONF.pid" ] ; then
-            rm "$PIDPATH/$CONF.pid"
-          fi
-          log_end_msg 0
-        else
-          log_end_msg 1
-        fi
+	spectrumctl -q -c $i stop
+	log_end_msg $?
       fi
     done
+}
+
+reload() {
+    for i in $CONFSDIR/* ; do
+      if grep "enable" $i | grep "=" | grep "1" > /dev/null ; then
+        CONF=`basename $i`
+        log_daemon_msg "Reloading spectrum instance:" "$CONF"
+	spectrumctl -q -c $i reload
+	log_end_msg $?
+      fi
+    done
+}
+
+case "$1" in
+  start)
+    check_user
+    start
+    ;;
+  stop)
+    stop
+    ;;
+  restart)
+    stop
+    start
+    ;;
+  reload)
+    reload
+    ;;
+  force-reload)
+    reload
     ;;
   *)
-    log_action_msg "Usage: /etc/init.d/spectrum {start|stop}"
+    log_action_msg "Usage: /etc/init.d/spectrum {start|stop|restart|reload|force-reload}"
     exit 1
 esac
       

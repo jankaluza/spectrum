@@ -23,6 +23,7 @@
 #include "../muchandler.h"
 #include "../usermanager.h"
 #include "../sql.h"
+#include "../user.h"
 #include "cmds.h"
 
 IRCProtocol::IRCProtocol(GlooxMessageHandler *main){
@@ -91,7 +92,9 @@ void IRCProtocol::onConnected(AbstractUser *user) {
 		// receivedMessage will send PM according to resource, so it doesn't matter what's before it... :)
 		Message msg(Message::Chat, JID("#test%test@server.cz/NickServ"), "identify " + nickserv);
 		msg.setFrom(user->jid());
-		GlooxMessageHandler::instance()->handleMessage(msg);
+		User *handler = (User *) user;
+// 		GlooxMessageHandler::instance()->handleMessage(msg);
+		handler->handleMessage(msg);
 	}
 
 	for (std::list <Tag*>::iterator it = data->autoConnectRooms.begin(); it != data->autoConnectRooms.end() ; it++ ) {
