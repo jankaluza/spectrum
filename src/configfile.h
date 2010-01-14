@@ -24,6 +24,9 @@
 #include "glib.h"
 #include "purple.h"
 #include <iostream>
+#include <list>
+#include <map>
+#include <string>
 #include "limits.h"
 
 

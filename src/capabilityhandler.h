@@ -23,8 +23,11 @@
 
 #include <sstream>
 #include <iostream>
+#include <string>
+#include <map>
 #include "purple.h"
 #include "configfile.h"
+#include "log.h"
 
 #include <gloox/iqhandler.h>
 #include <gloox/discohandler.h>

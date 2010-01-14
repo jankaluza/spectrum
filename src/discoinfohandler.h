@@ -27,6 +27,7 @@
 #include "purple.h"
 #include <glib.h>
 #include "configfile.h"
+#include "log.h"
 
 extern LogClass Log_;
 

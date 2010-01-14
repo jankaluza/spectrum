@@ -202,6 +202,7 @@ void User::connect() {
 	}
 
 	purple_account_set_string(m_account, "encoding", Transport::instance()->getConfiguration().encoding.c_str());
+	purple_account_set_bool(m_account, "use_clientlogin", false);
 
 	m_account->ui_data = this;
 
