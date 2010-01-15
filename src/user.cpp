@@ -271,6 +271,8 @@ void User::receivedPresence(const Presence &stanza) {
 		localization.loadLocale(getLang());
 		Log("LANG", lang << " " << lang.c_str());
 	}
+	
+	handlePresence(stanza);
 
 	if (p->protocol()->onPresenceReceived(this, stanza)) {
 		delete stanzaTag;
@@ -291,7 +293,7 @@ void User::receivedPresence(const Presence &stanza) {
 						removeResource(stanza.from().resource());
 						removeConversationResource(stanza.from().resource());
 					}
-					sendUnavailablePresenceToAll();
+					sendUnavailablePresenceToAll(stanza.from().resource());
 				}
 			}
 			if (m_connected) {

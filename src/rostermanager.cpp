@@ -109,10 +109,13 @@ bool RosterManager::isInRoster(const std::string &name, const std::string &subsc
 	return false;
 }
 
-void RosterManager::sendUnavailablePresenceToAll() {
+void RosterManager::sendUnavailablePresenceToAll(const std::string &resource) {
 	SendPresenceToAllData *data = new SendPresenceToAllData;
 	data->features = m_user->getFeatures();
-	data->to = m_user->jid();
+	if (resource.empty())
+		data->to = m_user->jid();
+	else
+		data->to = m_user->jid() + "/" + resource;
 	g_hash_table_foreach(m_roster, sendUnavailablePresence, data);
 	delete data;
 }
