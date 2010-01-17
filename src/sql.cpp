@@ -540,8 +540,12 @@ long SQLClass::addBuddy(long userId, const std::string &uin, const std::string &
 	}
 	// It would be much more better to find out the way how to get last_inserted_rowid from Poco.
 	if (p->configuration().sqlType == "sqlite") {
-		Poco::UInt64 id;
+		Poco::UInt64 id = -1;
+		Log("addBuddy","");
+		Log("addBuddy","Trying to get " << m_stmt_addBuddy.user_id << " " << m_stmt_addBuddy.uin);
+		STATEMENT_EXECUTE_BEGIN();
 		*m_sess << "SELECT id FROM " + p->configuration().sqlPrefix + "buddies WHERE user_id=? AND uin=?", use(m_stmt_addBuddy.user_id), use(m_stmt_addBuddy.uin), into(id), now;
+		STATEMENT_EXECUTE_END(m_stmt_addBuddy.stmt, addBuddy(userId, uin, subscription, group, nickname));
 		return id;
 	}
 	else
