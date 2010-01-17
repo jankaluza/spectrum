@@ -24,7 +24,7 @@ try:
 except ImportError:
 	import spectrumconfigparser
 
-class spectrum():
+class spectrum:
 	def __init__( self, config_path ):
 		self.config_path = os.path.normpath( config_path )
 		self.config = spectrumconfigparser.SpectrumConfigParser()
