@@ -374,8 +374,9 @@ void SQLClass::initDb() {
 	}
 	catch (Poco::Exception e) {
 		m_version = 0;
+		Log("SQL ERROR", e.displayText());
 		if (p->configuration().sqlType != "sqlite" && !m_upgrade) {
-			Log("SQL", "Database schema is not updated. Please run \"spectrum <config_file.cfg> --upgrade-db\" to fix that.");
+			Log("SQL", "Maybe the database schema is not updated. Try to run \"spectrum <config_file.cfg> --upgrade-db\" to fix that.");
 			return;
 		}
 		if (p->configuration().sqlType == "sqlite") {
