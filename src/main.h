@@ -48,6 +48,7 @@
 #include "core.h"
 #include "debug.h"
 #include "ft.h"
+#include "log.h"
 #include "notify.h"
 #include "prefs.h"
 #include "prpl.h"
