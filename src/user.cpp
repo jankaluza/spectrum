@@ -202,6 +202,7 @@ void User::connect() {
 	}
 
 	purple_account_set_string(m_account, "encoding", Transport::instance()->getConfiguration().encoding.c_str());
+	purple_account_set_bool(m_account, "use_clientlogin", false);
 
 	m_account->ui_data = this;
 
@@ -270,6 +271,8 @@ void User::receivedPresence(const Presence &stanza) {
 		localization.loadLocale(getLang());
 		Log("LANG", lang << " " << lang.c_str());
 	}
+	
+	handlePresence(stanza);
 
 	if (p->protocol()->onPresenceReceived(this, stanza)) {
 		delete stanzaTag;
@@ -290,7 +293,7 @@ void User::receivedPresence(const Presence &stanza) {
 						removeResource(stanza.from().resource());
 						removeConversationResource(stanza.from().resource());
 					}
-					sendUnavailablePresenceToAll();
+					sendUnavailablePresenceToAll(stanza.from().resource());
 				}
 			}
 			if (m_connected) {

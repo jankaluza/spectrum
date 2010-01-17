@@ -51,7 +51,7 @@ class RosterManager {
 		virtual ~RosterManager();
 
 		// Sends unavailable presence of all online buddies.
-		void sendUnavailablePresenceToAll();
+		void sendUnavailablePresenceToAll(const std::string &resource = "");
 
 		// Sends current presence of all buddies.
 		void sendPresenceToAll(const std::string &to);

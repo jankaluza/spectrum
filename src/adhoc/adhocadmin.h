@@ -25,6 +25,7 @@
 #include "purple.h"
 #include "account.h"
 #include "glib.h"
+#include "../log.h"
 #include "request.h"
 #include "adhoccommandhandler.h"
 
