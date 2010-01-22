@@ -44,6 +44,7 @@ CREATE TABLE IF NOT EXISTS `users_settings` (
 
 CREATE TABLE IF NOT EXISTS `db_version` (
   `ver` int(10) unsigned NOT NULL default '1'
+  UNIQUE KEY `ver` (`ver`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 
 INSERT INTO db_version (ver) VALUES ('1');
