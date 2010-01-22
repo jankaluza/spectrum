@@ -1420,35 +1420,36 @@ void GlooxMessageHandler::handlePresence(const Presence &stanza){
 
 void GlooxMessageHandler::onConnect() {
 	Log("gloox", "CONNECTED!");
-	j->disco()->setIdentity("gateway", protocol()->gatewayIdentity(), configuration().discoName);
-	j->disco()->setVersion(configuration().discoName, VERSION, "");
-
-	std::string id = "gateway";
-	id += '/';
-	id += protocol()->gatewayIdentity();
-	id += '/';
-	id += '/';
-	id += configuration().discoName;
-	id += '<';
-	
-	std::list<std::string> features = protocol()->transportFeatures();
-	features.sort();
-	for (std::list<std::string>::iterator it = features.begin(); it != features.end(); it++) {
-		j->disco()->addFeature(*it);
-	}
-
-	std::list<std::string> f = protocol()->buddyFeatures();
-	f.sort();
-	for (std::list<std::string>::iterator it = f.begin(); it != f.end(); it++) {
-		id += (*it);
-		id += '<';
-	}
-
-    SHA sha;
-    sha.feed( id );
-    m_configuration.hash = Base64::encode64( sha.binary() );
 
 	if (m_firstConnection) {
+		j->disco()->setIdentity("gateway", protocol()->gatewayIdentity(), configuration().discoName);
+		j->disco()->setVersion(configuration().discoName, VERSION, "");
+
+		std::string id = "gateway";
+		id += '/';
+		id += protocol()->gatewayIdentity();
+		id += '/';
+		id += '/';
+		id += configuration().discoName;
+		id += '<';
+		
+		std::list<std::string> features = protocol()->transportFeatures();
+		features.sort();
+		for (std::list<std::string>::iterator it = features.begin(); it != features.end(); it++) {
+			j->disco()->addFeature(*it);
+		}
+
+		std::list<std::string> f = protocol()->buddyFeatures();
+		f.sort();
+		for (std::list<std::string>::iterator it = f.begin(); it != f.end(); it++) {
+			id += (*it);
+			id += '<';
+		}
+
+		SHA sha;
+		sha.feed( id );
+		m_configuration.hash = Base64::encode64( sha.binary() );
+
 		new AutoConnectLoop();
 		m_firstConnection = false;
 	}
