@@ -368,8 +368,7 @@ void SQLClass::initDb() {
 			*m_sess << "CREATE TABLE IF NOT EXISTS " + p->configuration().sqlPrefix + "db_version ("
 				"  ver INTEGER NOT NULL DEFAULT '1'"
 				");", now;
-			
-			*m_sess << "INSERT INTO " + p->configuration().sqlPrefix + "db_version ('ver') VALUES (1);", now;
+			*m_sess << "REPLACE INTO" + p->configuration().sqlPrefix + "db_version SET ver=1", now;
 		}
 		catch (Poco::Exception e) {
 			Log("SQL ERROR", e.displayText());
@@ -421,7 +420,7 @@ void SQLClass::upgradeDatabase() {
 								");", now;
 					*m_sess << "ALTER TABLE " + p->configuration().sqlPrefix + "users ADD online tinyint(1) NOT NULL DEFAULT '0';", now;
 				}
-				*m_sess << "INSERT INTO " + p->configuration().sqlPrefix + "db_version (ver) VALUES ('1');", now;
+				*m_sess << "REPLACE INTO" + p->configuration().sqlPrefix + "db_version SET ver=1", now;
 			}
 		}
 	}
