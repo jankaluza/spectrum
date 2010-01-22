@@ -38,6 +38,7 @@ SQLClass::SQLClass(GlooxMessageHandler *parent, bool upgrade) {
 	m_upgrade = upgrade;
 	m_sess = NULL;
 	m_stmt_addUser.stmt = NULL;
+	m_version_stmt = NULL;
 	m_stmt_updateUserPassword.stmt = NULL;
 	m_stmt_removeBuddy.stmt = NULL;
 	m_stmt_removeUser.stmt = NULL;
@@ -111,6 +112,9 @@ SQLClass::~SQLClass() {
 }
 
 void SQLClass::createStatements() {
+	if (!m_version_stmt)
+		m_version_stmt = new Statement( ( STATEMENT("SELECT ver FROM " + p->configuration().sqlPrefix + "db_version"), into(m_version) ) );
+	
 	// Prepared statements
 	if (!m_stmt_addUser.stmt)
 		m_stmt_addUser.stmt = new Statement( ( STATEMENT("INSERT INTO " + p->configuration().sqlPrefix + "users (jid, uin, password, language, encoding) VALUES (?, ?, ?, ?, ?)"),
@@ -259,6 +263,7 @@ void SQLClass::addUser(const std::string &jid,const std::string &uin,const std::
 
 void SQLClass::removeStatements() {
 	delete m_stmt_addUser.stmt;
+	delete m_version_stmt;
 	delete m_stmt_updateUserPassword.stmt;
 	delete m_stmt_removeBuddy.stmt;
 	delete m_stmt_removeUser.stmt;
@@ -280,6 +285,7 @@ void SQLClass::removeStatements() {
 	delete m_stmt_setUserOnline.stmt;
 	
 	m_stmt_addUser.stmt = NULL;
+	m_version_stmt = NULL;
 	m_stmt_updateUserPassword.stmt = NULL;
 	m_stmt_removeBuddy.stmt = NULL;
 	m_stmt_removeUser.stmt = NULL;
@@ -370,7 +376,7 @@ void SQLClass::initDb() {
 	}
 
 	try {
-		*m_sess << "SELECT ver FROM " + p->configuration().sqlPrefix + "db_version", into(m_version), now;
+		m_version_stmt->execute();
 	}
 	catch (Poco::Exception e) {
 		m_version = 0;
