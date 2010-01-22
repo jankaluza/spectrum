@@ -112,8 +112,10 @@ SQLClass::~SQLClass() {
 }
 
 void SQLClass::createStatements() {
-	if (!m_version_stmt)
+	if (!m_version_stmt) {
+		Log("NEW STATEMENT", "version_stmt");
 		m_version_stmt = new Statement( ( STATEMENT("SELECT ver FROM " + p->configuration().sqlPrefix + "db_version"), into(m_version) ) );
+	}
 	
 	// Prepared statements
 	if (!m_stmt_addUser.stmt)
@@ -381,6 +383,7 @@ void SQLClass::initDb() {
 	catch (Poco::Exception e) {
 		m_version = 0;
 		Log("SQL ERROR", e.displayText());
+		Log("SQL ERROR CODE", e.code());
 		if (p->configuration().sqlType != "sqlite" && !m_upgrade) {
 			Log("SQL", "Maybe the database schema is not updated. Try to run \"spectrum <config_file.cfg> --upgrade-db\" to fix that.");
 			return;
