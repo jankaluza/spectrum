@@ -113,8 +113,7 @@ SQLClass::~SQLClass() {
 
 void SQLClass::createStatements() {
 	if (!m_version_stmt) {
-		Log("NEW STATEMENT", "version_stmt");
-		m_version_stmt = new Statement( ( STATEMENT("SELECT ver FROM " + p->configuration().sqlPrefix + "db_version") ) );
+		m_version_stmt = new Statement( ( STATEMENT("SELECT ver FROM " + p->configuration().sqlPrefix + "db_version LIMIT 1"), into(m_version) ) );
 	}
 	
 	// Prepared statements
