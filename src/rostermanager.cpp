@@ -146,7 +146,7 @@ void RosterManager::addRosterItem(AbstractSpectrumBuddy *s_buddy) {
 }
 
 void RosterManager::addRosterItem(PurpleBuddy *buddy) {
-	AbstractSpectrumBuddy *s_buddy = (AbstractSpectrumBuddy *) buddy;
+	AbstractSpectrumBuddy *s_buddy = (AbstractSpectrumBuddy *) buddy->node.ui_data;
 	if (s_buddy)
 		addRosterItem(s_buddy);
 	else
@@ -222,6 +222,7 @@ void RosterManager::handleBuddyStatusChanged(PurpleBuddy *buddy, PurpleStatus *s
 
 void RosterManager::handleBuddyRemoved(AbstractSpectrumBuddy *s_buddy) {
 	m_subscribeCache.erase(s_buddy->getName());
+	removeFromLocalRoster(s_buddy->getName());
 }
 
 void RosterManager::handleBuddyRemoved(PurpleBuddy *buddy) {
