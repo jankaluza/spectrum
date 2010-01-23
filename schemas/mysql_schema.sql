@@ -43,7 +43,7 @@ CREATE TABLE IF NOT EXISTS `users_settings` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 
 CREATE TABLE IF NOT EXISTS `db_version` (
-  `ver` int(10) unsigned NOT NULL default '1'
+  `ver` int(10) unsigned NOT NULL default '1',
   UNIQUE KEY `ver` (`ver`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 
