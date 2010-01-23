@@ -222,6 +222,7 @@ void RosterManager::handleBuddyStatusChanged(PurpleBuddy *buddy, PurpleStatus *s
 
 void RosterManager::handleBuddyRemoved(AbstractSpectrumBuddy *s_buddy) {
 	m_subscribeCache.erase(s_buddy->getName());
+	removeFromLocalRoster(s_buddy->getName());
 }
 
 void RosterManager::handleBuddyRemoved(PurpleBuddy *buddy) {
