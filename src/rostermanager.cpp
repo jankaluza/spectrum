@@ -81,6 +81,7 @@ RosterManager::RosterManager(AbstractUser *user) {
 
 RosterManager::~RosterManager() {
 	g_hash_table_destroy(m_roster);
+	delete m_syncTimer;
 	
 	for(std::map<std::string, authRequest *>::iterator iter = m_authRequests.begin(); iter != m_authRequests.end(); ++iter) {
 		authRequest *req = (*iter).second;
