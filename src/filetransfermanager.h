@@ -35,19 +35,33 @@
 
 using namespace gloox;
 
+// Manages and creates filetransfer requests.
 class FileTransferManager : public gloox::SIProfileFTHandler {
 	public:
 		FileTransferManager();
 		~FileTransferManager();
 
+		// Sets SIProfileFT class used to accept/request filetransfers.
 		void setSIProfileFT(gloox::SIProfileFT *sipft);
+
+		// Handles incoming FT request.
 		void handleFTRequest (const JID &from, const JID &to, const std::string &sid, const std::string &name, long size, const std::string &hash, const std::string &date, const std::string &mimetype, const std::string &desc, int stypes);
+
+		// Handles incoming FT error.
 		void handleFTRequestError (const IQ &iq, const std::string &sid) {}
+
+		// Handles newly created Bytestream used to send/receive file.
 		void handleFTBytestream (Bytestream *bs);
+
+		// Handles OOB request (http://xmpp.org/extensions/xep-0066.html).
 		const std::string handleOOBRequestResult (const JID &from, const JID &to, const std::string &sid) { return ""; }
 
+		// Sends file to user.
 		void sendFile(const std::string &jid, const std::string &from, const std::string &name, const std::string &file);
-		void setInfo(const std::string &r_sid, const std::string &name, long size, bool straight) {
+
+		// Sets informations about filetransfer. Used when requesting filetransfer. If `straight` is false, file 
+		// will be stored on server and link will be sent (straight is false if receiver doesn't support filetransfer).
+		void setTransferInfo(const std::string &r_sid, const std::string &name, long size, bool straight) {
 			m_info[r_sid].filename = name;
 			m_info[r_sid].size = size;
 			m_info[r_sid].straight = straight;

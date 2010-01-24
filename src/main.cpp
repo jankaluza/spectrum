@@ -64,6 +64,7 @@
 #include "protocols/simple.h"
 #include "protocols/xmpp.h"
 #include "protocols/yahoo.h"
+#include "protocols/sipe.h"
 #include "cmds.h"
 
 #include <gloox/tlsbase.h>
@@ -926,6 +927,8 @@ bool GlooxMessageHandler::loadProtocol(){
 		m_protocol = (AbstractProtocol*) new XMPPProtocol(this);
 	else if (configuration().protocol == "yahoo")
 		m_protocol = (AbstractProtocol*) new YahooProtocol(this);
+	else if (configuration().protocol == "sipe")
+		m_protocol = (AbstractProtocol*) new SIPEProtocol(this);
 	else {
 		Log("loadProtocol", "Protocol \"" << configuration().protocol << "\" does not exist.");
 		Log("loadProtocol", "Protocol has to be one of: facebook, gg, msn, irc, xmpp, myspace, qq, simple, aim, yahoo.");

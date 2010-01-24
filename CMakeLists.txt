@@ -112,6 +112,7 @@ set(spectrum_SRCS
 	src/protocols/myspace.cpp
 	src/protocols/qq.cpp
 	src/protocols/simple.cpp
+	src/protocols/sipe.cpp
 	src/protocols/xmpp.cpp
 	src/protocols/yahoo.cpp
 )
@@ -172,6 +173,7 @@ set(spectrum_MOC_HDRS
 	src/protocols/myspace.h
 	src/protocols/qq.h
 	src/protocols/simple.h
+	src/protocols/sipe.h
 	src/protocols/xmpp.h
 	src/protocols/yahoo.h
 )
