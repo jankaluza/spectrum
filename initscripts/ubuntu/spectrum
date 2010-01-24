@@ -39,7 +39,7 @@ check_user() {
 . /lib/lsb/init-functions
 
 start() {
-    for i in $CONFSDIR/* ; do
+    for i in $CONFSDIR/*.cfg ; do
       if grep "enable" $i | grep "=" | grep "1" > /dev/null ; then
         CONF=`basename $i`
         log_daemon_msg "Starting spectrum instance:" "$CONF"
@@ -50,7 +50,7 @@ start() {
 }
 
 stop() {
-    for i in $CONFSDIR/* ; do
+    for i in $CONFSDIR/*.cfg ; do
       if grep "enable" $i | grep "=" | grep "1" > /dev/null ; then
         CONF=`basename $i`
         log_daemon_msg "Stopping spectrum instance:" "$CONF"
@@ -61,7 +61,7 @@ stop() {
 }
 
 reload() {
-    for i in $CONFSDIR/* ; do
+    for i in $CONFSDIR/*.cfg ; do
       if grep "enable" $i | grep "=" | grep "1" > /dev/null ; then
         CONF=`basename $i`
         log_daemon_msg "Reloading spectrum instance:" "$CONF"
