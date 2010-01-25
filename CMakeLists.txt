@@ -29,6 +29,9 @@ find_path(GETTEXTPO_INCLUDE_DIR NAMES gettext-po.h
 	/usr/local/include
 )
 
+execute_process ( COMMAND python -c "from distutils.sysconfig import get_python_lib; print get_python_lib()" OUTPUT_VARIABLE PYTHON_SITE_PACKAGES OUTPUT_STRIP_TRAILING_WHITESPACE)
+message(STATUS "Python site-packages directory: " ${PYTHON_SITE_PACKAGES})
+
 if(GETTEXTPO_LIBRARY AND GETTEXTPO_INCLUDE_DIR)
 	include_directories(${GETTEXTPO_INCLUDE_DIR})
 	message(STATUS "libgettextpo (gettext-devel) found: " ${GETTEXTPO_LIBRARY})
@@ -326,6 +329,17 @@ endif (NOT EXISTS /etc/spectrum)
 INSTALL(FILES
     ${CMAKE_CURRENT_SOURCE_DIR}/locales/cs.po
 	DESTINATION share/spectrum/locales
+    )
+    
+INSTALL(DIRECTORY
+    ${CMAKE_CURRENT_SOURCE_DIR}/spectrumctl/spectrum
+	DESTINATION ${PYTHON_SITE_PACKAGES}
+    )
+
+INSTALL(FILES
+	${CMAKE_CURRENT_SOURCE_DIR}/spectrumctl/spectrumctl.py
+    DESTINATION bin
+    RENAME spectrumctl
     )
 
 INSTALL(FILES
