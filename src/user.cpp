@@ -205,6 +205,8 @@ void User::connect() {
 	purple_account_set_bool(m_account, "use_clientlogin", false);
 
 	m_account->ui_data = this;
+	
+	p->protocol()->onPurpleAccountCreated(m_account);
 
 	m_loadingBuddiesFromDB = true;
 	loadRoster();

@@ -38,6 +38,7 @@ SQLClass::SQLClass(GlooxMessageHandler *parent, bool upgrade) {
 	m_upgrade = upgrade;
 	m_sess = NULL;
 	m_stmt_addUser.stmt = NULL;
+	m_version_stmt = NULL;
 	m_stmt_updateUserPassword.stmt = NULL;
 	m_stmt_removeBuddy.stmt = NULL;
 	m_stmt_removeUser.stmt = NULL;
@@ -111,6 +112,10 @@ SQLClass::~SQLClass() {
 }
 
 void SQLClass::createStatements() {
+	if (!m_version_stmt) {
+		m_version_stmt = new Statement( ( STATEMENT("SELECT ver FROM " + p->configuration().sqlPrefix + "db_version LIMIT 1"), into(m_version) ) );
+	}
+	
 	// Prepared statements
 	if (!m_stmt_addUser.stmt)
 		m_stmt_addUser.stmt = new Statement( ( STATEMENT("INSERT INTO " + p->configuration().sqlPrefix + "users (jid, uin, password, language, encoding) VALUES (?, ?, ?, ?, ?)"),
@@ -259,6 +264,7 @@ void SQLClass::addUser(const std::string &jid,const std::string &uin,const std::
 
 void SQLClass::removeStatements() {
 	delete m_stmt_addUser.stmt;
+	delete m_version_stmt;
 	delete m_stmt_updateUserPassword.stmt;
 	delete m_stmt_removeBuddy.stmt;
 	delete m_stmt_removeUser.stmt;
@@ -280,6 +286,7 @@ void SQLClass::removeStatements() {
 	delete m_stmt_setUserOnline.stmt;
 	
 	m_stmt_addUser.stmt = NULL;
+	m_version_stmt = NULL;
 	m_stmt_updateUserPassword.stmt = NULL;
 	m_stmt_removeBuddy.stmt = NULL;
 	m_stmt_removeUser.stmt = NULL;
@@ -361,8 +368,7 @@ void SQLClass::initDb() {
 			*m_sess << "CREATE TABLE IF NOT EXISTS " + p->configuration().sqlPrefix + "db_version ("
 				"  ver INTEGER NOT NULL DEFAULT '1'"
 				");", now;
-			
-			*m_sess << "INSERT INTO " + p->configuration().sqlPrefix + "db_version ('ver') VALUES (1);", now;
+			*m_sess << "REPLACE INTO " + p->configuration().sqlPrefix + " db_version SET ver=1", now;
 		}
 		catch (Poco::Exception e) {
 			Log("SQL ERROR", e.displayText());
@@ -370,11 +376,12 @@ void SQLClass::initDb() {
 	}
 
 	try {
-		*m_sess << "SELECT ver FROM " + p->configuration().sqlPrefix + "db_version", into(m_version), now;
+		m_version_stmt->execute();
 	}
 	catch (Poco::Exception e) {
 		m_version = 0;
 		Log("SQL ERROR", e.displayText());
+		Log("SQL ERROR CODE", e.code());
 		if (p->configuration().sqlType != "sqlite" && !m_upgrade) {
 			Log("SQL", "Maybe the database schema is not updated. Try to run \"spectrum <config_file.cfg> --upgrade-db\" to fix that.");
 			return;
@@ -413,7 +420,7 @@ void SQLClass::upgradeDatabase() {
 								");", now;
 					*m_sess << "ALTER TABLE " + p->configuration().sqlPrefix + "users ADD online tinyint(1) NOT NULL DEFAULT '0';", now;
 				}
-				*m_sess << "INSERT INTO " + p->configuration().sqlPrefix + "db_version (ver) VALUES ('1');", now;
+				*m_sess << "REPLACE INTO " + p->configuration().sqlPrefix + " db_version SET ver=1", now;
 			}
 		}
 	}

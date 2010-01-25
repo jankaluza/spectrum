@@ -310,6 +310,7 @@ class SQLClass : public AbstractBackend {
 		removeBuddySettingsStatement m_stmt_removeBuddySettings;
 		setUserOnlineStatement m_stmt_setUserOnline;
 		getOnlineUsersStatement m_stmt_getOnlineUsers;
+		Poco::Data::Statement *m_version_stmt;
 
 		Poco::Data::Session *m_sess;
 		Poco::UInt64 m_version;

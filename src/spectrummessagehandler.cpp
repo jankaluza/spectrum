@@ -84,7 +84,7 @@ void SpectrumMessageHandler::handleWriteIM(PurpleConversation *conv, const char 
 		return;
 
 	// Don't resend our own messages.
-	if (flags & PURPLE_MESSAGE_SEND)
+	if (flags & PURPLE_MESSAGE_SEND || flags & PURPLE_MESSAGE_SYSTEM)
 		return;
 
 	std::string name = getConversationName(conv);

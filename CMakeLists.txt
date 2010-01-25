@@ -42,6 +42,9 @@ else(INTL_LIBRARY AND INTL_INCLUDE_DIR)
 	message(FATAL_ERROR "no libintl")
 endif(INTL_LIBRARY AND INTL_INCLUDE_DIR)
 
+execute_process ( COMMAND python -c "from distutils.sysconfig import get_python_lib; print get_python_lib()" OUTPUT_VARIABLE PYTHON_SITE_PACKAGES OUTPUT_STRIP_TRAILING_WHITESPACE)
+message(STATUS "Python site-packages directory: " ${PYTHON_SITE_PACKAGES})
+
 include_directories(${GLOOX_INCLUDE_DIR})
 include_directories(${PURPLE_INCLUDE_DIR})
 
@@ -118,6 +121,7 @@ set(spectrum_SRCS
 	src/protocols/myspace.cpp
 	src/protocols/qq.cpp
 	src/protocols/simple.cpp
+	src/protocols/sipe.cpp
 	src/protocols/xmpp.cpp
 	src/protocols/yahoo.cpp
 )
@@ -178,6 +182,7 @@ set(spectrum_MOC_HDRS
 	src/protocols/myspace.h
 	src/protocols/qq.h
 	src/protocols/simple.h
+	src/protocols/sipe.h
 	src/protocols/xmpp.h
 	src/protocols/yahoo.h
 )
@@ -330,6 +335,17 @@ endif (NOT EXISTS /etc/spectrum)
 INSTALL(FILES
     ${CMAKE_CURRENT_SOURCE_DIR}/locales/cs.po
 	DESTINATION share/spectrum/locales
+    )
+    
+INSTALL(DIRECTORY
+    ${CMAKE_CURRENT_SOURCE_DIR}/spectrumctl/spectrum
+	DESTINATION ${PYTHON_SITE_PACKAGES}
+    )
+
+INSTALL(FILES
+	${CMAKE_CURRENT_SOURCE_DIR}/spectrumctl/spectrumctl.py
+    DESTINATION bin
+    RENAME spectrumctl
     )
 
 INSTALL(FILES

@@ -81,6 +81,7 @@ RosterManager::RosterManager(AbstractUser *user) {
 
 RosterManager::~RosterManager() {
 	g_hash_table_destroy(m_roster);
+	delete m_syncTimer;
 	
 	for(std::map<std::string, authRequest *>::iterator iter = m_authRequests.begin(); iter != m_authRequests.end(); ++iter) {
 		authRequest *req = (*iter).second;
@@ -146,7 +147,7 @@ void RosterManager::addRosterItem(AbstractSpectrumBuddy *s_buddy) {
 }
 
 void RosterManager::addRosterItem(PurpleBuddy *buddy) {
-	AbstractSpectrumBuddy *s_buddy = (AbstractSpectrumBuddy *) buddy;
+	AbstractSpectrumBuddy *s_buddy = (AbstractSpectrumBuddy *) buddy->node.ui_data;
 	if (s_buddy)
 		addRosterItem(s_buddy);
 	else
@@ -222,6 +223,7 @@ void RosterManager::handleBuddyStatusChanged(PurpleBuddy *buddy, PurpleStatus *s
 
 void RosterManager::handleBuddyRemoved(AbstractSpectrumBuddy *s_buddy) {
 	m_subscribeCache.erase(s_buddy->getName());
+	removeFromLocalRoster(s_buddy->getName());
 }
 
 void RosterManager::handleBuddyRemoved(PurpleBuddy *buddy) {
@@ -310,7 +312,7 @@ void RosterManager::sendNewBuddies() {
 
 			Tag *tag = new Tag("presence");
 			tag->addAttribute("type", "subscribe");
-			tag->addAttribute("from", s_buddy->getJid());
+			tag->addAttribute("from", s_buddy->getBareJid());
 			tag->addAttribute("to", m_user->jid());
 			Tag *nick = new Tag("nick", alias);
 			nick->addAttribute("xmlns","http://jabber.org/protocol/nick");
@@ -352,6 +354,7 @@ authRequest *RosterManager::handleAuthorizationRequest(PurpleAccount *account, c
 	m_authRequests[name] = req;
 
 	Log(m_user->jid(), "purpleAuthorizeReceived: " << name << "on_list:" << on_list);
+	std::for_each( name.begin(), name.end(), replaceBadJidCharacters() );
 	// send subscribe presence to user
 	Tag *tag = new Tag("presence");
 	tag->addAttribute("type", "subscribe" );

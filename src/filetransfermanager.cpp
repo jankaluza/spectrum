@@ -25,6 +25,7 @@
 #include "main.h"
 #include "abstractuser.h"
 #include "usermanager.h"
+#include "spectrum_util.h"
 
 FileTransferManager::FileTransferManager() {
 }
@@ -38,29 +39,30 @@ void FileTransferManager::setSIProfileFT(gloox::SIProfileFT *sipft) {
 
 void FileTransferManager::handleFTRequest (const JID &from, const JID &to, const std::string &sid, const std::string &name, long size, const std::string &hash, const std::string &date, const std::string &mimetype, const std::string &desc, int stypes) {
 	Log("Received file transfer request from ", from.full() << " " << to.full() << " " << sid);
-	m_info[sid].filename = name;
-	m_info[sid].size = size;
 
 	std::string uname = to.username();
 	std::for_each( uname.begin(), uname.end(), replaceJidCharacters() );
 
 	AbstractUser *user = Transport::instance()->userManager()->getUserByJID(from.bare());
 	if (user && user->account() && user->isConnected()) {
+		bool canSendFile = Transport::instance()->canSendFile(user->account(), uname);
+		Log("CanSendFile = ", canSendFile);
+		setTransferInfo(sid, name, size, canSendFile);
+
 		user->addFiletransfer(from, sid, SIProfileFT::FTTypeS5B, to, size);
-		m_info[sid].straight = Transport::instance()->canSendFile(user->account(), uname);
-		if (m_info[sid].straight) {
+		// if we can't send file straightly, we just receive it and send link to buddy.
+		if (canSendFile)
 			serv_send_file(purple_account_get_connection(user->account()), uname.c_str(), name.c_str());
-		}
-		else {
+		else
 			m_sip->acceptFT(from, sid, SIProfileFT::FTTypeS5B, to);
-		}
 	}
 }
 
 void FileTransferManager::handleFTBytestream (Bytestream *bs) {
-	Log("handleFTBytestream", "target:" << bs->target().full() << " initiator:" << bs->initiator().full());
+	Log("handleFTBytestream", "target: " << bs->target().full() << " initiator: " << bs->initiator().full());
 	if (std::find(m_sendlist.begin(), m_sendlist.end(), bs->target().full()) == m_sendlist.end()) {
 		std::string filename = "";
+		// if we will store file, we have to replace invalid characters and prepare directories.
 		if (m_info[bs->sid()].straight == false) {
 			filename = m_info[bs->sid()].filename;
 			// replace invalid characters
@@ -69,7 +71,9 @@ void FileTransferManager::handleFTBytestream (Bytestream *bs) {
 					*it = '_';
 				}
 			}
-			filename = Transport::instance()->getConfiguration().filetransferCache + "/" + bs->target().username() + "-" + Transport::instance()->getId() + "-" + filename;
+			std::string directory = Transport::instance()->getConfiguration().filetransferCache + "/" + generateUUID();
+			g_mkdir_with_parents(directory.c_str(), 0755);
+			filename = directory + "/" + filename;
 		}
 		AbstractUser *user = Transport::instance()->userManager()->getUserByJID(bs->initiator().bare());
 		FiletransferRepeater *repeater = NULL;
