@@ -354,6 +354,7 @@ authRequest *RosterManager::handleAuthorizationRequest(PurpleAccount *account, c
 	m_authRequests[name] = req;
 
 	Log(m_user->jid(), "purpleAuthorizeReceived: " << name << "on_list:" << on_list);
+	std::for_each( name.begin(), name.end(), replaceBadJidCharacters() );
 	// send subscribe presence to user
 	Tag *tag = new Tag("presence");
 	tag->addAttribute("type", "subscribe" );
