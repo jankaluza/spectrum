@@ -40,6 +40,7 @@ class QQProtocol : AbstractProtocol
 		std::string text(const std::string &key);
 		Tag *getVCardTag(AbstractUser *user, GList *vcardEntries) { return NULL; }
 		bool isMUC(AbstractUser *user, const std::string &jid) { return false; }
+		void onPurpleAccountCreated(PurpleAccount *account);
 // 		std::string notifyUsername() { return "info"; }
 // 		std::string userSearchAction() { return "Search for buddies..."; }
 

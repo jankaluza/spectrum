@@ -44,6 +44,10 @@ QQProtocol::QQProtocol(GlooxMessageHandler *main){
 
 QQProtocol::~QQProtocol() {}
 
+void QQProtocol::onPurpleAccountCreated(PurpleAccount *account) {
+	purple_account_set_string(account, "client_version", "qq2008");
+}
+
 void QQProtocol::prepareUserName(std::string &str){
 	replace(str," ","");
 }
