@@ -745,7 +745,7 @@ class SpectrumBytestreamServer : public SOCKS5BytestreamServer {
 		}
 		void handleIncomingConnection( ConnectionBase* server, ConnectionBase* connection ) {
 			if (ftID == 0) {
-				ftID = purple_input_add( dynamic_cast<ConnectionTCPClient*>( server )->socket(), PURPLE_INPUT_READ, &ftServerReceive, connection);
+				ftID = purple_input_add( dynamic_cast<ConnectionTCPClient*>( server )->socket(), PURPLE_INPUT_READ, &ftServerReceive, server);
 			}
 			m_sockets[dynamic_cast<ConnectionTCPClient*>( connection )->socket()] = purple_input_add( dynamic_cast<ConnectionTCPClient*>( connection )->socket(), PURPLE_INPUT_READ, &ftServerReceive, connection);
 			SOCKS5BytestreamServer::handleIncomingConnection( server, connection );
