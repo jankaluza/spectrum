@@ -60,13 +60,13 @@ static gboolean storeAbstractSpectrumBuddy(gpointer key, gpointer v, gpointer da
 
 	// Buddy is not in DB
 	if (id != -1) {
-		Transport::instance()->sql()->addBuddy(user->storageId(), name, "both", s_buddy->getGroup(), alias);
+		Transport::instance()->sql()->addBuddy(user->storageId(), name, s_buddy->getSubscription(), s_buddy->getGroup(), alias);
 	}
 	else {
-		id = Transport::instance()->sql()->addBuddy(user->storageId(), name, "both", s_buddy->getGroup(), alias);
+		id = Transport::instance()->sql()->addBuddy(user->storageId(), name, s_buddy->getSubscription(), s_buddy->getGroup(), alias);
 		s_buddy->setId(id);
 	}
-	Log("buddyListSaveNode", id << " " << name << " " << alias);
+	Log("buddyListSaveNode", id << " " << name << " " << alias << " " << s_buddy->getSubscription());
 	if (s_buddy->getBuddy()) {
 		PurpleBuddy *buddy = s_buddy->getBuddy();
 		SaveData *s = new SaveData;

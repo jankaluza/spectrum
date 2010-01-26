@@ -36,6 +36,15 @@ struct SendPresenceToAllData {
 	std::string to;
 };
 
+static void handleAskSubscriptionBuddies(gpointer key, gpointer v, gpointer data) {
+	AbstractSpectrumBuddy *s_buddy = (AbstractSpectrumBuddy *) v;
+	RosterManager *manager = (RosterManager *) data;
+
+	if (s_buddy->getSubscription() == "ask") {
+		manager->handleBuddyCreated(s_buddy);
+	}
+}
+
 static void sendUnavailablePresence(gpointer key, gpointer v, gpointer data) {
 	AbstractSpectrumBuddy *s_buddy = (AbstractSpectrumBuddy *) v;
 	SendPresenceToAllData *d = (SendPresenceToAllData *) data;
@@ -71,7 +80,7 @@ static gboolean sync_cb(gpointer data) {
 	return manager->syncBuddiesCallback();
 }
 
-RosterManager::RosterManager(AbstractUser *user) {
+RosterManager::RosterManager(AbstractUser *user) : RosterStorage(user) {
 	m_user = user;
 	m_syncTimer = new SpectrumTimer(12000, &sync_cb, this);
 	m_subscribeLastCount = -1;
@@ -158,6 +167,7 @@ void RosterManager::setRoster(GHashTable *roster) {
 	if (m_roster)
 		g_hash_table_destroy(m_roster);
 	m_roster = roster;
+	g_hash_table_foreach(m_roster, handleAskSubscriptionBuddies, this);
 }
 
 void RosterManager::loadRoster() {
@@ -239,7 +249,7 @@ void RosterManager::handleBuddyCreated(AbstractSpectrumBuddy *s_buddy) {
 
 	Log(m_user->jid(), "handleBuddyCreated: " << name << " ("<< alias <<")");
 
-	if (!isInRoster(name, "")) {
+	if (!isInRoster(name, "both")) {
 		m_syncTimer->start();
 		Log(m_user->jid(), "Not in roster => adding to subscribe cache");
 		m_subscribeCache[name] = s_buddy;
@@ -401,10 +411,12 @@ void RosterManager::handleSubscription(const Subscription &subscription) {
 						// add user to mysql database and to local cache
 						addRosterItem(buddy);
 						Transport::instance()->sql()->addBuddy(m_user->storageId(), remote_user, "both");
+						storeBuddy(buddy);
 					}
 					else {
 						getRosterItem(remote_user)->setSubscription("both");
 						Transport::instance()->sql()->updateBuddySubscription(m_user->storageId(), remote_user, "both");
+						storeBuddy(buddy);
 					}
 				} else {
 					Log(m_user->jid(), "user is not in legacy network contact lists => nothing to be subscribed");

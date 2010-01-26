@@ -31,7 +31,6 @@
 #include "account.h"
 class RosterManager;
 #include "rostermanager.h"
-#include "rosterstorage.h"
 #include "spectrummessagehandler.h"
 
 class GlooxMessageHandler;
@@ -55,7 +54,7 @@ struct AdhocData {
 class User;
 
 // Representation of XMPP User
-class User : public AbstractUser, public RosterManager, public RosterStorage, public SpectrumMessageHandler {
+class User : public AbstractUser, public RosterManager, public SpectrumMessageHandler {
 	public:
 		User(GlooxMessageHandler *parent, JID jid, const std::string &username, const std::string &password, const std::string &userKey, long id);
 		virtual ~User();
