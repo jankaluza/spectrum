@@ -358,6 +358,7 @@ FiletransferRepeater::FiletransferRepeater(const JID& to, const std::string& sid
 	m_wantsData = false;
 	m_resender = NULL;
 	m_send = false;
+	m_readyCalled = false;
 }
 
 FiletransferRepeater::FiletransferRepeater(const JID& from, const JID& to) {
@@ -370,6 +371,7 @@ FiletransferRepeater::FiletransferRepeater(const JID& from, const JID& to) {
 	m_size = -1;
 	m_send = true;
 	m_wantsData = false;
+	m_readyCalled = false;
 }
 
 void FiletransferRepeater::registerXfer(PurpleXfer *xfer) {
@@ -508,6 +510,7 @@ int FiletransferRepeater::getDataToSend(guchar **data, gssize size) {
 	}
 
 	bool wakeUp = m_buffer_size < 1000;
+	m_readyCalled = false;
 	
 	if (wakeUp) {
 		Log("REPEATER", "WakeUP");
@@ -535,7 +538,9 @@ int FiletransferRepeater::getDataToSend(std::string &data) {
 }
 
 void FiletransferRepeater::ready() {
-	g_timeout_add(0, &ui_got_data, m_xfer);
+	if (!m_readyCalled)
+		g_timeout_add(0, &ui_got_data, m_xfer);
+	m_readyCalled = true;
 }
 
 

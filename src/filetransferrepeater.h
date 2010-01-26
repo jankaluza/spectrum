@@ -191,6 +191,7 @@ class FiletransferRepeater {
 		PurpleXfer *m_xfer;
 		bool m_send;
 		std::string a;
+		bool m_readyCalled;
 
 
 		guchar *m_buffer;

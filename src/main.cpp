@@ -821,7 +821,9 @@ GlooxMessageHandler::GlooxMessageHandler(const std::string &config) : MessageHan
 		if( ftServer->listen() != ConnNoError ) {}
 		ft->addStreamHost( j->jid(), configuration().bindIPs[0], 8000 );
 		ft->registerSOCKS5BytestreamServer( ftServer );
-		purple_timeout_add(50, &ftServerReceive, NULL);
+		if (m_configuration.transportFeatures & TRANSPORT_FEATURE_FILETRANSFER) {
+			purple_timeout_add(50, &ftServerReceive, NULL);
+		}
 
 		j->registerMessageHandler(this);
 		j->registerConnectionListener(this);
