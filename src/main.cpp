@@ -715,10 +715,10 @@ static gboolean reconnect(gpointer data) {
 /*
  * Checking new connections for our gloox proxy...
  */
-static void ftServerReceive(gpointer data, gint source, PurpleInputCondition condition) {
-// 	GlooxMessageHandler::instance()->ftServer->recv(1);
-	ConnectionBase *connection = (ConnectionBase *) data;
-	connection->recv();
+static gboolean ftServerReceive(gpointer data) {
+	if (GlooxMessageHandler::instance()->ftServer->recv(1) == ConnNoError)
+		return TRUE;
+	return FALSE;
 }
 
 static gboolean transportReconnect(gpointer data) {
@@ -733,34 +733,6 @@ static gboolean transportDataReceived(GIOChannel *source, GIOCondition condition
 	GlooxMessageHandler::instance()->j->recv(1000);
 	return TRUE;
 }
-
-class SpectrumBytestreamServer : public SOCKS5BytestreamServer {
-	public:
-		SpectrumBytestreamServer(const LogSink &logInstance, int port, const std::string &ip=EmptyString) : SOCKS5BytestreamServer(logInstance, port, ip) {
-			ftID = 0;
-		}
-		virtual ~SpectrumBytestreamServer() {
-			if (ftID)
-				g_source_remove(ftID);
-		}
-		void handleIncomingConnection( ConnectionBase* server, ConnectionBase* connection ) {
-			if (ftID == 0) {
-				ftID = purple_input_add( dynamic_cast<ConnectionTCPClient*>( server )->socket(), PURPLE_INPUT_READ, &ftServerReceive, server);
-			}
-			m_sockets[dynamic_cast<ConnectionTCPClient*>( connection )->socket()] = purple_input_add( dynamic_cast<ConnectionTCPClient*>( connection )->socket(), PURPLE_INPUT_READ, &ftServerReceive, connection);
-			SOCKS5BytestreamServer::handleIncomingConnection( server, connection );
-		}
-		void handleDisconnect( const ConnectionBase* connection, ConnectionError reason ) {
-			
-			g_source_remove(m_sockets[dynamic_cast<const ConnectionTCPClient*>( connection )->socket()]);
-			SOCKS5BytestreamServer::handleDisconnect( connection, reason );
-		}
-
-		
-	private:
-		guint ftID;
-		std::map<int, guint> m_sockets;
-};
 
 GlooxMessageHandler::GlooxMessageHandler(const std::string &config) : MessageHandler(),ConnectionListener(),PresenceHandler(),SubscriptionHandler() {
 	m_pInstance = this;
@@ -845,13 +817,13 @@ GlooxMessageHandler::GlooxMessageHandler(const std::string &config) : MessageHan
 		ftManager = new FileTransferManager();
 		ft = new SIProfileFT(j, ftManager);
 		ftManager->setSIProfileFT(ft);
-		SpectrumBytestreamServer *_ftServer = new SpectrumBytestreamServer(j->logInstance(), 8000, configuration().bindIPs[0]);
-		ftServer = (SOCKS5BytestreamServer *) _ftServer;
+		ftServer = new SOCKS5BytestreamServer(j->logInstance(), 8000, configuration().bindIPs[0]);
 		if( ftServer->listen() != ConnNoError ) {}
 		ft->addStreamHost( j->jid(), configuration().bindIPs[0], 8000 );
 		ft->registerSOCKS5BytestreamServer( ftServer );
-		
-		// ft->addStreamHost(gloox::JID("proxy.jabbim.cz"), "88.86.102.51", 7777);
+		if (m_configuration.transportFeatures & TRANSPORT_FEATURE_FILETRANSFER) {
+			purple_timeout_add(50, &ftServerReceive, NULL);
+		}
 
 		j->registerMessageHandler(this);
 		j->registerConnectionListener(this);

@@ -30,6 +30,7 @@
 #include "gloox/subscription.h"
 #include <algorithm>
 #include "abstractuser.h"
+#include "rosterstorage.h"
 
 using namespace gloox;
 
@@ -45,7 +46,7 @@ struct authRequest {
 };
 
 // Manages all SpectrumBuddies in user's roster.
-class RosterManager {
+class RosterManager : public RosterStorage {
 	public:
 		RosterManager(AbstractUser *user);
 		virtual ~RosterManager();

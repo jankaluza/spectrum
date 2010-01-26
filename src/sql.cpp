@@ -638,6 +638,8 @@ GHashTable *SQLClass::getBuddies(long userId, PurpleAccount *account){
 // 						create buddy
 					buddy = purple_buddy_new(account, user.uin.c_str(), user.nickname.c_str());
 					buddy->node.ui_data = (void *) new SpectrumBuddy(user.id, buddy);
+					SpectrumBuddy *s_buddy = (SpectrumBuddy *) buddy->node.ui_data;
+					s_buddy->setSubscription(user.subscription);
 					purple_blist_add_buddy(buddy, contact, g, NULL);
 					GHashTable *settings = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, (GDestroyNotify) purple_value_destroy);
 					Log("ADDING BUDDY ", " " << user.id << " " << user.uin << " " << buddy << " " << buddy->node.ui_data);

@@ -353,23 +353,27 @@ FiletransferRepeater::FiletransferRepeater(const JID& to, const std::string& sid
 	m_sid = sid;
 	m_type = type;
 	m_from = from;
-	m_buffer = (guchar *) g_malloc0(65535);
+	m_max_buffer_size = 65535;
+	m_buffer = (guchar *) g_malloc0(m_max_buffer_size);
 	m_buffer_size = 0;
 	m_wantsData = false;
 	m_resender = NULL;
 	m_send = false;
+	m_readyCalled = false;
 }
 
 FiletransferRepeater::FiletransferRepeater(const JID& from, const JID& to) {
 	m_to = to;
 	m_from = from;
-	m_buffer = (guchar *) g_malloc0(65535);
+	m_max_buffer_size = 65535;
+	m_buffer = (guchar *) g_malloc0(m_max_buffer_size);
 	m_buffer_size = 0;
 	m_type = SIProfileFT::FTTypeS5B;
 	m_resender = NULL;
 	m_size = -1;
 	m_send = true;
 	m_wantsData = false;
+	m_readyCalled = false;
 }
 
 void FiletransferRepeater::registerXfer(PurpleXfer *xfer) {
@@ -450,9 +454,10 @@ gssize FiletransferRepeater::handleLibpurpleData(const guchar *data, gssize size
 	if (m_resender)
 		g_mutex_lock(m_resender->getMutex());
 	gssize data_size = size;
-	if (m_buffer_size + data_size > 65535) {
-		data_size = 65535 - m_buffer_size;
-		std::cout << "new data_size is " << data_size << "\n";
+	if (m_buffer_size + data_size > m_max_buffer_size) {
+		m_max_buffer_size = data_size + m_buffer_size;
+		m_buffer = (guchar *) g_realloc(m_buffer, m_max_buffer_size);
+		std::cout << "new m_max_buffer_size is " << m_max_buffer_size << "\n";
 	}
 
 	guchar *c = m_buffer + m_buffer_size;
@@ -508,6 +513,7 @@ int FiletransferRepeater::getDataToSend(guchar **data, gssize size) {
 	}
 
 	bool wakeUp = m_buffer_size < 1000;
+	m_readyCalled = false;
 	
 	if (wakeUp) {
 		Log("REPEATER", "WakeUP");
@@ -530,12 +536,15 @@ int FiletransferRepeater::getDataToSend(std::string &data) {
 		size = m_buffer_size;
 		m_buffer_size = 0;
 	}
+	m_readyCalled = false;
 	ready();
 	return size;
 }
 
 void FiletransferRepeater::ready() {
-	g_timeout_add(0, &ui_got_data, m_xfer);
+	if (!m_readyCalled)
+		g_timeout_add(0, &ui_got_data, m_xfer);
+	m_readyCalled = true;
 }
 
 

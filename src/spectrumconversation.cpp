@@ -25,13 +25,14 @@
 #include "transport.h"
 #include "usermanager.h"
 
-static void sendXhtmlTag(Tag *tag, Tag *stanzaTag) {
-	Tag *html = new Tag("html");
-	html->addAttribute("xmlns", "http://jabber.org/protocol/xhtml-im");
-	Tag *body = tag->clone();
-	body->addAttribute("xmlns", "http://www.w3.org/1999/xhtml");
-	html->addChild(body);
-	stanzaTag->addChild(html);
+static void sendXhtmlTag(Tag *body, Tag *stanzaTag) {
+	if (body) {
+		Tag *html = new Tag("html");
+		html->addAttribute("xmlns", "http://jabber.org/protocol/xhtml-im");
+		body->addAttribute("xmlns", "http://www.w3.org/1999/xhtml");
+		html->addChild(body);
+		stanzaTag->addChild(html);
+	}
 	Transport::instance()->send(stanzaTag);
 }
 
@@ -55,7 +56,8 @@ void SpectrumConversation::handleMessage(AbstractUser *user, const char *who, co
 	
 	// Escape HTML characters.
 	char *newline = purple_strdup_withhtml(msg);
-	char *strip = purple_markup_strip_html(newline);
+	char *strip, *xhtml;
+	purple_markup_html_to_xhtml(newline, &xhtml, &strip);
 	std::string message(strip);
 
 	std::string to;
@@ -91,16 +93,15 @@ void SpectrumConversation::handleMessage(AbstractUser *user, const char *who, co
 		m.erase(0,6);
 		m.erase(m.length() - 7, 7);
 	}
+	g_free(newline);
+	g_free(xhtml);
+	g_free(strip);
 
 	std::string res = getResource();
 	if (user->hasFeature(GLOOX_FEATURE_XHTML_IM, res) && m != message) {
 		Transport::instance()->parser()->getTag("<body>" + m + "</body>", sendXhtmlTag, stanzaTag);
-		g_free(newline);
-		g_free(strip);
 		return;
 	}
-
 	Transport::instance()->send(stanzaTag);
-	g_free(newline);
-	g_free(strip);
+
 }

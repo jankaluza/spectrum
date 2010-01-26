@@ -23,7 +23,7 @@
 #include "transport.h"
 #include "usermanager.h"
 
-AbstractSpectrumBuddy::AbstractSpectrumBuddy(long id) : m_id(id), m_online(false), m_subscription("both") {
+AbstractSpectrumBuddy::AbstractSpectrumBuddy(long id) : m_id(id), m_online(false), m_subscription("ask") {
 }
 
 AbstractSpectrumBuddy::~AbstractSpectrumBuddy() {
