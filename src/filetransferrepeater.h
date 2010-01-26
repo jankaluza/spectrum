@@ -195,7 +195,8 @@ class FiletransferRepeater {
 
 
 		guchar *m_buffer;
-		int m_buffer_size;
+		size_t m_buffer_size;
+		size_t m_max_buffer_size;
 		AbstractResendClass *m_resender;
 		bool m_wantsData;
 
