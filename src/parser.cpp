@@ -33,7 +33,8 @@ void GlooxParser::getTag(std::string str, void (*handleTagCallback)(Tag *tag, Ta
 	m_handleTagCallback = handleTagCallback;
 
 	m_parser->cleanup();
-	m_parser->feed(str);
+	if (m_parser->feed(str) != -1)
+		m_handleTagCallback(NULL, m_userdata);
 }
 
 void GlooxParser::handleTag(Tag *tag) {
