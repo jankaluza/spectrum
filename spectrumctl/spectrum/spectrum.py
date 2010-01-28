@@ -112,6 +112,8 @@ class spectrum:
 		status = self.status()[0]
 		if status == 0:
 			return 0, "already running." # starting while we are already running is also success!
+		elif status == 1:
+			os.remove( self.pid_file )
 		elif status != 3:
 			return 1, "status unknown." # We cannot start if status != 3
 
