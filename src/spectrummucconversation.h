@@ -38,7 +38,7 @@ class SpectrumMUCConversation : public AbstractConversation {
 		virtual ~SpectrumMUCConversation();
 
 		// Handles message which should be resend to XMPP user.
-		void handleMessage(AbstractUser *user, const char *who, const char *msg, PurpleMessageFlags flags, time_t mtime);
+		void handleMessage(AbstractUser *user, const char *who, const char *msg, PurpleMessageFlags flags, time_t mtime, const std::string &currentBody = "");
 
 		// Called when new users join the room.
 		void addUsers(AbstractUser *user, GList *cbuddies);

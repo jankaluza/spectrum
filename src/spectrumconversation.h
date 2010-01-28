@@ -38,7 +38,7 @@ class SpectrumConversation : public AbstractConversation {
 		virtual ~SpectrumConversation();
 
 		// Handles message which should be resend to XMPP user.
-		void handleMessage(AbstractUser *user, const char *who, const char *msg, PurpleMessageFlags flags, time_t mtime);
+		void handleMessage(AbstractUser *user, const char *who, const char *msg, PurpleMessageFlags flags, time_t mtime, const std::string &currentBody = "");
 
 		// Returns pointer to PurpleConversation associated with this conversation.
 		PurpleConversation *getConv() { return m_conv; }

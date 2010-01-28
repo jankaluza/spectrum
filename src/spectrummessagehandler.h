@@ -91,6 +91,7 @@ class SpectrumMessageHandler {
 		std::string getConversationName(PurpleConversation *conv);
 
 		std::map <std::string, AbstractConversation *> m_conversations;
+		std::string m_currentBody;
 		AbstractUser *m_user;
 		int m_mucs;
 };

@@ -52,7 +52,7 @@ class AbstractConversation {
 		SpectrumConversationType &getType();
 
 		// Handles message which should be resend to XMPP user.
-		virtual void handleMessage(AbstractUser *user, const char *who, const char *msg, PurpleMessageFlags flags, time_t mtime) = 0;
+		virtual void handleMessage(AbstractUser *user, const char *who, const char *msg, PurpleMessageFlags flags, time_t mtime, const std::string &currentBody = "") = 0;
 
 		// Called when new users join the room.
 		virtual void addUsers(AbstractUser *user, GList *cbuddies) {}
