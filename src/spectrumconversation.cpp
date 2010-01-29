@@ -22,6 +22,7 @@
 #include "main.h" // just for replaceBadJidCharacters
 #include "capabilityhandler.h"
 #include "gloox/chatstate.h"
+#include "gloox/error.h"
 #include "transport.h"
 #include "usermanager.h"
 
@@ -43,7 +44,7 @@ SpectrumConversation::SpectrumConversation(PurpleConversation *conv, SpectrumCon
 SpectrumConversation::~SpectrumConversation() {
 }
 
-void SpectrumConversation::handleMessage(AbstractUser *user, const char *who, const char *msg, PurpleMessageFlags flags, time_t mtime) {
+void SpectrumConversation::handleMessage(AbstractUser *user, const char *who, const char *msg, PurpleMessageFlags flags, time_t mtime, const std::string &currentBody) {
 
 	std::string name(who);
 	// Remove resource if it's XMPP JID
@@ -66,6 +67,20 @@ void SpectrumConversation::handleMessage(AbstractUser *user, const char *who, co
 	else
 		to = user->jid() + "/" + getResource();
 
+	if (flags & PURPLE_MESSAGE_ERROR /* && message == "Unable to send message: The message is too large."*/) {
+		Message s(Message::Error, to, currentBody);
+		s.setFrom(name + std::string(getType() == SPECTRUM_CONV_CHAT ? "" : ("%" + JID(user->username()).server())) + "@" + Transport::instance()->jid() + "/bot");
+		Error *c = new Error(StanzaErrorTypeModify, StanzaErrorNotAcceptable);
+		c->setText(message);
+		s.addExtension(c);
+		Transport::instance()->send(s.tag());
+		g_free(newline);
+		g_free(xhtml);
+		g_free(strip);
+		return;
+	}
+	
+	
 	Message s(Message::Chat, to, message);
 	s.setFrom(name + std::string(getType() == SPECTRUM_CONV_CHAT ? "" : ("%" + JID(user->username()).server())) + "@" + Transport::instance()->jid() + "/bot");
 

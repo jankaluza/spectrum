@@ -32,7 +32,7 @@ SpectrumMUCConversation::SpectrumMUCConversation(PurpleConversation *conv, const
 SpectrumMUCConversation::~SpectrumMUCConversation() {
 }
 
-void SpectrumMUCConversation::handleMessage(AbstractUser *user, const char *who, const char *msg, PurpleMessageFlags flags, time_t mtime) {
+void SpectrumMUCConversation::handleMessage(AbstractUser *user, const char *who, const char *msg, PurpleMessageFlags flags, time_t mtime, const std::string &currentBody) {
 	std::string name(who);
 
 	// send message to user

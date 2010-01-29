@@ -301,6 +301,7 @@ void User::receivedPresence(const Presence &stanza) {
 			if (m_connected) {
 				if (getResources().empty() || (p->protocol()->tempAccountsAllowed() && !hasOpenedMUC())){
 					Log(m_jid, "disconecting");
+					sendUnavailablePresenceToAll();
 					purple_account_disconnect(m_account);
 					p->userManager()->removeUserTimer(this);
 				}
@@ -315,6 +316,7 @@ void User::receivedPresence(const Presence &stanza) {
 				}
 				else if (m_account) {
 					Log(m_jid, "disconecting2");
+					sendUnavailablePresenceToAll();
 					purple_account_disconnect(m_account);
 				}
 			}
@@ -415,7 +417,6 @@ User::~User(){
 	if (m_account)
 		purple_account_set_enabled(m_account, PURPLE_UI, FALSE);
 
-	sendUnavailablePresenceToAll();
 
 	GList *iter;
 	for (iter = purple_get_conversations(); iter; ) {

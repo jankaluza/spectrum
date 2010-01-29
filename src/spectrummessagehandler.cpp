@@ -37,6 +37,7 @@
 SpectrumMessageHandler::SpectrumMessageHandler(AbstractUser *user) {
 	m_user = user;
 	m_mucs = 0;
+	m_currentBody = "";
 }
 
 SpectrumMessageHandler::~SpectrumMessageHandler() {
@@ -94,7 +95,7 @@ void SpectrumMessageHandler::handleWriteIM(PurpleConversation *conv, const char 
 #endif
 	}
 
-	m_conversations[name]->handleMessage(m_user, who, msg, flags, mtime);
+	m_conversations[name]->handleMessage(m_user, who, msg, flags, mtime, m_currentBody);
 }
 
 void SpectrumMessageHandler::handleWriteChat(PurpleConversation *conv, const char *who, const char *msg, PurpleMessageFlags flags, time_t mtime) {
@@ -109,7 +110,7 @@ void SpectrumMessageHandler::handleWriteChat(PurpleConversation *conv, const cha
 #endif
 	}
 
-	m_conversations[name]->handleMessage(m_user, who, msg, flags, mtime);
+	m_conversations[name]->handleMessage(m_user, who, msg, flags, mtime, m_currentBody);
 }
 
 void SpectrumMessageHandler::purpleChatAddUsers(PurpleConversation *conv, GList *cbuddies, gboolean new_arrivals) {
@@ -181,13 +182,13 @@ void SpectrumMessageHandler::handleMessage(const Message& msg) {
 		conv = m_conversations[username]->getConv();
 		m_conversations[username]->setResource(msg.from().resource());
 	}
-	std::string body = msg.body();
+	m_currentBody = msg.body();
 
-	if (body.find("/transport") == 0) {
+	if (m_currentBody.find("/transport") == 0) {
 		PurpleCmdStatus status;
 		char *error = NULL;
-		body.erase(0, 11);
-		status = purple_cmd_do_command(conv, body.c_str(), body.c_str(), &error);
+		m_currentBody.erase(0, 11);
+		status = purple_cmd_do_command(conv, m_currentBody.c_str(), m_currentBody.c_str(), &error);
 
 		switch (status) {
 			case PURPLE_CMD_STATUS_OK:
@@ -220,7 +221,7 @@ void SpectrumMessageHandler::handleMessage(const Message& msg) {
 	}
 
 	// send this message
-	gchar *_markup = g_markup_escape_text(body.c_str(), -1);
+	gchar *_markup = g_markup_escape_text(m_currentBody.c_str(), -1);
 
 	if (purple_conversation_get_type(conv) == PURPLE_CONV_TYPE_IM) {
 		PurpleConvIm *im = purple_conversation_get_im_data(conv);
