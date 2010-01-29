@@ -728,8 +728,8 @@ static gboolean transportReconnect(gpointer data) {
 	return FALSE;
 }
 
-static gboolean whitespacePing(gpointer data) {
-	GlooxMessageHandler::instance()->j->whitespacePing();
+static gboolean sendPing(gpointer data) {
+	GlooxMessageHandler::instance()->j->xmppPing(GlooxMessageHandler::instance()->jid(), GlooxMessageHandler::instance());
 	return TRUE;
 }
 
@@ -1463,7 +1463,7 @@ void GlooxMessageHandler::onConnect() {
 
 		new AutoConnectLoop();
 		m_firstConnection = false;
-		purple_timeout_add_seconds(60 * 1, &whitespacePing, this);
+		purple_timeout_add_seconds(60, &sendPing, this);
 	}
 }
 
