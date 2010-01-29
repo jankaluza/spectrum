@@ -247,13 +247,15 @@ static void buddySignedOff(PurpleBuddy *buddy) {
 	GlooxMessageHandler::instance()->purpleBuddySignedOff(buddy);
 }
 
-static void NodeRemoved(PurpleBlistNode *node, gpointer null) {
+static void NodeRemoved(PurpleBuddyList *list, PurpleBlistNode *node) {
 	if (!PURPLE_BLIST_NODE_IS_BUDDY(node))
 		return;
 	PurpleBuddy *buddy = (PurpleBuddy *) node;
 	if (buddy->node.ui_data) {
 		SpectrumBuddy *s_buddy = (SpectrumBuddy *) buddy->node.ui_data;
+		Log("DELETING DATA FOR", s_buddy->getName());
 		delete s_buddy;
+		buddy->node.ui_data = NULL;
 	}
 }
 
@@ -583,7 +585,7 @@ static PurpleBlistUiOps blistUiOps =
 	buddyListNewNode,
 	NULL,
 	NULL, // buddyListUpdate,
-	NULL,
+	NodeRemoved,
 	NULL,
 	NULL,
 	NULL, // buddyListAddBuddy,
@@ -1690,7 +1692,7 @@ bool GlooxMessageHandler::initPurple(){
 		purple_signal_connect(purple_blist_get_handle(), "buddy-signed-on", &blist_handle,PURPLE_CALLBACK(buddySignedOn), NULL);
 		purple_signal_connect(purple_blist_get_handle(), "buddy-signed-off", &blist_handle,PURPLE_CALLBACK(buddySignedOff), NULL);
 		purple_signal_connect(purple_blist_get_handle(), "buddy-status-changed", &blist_handle,PURPLE_CALLBACK(buddyStatusChanged), NULL);
-		purple_signal_connect(purple_blist_get_handle(), "blist-node-removed", &blist_handle,PURPLE_CALLBACK(NodeRemoved), NULL);
+// 		purple_signal_connect(purple_blist_get_handle(), "blist-node-removed", &blist_handle,PURPLE_CALLBACK(NodeRemoved), NULL);
 		purple_signal_connect(purple_conversations_get_handle(), "chat-topic-changed", &conversation_handle, PURPLE_CALLBACK(conv_chat_topic_changed), NULL);
 
 		purple_commands_init();

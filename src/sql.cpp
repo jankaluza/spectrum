@@ -637,9 +637,6 @@ GHashTable *SQLClass::getBuddies(long userId, PurpleAccount *account){
 
 // 						create buddy
 					buddy = purple_buddy_new(account, user.uin.c_str(), user.nickname.c_str());
-					buddy->node.ui_data = (void *) new SpectrumBuddy(user.id, buddy);
-					SpectrumBuddy *s_buddy = (SpectrumBuddy *) buddy->node.ui_data;
-					s_buddy->setSubscription(user.subscription);
 					purple_blist_add_buddy(buddy, contact, g, NULL);
 					GHashTable *settings = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, (GDestroyNotify) purple_value_destroy);
 					Log("ADDING BUDDY ", " " << user.id << " " << user.uin << " " << buddy << " " << buddy->node.ui_data);
@@ -668,12 +665,29 @@ GHashTable *SQLClass::getBuddies(long userId, PurpleAccount *account){
 				}
 				else
 					buddiesLoaded = true;
-// 			if (!buddy->node.ui_data)
-// 				buddy->node.ui_data = (void *) new SpectrumBuddy(user.id, buddy);
-// 			}
+				
+				if (!buddy->node.ui_data) {
+					buddy->node.ui_data = (void *) new SpectrumBuddy(user.id, buddy);
+					SpectrumBuddy *s_buddy = (SpectrumBuddy *) buddy->node.ui_data;
+					s_buddy->setSubscription(user.subscription);
+				}
+				g_hash_table_replace(roster, g_strdup(m_stmt_getBuddies.resUin.c_str()), buddy->node.ui_data);
+				
+				GSList *buddies;
+				buddies = purple_find_buddies(account, user.uin.c_str());
+
+				for (buddies = purple_find_buddies(account, NULL); buddies;
+						buddies = g_slist_delete_link(buddies, buddies))
+				{
+					PurpleBuddy *buddy = (PurpleBuddy *) buddies->data;
+					if (!buddy->node.ui_data) {
+						buddy->node.ui_data = (void *) new SpectrumBuddy(user.id, buddy);
+						SpectrumBuddy *s_buddy = (SpectrumBuddy *) buddy->node.ui_data;
+						s_buddy->setSubscription(user.subscription);
+					}
+				}
 
 // 			rows[std::string(m_stmt_getBuddies.resUin)] = user;
-			g_hash_table_replace(roster, g_strdup(m_stmt_getBuddies.resUin.c_str()), buddy->node.ui_data);
 // 			m_stmt_getBuddies.stmt->execute();
 		} while (!m_stmt_getBuddies.stmt->done());
 	STATEMENT_EXECUTE_END(m_stmt_getBuddies.stmt, getBuddies(userId, account));

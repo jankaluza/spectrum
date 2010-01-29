@@ -350,6 +350,7 @@ void RosterManager::handlePresence(const Presence &stanza) {
 		std::for_each( name.begin(), name.end(), replaceJidCharacters() );
 		sendPresence(name);
 	}
+	delete stanzaTag;
 }
 
 authRequest *RosterManager::handleAuthorizationRequest(PurpleAccount *account, const char *remote_user, const char *id, const char *alias, const char *message, gboolean on_list, PurpleAccountRequestAuthorizationCb authorize_cb, PurpleAccountRequestAuthorizationCb deny_cb, void *user_data) {
