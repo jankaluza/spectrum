@@ -728,6 +728,11 @@ static gboolean transportReconnect(gpointer data) {
 	return FALSE;
 }
 
+static gboolean whitespacePing(gpointer data) {
+	GlooxMessageHandler::instance()->j->whitespacePing();
+	return TRUE;
+}
+
 /*
  * Called by notifier when new data can be received from socket
  */
@@ -1458,6 +1463,7 @@ void GlooxMessageHandler::onConnect() {
 
 		new AutoConnectLoop();
 		m_firstConnection = false;
+		purple_timeout_add_seconds(60 * 1, &whitespacePing, this);
 	}
 }
 
