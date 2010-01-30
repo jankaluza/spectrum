@@ -43,5 +43,5 @@ Here is an example snippet for your munin-node.conf:
 
 	[spectrum_*]
 	env.jids one.example.com two.example.com
-	env.bot &lt;jid&gt;
-	env.password &lt;password&gt;
+	env.bot <jid>
+	env.password <password>
