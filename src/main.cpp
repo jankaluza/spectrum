@@ -67,6 +67,7 @@
 #include "protocols/sipe.h"
 #include "cmds.h"
 
+#include "gloox/adhoc.h"
 #include <gloox/tlsbase.h>
 #include <gloox/compressionbase.h>
 #include <gloox/sha.h>
@@ -364,13 +365,13 @@ static void requestClose(PurpleRequestType type, void *ui_handle) {
 		AbstractPurpleRequest *r = (AbstractPurpleRequest *) ui_handle;
 		if (r->requestType() == CALLER_ADHOC) {
 			AdhocCommandHandler * repeater = (AdhocCommandHandler *) r;
-			std::string from = repeater->from();
+			std::string from = repeater->getInitiator();
 			GlooxMessageHandler::instance()->adhoc()->unregisterSession(from);
 			delete repeater;
 		}
 		else if (r->requestType() == CALLER_SEARCH) {
 			SearchRepeater * repeater = (SearchRepeater *) r;
-			std::string from = repeater->from();
+			std::string from = repeater->getInitiator();
 			GlooxMessageHandler::instance()->searchHandler()->unregisterSession(from);
 			delete repeater;
 		}
@@ -818,6 +819,13 @@ GlooxMessageHandler::GlooxMessageHandler(const std::string &config) : MessageHan
 		j->registerIqHandler(m_discoInfoHandler,ExtDiscoInfo);
 
 		m_adhoc = new GlooxAdhocHandler(this);
+		
+		j->registerIqHandler(m_adhoc, ExtAdhocCommand);
+		j->registerStanzaExtension( new Adhoc::Command() );
+		j->disco()->addFeature( XMLNS_ADHOC_COMMANDS );
+		j->disco()->registerNodeHandler( m_adhoc, XMLNS_ADHOC_COMMANDS );
+		j->disco()->registerNodeHandler( m_adhoc, std::string() );
+		
 		m_parser = new GlooxParser();
 		m_collector = new AccountCollector();
 
@@ -994,7 +1002,6 @@ void GlooxMessageHandler::purpleBuddyRemoved(PurpleBuddy *buddy) {
 		User *user = (User *) userManager()->getUserByAccount(a);
 		if (user != NULL) {
 			user->handleBuddyRemoved(buddy);
-			user->removeBuddy(buddy);
 		}
 	}
 }

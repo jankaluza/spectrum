@@ -32,7 +32,7 @@
 #include "main.h"
 
 static AdhocCommandHandler * createSettingsHandler(GlooxMessageHandler *m, User *user, const std::string &from, const std::string &id) {
-	AdhocCommandHandler *handler = new AdhocSettings(m, user, from, id);
+	AdhocCommandHandler *handler = new AdhocSettings( (AbstractUser *) user, from, id);
 	return handler;
 }
 
@@ -43,11 +43,6 @@ static AdhocCommandHandler * createAdminHandler(GlooxMessageHandler *m, User *us
 
 GlooxAdhocHandler::GlooxAdhocHandler(GlooxMessageHandler *m) {
 	main = m;
-	main->j->registerIqHandler( this, ExtAdhocCommand );
-	main->j->registerStanzaExtension( new Adhoc::Command() );
-	main->j->disco()->addFeature( XMLNS_ADHOC_COMMANDS );
-	main->j->disco()->registerNodeHandler( this, XMLNS_ADHOC_COMMANDS );
-	main->j->disco()->registerNodeHandler( this, std::string() );
 
 	m_handlers["transport_settings"].name = "Transport settings";
 	m_handlers["transport_settings"].admin = false;
@@ -148,7 +143,6 @@ Disco::IdentityList GlooxAdhocHandler::handleDiscoNodeIdentities( const JID& jid
 }
 
 bool GlooxAdhocHandler::handleIq( const IQ &stanza ) {
-	Log("GlooxAdhocHandler", "handleIq");
 	std::string to = stanza.to().bare();
 	std::string from = stanza.from().bare();
 	Tag *stanzaTag = stanza.tag();
@@ -156,6 +150,7 @@ bool GlooxAdhocHandler::handleIq( const IQ &stanza ) {
 	Tag *tag = stanzaTag->findChild( "command" );
 	if (!tag) { Log("GlooxAdhocHandler", "No Node!"); return false; }
 	const std::string& node = tag->findAttribute( "node" );
+	Log("GlooxAdhocHandler", "node: " << node);
 	if (node.empty()) {
 		delete stanzaTag;
 		return false;
@@ -176,7 +171,7 @@ bool GlooxAdhocHandler::handleIq( const IQ &stanza ) {
 	// check if we have registered handler for this node and create AdhocCommandHandler class
 	else if (m_handlers.find(node) != m_handlers.end()) {
 		std::list<std::string> const &admins = main->configuration().admins;
-		if (m_handlers[node].admin && std::find(admins.begin(), admins.end(), from) != admins.end()) {
+		if ((m_handlers[node].admin && std::find(admins.begin(), admins.end(), from) != admins.end()) || !m_handlers[node].admin) {
 			AdhocCommandHandler *handler = m_handlers[node].createHandler(main, user, stanza.from().full(), stanza.id());
 			registerSession(stanza.from().full(), handler);
 			delete stanzaTag;
