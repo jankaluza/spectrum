@@ -39,6 +39,7 @@ struct SaveData {
 	long id;
 };
 
+// Stores buddies into DB Backend.
 class RosterStorage {
 	public:
 		RosterStorage(AbstractUser *user);

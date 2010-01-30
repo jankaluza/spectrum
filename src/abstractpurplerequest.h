@@ -28,18 +28,19 @@
 
 using namespace gloox;
 
-class AbstractPurpleRequest
-{
+// Abstract class for PurpleRequest handler.
+class AbstractPurpleRequest {
 	public:
 		virtual ~AbstractPurpleRequest() {}
 
+		// Sets request type.
 		void setRequestType(AdhocDataCallerType type) { m_rtype = type; }
+
+		// Returns request type.
 		AdhocDataCallerType & requestType() { return m_rtype; }
 
 	private:
 		AdhocDataCallerType m_rtype;
-
-
 };
 
 #endif

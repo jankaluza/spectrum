@@ -30,13 +30,16 @@
 
 using namespace gloox;
 
-class AdhocCommandHandler : public AbstractPurpleRequest
-{
+// Abstract class for handling Adhoc command.
+class AdhocCommandHandler : public AbstractPurpleRequest {
 	public:
 		virtual ~AdhocCommandHandler() {}
 
+		// Handles incoming IQ.
 		virtual bool handleIq(const IQ &iq) = 0;
-		virtual const std::string & from() = 0;
+
+		// Returns full jid of command's initiator.
+		virtual const std::string & getInitiator() = 0;
 };
 
 #endif
