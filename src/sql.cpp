@@ -437,45 +437,15 @@ bool SQLClass::isVIP(const std::string &jid) {
 }
 
 long SQLClass::getRegisteredUsersCount(){
-// 	dbi_result result;
-	unsigned int r = 0;
-
-// 	result = dbi_conn_queryf(m_conn, "select count(*) as count from %susers", p->configuration().sqlPrefix.c_str());
-// 	if (result) {
-// 		if (dbi_result_first_row(result)) {
-// 			r = dbi_result_get_uint(result, "count");
-// 		}
-// 		dbi_result_free(result);
-// 	}
-// 	else {
-// 		const char *errmsg;
-// 		dbi_conn_error(m_conn, &errmsg);
-// 		if (errmsg)
-// 			Log().Get("SQL ERROR") << errmsg;
-// 	}
-
-	return r;
+	Poco::UInt64 users;
+	*m_sess << "SELECT count(*) FROM " + p->configuration().sqlPrefix + "users", into(users), now;
+	return users;
 }
 
 long SQLClass::getRegisteredUsersRosterCount(){
-// 	dbi_result result;
-	unsigned int r = 0;
-/*
-	result = dbi_conn_queryf(m_conn, "select count(*) as count from %sbuddies", p->configuration().sqlPrefix.c_str());
-	if (result) {
-		if (dbi_result_first_row(result)) {
-			r = dbi_result_get_uint(result, "count");
-		}
-		dbi_result_free(result);
-	}
-	else {
-		const char *errmsg;
-		dbi_conn_error(m_conn, &errmsg);
-		if (errmsg)
-			Log().Get("SQL ERROR") << errmsg;
-	}*/
-
-	return r;
+	Poco::UInt64 users;
+	*m_sess << "SELECT count(*) FROM " + p->configuration().sqlPrefix + "buddies", into(users), now;
+	return users;
 }
 
 void SQLClass::updateUser(const UserRow &user) {
