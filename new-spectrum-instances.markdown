@@ -21,7 +21,7 @@ If you use MySQL, there are some additional steps needed:
 	mysql -uroot -p -e "create database my_database;
 	 GRANT SELECT, UPDATE, INSERT, DELETE FROM ON my_database.* TO 'my_user'@'my_host' IDENTIFIED BY 'db_password';
 	 flush privileges;"
-	mysql -uroot -p my_database &lt; schema_file
+	mysql -uroot -p my_database < schema_file
 
 If you [built from source](building-from-source-code.html), you can find the
 schema file in schemas/mysql_schema, if you use the [Debian/Ubuntu
