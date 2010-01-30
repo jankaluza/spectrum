@@ -145,7 +145,7 @@ namespace gloox {
 			HiComponent(const std::string & ns, const std::string & server, const std::string & component, const std::string & password, int port = 5347) : Component(ns, server, component, password, port) {};
 			virtual ~HiComponent() {};
 	};
-};
+}
 
 /*
  * New message from legacy network received (we can create conversation here)
@@ -1374,7 +1374,7 @@ void GlooxMessageHandler::handlePresence(const Presence &stanza){
 				}
 				else {
 					if (purple_accounts_find(res.uin.c_str(), protocol()->protocol().c_str()) != NULL) {
-						PurpleAccount *act = purple_accounts_find(res.uin.c_str(), protocol()->protocol().c_str());
+// 						PurpleAccount *act = purple_accounts_find(res.uin.c_str(), protocol()->protocol().c_str());
 // 						user = (User *) userManager()->getUserByAccount(act);
 // 						if (user) {
 // 							Log(stanza.from().full(), "This account is already connected by another jid " << user->jid());

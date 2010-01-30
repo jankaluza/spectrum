@@ -86,16 +86,6 @@ void base64encode(const unsigned char * input, int len, std::string & out)
     }
 }
 
-static void sendVCardTag(Tag *tag, Tag *stanzaTag) {
-	std::string id = stanzaTag->findAttribute("id");
-	std::string from = stanzaTag->findAttribute("from");
-	Tag *vcard = tag->clone();
-	vcard->addAttribute("id",id);
-	vcard->addAttribute("to",from);
-	GlooxMessageHandler::instance()->j->send(vcard);
-	delete stanzaTag;
-}
-
 GlooxVCardHandler::GlooxVCardHandler(GlooxMessageHandler *parent) : IqHandler(){
 	p=parent;
 	p->j->registerStanzaExtension( new VCard() );

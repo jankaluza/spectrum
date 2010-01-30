@@ -50,12 +50,6 @@ const char * Localization::translate(const char *lang, const char *key) {
 bool Localization::loadLocale(const std::string &lang) {
 #ifndef WIN32
 	po_file_t pofile = NULL;
-
-#if LIBGETTEXTPO_VERSION < 0x000E07
-	po_error_handler_t error_handle;
-#else
-	po_xerror_handler_t error_handle;
-#endif
 	const char * const *domains;
 	const char * const *domainp;
 	const char *msgstr = NULL;
@@ -67,7 +61,7 @@ bool Localization::loadLocale(const std::string &lang) {
 	g_hash_table_replace(m_locales, g_strdup(lang.c_str()), g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free));
 #ifndef WIN32
 	char *l = g_build_filename(INSTALL_DIR, "share", "spectrum", "locales", std::string(lang + ".po").c_str(), NULL);
-	pofile = po_file_read (l, error_handle);
+	pofile = po_file_read (l, NULL);
 	g_free(l);
 	if (pofile != NULL) {
 		GHashTable *locale = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
