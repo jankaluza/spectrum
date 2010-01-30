@@ -164,7 +164,7 @@ void SpectrumMUCConversation::removeUsers(AbstractUser *_user, GList *users) {
 
 void SpectrumMUCConversation::changeTopic(AbstractUser *user, const char *who, const char *topic) {
 	m_topic = std::string(topic);
-	m_topicUser = std::string(who ? who : "transport");
+	m_topicUser = std::string(who ? who : m_jid.substr(0,m_jid.find('%')));
 // 	if (user->connected())
 	sendTopic(user);
 }
