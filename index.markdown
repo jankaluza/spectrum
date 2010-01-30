@@ -11,6 +11,7 @@ title: Documentation
 
 ### Features
 * [Supported protocols](supported-protocols.html)
+* [Munin plugin](munin-plugin.html)
 
 ### For developers
 * [Buddies forwarding method](buddies-forwarding-method.html)
