@@ -187,8 +187,8 @@ def handler_fetch( c, packet ):
 					total = int( value )
 				else:
 					total += int( value )
-			if not verbose:
-				continue
+				if not verbose:
+					continue
 				
 			fieldname = handle_field( label )
 			
