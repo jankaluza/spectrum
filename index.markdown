@@ -7,6 +7,8 @@ title: Documentation
 * [Building from source code](building-from-source-code.html) – platform independent
 * [Installing on Debian/Ubuntu](debian-ubuntu-installation.html)
 
+* [Configuring new spectrum instances](new-spectrum-instances.html)
+
 ### Features
 * [Supported protocols](supported-protocols.html)
 
