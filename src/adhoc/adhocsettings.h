@@ -28,8 +28,7 @@
 #include "request.h"
 #include "adhoccommandhandler.h"
 
-class GlooxMessageHandler;
-class User;
+class AbstractUser;
 
 /*
  * AdhocCommandHandler for Transport Settings node
@@ -37,15 +36,14 @@ class User;
 class AdhocSettings : public AdhocCommandHandler
 {
 	public:
-		AdhocSettings(GlooxMessageHandler *m, User *user, const std::string &from, const std::string &id);
+		AdhocSettings(AbstractUser *user, const std::string &from, const std::string &id);
 		~AdhocSettings();
 		bool handleIq(const IQ &iq);
 		const std::string & getInitiator() { return m_from; }
 
 	private:
-		GlooxMessageHandler *main;		// client
 		std::string m_from;				// full jid
-		User *m_user;					// User class
+		AbstractUser *m_user;			// User class
 };
 
 #endif

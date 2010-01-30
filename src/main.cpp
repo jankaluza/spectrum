@@ -67,6 +67,7 @@
 #include "protocols/sipe.h"
 #include "cmds.h"
 
+#include "gloox/adhoc.h"
 #include <gloox/tlsbase.h>
 #include <gloox/compressionbase.h>
 #include <gloox/sha.h>
@@ -818,6 +819,13 @@ GlooxMessageHandler::GlooxMessageHandler(const std::string &config) : MessageHan
 		j->registerIqHandler(m_discoInfoHandler,ExtDiscoInfo);
 
 		m_adhoc = new GlooxAdhocHandler(this);
+		
+		j->registerIqHandler(m_adhoc, ExtAdhocCommand);
+		j->registerStanzaExtension( new Adhoc::Command() );
+		j->disco()->addFeature( XMLNS_ADHOC_COMMANDS );
+		j->disco()->registerNodeHandler( m_adhoc, XMLNS_ADHOC_COMMANDS );
+		j->disco()->registerNodeHandler( m_adhoc, std::string() );
+		
 		m_parser = new GlooxParser();
 		m_collector = new AccountCollector();
 

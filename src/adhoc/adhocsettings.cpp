@@ -21,85 +21,39 @@
 #include "adhocsettings.h"
 #include "gloox/stanza.h"
 #include "../log.h"
-#include "user.h"
-#include "main.h"
+#include "abstractuser.h"
+#include "transport.h"
+#include "adhoctag.h"
 
-AdhocSettings::AdhocSettings(GlooxMessageHandler *m, User *user, const std::string &from, const std::string &id) {
-	main = m;
-	m_user = user;
-	PurpleValue *value;
-	Tag *field;
-	m_from = std::string(from);
+AdhocSettings::AdhocSettings(AbstractUser *user, const std::string &from, const std::string &id) :
+	m_from(from), m_user(user) {
 	setRequestType(CALLER_ADHOC);
+
+	PurpleValue *value;
 
 	IQ _response(IQ::Result, from, id);
 	Tag *response = _response.tag();
-	response->addAttribute("from",main->jid());
+	response->addAttribute("from", Transport::instance()->jid());
 
-	Tag *c = new Tag("command");
-	c->addAttribute("xmlns","http://jabber.org/protocol/commands");
-	c->addAttribute("sessionid",main->j->getID());
-	c->addAttribute("node","transport_settings");
-	c->addAttribute("status","executing");
-
-	Tag *actions = new Tag("actions");
-	actions->addAttribute("execute","complete");
-	actions->addChild(new Tag("complete"));
-	c->addChild(actions);
-
-	Tag *xdata = new Tag("x");
-	xdata->addAttribute("xmlns","jabber:x:data");
-	xdata->addAttribute("type","form");
-	xdata->addChild(new Tag("title","Transport settings"));
-	xdata->addChild(new Tag("instructions","Change your transport settings here."));
-
-	field = new Tag("field");
-	field->addAttribute("type","boolean");
-	field->addAttribute("label","Enable transport");
-	field->addAttribute("var","enable_transport");
+	AdhocTag *adhocTag = new AdhocTag(Transport::instance()->getId(), "transport_settings", "executing");
+	adhocTag->setAction("complete");
+	adhocTag->setTitle("Transport settings");
+	adhocTag->setInstructions("Change your transport settings here.");
+	
 	value = m_user->getSetting("enable_transport");
-	if (purple_value_get_boolean(value))
-		field->addChild(new Tag("value","1"));
-	else
-		field->addChild(new Tag("value","0"));
-	xdata->addChild(field);
+	adhocTag->addBoolean("Enable transport", "enable_transport", purple_value_get_boolean(value));
 
-	field = new Tag("field");
-	field->addAttribute("type","boolean");
-	field->addAttribute("label","Enable network notification");
-	field->addAttribute("var","enable_notify_email");
 	value = m_user->getSetting("enable_notify_email");
-	if (purple_value_get_boolean(value))
-		field->addChild(new Tag("value","1"));
-	else
-		field->addChild(new Tag("value","0"));
-	xdata->addChild(field);
+	adhocTag->addBoolean("Enable network notification", "enable_notify_email", purple_value_get_boolean(value));
 
-	field = new Tag("field");
-	field->addAttribute("type","boolean");
-	field->addAttribute("label","Enable avatars");
-	field->addAttribute("var","enable_avatars");
 	value = m_user->getSetting("enable_avatars");
-	if (purple_value_get_boolean(value))
-		field->addChild(new Tag("value","1"));
-	else
-		field->addChild(new Tag("value","0"));
-	xdata->addChild(field);
+	adhocTag->addBoolean("Enable avatars", "enable_avatars", purple_value_get_boolean(value));
 
-	field = new Tag("field");
-	field->addAttribute("type","boolean");
-	field->addAttribute("label","Enable chatstates");
-	field->addAttribute("var","enable_chatstate");
 	value = m_user->getSetting("enable_chatstate");
-	if (purple_value_get_boolean(value))
-		field->addChild(new Tag("value","1"));
-	else
-		field->addChild(new Tag("value","0"));
-	xdata->addChild(field);
+	adhocTag->addBoolean("Enable chatstates", "enable_chatstate", purple_value_get_boolean(value));
 
-	c->addChild(xdata);
-	response->addChild(c);
-	main->j->send(response);
+	response->addChild(adhocTag);
+	Transport::instance()->send(response);
 
 }
 
@@ -108,20 +62,14 @@ AdhocSettings::~AdhocSettings() {}
 bool AdhocSettings::handleIq(const IQ &stanza) {
 	Tag *stanzaTag = stanza.tag();
 	Tag *tag = stanzaTag->findChild( "command" );
-	if (tag->hasAttribute("action","cancel")){
+
+	if (tag->hasAttribute("action","cancel")) {
 		IQ _response(IQ::Result, stanza.from().full(), stanza.id());
-		_response.setFrom(main->jid());
+		_response.setFrom(Transport::instance()->jid());
 		Tag *response = _response.tag();
+		response->addChild( new AdhocTag(tag->findAttribute("sessionid"), "transport_settings", "canceled") );
+		Transport::instance()->send(response);
 
-		Tag *c = new Tag("command");
-		c->addAttribute("xmlns","http://jabber.org/protocol/commands");
-		c->addAttribute("sessionid",tag->findAttribute("sessionid"));
-		c->addAttribute("node","configuration");
-		c->addAttribute("status","canceled");
-		response->addChild(c);
-		main->j->send(response);
-
-// 		g_timeout_add(0,&removeHandler,this);
 		delete stanzaTag;
 		return true;
 	}
@@ -129,7 +77,7 @@ bool AdhocSettings::handleIq(const IQ &stanza) {
 	Tag *x = tag->findChildWithAttrib("xmlns","jabber:x:data");
 	if (x) {
 		std::string result("");
-		for(std::list<Tag*>::const_iterator it = x->children().begin(); it != x->children().end(); ++it) {
+		for (std::list<Tag*>::const_iterator it = x->children().begin(); it != x->children().end(); ++it) {
 			std::string key = (*it)->findAttribute("var");
 			if (key.empty()) continue;
 
@@ -151,19 +99,11 @@ bool AdhocSettings::handleIq(const IQ &stanza) {
 			}
 		}
 
-		IQ _s(IQ::Result, stanza.from().full(), stanza.id());
-		_s.setFrom(main->jid());
-		Tag *s = _s.tag();
-
-		Tag *c = new Tag("command");
-		c->addAttribute("xmlns","http://jabber.org/protocol/commands");
-		c->addAttribute("sessionid",tag->findAttribute("sessionid"));
-		c->addAttribute("node","configuration");
-		c->addAttribute("status","completed");
-		s->addChild(c);
-		main->j->send(s);
-
-// 		g_timeout_add(0,&removeRepeater,this);
+		IQ _response(IQ::Result, stanza.from().full(), stanza.id());
+		_response.setFrom(Transport::instance()->jid());
+		Tag *response = _response.tag();
+		response->addChild( new AdhocTag(tag->findAttribute("sessionid"), "transport_settings", "completed") );
+		Transport::instance()->send(response);
 	}
 
 	delete stanzaTag;

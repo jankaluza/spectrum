@@ -34,7 +34,7 @@ AdhocAdmin::AdhocAdmin(GlooxMessageHandler *m, User *user, const std::string &fr
 	Tag *response = _response.tag();
 	response->addAttribute("from",main->jid());
 
-	AdhocTag *adhocTag = new AdhocTag(main->j->getID(), "transport_settings", "executing");
+	AdhocTag *adhocTag = new AdhocTag(main->j->getID(), "transport_admin", "executing");
 	adhocTag->setAction("next");
 	adhocTag->setTitle("Transport administration");
 	adhocTag->setInstructions("Please select the group you want to change.");
@@ -57,7 +57,7 @@ bool AdhocAdmin::handleIq(const IQ &stanza) {
 		IQ _response(IQ::Result, stanza.from().full(), stanza.id());
 		_response.setFrom(main->jid());
 		Tag *response = _response.tag();
-		response->addChild( new AdhocTag(tag->findAttribute("sessionid"), "transport_settings", "canceled") );
+		response->addChild( new AdhocTag(tag->findAttribute("sessionid"), "transport_admin", "canceled") );
 		main->j->send(response);
 
 		delete stanzaTag;
@@ -82,7 +82,7 @@ bool AdhocAdmin::handleIq(const IQ &stanza) {
 				Tag *response = _response.tag();
 				response->addAttribute("from", main->jid());
 
-				AdhocTag *adhocTag = new AdhocTag(tag->findAttribute("sessionid"), "transport_settings", "executing");
+				AdhocTag *adhocTag = new AdhocTag(tag->findAttribute("sessionid"), "transport_admin", "executing");
 				adhocTag->setAction("complete");
 				adhocTag->setTitle("Logging settings");
 				adhocTag->setInstructions("You can change logging settings here.");
@@ -128,7 +128,7 @@ bool AdhocAdmin::handleIq(const IQ &stanza) {
 			IQ _response(IQ::Result, stanza.from().full(), stanza.id());
 			_response.setFrom(main->jid());
 			Tag *response = _response.tag();
-			response->addChild( new AdhocTag(tag->findAttribute("sessionid"), "transport_settings", "completed") );
+			response->addChild( new AdhocTag(tag->findAttribute("sessionid"), "transport_admin", "completed") );
 			main->j->send(response);
 		}
 
