@@ -45,3 +45,12 @@ Here is an example snippet for your munin-node.conf:
 	env.jids one.example.com two.example.com
 	env.bot <jid>
 	env.password <password>
+
+You can also set the variable verbose to any non-empty string, which will cause
+the munin-plugin to show each individual value on graphs that show aggregated
+values (example: By default, spectrum_messages only displays the total number of
+messages send, with the verbose setting, it will also show the number of
+incoming and outgoing messages).
+
+###Showcase
+There is a showcase of these munin-plugins [here](http://jabber.fsinf.at/stats/fsinf.at/jabber.fsinf.at.html#Transports).
