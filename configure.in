@@ -1,0 +1,21 @@
+# Process this file with autoconf to produce a configure script.
+AC_INIT(src/main.cpp)
+AM_INIT_AUTOMAKE(spectrum, 0.0.1)
+AM_CONFIG_HEADER(transport_config.h)
+
+# Checks for programs.
+AC_PROG_AWK
+AC_PROG_CXX
+AC_PROG_CC
+AC_PROG_INSTALL
+AC_PROG_LN_S
+
+
+CPPFLAGS="$CPPFLAGS -I../win-deps/win32-dev/gtk_2_0/include/glib-2.0 -I../win-deps/pidgin-2.6.2/libpurple -I../win-deps/win32-dev/gtk_2_0/lib/glib-2.0/include -I../win-deps -I../win-deps/poco-1.3.5-all/Data/include -I../win-deps/poco-1.3.5-all/Data/SQLite/include -I../win-deps/poco-1.3.5-all/Foundation/include"
+
+LIBS="-L../win-deps/win32-dev/gtk_2_0/lib -L../win-deps/pidgin-2.6.2/libpurple -L../win-deps/gloox/src/.libs -L../win-deps/poco-1.3.5-all/lib/MinGW/ia32 -L../win-deps/poco-1.3.5-all/Data/lib/MinGW/ia32 -lglib-2.0 -lpurple -lgloox -lPocoSQLite -lPocoFoundation -lPocoData -lwsock32 -lgdi32 -ldnsapi -lcrypt32 -lsecur32 -lwsock32 -lgdi32"
+
+
+AC_CONFIG_FILES([Makefile src/Makefile])
+AC_OUTPUT
+
