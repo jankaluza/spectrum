@@ -40,17 +40,6 @@ class RosterRow;
 
 using namespace gloox;
 
-typedef enum { 	CALLER_ADHOC,
-				CALLER_SEARCH
-				} AdhocDataCallerType;
-
-struct AdhocData {
-	std::string id;
-	std::string from;
-	std::string node;
-	AdhocDataCallerType callerType;
-};
-
 class User;
 
 // Representation of XMPP User
@@ -95,8 +84,6 @@ class User : public AbstractUser, public RosterManager, public SpectrumMessageHa
 		void setReadyForConnect(bool ready) { m_readyForConnect = ready; }
 		const std::string & username() { return m_username; }
 		const std::string & jid() { return m_jid; }
-		AdhocData & adhocData() { return m_adhocData; }
-		void setAdhocData(AdhocData data) { m_adhocData = data; }
 
 		const char *getLang() { return m_lang; }
 		void setLang(const char *lang) { m_lang = lang; }
@@ -122,7 +109,6 @@ class User : public AbstractUser, public RosterManager, public SpectrumMessageHa
 		bool m_rosterXCalled;		// true if we are counting buddies for roster X
 		bool m_connected;			// true if this user is connected to legacy account
 		bool m_reconnectCount;		// number of passed reconnect tries
-		AdhocData m_adhocData;		// name of node for AdhocHandler
 		std::string m_bindIP;		// IP address to which libpurple will be binded
 		std::string m_password;		// password used to connect to legacy network
 		std::string m_username;		// legacy network user name

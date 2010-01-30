@@ -36,6 +36,7 @@ class AdhocCommandHandler : public AbstractPurpleRequest {
 		virtual ~AdhocCommandHandler() {}
 
 		// Handles incoming IQ.
+		// Returns true if command is completed (AdhocCommandHandler instance will be deleted then).
 		virtual bool handleIq(const IQ &iq) = 0;
 
 		// Returns full jid of command's initiator.

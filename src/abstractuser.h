@@ -30,6 +30,17 @@
 #include "filetransferrepeater.h"
 #endif
 
+typedef enum { 	CALLER_ADHOC,
+				CALLER_SEARCH
+				} AdhocDataCallerType;
+
+struct AdhocData {
+	std::string id;
+	std::string from;
+	std::string node;
+	AdhocDataCallerType callerType;
+};
+
 class AbstractUser : public ResourceManager
 {
 	public:
@@ -51,6 +62,8 @@ class AbstractUser : public ResourceManager
 		virtual void connect() = 0;
 		virtual void disconnected() = 0;
 		virtual void updateSetting(const std::string &key, PurpleValue *value) {}
+		AdhocData & adhocData() { return m_adhocData; }
+		void setAdhocData(AdhocData data) { m_adhocData = data; }
 		
 		void setProtocolData(void *protocolData) { m_protocolData = protocolData; }
 		void *protocolData() { return m_protocolData; }
@@ -78,6 +91,7 @@ class AbstractUser : public ResourceManager
 
 	private:
 		void *m_protocolData;
+		AdhocData m_adhocData;
 		std::map<std::string, std::string> m_roomResources;
 		GHashTable *m_filetransfers;
 		
