@@ -994,7 +994,6 @@ void GlooxMessageHandler::purpleBuddyRemoved(PurpleBuddy *buddy) {
 		User *user = (User *) userManager()->getUserByAccount(a);
 		if (user != NULL) {
 			user->handleBuddyRemoved(buddy);
-			user->removeBuddy(buddy);
 		}
 	}
 }
