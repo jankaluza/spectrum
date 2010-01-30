@@ -343,11 +343,6 @@ INSTALL(FILES
     RENAME spectrumctl
     )
 
-INSTALL(FILES
-    ${CMAKE_CURRENT_SOURCE_DIR}/certificates/facebook.pem
-	DESTINATION share/spectrum/certificates
-    )
-
 # install(FILES
 # 	${CMAKE_CURRENT_SOURCE_DIR}/data/LICENSE.txt
 # 	${CMAKE_CURRENT_SOURCE_DIR}/data/TRANSLATIONS.txt
