@@ -12,7 +12,7 @@ To use the repositories, just add the following lines to /etc/apt/sources.list:
 	deb http://packages.spectrum.im <dist> spectrum
 	deb-src http://packages.spectrum.im <dist> spectrum
 
-where <dist> is either lenny, hardy, intrepid, jaunty or karmic. You can find your distribution in
+where &lt;dist&gt; is either lenny, hardy, intrepid, jaunty or karmic. You can find your distribution in
 the file /etc/lsb-release.
 
 After you have done that, simply do:
