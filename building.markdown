@@ -18,7 +18,6 @@ If you want to build also unit tests, you have to install [CppUnit](http://sourc
 For SpectrumCtl (script for easier starting/stopping Spectrum instances), you have to have installed:
 
 * [Python](http://python.org/)
-* [Python-twisted](http://twistedmatrix.com/trac/)
 
 Once you have these dependencies installed, you can get Spectrum’s source code:
 
