@@ -28,3 +28,5 @@ After you have downloaded the source code, you can build Spectrum:
 	cmake .
 	make
 	sudo make install
+
+After you have successfully installed spectrum, you can start [configuring spectrum instances](new-spectrum-instances.html).

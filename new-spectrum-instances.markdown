@@ -10,6 +10,7 @@ config file
 ###Configuration file
 The configuration files are located in /etc/spectrum. You can find an example there.
 The file itself is well documented, so you simply need to fill out the details.
+The initscript will only recognize configuration files if the suffix is .cfg.
 
 ###Setting up the database
 If you use SQLite as a database backend, you do not need to do anything to set
@@ -19,8 +20,9 @@ the configuration file exists.
 If you use MySQL, there are some additional steps needed:
 
 	mysql -uroot -p -e "create database my_database;
-	 GRANT SELECT, UPDATE, INSERT, DELETE FROM ON my_database.* TO 'my_user'@'my_host' IDENTIFIED BY 'db_password';
-	 flush privileges;"
+	    GRANT SELECT, UPDATE, INSERT, DELETE FROM ON my_database.*
+	        TO 'my_user'@'my_host' IDENTIFIED BY 'db_password';
+	    flush privileges;"
 	mysql -uroot -p my_database < schema_file
 
 If you [built from source](building-from-source-code.html), you can find the
