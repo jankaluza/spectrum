@@ -95,7 +95,13 @@ void SpectrumMessageHandler::handleWriteIM(PurpleConversation *conv, const char 
 #endif
 	}
 
-	m_conversations[name]->handleMessage(m_user, who, msg, flags, mtime, m_currentBody);
+	if (Transport::instance()->getConfiguration().protocol == "irc") {
+		char *who_final = g_strdup_printf("%s%%%s", who, JID(m_user->username()).server().c_str());
+		m_conversations[name]->handleMessage(m_user, who_final, msg, flags, mtime, m_currentBody);
+		g_free(who_final);
+	}
+	else
+		m_conversations[name]->handleMessage(m_user, who, msg, flags, mtime, m_currentBody);
 }
 
 void SpectrumMessageHandler::handleWriteChat(PurpleConversation *conv, const char *who, const char *msg, PurpleMessageFlags flags, time_t mtime) {
