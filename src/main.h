@@ -41,6 +41,7 @@
 #include <gloox/socks5bytestreamserver.h>
 #include <gloox/siprofileft.h>
 #include <gloox/message.h>
+#include <gloox/eventhandler.h>
 
 #include "purple.h"
 #include "account.h"
@@ -120,7 +121,7 @@ typedef enum {	ExtGateway = 1024,
  * Main transport class. It inits libpurple and Gloox, runs event loop and handles almost all signals.
  * This class is created only once and can be reached by static GlooxMessageHandler::instance() function.
  */
-class GlooxMessageHandler : public MessageHandler, ConnectionListener, PresenceHandler, SubscriptionHandler, LogHandler {
+class GlooxMessageHandler : public MessageHandler, ConnectionListener, PresenceHandler, SubscriptionHandler, LogHandler, public EventHandler {
 public:
 	GlooxMessageHandler(const std::string &config);
 	~GlooxMessageHandler();
@@ -173,6 +174,7 @@ public:
 	void handlePresence(const Presence &presence);
 	void handleSubscription(const Subscription &stanza);
 	void handleLog(LogLevel level, LogArea area, const std::string &message);
+	void handleEvent (const Event &event) {}
 
 	UserManager *userManager() { return m_userManager; }
 	GlooxStatsHandler *stats() { return m_stats; }
