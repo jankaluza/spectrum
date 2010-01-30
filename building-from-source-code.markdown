@@ -13,10 +13,9 @@ Before building Spectrum from source code, you need to install the following dep
 
 If you want to build also unit tests, you have to install [CppUnit](http://sourceforge.net/apps/mediawiki/cppunit/index.php?title=Main_Page).
 
-For SpectrumCtl (script for easier starting/stopping Spectrum instances), you have to have installed:
+For SpectrumCtl (script for easier starting/stopping Spectrum instances), you have to have python (2.5 or 2.6) installed.
 
 * [Python](http://python.org/)
-* [Python-twisted](http://twistedmatrix.com/trac/)
 
 Once you have these dependencies installed, you can get Spectrum’s source code:
 
