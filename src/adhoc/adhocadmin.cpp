@@ -20,21 +20,21 @@
 
 #include "adhocadmin.h"
 #include "gloox/stanza.h"
-#include "user.h"
-#include "main.h"
+#include "abstractuser.h"
+#include "transport.h"
 #include "../log.h"
 #include "adhoctag.h"
 
-AdhocAdmin::AdhocAdmin(GlooxMessageHandler *m, User *user, const std::string &from, const std::string &id) {
-	main = m;
+AdhocAdmin::AdhocAdmin(AbstractUser *user, const std::string &from, const std::string &id) {
+	setRequestType(CALLER_ADHOC);
 	m_from = std::string(from);
 	m_state = ADHOC_ADMIN_INIT;
 
 	IQ _response(IQ::Result, from, id);
 	Tag *response = _response.tag();
-	response->addAttribute("from",main->jid());
+	response->addAttribute("from", Transport::instance()->jid());
 
-	AdhocTag *adhocTag = new AdhocTag(main->j->getID(), "transport_admin", "executing");
+	AdhocTag *adhocTag = new AdhocTag(Transport::instance()->getId(), "transport_admin", "executing");
 	adhocTag->setAction("next");
 	adhocTag->setTitle("Transport administration");
 	adhocTag->setInstructions("Please select the group you want to change.");
@@ -44,21 +44,20 @@ AdhocAdmin::AdhocAdmin(GlooxMessageHandler *m, User *user, const std::string &fr
 	adhocTag->addListSingle("Config area", "config_area", values);
 
 	response->addChild(adhocTag);
-	main->j->send(response);
-
+	Transport::instance()->send(response);
 }
 
 AdhocAdmin::~AdhocAdmin() {}
 
 bool AdhocAdmin::handleIq(const IQ &stanza) {
 	Tag *stanzaTag = stanza.tag();
-	Tag *tag = stanzaTag->findChild( "command" );
-	if (tag->hasAttribute("action","cancel")){
+	Tag *tag = stanzaTag->findChild("command");
+	if (tag->hasAttribute("action", "cancel")) {
 		IQ _response(IQ::Result, stanza.from().full(), stanza.id());
-		_response.setFrom(main->jid());
+		_response.setFrom(Transport::instance()->jid());
 		Tag *response = _response.tag();
 		response->addChild( new AdhocTag(tag->findAttribute("sessionid"), "transport_admin", "canceled") );
-		main->j->send(response);
+		Transport::instance()->send(response);
 
 		delete stanzaTag;
 		return true;
@@ -68,8 +67,8 @@ bool AdhocAdmin::handleIq(const IQ &stanza) {
 	if (x) {
 		if (m_state == ADHOC_ADMIN_INIT) {
 			std::string result("");
-			for(std::list<Tag*>::const_iterator it = x->children().begin(); it != x->children().end(); ++it) {
-				if ((*it)->hasAttribute("var","config_area")){
+			for (std::list<Tag*>::const_iterator it = x->children().begin(); it != x->children().end(); ++it) {
+				if ((*it)->hasAttribute("var", "config_area")) {
 					result = (*it)->findChild("value")->cdata();
 					break;
 				}
@@ -80,23 +79,23 @@ bool AdhocAdmin::handleIq(const IQ &stanza) {
 
 				IQ _response(IQ::Result, stanza.from().full(), stanza.id());
 				Tag *response = _response.tag();
-				response->addAttribute("from", main->jid());
+				response->addAttribute("from", Transport::instance()->jid());
 
 				AdhocTag *adhocTag = new AdhocTag(tag->findAttribute("sessionid"), "transport_admin", "executing");
 				adhocTag->setAction("complete");
 				adhocTag->setTitle("Logging settings");
 				adhocTag->setInstructions("You can change logging settings here.");
-				adhocTag->addBoolean("Log XML", "log_xml", main->configuration().logAreas & LOG_AREA_XML);
-				adhocTag->addBoolean("Log Purple messages", "log_purple", main->configuration().logAreas & LOG_AREA_PURPLE);
+				adhocTag->addBoolean("Log XML", "log_xml", Transport::instance()->getConfiguration().logAreas & LOG_AREA_XML);
+				adhocTag->addBoolean("Log Purple messages", "log_purple", Transport::instance()->getConfiguration().logAreas & LOG_AREA_PURPLE);
 
 				response->addChild(adhocTag);
-				main->j->send(response);
+				Transport::instance()->send(response);
 				delete stanzaTag;
 				return false;
 			}
 		}
 		else if (m_state == ADHOC_ADMIN_LOGGING) {
-			for(std::list<Tag*>::const_iterator it = x->children().begin(); it != x->children().end(); ++it) {
+			for (std::list<Tag*>::const_iterator it = x->children().begin(); it != x->children().end(); ++it) {
 				std::string key = (*it)->findAttribute("var");
 				if (key.empty()) continue;
 
@@ -107,32 +106,31 @@ bool AdhocAdmin::handleIq(const IQ &stanza) {
 				
 				if (key == "log_xml") {
 					if (data == "1")
-						main->configuration().logAreas |= LOG_AREA_XML;
+						Transport::instance()->getConfiguration().logAreas |= LOG_AREA_XML;
 					else {
-						Log("test", main->configuration().logAreas);
-						main->configuration().logAreas &= ~LOG_AREA_XML;
-						Log("test", main->configuration().logAreas);
+						Log("test", Transport::instance()->getConfiguration().logAreas);
+						Transport::instance()->getConfiguration().logAreas &= ~LOG_AREA_XML;
+						Log("test", Transport::instance()->getConfiguration().logAreas);
 					}
 				}
 				else if (key == "log_purple") {
 					if (data == "1") {
-						main->configuration().logAreas |= LOG_AREA_PURPLE;
+						Transport::instance()->getConfiguration().logAreas |= LOG_AREA_PURPLE;
 						purple_debug_set_enabled(true);
 					}
 					else {
-						main->configuration().logAreas &= ~(LOG_AREA_PURPLE);
+						Transport::instance()->getConfiguration().logAreas &= ~(LOG_AREA_PURPLE);
 						purple_debug_set_enabled(false);
 					}
 				}
 			}
 			IQ _response(IQ::Result, stanza.from().full(), stanza.id());
-			_response.setFrom(main->jid());
+			_response.setFrom(Transport::instance()->jid());
 			Tag *response = _response.tag();
 			response->addChild( new AdhocTag(tag->findAttribute("sessionid"), "transport_admin", "completed") );
-			main->j->send(response);
+			Transport::instance()->send(response);
 		}
 
-// 		g_timeout_add(0,&removeRepeater,this);
 	}
 
 	delete stanzaTag;

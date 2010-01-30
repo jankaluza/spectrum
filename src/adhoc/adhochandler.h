@@ -31,10 +31,9 @@
 
 using namespace gloox;
 
-class GlooxMessageHandler;
 class AdhocRepeater;
 class AdhocCommandHandler;
-class User;
+class AbstractUser;
 
 /*
  * Structure used for registering Ad-Hoc command
@@ -43,13 +42,13 @@ struct adhocCommand {
 	std::string name;	// command's name
 	bool admin;			// true if the user has to be admin to execute this command
 	// function which creates AdhocCommandHandler class which will be used as handler for this command
-	AdhocCommandHandler * (*createHandler)(GlooxMessageHandler *m, User *user, const std::string &from, const std::string &id);
+	AdhocCommandHandler * (*createHandler)(AbstractUser *user, const std::string &from, const std::string &id);
 };
 
 class GlooxAdhocHandler : public DiscoNodeHandler, public DiscoHandler, public IqHandler
 {
 	public:
-		GlooxAdhocHandler(GlooxMessageHandler *m);
+		GlooxAdhocHandler();
 		~GlooxAdhocHandler();
 		StringList handleDiscoNodeFeatures (const JID &from, const std::string &node);
 		Disco::IdentityList handleDiscoNodeIdentities( const JID& jid, const std::string& node );
@@ -64,7 +63,6 @@ class GlooxAdhocHandler : public DiscoNodeHandler, public DiscoHandler, public I
 		bool hasSession(const std::string &jid);
 
 	private:
-		GlooxMessageHandler *main;									// client
 		std::map<std::string, AdhocCommandHandler *> m_sessions;	// sessions (m_sessions[full_jid] = handler)
 		std::map<std::string, adhocCommand> m_handlers;				// handlers (m_handlers[node] = handler)
 

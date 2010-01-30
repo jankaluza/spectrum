@@ -25,24 +25,23 @@
 #include "adhocsettings.h"
 #include "adhocadmin.h"
 #include "adhoccommandhandler.h"
-#include "user.h"
+#include "abstractuser.h"
 #include "gloox/disconodehandler.h"
 #include "gloox/adhoc.h"
 #include <algorithm>
-#include "main.h"
+#include "transport.h"
 
-static AdhocCommandHandler * createSettingsHandler(GlooxMessageHandler *m, User *user, const std::string &from, const std::string &id) {
-	AdhocCommandHandler *handler = new AdhocSettings( (AbstractUser *) user, from, id);
+static AdhocCommandHandler * createSettingsHandler(AbstractUser *user, const std::string &from, const std::string &id) {
+	AdhocCommandHandler *handler = new AdhocSettings(user, from, id);
 	return handler;
 }
 
-static AdhocCommandHandler * createAdminHandler(GlooxMessageHandler *m, User *user, const std::string &from, const std::string &id) {
-	AdhocCommandHandler *handler = new AdhocAdmin(m, user, from, id);
+static AdhocCommandHandler * createAdminHandler(AbstractUser *user, const std::string &from, const std::string &id) {
+	AdhocCommandHandler *handler = new AdhocAdmin(user, from, id);
 	return handler;
 }
 
-GlooxAdhocHandler::GlooxAdhocHandler(GlooxMessageHandler *m) {
-	main = m;
+GlooxAdhocHandler::GlooxAdhocHandler() {
 
 	m_handlers["transport_settings"].name = "Transport settings";
 	m_handlers["transport_settings"].admin = false;
@@ -61,26 +60,24 @@ StringList GlooxAdhocHandler::handleDiscoNodeFeatures (const JID &from, const st
 	return features;
 }
 
-/*
- * Returns ItemList which contains list of available commands
- */
 Disco::ItemList GlooxAdhocHandler::handleDiscoNodeItems( const JID &_from, const JID &_to, const std::string& node ) {
 	Disco::ItemList lst;
 	std::string from = _from.bare();
 	std::string to = _to.bare();
-	Log("GlooxAdhocHandler", "items" << from << to);
+	Log("GlooxAdhocHandler", "seding items from " << from << " to " << to);
 
-	// it's adhoc request for transport
-	if (to == main->jid()) {
-		User *user = (User *) main->userManager()->getUserByJID(from);
-		std::list<std::string> const &admins = main->configuration().admins;
+	if (to == Transport::instance()->jid()) {
+		AbstractUser *user = Transport::instance()->userManager()->getUserByJID(from);
+		std::list<std::string> const &admins = Transport::instance()->getConfiguration().admins;
+
 		// add internal commands from m_handlers
-		for(std::map<std::string, adhocCommand>::iterator u = m_handlers.begin(); u != m_handlers.end() ; u++) {
+		for (std::map<std::string, adhocCommand>::iterator u = m_handlers.begin(); u != m_handlers.end() ; u++) {
 			if (user)
-				lst.push_back( new Disco::Item( main->jid(), (*u).first, (std::string) tr(user->getLang(), (*u).second.name) ) );
-			else if ((*u).second.admin && std::find(admins.begin(), admins.end(), from) != admins.end())
-				lst.push_back( new Disco::Item( main->jid(), (*u).first, (*u).second.name) );
+				lst.push_back( new Disco::Item( Transport::instance()->jid(), (*u).first, (std::string) tr(user->getLang(), (*u).second.name) ) );
+			else if (((*u).second.admin && std::find(admins.begin(), admins.end(), from) != admins.end()) || (*u).second.admin == false)
+				lst.push_back( new Disco::Item( Transport::instance()->jid(), (*u).first, (*u).second.name) );
 		}
+
 		if (user) {
 			// add commands from libpurple
 			if (user->isConnected() && purple_account_get_connection(user->account())) {
@@ -96,8 +93,7 @@ Disco::ItemList GlooxAdhocHandler::handleDiscoNodeItems( const JID &_from, const
 						if (l->data) {
 							action = (PurplePluginAction *) l->data;
 							// we are using "transport_" prefix here to identify command in disco#info handler
-							// it's ugly and we're bastards, but it's the easy solution
-							lst.push_back( new Disco::Item( main->jid(), "transport_" + (std::string) action->label,(std::string) tr(user->getLang(), action->label) ) );
+							lst.push_back( new Disco::Item( Transport::instance()->jid(), "transport_" + (std::string) action->label,(std::string) tr(user->getLang(), action->label) ) );
 							purple_plugin_action_free(action);
 						}
 					}
@@ -105,12 +101,10 @@ Disco::ItemList GlooxAdhocHandler::handleDiscoNodeItems( const JID &_from, const
 			}
 		}
 	}
-	// it's request for some PurpleBuddy
 	else {
-		User *user = (User *) main->userManager()->getUserByJID(from);
+		AbstractUser *user = Transport::instance()->userManager()->getUserByJID(from);
 		if (user) {
 			if (user->isConnected() && purple_account_get_connection(user->account())) {
-				Log("GlooxAdhocHandler", user->getLang());
 				GList *l, *ll;
 				PurpleConnection *gc = purple_account_get_connection(user->account());
 				PurplePlugin *plugin = gc && PURPLE_CONNECTION_IS_CONNECTED(gc) ? gc->prpl : NULL;
@@ -145,10 +139,13 @@ Disco::IdentityList GlooxAdhocHandler::handleDiscoNodeIdentities( const JID& jid
 bool GlooxAdhocHandler::handleIq( const IQ &stanza ) {
 	std::string to = stanza.to().bare();
 	std::string from = stanza.from().bare();
+
 	Tag *stanzaTag = stanza.tag();
 	if (!stanzaTag) return false;
+
 	Tag *tag = stanzaTag->findChild( "command" );
 	if (!tag) { Log("GlooxAdhocHandler", "No Node!"); return false; }
+
 	const std::string& node = tag->findAttribute( "node" );
 	Log("GlooxAdhocHandler", "node: " << node);
 	if (node.empty()) {
@@ -156,10 +153,10 @@ bool GlooxAdhocHandler::handleIq( const IQ &stanza ) {
 		return false;
 	}
 
-	User *user = (User *) main->userManager()->getUserByJID(from);
+	AbstractUser *user = Transport::instance()->userManager()->getUserByJID(from);
 	// check if we have existing session for this jid
 	if (hasSession(stanza.from().full())) {
-		if( m_sessions[stanza.from().full()]->handleIq(stanza) ) {
+		if (m_sessions[stanza.from().full()]->handleIq(stanza)) {
 			// AdhocCommandHandler returned true, so we should remove it
 			std::string jid = stanza.from().full();
 			delete m_sessions[jid];
@@ -170,9 +167,9 @@ bool GlooxAdhocHandler::handleIq( const IQ &stanza ) {
 	}
 	// check if we have registered handler for this node and create AdhocCommandHandler class
 	else if (m_handlers.find(node) != m_handlers.end()) {
-		std::list<std::string> const &admins = main->configuration().admins;
+		std::list<std::string> const &admins = Transport::instance()->getConfiguration().admins;
 		if ((m_handlers[node].admin && std::find(admins.begin(), admins.end(), from) != admins.end()) || !m_handlers[node].admin) {
-			AdhocCommandHandler *handler = m_handlers[node].createHandler(main, user, stanza.from().full(), stanza.id());
+			AdhocCommandHandler *handler = m_handlers[node].createHandler(user, stanza.from().full(), stanza.id());
 			registerSession(stanza.from().full(), handler);
 			delete stanzaTag;
 			return true;
@@ -181,7 +178,7 @@ bool GlooxAdhocHandler::handleIq( const IQ &stanza ) {
 	if (user) {
 		// if it's PurpleAction, so we don't have handler for it, we have to execute the action here.
 		if (user->isConnected() && purple_account_get_connection(user->account())) {
-			if (to == main->jid()) {
+			if (to == Transport::instance()->jid()) {
 				PurpleConnection *gc = purple_account_get_connection(user->account());
 				PurplePlugin *plugin = gc && PURPLE_CONNECTION_IS_CONNECTED(gc) ? gc->prpl : NULL;
 				if (plugin && PURPLE_PLUGIN_HAS_ACTIONS(plugin)) {
@@ -238,7 +235,7 @@ bool GlooxAdhocHandler::handleIq( const IQ &stanza ) {
 						c->addAttribute("sessionid",tag->findAttribute("sessionid"));
 						c->addAttribute("node","configuration");
 						c->addAttribute("status","completed");
-						main->j->send(s);
+						Transport::instance()->send(s);
 
 					}
 					purple_menu_action_free(action);
