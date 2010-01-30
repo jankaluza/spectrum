@@ -32,6 +32,9 @@
 #     Mathias Ertl <mati@fsinf.at>
 # 
 # Changelog:
+#     1.1: Suffixes that aggregate multiple values no longer show the individual
+#     	values by default. This can be overridden by setting the "verbose"
+#     	env-variable to any non-empty string.
 #     1.0: Initial version
 #
 # [1] http://xmpp.org/extensions/xep-0039.html
@@ -89,6 +92,7 @@ password = os.environ.get( 'password' )
 resource = hashlib.md5( str(time.time()) ).hexdigest()
 stat = sys.argv[0].rpartition('_')[2]
 jids = os.environ.get( 'jids' ).split()
+verbose = os.environ.get( 'verbose' )
 
 # connect
 conn = xmpp.Client( jid.getDomain(), debug = [] )
@@ -147,15 +151,20 @@ graph_scale no
 graph_vlabel %s
 graph_category transports""" %(title, vlabel) )
 	for jid in jids:
+		if len(stat) > 1:
+			label = jid + ' total'
+			fieldname = handle_field( label )
+			print( '%s.label %s' %(fieldname, label) )
+
+			# to not print individual fields if verbose is not set:
+			if not verbose: 
+				continue
+
 		for i in range(0, len(stat)):
 			line = stat[i]
 			label = jid
 			if suffixes:
 				label += ' ' + suffixes[i]
-			fieldname = handle_field( label )
-			print( '%s.label %s' %(fieldname, label) )
-		if len(stat) > 1:
-			label = jid + ' total'
 			fieldname = handle_field( label )
 			print( '%s.label %s' %(fieldname, label) )
 	sys.exit(0)
@@ -178,6 +187,8 @@ def handler_fetch( c, packet ):
 					total = int( value )
 				else:
 					total += int( value )
+			if not verbose:
+				continue
 				
 			fieldname = handle_field( label )
 			
