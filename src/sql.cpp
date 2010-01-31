@@ -644,9 +644,8 @@ GHashTable *SQLClass::getBuddies(long userId, PurpleAccount *account){
 				g_hash_table_replace(roster, g_strdup(m_stmt_getBuddies.resUin.c_str()), buddy->node.ui_data);
 				
 				GSList *buddies;
-				buddies = purple_find_buddies(account, user.uin.c_str());
 
-				for (buddies = purple_find_buddies(account, NULL); buddies;
+				for (buddies = purple_find_buddies(account, user.uin.c_str()); buddies;
 						buddies = g_slist_delete_link(buddies, buddies))
 				{
 					PurpleBuddy *buddy = (PurpleBuddy *) buddies->data;
