@@ -21,13 +21,12 @@ is used to sign the packages in the repository. You can do this in two ways:
 
 1. You can download and add the key manually (apt-key requires root privileges):
 	
-	wget -O - http://packages.spectrum.im/keys/apt-repository@fsinf.at | apt-key add -
+        wget -O - http://packages.spectrum.im/keys/apt-repository@fsinf.at | apt-key add -
 
-2. You can simply update the repositories and install the fsinf-keyring
-packages:
-	
-	apt-get update
-	apt-get install fsinf-keyring
+2. You can simply update the repositories and install the fsinf-keyring packages:
+
+        apt-get update
+        apt-get install fsinf-keyring
 
 Don't worry about the warnings that the packages can't be identified, they will
 be gone after you installed the fsinf-keyring package.
