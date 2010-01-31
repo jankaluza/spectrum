@@ -252,6 +252,12 @@ static void NodeRemoved(PurpleBuddyList *list, PurpleBlistNode *node) {
 	if (!PURPLE_BLIST_NODE_IS_BUDDY(node))
 		return;
 	PurpleBuddy *buddy = (PurpleBuddy *) node;
+	
+	PurpleAccount *a = purple_buddy_get_account(buddy);
+	User *user = (User *) GlooxMessageHandler::instance()->userManager()->getUserByAccount(a);
+	if (user != NULL) {
+		user->handleBuddyRemoved(buddy);
+	}
 	if (buddy->node.ui_data) {
 		SpectrumBuddy *s_buddy = (SpectrumBuddy *) buddy->node.ui_data;
 		Log("DELETING DATA FOR", s_buddy->getName());
@@ -997,13 +1003,13 @@ void GlooxMessageHandler::purpleBuddyTyping(PurpleAccount *account, const char *
 }
 
 void GlooxMessageHandler::purpleBuddyRemoved(PurpleBuddy *buddy) {
-	if (buddy != NULL) {
-		PurpleAccount *a = purple_buddy_get_account(buddy);
-		User *user = (User *) userManager()->getUserByAccount(a);
-		if (user != NULL) {
-			user->handleBuddyRemoved(buddy);
-		}
-	}
+// 	if (buddy != NULL) {
+// 		PurpleAccount *a = purple_buddy_get_account(buddy);
+// 		User *user = (User *) userManager()->getUserByAccount(a);
+// 		if (user != NULL) {
+// 			user->handleBuddyRemoved(buddy);
+// 		}
+// 	}
 }
 
 void GlooxMessageHandler::purpleBuddyCreated(PurpleBuddy *buddy) {
