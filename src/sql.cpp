@@ -23,6 +23,7 @@
 #include "log.h"
 #include "main.h"
 #include "spectrumbuddy.h"
+#include "spectrum_util.h"
 
 #if !defined(WITH_MYSQL) && !defined(WITH_SQLITE) && !defined(WITH_ODBC)
 #error There is no libPocoData storage backend installed. Spectrum will not work without one of them.
@@ -368,7 +369,7 @@ void SQLClass::initDb() {
 			*m_sess << "CREATE TABLE IF NOT EXISTS " + p->configuration().sqlPrefix + "db_version ("
 				"  ver INTEGER NOT NULL DEFAULT '1'"
 				");", now;
-			*m_sess << "REPLACE INTO " + p->configuration().sqlPrefix + "db_version SET ver=1", now;
+			*m_sess << "REPLACE INTO " + p->configuration().sqlPrefix + "db_version (ver) values(1)", now;
 		}
 		catch (Poco::Exception e) {
 			Log("SQL ERROR", e.displayText());
@@ -420,7 +421,7 @@ void SQLClass::upgradeDatabase() {
 								");", now;
 					*m_sess << "ALTER TABLE " + p->configuration().sqlPrefix + "users ADD online tinyint(1) NOT NULL DEFAULT '0';", now;
 				}
-				*m_sess << "REPLACE INTO " + p->configuration().sqlPrefix + "db_version SET ver=1", now;
+				*m_sess << "REPLACE INTO " + p->configuration().sqlPrefix + "db_version (ver) values(1)", now;
 			}
 		}
 	}
@@ -437,45 +438,15 @@ bool SQLClass::isVIP(const std::string &jid) {
 }
 
 long SQLClass::getRegisteredUsersCount(){
-// 	dbi_result result;
-	unsigned int r = 0;
-
-// 	result = dbi_conn_queryf(m_conn, "select count(*) as count from %susers", p->configuration().sqlPrefix.c_str());
-// 	if (result) {
-// 		if (dbi_result_first_row(result)) {
-// 			r = dbi_result_get_uint(result, "count");
-// 		}
-// 		dbi_result_free(result);
-// 	}
-// 	else {
-// 		const char *errmsg;
-// 		dbi_conn_error(m_conn, &errmsg);
-// 		if (errmsg)
-// 			Log().Get("SQL ERROR") << errmsg;
-// 	}
-
-	return r;
+	Poco::UInt64 users;
+	*m_sess << "SELECT count(*) FROM " + p->configuration().sqlPrefix + "users", into(users), now;
+	return users;
 }
 
 long SQLClass::getRegisteredUsersRosterCount(){
-// 	dbi_result result;
-	unsigned int r = 0;
-/*
-	result = dbi_conn_queryf(m_conn, "select count(*) as count from %sbuddies", p->configuration().sqlPrefix.c_str());
-	if (result) {
-		if (dbi_result_first_row(result)) {
-			r = dbi_result_get_uint(result, "count");
-		}
-		dbi_result_free(result);
-	}
-	else {
-		const char *errmsg;
-		dbi_conn_error(m_conn, &errmsg);
-		if (errmsg)
-			Log().Get("SQL ERROR") << errmsg;
-	}*/
-
-	return r;
+	Poco::UInt64 users;
+	*m_sess << "SELECT count(*) FROM " + p->configuration().sqlPrefix + "buddies", into(users), now;
+	return users;
 }
 
 void SQLClass::updateUser(const UserRow &user) {
@@ -604,6 +575,12 @@ GHashTable *SQLClass::getBuddies(long userId, PurpleAccount *account){
 		m_stmt_getBuddiesSettings.stmt->execute();
 	STATEMENT_EXECUTE_END(m_stmt_getBuddiesSettings.stmt, getBuddies(userId, account));
 
+#ifndef WIN32
+	double vm, rss;
+	process_mem_usage(vm, rss);
+	Log("MEMORY USAGE BEFORE ADDING BUDDY", rss);
+#endif
+	
 	STATEMENT_EXECUTE_BEGIN();
 		do {
 			if (!m_stmt_getBuddies.stmt->execute())
@@ -639,6 +616,7 @@ GHashTable *SQLClass::getBuddies(long userId, PurpleAccount *account){
 					buddy = purple_buddy_new(account, user.uin.c_str(), user.nickname.c_str());
 					purple_blist_add_buddy(buddy, contact, g, NULL);
 					GHashTable *settings = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, (GDestroyNotify) purple_value_destroy);
+					buddy->node.ui_data = NULL;
 					Log("ADDING BUDDY ", " " << user.id << " " << user.uin << " " << buddy << " " << buddy->node.ui_data);
 					while(i < (int) m_stmt_getBuddiesSettings.resId.size()) {
 						if (m_stmt_getBuddiesSettings.resId[i] == user.id) {
@@ -674,9 +652,8 @@ GHashTable *SQLClass::getBuddies(long userId, PurpleAccount *account){
 				g_hash_table_replace(roster, g_strdup(m_stmt_getBuddies.resUin.c_str()), buddy->node.ui_data);
 				
 				GSList *buddies;
-				buddies = purple_find_buddies(account, user.uin.c_str());
 
-				for (buddies = purple_find_buddies(account, NULL); buddies;
+				for (buddies = purple_find_buddies(account, user.uin.c_str()); buddies;
 						buddies = g_slist_delete_link(buddies, buddies))
 				{
 					PurpleBuddy *buddy = (PurpleBuddy *) buddies->data;
@@ -692,6 +669,11 @@ GHashTable *SQLClass::getBuddies(long userId, PurpleAccount *account){
 		} while (!m_stmt_getBuddies.stmt->done());
 	STATEMENT_EXECUTE_END(m_stmt_getBuddies.stmt, getBuddies(userId, account));
 
+#ifndef WIN32
+	process_mem_usage(vm, rss);
+	Log("MEMORY USAGE AFTER ADDING BUDDY", rss);
+#endif
+	
 	m_stmt_getBuddiesSettings.resId.clear();
 	m_stmt_getBuddiesSettings.resType.clear();
 	m_stmt_getBuddiesSettings.resValue.clear();

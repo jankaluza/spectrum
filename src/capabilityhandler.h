@@ -37,7 +37,7 @@ extern LogClass Log_;
 typedef enum { 	GLOOX_FEATURE_ROSTERX = 2,
 				GLOOX_FEATURE_XHTML_IM = 4,
 				GLOOX_FEATURE_FILETRANSFER = 8,
-				GLOOX_FEATURE_CHATSTATES = 16,
+				GLOOX_FEATURE_CHATSTATES = 16
 				} GlooxImportantFeatures;
 
 using namespace gloox;

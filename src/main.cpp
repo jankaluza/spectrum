@@ -145,7 +145,7 @@ namespace gloox {
 			HiComponent(const std::string & ns, const std::string & server, const std::string & component, const std::string & password, int port = 5347) : Component(ns, server, component, password, port) {};
 			virtual ~HiComponent() {};
 	};
-};
+}
 
 /*
  * New message from legacy network received (we can create conversation here)
@@ -248,10 +248,16 @@ static void buddySignedOff(PurpleBuddy *buddy) {
 	GlooxMessageHandler::instance()->purpleBuddySignedOff(buddy);
 }
 
-static void NodeRemoved(PurpleBuddyList *list, PurpleBlistNode *node) {
+static void NodeRemoved(PurpleBlistNode *node, void *data) {
 	if (!PURPLE_BLIST_NODE_IS_BUDDY(node))
 		return;
 	PurpleBuddy *buddy = (PurpleBuddy *) node;
+	
+	PurpleAccount *a = purple_buddy_get_account(buddy);
+	User *user = (User *) GlooxMessageHandler::instance()->userManager()->getUserByAccount(a);
+	if (user != NULL) {
+		user->handleBuddyRemoved(buddy);
+	}
 	if (buddy->node.ui_data) {
 		SpectrumBuddy *s_buddy = (SpectrumBuddy *) buddy->node.ui_data;
 		Log("DELETING DATA FOR", s_buddy->getName());
@@ -586,7 +592,7 @@ static PurpleBlistUiOps blistUiOps =
 	buddyListNewNode,
 	NULL,
 	NULL, // buddyListUpdate,
-	NodeRemoved,
+	NULL, //NodeRemoved,
 	NULL,
 	NULL,
 	NULL, // buddyListAddBuddy,
@@ -997,21 +1003,22 @@ void GlooxMessageHandler::purpleBuddyTyping(PurpleAccount *account, const char *
 }
 
 void GlooxMessageHandler::purpleBuddyRemoved(PurpleBuddy *buddy) {
-	if (buddy != NULL) {
-		PurpleAccount *a = purple_buddy_get_account(buddy);
-		User *user = (User *) userManager()->getUserByAccount(a);
-		if (user != NULL) {
-			user->handleBuddyRemoved(buddy);
-		}
-	}
+// 	if (buddy != NULL) {
+// 		PurpleAccount *a = purple_buddy_get_account(buddy);
+// 		User *user = (User *) userManager()->getUserByAccount(a);
+// 		if (user != NULL) {
+// 			user->handleBuddyRemoved(buddy);
+// 		}
+// 	}
 }
 
 void GlooxMessageHandler::purpleBuddyCreated(PurpleBuddy *buddy) {
 	PurpleAccount *a = purple_buddy_get_account(buddy);
 	User *user = (User *) userManager()->getUserByAccount(a);
-	buddy->node.ui_data = (void *) new SpectrumBuddy(-1, buddy);
 	if (user != NULL)
 		user->handleBuddyCreated(buddy);
+	else
+		buddy->node.ui_data = (void *) new SpectrumBuddy(-1, buddy);
 		
 }
 
@@ -1374,7 +1381,7 @@ void GlooxMessageHandler::handlePresence(const Presence &stanza){
 				}
 				else {
 					if (purple_accounts_find(res.uin.c_str(), protocol()->protocol().c_str()) != NULL) {
-						PurpleAccount *act = purple_accounts_find(res.uin.c_str(), protocol()->protocol().c_str());
+// 						PurpleAccount *act = purple_accounts_find(res.uin.c_str(), protocol()->protocol().c_str());
 // 						user = (User *) userManager()->getUserByAccount(act);
 // 						if (user) {
 // 							Log(stanza.from().full(), "This account is already connected by another jid " << user->jid());
@@ -1705,7 +1712,7 @@ bool GlooxMessageHandler::initPurple(){
 		purple_signal_connect(purple_blist_get_handle(), "buddy-signed-on", &blist_handle,PURPLE_CALLBACK(buddySignedOn), NULL);
 		purple_signal_connect(purple_blist_get_handle(), "buddy-signed-off", &blist_handle,PURPLE_CALLBACK(buddySignedOff), NULL);
 		purple_signal_connect(purple_blist_get_handle(), "buddy-status-changed", &blist_handle,PURPLE_CALLBACK(buddyStatusChanged), NULL);
-// 		purple_signal_connect(purple_blist_get_handle(), "blist-node-removed", &blist_handle,PURPLE_CALLBACK(NodeRemoved), NULL);
+		purple_signal_connect(purple_blist_get_handle(), "blist-node-removed", &blist_handle,PURPLE_CALLBACK(NodeRemoved), NULL);
 		purple_signal_connect(purple_conversations_get_handle(), "chat-topic-changed", &conversation_handle, PURPLE_CALLBACK(conv_chat_topic_changed), NULL);
 
 		purple_commands_init();

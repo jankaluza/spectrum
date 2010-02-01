@@ -34,6 +34,7 @@
 struct SendPresenceToAllData {
 	int features;
 	std::string to;
+	bool markOffline;
 };
 
 static void handleAskSubscriptionBuddies(gpointer key, gpointer v, gpointer data) {
@@ -56,8 +57,8 @@ static void sendUnavailablePresence(gpointer key, gpointer v, gpointer data) {
 		tag->addAttribute( "type", "unavailable" );
 		tag->addAttribute( "from", s_buddy->getJid());
 		Transport::instance()->send( tag );
-		Transport::instance()->userManager()->buddyOffline();
-		s_buddy->setOffline();
+		if (d->markOffline)
+			s_buddy->setOffline();
 	}
 }
 
@@ -122,10 +123,14 @@ bool RosterManager::isInRoster(const std::string &name, const std::string &subsc
 void RosterManager::sendUnavailablePresenceToAll(const std::string &resource) {
 	SendPresenceToAllData *data = new SendPresenceToAllData;
 	data->features = m_user->getFeatures();
-	if (resource.empty())
+	if (resource.empty()) {
 		data->to = m_user->jid();
-	else
+		data->markOffline = true;
+	}
+	else {
 		data->to = m_user->jid() + "/" + resource;
+		data->markOffline = false;
+	}
 	g_hash_table_foreach(m_roster, sendUnavailablePresence, data);
 	delete data;
 }
@@ -260,6 +265,9 @@ void RosterManager::handleBuddyCreated(AbstractSpectrumBuddy *s_buddy) {
 void RosterManager::handleBuddyCreated(PurpleBuddy *buddy) {
 	if (buddy==NULL || m_loadingFromDB)
 		return;
+#ifndef TESTS
+	buddy->node.ui_data = (void *) new SpectrumBuddy(-1, buddy);
+#endif
 	AbstractSpectrumBuddy *s_buddy = (AbstractSpectrumBuddy *) buddy->node.ui_data;
 	handleBuddyCreated(s_buddy);
 }
@@ -312,7 +320,6 @@ void RosterManager::sendNewBuddies() {
 			it++;
 		}
 		tag->addChild(x);
-		Log("rosterx stanza", tag->xml() << "\n");
 		Transport::instance()->send(tag);
 	}
 	else {

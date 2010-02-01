@@ -321,10 +321,12 @@ void User::receivedPresence(const Presence &stanza) {
 				}
 			}
 		} else {
-			if (hasResource(stanza.from().resource())) {
-				setResource(stanza); // update this resource
+			if (!hasResource(stanza.from().resource())) {
+				setResource(stanza); // add this resource
 				sendPresenceToAll(stanza.from().full());
 			}
+			else
+				setResource(stanza); // update this resource
 
 			Log(m_jid, "resource: " << getResource().name);
 			if (!m_connected) {
