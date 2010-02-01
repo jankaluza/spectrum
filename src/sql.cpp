@@ -23,6 +23,7 @@
 #include "log.h"
 #include "main.h"
 #include "spectrumbuddy.h"
+#include "spectrum_util.h"
 
 #if !defined(WITH_MYSQL) && !defined(WITH_SQLITE) && !defined(WITH_ODBC)
 #error There is no libPocoData storage backend installed. Spectrum will not work without one of them.
@@ -574,6 +575,12 @@ GHashTable *SQLClass::getBuddies(long userId, PurpleAccount *account){
 		m_stmt_getBuddiesSettings.stmt->execute();
 	STATEMENT_EXECUTE_END(m_stmt_getBuddiesSettings.stmt, getBuddies(userId, account));
 
+#ifndef WIN32
+	double vm, rss;
+	process_mem_usage(vm, rss);
+	Log("MEMORY USAGE BEFORE ADDING BUDDY", rss);
+#endif
+	
 	STATEMENT_EXECUTE_BEGIN();
 		do {
 			if (!m_stmt_getBuddies.stmt->execute())
@@ -661,6 +668,11 @@ GHashTable *SQLClass::getBuddies(long userId, PurpleAccount *account){
 		} while (!m_stmt_getBuddies.stmt->done());
 	STATEMENT_EXECUTE_END(m_stmt_getBuddies.stmt, getBuddies(userId, account));
 
+#ifndef WIN32
+	process_mem_usage(vm, rss);
+	Log("MEMORY USAGE AFTER ADDING BUDDY", rss);
+#endif
+	
 	m_stmt_getBuddiesSettings.resId.clear();
 	m_stmt_getBuddiesSettings.resType.clear();
 	m_stmt_getBuddiesSettings.resValue.clear();

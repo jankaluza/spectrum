@@ -265,6 +265,9 @@ void RosterManager::handleBuddyCreated(AbstractSpectrumBuddy *s_buddy) {
 void RosterManager::handleBuddyCreated(PurpleBuddy *buddy) {
 	if (buddy==NULL || m_loadingFromDB)
 		return;
+#ifndef TESTS
+	buddy->node.ui_data = (void *) new SpectrumBuddy(-1, buddy);
+#endif
 	AbstractSpectrumBuddy *s_buddy = (AbstractSpectrumBuddy *) buddy->node.ui_data;
 	handleBuddyCreated(s_buddy);
 }
@@ -317,7 +320,6 @@ void RosterManager::sendNewBuddies() {
 			it++;
 		}
 		tag->addChild(x);
-		Log("rosterx stanza", tag->xml() << "\n");
 		Transport::instance()->send(tag);
 	}
 	else {

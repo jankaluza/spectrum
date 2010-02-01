@@ -38,19 +38,24 @@ AdhocSettings::AdhocSettings(AbstractUser *user, const std::string &from, const 
 	AdhocTag *adhocTag = new AdhocTag(Transport::instance()->getId(), "transport_settings", "executing");
 	adhocTag->setAction("complete");
 	adhocTag->setTitle("Transport settings");
-	adhocTag->setInstructions("Change your transport settings here.");
-	
-	value = m_user->getSetting("enable_transport");
-	adhocTag->addBoolean("Enable transport", "enable_transport", purple_value_get_boolean(value));
+	if (user) {
+		adhocTag->setInstructions("Change your transport settings here.");
+		
+		value = m_user->getSetting("enable_transport");
+		adhocTag->addBoolean("Enable transport", "enable_transport", purple_value_get_boolean(value));
 
-	value = m_user->getSetting("enable_notify_email");
-	adhocTag->addBoolean("Enable network notification", "enable_notify_email", purple_value_get_boolean(value));
+		value = m_user->getSetting("enable_notify_email");
+		adhocTag->addBoolean("Enable network notification", "enable_notify_email", purple_value_get_boolean(value));
 
-	value = m_user->getSetting("enable_avatars");
-	adhocTag->addBoolean("Enable avatars", "enable_avatars", purple_value_get_boolean(value));
+		value = m_user->getSetting("enable_avatars");
+		adhocTag->addBoolean("Enable avatars", "enable_avatars", purple_value_get_boolean(value));
 
-	value = m_user->getSetting("enable_chatstate");
-	adhocTag->addBoolean("Enable chatstates", "enable_chatstate", purple_value_get_boolean(value));
+		value = m_user->getSetting("enable_chatstate");
+		adhocTag->addBoolean("Enable chatstates", "enable_chatstate", purple_value_get_boolean(value));
+	}
+	else {
+		adhocTag->setInstructions("You have to be online to change transport settings.");
+	}
 
 	response->addChild(adhocTag);
 	Transport::instance()->send(response);
@@ -75,7 +80,7 @@ bool AdhocSettings::handleIq(const IQ &stanza) {
 	}
 
 	Tag *x = tag->findChildWithAttrib("xmlns","jabber:x:data");
-	if (x) {
+	if (x && m_user) {
 		std::string result("");
 		for (std::list<Tag*>::const_iterator it = x->children().begin(); it != x->children().end(); ++it) {
 			std::string key = (*it)->findAttribute("var");
