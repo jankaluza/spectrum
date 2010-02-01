@@ -162,9 +162,11 @@ Configuration ConfigFile::getConfiguration() {
 
 	if (!loadString(configuration.sqlDb, "database", "database"))
 		return DummyConfiguration;
-	g_mkdir_with_parents(g_path_get_dirname(configuration.sqlDb.c_str()), 0755);
+	if (configuration.sqlType == "sqlite") {
+		g_mkdir_with_parents(g_path_get_dirname(configuration.sqlDb.c_str()), 0755);
+	}
 
-	if (!loadString(configuration.sqlPrefix, "database", "prefix"))
+	if (!loadString(configuration.sqlPrefix, "database", "prefix", configuration.sqlType == "sqlite" ? "" : "required"))
 		return DummyConfiguration;
 
 	if (!loadString(configuration.userDir, "purple", "userdir"))

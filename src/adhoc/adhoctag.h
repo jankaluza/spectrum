@@ -26,23 +26,35 @@
 
 using namespace gloox;
 
-
-class AdhocTag : public Tag
-{
+// Tag representing adhoc dataform.
+class AdhocTag : public Tag {
 	public:
+		// Creates new AdhocTag.
+		// id     - IQ id
+		// node   - node name
+		// status - "executing", "executing", "completed"
 		AdhocTag(const std::string &id, const std::string &node, const std::string &status);
-		~AdhocTag() {}
+		virtual ~AdhocTag() {}
+
+		// Sets action.
+		// action - "next", "complete"
 		void setAction(const std::string &action);
+
+		// Sets title.
 		void setTitle(const std::string &title);
+
+		// Sets instructions.
 		void setInstructions(const std::string &instructions);
+
+		// Adds combobox with.
 		void addListSingle(const std::string &label, const std::string &var, std::list <std::string> &values);
+
+		// Adds checkbox.
 		void addBoolean(const std::string &label, const std::string &var, bool value);
 
 	private:
 		void initXData();
-
 		Tag *xdata;
-
 };
 
 #endif

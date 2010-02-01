@@ -368,7 +368,7 @@ void SQLClass::initDb() {
 			*m_sess << "CREATE TABLE IF NOT EXISTS " + p->configuration().sqlPrefix + "db_version ("
 				"  ver INTEGER NOT NULL DEFAULT '1'"
 				");", now;
-			*m_sess << "REPLACE INTO " + p->configuration().sqlPrefix + "db_version SET ver=1", now;
+			*m_sess << "REPLACE INTO " + p->configuration().sqlPrefix + "db_version (ver) values(1)", now;
 		}
 		catch (Poco::Exception e) {
 			Log("SQL ERROR", e.displayText());
@@ -420,7 +420,7 @@ void SQLClass::upgradeDatabase() {
 								");", now;
 					*m_sess << "ALTER TABLE " + p->configuration().sqlPrefix + "users ADD online tinyint(1) NOT NULL DEFAULT '0';", now;
 				}
-				*m_sess << "REPLACE INTO " + p->configuration().sqlPrefix + "db_version SET ver=1", now;
+				*m_sess << "REPLACE INTO " + p->configuration().sqlPrefix + "db_version (ver) values(1)", now;
 			}
 		}
 	}
@@ -437,45 +437,15 @@ bool SQLClass::isVIP(const std::string &jid) {
 }
 
 long SQLClass::getRegisteredUsersCount(){
-// 	dbi_result result;
-	unsigned int r = 0;
-
-// 	result = dbi_conn_queryf(m_conn, "select count(*) as count from %susers", p->configuration().sqlPrefix.c_str());
-// 	if (result) {
-// 		if (dbi_result_first_row(result)) {
-// 			r = dbi_result_get_uint(result, "count");
-// 		}
-// 		dbi_result_free(result);
-// 	}
-// 	else {
-// 		const char *errmsg;
-// 		dbi_conn_error(m_conn, &errmsg);
-// 		if (errmsg)
-// 			Log().Get("SQL ERROR") << errmsg;
-// 	}
-
-	return r;
+	Poco::UInt64 users;
+	*m_sess << "SELECT count(*) FROM " + p->configuration().sqlPrefix + "users", into(users), now;
+	return users;
 }
 
 long SQLClass::getRegisteredUsersRosterCount(){
-// 	dbi_result result;
-	unsigned int r = 0;
-/*
-	result = dbi_conn_queryf(m_conn, "select count(*) as count from %sbuddies", p->configuration().sqlPrefix.c_str());
-	if (result) {
-		if (dbi_result_first_row(result)) {
-			r = dbi_result_get_uint(result, "count");
-		}
-		dbi_result_free(result);
-	}
-	else {
-		const char *errmsg;
-		dbi_conn_error(m_conn, &errmsg);
-		if (errmsg)
-			Log().Get("SQL ERROR") << errmsg;
-	}*/
-
-	return r;
+	Poco::UInt64 users;
+	*m_sess << "SELECT count(*) FROM " + p->configuration().sqlPrefix + "buddies", into(users), now;
+	return users;
 }
 
 void SQLClass::updateUser(const UserRow &user) {
@@ -674,9 +644,8 @@ GHashTable *SQLClass::getBuddies(long userId, PurpleAccount *account){
 				g_hash_table_replace(roster, g_strdup(m_stmt_getBuddies.resUin.c_str()), buddy->node.ui_data);
 				
 				GSList *buddies;
-				buddies = purple_find_buddies(account, user.uin.c_str());
 
-				for (buddies = purple_find_buddies(account, NULL); buddies;
+				for (buddies = purple_find_buddies(account, user.uin.c_str()); buddies;
 						buddies = g_slist_delete_link(buddies, buddies))
 				{
 					PurpleBuddy *buddy = (PurpleBuddy *) buddies->data;

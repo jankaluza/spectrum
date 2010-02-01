@@ -23,7 +23,6 @@
 
 AdhocTag::AdhocTag(const std::string &id, const std::string &node, const std::string &status) : Tag("command") {
 	xdata = NULL;
-	
 	addAttribute("xmlns", "http://jabber.org/protocol/commands");
 	addAttribute("sessionid", id);
 	addAttribute("node", node);
@@ -86,6 +85,3 @@ void AdhocTag::initXData() {
 	xdata->addAttribute("type","form");
 	addChild(xdata);
 }
-
-
-

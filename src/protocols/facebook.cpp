@@ -37,26 +37,6 @@ FacebookProtocol::FacebookProtocol(GlooxMessageHandler *main){
 	m_buddyFeatures.push_back("http://jabber.org/protocol/chatstates");
 	m_buddyFeatures.push_back("http://jabber.org/protocol/commands");
 
-	// load certificate from certificate.pem
-	PurpleCertificatePool *tls_peers;
-	tls_peers = purple_certificate_find_pool("x509", "tls_peers");
-	if (!purple_certificate_pool_contains(tls_peers, "login.facebook.com")){
-		PurpleCertificateScheme *x509;
-		PurpleCertificate *crt;
-
-		/* Load the scheme of our tls_peers pool (ought to be x509) */
-		x509 = purple_certificate_pool_get_scheme(tls_peers);
-
-		/* Now load the certificate from disk */
-		char *c = g_build_filename(INSTALL_DIR, "share", "spectrum", "certificates", "facebook.pem", NULL);
-		crt = purple_certificate_import(x509, c);
-		g_free(c);
-		purple_certificate_pool_store(tls_peers, "login.facebook.com", crt);
-
-		/* And this certificate is not needed any more */
-		purple_certificate_destroy(crt);
-	}
-
 // 	m_buddyFeatures.push_back("http://jabber.org/protocol/si/profile/file-transfer");
 // 	m_buddyFeatures.push_back("http://jabber.org/protocol/bytestreams");
 // 	m_buddyFeatures.push_back("http://jabber.org/protocol/si");

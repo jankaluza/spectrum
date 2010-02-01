@@ -29,8 +29,7 @@
 #include "request.h"
 #include "adhoccommandhandler.h"
 
-class GlooxMessageHandler;
-class User;
+class AbstractUser;
 
 extern LogClass Log_;
 
@@ -44,15 +43,14 @@ typedef enum {	ADHOC_ADMIN_INIT = 0,
 class AdhocAdmin : public AdhocCommandHandler
 {
 	public:
-		AdhocAdmin(GlooxMessageHandler *m, User *user, const std::string &from, const std::string &id);
+		AdhocAdmin(AbstractUser *user, const std::string &from, const std::string &id);
 		~AdhocAdmin();
 		bool handleIq(const IQ &iq);
-		const std::string & from() { return m_from; }
+		const std::string & getInitiator() { return m_from; }
 
 	private:
-		GlooxMessageHandler *main;		// client
 		std::string m_from;				// full jid
-		User *m_user;					// User class
+		AbstractUser *m_user;					// User class
 		int m_state;					// current executing state
 };
 

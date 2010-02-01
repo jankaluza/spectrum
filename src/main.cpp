@@ -67,6 +67,7 @@
 #include "protocols/sipe.h"
 #include "cmds.h"
 
+#include "gloox/adhoc.h"
 #include <gloox/tlsbase.h>
 #include <gloox/compressionbase.h>
 #include <gloox/sha.h>
@@ -144,7 +145,7 @@ namespace gloox {
 			HiComponent(const std::string & ns, const std::string & server, const std::string & component, const std::string & password, int port = 5347) : Component(ns, server, component, password, port) {};
 			virtual ~HiComponent() {};
 	};
-};
+}
 
 /*
  * New message from legacy network received (we can create conversation here)
@@ -247,10 +248,16 @@ static void buddySignedOff(PurpleBuddy *buddy) {
 	GlooxMessageHandler::instance()->purpleBuddySignedOff(buddy);
 }
 
-static void NodeRemoved(PurpleBuddyList *list, PurpleBlistNode *node) {
+static void NodeRemoved(PurpleBlistNode *node, void *data) {
 	if (!PURPLE_BLIST_NODE_IS_BUDDY(node))
 		return;
 	PurpleBuddy *buddy = (PurpleBuddy *) node;
+	
+	PurpleAccount *a = purple_buddy_get_account(buddy);
+	User *user = (User *) GlooxMessageHandler::instance()->userManager()->getUserByAccount(a);
+	if (user != NULL) {
+		user->handleBuddyRemoved(buddy);
+	}
 	if (buddy->node.ui_data) {
 		SpectrumBuddy *s_buddy = (SpectrumBuddy *) buddy->node.ui_data;
 		Log("DELETING DATA FOR", s_buddy->getName());
@@ -364,13 +371,13 @@ static void requestClose(PurpleRequestType type, void *ui_handle) {
 		AbstractPurpleRequest *r = (AbstractPurpleRequest *) ui_handle;
 		if (r->requestType() == CALLER_ADHOC) {
 			AdhocCommandHandler * repeater = (AdhocCommandHandler *) r;
-			std::string from = repeater->from();
+			std::string from = repeater->getInitiator();
 			GlooxMessageHandler::instance()->adhoc()->unregisterSession(from);
 			delete repeater;
 		}
 		else if (r->requestType() == CALLER_SEARCH) {
 			SearchRepeater * repeater = (SearchRepeater *) r;
-			std::string from = repeater->from();
+			std::string from = repeater->getInitiator();
 			GlooxMessageHandler::instance()->searchHandler()->unregisterSession(from);
 			delete repeater;
 		}
@@ -585,7 +592,7 @@ static PurpleBlistUiOps blistUiOps =
 	buddyListNewNode,
 	NULL,
 	NULL, // buddyListUpdate,
-	NodeRemoved,
+	NULL, //NodeRemoved,
 	NULL,
 	NULL,
 	NULL, // buddyListAddBuddy,
@@ -817,7 +824,14 @@ GlooxMessageHandler::GlooxMessageHandler(const std::string &config) : MessageHan
 		m_discoInfoHandler = new GlooxDiscoInfoHandler();
 		j->registerIqHandler(m_discoInfoHandler,ExtDiscoInfo);
 
-		m_adhoc = new GlooxAdhocHandler(this);
+		m_adhoc = new GlooxAdhocHandler();
+		
+		j->registerIqHandler(m_adhoc, ExtAdhocCommand);
+		j->registerStanzaExtension( new Adhoc::Command() );
+		j->disco()->addFeature( XMLNS_ADHOC_COMMANDS );
+		j->disco()->registerNodeHandler( m_adhoc, XMLNS_ADHOC_COMMANDS );
+		j->disco()->registerNodeHandler( m_adhoc, std::string() );
+		
 		m_parser = new GlooxParser();
 		m_collector = new AccountCollector();
 
@@ -989,14 +1003,13 @@ void GlooxMessageHandler::purpleBuddyTyping(PurpleAccount *account, const char *
 }
 
 void GlooxMessageHandler::purpleBuddyRemoved(PurpleBuddy *buddy) {
-	if (buddy != NULL) {
-		PurpleAccount *a = purple_buddy_get_account(buddy);
-		User *user = (User *) userManager()->getUserByAccount(a);
-		if (user != NULL) {
-			user->handleBuddyRemoved(buddy);
-			user->removeBuddy(buddy);
-		}
-	}
+// 	if (buddy != NULL) {
+// 		PurpleAccount *a = purple_buddy_get_account(buddy);
+// 		User *user = (User *) userManager()->getUserByAccount(a);
+// 		if (user != NULL) {
+// 			user->handleBuddyRemoved(buddy);
+// 		}
+// 	}
 }
 
 void GlooxMessageHandler::purpleBuddyCreated(PurpleBuddy *buddy) {
@@ -1367,7 +1380,7 @@ void GlooxMessageHandler::handlePresence(const Presence &stanza){
 				}
 				else {
 					if (purple_accounts_find(res.uin.c_str(), protocol()->protocol().c_str()) != NULL) {
-						PurpleAccount *act = purple_accounts_find(res.uin.c_str(), protocol()->protocol().c_str());
+// 						PurpleAccount *act = purple_accounts_find(res.uin.c_str(), protocol()->protocol().c_str());
 // 						user = (User *) userManager()->getUserByAccount(act);
 // 						if (user) {
 // 							Log(stanza.from().full(), "This account is already connected by another jid " << user->jid());
@@ -1698,7 +1711,7 @@ bool GlooxMessageHandler::initPurple(){
 		purple_signal_connect(purple_blist_get_handle(), "buddy-signed-on", &blist_handle,PURPLE_CALLBACK(buddySignedOn), NULL);
 		purple_signal_connect(purple_blist_get_handle(), "buddy-signed-off", &blist_handle,PURPLE_CALLBACK(buddySignedOff), NULL);
 		purple_signal_connect(purple_blist_get_handle(), "buddy-status-changed", &blist_handle,PURPLE_CALLBACK(buddyStatusChanged), NULL);
-// 		purple_signal_connect(purple_blist_get_handle(), "blist-node-removed", &blist_handle,PURPLE_CALLBACK(NodeRemoved), NULL);
+		purple_signal_connect(purple_blist_get_handle(), "blist-node-removed", &blist_handle,PURPLE_CALLBACK(NodeRemoved), NULL);
 		purple_signal_connect(purple_conversations_get_handle(), "chat-topic-changed", &conversation_handle, PURPLE_CALLBACK(conv_chat_topic_changed), NULL);
 
 		purple_commands_init();

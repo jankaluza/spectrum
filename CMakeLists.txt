@@ -65,7 +65,7 @@ if(CMAKE_BUILD_TYPE MATCHES Debug)
 	ADD_DEFINITIONS(-ggdb)
 	ADD_DEFINITIONS(-DDEBUG)
 	ADD_DEFINITIONS(-Wall)
-# 	ADD_DEFINITIONS(-pedantic)
+#	ADD_DEFINITIONS(-pedantic)
 	message(STATUS "Build type is set to Debug")
 endif(CMAKE_BUILD_TYPE MATCHES Debug)
 
@@ -353,11 +353,6 @@ INSTALL(FILES
     RENAME spectrumctl
     PERMISSIONS OWNER_EXECUTE OWNER_READ GROUP_EXECUTE GROUP_READ
 		WORLD_READ WORLD_EXECUTE
-    )
-
-INSTALL(FILES
-    ${CMAKE_CURRENT_SOURCE_DIR}/certificates/facebook.pem
-	DESTINATION share/spectrum/certificates
     )
 
 # install(FILES

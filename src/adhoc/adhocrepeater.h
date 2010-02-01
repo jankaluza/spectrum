@@ -52,7 +52,7 @@ class AdhocRepeater : public AdhocCommandHandler
 
 		void setType(PurpleRequestType t) { m_type = t; }
 		PurpleRequestType type() { return m_type; }
-		const std::string & from() { return m_from; }
+		const std::string & getInitiator() { return m_from; }
 
 	private:
 		GlooxMessageHandler *main;				// client

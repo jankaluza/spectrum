@@ -357,8 +357,8 @@ void RosterManagerTest::handleBuddyCreatedSubscribe() {
 	CPPUNIT_ASSERT_MESSAGE ("There has to be 2 subscribe stanza sent", m_tags.size() == 2);
 
 	std::list <std::string> users;
-	users.push_back("user1%example.com@icq.localhost/bot");
-	users.push_back("user2%example.com@icq.localhost/bot");
+	users.push_back("user1%example.com@icq.localhost");
+	users.push_back("user2%example.com@icq.localhost");
 
 	while (m_tags.size() != 0) {
 		Tag *tag = m_tags.front();
@@ -372,7 +372,7 @@ void RosterManagerTest::handleBuddyCreatedSubscribe() {
 								find(users.begin(), users.end(), tag->findAttribute("from")) != users.end());
 		CPPUNIT_ASSERT (tag->findChild("nick") != NULL);
 		CPPUNIT_ASSERT (tag->findChild("nick")->findAttribute("xmlns") == "http://jabber.org/protocol/nick");
-		if (tag->findAttribute("from") == "user1%example.com@icq.localhost/bot")
+		if (tag->findAttribute("from") == "user1%example.com@icq.localhost")
 			CPPUNIT_ASSERT (tag->findChild("nick")->cdata() == "Frank");
 		else
 			CPPUNIT_ASSERT (tag->findChild("nick")->cdata() == "Bob");

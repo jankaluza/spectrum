@@ -43,14 +43,14 @@ void ResourceManager::setResource(const std::string &resource, int priority, int
 
 void ResourceManager::setResource(const Presence &stanza) {
 	std::string resource = stanza.from().resource();
-	m_resources[resource].priority = stanza.priority();
 	Tag *stanzaTag = stanza.tag();
 	Tag *c = stanzaTag->findChildWithAttrib("xmlns", "http://jabber.org/protocol/caps");
+	int caps = -1;
 	// presence has caps
 	if (c != NULL) {
-		m_resources[resource].caps = Transport::instance()->getCapabilities(c->findAttribute("ver"));
+		caps = Transport::instance()->getCapabilities(c->findAttribute("ver"));
 	}
-	setActiveResource();
+	setResource(resource, stanza.priority(), caps);
 	delete stanzaTag;
 }
 
