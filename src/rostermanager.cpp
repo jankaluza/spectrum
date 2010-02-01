@@ -317,7 +317,6 @@ void RosterManager::sendNewBuddies() {
 			it++;
 		}
 		tag->addChild(x);
-		Log("rosterx stanza", tag->xml() << "\n");
 		Transport::instance()->send(tag);
 	}
 	else {
