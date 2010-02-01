@@ -41,7 +41,6 @@ You will see something like this:
 	For bug reporting instructions, please see:
 	<http://www.gnu.org/software/gdb/bugs/>...
 	Reading symbols from /home/hanzz/code/test/transport/spectrum...done.
-	/home/hanzz/code/test/transport/icq: No such file or directory.
 	(gdb)
 
 Now you have to start Spectrum with following GDB command:
