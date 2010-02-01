@@ -29,4 +29,8 @@ void replace(std::string &str, const char *from, const char *to);
 int isValidEmail(const char *address);
 const std::string generateUUID();
 
+#ifndef WIN32
+void process_mem_usage(double& vm_usage, double& resident_set);
+#endif
+
 #endif
