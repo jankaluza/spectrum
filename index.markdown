@@ -12,5 +12,8 @@ title: Documentation
 * [Supported protocols](supported-protocols.html)
 * [Munin plugin](munin-plugin.html)
 
+### Debugging
+* [Getting a backtrace](getting-a-backtrace.html)
+
 ### For developers
 * [Buddies forwarding method](buddies-forwarding-method.html)
