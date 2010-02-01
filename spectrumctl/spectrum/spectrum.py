@@ -34,10 +34,7 @@ class spectrum:
 		return self.config.get( 'service', 'jid' )
 
 	def enabled( self ):
-		if int( self.config.get( 'service', 'enable' ) ) == 0:
-			return False
-		else:
-			return True
+		return self.config.getboolean( 'service', 'enable' )
 
 	def get_pid( self ):
 		"""
@@ -132,6 +129,9 @@ class spectrum:
 		if status == 3:
 			# stopping while not running is also success!
 			return 0, "already stopped."
+		elif status == 1:
+			os.remove( self.pid_file )
+			return 0, "pid file was still there"
 		elif status != 0: 
 			# we cannot stop if status != 0
 			return 1, "status unknown." 
