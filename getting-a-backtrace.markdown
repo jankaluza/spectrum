@@ -10,13 +10,13 @@ a backtrace you have to have debugging symbols installed or compiled Spectrum wi
 1. If you are installing from our [Debian/Ubuntu repository](debian-ubuntu-installation.html), you can just install debugging symbols
 with this command:
 
-	sudo apt-get install spectrum-dbg
+		sudo apt-get install spectrum-dbg
 
 2. If you build Spectrum by yourself, you have to build it in Debug mode.
 
-	cmake . -DCMAKE_BUILD_TYPE=Debug
-	make
-	sudo make install
+		cmake . -DCMAKE_BUILD_TYPE=Debug
+		make
+		sudo make install
 
 ###Installing GDB
 
