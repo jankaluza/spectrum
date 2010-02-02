@@ -51,6 +51,7 @@ void SpectrumConversationTest::handleMessage() {
 	// <html xmlns='http://jabber.org/protocol/xhtml-im'>
 	// <body xmlns='http://www.w3.org/1999/xhtml'>Hi, how are you? <b>I&apos;m fine</b>.</body></html></message>
 	tag = m_tags.front();
+	std::cout << tag->xml() << "\n";
 	CPPUNIT_ASSERT (tag->name() == "message");
 	CPPUNIT_ASSERT (tag->findAttribute("to") == "user@example.com");
 	CPPUNIT_ASSERT (tag->findAttribute("from") == "user1%example.com@icq.localhost/bot");

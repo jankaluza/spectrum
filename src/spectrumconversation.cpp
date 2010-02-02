@@ -104,7 +104,7 @@ void SpectrumConversation::handleMessage(AbstractUser *user, const char *who, co
 
 	Tag *stanzaTag = s.tag();
 
-	std::string m(msg);
+	std::string m(xhtml);
 	if (m.find("<body>") == 0) {
 		m.erase(0,6);
 		m.erase(m.length() - 7, 7);
