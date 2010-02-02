@@ -39,6 +39,7 @@ struct Configuration {
 	std::string jid;				// Spectrum JID.
 	std::string encoding;			// Default encoding.
 	int port;						// Server port.
+	std::string config_interface;	// ConfigInterface address.
 	
 	int logAreas;					// Logging areas.
 	std::string logfile;			// Logging file.

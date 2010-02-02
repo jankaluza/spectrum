@@ -86,6 +86,7 @@ set(spectrum_SRCS
 	src/capabilityhandler.cpp
 	src/commands.cpp
 	src/configfile.cpp
+	src/configinterface.cpp
 	src/discoinfohandler.cpp
 	src/filetransfermanager.cpp
 	src/filetransferrepeater.cpp
@@ -147,6 +148,7 @@ set(spectrum_MOC_HDRS
 	src/capabilityhandler.h
 	src/commands.h
 	src/configfile.h
+	src/configinterface.h
 	src/discoinfohandler.h
 	src/filetransfermanager.h
 	src/filetransferrepeater.h

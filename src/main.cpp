@@ -32,6 +32,7 @@
 #include "usermanager.h"
 #include "adhoc/adhochandler.h"
 #include "adhoc/adhocrepeater.h"
+#include "configinterface.h"
 #include "searchhandler.h"
 #include "searchrepeater.h"
 #include "filetransferrepeater.h"
@@ -765,6 +766,7 @@ GlooxMessageHandler::GlooxMessageHandler(const std::string &config) : MessageHan
 	ftServer = NULL;
 	m_stats = NULL;
 	connectIO = NULL;
+	m_configInterface = NULL;
 
 	bool loaded = true;
 
@@ -818,6 +820,9 @@ GlooxMessageHandler::GlooxMessageHandler(const std::string &config) : MessageHan
 		loaded = false;
 
 	if (loaded) {
+		
+		if (!m_configuration.config_interface.empty())
+			m_configInterface = new ConfigInterface(m_configuration.config_interface, j->logInstance());
 
 		m_discoHandler = new CapabilityHandler();
 
@@ -854,6 +859,7 @@ GlooxMessageHandler::GlooxMessageHandler(const std::string &config) : MessageHan
 		j->registerIqHandler(m_reg, ExtRegistration);
 		m_stats = new GlooxStatsHandler(this);
 		j->registerIqHandler(m_stats, ExtStats);
+		m_configInterface->registerHandler(m_stats);
 		m_vcard = new GlooxVCardHandler(this);
 		j->registerIqHandler(m_vcard, ExtVCard);
 		j->registerPresenceHandler(this);
@@ -870,6 +876,8 @@ GlooxMessageHandler::~GlooxMessageHandler(){
 	g_main_loop_quit(m_loop);
 	g_main_loop_unref(m_loop);
 	delete m_userManager;
+	if (m_configInterface)
+		delete m_configInterface;
 	if (m_parser)
 		delete m_parser;
 	if (m_sql)
