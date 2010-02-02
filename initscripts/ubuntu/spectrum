@@ -1,7 +1,9 @@
 #!/bin/sh
 #
 # spectrum (this script) - manage multiple spectrum (XMPP Transport) instances
-# Copyright (C) 2009 Thilo Cestonaro <thilo@cestona.ro>
+# Copyright (C) 2009 Thilo Cestonaro <thilo@cestona.ro> and 
+# Mathias Ertl <mati@fsinf.at>
+# 
 # Distributable under the terms of the GNU GPL version 2.
 #
 
@@ -14,20 +16,8 @@
 # Short-Description:    Spectrum XMPP Transport Service
 ### END INIT INFO
 
-
-set -e
-
 USER=spectrum
 CONFSDIR=/etc/spectrum/
-DAEMON=/usr/bin/spectrum
-PIDPATH=/var/run/spectrum
-
-test -x "$DAEMON" || exit 0
-
-if [ ! -d "$PIDPATH" ]; then
-	mkdir "$PIDPATH";
-	chown $USER.adm "$PIDPATH";
-fi
 
 # Check that user exists
 check_user() {
