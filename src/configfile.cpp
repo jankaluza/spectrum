@@ -145,6 +145,9 @@ Configuration ConfigFile::getConfiguration() {
 	if (!loadString(configuration.filetransferCache, "service", "filetransfer_cache"))
 		return DummyConfiguration;
 
+	if (!loadString(configuration.config_interface, "service", "config_interface", ""))
+		return DummyConfiguration;
+
 	loadString(configuration.pid_f, "service", "pid_file", "/var/run/spectrum/" + configuration.jid);
 	g_mkdir_with_parents(g_path_get_dirname(configuration.pid_f.c_str()), 0755);
 
