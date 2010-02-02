@@ -21,9 +21,10 @@ except ImportError:
 	import spectrumconfigparser
 
 class spectrum:
-	def __init__( self, config_path ):
+	def __init__( self, options, config_path ):
 		self.config_path = os.path.normpath( config_path )
 		self.config = spectrumconfigparser.SpectrumConfigParser()
+		self.options = options
 		self.config.read( config_path )
 		self.pid_file = self.config.get( 'service', 'pid_file' )
 
@@ -47,7 +48,50 @@ class spectrum:
 			return -1
 
 	def su_cmd( self, cmd ):
-		return [ 'su', 'spectrum', '-s', '/bin/bash', '-c', ' '.join( cmd ) ]
+		user = self.options.su
+		return [ 'su', user, '-s', '/bin/bash', '-c', ' '.join( cmd ) ]
+
+	def check_environment( self ):
+		# we must be root
+		if os.getuid() != 0:
+			raise RuntimeError( "User", "Must be root to start spectrum" )
+
+		# check if spectrum user exists:
+		if os.name == 'posix':
+			import pwd
+			try:
+				user = pwd.getpwnam( self.options.su )
+			except KeyError:
+				raise RuntimeError( self.options.su, 'User does not exist' )
+
+		def check_dir( dir ):
+			if os.path.exists( dir ) and os.path.isdir( dir ):
+				stat = os.stat( dir )
+				if stat.st_uid != user.pw_uid or stat.st_gid != user.pw_gid:
+					raise RuntimeError( dir, 'Unsafe ownership' )
+			elif not os.path.exists( dir ):
+				os.makedirs( dir )
+				os.chown( dir, user.pw_uid, user.pw_gid )
+			else:
+				raise RuntimeError( dir, "Not a directory" )
+
+		
+		check_dir( os.path.dirname( self.pid_file ) )
+
+		log_file = self.config.get( 'logging', 'log_file' )
+		check_dir( os.path.dirname( log_file ) )
+
+		cache_file = self.config.get( 'service', 'filetransfer_cache' )
+		check_dir( os.path.dirname( cache_file ) )
+
+		purple_dir = self.config.get( 'purple', 'userdir' )
+		check_dir( purple_dir )
+
+		if self.config.get( 'database', 'type' ) == 'sqlite':
+			db_file = self.config.get( 'logging', 'log_file' )
+			check_dir( os.path.dirname( db_path ) )
+
+		return 0, 'ok'
 
 	def list( self ):
 		pid = self.get_pid()
@@ -109,6 +153,11 @@ class spectrum:
 			os.remove( self.pid_file )
 		elif status != 3:
 			return 1, "status unknown." # We cannot start if status != 3
+
+		try:
+			self.check_environment()
+		except RuntimeError, e:
+			return 1, "%s: %s" % e.args
 
 		cmd = [ 'spectrum', self.config_path ]
 		cmd = self.su_cmd( cmd )

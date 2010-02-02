@@ -77,7 +77,7 @@ def act( instance ):
 	return exit
 
 if options.config:
-	instance = spectrum.spectrum( options.config )
+	instance = spectrum.spectrum( options, options.config )
 	ret = act( instance )
 	sys.exit( ret )
 else:
@@ -90,7 +90,7 @@ else:
 	ret = 0
 	for file in os.listdir( options.config_dir ):
 		path = '%s/%s'%(options.config_dir, file)
-		instance = spectrum.spectrum(path)
+		instance = spectrum.spectrum( options, path )
 		if action == "list":
 			list.append( instance.list() )
 		else:
