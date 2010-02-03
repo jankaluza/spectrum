@@ -859,6 +859,7 @@ GlooxMessageHandler::GlooxMessageHandler(const std::string &config) : MessageHan
 		j->registerIqHandler(m_reg, ExtRegistration);
 		m_stats = new GlooxStatsHandler(this);
 		j->registerIqHandler(m_stats, ExtStats);
+                if (m_configInterface)
 		m_configInterface->registerHandler(m_stats);
 		m_vcard = new GlooxVCardHandler(this);
 		j->registerIqHandler(m_vcard, ExtVCard);
