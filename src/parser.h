@@ -33,15 +33,15 @@ class GlooxParser : public TagHandler
 	public:
 		GlooxParser();
 		~GlooxParser();
-		void getTag(std::string str, void (*handleTagCallback)(Tag *tag, Tag *user_data), Tag *userdata);
+		void getTag(std::string str, void (*handleTagCallback)(Tag *tag, void *user_data), void *userdata);
 
 		// TagHandler
 		void handleTag (Tag *tag);
 
 	private:
 		Parser *m_parser;
-		void (*m_handleTagCallback)(Tag *tag, Tag *user_data);
-		Tag *m_userdata;
+		void (*m_handleTagCallback)(Tag *tag, void *user_data);
+		void *m_userdata;
 };
 
 #endif

@@ -26,7 +26,8 @@
 #include "transport.h"
 #include "usermanager.h"
 
-static void sendXhtmlTag(Tag *body, Tag *stanzaTag) {
+static void sendXhtmlTag(Tag *body, void *data) {
+	Tag *stanzaTag = (Tag*) data;
 	if (body) {
 		Tag *html = new Tag("html");
 		html->addAttribute("xmlns", "http://jabber.org/protocol/xhtml-im");
@@ -103,7 +104,7 @@ void SpectrumConversation::handleMessage(AbstractUser *user, const char *who, co
 
 	Tag *stanzaTag = s.tag();
 
-	std::string m(msg);
+	std::string m(xhtml);
 	if (m.find("<body>") == 0) {
 		m.erase(0,6);
 		m.erase(m.length() - 7, 7);

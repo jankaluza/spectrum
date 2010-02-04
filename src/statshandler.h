@@ -25,6 +25,7 @@
 #include <gloox/stanza.h>
 #include <gloox/stanzaextension.h>
 #include <gloox/iqhandler.h>
+#include "abstractconfiginterfacehandler.h"
 
 class GlooxMessageHandler;
 
@@ -71,11 +72,13 @@ private:
 
 };
 
-class GlooxStatsHandler : public IqHandler
+class GlooxStatsHandler : public IqHandler, public AbstractConfigInterfaceHandler
 {
 	public:
 		GlooxStatsHandler(GlooxMessageHandler *parent);
 		~GlooxStatsHandler();
+		bool handleCondition(Tag *stanzaTag);
+		Tag *handleTag(Tag *stanzaTag);
 		bool handleIq (const IQ &iq);
 		void handleIqID (const IQ &iq, int context);
 		GlooxMessageHandler *p;

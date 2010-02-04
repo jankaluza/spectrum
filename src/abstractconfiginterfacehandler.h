@@ -18,27 +18,25 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02111-1301  USA
  */
 
-#include "parser.h"
+#ifndef ABSTRACT_CONFIG_HANDLER_H
+#define ABSTRACT_CONFIG_HANDLER_H
 
-GlooxParser::GlooxParser() {
-	m_parser = new Parser(this);
-}
+#include <string>
+#include <list>
+#include "purple.h"
+#include "gloox/tag.h"
 
-GlooxParser::~GlooxParser() {
-	delete m_parser;
-}
+using namespace gloox;
 
-void GlooxParser::getTag(std::string str, void (*handleTagCallback)(Tag *tag, void *user_data), void *userdata) {
-	m_userdata = userdata;
-	m_handleTagCallback = handleTagCallback;
+class AbstractConfigInterfaceHandler {
+	public:
+		virtual ~AbstractConfigInterfaceHandler() {}
 
-	m_parser->cleanup();
-	if (m_parser->feed(str) != -1)
-		m_handleTagCallback(NULL, m_userdata);
-}
+		// Returns true if handler will handle this tag.
+		virtual bool handleCondition(Tag *tag) = 0;
 
-void GlooxParser::handleTag(Tag *tag) {
-	m_handleTagCallback(tag->clone(), m_userdata);
-}
+		// Handles Tag*. ConfigInterface will send the response if it's not NULL.
+		virtual Tag *handleTag(Tag *tag) = 0;
+};
 
-
+#endif

@@ -69,7 +69,11 @@ GlooxStatsHandler::GlooxStatsHandler(GlooxMessageHandler *parent) : IqHandler(){
 GlooxStatsHandler::~GlooxStatsHandler(){
 }
 
-bool GlooxStatsHandler::handleIq (const IQ &stanza){
+bool GlooxStatsHandler::handleCondition(Tag *stanzaTag) {
+	return stanzaTag->findChild("query","xmlns","http://jabber.org/protocol/stats") != NULL;
+}
+
+Tag* GlooxStatsHandler::handleTag (Tag *stanzaTag){
 // 	      recv:     <iq type='result' from='component'>
 //                   <query xmlns='http://jabber.org/protocol/stats'>
 // 	            <stat name='time/uptime'/>
@@ -82,23 +86,21 @@ bool GlooxStatsHandler::handleIq (const IQ &stanza){
 // 	          </query>
 //                 </iq>
 //
+	Tag *s;
 
-	Tag *stanzaTag = stanza.tag();
 	Tag *query = stanzaTag->findChild("query");
 	if (query==NULL) {
-		delete stanzaTag;
-		return true;
+		return NULL;
 	}
-	std::cout << "*** "<< stanza.from().full() << ": received stats request\n";
 	std::list<Tag*> stats = query->children();
 	if (stats.empty()){
 		std::cout << "* sending stats keys\n";
-		IQ _s(IQ::Result, stanza.from(), stanza.id());
+		IQ _s(IQ::Result, stanzaTag->findAttribute("from"), stanzaTag->findAttribute("id"));
 		std::string from;
 		from.append(p->jid());
 		_s.setFrom(from);
 
-		Tag *s = _s.tag();
+		s = _s.tag();
 		Tag *query = new Tag("query");
 		query->setXmlns("http://jabber.org/protocol/stats");
 		Tag *t;
@@ -139,17 +141,15 @@ bool GlooxStatsHandler::handleIq (const IQ &stanza){
 
 		s->addChild(query);
 
-		p->j->send( s );
-
 	}
 	else{
 		std::cout << "* sending stats values\n";
-		IQ _s(IQ::Result, stanza.from(), stanza.id());
+		IQ _s(IQ::Result, stanzaTag->findAttribute("from"), stanzaTag->findAttribute("id"));
 		std::string from;
 		from.append(p->jid());
 		_s.setFrom(from);
 
-		Tag *s = _s.tag();
+		s = _s.tag();
 		Tag *query = new Tag("query");
 		query->setXmlns("http://jabber.org/protocol/stats");
 
@@ -233,11 +233,19 @@ bool GlooxStatsHandler::handleIq (const IQ &stanza){
 		}
 
 		s->addChild(query);
-		p->j->send(s);
-
 	}
+	
+	return s;
+}
 
+bool GlooxStatsHandler::handleIq (const IQ &stanza){
+	std::cout << "*** "<< stanza.from().full() << ": received stats request\n";
+	Tag *stanzaTag = stanza.tag();
+	Tag *query = handleTag(stanzaTag);
 	delete stanzaTag;
+	if (query)
+		p->j->send(query);
+
 	return true;
 }
 

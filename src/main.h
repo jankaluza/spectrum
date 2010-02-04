@@ -97,6 +97,7 @@ class GlooxSearchHandler;
 class GlooxParser;
 class AccountCollector;
 class Transport;
+class ConfigInterface;
 
 struct User;
 struct UserRow;
@@ -222,6 +223,7 @@ private:
 	GlooxSearchHandler *m_searchHandler;		// jabber:iq:search handler
 	GlooxAdhocHandler *m_adhoc;					// Ad-Hoc commands handler
 	GlooxParser *m_parser;						// Gloox parser - makes Tag* from std::string
+	ConfigInterface *m_configInterface;
 
 	GIOChannel *connectIO;						// GIOChannel for Gloox socket
 	guint connectID;
