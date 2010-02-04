@@ -89,7 +89,7 @@ class spectrum:
 
 		if self.config.get( 'database', 'type' ) == 'sqlite':
 			db_file = self.config.get( 'logging', 'log_file' )
-			check_dir( os.path.dirname( db_path ) )
+			check_dir( os.path.dirname( db_file ) )
 
 		return 0, 'ok'
 
