@@ -172,6 +172,7 @@ class FiletransferRepeater {
 		void handleDataNotSent(const guchar *data, gssize size);
 		int getDataToSend(guchar **data, gssize size);
 		int getDataToSend(std::string &data);
+		void xferDestroyed();
 		std::string requestFT();
 
 		bool isSending() { return m_send; }

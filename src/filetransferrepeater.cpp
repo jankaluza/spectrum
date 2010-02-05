@@ -34,15 +34,6 @@ static gboolean ui_got_data(gpointer data){
 	return FALSE;
 }
 
-
-static gboolean getData(gpointer data){
-// 	FiletransferRepeater *repeater = (FiletransferRepeater *) data;
-// 	std::string d;
-// 	repeater->getDataToSend(d, 320000);
-	return FALSE;
-}
-
-
 SendFile::SendFile(Bytestream *stream, int size, const std::string &filename, AbstractUser *user, FiletransferRepeater *manager) {
     std::cout << "SendFile::SendFile" << " Constructor.\n";
     m_stream = stream;
@@ -395,13 +386,12 @@ void FiletransferRepeater::fileSendStart() {
 
 void FiletransferRepeater::fileRecvStart() {
 	Log("SendFileStraight", "fileRecvStart!" << m_from.full() << " " << m_to.full());
-	if (m_resender)
-	g_timeout_add_seconds(0,&ui_got_data,m_xfer);
+	if (m_resender && m_xfer)
+		g_timeout_add_seconds(0, &ui_got_data, m_xfer);
 }
 
 std::string FiletransferRepeater::requestFT() {
-// 	purple_xfer_request_accepted(xfer, std::string(filename).c_str());
-	std::string filename(purple_xfer_get_filename(m_xfer));
+	std::string filename(m_xfer ? purple_xfer_get_filename(m_xfer) : "");
 	m_sid = Transport::instance()->requestFT(m_to, filename, purple_xfer_get_size(m_xfer), EmptyString, EmptyString, EmptyString, EmptyString, SIProfileFT::FTTypeAll, m_from);
 	return m_sid;
 }
@@ -418,6 +408,10 @@ void FiletransferRepeater::handleFTReceiveBytestream(Bytestream *bs, const std::
 
 void FiletransferRepeater::handleFTSendBytestream(Bytestream *bs, const std::string &filename) {
 	Log("SendFileStraight", "new!");
+	if (!m_xfer) {
+		Log("SendFileStraight", "no xfer");
+		return;
+	}
 	purple_xfer_request_accepted(m_xfer, NULL);
 	if (filename.empty())
 		m_resender = new SendFileStraight(bs, 0, this);
@@ -542,9 +536,15 @@ int FiletransferRepeater::getDataToSend(std::string &data) {
 }
 
 void FiletransferRepeater::ready() {
-	if (!m_readyCalled)
+	if (!m_readyCalled && m_xfer)
 		g_timeout_add(0, &ui_got_data, m_xfer);
 	m_readyCalled = true;
+}
+
+void FiletransferRepeater::xferDestroyed() {
+	m_xfer = NULL;
+	if (!m_resender)
+		delete this;
 }
 
 
