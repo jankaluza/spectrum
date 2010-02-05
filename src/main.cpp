@@ -476,6 +476,13 @@ static void XferCreated(PurpleXfer *xfer) {
 	}
 }
 
+static void XferDestroyed(PurpleXfer *xfer) {
+	FiletransferRepeater *repeater = (FiletransferRepeater *) xfer->ui_data;
+	if (!repeater)
+		return;
+	repeater->xferDestroyed();
+}
+
 static void fileSendStart(PurpleXfer *xfer) {
 	FiletransferRepeater *repeater = (FiletransferRepeater *) xfer->ui_data;
 	repeater->fileSendStart();
@@ -623,7 +630,7 @@ static PurpleRequestUiOps requestUiOps =
 static PurpleXferUiOps xferUiOps =
 {
 	XferCreated,
-	NULL,
+	XferDestroyed,
 	NULL,
 	NULL,
 	NULL,
