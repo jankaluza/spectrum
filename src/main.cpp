@@ -560,9 +560,26 @@ static gssize XferRead(PurpleXfer *xfer, guchar **buffer, gssize size) {
 	return data_size;
 }
 
+void printDebug(PurpleDebugLevel level, const char *category, const char *arg_s) {
+	if (category == NULL)
+		LogMessage(Log_.fileStream(),false).Get("libpurple") << arg_s;
+	else
+		LogMessage(Log_.fileStream(),false).Get(category) << arg_s;
+}
+
 /*
  * Ops....
  */
+static PurpleDebugUiOps debugUiOps =
+{
+	printDebug,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL
+};
+
 
 static PurpleNotifyUiOps notifyUiOps =
 {
@@ -1681,7 +1698,7 @@ bool GlooxMessageHandler::initPurple(){
 	purple_util_set_user_dir(configuration().userDir.c_str());
 
 	if (m_configuration.logAreas & LOG_AREA_PURPLE)
-		purple_debug_set_enabled(true);
+		purple_debug_set_ui_ops(&debugUiOps);
 
 	purple_core_set_ui_ops(&coreUiOps);
 	purple_eventloop_set_ui_ops(getEventLoopUiOps());
