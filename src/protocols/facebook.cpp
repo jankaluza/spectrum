@@ -44,10 +44,6 @@ FacebookProtocol::FacebookProtocol(GlooxMessageHandler *main){
 
 FacebookProtocol::~FacebookProtocol() {}
 
-void FacebookProtocol::prepareUserName(std::string &str) {
-	replace(str," ","");
-}
-
 bool FacebookProtocol::isValidUsername(const std::string &str){
 	return isValidEmail(str.c_str());
 }

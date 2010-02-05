@@ -39,6 +39,9 @@ long AbstractSpectrumBuddy::getId() {
 
 std::string AbstractSpectrumBuddy::getSafeName() {
 	std::string name = getName();
+#ifndef TESTS
+	Transport::instance()->protocol()->prepareUsername(name);
+#endif
 	std::for_each( name.begin(), name.end(), replaceBadJidCharacters() );
 	return name;
 }

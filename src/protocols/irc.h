@@ -42,7 +42,6 @@ class IRCProtocol : AbstractProtocol
 		const std::string gatewayIdentity() { return "irc"; }
 		const std::string protocol() { return "prpl-irc"; }
 		bool isValidUsername(const std::string &username) { return true; }
-		void prepareUserName(std::string &username) { }
 		std::list<std::string> transportFeatures();
 		std::list<std::string> buddyFeatures();
 		std::string text(const std::string &key);

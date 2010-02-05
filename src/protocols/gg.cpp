@@ -42,10 +42,6 @@ GGProtocol::GGProtocol(GlooxMessageHandler *main){
 
 GGProtocol::~GGProtocol() {}
 
-void GGProtocol::prepareUserName(std::string &str) {
-	replace(str," ","");
-}
-
 bool GGProtocol::isValidUsername(const std::string &str){
 	// TODO: check valid email address
 	return true;

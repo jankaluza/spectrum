@@ -44,10 +44,6 @@ SimpleProtocol::SimpleProtocol(GlooxMessageHandler *main){
 
 SimpleProtocol::~SimpleProtocol() {}
 
-void SimpleProtocol::prepareUserName(std::string &str) {
-	replace(str," ","");
-}
-
 bool SimpleProtocol::isValidUsername(const std::string &str){
 	// TODO: check valid email address
 	return true;

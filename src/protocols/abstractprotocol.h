@@ -55,7 +55,10 @@ class AbstractProtocol
 		/*
 		 * Returns revised username (for example for ICQ where username = "123- 456-789"; return "123456789";)
 		 */
-		virtual void prepareUserName(std::string &username) = 0;
+		virtual void prepareUsername(std::string &username, PurpleAccount *account = NULL) {
+			username.assign(purple_normalize(account, username.c_str()));
+		};
+
 		/*
 		 * Returns disco features user by transport jid
 		 */

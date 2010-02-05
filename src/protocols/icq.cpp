@@ -40,11 +40,6 @@ ICQProtocol::ICQProtocol(GlooxMessageHandler *main){
 
 ICQProtocol::~ICQProtocol() {}
 
-void ICQProtocol::prepareUserName(std::string &str) {
-	replace(str,"-","");
-	replace(str," ","");
-}
-
 bool ICQProtocol::isValidUsername(const std::string &str) {
 	static std::string const digits("0123456789");
 	bool allDigits( str.find_first_not_of(digits)==std::string::npos );

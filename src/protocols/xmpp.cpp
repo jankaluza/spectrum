@@ -43,10 +43,6 @@ XMPPProtocol::XMPPProtocol(GlooxMessageHandler *main){
 
 XMPPProtocol::~XMPPProtocol() {}
 
-void XMPPProtocol::prepareUserName(std::string &str) {
-	replace(str," ","");
-}
-
 bool XMPPProtocol::isValidUsername(const std::string &str){
 	// TODO: check valid email address
 	return true;

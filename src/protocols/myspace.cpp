@@ -44,10 +44,6 @@ MyspaceProtocol::MyspaceProtocol(GlooxMessageHandler *main){
 
 MyspaceProtocol::~MyspaceProtocol() {}
 
-void MyspaceProtocol::prepareUserName(std::string &str) {
-	replace(str," ","");
-}
-
 bool MyspaceProtocol::isValidUsername(const std::string &str){
 	// TODO: check valid email address
 	return true;
