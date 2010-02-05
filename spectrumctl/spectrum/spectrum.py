@@ -67,12 +67,16 @@ class spectrum:
 				user = pwd.getpwnam( self.options.su )
 			except KeyError:
 				raise RuntimeError( self.options.su, 'User does not exist' )
+		else:
+			return 0, "ok"
 
-		def check_dir( dir ):
+		def check_dir( dir, check_gid=True ):
 			if os.path.exists( dir ) and os.path.isdir( dir ):
 				stat = os.stat( dir )
-				if stat.st_uid != user.pw_uid or stat.st_gid != user.pw_gid:
+				if stat.st_uid != user.pw_uid:
 					raise RuntimeError( dir, 'Unsafe ownership' )
+				if check_gid and stat.st_gid != user.pw_gid:
+					raise RuntimeError( dir, 'Unsafe group ownership' )
 			elif not os.path.exists( dir ):
 				os.makedirs( dir )
 				os.chown( dir, user.pw_uid, user.pw_gid )
@@ -83,7 +87,7 @@ class spectrum:
 		check_dir( os.path.dirname( self.pid_file ) )
 
 		log_file = self.config.get( 'logging', 'log_file' )
-		check_dir( os.path.dirname( log_file ) )
+		check_dir( os.path.dirname( log_file ), False )
 
 		cache_file = self.config.get( 'service', 'filetransfer_cache' )
 		check_dir( os.path.dirname( cache_file ) )
