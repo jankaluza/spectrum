@@ -42,6 +42,7 @@ class SpectrumBuddy : public AbstractSpectrumBuddy {
 		bool getStatus(PurpleStatusPrimitive &status, std::string &statusMessage);
 		std::string getIconHash();
 		std::string getGroup();
+		std::string getSafeName();
 		PurpleBuddy *getBuddy() { return m_buddy; }
 
 	private:
