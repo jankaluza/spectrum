@@ -1,5 +1,0 @@
-=== Things we want for a 0.1 release ===
-* Working ad-hoc commands
-* Correct values on all statistics
-* Answer all IQ packaets (Issue #45)
-	This can really be a pain in the ass for scripts
