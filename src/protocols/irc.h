@@ -22,8 +22,11 @@
 #define _HI_IRCPROTOCOL_PROTOCOL_H
 
 #include "abstractprotocol.h"
+#include "../adhoc/adhoccommandhandler.h"
 
 class GlooxMessageHandler;
+class AbstractUser;
+
 extern Localization localization;
 
 class IRCProtocolData {
@@ -32,6 +35,19 @@ class IRCProtocolData {
 		~IRCProtocolData() {}
 
 		std::list <Tag *> autoConnectRooms;
+};
+
+class ConfigHandler : public AdhocCommandHandler {
+	public:
+		ConfigHandler(AbstractUser *user, const std::string &from, const std::string &id);
+		virtual ~ConfigHandler();
+		
+		bool handleIq(const IQ &iq) { return true;}
+		const std::string & getInitiator() { return m_from; }
+	
+	private:
+		std::string m_from;
+		AbstractUser *m_user;
 };
 
 class IRCProtocol : AbstractProtocol

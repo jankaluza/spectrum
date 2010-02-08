@@ -24,7 +24,19 @@
 #include "../usermanager.h"
 #include "../sql.h"
 #include "../user.h"
+#include "../adhoc/adhochandler.h"
 #include "cmds.h"
+
+ConfigHandler::ConfigHandler(AbstractUser *user, const std::string &from, const std::string &id) : m_from(from), m_user(user) {
+	setRequestType(CALLER_ADHOC);
+}
+
+ConfigHandler::~ConfigHandler() { }
+
+static AdhocCommandHandler * createConfigHandler(AbstractUser *user, const std::string &from, const std::string &id) {
+	AdhocCommandHandler *handler = new ConfigHandler(user, from, id);
+	return handler;
+}
 
 IRCProtocol::IRCProtocol(GlooxMessageHandler *main){
 	m_main = main;
@@ -37,6 +49,9 @@ IRCProtocol::IRCProtocol(GlooxMessageHandler *main){
 	m_buddyFeatures.push_back("http://jabber.org/protocol/disco#info");
 	m_buddyFeatures.push_back("http://jabber.org/protocol/caps");
 	m_buddyFeatures.push_back("http://jabber.org/protocol/commands");
+	
+	adhocCommand command = { "IRC Nickserv password configuration", false, createConfigHandler };
+	GlooxAdhocHandler::instance()->registerAdhocCommandHandler("transport_irc_config", command);
 
 }
 
@@ -251,4 +266,5 @@ void IRCProtocol::onDestroy(AbstractUser *user) {
 	IRCProtocolData *data = (IRCProtocolData *) user->protocolData();
 	delete data;
 }
+
 

@@ -42,6 +42,7 @@ static AdhocCommandHandler * createAdminHandler(AbstractUser *user, const std::s
 }
 
 GlooxAdhocHandler::GlooxAdhocHandler() {
+	m_pInstance = this;
 
 	m_handlers["transport_settings"].name = "Transport settings";
 	m_handlers["transport_settings"].admin = false;
@@ -72,6 +73,7 @@ Disco::ItemList GlooxAdhocHandler::handleDiscoNodeItems( const JID &_from, const
 
 		// add internal commands from m_handlers
 		for (std::map<std::string, adhocCommand>::iterator u = m_handlers.begin(); u != m_handlers.end() ; u++) {
+			Log("GlooxAdhocHandler", "seding item " << (*u).first << " " << (*u).second.name);
 			if (user)
 				lst.push_back( new Disco::Item( Transport::instance()->jid(), (*u).first, (std::string) tr(user->getLang(), (*u).second.name) ) );
 			else if (((*u).second.admin && std::find(admins.begin(), admins.end(), from) != admins.end()) || (*u).second.admin == false)
@@ -264,4 +266,10 @@ void GlooxAdhocHandler::handleDiscoInfo(const JID &jid, const Disco::Info &info,
 void GlooxAdhocHandler::handleDiscoItems(const JID &jid, const Disco::Items &items, int context) {}
 void GlooxAdhocHandler::handleDiscoError(const JID &jid, const Error *error, int context) {}
 
+
+void GlooxAdhocHandler::registerAdhocCommandHandler(const std::string &name, const adhocCommand command) {
+	m_handlers[name] = command;
+}
+
+GlooxAdhocHandler* GlooxAdhocHandler::m_pInstance = NULL;
 
