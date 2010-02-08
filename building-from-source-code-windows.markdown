@@ -84,6 +84,7 @@ Libpoco is used as storage backend. Just now there is only SQLite supported on W
 Official libpoco can’t be compiled in Cygwin, so we have to change its build system little bit. You will have to change few files to get it work:
 
 * File: build/rules/global
+
 		find:
 		LIBPATH  = $(POCO_BUILD)/$(LIBDIR)
 		replace it with:
