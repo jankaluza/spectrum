@@ -4,7 +4,7 @@ title: Building from source code on Windows
 ---
 
 Spectrum can be built on Windows, but only SQLite is supported as storage backend at the moment. This page describes how to do it.
-Current way of compilling Spectrum on Windows is very hacky :). If you know how how to make it easier, feel free to tell us.
+Current way of compilling Spectrum on Windows is very hacky :). If you know how to make it easier, feel free to tell us.
 
 ### Installing Cygwin
 Download Cygwin setup file from [Cygwin homepage](http://cygwin.com/). In installation process, choose also these packages:
