@@ -43,10 +43,6 @@ SIPEProtocol::SIPEProtocol(GlooxMessageHandler *main){
 
 SIPEProtocol::~SIPEProtocol() {}
 
-void SIPEProtocol::prepareUserName(std::string &str){
-	replace(str," ","");
-}
-
 bool SIPEProtocol::isValidUsername(const std::string &str){
 	// TODO: check valid email address
 	return true;

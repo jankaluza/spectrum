@@ -43,10 +43,6 @@ MSNProtocol::MSNProtocol(GlooxMessageHandler *main){
 
 MSNProtocol::~MSNProtocol() {}
 
-void MSNProtocol::prepareUserName(std::string &str){
-	replace(str," ","");
-}
-
 bool MSNProtocol::isValidUsername(const std::string &str){
 	// TODO: check valid email address
 	return true;

@@ -105,3 +105,10 @@ std::string SpectrumBuddy::getGroup() {
 	return purple_group_get_name(purple_buddy_get_group(m_buddy)) ? std::string(purple_group_get_name(purple_buddy_get_group(m_buddy))) : std::string("Buddies");
 }
 
+std::string SpectrumBuddy::getSafeName() {
+	std::string name = getName();
+	Transport::instance()->protocol()->prepareUsername(name, purple_buddy_get_account(m_buddy));
+	std::for_each( name.begin(), name.end(), replaceBadJidCharacters() );
+	return name;
+}
+

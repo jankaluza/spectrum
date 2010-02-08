@@ -20,9 +20,10 @@ class LogClass;
 class LogMessage
 {
 public:
-	LogMessage(std::ofstream &file) : m_file(file) {}
+	LogMessage(std::ofstream &file, bool newline = true) : m_file(file), m_newline(newline) {}
 	~LogMessage() {
-		os << std::endl;
+		if (m_newline)
+			os << std::endl;
 		fprintf(stdout, "%s", os.str().c_str());
 		fflush(stdout);
 		if (m_file.is_open()) {
@@ -42,6 +43,7 @@ public:
 protected:
 	std::ostringstream os;
 	std::ofstream &m_file;
+	bool m_newline;
 };
 
 class LogClass : public LogHandler {

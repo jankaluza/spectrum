@@ -47,10 +47,6 @@ class AbstractSpectrumBuddy {
 		// Sets/gets ID used to identify this buddy for example by storage backend.
 		void setId(long id);
 		long getId();
-		
-		// Returns name which doesn't contain unsafe characters, so it can be used.
-		// in JIDs.
-		std::string getSafeName();
 
 		// Returns bare JID.
 		std::string getBareJid();
@@ -85,6 +81,10 @@ class AbstractSpectrumBuddy {
 
 		// Returns buddy's group name.
 		virtual std::string getGroup() = 0;
+
+		// Returns name which doesn't contain unsafe characters, so it can be used.
+		// in JIDs.
+		virtual std::string getSafeName() = 0;
 
 		// Stores current status in `status` and current status message in `statusMessage`.
 		// Returns true if data can be stored.

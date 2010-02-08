@@ -34,7 +34,6 @@ class QQProtocol : AbstractProtocol
 		const std::string gatewayIdentity() { return "qq"; }
 		const std::string protocol() { return "prpl-qq"; }
 		bool isValidUsername(const std::string &username);
-		void prepareUserName(std::string &username);
 		std::list<std::string> transportFeatures();
 		std::list<std::string> buddyFeatures();
 		std::string text(const std::string &key);

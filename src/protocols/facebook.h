@@ -34,7 +34,6 @@ class FacebookProtocol : AbstractProtocol
 		const std::string gatewayIdentity() { return "facebook"; }
 		const std::string protocol() { return "prpl-bigbrownchunx-facebookim"; }
 		bool isValidUsername(const std::string &username);
-		void prepareUserName(std::string &username);
 		std::list<std::string> transportFeatures();
 		std::list<std::string> buddyFeatures();
 		std::string text(const std::string &key);

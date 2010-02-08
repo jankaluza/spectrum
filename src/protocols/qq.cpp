@@ -54,10 +54,6 @@ void QQProtocol::onPurpleRequestInput(AbstractUser *user, const char *title, con
 	}
 }
 
-void QQProtocol::prepareUserName(std::string &str){
-	replace(str," ","");
-}
-
 bool QQProtocol::isValidUsername(const std::string &str){
 	// TODO: check valid email address
 	return true;

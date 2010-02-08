@@ -43,10 +43,6 @@ AIMProtocol::AIMProtocol(GlooxMessageHandler *main){
 
 AIMProtocol::~AIMProtocol() {}
 
-void AIMProtocol::prepareUserName(std::string &str){
-	replace(str," ","");
-}
-
 bool AIMProtocol::isValidUsername(const std::string &str){
 	// TODO: check valid email address
 	return true;

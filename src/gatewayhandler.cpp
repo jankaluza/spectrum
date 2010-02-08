@@ -24,6 +24,8 @@
 #include "sql.h"
 #include "log.h"
 #include "spectrum_util.h"
+#include "usermanager.h"
+#include "transport.h"
 
 GatewayExtension::GatewayExtension() : StanzaExtension( ExtGateway )
 {
@@ -78,7 +80,7 @@ bool GlooxGatewayHandler::handleIq (const IQ &stanza){
 		Tag *query = new Tag("query");
 		query->setXmlns("jabber:iq:gateway");
 
-		query->addChild(new Tag("desc","Please enter the ICQ Number of the person you would like to contact."));
+		query->addChild(new Tag("desc","Please enter the ID of the person you would like to contact."));
 		query->addChild(new Tag("prompt","Contact ID"));
 		s->addChild(query);
 
@@ -95,10 +97,12 @@ bool GlooxGatewayHandler::handleIq (const IQ &stanza){
 		if (prompt==NULL)
 			return false;
 		std::string uin(prompt->cdata());
+		
+		AbstractUser *user = Transport::instance()->userManager()->getUserByJID(stanza.from().bare());
+		PurpleAccount *account = user->account();
 
-		// TODO: rewrite to support more protocols
-		replace(uin,"-","");
-		replace(uin," ","");
+		Transport::instance()->protocol()->prepareUsername(uin, account);
+		std::for_each( uin.begin(), uin.end(), replaceBadJidCharacters() );
 
 		IQ _s(IQ::Result, stanza.from(), stanza.id());
 		_s.setFrom(p->jid());

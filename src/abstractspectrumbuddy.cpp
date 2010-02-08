@@ -37,12 +37,6 @@ long AbstractSpectrumBuddy::getId() {
 	return m_id;
 }
 
-std::string AbstractSpectrumBuddy::getSafeName() {
-	std::string name = getName();
-	std::for_each( name.begin(), name.end(), replaceBadJidCharacters() );
-	return name;
-}
-
 std::string AbstractSpectrumBuddy::getBareJid() {
 	return getSafeName() + "@" + Transport::instance()->jid();
 }

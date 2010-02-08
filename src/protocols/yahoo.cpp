@@ -44,10 +44,6 @@ YahooProtocol::YahooProtocol(GlooxMessageHandler *main){
 
 YahooProtocol::~YahooProtocol() {}
 
-void YahooProtocol::prepareUserName(std::string &str){
-	replace(str," ","");
-}
-
 bool YahooProtocol::isValidUsername(const std::string &str){
 	// TODO: check valid email address
 	return true;

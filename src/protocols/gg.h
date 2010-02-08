@@ -33,7 +33,6 @@ class GGProtocol : AbstractProtocol
 		const std::string gatewayIdentity() { return "gadu-gadu"; }
 		const std::string protocol() { return "prpl-gg"; }
 		bool isValidUsername(const std::string &username);
-		void prepareUserName(std::string &username);
 		std::list<std::string> transportFeatures();
 		std::list<std::string> buddyFeatures();
 		std::string text(const std::string &key);
