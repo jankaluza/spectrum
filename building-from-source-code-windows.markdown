@@ -76,30 +76,30 @@ Libpoco is used as storage backend. Just now there is only SQLite supported on W
 Official libpoco can’t be compiled in Cygwin, so we have to change its build system little bit. You will have to change few files to get it work:
 
 * File: build/rules/global
-	find:
-	LIBPATH  = $(POCO_BUILD)/$(LIBDIR)
-	replace it with:
-	LIBPATH  = ../$(LIBDIR)
-	
-	find:
-	OBJPATH  = $(POCO_BUILD)/$(COMPONENT)/$(OBJDIR)
-	replace it with:
-	OBJPATH  = $(OBJDIR)
-	
-	find:
-	INCLUDE = $(foreach p,$(POCO_ADD_INCLUDE),-I$(p)) -Iinclude $(foreach p,$(COMPONENTS),-I$(POCO_BASE)/$(p)/$(INCDIR))
-	replace it with:
-	INCLUDE = $(foreach p,$(POCO_ADD_INCLUDE),-I$(p)) -Iinclude $(foreach p,$(COMPONENTS),-I../$(p)/$(INCDIR)) $(foreach p,$(COMPONENTS),-I../../$(p)/$(INCDIR))
+		find:
+		LIBPATH  = $(POCO_BUILD)/$(LIBDIR)
+		replace it with:
+		LIBPATH  = ../$(LIBDIR)
+		
+		find:
+		OBJPATH  = $(POCO_BUILD)/$(COMPONENT)/$(OBJDIR)
+		replace it with:
+		OBJPATH  = $(OBJDIR)
+		
+		find:
+		INCLUDE = $(foreach p,$(POCO_ADD_INCLUDE),-I$(p)) -Iinclude $(foreach p,$(COMPONENTS),-I$(POCO_BASE)/$(p)/$(INCDIR))
+		replace it with:
+		INCLUDE = $(foreach p,$(POCO_ADD_INCLUDE),-I$(p)) -Iinclude $(foreach p,$(COMPONENTS),-I../$(p)/$(INCDIR)) $(foreach p,$(COMPONENTS),-I../../$(p)/$(INCDIR))
 * File: Makefile
-	find:
-	all: libexecs tests sample
-	replace it with:
-	all: libexecs
-	
-	find:
-	libexecs: $(filter-out $(foreach f,$(OMIT),$f%),$(libexecs))
-	replace it with:
-	libexecs: Foundation-libexec Data-libexec Data/SQLite-libexec
+		find:
+		all: libexecs tests sample
+		replace it with:
+		all: libexecs
+		
+		find:
+		libexecs: $(filter-out $(foreach f,$(OMIT),$f%),$(libexecs))
+		replace it with:
+		libexecs: Foundation-libexec Data-libexec Data/SQLite-libexec
 
 Now you can compile it:
 	make
