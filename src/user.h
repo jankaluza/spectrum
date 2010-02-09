@@ -43,7 +43,7 @@ using namespace gloox;
 class User;
 
 // Representation of XMPP User
-class User : public AbstractUser, public RosterManager, public SpectrumMessageHandler {
+class User : public AbstractUser, public SpectrumRosterManager, public SpectrumMessageHandler {
 	public:
 		User(GlooxMessageHandler *parent, JID jid, const std::string &username, const std::string &password, const std::string &userKey, long id);
 		virtual ~User();

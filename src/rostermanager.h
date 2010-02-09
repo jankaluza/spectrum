@@ -46,10 +46,10 @@ struct authRequest {
 };
 
 // Manages all SpectrumBuddies in user's roster.
-class RosterManager : public RosterStorage {
+class SpectrumRosterManager : public RosterStorage {
 	public:
-		RosterManager(AbstractUser *user);
-		virtual ~RosterManager();
+		SpectrumRosterManager(AbstractUser *user);
+		virtual ~SpectrumRosterManager();
 
 		// Sends unavailable presence of all online buddies.
 		void sendUnavailablePresenceToAll(const std::string &resource = "");
