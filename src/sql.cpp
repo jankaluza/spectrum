@@ -25,6 +25,7 @@
 #include "spectrumbuddy.h"
 #include "spectrum_util.h"
 
+
 #if !defined(WITH_MYSQL) && !defined(WITH_SQLITE) && !defined(WITH_ODBC)
 #error There is no libPocoData storage backend installed. Spectrum will not work without one of them.
 #endif

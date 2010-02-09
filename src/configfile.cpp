@@ -149,7 +149,7 @@ Configuration ConfigFile::getConfiguration() {
 		return DummyConfiguration;
 
 	loadString(configuration.pid_f, "service", "pid_file", "/var/run/spectrum/" + configuration.jid);
-	g_mkdir_with_parents(g_path_get_dirname(configuration.pid_f.c_str()), 0755);
+	purple_build_dir(g_path_get_dirname(configuration.pid_f.c_str()), 0755);
 
 	if (!loadString(configuration.sqlType, "database", "type"))
 		return DummyConfiguration;
@@ -166,7 +166,7 @@ Configuration ConfigFile::getConfiguration() {
 	if (!loadString(configuration.sqlDb, "database", "database"))
 		return DummyConfiguration;
 	if (configuration.sqlType == "sqlite") {
-		g_mkdir_with_parents(g_path_get_dirname(configuration.sqlDb.c_str()), 0755);
+		purple_build_dir(g_path_get_dirname(configuration.sqlDb.c_str()), 0755);
 	}
 
 	if (!loadString(configuration.sqlPrefix, "database", "prefix", configuration.sqlType == "sqlite" ? "" : "required"))
@@ -174,7 +174,7 @@ Configuration ConfigFile::getConfiguration() {
 
 	if (!loadString(configuration.userDir, "purple", "userdir"))
 		return DummyConfiguration;
-	g_mkdir_with_parents(g_path_get_dirname(configuration.userDir.c_str()), 0755);
+	purple_build_dir(g_path_get_dirname(configuration.userDir.c_str()), 0755);
 
 
 	loadString(configuration.language, "service", "language", "en");

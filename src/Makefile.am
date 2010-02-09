@@ -2,6 +2,7 @@
 bin_PROGRAMS = spectrum
 spectrum_SOURCES = adhoc/adhocadmin.cpp \
 	adhoc/adhochandler.cpp \
+	adhoc/adhoctag.cpp \
 	adhoc/adhocrepeater.cpp \
 	adhoc/adhocsettings.cpp \
 	adhoc/dataforms.cpp \
@@ -13,7 +14,6 @@ spectrum_SOURCES = adhoc/adhocadmin.cpp \
 	capabilitymanager.cpp \
 	commands.cpp \
 	configfile.cpp \
-	configinterface.cpp \
 	configuration.cpp \
 	discoinfohandler.cpp \
 	filetransfermanager.cpp \
@@ -23,7 +23,6 @@ spectrum_SOURCES = adhoc/adhocadmin.cpp \
 	localization.cpp \
 	log.cpp \
 	main.cpp \
-	muchandler.cpp \
 	parser.cpp \
 	registerhandler.cpp \
 	resourcemanager.cpp \
@@ -55,5 +54,6 @@ spectrum_SOURCES = adhoc/adhocadmin.cpp \
 	protocols/qq.cpp \
 	protocols/simple.cpp \
 	protocols/xmpp.cpp \
-	protocols/yahoo.cpp
+	protocols/yahoo.cpp \
+	protocols/sipe.cpp
 noinst_HEADERS = main.h

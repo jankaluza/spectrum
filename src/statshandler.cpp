@@ -208,8 +208,9 @@ Tag* GlooxStatsHandler::handleTag (Tag *stanzaTag){
 				t->addAttribute("units","messages");
 				t->addAttribute("value",m_messagesOut);
 				query->addChild(t);
+			}
 #ifndef WIN32
-			} else if (name == "memory-usage") {
+			else if (name == "memory-usage") {
 				double vm, rss;
 				std::stringstream rss_stream;
 				process_mem_usage(vm, rss);

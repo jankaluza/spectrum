@@ -21,7 +21,9 @@
 #include "main.h"
 #include <sys/stat.h>
 #include <sys/types.h>
+#ifndef WIN32
 #include <sys/wait.h>
+#endif
 #include <fcntl.h>
 #include <signal.h>
 #include "utf8.h"
@@ -32,7 +34,9 @@
 #include "usermanager.h"
 #include "adhoc/adhochandler.h"
 #include "adhoc/adhocrepeater.h"
+#ifndef WIN32
 #include "configinterface.h"
+#endif
 #include "searchhandler.h"
 #include "searchrepeater.h"
 #include "filetransferrepeater.h"
@@ -790,7 +794,9 @@ GlooxMessageHandler::GlooxMessageHandler(const std::string &config) : MessageHan
 	ftServer = NULL;
 	m_stats = NULL;
 	connectIO = NULL;
+#ifndef WIN32
 	m_configInterface = NULL;
+#endif
 
 	bool loaded = true;
 
@@ -844,10 +850,10 @@ GlooxMessageHandler::GlooxMessageHandler(const std::string &config) : MessageHan
 		loaded = false;
 
 	if (loaded) {
-		
+#ifndef WIN32
 		if (!m_configuration.config_interface.empty())
 			m_configInterface = new ConfigInterface(m_configuration.config_interface, j->logInstance());
-
+#endif
 		m_discoHandler = new CapabilityHandler();
 
 		m_discoInfoHandler = new GlooxDiscoInfoHandler();
@@ -883,8 +889,10 @@ GlooxMessageHandler::GlooxMessageHandler(const std::string &config) : MessageHan
 		j->registerIqHandler(m_reg, ExtRegistration);
 		m_stats = new GlooxStatsHandler(this);
 		j->registerIqHandler(m_stats, ExtStats);
+#ifndef WIN32
                 if (m_configInterface)
 		m_configInterface->registerHandler(m_stats);
+#endif
 		m_vcard = new GlooxVCardHandler(this);
 		j->registerIqHandler(m_vcard, ExtVCard);
 		j->registerPresenceHandler(this);
@@ -901,8 +909,10 @@ GlooxMessageHandler::~GlooxMessageHandler(){
 	g_main_loop_quit(m_loop);
 	g_main_loop_unref(m_loop);
 	delete m_userManager;
+#ifndef WIN32
 	if (m_configInterface)
 		delete m_configInterface;
+#endif
 	if (m_parser)
 		delete m_parser;
 	if (m_sql)
@@ -1760,7 +1770,7 @@ GlooxMessageHandler* GlooxMessageHandler::m_pInstance = NULL;
 static void spectrum_sigint_handler(int sig) {
 	delete GlooxMessageHandler::instance();
 }
-
+#ifndef WIN32
 static void spectrum_sigchld_handler(int sig)
 {
 	int status;
@@ -1776,10 +1786,10 @@ static void spectrum_sigchld_handler(int sig)
 		perror(errmsg);
 	}
 }
-
 static void spectrum_sighup_handler(int sig) {
 	GlooxMessageHandler::instance()->loadConfigFile();
 }
+#endif
 
 int main( int argc, char* argv[] ) {
 	GError *error = NULL;
@@ -1804,7 +1814,7 @@ int main( int argc, char* argv[] ) {
 		std::cout << g_option_context_get_help(context, FALSE, NULL);
 #endif
 	else {
-
+#ifndef WIN32
 		signal(SIGPIPE, SIG_IGN);
 
 		if (signal(SIGCHLD, spectrum_sigchld_handler) == SIG_ERR) {
@@ -1824,7 +1834,7 @@ int main( int argc, char* argv[] ) {
 			g_option_context_free(context);
 			return -1;
 		}
-
+#endif
 		std::string config(argv[1]);
 		new GlooxMessageHandler(config);
 	}
