@@ -96,7 +96,7 @@ class spectrum:
 		check_dir( purple_dir )
 
 		if self.config.get( 'database', 'type' ) == 'sqlite':
-			db_file = self.config.get( 'logging', 'log_file' )
+			db_file = self.config.get( 'database', 'database' )
 			check_dir( os.path.dirname( db_file ) )
 
 		return 0, 'ok'
