@@ -2,11 +2,14 @@ mkdir -p win-deps
 cd win-deps
 
 ### PIDGIN-FETCH
-wget -c http://gaim-extprefs.sf.net/winpidgin-build-fetcher.sh
-sh winpidgin-build-fetcher.sh
-if [ "$?" -ne 0 ]
+if [ ! -d pidgin-2.6.5 ]
 then
-    exit
+    wget -c http://gaim-extprefs.sf.net/winpidgin-build-fetcher.sh
+    sh winpidgin-build-fetcher.sh
+    if [ "$?" -ne 0 ]
+    then
+        exit
+    fi
 fi
 
 ### OLDER GCC - if needed
@@ -32,12 +35,15 @@ cd ..
 ### LIBPURPLE
 cd pidgin-2.6.5
 cd libpurple
-make -f Makefile.mingw
-if [ "$?" -ne 0 ]
+if [ ! -e libpurple.dll ]
 then
-    exit
+    make -f Makefile.mingw
+    if [ "$?" -ne 0 ]
+    then
+        exit
+    fi
+    make -f Makefile.mingw install
 fi
-make -f Makefile.mingw install
 cd ..
 cd ..
 
@@ -129,15 +135,20 @@ rm -rf src/.deps
 ./configure
 #make clean
 make
+if [ "$?" -ne 0 ]
+then
+    exit
+fi
 
 ### SPECTRUM INSTALL
 echo "copying libraries into bin/"
 mkdir -p bin
 cp src/spectrum.exe bin/spectrum.exe
 strip bin/spectrum.exe
-cp spectrum.cfg bin/spectrum.cfg
+cp spectrum.cfg.win bin/spectrum.cfg
 cp -r win-deps/pidgin-2.6.5/win32-install-dir/* bin/
 cp win-deps/bin/*.dll bin/
+cp nsis/*.bat bin/
 cp win-deps/gtk_installer/gtk_install_files/bin/intl.dll bin/
 cp win-deps/gtk_installer/gtk_install_files/bin/iconv.dll bin/
 cp win-deps/gtk_installer/gtk_install_files/bin/asprintf.dll bin/
@@ -150,3 +161,16 @@ cp win-deps/gtk_installer/gtk_install_files/bin/libatk-1.0-0.dll bin/
 cp win-deps/win32-dev/libxml2-2.6.30/bin/libxml2.dll bin/
 cp win-deps/gloox/src/.libs/cyggloox-8.dll bin/
 strip bin/cyggloox-8.dll
+
+### Package
+rm -rf spectrum-git
+mv bin spectrum-git
+echo "creating spectrum-git.tar.gz"
+tar -czf spectrum-git.tar.gz spectrum-git
+echo "creating spectrum-git.tar.bz2"
+tar -cjf spectrum-git.tar.bz2 spectrum-git
+
+## NSIS installer
+cd nsis
+makensis spectrum.nsi
+cd ..
