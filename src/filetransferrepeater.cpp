@@ -387,7 +387,7 @@ void FiletransferRepeater::fileSendStart() {
 void FiletransferRepeater::fileRecvStart() {
 	Log("SendFileStraight", "fileRecvStart!" << m_from.full() << " " << m_to.full());
 	if (m_resender && m_xfer)
-		g_timeout_add_seconds(0, &ui_got_data, m_xfer);
+		g_timeout_add(0, &ui_got_data, m_xfer);
 }
 
 std::string FiletransferRepeater::requestFT() {

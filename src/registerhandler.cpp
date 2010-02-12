@@ -20,7 +20,6 @@
 
 #include "registerhandler.h"
 #include <gloox/clientbase.h>
-#include <gloox/registration.h>
 #include <glib.h>
 #include "sql.h"
 #include "capabilityhandler.h"
@@ -30,8 +29,35 @@
 #include "user.h"
 #include "transport.h"
 
+RegisterExtension::RegisterExtension() : StanzaExtension( ExtRegistration )
+{
+    m_tag = NULL;
+}
+
+RegisterExtension::RegisterExtension(const Tag *tag) : StanzaExtension( ExtRegistration )
+{
+    m_tag = tag->clone();
+}
+		
+RegisterExtension::~RegisterExtension()
+{
+        Log("RegisterExtension", "deleting RegisterExtension()");
+        delete m_tag;
+}
+				
+const std::string& RegisterExtension::filterString() const
+{
+    static const std::string filter = "iq/query[@xmlns='jabber:iq:register']";
+    return filter;
+}
+						
+Tag* RegisterExtension::tag() const
+{
+    return m_tag->clone();
+}							
+
 GlooxRegisterHandler::GlooxRegisterHandler() : IqHandler() {
-	Transport::instance()->registerStanzaExtension( new Registration::Query() );
+	Transport::instance()->registerStanzaExtension( new RegisterExtension );
 }
 
 GlooxRegisterHandler::~GlooxRegisterHandler(){

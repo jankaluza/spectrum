@@ -15,7 +15,7 @@ void RosterManagerTest::setUp (void) {
 	m_buddy2->setOnline();
 	
 	m_user = new TestingUser("key", "user@example.com");
-	m_manager = new RosterManager(m_user);
+	m_manager = new SpectrumRosterManager(m_user);
 }
 
 void RosterManagerTest::tearDown (void) {

@@ -1,31 +1,46 @@
 # used by automake
 bin_PROGRAMS = spectrum
-spectrum_SOURCES = accountcollector.cpp \
-	adhoc/adhocadmin.cpp \
+spectrum_SOURCES = adhoc/adhocadmin.cpp \
 	adhoc/adhochandler.cpp \
+	adhoc/adhoctag.cpp \
 	adhoc/adhocrepeater.cpp \
 	adhoc/adhocsettings.cpp \
 	adhoc/dataforms.cpp \
+	abstractconversation.cpp \
+	abstractspectrumbuddy.cpp \
+	accountcollector.cpp \
 	autoconnectloop.cpp \
-	caps.cpp \
+	capabilityhandler.cpp \
+	capabilitymanager.cpp \
 	commands.cpp \
+	configfile.cpp \
+	configuration.cpp \
 	discoinfohandler.cpp \
 	filetransfermanager.cpp \
 	filetransferrepeater.cpp \
 	gatewayhandler.cpp \
 	geventloop.cpp \
 	localization.cpp \
+	log.cpp \
 	main.cpp \
-	muchandler.cpp \
 	parser.cpp \
 	registerhandler.cpp \
+	resourcemanager.cpp \
+	rostermanager.cpp \
+	rosterstorage.cpp \
 	searchhandler.cpp \
 	searchrepeater.cpp \
 	spectrum_util.cpp \
+	spectrumbuddy.cpp \
+	spectrumconversation.cpp \
+	spectrummessagehandler.cpp \
+	spectrummucconversation.cpp \
+	spectrumtimer.cpp \
+	sql.cpp \
 	statshandler.cpp \
 	striphtmltags.cpp \
-	sql.cpp \
 	thread.cpp \
+	transport.cpp \
 	user.cpp \
 	usermanager.cpp \
 	vcardhandler.cpp \
@@ -39,5 +54,6 @@ spectrum_SOURCES = accountcollector.cpp \
 	protocols/qq.cpp \
 	protocols/simple.cpp \
 	protocols/xmpp.cpp \
-	protocols/yahoo.cpp
+	protocols/yahoo.cpp \
+	protocols/sipe.cpp
 noinst_HEADERS = main.h

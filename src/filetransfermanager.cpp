@@ -72,7 +72,7 @@ void FileTransferManager::handleFTBytestream (Bytestream *bs) {
 				}
 			}
 			std::string directory = Transport::instance()->getConfiguration().filetransferCache + "/" + generateUUID();
-			g_mkdir_with_parents(directory.c_str(), 0755);
+			purple_build_dir(directory.c_str(), 0755);
 			filename = directory + "/" + filename;
 		}
 		AbstractUser *user = Transport::instance()->userManager()->getUserByJID(bs->initiator().bare());

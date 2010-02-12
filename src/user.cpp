@@ -36,7 +36,7 @@
 #include "spectrumbuddy.h"
 #include "transport.h"
 
-User::User(GlooxMessageHandler *parent, JID jid, const std::string &username, const std::string &password, const std::string &userKey, long id) : RosterManager(this), SpectrumMessageHandler(this) {
+User::User(GlooxMessageHandler *parent, JID jid, const std::string &username, const std::string &password, const std::string &userKey, long id) : SpectrumRosterManager(this), SpectrumMessageHandler(this) {
 	p = parent;
 	m_jid = jid.bare();
 	m_userID = id;
