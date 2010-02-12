@@ -39,7 +39,7 @@ struct SendPresenceToAllData {
 
 static void handleAskSubscriptionBuddies(gpointer key, gpointer v, gpointer data) {
 	AbstractSpectrumBuddy *s_buddy = (AbstractSpectrumBuddy *) v;
-	RosterManager *manager = (RosterManager *) data;
+	SpectrumRosterManager *manager = (SpectrumRosterManager *) data;
 
 	if (s_buddy->getSubscription() == "ask") {
 		manager->handleBuddyCreated(s_buddy);
@@ -77,11 +77,11 @@ static void sendCurrentPresence(gpointer key, gpointer v, gpointer data) {
 }
 
 static gboolean sync_cb(gpointer data) {
-	RosterManager *manager = (RosterManager *) data;
+	SpectrumRosterManager *manager = (SpectrumRosterManager *) data;
 	return manager->syncBuddiesCallback();
 }
 
-RosterManager::RosterManager(AbstractUser *user) : RosterStorage(user) {
+SpectrumRosterManager::SpectrumRosterManager(AbstractUser *user) : RosterStorage(user) {
 	m_user = user;
 	m_syncTimer = new SpectrumTimer(12000, &sync_cb, this);
 	m_subscribeLastCount = -1;
@@ -89,7 +89,7 @@ RosterManager::RosterManager(AbstractUser *user) : RosterStorage(user) {
 	m_loadingFromDB = false;
 }
 
-RosterManager::~RosterManager() {
+SpectrumRosterManager::~SpectrumRosterManager() {
 	g_hash_table_destroy(m_roster);
 	delete m_syncTimer;
 	
@@ -100,7 +100,7 @@ RosterManager::~RosterManager() {
 	m_authRequests.clear();
 }
 
-bool RosterManager::isInRoster(const std::string &name, const std::string &subscription) {
+bool SpectrumRosterManager::isInRoster(const std::string &name, const std::string &subscription) {
 // 	std::map<std::string,RosterRow>::iterator iter = m_roster.begin();
 // 	iter = m_roster.find(name);
 // 	if (iter != m_roster.end()) {
@@ -120,7 +120,7 @@ bool RosterManager::isInRoster(const std::string &name, const std::string &subsc
 	return false;
 }
 
-void RosterManager::sendUnavailablePresenceToAll(const std::string &resource) {
+void SpectrumRosterManager::sendUnavailablePresenceToAll(const std::string &resource) {
 	SendPresenceToAllData *data = new SendPresenceToAllData;
 	data->features = m_user->getFeatures();
 	if (resource.empty()) {
@@ -135,7 +135,7 @@ void RosterManager::sendUnavailablePresenceToAll(const std::string &resource) {
 	delete data;
 }
 
-void RosterManager::sendPresenceToAll(const std::string &to) {
+void SpectrumRosterManager::sendPresenceToAll(const std::string &to) {
 	SendPresenceToAllData *data = new SendPresenceToAllData;
 	data->features = m_user->getFeatures();
 	data->to = to;
@@ -143,24 +143,24 @@ void RosterManager::sendPresenceToAll(const std::string &to) {
 	delete data;
 }
 
-void RosterManager::removeFromLocalRoster(const std::string &uin) {
+void SpectrumRosterManager::removeFromLocalRoster(const std::string &uin) {
 	if (!g_hash_table_lookup(m_roster, uin.c_str()))
 		return;
 	g_hash_table_remove(m_roster, uin.c_str());
 }
 
-AbstractSpectrumBuddy *RosterManager::getRosterItem(const std::string &uin) {
+AbstractSpectrumBuddy *SpectrumRosterManager::getRosterItem(const std::string &uin) {
 	AbstractSpectrumBuddy *s_buddy = (AbstractSpectrumBuddy *) g_hash_table_lookup(m_roster, uin.c_str());
 	return s_buddy;
 }
 
-void RosterManager::addRosterItem(AbstractSpectrumBuddy *s_buddy) {
+void SpectrumRosterManager::addRosterItem(AbstractSpectrumBuddy *s_buddy) {
 	if (isInRoster(s_buddy->getName()))
 		return;
 	g_hash_table_replace(m_roster, g_strdup(s_buddy->getName().c_str()), s_buddy);
 }
 
-void RosterManager::addRosterItem(PurpleBuddy *buddy) {
+void SpectrumRosterManager::addRosterItem(PurpleBuddy *buddy) {
 	AbstractSpectrumBuddy *s_buddy = (AbstractSpectrumBuddy *) buddy->node.ui_data;
 	if (s_buddy)
 		addRosterItem(s_buddy);
@@ -168,20 +168,20 @@ void RosterManager::addRosterItem(PurpleBuddy *buddy) {
 		Log(std::string(purple_buddy_get_name(buddy)), "This buddy has not set AbstractSpectrumBuddy!!!");
 }
 
-void RosterManager::setRoster(GHashTable *roster) {
+void SpectrumRosterManager::setRoster(GHashTable *roster) {
 	if (m_roster)
 		g_hash_table_destroy(m_roster);
 	m_roster = roster;
 	g_hash_table_foreach(m_roster, handleAskSubscriptionBuddies, this);
 }
 
-void RosterManager::loadRoster() {
+void SpectrumRosterManager::loadRoster() {
 	m_loadingFromDB = true;
 	setRoster(Transport::instance()->sql()->getBuddies(m_user->storageId(), m_user->account()));
 	m_loadingFromDB = false;
 }
 
-void RosterManager::sendPresence(AbstractSpectrumBuddy *s_buddy, const std::string &resource) {
+void SpectrumRosterManager::sendPresence(AbstractSpectrumBuddy *s_buddy, const std::string &resource) {
 	Tag *tag = s_buddy->generatePresenceStanza(m_user->getFeatures());
 	if (tag) {
 		tag->addAttribute("to", m_user->jid() + std::string(resource.empty() ? "" : "/" + resource));
@@ -189,7 +189,7 @@ void RosterManager::sendPresence(AbstractSpectrumBuddy *s_buddy, const std::stri
 	}
 }
 
-void RosterManager::sendPresence(const std::string &name, const std::string &resource) {
+void SpectrumRosterManager::sendPresence(const std::string &name, const std::string &resource) {
 	AbstractSpectrumBuddy *s_buddy = getRosterItem(name);
 	if (s_buddy) {
 		sendPresence(s_buddy, resource);
@@ -206,48 +206,48 @@ void RosterManager::sendPresence(const std::string &name, const std::string &res
 	}
 }
 
-void RosterManager::handleBuddySignedOn(AbstractSpectrumBuddy *s_buddy) {
+void SpectrumRosterManager::handleBuddySignedOn(AbstractSpectrumBuddy *s_buddy) {
 	sendPresence(s_buddy);
 	s_buddy->setOnline();
 }
 
-void RosterManager::handleBuddySignedOn(PurpleBuddy *buddy) {
+void SpectrumRosterManager::handleBuddySignedOn(PurpleBuddy *buddy) {
 	AbstractSpectrumBuddy *s_buddy = (AbstractSpectrumBuddy *) buddy->node.ui_data;
 	handleBuddySignedOn(s_buddy);
 }
 
-void RosterManager::handleBuddySignedOff(AbstractSpectrumBuddy *s_buddy) {
+void SpectrumRosterManager::handleBuddySignedOff(AbstractSpectrumBuddy *s_buddy) {
 	sendPresence(s_buddy);
 	s_buddy->setOffline();
 }
 
-void RosterManager::handleBuddySignedOff(PurpleBuddy *buddy) {
+void SpectrumRosterManager::handleBuddySignedOff(PurpleBuddy *buddy) {
 	AbstractSpectrumBuddy *s_buddy = (AbstractSpectrumBuddy *) buddy->node.ui_data;
 	handleBuddySignedOff(s_buddy);
 }
 
-void RosterManager::handleBuddyStatusChanged(AbstractSpectrumBuddy *s_buddy, PurpleStatus *status, PurpleStatus *old_status) {
+void SpectrumRosterManager::handleBuddyStatusChanged(AbstractSpectrumBuddy *s_buddy, PurpleStatus *status, PurpleStatus *old_status) {
 	sendPresence(s_buddy);
 	s_buddy->setOnline();
 }
 
-void RosterManager::handleBuddyStatusChanged(PurpleBuddy *buddy, PurpleStatus *status, PurpleStatus *old_status) {
+void SpectrumRosterManager::handleBuddyStatusChanged(PurpleBuddy *buddy, PurpleStatus *status, PurpleStatus *old_status) {
 	AbstractSpectrumBuddy *s_buddy = (AbstractSpectrumBuddy *) buddy->node.ui_data;
 	handleBuddyStatusChanged(s_buddy, status, old_status);
 }
 
-void RosterManager::handleBuddyRemoved(AbstractSpectrumBuddy *s_buddy) {
+void SpectrumRosterManager::handleBuddyRemoved(AbstractSpectrumBuddy *s_buddy) {
 	m_subscribeCache.erase(s_buddy->getName());
 	removeFromLocalRoster(s_buddy->getName());
 	removeBuddy(s_buddy);
 }
 
-void RosterManager::handleBuddyRemoved(PurpleBuddy *buddy) {
+void SpectrumRosterManager::handleBuddyRemoved(PurpleBuddy *buddy) {
 	AbstractSpectrumBuddy *s_buddy = (AbstractSpectrumBuddy *) buddy->node.ui_data;
 	handleBuddyRemoved(s_buddy);
 }
 
-void RosterManager::handleBuddyCreated(AbstractSpectrumBuddy *s_buddy) {
+void SpectrumRosterManager::handleBuddyCreated(AbstractSpectrumBuddy *s_buddy) {
 	std::string alias = s_buddy->getAlias();
 	std::string name = s_buddy->getName();
 	if (name.empty())
@@ -262,7 +262,7 @@ void RosterManager::handleBuddyCreated(AbstractSpectrumBuddy *s_buddy) {
 	}
 }
 
-void RosterManager::handleBuddyCreated(PurpleBuddy *buddy) {
+void SpectrumRosterManager::handleBuddyCreated(PurpleBuddy *buddy) {
 	if (buddy==NULL || m_loadingFromDB)
 		return;
 #ifndef TESTS
@@ -273,7 +273,7 @@ void RosterManager::handleBuddyCreated(PurpleBuddy *buddy) {
 }
 
 
-bool RosterManager::syncBuddiesCallback() {
+bool SpectrumRosterManager::syncBuddiesCallback() {
 	Log(m_user->jid(), "sync_cb lastCount: " << m_subscribeLastCount << "cacheSize: " << int(m_subscribeCache.size()));
 	if (m_subscribeLastCount == int(m_subscribeCache.size())) {
 		sendNewBuddies();
@@ -285,7 +285,7 @@ bool RosterManager::syncBuddiesCallback() {
 	}
 }
 
-void RosterManager::sendNewBuddies() {
+void SpectrumRosterManager::sendNewBuddies() {
 	if (int(m_subscribeCache.size()) == 0)
 		return;
 
@@ -347,7 +347,7 @@ void RosterManager::sendNewBuddies() {
 	m_subscribeLastCount = -1;
 }
 
-void RosterManager::handlePresence(const Presence &stanza) {
+void SpectrumRosterManager::handlePresence(const Presence &stanza) {
 	Tag *stanzaTag = stanza.tag();
 	if (!stanzaTag)
 		return;
@@ -361,7 +361,7 @@ void RosterManager::handlePresence(const Presence &stanza) {
 	delete stanzaTag;
 }
 
-authRequest *RosterManager::handleAuthorizationRequest(PurpleAccount *account, const char *remote_user, const char *id, const char *alias, const char *message, gboolean on_list, PurpleAccountRequestAuthorizationCb authorize_cb, PurpleAccountRequestAuthorizationCb deny_cb, void *user_data) {
+authRequest *SpectrumRosterManager::handleAuthorizationRequest(PurpleAccount *account, const char *remote_user, const char *id, const char *alias, const char *message, gboolean on_list, PurpleAccountRequestAuthorizationCb authorize_cb, PurpleAccountRequestAuthorizationCb deny_cb, void *user_data) {
 	std::string name(remote_user);
 	
 	authRequest *req = new authRequest;
@@ -390,18 +390,18 @@ authRequest *RosterManager::handleAuthorizationRequest(PurpleAccount *account, c
 	return req;
 }
 
-void RosterManager::removeAuthRequest(const std::string &remote_user) {
+void SpectrumRosterManager::removeAuthRequest(const std::string &remote_user) {
 	if (m_authRequests.find(remote_user) == m_authRequests.end())
 		return;
 	delete m_authRequests[remote_user];
 	m_authRequests.erase(remote_user);
 }
 
-bool RosterManager::hasAuthRequest(const std::string &remote_user) {
+bool SpectrumRosterManager::hasAuthRequest(const std::string &remote_user) {
 	return m_authRequests.find(remote_user) != m_authRequests.end();
 }
 
-void RosterManager::handleSubscription(const Subscription &subscription) {
+void SpectrumRosterManager::handleSubscription(const Subscription &subscription) {
 	std::string remote_user(subscription.to().username());
 	std::for_each( remote_user.begin(), remote_user.end(), replaceJidCharacters() );
 

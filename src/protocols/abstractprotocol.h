@@ -23,6 +23,7 @@
 
 #include <string>
 #include <list>
+#include "purple.h"
 #include "glib.h"
 #include "gloox/tag.h"
 #include "../abstractuser.h"

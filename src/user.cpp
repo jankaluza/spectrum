@@ -36,7 +36,7 @@
 #include "spectrumbuddy.h"
 #include "transport.h"
 
-User::User(GlooxMessageHandler *parent, JID jid, const std::string &username, const std::string &password, const std::string &userKey, long id) : RosterManager(this), SpectrumMessageHandler(this) {
+User::User(GlooxMessageHandler *parent, JID jid, const std::string &username, const std::string &password, const std::string &userKey, long id) : SpectrumRosterManager(this), SpectrumMessageHandler(this) {
 	p = parent;
 	m_jid = jid.bare();
 	m_userID = id;
@@ -419,6 +419,7 @@ User::~User(){
 	if (m_account)
 		purple_account_set_enabled(m_account, PURPLE_UI, FALSE);
 
+	sendUnavailablePresenceToAll();
 
 	GList *iter;
 	for (iter = purple_get_conversations(); iter; ) {
@@ -453,8 +454,6 @@ User::~User(){
 	}
 
 	g_hash_table_destroy(m_settings);
-	
-	Transport::instance()->sql()->setUserOnline(m_userID, false);
 
 	p->protocol()->onDestroy(this);
 }

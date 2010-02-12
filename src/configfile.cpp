@@ -24,6 +24,16 @@
 #include "log.h"
 #include "spectrum_util.h"
 #include "transport.h"
+#ifdef WIN32
+#include "win32/win32dep.h"
+#endif
+
+static int create_dir(std::string dir) {
+#ifdef WIN32
+		replace(dir, "/", "\\");
+#endif
+		return purple_build_dir(g_path_get_dirname(dir.c_str()), 0755);
+}
 
 Configuration DummyConfiguration;
 
@@ -32,6 +42,12 @@ ConfigFile::ConfigFile(const std::string &config) {
 	m_loaded = true;
 	m_jid = "";
 	m_protocol = "";
+#ifdef WIN32
+	char *appdata = wpurple_get_special_folder(CSIDL_APPDATA);
+	m_appdata = std::string(appdata ? appdata : "");
+#else
+	m_appdata = "";
+#endif
 
 	keyfile = g_key_file_new ();
 	if (!config.empty())
@@ -42,11 +58,14 @@ void ConfigFile::loadFromFile(const std::string &config) {
 	int flags = G_KEY_FILE_KEEP_COMMENTS | G_KEY_FILE_KEEP_TRANSLATIONS;
 
 	if (!g_key_file_load_from_file (keyfile, config.c_str(), (GKeyFileFlags)flags, NULL)) {
-		if (!g_key_file_load_from_file (keyfile, std::string("/etc/spectrum/" + config + ".cfg").c_str(), (GKeyFileFlags)flags, NULL))
+		if (!g_key_file_load_from_file (keyfile, std::string( "/etc/spectrum/" + config + ".cfg").c_str(), (GKeyFileFlags)flags, NULL))
 		{
-			Log("loadConfigFile", "Can't load config file!");
-			Log("loadConfigFile", std::string("/etc/spectrum/" + config + ".cfg") << " or ./" << config);
-			m_loaded = false;
+			if (!g_key_file_load_from_file (keyfile, std::string( m_appdata + "/spectrum/" + config).c_str(), (GKeyFileFlags)flags, NULL))
+			{
+				Log("loadConfigFile", "Can't load config file!");
+				Log("loadConfigFile", std::string("/etc/spectrum/" + config + ".cfg") << " or ./" << config);
+				m_loaded = false;
+			}
 		}
 	}
 }
@@ -68,6 +87,7 @@ bool ConfigFile::loadString(std::string &variable, const std::string &section, c
 			replace(variable, "$jid", m_jid.c_str());
 		if (!m_protocol.empty())
 			replace(variable, "$protocol", m_protocol.c_str());
+		replace(variable, "$appdata", m_appdata.c_str());
 		g_free(value);
 	}
 	else {
@@ -149,7 +169,7 @@ Configuration ConfigFile::getConfiguration() {
 		return DummyConfiguration;
 
 	loadString(configuration.pid_f, "service", "pid_file", "/var/run/spectrum/" + configuration.jid);
-	g_mkdir_with_parents(g_path_get_dirname(configuration.pid_f.c_str()), 0755);
+	create_dir(configuration.pid_f);
 
 	if (!loadString(configuration.sqlType, "database", "type"))
 		return DummyConfiguration;
@@ -163,10 +183,11 @@ Configuration ConfigFile::getConfiguration() {
 	if (!loadString(configuration.sqlUser, "database", "user", configuration.sqlType == "sqlite" ? "optional" :""))
 		return DummyConfiguration;
 
+
 	if (!loadString(configuration.sqlDb, "database", "database"))
 		return DummyConfiguration;
 	if (configuration.sqlType == "sqlite") {
-		g_mkdir_with_parents(g_path_get_dirname(configuration.sqlDb.c_str()), 0755);
+		create_dir(configuration.sqlDb);
 	}
 
 	if (!loadString(configuration.sqlPrefix, "database", "prefix", configuration.sqlType == "sqlite" ? "" : "required"))
@@ -174,8 +195,7 @@ Configuration ConfigFile::getConfiguration() {
 
 	if (!loadString(configuration.userDir, "purple", "userdir"))
 		return DummyConfiguration;
-	g_mkdir_with_parents(g_path_get_dirname(configuration.userDir.c_str()), 0755);
-
+	create_dir(configuration.userDir);
 
 	loadString(configuration.language, "service", "language", "en");
 	loadString(configuration.encoding, "service", "encoding", "");
@@ -254,7 +274,6 @@ Configuration ConfigFile::getConfiguration() {
 		}
 		g_strfreev (bind);
 	}
-
 	return configuration;
 }
 

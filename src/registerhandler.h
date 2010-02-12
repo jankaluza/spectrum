@@ -23,8 +23,31 @@
 
 #include "purple.h"
 #include <gloox/iqhandler.h>
+#include <gloox/stanzaextension.h>
 
 using namespace gloox;
+
+class RegisterExtension : public StanzaExtension
+{
+
+public:
+    RegisterExtension();
+    RegisterExtension(const Tag *tag);
+    virtual ~RegisterExtension();
+    virtual const std::string& filterString() const;
+    virtual StanzaExtension* newInstance( const Tag* tag ) const
+    {
+        return new RegisterExtension(tag);
+    }
+    virtual Tag* tag() const;
+    virtual StanzaExtension* clone() const
+    {
+        return new RegisterExtension(m_tag);
+    }
+private:
+    Tag *m_tag;
+};
+																									
 
 class GlooxRegisterHandler : public IqHandler {
 	public:

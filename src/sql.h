@@ -37,6 +37,10 @@
 #include "Poco/Data/Session.h"
 #include "Poco/Data/RecordSet.h"
 
+#ifdef WIN32
+#define WITH_SQLITE 1
+#endif
+
 #ifdef WITH_SQLITE
 #include "Poco/Data/SQLite/Connector.h" 
 #endif // WITH_SQLITE

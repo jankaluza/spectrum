@@ -22,12 +22,26 @@
 #include "main.h"
 #include "user.h"
 #include "log.h"
+#include "transport.h"
 
 static gboolean deleteUser(gpointer data){
 	AbstractUser *user = (AbstractUser*) data;
+	Transport::instance()->sql()->setUserOnline(user->storageId(), false);
 	delete user;
 	Log("logout", "delete user; called => user is sucesfully removed");
 	return FALSE;
+}
+
+static void removeUserCallback(gpointer key, gpointer v, gpointer data) {
+	AbstractUser *user = (AbstractUser *) v;
+	Log("logout", "Removing user " << user->jid());
+	Tag *tag = new Tag("presence");
+	tag->addAttribute("to", user->jid());
+	tag->addAttribute("type", "unavailable");
+	tag->addAttribute("from", Transport::instance()->jid());
+	Transport::instance()->send(tag);
+	delete user;
+	usleep(10000);
 }
 
 UserManager::UserManager() {
@@ -37,6 +51,7 @@ UserManager::UserManager() {
 }
 
 UserManager::~UserManager(){
+	g_hash_table_foreach(m_users, removeUserCallback, NULL);
 	g_hash_table_destroy(m_users);
 }
 
@@ -66,6 +81,7 @@ void UserManager::removeUser(AbstractUser *user){
 	}
 	if (user->removeTimer != 0)
 		purple_timeout_remove(user->removeTimer);
+	Transport::instance()->sql()->setUserOnline(user->storageId(), false);
 	delete user;
 	Log("logout", "delete user; called => user is sucesfully removed");
 }
