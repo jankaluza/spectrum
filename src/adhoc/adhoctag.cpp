@@ -79,6 +79,30 @@ void AdhocTag::addBoolean(const std::string &label, const std::string &var, bool
 	xdata->addChild(field);
 }
 
+void AdhocTag::addTextSingle(const std::string &label, const std::string &var, const std::string &value) {
+	if (xdata == NULL)
+		initXData();
+	Tag *field = new Tag("field");
+	field->addAttribute("type", "text-single");
+	field->addAttribute("label", label);
+	field->addAttribute("var", var);
+	
+	field->addChild(new Tag("value", value));
+	xdata->addChild(field);
+}
+
+void AdhocTag::addTextPrivate(const std::string &label, const std::string &var, const std::string &value) {
+	if (xdata == NULL)
+		initXData();
+	Tag *field = new Tag("field");
+	field->addAttribute("type", "text-private");
+	field->addAttribute("label", label);
+	field->addAttribute("var", var);
+	
+	field->addChild(new Tag("value", value));
+	xdata->addChild(field);
+}
+
 void AdhocTag::initXData() {
 	xdata = new Tag("x");
 	xdata->addAttribute("xmlns","jabber:x:data");

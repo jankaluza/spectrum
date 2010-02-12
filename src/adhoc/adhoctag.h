@@ -52,6 +52,12 @@ class AdhocTag : public Tag {
 		// Adds checkbox.
 		void addBoolean(const std::string &label, const std::string &var, bool value);
 
+		// Adds single line input.
+		void addTextSingle(const std::string &label, const std::string &var, const std::string &value = "");
+		
+		// Adds single line password input.
+		void addTextPrivate(const std::string &label, const std::string &var, const std::string &value = "");
+
 	private:
 		void initXData();
 		Tag *xdata;

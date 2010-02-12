@@ -50,6 +50,8 @@ ConfigHandler::ConfigHandler(AbstractUser *user, const std::string &from, const 
 	}
 	adhocTag->addListSingle("IRC server", "irc_server", values);
 
+	adhocTag->addTextPrivate("New NickServ password", "password");
+
 	response->addChild(adhocTag);
 	Transport::instance()->send(response);
 }
