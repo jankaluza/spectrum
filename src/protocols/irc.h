@@ -42,7 +42,7 @@ class ConfigHandler : public AdhocCommandHandler {
 		ConfigHandler(AbstractUser *user, const std::string &from, const std::string &id);
 		virtual ~ConfigHandler();
 		
-		bool handleIq(const IQ &iq) { return true;}
+		bool handleIq(const IQ &iq);
 		const std::string & getInitiator() { return m_from; }
 	
 	private:

@@ -56,11 +56,11 @@ void AdhocTag::addListSingle(const std::string &label, const std::string &var, s
 	field->addAttribute("label", label);
 	field->addAttribute("var", var);
 
-	Tag *option = new Tag("option");
 	for (std::list<std::string>::iterator it = values.begin(); it != values.end(); it++) {
+		Tag *option = new Tag("option");
 		option->addChild( new Tag("value", *it) );
+		field->addChild(option);
 	}
-	field->addChild(option);
 	xdata->addChild(field);
 }
 

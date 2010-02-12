@@ -25,13 +25,53 @@
 #include "../sql.h"
 #include "../user.h"
 #include "../adhoc/adhochandler.h"
+#include "../adhoc/adhoctag.h"
+#include "../transport.h"
 #include "cmds.h"
 
 ConfigHandler::ConfigHandler(AbstractUser *user, const std::string &from, const std::string &id) : m_from(from), m_user(user) {
 	setRequestType(CALLER_ADHOC);
+	std::string bare(JID(from).bare());
+
+	IQ _response(IQ::Result, from, id);
+	Tag *response = _response.tag();
+	response->addAttribute("from", Transport::instance()->jid());
+
+	AdhocTag *adhocTag = new AdhocTag(Transport::instance()->getId(), "transport_irc_config", "executing");
+	adhocTag->setAction("next");
+	adhocTag->setTitle("IRC Nickserv password configuration");
+	adhocTag->setInstructions("Choose the server you want to change password for.");
+	
+	std::list <std::string> values;
+	std::map<std::string, UserRow> users = Transport::instance()->sql()->getUsersByJid(bare);
+	for (std::map<std::string, UserRow>::iterator it = users.begin(); it != users.end(); it++) {
+		std::string server = (*it).second.jid.substr(bare.size());
+		values.push_back(server);
+	}
+	adhocTag->addListSingle("IRC server", "irc_server", values);
+
+	response->addChild(adhocTag);
+	Transport::instance()->send(response);
 }
 
 ConfigHandler::~ConfigHandler() { }
+
+bool ConfigHandler::handleIq(const IQ &stanza) {
+	Tag *stanzaTag = stanza.tag();
+	Tag *tag = stanzaTag->findChild("command");
+	if (tag->hasAttribute("action", "cancel")) {
+		IQ _response(IQ::Result, stanza.from().full(), stanza.id());
+		_response.setFrom(Transport::instance()->jid());
+		Tag *response = _response.tag();
+		response->addChild( new AdhocTag(tag->findAttribute("sessionid"), "transport_irc_config", "canceled") );
+		Transport::instance()->send(response);
+
+		delete stanzaTag;
+		return true;
+	}
+	
+	return true;
+}
 
 static AdhocCommandHandler * createConfigHandler(AbstractUser *user, const std::string &from, const std::string &id) {
 	AdhocCommandHandler *handler = new ConfigHandler(user, from, id);

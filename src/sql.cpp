@@ -564,6 +564,30 @@ UserRow SQLClass::getUserByJid(const std::string &jid){
 	return user;
 }
 
+std::map<std::string, UserRow> SQLClass::getUsersByJid(const std::string &jid) {
+	std::vector<Poco::Int32> resId; 
+	std::vector<std::string> resJid;
+	std::vector<std::string> resUin;
+	std::vector<std::string> resPassword;
+	std::vector<std::string> resEncoding;
+	*m_sess <<  "SELECT id, jid, uin, password, encoding FROM " + p->configuration().sqlPrefix + "users WHERE jid LIKE \"" + jid +"%\"",
+													into(resId),
+													into(resJid),
+													into(resUin),
+													into(resPassword),
+													into(resEncoding), now;
+	std::map<std::string, UserRow> users;
+	for (int i = 0; i < (int) resId.size(); i++) {
+		std::string jid = resJid[i];
+		users[jid].id = resId[i];
+		users[jid].jid = resJid[i];
+		users[jid].uin = resUin[i];
+		users[jid].password = resPassword[i];
+		users[jid].encoding = resEncoding[i];
+	}
+	return users;
+}
+
 GHashTable *SQLClass::getBuddies(long userId, PurpleAccount *account){
 	GHashTable *roster = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
 	m_stmt_getBuddies.user_id = userId;
