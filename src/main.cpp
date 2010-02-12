@@ -561,10 +561,14 @@ static gssize XferRead(PurpleXfer *xfer, guchar **buffer, gssize size) {
 }
 
 void printDebug(PurpleDebugLevel level, const char *category, const char *arg_s) {
-	if (category == NULL)
-		LogMessage(Log_.fileStream(),false).Get("libpurple") << arg_s;
-	else
-		LogMessage(Log_.fileStream(),false).Get(category) << arg_s;
+	std::string c("libpurple");
+
+	if (category) {
+		c.push_back('/');
+		c.append(category);
+	}
+
+	LogMessage(Log_.fileStream(), false).Get(c) << arg_s;
 }
 
 /*
