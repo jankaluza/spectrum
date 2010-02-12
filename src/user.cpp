@@ -419,6 +419,7 @@ User::~User(){
 	if (m_account)
 		purple_account_set_enabled(m_account, PURPLE_UI, FALSE);
 
+	sendUnavailablePresenceToAll();
 
 	GList *iter;
 	for (iter = purple_get_conversations(); iter; ) {
@@ -453,8 +454,6 @@ User::~User(){
 	}
 
 	g_hash_table_destroy(m_settings);
-	
-	Transport::instance()->sql()->setUserOnline(m_userID, false);
 
 	p->protocol()->onDestroy(this);
 }

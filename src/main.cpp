@@ -909,10 +909,11 @@ GlooxMessageHandler::GlooxMessageHandler(const std::string &config) : MessageHan
 }
 
 GlooxMessageHandler::~GlooxMessageHandler(){
+	delete m_userManager;
 	purple_core_quit();
 	g_main_loop_quit(m_loop);
 	g_main_loop_unref(m_loop);
-	delete m_userManager;
+	
 #ifndef WIN32
 	if (m_configInterface)
 		delete m_configInterface;
