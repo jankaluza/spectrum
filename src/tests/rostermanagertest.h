@@ -10,7 +10,7 @@
 
 using namespace std;
 
-class RosterManager;
+class SpectrumRosterManager;
 
 class RosterManagerTest : public CPPUNIT_NS :: TestFixture
 {
@@ -52,7 +52,7 @@ class RosterManagerTest : public CPPUNIT_NS :: TestFixture
 	private:
 		SpectrumBuddyTest *m_buddy1;
 		SpectrumBuddyTest *m_buddy2;
-		RosterManager *m_manager;
+		SpectrumRosterManager *m_manager;
 		TestingUser *m_user;
 		std::list <Tag *> m_tags;
 };
