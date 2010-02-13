@@ -27,6 +27,7 @@
 #include "../adhoc/adhochandler.h"
 #include "../adhoc/adhoctag.h"
 #include "../transport.h"
+#include "../spectrum_util.h"
 #include "cmds.h"
 
 ConfigHandler::ConfigHandler(AbstractUser *user, const std::string &from, const std::string &id) : m_from(from), m_user(user) {
@@ -38,15 +39,16 @@ ConfigHandler::ConfigHandler(AbstractUser *user, const std::string &from, const 
 	response->addAttribute("from", Transport::instance()->jid());
 
 	AdhocTag *adhocTag = new AdhocTag(Transport::instance()->getId(), "transport_irc_config", "executing");
-	adhocTag->setAction("next");
+	adhocTag->setAction("complete");
 	adhocTag->setTitle("IRC Nickserv password configuration");
 	adhocTag->setInstructions("Choose the server you want to change password for.");
 	
-	std::list <std::string> values;
+	std::map <std::string, std::string> values;
 	std::map<std::string, UserRow> users = Transport::instance()->sql()->getUsersByJid(bare);
 	for (std::map<std::string, UserRow>::iterator it = users.begin(); it != users.end(); it++) {
 		std::string server = (*it).second.jid.substr(bare.size());
-		values.push_back(server);
+		values[server] = stringOf((*it).second.id);
+		m_userId.push_back(stringOf((*it).second.id));
 	}
 	adhocTag->addListSingle("IRC server", "irc_server", values);
 
@@ -59,6 +61,7 @@ ConfigHandler::ConfigHandler(AbstractUser *user, const std::string &from, const 
 ConfigHandler::~ConfigHandler() { }
 
 bool ConfigHandler::handleIq(const IQ &stanza) {
+	std::string bare(JID(m_from).bare());
 	Tag *stanzaTag = stanza.tag();
 	Tag *tag = stanzaTag->findChild("command");
 	if (tag->hasAttribute("action", "cancel")) {
@@ -71,7 +74,43 @@ bool ConfigHandler::handleIq(const IQ &stanza) {
 		delete stanzaTag;
 		return true;
 	}
-	
+
+	Tag *x = tag->findChildWithAttrib("xmlns","jabber:x:data");
+	if (x) {
+		std::string serverId("");
+		std::string password("");
+		for (std::list<Tag*>::const_iterator it = x->children().begin(); it != x->children().end(); ++it) {
+			std::string key = (*it)->findAttribute("var");
+			if (key.empty()) continue;
+
+			Tag *v =(*it)->findChild("value");
+			if (!v) continue;
+			
+			if (key == "irc_server") {
+				serverId = v->cdata();
+				std::list<std::string>::iterator id_iter = find(m_userId.begin(), m_userId.end(), serverId);
+				if (id_iter == m_userId.end()) {
+					delete stanzaTag;
+					return true;
+				}
+			}
+			else if (key == "password") {
+				password = v->cdata();
+			}
+		}
+		
+		if (!serverId.empty()) {
+			Transport::instance()->sql()->updateSetting(atoi(serverId.c_str()), "nickserv", password);
+		}
+
+		IQ _response(IQ::Result, stanza.from().full(), stanza.id());
+		_response.setFrom(Transport::instance()->jid());
+		Tag *response = _response.tag();
+		response->addChild( new AdhocTag(tag->findAttribute("sessionid"), "transport_irc_config", "completed") );
+		Transport::instance()->send(response);
+	}
+
+	delete stanzaTag;
 	return true;
 }
 

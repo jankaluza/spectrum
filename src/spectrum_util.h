@@ -22,7 +22,16 @@
 #define UTIL_H
 
 #include <string>
+#include <sstream>
+#include <cstdio>
+#include <iostream>
 #include "glib.h"
+
+template <class T> std::string stringOf(T object) {
+	std::ostringstream os;
+	os << object;
+	return (os.str());
+}
 
 /* Replace all instances of from with to in string str in-place */
 void replace(std::string &str, const char *from, const char *to);

@@ -52,6 +52,7 @@ class AbstractBackend {
 		virtual void removeUser(long userId) = 0;
 		virtual void updateUser(const UserRow &user) = 0;
 		virtual std::map<std::string, UserRow> getUsersByJid(const std::string &jid) = 0;
+		virtual void updateSetting(long userId, const std::string &key, const std::string &value) = 0;
 
 };
 

@@ -48,6 +48,7 @@ class AdhocTag : public Tag {
 
 		// Adds combobox with.
 		void addListSingle(const std::string &label, const std::string &var, std::list <std::string> &values);
+		void addListSingle(const std::string &label, const std::string &var, std::map <std::string, std::string> &values);
 
 		// Adds checkbox.
 		void addBoolean(const std::string &label, const std::string &var, bool value);

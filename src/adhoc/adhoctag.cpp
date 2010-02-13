@@ -64,6 +64,23 @@ void AdhocTag::addListSingle(const std::string &label, const std::string &var, s
 	xdata->addChild(field);
 }
 
+void AdhocTag::addListSingle(const std::string &label, const std::string &var, std::map <std::string, std::string> &values) {
+	if (xdata == NULL)
+		initXData();
+	Tag *field = new Tag("field");
+	field->addAttribute("type", "list-single");
+	field->addAttribute("label", label);
+	field->addAttribute("var", var);
+
+	for (std::map<std::string, std::string>::iterator it = values.begin(); it != values.end(); it++) {
+		Tag *option = new Tag("option");
+		option->addAttribute("label", (*it).first);
+		option->addChild( new Tag("value", (*it).second) );
+		field->addChild(option);
+	}
+	xdata->addChild(field);
+}
+
 void AdhocTag::addBoolean(const std::string &label, const std::string &var, bool value) {
 	if (xdata == NULL)
 		initXData();

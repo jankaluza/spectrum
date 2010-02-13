@@ -48,6 +48,7 @@ class ConfigHandler : public AdhocCommandHandler {
 	private:
 		std::string m_from;
 		AbstractUser *m_user;
+		std::list <std::string> m_userId;
 };
 
 class IRCProtocol : AbstractProtocol
