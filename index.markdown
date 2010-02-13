@@ -6,6 +6,7 @@ title: Documentation
 ### For Administrators
 
 #### Installation
+* [Building from source code on Linux](building-from-source-code.html)
 * [Building from source code on Windows](building-from-source-code-windows.html)
 * [Installing on Debian/Ubuntu](debian-ubuntu-installation.html)
 * [Configuring new spectrum instances](new-spectrum-instances.html)
