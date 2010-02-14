@@ -61,56 +61,21 @@ ConfigHandler::ConfigHandler(AbstractUser *user, const std::string &from, const 
 ConfigHandler::~ConfigHandler() { }
 
 bool ConfigHandler::handleIq(const IQ &stanza) {
-	std::string bare(JID(m_from).bare());
-	Tag *stanzaTag = stanza.tag();
-	Tag *tag = stanzaTag->findChild("command");
-	if (tag->hasAttribute("action", "cancel")) {
-		IQ _response(IQ::Result, stanza.from().full(), stanza.id());
-		_response.setFrom(Transport::instance()->jid());
-		Tag *response = _response.tag();
-		response->addChild( new AdhocTag(tag->findAttribute("sessionid"), "transport_irc_config", "canceled") );
-		Transport::instance()->send(response);
+	AdhocTag cmd(stanza);
 
-		delete stanzaTag;
+	Tag *response = cmd.generateResponse();
+	if (cmd.isCanceled()) {
+		Transport::instance()->send(response);
 		return true;
 	}
+	
+	std::string serverId = cmd.getValue("irc_server");
+	std::string password = cmd.getValue("password");
 
-	Tag *x = tag->findChildWithAttrib("xmlns","jabber:x:data");
-	if (x) {
-		std::string serverId("");
-		std::string password("");
-		for (std::list<Tag*>::const_iterator it = x->children().begin(); it != x->children().end(); ++it) {
-			std::string key = (*it)->findAttribute("var");
-			if (key.empty()) continue;
+	if (serverId != "")
+		Transport::instance()->sql()->updateSetting(atoi(serverId.c_str()), "nickserv", password);
 
-			Tag *v =(*it)->findChild("value");
-			if (!v) continue;
-			
-			if (key == "irc_server") {
-				serverId = v->cdata();
-				std::list<std::string>::iterator id_iter = find(m_userId.begin(), m_userId.end(), serverId);
-				if (id_iter == m_userId.end()) {
-					delete stanzaTag;
-					return true;
-				}
-			}
-			else if (key == "password") {
-				password = v->cdata();
-			}
-		}
-		
-		if (!serverId.empty()) {
-			Transport::instance()->sql()->updateSetting(atoi(serverId.c_str()), "nickserv", password);
-		}
-
-		IQ _response(IQ::Result, stanza.from().full(), stanza.id());
-		_response.setFrom(Transport::instance()->jid());
-		Tag *response = _response.tag();
-		response->addChild( new AdhocTag(tag->findAttribute("sessionid"), "transport_irc_config", "completed") );
-		Transport::instance()->send(response);
-	}
-
-	delete stanzaTag;
+	Transport::instance()->send(response);
 	return true;
 }
 

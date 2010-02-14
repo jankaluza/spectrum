@@ -20,6 +20,7 @@
 
 #include "adhoctag.h"
 #include "gloox/stanza.h"
+#include "transport.h"
 
 AdhocTag::AdhocTag(const std::string &id, const std::string &node, const std::string &status) : Tag("command") {
 	xdata = NULL;
@@ -27,6 +28,26 @@ AdhocTag::AdhocTag(const std::string &id, const std::string &node, const std::st
 	addAttribute("sessionid", id);
 	addAttribute("node", node);
 	addAttribute("status", status);
+}
+
+AdhocTag::AdhocTag(const IQ &stanza) : Tag("command") {
+	m_from = stanza.from().full();
+	m_id = stanza.id();
+	xdata = NULL;
+	Tag *iq = stanza.tag();
+	Tag *command = iq->findChild("command");
+	if (command) {
+		const Tag::AttributeList & attributes = command->attributes();
+		for (Tag::AttributeList::const_iterator it = attributes.begin(); it != attributes.end(); it++) {
+			addAttribute(std::string((*it)->name()), std::string((*it)->value()));
+		}
+		Tag *x = command->findChildWithAttrib("xmlns","jabber:x:data");
+		if (x) {
+			xdata = x->clone();
+			addChild(xdata);
+		}
+	}
+	delete iq;
 }
 
 void AdhocTag::setAction(const std::string &action) {
@@ -118,6 +139,40 @@ void AdhocTag::addTextPrivate(const std::string &label, const std::string &var, 
 	
 	field->addChild(new Tag("value", value));
 	xdata->addChild(field);
+}
+
+const std::string AdhocTag::getValue(const std::string &var) {
+	if (xdata == NULL)
+		return "";
+	Tag *v = xdata->findChildWithAttrib("var", var);
+	if (!v)
+		return "";
+	Tag *value =v->findChild("value");
+	if (!value)
+		return "";
+	return value->cdata();
+}
+
+Tag * AdhocTag::generateResponse(const std::string &action) {
+	IQ _response(IQ::Result, m_from, m_id);
+	_response.setFrom(Transport::instance()->jid());
+	Tag *response = _response.tag();
+
+	if (action != "") {
+		response->addChild( new AdhocTag(findAttribute("sessionid"), findAttribute("node"), action) );
+		return response;
+	}
+
+	if (hasAttribute("action", "cancel"))
+		response->addChild( new AdhocTag(findAttribute("sessionid"), findAttribute("node"), "canceled") );
+	else
+		response->addChild( new AdhocTag(findAttribute("sessionid"), findAttribute("node"), "completed") );
+	
+	return response;
+}
+
+bool AdhocTag::isCanceled() {
+	return hasAttribute("action", "cancel");
 }
 
 void AdhocTag::initXData() {

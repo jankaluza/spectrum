@@ -87,6 +87,8 @@ class TestingBackend : public AbstractBackend {
 		GlooxParser *getParser() { return m_parser; }
 		Configuration &getConfiguration() { return m_configuration; }
 		void setConfiguration(const Configuration &conf) { m_configuration = conf; }
+		std::map<std::string, UserRow> getUsersByJid(const std::string &jid) { std::map<std::string, UserRow> test; return test; }
+		void updateSetting(long userId, const std::string &key, const std::string &value) {}
 
 	private:
 		Configuration m_configuration;
