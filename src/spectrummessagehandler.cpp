@@ -235,13 +235,8 @@ void SpectrumMessageHandler::handleMessage(const Message& msg) {
 	}
 	else if (purple_conversation_get_type(conv) == PURPLE_CONV_TYPE_CHAT) {
 		purple_conv_chat_send(PURPLE_CONV_CHAT(conv), _markup);
-	g_free(_markup);
-// 		Message s(Message::Groupchat, msg.from().full(), body);
-// 		s.setFrom(msg.to().full());
-// 		Tag *xx = s.tag();
-// 		std::cout << "MESSAGE" << xx->xml() << "\n";
-// 		p->j->send( xx );
 	}
+	g_free(_markup);
 }
 void SpectrumMessageHandler::removeConversationResource(const std::string &resource) {
 	for (std::map<std::string, AbstractConversation *>::iterator u = m_conversations.begin(); u != m_conversations.end() ; u++) {
