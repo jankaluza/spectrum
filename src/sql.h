@@ -284,6 +284,7 @@ class SQLClass : public AbstractBackend {
 		void addBuddySetting(long userId, long buddyId, const std::string &key, const std::string &value, PurpleType type);
 
 		UserRow getUserByJid(const std::string &jid);
+		std::map<std::string, UserRow> getUsersByJid(const std::string &jid);
 		GHashTable *getBuddies(long userId, PurpleAccount *account = NULL);
 		bool loaded() { return m_loaded; }
 		std::vector<std::string> getOnlineUsers();

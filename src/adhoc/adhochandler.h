@@ -50,6 +50,7 @@ class GlooxAdhocHandler : public DiscoNodeHandler, public DiscoHandler, public I
 	public:
 		GlooxAdhocHandler();
 		~GlooxAdhocHandler();
+		static GlooxAdhocHandler *instance() { return m_pInstance; }
 		StringList handleDiscoNodeFeatures (const JID &from, const std::string &node);
 		Disco::IdentityList handleDiscoNodeIdentities( const JID& jid, const std::string& node );
 		Disco::ItemList handleDiscoNodeItems (const JID &from, const JID &to, const std::string &node=EmptyString);
@@ -61,10 +62,12 @@ class GlooxAdhocHandler : public DiscoNodeHandler, public DiscoHandler, public I
 		void registerSession(const std::string &jid, AdhocCommandHandler *handler) {m_sessions[jid] = handler; }
 		void unregisterSession(const std::string &jid) { m_sessions.erase(jid); }
 		bool hasSession(const std::string &jid);
+		void registerAdhocCommandHandler(const std::string &name, const adhocCommand command);
 
 	private:
 		std::map<std::string, AdhocCommandHandler *> m_sessions;	// sessions (m_sessions[full_jid] = handler)
 		std::map<std::string, adhocCommand> m_handlers;				// handlers (m_handlers[node] = handler)
+		static GlooxAdhocHandler *m_pInstance;
 
 };
 

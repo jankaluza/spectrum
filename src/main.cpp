@@ -845,6 +845,7 @@ GlooxMessageHandler::GlooxMessageHandler(const std::string &config) : MessageHan
 	g_thread_init(NULL);
 
 	m_userManager = new UserManager();
+	m_adhoc = new GlooxAdhocHandler();
 	m_searchHandler = NULL;
 
 	if (loaded && !initPurple())
@@ -862,8 +863,6 @@ GlooxMessageHandler::GlooxMessageHandler(const std::string &config) : MessageHan
 
 		m_discoInfoHandler = new GlooxDiscoInfoHandler();
 		j->registerIqHandler(m_discoInfoHandler,ExtDiscoInfo);
-
-		m_adhoc = new GlooxAdhocHandler();
 		
 		j->registerIqHandler(m_adhoc, ExtAdhocCommand);
 		j->registerStanzaExtension( new Adhoc::Command() );

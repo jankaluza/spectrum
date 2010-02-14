@@ -23,6 +23,7 @@
 
 #include <string>
 #include "gloox/tag.h"
+#include "gloox/iq.h"
 
 using namespace gloox;
 
@@ -34,6 +35,7 @@ class AdhocTag : public Tag {
 		// node   - node name
 		// status - "executing", "executing", "completed"
 		AdhocTag(const std::string &id, const std::string &node, const std::string &status);
+		AdhocTag(const IQ &stanza);
 		virtual ~AdhocTag() {}
 
 		// Sets action.
@@ -48,13 +50,32 @@ class AdhocTag : public Tag {
 
 		// Adds combobox with.
 		void addListSingle(const std::string &label, const std::string &var, std::list <std::string> &values);
+		void addListSingle(const std::string &label, const std::string &var, std::map <std::string, std::string> &values);
 
 		// Adds checkbox.
 		void addBoolean(const std::string &label, const std::string &var, bool value);
 
+		// Adds single line input.
+		void addTextSingle(const std::string &label, const std::string &var, const std::string &value = "");
+		
+		// Adds single line password input.
+		void addTextPrivate(const std::string &label, const std::string &var, const std::string &value = "");
+
+		// Returns value of field var.
+		const std::string getValue(const std::string &var);
+
+		// Generates response for this dataform.
+		Tag * generateResponse(const std::string &action = "");
+
+		// Returns true if XMPP user canceled executing.
+		bool isCanceled();
+
+
 	private:
 		void initXData();
 		Tag *xdata;
+		std::string m_from;
+		std::string m_id;
 };
 
 #endif

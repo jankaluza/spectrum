@@ -24,7 +24,65 @@
 #include "../usermanager.h"
 #include "../sql.h"
 #include "../user.h"
+#include "../adhoc/adhochandler.h"
+#include "../adhoc/adhoctag.h"
+#include "../transport.h"
+#include "../spectrum_util.h"
 #include "cmds.h"
+
+ConfigHandler::ConfigHandler(AbstractUser *user, const std::string &from, const std::string &id) : m_from(from), m_user(user) {
+	setRequestType(CALLER_ADHOC);
+	std::string bare(JID(from).bare());
+
+	IQ _response(IQ::Result, from, id);
+	Tag *response = _response.tag();
+	response->addAttribute("from", Transport::instance()->jid());
+
+	AdhocTag *adhocTag = new AdhocTag(Transport::instance()->getId(), "transport_irc_config", "executing");
+	adhocTag->setAction("complete");
+	adhocTag->setTitle("IRC Nickserv password configuration");
+	adhocTag->setInstructions("Choose the server you want to change password for.");
+	
+	std::map <std::string, std::string> values;
+	std::map<std::string, UserRow> users = Transport::instance()->sql()->getUsersByJid(bare);
+	for (std::map<std::string, UserRow>::iterator it = users.begin(); it != users.end(); it++) {
+		std::string server = (*it).second.jid.substr(bare.size());
+		values[server] = stringOf((*it).second.id);
+		m_userId.push_back(stringOf((*it).second.id));
+	}
+	adhocTag->addListSingle("IRC server", "irc_server", values);
+
+	adhocTag->addTextPrivate("New NickServ password", "password");
+
+	response->addChild(adhocTag);
+	Transport::instance()->send(response);
+}
+
+ConfigHandler::~ConfigHandler() { }
+
+bool ConfigHandler::handleIq(const IQ &stanza) {
+	AdhocTag cmd(stanza);
+
+	Tag *response = cmd.generateResponse();
+	if (cmd.isCanceled()) {
+		Transport::instance()->send(response);
+		return true;
+	}
+	
+	std::string serverId = cmd.getValue("irc_server");
+	std::string password = cmd.getValue("password");
+
+	if (serverId != "")
+		Transport::instance()->sql()->updateSetting(atoi(serverId.c_str()), "nickserv", password);
+
+	Transport::instance()->send(response);
+	return true;
+}
+
+static AdhocCommandHandler * createConfigHandler(AbstractUser *user, const std::string &from, const std::string &id) {
+	AdhocCommandHandler *handler = new ConfigHandler(user, from, id);
+	return handler;
+}
 
 IRCProtocol::IRCProtocol(GlooxMessageHandler *main){
 	m_main = main;
@@ -37,6 +95,9 @@ IRCProtocol::IRCProtocol(GlooxMessageHandler *main){
 	m_buddyFeatures.push_back("http://jabber.org/protocol/disco#info");
 	m_buddyFeatures.push_back("http://jabber.org/protocol/caps");
 	m_buddyFeatures.push_back("http://jabber.org/protocol/commands");
+	
+	adhocCommand command = { "IRC Nickserv password configuration", false, createConfigHandler };
+	GlooxAdhocHandler::instance()->registerAdhocCommandHandler("transport_irc_config", command);
 
 }
 
@@ -251,4 +312,5 @@ void IRCProtocol::onDestroy(AbstractUser *user) {
 	IRCProtocolData *data = (IRCProtocolData *) user->protocolData();
 	delete data;
 }
+
 
