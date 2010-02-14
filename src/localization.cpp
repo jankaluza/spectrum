@@ -21,79 +21,64 @@
 #include "localization.h"
 #include "log.h"
 #include "transport_config.h"
+#include <locale.h>
+#include <libintl.h>
+#include <stdlib.h>
 
 Localization::Localization() {
-	m_locales = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, (GDestroyNotify)g_hash_table_destroy);
+    // remove the LANGUAGE environment variable, to keep from
+    // messing up gettext(3)
+    unsetenv("LANGUAGE");
+    unsetenv("LANG");
+    unsetenv("LC_MESSAGES");
+
+    // set the domain for message files.
+    textdomain("spectrum");
+
+    // create a local cache for the locale strings,
+    // hopefully allowing a bit of performance improvement when
+    // running as a daemon..
+    m_locales = g_hash_table_new_full(g_str_hash, g_str_equal, g_free,
+					(GDestroyNotify)g_hash_table_destroy);
 }
 
 Localization::~Localization() {
-	g_hash_table_destroy(m_locales);
+    g_hash_table_destroy(m_locales);
 }
 
 const char * Localization::translate(const char *lang, const char *key) {
-	const char *ret = key;
-	GHashTable *l;
-	if (!(l = (GHashTable*) g_hash_table_lookup(m_locales, lang))) {
-		loadLocale(lang);
-		l = (GHashTable*) g_hash_table_lookup(m_locales, lang);
-	}
-	if (l) {
-		char *col = g_utf8_collate_key(key, -1);
-		if (!(ret = (const char *) g_hash_table_lookup(l, col))) {
-			ret = key;
-		}
-		g_free(col);
-	}
-	return ret;
-}
+    const char *ret = key;
+    GHashTable *locale;
 
-bool Localization::loadLocale(const std::string &lang) {
-#ifndef WIN32
-	po_file_t pofile = NULL;
-	const char * const *domains;
-	const char * const *domainp;
-	const char *msgstr = NULL;
-	const char *msgid = NULL;
-#endif
-	// Already loaded
-	if (g_hash_table_lookup(m_locales, lang.c_str()))
-		return true;
-	g_hash_table_replace(m_locales, g_strdup(lang.c_str()), g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free));
-#ifndef WIN32
-	char *l = g_build_filename(INSTALL_DIR, "share", "spectrum", "locales", std::string(lang + ".po").c_str(), NULL);
-	pofile = po_file_read (l, NULL);
-	g_free(l);
-	if (pofile != NULL) {
-		GHashTable *locale = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
-		domains = po_file_domains (pofile);
-		for (domainp = domains; *domainp; domainp++) {
-			const char *domain = *domainp;
-			po_message_t message;
-			po_message_iterator_t iterator = po_message_iterator (pofile,
-									      domain);
-			message = po_next_message (iterator);
-			for (;message;) {
-				gchar *key;
-				gchar *value;
-				msgstr = po_message_msgstr (message);
-				msgid = po_message_msgid (message);
-				if (msgstr && msgid) {
-					if (g_utf8_collate (msgid, "") != 0) {
-						key = g_utf8_collate_key (msgid, -1);
-						value = g_strdup (msgstr);
-						g_hash_table_replace(locale, key, value);
-					}
-				}
-				message = po_next_message (iterator);
-			}
-			po_message_iterator_free (iterator);
-		}
-		g_hash_table_replace(m_locales, g_strdup(lang.c_str()), locale);
-		po_file_free(pofile);
-		return true;
+    if (!(locale = (GHashTable*) g_hash_table_lookup(m_locales, lang))) {
+	// didn't find the locale, so lets create it and put it
+	// in the locales hash table.
+	locale = g_hash_table_new_full(g_str_hash,
+					    g_str_equal, g_free, g_free);
+
+	g_hash_table_replace(m_locales, g_strdup(lang), locale);
+    }
+    if (locale) {
+	char *col = g_utf8_collate_key(key, -1);
+	if (!(ret = (const char *) g_hash_table_lookup(locale, col))) {
+	    // we didn't find the message in the cache, so lets
+	    // look it up using gettext()
+	    setlocale(LC_MESSAGES, lang);
+
+	    // ask gettext for our translation
+	    if (!(ret = (const char *)gettext(key))) {
+		ret = key;
+	    } else {
+		gchar *value = g_strdup(ret);
+		gchar *nkey = g_strdup(key);
+		g_hash_table_replace(locale, nkey, value);
+	    }
 	}
-	#endif
-	return false;
+
+	g_free(col);
+    }
+
+    return ret;
 }
 
 Localization localization;

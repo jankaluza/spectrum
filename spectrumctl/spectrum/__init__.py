@@ -1,7 +1,3 @@
-# -*- coding: utf-8 -*-
-#
-# This file is part of spectrumctl. See spectrumctl.py for a description.
-#
 # Copyright (C) 2009, 2010 Mathias Ertl
 #
 # This file is part of Spectrumctl.

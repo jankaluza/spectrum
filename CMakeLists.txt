@@ -22,22 +22,32 @@ find_package(libpoco REQUIRED)
 set(cppunit_DIR "${CMAKE_SOURCE_DIR}/cmake_modules")
 find_package(cppunit)
 
-FIND_LIBRARY(GETTEXTPO_LIBRARY NAMES gettextpo)
-find_path(GETTEXTPO_INCLUDE_DIR NAMES gettext-po.h
-	PATHS
-	/usr/include
-	/usr/local/include
-)
+#
+# find the needed parts for gettext and friends
+#
+include(FindGettext)
+find_library(INTL_LIBRARY NAMES intl
+	PATHS /usr/pkg/lib /usr/lib
+	NO_DEFAULT_PATH
+	)
+find_path(INTL_INCLUDE_DIR NAMES libintl.h
+	PATHS /usr/pkg/include /usr/include
+	NO_DEFAULT_PATH
+	)
 
-execute_process ( COMMAND python -c "from distutils.sysconfig import get_python_lib; print get_python_lib()" OUTPUT_VARIABLE PYTHON_SITE_PACKAGES OUTPUT_STRIP_TRAILING_WHITESPACE)
+if(INTL_LIBRARY AND INTL_INCLUDE_DIR)
+    include_directories(${INTL_INCLUDE_DIR})
+    message(STATUS "libintl found: " ${INTL_LIBRARY} " " ${INTL_INCLUDE_DIR})
+else(INTL_LIBRARY AND INTL_INCLUDE_DIR)
+	message(FATAL_ERROR "no libintl")
+endif(INTL_LIBRARY AND INTL_INCLUDE_DIR)
+
+# find a working python
+include(FindPythonInterp)
+
+execute_process ( COMMAND ${PYTHON_EXECUTABLE} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()" OUTPUT_VARIABLE PYTHON_SITE_PACKAGES OUTPUT_STRIP_TRAILING_WHITESPACE)
+
 message(STATUS "Python site-packages directory: " ${PYTHON_SITE_PACKAGES})
-
-if(GETTEXTPO_LIBRARY AND GETTEXTPO_INCLUDE_DIR)
-	include_directories(${GETTEXTPO_INCLUDE_DIR})
-	message(STATUS "libgettextpo (gettext-devel) found: " ${GETTEXTPO_LIBRARY})
-else(GETTEXTPO_LIBRARY AND GETTEXTPO_INCLUDE_DIR)
-	message(FATAL_ERROR "no libgettextpo (gettext-devel)")
-endif(GETTEXTPO_LIBRARY AND GETTEXTPO_INCLUDE_DIR)
 
 include_directories(${GLOOX_INCLUDE_DIR})
 include_directories(${PURPLE_INCLUDE_DIR})
@@ -186,9 +196,9 @@ set(spectrum_MOC_HDRS
 add_executable(spectrum ${spectrum_SRCS} ${lrelease_outputs})
 
 if(DEFINED WITH_STATIC_GLOOX)
-	target_link_libraries(spectrum ${WITH_STATIC_GLOOX} -lgnutls ${PURPLE_LIBRARY} ${GLIB2_LIBRARIES} ${GETTEXTPO_LIBRARY} ${LIBPOCO_LIBRARIES} -export-dynamic)
+	target_link_libraries(spectrum ${WITH_STATIC_GLOOX} -lgnutls ${PURPLE_LIBRARY} ${GLIB2_LIBRARIES} ${LIBPOCO_LIBRARIES} ${INTL_LIBRARY} -export-dynamic)
 else(DEFINED WITH_STATIC_GLOOX)
-	target_link_libraries(spectrum ${GLOOX_LIBRARIES} ${PURPLE_LIBRARY} ${GLIB2_LIBRARIES} ${GETTEXTPO_LIBRARY} ${LIBPOCO_LIBRARIES} -export-dynamic)
+	target_link_libraries(spectrum ${GLOOX_LIBRARIES} ${PURPLE_LIBRARY} ${GLIB2_LIBRARIES} ${LIBPOCO_LIBRARIES} ${INTL_LIBRARY} -export-dynamic)
 endif(DEFINED WITH_STATIC_GLOOX)
 
 message(STATUS "Transport will be installed into: " ${CMAKE_INSTALL_PREFIX})
@@ -301,9 +311,9 @@ add_executable(spectrum_tests ${spectrum_tests_SRCS} ${lrelease_outputs})
 set_target_properties(spectrum_tests PROPERTIES COMPILE_FLAGS -DTESTS)
 
 if(DEFINED WITH_STATIC_GLOOX)
-	target_link_libraries(spectrum_tests ${WITH_STATIC_GLOOX} -lgnutls ${PURPLE_LIBRARY} ${CPPUNIT_LIBRARY} ${GLIB2_LIBRARIES} ${GETTEXTPO_LIBRARY} ${LIBPOCO_LIBRARIES} -export-dynamic)
+	target_link_libraries(spectrum_tests ${WITH_STATIC_GLOOX} -lgnutls ${PURPLE_LIBRARY} ${CPPUNIT_LIBRARY} ${GLIB2_LIBRARIES} ${GETTEXTPO_LIBRARY} ${LIBPOCO_LIBRARIES} ${INTL_LIBRARY} -export-dynamic)
 else(DEFINED WITH_STATIC_GLOOX)
-	target_link_libraries(spectrum_tests ${GLOOX_LIBRARIES} ${PURPLE_LIBRARY} ${CPPUNIT_LIBRARY} ${GLIB2_LIBRARIES} ${GETTEXTPO_LIBRARY} ${LIBPOCO_LIBRARIES} -export-dynamic)
+	target_link_libraries(spectrum_tests ${GLOOX_LIBRARIES} ${PURPLE_LIBRARY} ${CPPUNIT_LIBRARY} ${GLIB2_LIBRARIES} ${GETTEXTPO_LIBRARY} ${LIBPOCO_LIBRARIES} ${INTL_LIBRARY} -export-dynamic)
 endif(DEFINED WITH_STATIC_GLOOX)
 
 
@@ -343,6 +353,8 @@ INSTALL(FILES
     DESTINATION bin
     PERMISSIONS OWNER_EXECUTE GROUP_EXECUTE WORLD_EXECUTE
     RENAME spectrumctl
+    PERMISSIONS OWNER_EXECUTE OWNER_READ GROUP_EXECUTE GROUP_READ
+		WORLD_READ WORLD_EXECUTE
     )
 
 # install(FILES
