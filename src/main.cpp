@@ -1424,7 +1424,7 @@ void GlooxMessageHandler::handlePresence(const Presence &stanza){
 				if (protocol()->tempAccountsAllowed()) {
 					std::string server = stanza.to().username().substr(stanza.to().username().find("%") + 1, stanza.to().username().length() - stanza.to().username().find("%"));
 					std::cout << "SERVER" << stanza.from().bare() + server << "\n";
-					user = new User(this, stanza.from(), stanza.to().resource() + "@" + server, "", stanza.from().bare() + server, res.id);
+					user = new User(this, stanza.from(), stanza.to().resource() + "@" + server, "", stanza.from().bare() + server, res.id, res.encoding);
 				}
 				else {
 					if (purple_accounts_find(res.uin.c_str(), protocol()->protocol().c_str()) != NULL) {
@@ -1435,7 +1435,7 @@ void GlooxMessageHandler::handlePresence(const Presence &stanza){
 // 							return;
 // 						}
 					}
-					user = new User(this, stanza.from(), res.uin, res.password, stanza.from().bare(), res.id);
+					user = new User(this, stanza.from(), res.uin, res.password, stanza.from().bare(), res.id, res.encoding);
 				}
 				user->setFeatures(isVip ? configuration().VIPFeatures : configuration().transportFeatures);
 				if (c != NULL)
@@ -1646,46 +1646,6 @@ void GlooxMessageHandler::handleMessage (const Message &msg, MessageSession *ses
 			if (msgTag->findChild("body") != NULL) {
 				m_stats->messageFromJabber();
 				user->handleMessage(msg);
-			}
-			else {
-				// handle activity; TODO: move me to another function or better file
-				Tag *event = msgTag->findChild("event");
-				if (!event) return;
-				Tag *items = event->findChildWithAttrib("node","http://jabber.org/protocol/activity");
-				if (!items) return;
-				Tag *item = items->findChild("item");
-				if (!item) return;
-				Tag *activity = item->findChild("activity");
-				if (!activity) return;
-				Tag *text = item->findChild("text");
-				if (!text) return;
-				std::string message(activity->cdata());
-				if (message.empty()) return;
-
-				user->actionData = message;
-
-				if (purple_account_get_connection(user->account())) {
-					PurpleConnection *gc = purple_account_get_connection(user->account());
-					PurplePlugin *plugin = gc && PURPLE_CONNECTION_IS_CONNECTED(gc) ? gc->prpl : NULL;
-					if (plugin && PURPLE_PLUGIN_HAS_ACTIONS(plugin)) {
-						PurplePluginAction *action = NULL;
-						GList *actions, *l;
-
-						actions = PURPLE_PLUGIN_ACTIONS(plugin, gc);
-
-						for (l = actions; l != NULL; l = l->next) {
-							if (l->data) {
-								action = (PurplePluginAction *) l->data;
-								action->plugin = plugin;
-								action->context = gc;
-								if ((std::string) action->label == "Set Facebook status...") {
-									action->callback(action);
-								}
-								purple_plugin_action_free(action);
-							}
-						}
-					}
-				}
 			}
 			delete msgTag;
 		}

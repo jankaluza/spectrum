@@ -36,7 +36,7 @@
 #include "spectrumbuddy.h"
 #include "transport.h"
 
-User::User(GlooxMessageHandler *parent, JID jid, const std::string &username, const std::string &password, const std::string &userKey, long id) : SpectrumRosterManager(this), SpectrumMessageHandler(this) {
+User::User(GlooxMessageHandler *parent, JID jid, const std::string &username, const std::string &password, const std::string &userKey, long id, const std::string &encoding) : SpectrumRosterManager(this), SpectrumMessageHandler(this) {
 	p = parent;
 	m_jid = jid.bare();
 	m_userID = id;
@@ -46,6 +46,7 @@ User::User(GlooxMessageHandler *parent, JID jid, const std::string &username, co
 	setActiveResource(jid.resource());
 
 	m_username = username;
+	m_encoding = encoding;
 	m_password = password;
 	m_userKey = userKey;
 	m_connected = false;
@@ -201,7 +202,7 @@ void User::connect() {
 		purple_accounts_add(m_account);
 	}
 
-	purple_account_set_string(m_account, "encoding", Transport::instance()->getConfiguration().encoding.c_str());
+	purple_account_set_string(m_account, "encoding", m_encoding.empty() ? Transport::instance()->getConfiguration().encoding.c_str() : m_encoding.c_str());
 	purple_account_set_bool(m_account, "use_clientlogin", false);
 
 	m_account->ui_data = this;

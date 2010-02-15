@@ -54,6 +54,7 @@ struct Configuration {
 
 	std::string userDir;			// Directory used to store avatars.
 	std::string filetransferCache;	// Directory where transfered files are stored.
+	std::string filetransferWeb;
 
 	std::string sqlHost;			// Database host.
 	std::string sqlPassword;		// Database password.

@@ -164,6 +164,8 @@ Configuration ConfigFile::getConfiguration() {
 
 	if (!loadString(configuration.filetransferCache, "service", "filetransfer_cache"))
 		return DummyConfiguration;
+	
+	loadString(configuration.filetransferWeb, "service", "filetransfer_web", "");
 
 	if (!loadString(configuration.config_interface, "service", "config_interface", ""))
 		return DummyConfiguration;
