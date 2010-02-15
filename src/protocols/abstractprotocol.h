@@ -21,7 +21,9 @@
 #ifndef _HI_ABSTRACTPROTOCOL_H
 #define _HI_ABSTRACTPROTOCOL_H
 
+#include <cctype>
 #include <string>
+#include <algorithm>
 #include <list>
 #include "purple.h"
 #include "glib.h"
@@ -58,6 +60,7 @@ class AbstractProtocol
 		 */
 		virtual void prepareUsername(std::string &username, PurpleAccount *account = NULL) {
 			username.assign(purple_normalize(account, username.c_str()));
+			std::transform(username.begin(), username.end(), username.begin(), (int(*)(int)) std::tolower);
 		};
 
 		/*
