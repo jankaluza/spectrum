@@ -34,7 +34,7 @@ is used to sign the packages in the repository. You can do this in two ways:
 Don't worry about the warnings that the packages can't be identified, they will
 be gone after you installed the fsinf-keyring package.
 
-###Install spectrum
+###Install spectrum - stable version
 
 After you have done that, simply do:
 
@@ -42,6 +42,12 @@ After you have done that, simply do:
 	apt-get install spectrum
 
 Note that these repositories pull in quite a few dependencies, depending on the distribution you use. 
+
+### Install spectrum - development version
+If you want to try newest features or help us with testing, you can use development packages. 
 The packages are rebuild daily at 6:00 AM CEST.
+
+	apt-get update
+	apt-get install spectrum
 
 After you have successfully installed spectrum, you can start [configuring spectrum instances](new-spectrum-instances.html).
