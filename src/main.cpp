@@ -1647,46 +1647,6 @@ void GlooxMessageHandler::handleMessage (const Message &msg, MessageSession *ses
 				m_stats->messageFromJabber();
 				user->handleMessage(msg);
 			}
-			else {
-				// handle activity; TODO: move me to another function or better file
-				Tag *event = msgTag->findChild("event");
-				if (!event) return;
-				Tag *items = event->findChildWithAttrib("node","http://jabber.org/protocol/activity");
-				if (!items) return;
-				Tag *item = items->findChild("item");
-				if (!item) return;
-				Tag *activity = item->findChild("activity");
-				if (!activity) return;
-				Tag *text = item->findChild("text");
-				if (!text) return;
-				std::string message(activity->cdata());
-				if (message.empty()) return;
-
-				user->actionData = message;
-
-				if (purple_account_get_connection(user->account())) {
-					PurpleConnection *gc = purple_account_get_connection(user->account());
-					PurplePlugin *plugin = gc && PURPLE_CONNECTION_IS_CONNECTED(gc) ? gc->prpl : NULL;
-					if (plugin && PURPLE_PLUGIN_HAS_ACTIONS(plugin)) {
-						PurplePluginAction *action = NULL;
-						GList *actions, *l;
-
-						actions = PURPLE_PLUGIN_ACTIONS(plugin, gc);
-
-						for (l = actions; l != NULL; l = l->next) {
-							if (l->data) {
-								action = (PurplePluginAction *) l->data;
-								action->plugin = plugin;
-								action->context = gc;
-								if ((std::string) action->label == "Set Facebook status...") {
-									action->callback(action);
-								}
-								purple_plugin_action_free(action);
-							}
-						}
-					}
-				}
-			}
 			delete msgTag;
 		}
 		else{
