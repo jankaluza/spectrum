@@ -26,6 +26,7 @@
 #include <cstdio>
 #include <iostream>
 #include "glib.h"
+#include <vector>
 
 template <class T> std::string stringOf(T object) {
 	std::ostringstream os;
@@ -37,6 +38,11 @@ template <class T> std::string stringOf(T object) {
 void replace(std::string &str, const char *from, const char *to);
 int isValidEmail(const char *address);
 const std::string generateUUID();
+
+std::vector<std::string> &split(const std::string &s, char delim, std::vector<std::string> &elems);
+std::vector<std::string> split(const std::string &s, char delim);
+
+
 
 #ifndef WIN32
 void process_mem_usage(double& vm_usage, double& resident_set);

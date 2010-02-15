@@ -26,6 +26,7 @@
 #include "sql.h"
 #include "abstractuser.h"
 #include "transport.h"
+#include "spectrummessagehandler.h"
 
 static gboolean ui_got_data(gpointer data){
 	PurpleXfer *xfer = (PurpleXfer*) data;
@@ -192,10 +193,19 @@ static gboolean transferFinished(gpointer data) {
 	if (user->account()){
 		if (user->isConnected()){
 			Log(user->jid(), "sending download message");
-			std::string basename(g_path_get_basename(filename.c_str()));
-			Message s(Message::Chat, receive->target(), "Uzivatel Vam poslal soubor '"+basename+"'. Muzete jej stahnout z adresy http://soumar.jabbim.cz/icq/" + basename +" .");
+			std::vector <std::string> dirs = split(filename, '/');
+			std::string url = Transport::instance()->getConfiguration().filetransferWeb;
+			std::string basename = dirs.back();
+			url += basename + "/";
+			dirs.pop_back();
+			url += dirs.back();
+			Message s(Message::Chat, receive->target(), "User sent you file '"+basename+"'. You can download it from " + url +" .");
 			s.setFrom(user->jid());
-// 			user->handleMessage(s); TODO!
+			// TODO: rewrite me to not use GlooxMessageHandler
+#ifndef TESTS
+			GlooxMessageHandler::instance()->handleMessage(s, NULL);
+#endif
+			
 		}
 	}
 	receive->dispose();
@@ -234,9 +244,11 @@ void ReceiveFile::exec() {
         return;
     }
 	while (!m_finished) {
+		Log("ReceiveFile", "recv");
 		m_stream->recv();
 	}
 	m_file.close();
+	Log("ReceiveFile", "transferFinished");
 	g_timeout_add(1000,&transferFinished,this);
 }
 

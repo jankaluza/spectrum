@@ -47,14 +47,17 @@ void FileTransferManager::handleFTRequest (const JID &from, const JID &to, const
 	if (user && user->account() && user->isConnected()) {
 		bool canSendFile = Transport::instance()->canSendFile(user->account(), uname);
 		Log("CanSendFile = ", canSendFile);
+		Log("filetransferWeb = ", Transport::instance()->getConfiguration().filetransferWeb);
 		setTransferInfo(sid, name, size, canSendFile);
 
 		user->addFiletransfer(from, sid, SIProfileFT::FTTypeS5B, to, size);
 		// if we can't send file straightly, we just receive it and send link to buddy.
 		if (canSendFile)
 			serv_send_file(purple_account_get_connection(user->account()), uname.c_str(), name.c_str());
-		else
+		else if (!Transport::instance()->getConfiguration().filetransferWeb.empty())
 			m_sip->acceptFT(from, sid, SIProfileFT::FTTypeS5B, to);
+		else
+			m_sip->declineFT(from, sid, SIManager::RequestRejected , "There is no way how to transfer file.");
 	}
 }
 
