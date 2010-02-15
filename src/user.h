@@ -45,7 +45,7 @@ class User;
 // Representation of XMPP User
 class User : public AbstractUser, public SpectrumRosterManager, public SpectrumMessageHandler {
 	public:
-		User(GlooxMessageHandler *parent, JID jid, const std::string &username, const std::string &password, const std::string &userKey, long id);
+		User(GlooxMessageHandler *parent, JID jid, const std::string &username, const std::string &password, const std::string &userKey, long id, const std::string &encoding);
 		virtual ~User();
 
 		// Connects the user to legacy network.
@@ -113,6 +113,7 @@ class User : public AbstractUser, public SpectrumRosterManager, public SpectrumM
 		std::string m_password;		// password used to connect to legacy network
 		std::string m_username;		// legacy network user name
 		std::string m_jid;			// Jabber ID of this user
+		std::string m_encoding;
 		const char *m_lang;			// xml:lang
 		int m_features;
 		time_t m_connectionStart;	// connection start timestamp
