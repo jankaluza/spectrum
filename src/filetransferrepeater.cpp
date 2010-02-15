@@ -196,9 +196,9 @@ static gboolean transferFinished(gpointer data) {
 			std::vector <std::string> dirs = split(filename, '/');
 			std::string url = Transport::instance()->getConfiguration().filetransferWeb;
 			std::string basename = dirs.back();
-			url += basename + "/";
 			dirs.pop_back();
-			url += dirs.back();
+			url += dirs.back() + "/";
+			url += basename;
 			Message s(Message::Chat, receive->target(), "User sent you file '"+basename+"'. You can download it from " + url +" .");
 			s.setFrom(user->jid());
 			// TODO: rewrite me to not use GlooxMessageHandler
