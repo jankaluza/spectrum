@@ -23,7 +23,7 @@
 
 #include <iostream>
 
-#if WIN32
+#ifdef WIN32
 #include <windows.h>
 #else
 #define HAVE_PTHREADS
@@ -35,14 +35,14 @@ class Thread;
 
 #ifdef HAVE_PTHREADS
 void *thread_thread(void *v);
-#elif WIN32
+#elif defined(WIN32)
 DWORD WINAPI thread_thread(void *v);
 #endif
 
 class Thread {
 #ifdef HAVE_PTHREADS
         pthread_t m_id;
-#elif WIN32
+#elif defined(WIN32)
     HANDLE m_handle;
     DWORD m_id;
 #endif
@@ -65,7 +65,7 @@ public:
 class MyMutex {
     #ifdef HAVE_PTHREADS
                 pthread_mutex_t m_mutex;
-    #elif WIN32
+    #elif defined(WIN32)
         CRITICAL_SECTION m_cs;
      #endif
 public:

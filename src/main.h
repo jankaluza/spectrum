@@ -171,7 +171,7 @@ public:
 	 */
 	void onConnect();
 	void onDisconnect(ConnectionError e);
-	void onSessionCreateError(SessionCreateError error);
+	void onSessionCreateError(const Error *error);
 	bool onTLSConnect(const CertInfo & info);
 	
 	void handleMessage (const Message &msg, MessageSession *session = 0);

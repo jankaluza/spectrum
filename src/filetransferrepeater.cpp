@@ -391,7 +391,7 @@ void FiletransferRepeater::registerXfer(PurpleXfer *xfer) {
 void FiletransferRepeater::fileSendStart() {
 	Log("ReceiveFileStraight", "fileSendStart!" << m_from.full() << " " << m_to.full());
 	Log("ReceiveFileStraight", m_sid);
-	Log("ReceiveFileStraight", m_type);
+	Log("ReceiveFileStraight", (int)m_type);
 	
 	Transport::instance()->acceptFT(m_to, m_sid, m_type, m_from.resource().empty() ? std::string(m_from.bare() + "/bot") : m_from);
 }
