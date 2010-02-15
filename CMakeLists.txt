@@ -98,6 +98,7 @@ set(spectrum_SRCS
 	src/spectrumbuddy.cpp
 	src/spectrumconversation.cpp
 	src/spectrummucconversation.cpp
+	src/spectrumnodehandler.cpp
 	src/spectrumtimer.cpp
 	src/statshandler.cpp
 	src/striphtmltags.cpp

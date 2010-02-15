@@ -53,6 +53,7 @@
 #include "filetransfermanager.h"
 #include "localization.h"
 #include "spectrumbuddy.h"
+#include "spectrumnodehandler.h"
 #include "transport.h"
 
 #include "parser.h"
@@ -830,6 +831,7 @@ GlooxMessageHandler::GlooxMessageHandler(const std::string &config) : MessageHan
 #endif
 
 	m_transport = new Transport(m_configuration.jid);
+	m_spectrumNodeHandler = new SpectrumNodeHandler();
 
 	if (loaded) {
 		m_sql = new SQLClass(this, upgrade_db);	
@@ -861,8 +863,8 @@ GlooxMessageHandler::GlooxMessageHandler(const std::string &config) : MessageHan
 #endif
 		m_discoHandler = new CapabilityHandler();
 
-		m_discoInfoHandler = new GlooxDiscoInfoHandler();
-		j->registerIqHandler(m_discoInfoHandler,ExtDiscoInfo);
+// 		m_discoInfoHandler = new GlooxDiscoInfoHandler();
+// 		j->registerIqHandler(m_discoInfoHandler,ExtDiscoInfo);
 		
 		j->registerIqHandler(m_adhoc, ExtAdhocCommand);
 		j->registerStanzaExtension( new Adhoc::Command() );
@@ -1521,6 +1523,7 @@ void GlooxMessageHandler::onConnect() {
 		SHA sha;
 		sha.feed( id );
 		m_configuration.hash = Base64::encode64( sha.binary() );
+		j->disco()->registerNodeHandler( m_spectrumNodeHandler, "http://spectrum.im/transport#" + m_configuration.hash );
 
 		new AutoConnectLoop();
 		m_firstConnection = false;
