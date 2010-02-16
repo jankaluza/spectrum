@@ -1367,7 +1367,7 @@ void GlooxMessageHandler::handlePresence(const Presence &stanza){
 	Tag *c = NULL;
 	Log(stanza.from().full(), "Presence received (" << (int)stanza.subtype() << ") for: " << stanza.to().full());
 
-	if (stanza.presence() != Presence::Unavailable && ((stanza.to().username() == "" && !protocol()->tempAccountsAllowed()) || protocol()->isMUC(NULL, stanza.to().bare()))) {
+	if (stanza.presence() != Presence::Unavailable && ((stanza.to().username() == "" && !protocol()->tempAccountsAllowed()) || (protocol()->isMUC(NULL, stanza.to().bare()) && protocol()->tempAccountsAllowed()))) {
 		Tag *stanzaTag = stanza.tag();
 		if (!stanzaTag) return;
 		Tag *c = stanzaTag->findChildWithAttrib("xmlns","http://jabber.org/protocol/caps");
@@ -1405,7 +1405,7 @@ void GlooxMessageHandler::handlePresence(const Presence &stanza){
 			tag->addAttribute("type", "unavailable");
 			j->send(tag);
 		}
-		else if (((stanza.to().username() == "" && !protocol()->tempAccountsAllowed()) || protocol()->isMUC(NULL, stanza.to().bare())) && stanza.presence() != Presence::Unavailable){
+		else if (((stanza.to().username() == "" && !protocol()->tempAccountsAllowed()) || ( protocol()->tempAccountsAllowed() && protocol()->isMUC(NULL, stanza.to().bare()))) && stanza.presence() != Presence::Unavailable){
 			UserRow res = sql()->getUserByJid(userkey);
 			if(res.id==-1 && !protocol()->tempAccountsAllowed()) {
 				// presence from unregistered user
@@ -1526,7 +1526,7 @@ void GlooxMessageHandler::onConnect() {
 		m_configuration.hash = Base64::encode64( sha.binary() );
 		j->disco()->registerNodeHandler( m_spectrumNodeHandler, "http://spectrum.im/transport#" + m_configuration.hash );
 
-		new AutoConnectLoop();
+// 		new AutoConnectLoop();
 		m_firstConnection = false;
 		purple_timeout_add_seconds(60, &sendPing, this);
 	}
