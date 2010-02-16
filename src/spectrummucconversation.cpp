@@ -34,13 +34,49 @@ SpectrumMUCConversation::~SpectrumMUCConversation() {
 
 void SpectrumMUCConversation::handleMessage(AbstractUser *user, const char *who, const char *msg, PurpleMessageFlags flags, time_t mtime, const std::string &currentBody) {
 	std::string name(who);
+// 
+// 	// send message to user
+// 	std::string message(purple_unescape_html(msg));
+// 	Message s(Message::Groupchat, user->jid() + m_resource, message);
+// 	s.setFrom(m_jid + "/" + name);
+// 
+// 	Transport::instance()->send( s.tag() );
 
-	// send message to user
-	std::string message(purple_unescape_html(msg));
-	Message s(Message::Groupchat, user->jid() + m_resource, message);
+	// Escape HTML characters.
+	char *newline = purple_strdup_withhtml(msg);
+	char *strip, *xhtml;
+	purple_markup_html_to_xhtml(newline, &xhtml, &strip);
+	std::string message(strip);
+
+	std::string to = user->jid() + m_resource;	
+	
+	Message s(Message::Groupchat, to, message);
 	s.setFrom(m_jid + "/" + name);
 
-	Transport::instance()->send( s.tag() );
+// 	<delay xmlns="urn:xmpp:delay" stamp="2010-02-16T15:49:19Z"/>
+// 	<x xmlns="jabber:x:delay" stamp="20100216T15:49:19"/>
+	
+	// Delayed messages, we have to count with some delay
+	if ((unsigned long) time(NULL)-10 > (unsigned long) mtime) {
+		char buf[80];
+		strftime(buf, sizeof(buf), "%Y-%m-%dT%H:%M:%SZ", gmtime(&mtime));
+		std::string timestamp(buf);
+		DelayedDelivery *d = new DelayedDelivery(m_jid, timestamp);
+		s.addExtension(d);
+	}
+
+	Tag *stanzaTag = s.tag();
+	g_free(newline);
+	g_free(xhtml);
+	g_free(strip);
+
+// 	std::string res = getResource();
+// 	if (user->hasFeature(GLOOX_FEATURE_XHTML_IM, res) && m != message) {
+// 		Transport::instance()->parser()->getTag("<body>" + m + "</body>", sendXhtmlTag, stanzaTag);
+// 		return;
+// 	}
+	Transport::instance()->send(stanzaTag);
+
 }
 
 void SpectrumMUCConversation::addUsers(AbstractUser *user, GList *cbuddies) {
