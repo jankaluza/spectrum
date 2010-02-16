@@ -1386,7 +1386,7 @@ void GlooxMessageHandler::handlePresence(const Presence &stanza){
 	}
 	User *user;
 	std::string userkey;
-	if (protocol()->isMUC(NULL, stanza.to().bare())) {
+	if (protocol()->tempAccountsAllowed() && protocol()->isMUC(NULL, stanza.to().bare())) {
 		std::string server = stanza.to().username().substr(stanza.to().username().find("%") + 1, stanza.to().username().length() - stanza.to().username().find("%"));
 		userkey = stanza.from().bare() + server;
 		user = (User *) userManager()->getUserByJID(stanza.from().bare() + server);
@@ -1526,7 +1526,7 @@ void GlooxMessageHandler::onConnect() {
 		m_configuration.hash = Base64::encode64( sha.binary() );
 		j->disco()->registerNodeHandler( m_spectrumNodeHandler, "http://spectrum.im/transport#" + m_configuration.hash );
 
-// 		new AutoConnectLoop();
+		new AutoConnectLoop();
 		m_firstConnection = false;
 		purple_timeout_add_seconds(60, &sendPing, this);
 	}
@@ -1630,7 +1630,7 @@ void GlooxMessageHandler::handleMessage (const Message &msg, MessageSession *ses
 	if (msg.subtype() == Message::Error || msg.subtype() == Message::Invalid)
 		return;
 	User *user;
-	if (protocol()->isMUC(NULL, msg.to().bare())) {
+	if (protocol()->isMUC(NULL, msg.to().bare()) && protocol()->tempAccountsAllowed()) {
 		std::string server = msg.to().username().substr(msg.to().username().find("%") + 1, msg.to().username().length() - msg.to().username().find("%"));
 		user = (User *) userManager()->getUserByJID(msg.from().bare() + server);
 	}

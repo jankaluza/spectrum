@@ -62,6 +62,8 @@ class AbstractProtocol
 			username.assign(purple_normalize(account, username.c_str()));
 			std::transform(username.begin(), username.end(), username.begin(), (int(*)(int)) std::tolower);
 		};
+		
+		virtual std::string prepareRoomName(const std::string &room) { return room; }
 
 		/*
 		 * Returns disco features user by transport jid

@@ -37,9 +37,11 @@ class XMPPProtocol : AbstractProtocol
 		std::list<std::string> buddyFeatures();
 		std::string text(const std::string &key);
 		Tag *getVCardTag(AbstractUser *user, GList *vcardEntries) { return NULL; }
-		bool isMUC(AbstractUser *user, const std::string &jid) { return false; }
+		bool isMUC(AbstractUser *user, const std::string &jid) { return jid.find("#") == 0; }
 		const std::string userSearchAction() { return "Search for Users..."; }
 		const std::string userSearchColumn() { return "Jabber ID"; }
+		bool onPresenceReceived(AbstractUser *user, const Presence &stanza);
+		std::string prepareRoomName(const std::string &room);
 
 	private:
 		GlooxMessageHandler *m_main;

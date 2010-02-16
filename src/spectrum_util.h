@@ -35,7 +35,7 @@ template <class T> std::string stringOf(T object) {
 }
 
 /* Replace all instances of from with to in string str in-place */
-void replace(std::string &str, const char *from, const char *to);
+void replace(std::string &str, const char *from, const char *to, int count = 0);
 int isValidEmail(const char *address);
 const std::string generateUUID();
 

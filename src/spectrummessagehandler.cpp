@@ -275,8 +275,11 @@ std::string SpectrumMessageHandler::getConversationName(PurpleConversation *conv
 		std::transform(name.begin(), name.end(), name.begin(),(int(*)(int)) std::tolower);
 	}
 	else {
+		name = Transport::instance()->protocol()->prepareRoomName(name);
+		if (name.find("%") == std::string::npos) {
 			std::transform(name.begin(), name.end(), name.begin(),(int(*)(int)) std::tolower);
 			name = name + "%" + JID(m_user->username()).server();
+		}
 	}
 	return name;
 }

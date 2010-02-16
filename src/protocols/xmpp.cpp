@@ -61,3 +61,40 @@ std::string XMPPProtocol::text(const std::string &key) {
 		return "Enter your Jabber ID and password:";
 	return "not defined";
 }
+
+bool XMPPProtocol::onPresenceReceived(AbstractUser *user, const Presence &stanza) {
+	Tag *stanzaTag = stanza.tag();
+	if (stanza.to().username() != "") {
+		if (user->isConnectedInRoom(stanza.to().username().c_str())) {
+		}
+		else if (isMUC(user, stanza.to().bare()) && stanza.presence() != Presence::Unavailable) {
+			if (user->isConnected()) {
+				GHashTable *comps = NULL;
+				std::string name = JID(stanzaTag->findAttribute("to")).username();
+				std::string nickname = JID(stanzaTag->findAttribute("to")).resource();
+
+				PurpleConnection *gc = purple_account_get_connection(user->account());
+				if (PURPLE_PLUGIN_PROTOCOL_INFO(gc->prpl)->chat_info_defaults != NULL) {
+					replace(name, "%", "@");
+					replace(name, "#", "");
+					name += "/" + nickname;
+					comps = PURPLE_PLUGIN_PROTOCOL_INFO(gc->prpl)->chat_info_defaults(gc, name.c_str());
+				}
+				if (comps) {
+					user->setRoomResource(name, JID(stanzaTag->findAttribute("from")).resource());
+					serv_join_chat(gc, comps);
+				}
+				
+				
+			}
+		}
+	}
+	delete stanzaTag;
+	return false;
+}
+
+std::string XMPPProtocol::prepareRoomName(const std::string &room) {
+	std::string r = "#" + room;
+	replace(r, "@", "%", 1);
+	return r;
+}
