@@ -1,7 +1,10 @@
 version 0.2 (20??-??-??):
+	* MUC support for XMPP
+	* Working filetransfer from XMPP to legacy network when legacy network user can't receive file.
 	* Added Windows compilation support
 	* Send unavailable presences when shutting transport down
 	* IRC Nickserv password can be set via Adhoc command
+	* Proper disco#info handling (#51)
 
 version 0.1 (2010-02-05):
 	* initial version
