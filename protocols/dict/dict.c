@@ -25,62 +25,22 @@
 #include <glib.h>
 #include "dict.h"
 
+#define WORD_DEFINITION "\n151"
+#define WORD_MATCH "\n152"
+#define WORD_NOT_FOUND "\n552"
+
 static PurplePlugin *_dict_protocol = NULL;
 
 static void dummy_authorization_cb(void * data) { }
 
-static char * dict_get_first_match(const char *conv_name, const char *message) {
-	FILE *fp;
-	int status;
-	char line[4096] = "";
-	char *result;
-	char *response;
-	char *ptr;
-	int len = 4096;
-
-	char *query = g_strdup_printf("curl 'dict://dict.org/m:%s:%s'", message, conv_name);
-	result = g_malloc(sizeof(char) * 4096);
-	response = g_malloc(sizeof(char) * 4096);
-	strcpy(result, "");
-	strcpy(response, "");
-	
-	fp = popen(query, "r");
-	g_free(query);
-	if (fp == NULL)
-		return 0;
-
-
-	while (fgets(line, 4096, fp) != NULL) {
-		strncat(result, line, len);
-		len -= strlen(line);
-	}
-	ptr = result;
-	
-	while ((ptr = strstr(ptr, "\n152")) != NULL) {
-		ptr += 1;
-		if ((ptr = strchr(ptr, '\n')) == NULL) break;
-		ptr++;
-		
-		if (*ptr == '.') break;
-		ptr += strlen(conv_name) + 2;
-		strncat(response, ptr, strchr(ptr, '"') - ptr);
-		break;
-	}
-
-	g_free(result);
-
-	status = pclose(fp);
-	return response;
-}
-
-static char *dict_ask_server(const char *conv_name, const char *message) {
+static char *dict_ask_server(const char *conv_name, const char *message, const char *type) {
 	FILE *fp;
 	int status;
 	char line[4096] = "";
 	char *result;
 	int len = 4096;
+	char *query = g_strdup_printf("curl 'dict://dict.org/%s:%s:%s'", type, message, conv_name);
 
-	char *query = g_strdup_printf("curl 'dict://dict.org/d:%s:%s'", message, conv_name);
 	result = g_malloc(sizeof(char) * 4096);
 	strcpy(result, "");
 	
@@ -88,7 +48,6 @@ static char *dict_ask_server(const char *conv_name, const char *message) {
 	g_free(query);
 	if (fp == NULL)
 		return 0;
-
 
 	while (fgets(line, 4096, fp) != NULL) {
 		strncat(result, line, len);
@@ -98,6 +57,34 @@ static char *dict_ask_server(const char *conv_name, const char *message) {
 	return result;
 }
 
+static char * dict_get_first_match(const char *conv_name, const char *message) {
+	char *ptr;
+	char *response = g_malloc(sizeof(char) * 4096);
+	strcpy(response, "");
+
+	char *result = dict_ask_server(conv_name, message, "m");
+	if (!result)
+		return 0;
+	ptr = result;
+
+	if ((ptr = strstr(ptr, WORD_MATCH)) == NULL)
+		return 0;
+
+	ptr += 1;
+	if ((ptr = strchr(ptr, '\n')) == NULL)
+		return 0;
+	ptr++;
+	
+	if (*ptr == '.')
+		return 0;
+
+	ptr += strlen(conv_name) + 2;
+	strncat(response, ptr, strchr(ptr, '"') - ptr);
+
+	g_free(result);
+	return response;
+}
+
 static int dict_send_im(PurpleConnection *gc, const char *conv_name, const char *message, PurpleMessageFlags flags) {
 	char *response = g_malloc(sizeof(char) * 4096);;
 	char *ptr;
@@ -105,17 +92,17 @@ static int dict_send_im(PurpleConnection *gc, const char *conv_name, const char 
 	if (strlen(message) > 255)
 		return -E2BIG;
 
-	char *result = dict_ask_server(conv_name, message);
+	char *result = dict_ask_server(conv_name, message, "d");
 	strcpy(response, "");
 	if (!result)
 		return 0;
 	ptr = result;
 	
-	if (strstr(ptr, "\n552") != NULL) {
+	if (strstr(ptr, WORD_NOT_FOUND) != NULL) {
 		char *match = dict_get_first_match(conv_name, message);
 		if (match && *match!='\0') {
 			g_free(result);
-			char *result = dict_ask_server(conv_name, match);
+			char *result = dict_ask_server(conv_name, match, "d");
 			ptr = result;
 			strcat(response, "Did you mean '");
 			strcat(response, match);
@@ -126,14 +113,14 @@ static int dict_send_im(PurpleConnection *gc, const char *conv_name, const char 
 	}
 	
 	int i;
-	while ((ptr = strstr(ptr, "\n151")) != NULL) {
+	while ((ptr = strstr(ptr, WORD_DEFINITION)) != NULL) {
 		ptr += 1;
 		for (i = 0; i < 3; i++) {
 			if ((ptr = strchr(ptr, '\n')) == NULL) break;
 			ptr++;
 		}
 		if (!ptr) break;
-		printf("%d", strlen(response) + strchr(ptr, '\n') - ptr + 1);
+
 		if (strlen(response) + strchr(ptr, '\n') - ptr + 1 > 4095)
 			break;
 		strncat(response, ptr, strchr(ptr, '\n') - ptr);
