@@ -131,6 +131,7 @@ set(spectrum_SRCS
 	src/protocols/qq.cpp
 	src/protocols/simple.cpp
 	src/protocols/sipe.cpp
+	src/protocols/twitter.cpp
 	src/protocols/xmpp.cpp
 	src/protocols/yahoo.cpp
 )

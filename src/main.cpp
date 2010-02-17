@@ -68,6 +68,7 @@
 #include "protocols/myspace.h"
 #include "protocols/qq.h"
 #include "protocols/simple.h"
+#include "protocols/twitter.h"
 #include "protocols/xmpp.h"
 #include "protocols/yahoo.h"
 #include "protocols/sipe.h"
@@ -952,6 +953,8 @@ bool GlooxMessageHandler::loadProtocol(){
 		m_protocol = (AbstractProtocol*) new AIMProtocol(this);
 	else if (configuration().protocol == "facebook")
 		m_protocol = (AbstractProtocol*) new FacebookProtocol(this);
+	else if (configuration().protocol == "twitter")
+		m_protocol = (AbstractProtocol*) new TwitterProtocol(this);
 	else if (configuration().protocol == "gg")
 		m_protocol = (AbstractProtocol*) new GGProtocol(this);
 	else if (configuration().protocol == "icq")
