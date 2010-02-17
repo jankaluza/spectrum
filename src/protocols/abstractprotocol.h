@@ -28,6 +28,7 @@
 #include "purple.h"
 #include "glib.h"
 #include "gloox/tag.h"
+#include "gloox/subscription.h"
 #include "../abstractuser.h"
 #include "../spectrum_util.h"
 #include "../log.h"
@@ -107,6 +108,7 @@ class AbstractProtocol
 		virtual bool changeNickname(const std::string &nick, PurpleConversation *conv) { return true; }
 		
 		virtual std::string defaultEncoding() { return "utf8"; }
+		virtual bool registerAutomatically() { return false; }
 
 		// SIGNALS
 
@@ -126,6 +128,8 @@ class AbstractProtocol
 		 * Presence Received. Returns true if the presence was handled.
 		 */
 		virtual bool onPresenceReceived(AbstractUser *user, const Presence &stanza) { return false; }
+		
+		virtual void handleSubscription(const Subscription &stanza) { }
 		/*
 		 * Called on purple_request_input.
 		 */

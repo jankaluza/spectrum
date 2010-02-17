@@ -60,6 +60,7 @@
 #include "commands.h"
 #include "protocols/abstractprotocol.h"
 #include "protocols/aim.h"
+#include "protocols/dict.h"
 #include "protocols/facebook.h"
 #include "protocols/gg.h"
 #include "protocols/icq.h"
@@ -952,6 +953,8 @@ bool GlooxMessageHandler::loadProtocol(){
 		m_protocol = (AbstractProtocol*) new AIMProtocol(this);
 	else if (configuration().protocol == "facebook")
 		m_protocol = (AbstractProtocol*) new FacebookProtocol(this);
+	else if (configuration().protocol == "dict")
+		m_protocol = (AbstractProtocol*) new DictProtocol(this);
 	else if (configuration().protocol == "gg")
 		m_protocol = (AbstractProtocol*) new GGProtocol(this);
 	else if (configuration().protocol == "icq")
@@ -1356,6 +1359,8 @@ void GlooxMessageHandler::handleSubscription(const Subscription &stanza) {
 	}
 	if (user)
 		user->handleSubscription(stanza);
+	else
+		m_protocol->handleSubscription(stanza);
 
 }
 
@@ -1405,8 +1410,12 @@ void GlooxMessageHandler::handlePresence(const Presence &stanza){
 			tag->addAttribute("type", "unavailable");
 			j->send(tag);
 		}
-		else if (((stanza.to().username() == "" && !protocol()->tempAccountsAllowed()) || ( protocol()->tempAccountsAllowed() && protocol()->isMUC(NULL, stanza.to().bare()))) && stanza.presence() != Presence::Unavailable){
+		else if ((((stanza.to().username() == "" && !protocol()->tempAccountsAllowed()) || ( protocol()->tempAccountsAllowed() && protocol()->isMUC(NULL, stanza.to().bare())))) && stanza.presence() != Presence::Unavailable){
 			UserRow res = sql()->getUserByJid(userkey);
+			if (res.id == -1) {
+				sql()->addUser(userkey, stanza.from().username(), "", "en", m_configuration.encoding);
+				res = sql()->getUserByJid(userkey);
+			}
 			if(res.id==-1 && !protocol()->tempAccountsAllowed()) {
 				// presence from unregistered user
 				Log(stanza.from().full(), "This user is not registered");

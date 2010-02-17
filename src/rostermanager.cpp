@@ -164,8 +164,6 @@ void SpectrumRosterManager::addRosterItem(PurpleBuddy *buddy) {
 	AbstractSpectrumBuddy *s_buddy = (AbstractSpectrumBuddy *) buddy->node.ui_data;
 	if (s_buddy)
 		addRosterItem(s_buddy);
-	else
-		Log(std::string(purple_buddy_get_name(buddy)), "This buddy has not set AbstractSpectrumBuddy!!!");
 }
 
 void SpectrumRosterManager::setRoster(GHashTable *roster) {
@@ -305,6 +303,8 @@ void SpectrumRosterManager::sendNewBuddies() {
 		std::map<std::string, AbstractSpectrumBuddy *>::iterator it = m_subscribeCache.begin();
 		while (it != m_subscribeCache.end()) {
 			AbstractSpectrumBuddy *s_buddy = (*it).second;
+			if (s_buddy->getSubscription() == "both")
+				continue;
 			std::string jid = s_buddy->getBareJid();
 			std::string alias = s_buddy->getAlias();
 
@@ -326,6 +326,8 @@ void SpectrumRosterManager::sendNewBuddies() {
 		std::map<std::string, AbstractSpectrumBuddy *>::iterator it = m_subscribeCache.begin();
 		while (it != m_subscribeCache.end()) {
 			AbstractSpectrumBuddy *s_buddy = (*it).second;
+			if (s_buddy->getSubscription() == "both")
+				continue;
 			std::string alias = s_buddy->getAlias();
 
 			Tag *tag = new Tag("presence");
@@ -374,9 +376,8 @@ authRequest *SpectrumRosterManager::handleAuthorizationRequest(PurpleAccount *ac
 
 	Log(m_user->jid(), "purpleAuthorizeReceived: " << name << "on_list:" << on_list);
 	std::for_each( name.begin(), name.end(), replaceBadJidCharacters() );
-	// send subscribe presence to user
 	Tag *tag = new Tag("presence");
-	tag->addAttribute("type", "subscribe" );
+	tag->addAttribute("type", "subscribed" );
 	tag->addAttribute("from", name + "@" + Transport::instance()->jid());
 	tag->addAttribute("to", m_user->jid());
 
@@ -385,8 +386,23 @@ authRequest *SpectrumRosterManager::handleAuthorizationRequest(PurpleAccount *ac
 		nick->addAttribute("xmlns","http://jabber.org/protocol/nick");
 		tag->addChild(nick);
 	}
-
+	
 	Transport::instance()->send(tag);
+	
+// send subscribe presence to user
+	tag = new Tag("presence");
+	tag->addAttribute("type", "subscribe" );
+	tag->addAttribute("from", name + "@" + Transport::instance()->jid());
+	tag->addAttribute("to", m_user->jid());
+	
+	if (alias) {
+		Tag *nick = new Tag("nick", std::string(alias));
+		nick->addAttribute("xmlns","http://jabber.org/protocol/nick");
+		tag->addChild(nick);
+	}
+	
+	Transport::instance()->send(tag);
+
 	return req;
 }
 
@@ -419,6 +435,7 @@ void SpectrumRosterManager::handleSubscription(const Subscription &subscription)
 					if (!isInRoster(remote_user)) {
 						// add user to mysql database and to local cache
 						addRosterItem(buddy);
+						getRosterItem(remote_user)->setSubscription("both");
 						Transport::instance()->sql()->addBuddy(m_user->storageId(), remote_user, "both");
 						storeBuddy(buddy);
 					}

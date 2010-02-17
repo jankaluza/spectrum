@@ -122,6 +122,7 @@ set(spectrum_SRCS
 	src/usermanager.cpp
 	src/vcardhandler.cpp
 	src/protocols/aim.cpp
+	src/protocols/dict.cpp
 	src/protocols/facebook.cpp
 	src/protocols/gg.cpp
 	src/protocols/icq.cpp
@@ -184,6 +185,7 @@ set(spectrum_MOC_HDRS
 	src/vcardhandler.h
 	src/protocols/abstractprotocol.h
 	src/protocols/aim.h
+	src/protocols/dict.h
 	src/protocols/facebook.h
 	src/protocols/gg.h
 	src/protocols/icq.h
@@ -323,11 +325,6 @@ endif(DEFINED WITH_STATIC_GLOOX)
 
 
 endif (CPPUNIT_FOUND)
-
-
-
-
-
 
 
 INSTALL(TARGETS spectrum
