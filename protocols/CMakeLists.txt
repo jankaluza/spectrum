@@ -62,7 +62,12 @@ add_library(prpldict SHARED dict/dict.c)
 target_link_libraries(prpldict ${PURPLE_LIBRARY} ${GLIB2_LIBRARIES} ${GETTEXTPO_LIBRARY} -export-dynamic)
 set_target_properties(prpldict PROPERTIES COMPILE_FLAGS -DPURPLE_PLUGINS)
 
+add_library(prplrss SHARED rss/rss.c)
+target_link_libraries(prplrss ${PURPLE_LIBRARY} ${GLIB2_LIBRARIES} ${GETTEXTPO_LIBRARY} -lmrss -export-dynamic)
+set_target_properties(prplrss PROPERTIES COMPILE_FLAGS -DPURPLE_PLUGINS)
+
 INSTALL(FILES
 	${CMAKE_CURRENT_SOURCE_DIR}/libprpldict.so
+	${CMAKE_CURRENT_SOURCE_DIR}/libprplrss.so
 	DESTINATION lib/purple-2
 	)
