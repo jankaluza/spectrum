@@ -303,20 +303,20 @@ void SpectrumRosterManager::sendNewBuddies() {
 		std::map<std::string, AbstractSpectrumBuddy *>::iterator it = m_subscribeCache.begin();
 		while (it != m_subscribeCache.end()) {
 			AbstractSpectrumBuddy *s_buddy = (*it).second;
-			if (s_buddy->getSubscription() == "both")
-				continue;
-			std::string jid = s_buddy->getBareJid();
-			std::string alias = s_buddy->getAlias();
+			if (s_buddy->getSubscription() != "both") {
+				std::string jid = s_buddy->getBareJid();
+				std::string alias = s_buddy->getAlias();
 
-			s_buddy->setSubscription("ask");
-			addRosterItem(s_buddy);
+				s_buddy->setSubscription("ask");
+				addRosterItem(s_buddy);
 
-			item = new Tag("item");
-			item->addAttribute("action", "add");
-			item->addAttribute("jid", jid);
-			item->addAttribute("name", alias);
-			item->addChild( new Tag("group", s_buddy->getGroup()));
-			x->addChild(item);
+				item = new Tag("item");
+				item->addAttribute("action", "add");
+				item->addAttribute("jid", jid);
+				item->addAttribute("name", alias);
+				item->addChild( new Tag("group", s_buddy->getGroup()));
+				x->addChild(item);
+			}
 			it++;
 		}
 		tag->addChild(x);
@@ -326,21 +326,21 @@ void SpectrumRosterManager::sendNewBuddies() {
 		std::map<std::string, AbstractSpectrumBuddy *>::iterator it = m_subscribeCache.begin();
 		while (it != m_subscribeCache.end()) {
 			AbstractSpectrumBuddy *s_buddy = (*it).second;
-			if (s_buddy->getSubscription() == "both")
-				continue;
-			std::string alias = s_buddy->getAlias();
+			if (s_buddy->getSubscription() != "both") {
+				std::string alias = s_buddy->getAlias();
 
-			Tag *tag = new Tag("presence");
-			tag->addAttribute("type", "subscribe");
-			tag->addAttribute("from", s_buddy->getBareJid());
-			tag->addAttribute("to", m_user->jid());
-			Tag *nick = new Tag("nick", alias);
-			nick->addAttribute("xmlns","http://jabber.org/protocol/nick");
-			tag->addChild(nick);
-			Transport::instance()->send(tag);
+				Tag *tag = new Tag("presence");
+				tag->addAttribute("type", "subscribe");
+				tag->addAttribute("from", s_buddy->getBareJid());
+				tag->addAttribute("to", m_user->jid());
+				Tag *nick = new Tag("nick", alias);
+				nick->addAttribute("xmlns","http://jabber.org/protocol/nick");
+				tag->addChild(nick);
+				Transport::instance()->send(tag);
 
-			s_buddy->setSubscription("ask");
-			addRosterItem(s_buddy);
+				s_buddy->setSubscription("ask");
+				addRosterItem(s_buddy);
+			}
 			it++;
 		}
 	}
