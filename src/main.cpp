@@ -1046,7 +1046,7 @@ void GlooxMessageHandler::purpleConnectionError(PurpleConnection *gc,PurpleConne
 }
 
 void GlooxMessageHandler::purpleBuddyTyping(PurpleAccount *account, const char *who){
-  PurpleConverstation *conv = purple_find_converstation_with_account(PURPLE_CONV_TYPE_IM, who, account);
+  PurpleConversation *conv = purple_find_conversation_with_account(PURPLE_CONV_TYPE_IM, who, account);
   if (0 == conv) {
     return;
   }
@@ -1102,7 +1102,7 @@ void GlooxMessageHandler::purpleBuddySignedOff(PurpleBuddy *buddy) {
 }
 
 void GlooxMessageHandler::purpleBuddyTypingStopped(PurpleAccount *account, const char *who) {
-  PurpleConverstation *conv = purple_find_converstation_with_account(PURPLE_CONV_TYPE_IM, who, account);
+  PurpleConversation *conv = purple_find_conversation_with_account(PURPLE_CONV_TYPE_IM, who, account);
   if (0 == conv) {
     return;
   }
