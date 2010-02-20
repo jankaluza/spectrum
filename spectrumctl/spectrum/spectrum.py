@@ -21,6 +21,12 @@ except ImportError:
 	import spectrumconfigparser
 
 class spectrum:
+	file_settings = [ ('service', 'config_interface'),
+		( 'service', 'pid_file' ),
+		( 'logging', 'log_file' ) ]
+
+	dir_settings = [ ( 'purple', 'userdir' ) ]
+
 	def __init__( self, options, config_path ):
 		self.config_path = os.path.normpath( config_path )
 		self.config = spectrumconfigparser.SpectrumConfigParser()
@@ -47,6 +53,64 @@ class spectrum:
 		except:
 			return -1
 
+	def check_file( self, file, uid=True, gid=True, create=False ):
+		print( 'check_file: ' + file )
+
+		import pwd
+		user = pwd.getpwnam( self.options.su )
+
+		if os.path.exists( file ) and os.path.isfile():
+			stat = os.stat( file )
+			if uid and stat.st_uid != user.pw_uid:
+				raise RuntimeError( file, 'Unsafe ownership' )
+			if gid and stat.st_gid != user.pw_gid:
+				raise RuntimeError( file, 'Unsafe group ownership' )
+		elif not os.path.exists( file ):
+			# Todo: check if dir is writable
+
+			if not create:
+				return
+
+			if not os.path.exists( os.path.dirname( file ) ):
+				os.makedirs( os.path.dirname( file ) )
+			os.mknod( file )
+			file_uid = -1
+			file_gid = -1
+			if uid:
+				file_uid = uid
+			if gid:
+				file_gid = gid
+			os.chown( file, file_uid, file_gid )
+		else:
+			raise RuntimeError( file, "Not a regular file" )
+	
+	def check_dir( self, dir, uid=True, gid=True, create=False ):
+		print( 'check_dir: ' + dir )
+
+		import pwd
+		user = pwd.getpwnam( self.options.su )
+
+		if os.path.exists( dir ) and os.path.isdir():
+			stat = os.stat( dir )
+			if uid and stat.st_uid != user.pw_uid:
+				raise RuntimeError( dir, 'Unsafe ownership' )
+			if gid and stat.st_gid != user.pw_gid:
+				raise RuntimeError( dir, 'Unsafe group ownership' )
+		elif not os.path.exists( dir ):
+			if not create:
+				return
+
+			os.makedirs( dir )
+			dir_uid = -1
+			dir_gid = -1
+			if uid:
+				dir_uid = uid
+			if gid:
+				dir_gid = gid
+			os.chown( dir, dir_uid, dir_gid )
+		else:
+			raise RuntimeError( dir, "Not a directory" )
+	
 	def su_cmd( self, cmd ):
 		user = self.options.su
 		return [ 'su', user, '-s', '/bin/bash', '-c', ' '.join( cmd ) ]
@@ -64,36 +128,25 @@ class spectrum:
 			except KeyError:
 				raise RuntimeError( self.options.su, 'User does not exist' )
 		else:
+			# on windows, there is no real way to get the info that
+			# we need
 			return 0, "ok"
 
-		def check_dir( dir, check_gid=True ):
-			if os.path.exists( dir ) and os.path.isdir( dir ):
-				stat = os.stat( dir )
-				if stat.st_uid != user.pw_uid:
-					raise RuntimeError( dir, 'Unsafe ownership' )
-				if check_gid and stat.st_gid != user.pw_gid:
-					raise RuntimeError( dir, 'Unsafe group ownership' )
-			elif not os.path.exists( dir ):
-				os.makedirs( dir )
-				os.chown( dir, user.pw_uid, user.pw_gid )
-			else:
-				raise RuntimeError( dir, "Not a directory" )
+		for entry in spectrum.file_settings:
+			section = entry[0]
+			setting = entry[1]
+			value = self.config.get( section, setting )
+			self.check_file( value )
 
-		
-		check_dir( os.path.dirname( self.pid_file ) )
-
-		log_file = self.config.get( 'logging', 'log_file' )
-		check_dir( os.path.dirname( log_file ), False )
-
-		cache_file = self.config.get( 'service', 'filetransfer_cache' )
-		check_dir( os.path.dirname( cache_file ) )
-
-		purple_dir = self.config.get( 'purple', 'userdir' )
-		check_dir( purple_dir )
-
+		for entry in spectrum.dir_settings:
+			section = entry[0]
+			setting = entry[1]
+			value = self.config.get( section, setting )
+			self.check_dir( value )
+			
 		if self.config.get( 'database', 'type' ) == 'sqlite':
 			db_file = self.config.get( 'database', 'database' )
-			check_dir( os.path.dirname( db_file ) )
+			self.check_file( db_file )
 
 		return 0, 'ok'
 
