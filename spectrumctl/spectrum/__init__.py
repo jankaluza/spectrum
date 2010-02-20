@@ -1,6 +1,8 @@
-# Copyright (C) 2009, 2010 Mathias Ertl
+# -*- coding: utf-8 -*-
 #
-# This file is part of Spectrumctl.
+# This file is part of spectrumctl. See spectrumctl.py for a description.
+#
+# Copyright (C) 2009, 2010 Mathias Ertl
 #
 # Spectrumctl is free software; you can redistribute it and/or modify it under
 # the terms of the GNU General Public License as published by the Free Software
