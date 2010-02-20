@@ -22,6 +22,8 @@ except ImportError:
 	import configparser as ConfigParser
 
 class SpectrumConfigParser( ConfigParser.ConfigParser ):
+	variables = [ 'jid', 'protocol', 'filename' ]
+
 	def _interpolate( self, section, option, rawval, vars ):
 		value = rawval
 		if value == "password":
@@ -29,21 +31,16 @@ class SpectrumConfigParser( ConfigParser.ConfigParser ):
 
 		depth = ConfigParser.MAX_INTERPOLATION_DEPTH
 		while depth:
-#			if '$'+option in value:
-#				print( "Warning: Option %s contains itself: %s"%(option, value) )
-#				break # we cannot contain ourself - stop!
-
-			if not '$jid' in value and not '$protocol' in value:
+			variables = [ v for v in SpectrumConfigParser.variables if '$'+v in value ]
+			if variables == []:
 				break # nothing left to expand
 			
-			if "$jid" in value:
-				jid = self.get( 'service', 'jid', True )
-				value = value.replace( '$jid', jid )
-			if "$protocol" in value:
-				protocol = self.get( 'service', 'protocol', True )
-				value = value.replace( '$protocol', protocol )
+			for var in variables:
+				subst = self.get( 'service', var, True )
+				value = value.replace( '$'+var, subst )
 			depth -= 1
 
 		return value
+
 	def _interpolation_replace( self ):
 		print( "Please file a bug-report when you read this line!" )

@@ -25,7 +25,8 @@ except ImportError:
 class spectrum:
 	def __init__( self, options, config_path ):
 		self.config_path = os.path.normpath( config_path )
-		self.config = spectrumconfigparser.SpectrumConfigParser()
+		filename = os.path.splitext( os.path.basename( self.config_path ) )[0]
+		self.config = spectrumconfigparser.SpectrumConfigParser({'filename': filename})
 		self.options = options
 		self.config.read( config_path )
 		self.pid_file = self.config.get( 'service', 'pid_file' )
@@ -309,17 +310,7 @@ class spectrum:
 		try:
 			os.kill( pid, signal.SIGTERM )
 			time.sleep( 0.1 )
-	def check_exists( self, file, typ=file ):
-		if not os.path.exists( file ):
-			raise RuntimeError( file, 'Does not exists' )
-
-		if typ == 'file' and not os.path.isfile( file ):
-			raise RuntimeError( file, 'Not a file' )
-		if typ == 'dir' and not os.path.isdir( file ):
-			raise RuntimeError( file, 'Not a directory' )
-
-		return True
-
+			
 			for i in range(1, 10):
 				status = self.status()[0]
 				if status == 3 or status == 1:
