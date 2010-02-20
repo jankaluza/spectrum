@@ -28,12 +28,12 @@
 #include "win32/win32dep.h"
 #endif
 
-static int create_dir(std::string dir) {
+static int create_dir(std::string dir, int mode) {
 #ifdef WIN32
 	replace(dir, "/", "\\");
 #endif
 	char *dirname = g_path_get_dirname(dir.c_str());
-	int ret = purple_build_dir(dirname, 0755);
+	int ret = purple_build_dir(dirname, mode);
 	g_free(dirname);
 	return ret;
 }
@@ -173,14 +173,16 @@ Configuration ConfigFile::getConfiguration() {
 
 	if (!loadString(configuration.filetransferCache, "service", "filetransfer_cache"))
 		return DummyConfiguration;
+	create_dir(configuration.filetransferCache, 0750);
 	
 	loadString(configuration.filetransferWeb, "service", "filetransfer_web", "");
 
 	if (!loadString(configuration.config_interface, "service", "config_interface", ""))
 		return DummyConfiguration;
+	create_dir(configuration.config_interface, 0640);
 
 	loadString(configuration.pid_f, "service", "pid_file", "/var/run/spectrum/" + configuration.jid);
-	create_dir(configuration.pid_f);
+	create_dir(configuration.pid_f, 0640);
 
 	if (!loadString(configuration.sqlType, "database", "type"))
 		return DummyConfiguration;
@@ -198,7 +200,7 @@ Configuration ConfigFile::getConfiguration() {
 	if (!loadString(configuration.sqlDb, "database", "database"))
 		return DummyConfiguration;
 	if (configuration.sqlType == "sqlite") {
-		create_dir(configuration.sqlDb);
+		create_dir(configuration.sqlDb, 0640);
 	}
 
 	if (!loadString(configuration.sqlPrefix, "database", "prefix", configuration.sqlType == "sqlite" ? "" : "required"))
@@ -206,11 +208,12 @@ Configuration ConfigFile::getConfiguration() {
 
 	if (!loadString(configuration.userDir, "purple", "userdir"))
 		return DummyConfiguration;
-	create_dir(configuration.userDir);
+	create_dir(configuration.userDir, 0750);
 
 	loadString(configuration.language, "service", "language", "en");
 	loadString(configuration.encoding, "service", "encoding", "");
 	loadString(configuration.logfile, "logging", "log_file", "");
+	create_dir(configuration.logfile, 0640);
 	loadBoolean(configuration.onlyForVIP, "service", "only_for_vip", false);
 	loadBoolean(configuration.VIPEnabled, "service", "vip_mode", false);
 	loadBoolean(configuration.useProxy, "service", "use_proxy", false);
