@@ -14,19 +14,13 @@
 # You should have received a copy of the GNU General Public License along with
 # this program; if not, see <http://www.gnu.org/licenses/>.
 
-import os, time, signal, subprocess
+import os, grp, pwd, stat, time, signal, subprocess
 try:
 	from spectrum import spectrumconfigparser
 except ImportError:
 	import spectrumconfigparser
 
 class spectrum:
-	file_settings = [ ('service', 'config_interface'),
-		( 'service', 'pid_file' ),
-		( 'logging', 'log_file' ) ]
-
-	dir_settings = [ ( 'purple', 'userdir' ) ]
-
 	def __init__( self, options, config_path ):
 		self.config_path = os.path.normpath( config_path )
 		self.config = spectrumconfigparser.SpectrumConfigParser()
@@ -53,63 +47,77 @@ class spectrum:
 		except:
 			return -1
 
-	def check_file( self, file, uid=True, gid=True, create=False ):
-		print( 'check_file: ' + file )
+	def check_exists( self, file, typ=file ):
+		if not os.path.exists( file ):
+			raise RuntimeError( file, 'Does not exists' )
 
-		import pwd
-		user = pwd.getpwnam( self.options.su )
+		if typ == 'file' and not os.path.isfile( file ):
+			raise RuntimeError( file, 'Not a file' )
+		if typ == 'dir' and not os.path.isdir( file ):
+			raise RuntimeError( file, 'Not a directory' )
 
-		if os.path.exists( file ) and os.path.isfile():
-			stat = os.stat( file )
-			if uid and stat.st_uid != user.pw_uid:
-				raise RuntimeError( file, 'Unsafe ownership' )
-			if gid and stat.st_gid != user.pw_gid:
-				raise RuntimeError( file, 'Unsafe group ownership' )
-		elif not os.path.exists( file ):
-			# Todo: check if dir is writable
+		return True
 
-			if not create:
-				return
+	def check_ownership( self, node, uid=None, gid=None ):
+		# pass -1 to uid/gid to not check those permissions
+		# pass None to use parameter passed by --su
 
-			if not os.path.exists( os.path.dirname( file ) ):
-				os.makedirs( os.path.dirname( file ) )
-			os.mknod( file )
-			file_uid = -1
-			file_gid = -1
-			if uid:
-				file_uid = uid
-			if gid:
-				file_gid = gid
-			os.chown( file, file_uid, file_gid )
-		else:
-			raise RuntimeError( file, "Not a regular file" )
+		if uid == -1 and gid == -1:
+			print( "uid and gid are -1. That doesn't make sense." )
+
+		if not os.path.exists( node ):
+			raise RuntimeError( node, "Does not exist" )
+
+		if uid == None:
+			uid = pwd.getpwnam( self.options.su ).pw_uid
+		if gid == None:
+			gid = pwd.getpwnam( self.options.su ).pw_gid
+
+		stat = os.stat( node )
+		if uid != -1 and stat.st_uid != uid:
+				raise RuntimeError( node, 'Unsafe ownership' )
+		if gid != -1 and stat.st_gid != gid:
+				raise RuntimeError( node, 'Unsafe group ownership' )
 	
-	def check_dir( self, dir, uid=True, gid=True, create=False ):
-		print( 'check_dir: ' + dir )
+	def check_permissions( self, file, permissions, wildcards=[] ):
+		all = [ stat.S_IRUSR, stat.S_IWUSR, stat.S_IXUSR,
+			stat.S_IRGRP, stat.S_IWGRP, stat.S_IXGRP,
+			stat.S_IROTH, stat.S_IWOTH, stat.S_IXOTH ]
+		mode = os.stat( file )[stat.ST_MODE]
 
-		import pwd
-		user = pwd.getpwnam( self.options.su )
+		for p in permissions:
+			if (mode & p) == 0:
+				raise RuntimeError( file, 'Incorrect permissions' )
 
-		if os.path.exists( dir ) and os.path.isdir():
-			stat = os.stat( dir )
-			if uid and stat.st_uid != user.pw_uid:
-				raise RuntimeError( dir, 'Unsafe ownership' )
-			if gid and stat.st_gid != user.pw_gid:
-				raise RuntimeError( dir, 'Unsafe group ownership' )
-		elif not os.path.exists( dir ):
-			if not create:
-				return
+		for p in [ p for p in all if ( p not in permissions and p not in wildcards )]:
+			if (mode & p) != 0:
+				raise RuntimeError( file, 'Incorrect permissions' )
 
-			os.makedirs( dir )
-			dir_uid = -1
-			dir_gid = -1
-			if uid:
-				dir_uid = uid
-			if gid:
-				dir_gid = gid
-			os.chown( dir, dir_uid, dir_gid )
+	def check_writable( self, node, uid=None ):
+		if uid == None:
+			user = pwd.getpwnam( self.options.su )
 		else:
-			raise RuntimeError( dir, "Not a directory" )
+			user = pwd.getpwuid( uid )
+
+		s = os.stat( node )
+		groups = [g for g in grp.getgrall() if user.pw_name in g.gr_mem]
+		groups.append( user.pw_gid )
+		if s.st_uid == user.pw_uid:
+			# user owns the file
+			if s.st_mode & stat.S_IWUSR == 0:
+				raise RuntimeError( node, 'Not writable (user write bit not set)' )
+			if os.path.isdir( node ) and s.st_mode & stat.S_IXUSR == 0:
+				raise RuntimeError( node, 'Not writable (user execute bit not set)' )
+		elif s.st_gid in groups:
+			if s.st_mode & stat.S_IWGRP == 0:
+				raise RuntimeError( node, 'Not writable (group write bit not set)' )
+			if os.path.isdir( node ) and s.st_mode & stat.S_IXGRP == 0:
+				raise RuntimeError( node, 'Not writable (group execute bit not set)' )
+		else: 
+			if s.st_mode & stat.S_IWOTH == 0:
+				raise RuntimeError( node, 'Not writable (other write bit not set)' )
+			if os.path.isdir( node ) and s.st_mode & stat.S_IXOTH == 0:
+				raise RuntimeError( node, 'Not writable (other execute bit not set)' )
 	
 	def su_cmd( self, cmd ):
 		user = self.options.su
@@ -122,7 +130,6 @@ class spectrum:
 
 		# check if spectrum user exists:
 		if os.name == 'posix':
-			import pwd
 			try:
 				user = pwd.getpwnam( self.options.su )
 			except KeyError:
@@ -132,21 +139,64 @@ class spectrum:
 			# we need
 			return 0, "ok"
 
-		for entry in spectrum.file_settings:
-			section = entry[0]
-			setting = entry[1]
-			value = self.config.get( section, setting )
-			self.check_file( value )
+		# config-file
+		self.check_ownership( self.config_path, 0 )
+		# we don't care about user permissions, group MUST be read-only
+		self.check_permissions( self.config_path, [ stat.S_IRGRP ],
+			[ stat.S_IRUSR, stat.S_IWUSR, stat.S_IXUSR ] )
 
-		for entry in spectrum.dir_settings:
-			section = entry[0]
-			setting = entry[1]
-			value = self.config.get( section, setting )
-			self.check_dir( value )
-			
+		# config_interface:
+		config_interface = self.config.get( 'service', 'config_interface' )
+		dir = os.path.dirname( config_interface )
+		self.check_exists( dir, 'dir' )
+		self.check_writable( dir )
+
+		# filetransfer cache
+		filetransfer_cache = self.config.get( 'service', 'filetransfer_cache' )
+		self.check_exists( filetransfer_cache, 'dir' )
+		self.check_ownership( filetransfer_cache )
+		self.check_permissions( filetransfer_cache, # rwxr-x---
+			[ stat.S_IRUSR, stat.S_IWUSR, stat.S_IXUSR, 
+			  stat.S_IRGRP, stat.S_IXGRP ] )
+
+		# pid_file:
+		pid_file = self.config.get( 'service', 'pid_file' )
+		dir = os.path.dirname( pid_file )
+		self.check_exists( dir )
+		self.check_writable( dir )
+
+		# log file
+		log_file = self.config.get( 'logging', 'log_file' )
+		try:
+			# does not exist upon first startup:
+			self.check_exists( log_file )
+			self.check_ownership( log_file, gid=-1 )
+			self.check_permissions( log_file, # rw-r-----
+				[ stat.S_IRUSR, stat.S_IWUSR, stat.S_IRGRP ] )
+		except RuntimeError:
+			dir = os.path.dirname( log_file )
+			self.check_writable( dir )
+
+		# sqlite database
 		if self.config.get( 'database', 'type' ) == 'sqlite':
 			db_file = self.config.get( 'database', 'database' )
-			self.check_file( db_file )
+			try:
+				# might not exist upon first startup:
+				self.check_exists( db_file )
+				self.check_ownership( db_file )
+				self.check_permissions( db_file, # rw-r-----
+					[ stat.S_IRUSR, stat.S_IWUSR, stat.S_IRGRP ] )
+			except RuntimeError:
+				dir = os.path.dirname( db_file )
+				self.check_writable( dir )
+		
+		# purple userdir
+		userdir = self.config.get( 'purple', 'userdir' )
+		self.check_exists( userdir, 'dir' )
+		self.check_ownership( userdir )
+		self.check_permissions( userdir, # rwxr-x---
+			[ stat.S_IRUSR, stat.S_IWUSR, stat.S_IXUSR, 
+			  stat.S_IRGRP, stat.S_IXGRP ] )
 
 		return 0, 'ok'
 
@@ -246,6 +296,17 @@ class spectrum:
 		try:
 			os.kill( pid, signal.SIGTERM )
 			time.sleep( 0.1 )
+	def check_exists( self, file, typ=file ):
+		if not os.path.exists( file ):
+			raise RuntimeError( file, 'Does not exists' )
+
+		if typ == 'file' and not os.path.isfile( file ):
+			raise RuntimeError( file, 'Not a file' )
+		if typ == 'dir' and not os.path.isdir( file ):
+			raise RuntimeError( file, 'Not a directory' )
+
+		return True
+
 			for i in range(1, 10):
 				status = self.status()[0]
 				if status == 3 or status == 1:
