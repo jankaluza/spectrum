@@ -165,7 +165,7 @@ class spectrum:
 				[ stat.S_IRUSR, stat.S_IWUSR, stat.S_IXUSR, 
 				  stat.S_IRGRP, stat.S_IXGRP ] )
 		except RuntimeError:
-			dir = os.path.dirname( log_file )
+			dir = os.path.dirname( filetransfer_cache )
 			self.check_exists( dir )
 			self.check_writable( dir )
 
@@ -210,7 +210,7 @@ class spectrum:
 				[ stat.S_IRUSR, stat.S_IWUSR, stat.S_IXUSR, 
 				  stat.S_IRGRP, stat.S_IXGRP ] )
 		except RuntimeError:
-			dir = os.path.dirname( log_file )
+			dir = os.path.dirname( userdir )
 			self.check_exists( dir )
 			self.check_writable( dir )
 
