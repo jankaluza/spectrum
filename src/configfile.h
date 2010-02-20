@@ -98,6 +98,7 @@ class ConfigFile {
 		std::string m_jid;
 		std::string m_protocol;
 		std::string m_appdata;
+		std::string m_filename;
 
 		bool loadString(std::string &variable, const std::string &section, const std::string &key, const std::string &def = "required");
 		bool loadInteger(int &variable, const std::string &section, const std::string &key, int def = INT_MAX);

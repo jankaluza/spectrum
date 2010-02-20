@@ -65,6 +65,19 @@ if(CMAKE_BUILD_TYPE MATCHES Debug)
 	ADD_DEFINITIONS(-ggdb)
 	ADD_DEFINITIONS(-DDEBUG)
 	ADD_DEFINITIONS(-Wall)
+	ADD_DEFINITIONS(-W)
+	ADD_DEFINITIONS(-Wcast-align)
+	ADD_DEFINITIONS(-Wextra -Wno-sign-compare -Wno-unused-parameter)
+	ADD_DEFINITIONS(-Werror=format-security)
+	ADD_DEFINITIONS(-Winit-self)
+	ADD_DEFINITIONS(-Wmissing-declarations)
+	ADD_DEFINITIONS(-Wmissing-noreturn)
+	ADD_DEFINITIONS(-Wpointer-arith)
+	ADD_DEFINITIONS(-Wreorder)
+	ADD_DEFINITIONS(-Woverloaded-virtual)
+	ADD_DEFINITIONS(-Wsign-promo)
+	ADD_DEFINITIONS(-Wundef -Wunused)
+#	ADD_DEFINITIONS(-Weffc++)
 #	ADD_DEFINITIONS(-pedantic)
 	message(STATUS "Build type is set to Debug")
 endif(CMAKE_BUILD_TYPE MATCHES Debug)
@@ -108,6 +121,7 @@ set(spectrum_SRCS
 	src/spectrumbuddy.cpp
 	src/spectrumconversation.cpp
 	src/spectrummucconversation.cpp
+	src/spectrumnodehandler.cpp
 	src/spectrumtimer.cpp
 	src/statshandler.cpp
 	src/striphtmltags.cpp
@@ -127,6 +141,7 @@ set(spectrum_SRCS
 	src/protocols/qq.cpp
 	src/protocols/simple.cpp
 	src/protocols/sipe.cpp
+	src/protocols/twitter.cpp
 	src/protocols/xmpp.cpp
 	src/protocols/yahoo.cpp
 )

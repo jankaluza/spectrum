@@ -35,6 +35,7 @@ spectrum_SOURCES = adhoc/adhocadmin.cpp \
 	spectrumconversation.cpp \
 	spectrummessagehandler.cpp \
 	spectrummucconversation.cpp \
+	spectrumnodehandler.cpp \
 	spectrumtimer.cpp \
 	sql.cpp \
 	statshandler.cpp \

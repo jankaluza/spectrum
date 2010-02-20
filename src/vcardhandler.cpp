@@ -26,7 +26,7 @@
 #include "protocols/abstractprotocol.h"
 #include "transport.h"
 
-void base64encode(const unsigned char * input, int len, std::string & out)
+static void base64encode(const unsigned char * input, int len, std::string & out)
 {
 
     static char b64lookup[65] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"

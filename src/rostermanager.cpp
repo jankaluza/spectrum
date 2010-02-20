@@ -164,8 +164,6 @@ void SpectrumRosterManager::addRosterItem(PurpleBuddy *buddy) {
 	AbstractSpectrumBuddy *s_buddy = (AbstractSpectrumBuddy *) buddy->node.ui_data;
 	if (s_buddy)
 		addRosterItem(s_buddy);
-	else
-		Log(std::string(purple_buddy_get_name(buddy)), "This buddy has not set AbstractSpectrumBuddy!!!");
 }
 
 void SpectrumRosterManager::setRoster(GHashTable *roster) {
@@ -305,18 +303,20 @@ void SpectrumRosterManager::sendNewBuddies() {
 		std::map<std::string, AbstractSpectrumBuddy *>::iterator it = m_subscribeCache.begin();
 		while (it != m_subscribeCache.end()) {
 			AbstractSpectrumBuddy *s_buddy = (*it).second;
-			std::string jid = s_buddy->getBareJid();
-			std::string alias = s_buddy->getAlias();
+			if (s_buddy->getSubscription() != "both") {
+				std::string jid = s_buddy->getBareJid();
+				std::string alias = s_buddy->getAlias();
 
-			s_buddy->setSubscription("ask");
-			addRosterItem(s_buddy);
+				s_buddy->setSubscription("ask");
+				addRosterItem(s_buddy);
 
-			item = new Tag("item");
-			item->addAttribute("action", "add");
-			item->addAttribute("jid", jid);
-			item->addAttribute("name", alias);
-			item->addChild( new Tag("group", s_buddy->getGroup()));
-			x->addChild(item);
+				item = new Tag("item");
+				item->addAttribute("action", "add");
+				item->addAttribute("jid", jid);
+				item->addAttribute("name", alias);
+				item->addChild( new Tag("group", s_buddy->getGroup()));
+				x->addChild(item);
+			}
 			it++;
 		}
 		tag->addChild(x);
@@ -326,19 +326,21 @@ void SpectrumRosterManager::sendNewBuddies() {
 		std::map<std::string, AbstractSpectrumBuddy *>::iterator it = m_subscribeCache.begin();
 		while (it != m_subscribeCache.end()) {
 			AbstractSpectrumBuddy *s_buddy = (*it).second;
-			std::string alias = s_buddy->getAlias();
+			if (s_buddy->getSubscription() != "both") {
+				std::string alias = s_buddy->getAlias();
 
-			Tag *tag = new Tag("presence");
-			tag->addAttribute("type", "subscribe");
-			tag->addAttribute("from", s_buddy->getBareJid());
-			tag->addAttribute("to", m_user->jid());
-			Tag *nick = new Tag("nick", alias);
-			nick->addAttribute("xmlns","http://jabber.org/protocol/nick");
-			tag->addChild(nick);
-			Transport::instance()->send(tag);
+				Tag *tag = new Tag("presence");
+				tag->addAttribute("type", "subscribe");
+				tag->addAttribute("from", s_buddy->getBareJid());
+				tag->addAttribute("to", m_user->jid());
+				Tag *nick = new Tag("nick", alias);
+				nick->addAttribute("xmlns","http://jabber.org/protocol/nick");
+				tag->addChild(nick);
+				Transport::instance()->send(tag);
 
-			s_buddy->setSubscription("ask");
-			addRosterItem(s_buddy);
+				s_buddy->setSubscription("ask");
+				addRosterItem(s_buddy);
+			}
 			it++;
 		}
 	}

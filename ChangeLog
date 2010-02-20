@@ -1,7 +1,19 @@
 version 0.2 (20??-??-??):
+	General:
+	* Proper disco#info handling (#51)
 	* Added Windows compilation support
 	* Send unavailable presences when shutting transport down
+	* Working filetransfer from XMPP to legacy network when legacy network user
+	  can't receive file.
+	* Twitter protocol support (Twitter with http://code.google.com/p/prpltwtr/)
+
+	XMPP:
+	* MUC support for XMPP
+
+	IRC:
 	* IRC Nickserv password can be set via Adhoc command
+	* Using IRC Helper (http://plugins.guifications.org/trac/wiki/irchelper) for
+	  identyfing user. Used only if IRC Helper is installed.
 
 version 0.1 (2010-02-05):
 	* initial version

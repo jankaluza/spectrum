@@ -275,8 +275,12 @@ std::string SpectrumMessageHandler::getConversationName(PurpleConversation *conv
 		std::transform(name.begin(), name.end(), name.begin(),(int(*)(int)) std::tolower);
 	}
 	else {
+		name = Transport::instance()->protocol()->prepareRoomName(name);
+		// TODO: move me to protocols/irc.cpp
+		if (name.find("%") == std::string::npos && Transport::instance()->getConfiguration().protocol == "irc") {
 			std::transform(name.begin(), name.end(), name.begin(),(int(*)(int)) std::tolower);
 			name = name + "%" + JID(m_user->username()).server();
+		}
 	}
 	return name;
 }

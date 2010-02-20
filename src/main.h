@@ -97,6 +97,7 @@ class GlooxSearchHandler;
 class GlooxParser;
 class AccountCollector;
 class Transport;
+class SpectrumNodeHandler;
 #ifndef WIN32
 class ConfigInterface;
 #endif
@@ -170,7 +171,7 @@ public:
 	 */
 	void onConnect();
 	void onDisconnect(ConnectionError e);
-	void onSessionCreateError(SessionCreateError error);
+	void onSessionCreateError(const Error *error);
 	bool onTLSConnect(const CertInfo & info);
 	
 	void handleMessage (const Message &msg, MessageSession *session = 0);
@@ -225,6 +226,7 @@ private:
 	GlooxSearchHandler *m_searchHandler;		// jabber:iq:search handler
 	GlooxAdhocHandler *m_adhoc;					// Ad-Hoc commands handler
 	GlooxParser *m_parser;						// Gloox parser - makes Tag* from std::string
+	SpectrumNodeHandler *m_spectrumNodeHandler;
 #ifndef WIN32
 	ConfigInterface *m_configInterface;
 #endif

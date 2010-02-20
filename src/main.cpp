@@ -53,6 +53,7 @@
 #include "filetransfermanager.h"
 #include "localization.h"
 #include "spectrumbuddy.h"
+#include "spectrumnodehandler.h"
 #include "transport.h"
 
 #include "parser.h"
@@ -67,6 +68,7 @@
 #include "protocols/myspace.h"
 #include "protocols/qq.h"
 #include "protocols/simple.h"
+#include "protocols/twitter.h"
 #include "protocols/xmpp.h"
 #include "protocols/yahoo.h"
 #include "protocols/sipe.h"
@@ -90,7 +92,7 @@ static GOptionEntry options_entries[] = {
 	{ "pidfile", 'p', 0, G_OPTION_ARG_STRING, &lock_file, "File where to write transport PID", NULL },
 	{ "version", 'v', 0, G_OPTION_ARG_NONE, &ver, "Shows Spectrum version", NULL },
 	{ "upgrade-db", 'u', 0, G_OPTION_ARG_NONE, &upgrade_db, "Upgrades Spectrum database", NULL },
-	{ NULL }
+	{ NULL, 0, 0, G_OPTION_ARG_NONE, NULL, "", NULL }
 };
 
 static void daemonize(void) {
@@ -274,7 +276,7 @@ static void NodeRemoved(PurpleBlistNode *node, void *data) {
 /*
  * Called when purple disconnects from legacy network.
  */
-void connection_report_disconnect(PurpleConnection *gc,PurpleConnectionError reason,const char *text){
+static void connection_report_disconnect(PurpleConnection *gc,PurpleConnectionError reason,const char *text){
 	GlooxMessageHandler::instance()->purpleConnectionError(gc, reason, text);
 }
 
@@ -564,7 +566,7 @@ static gssize XferRead(PurpleXfer *xfer, guchar **buffer, gssize size) {
 	return data_size;
 }
 
-void printDebug(PurpleDebugLevel level, const char *category, const char *arg_s) {
+static void printDebug(PurpleDebugLevel level, const char *category, const char *arg_s) {
 	std::string c("libpurple");
 
 	if (category) {
@@ -662,7 +664,8 @@ static PurpleXferUiOps xferUiOps =
 	NULL,
 	XferWrite,
 	XferRead,
-	XferNotSent
+	XferNotSent,
+	NULL
 };
 
 static PurpleConnectionUiOps conn_ui_ops =
@@ -830,6 +833,7 @@ GlooxMessageHandler::GlooxMessageHandler(const std::string &config) : MessageHan
 #endif
 
 	m_transport = new Transport(m_configuration.jid);
+	m_spectrumNodeHandler = new SpectrumNodeHandler();
 
 	if (loaded) {
 		m_sql = new SQLClass(this, upgrade_db);	
@@ -861,8 +865,8 @@ GlooxMessageHandler::GlooxMessageHandler(const std::string &config) : MessageHan
 #endif
 		m_discoHandler = new CapabilityHandler();
 
-		m_discoInfoHandler = new GlooxDiscoInfoHandler();
-		j->registerIqHandler(m_discoInfoHandler,ExtDiscoInfo);
+// 		m_discoInfoHandler = new GlooxDiscoInfoHandler();
+// 		j->registerIqHandler(m_discoInfoHandler,ExtDiscoInfo);
 		
 		j->registerIqHandler(m_adhoc, ExtAdhocCommand);
 		j->registerStanzaExtension( new Adhoc::Command() );
@@ -949,6 +953,8 @@ bool GlooxMessageHandler::loadProtocol(){
 		m_protocol = (AbstractProtocol*) new AIMProtocol(this);
 	else if (configuration().protocol == "facebook")
 		m_protocol = (AbstractProtocol*) new FacebookProtocol(this);
+	else if (configuration().protocol == "twitter")
+		m_protocol = (AbstractProtocol*) new TwitterProtocol(this);
 	else if (configuration().protocol == "gg")
 		m_protocol = (AbstractProtocol*) new GGProtocol(this);
 	else if (configuration().protocol == "icq")
@@ -1000,7 +1006,7 @@ void GlooxMessageHandler::handleLog(LogLevel level, LogArea area, const std::str
 // 	}
 }
 
-void GlooxMessageHandler::onSessionCreateError(SessionCreateError error) {
+void GlooxMessageHandler::onSessionCreateError(const Error *error) {
 	Log("gloox", "sessionCreateError");
 }
 
@@ -1040,6 +1046,11 @@ void GlooxMessageHandler::purpleConnectionError(PurpleConnection *gc,PurpleConne
 }
 
 void GlooxMessageHandler::purpleBuddyTyping(PurpleAccount *account, const char *who){
+  PurpleConversation *conv = purple_find_conversation_with_account(PURPLE_CONV_TYPE_IM, who, account);
+  if (0 == conv) {
+    return;
+  }
+  
 	User *user = (User *) userManager()->getUserByAccount(account);
 	if (user != NULL) {
 		user->purpleBuddyTyping((std::string)who);
@@ -1091,6 +1102,11 @@ void GlooxMessageHandler::purpleBuddySignedOff(PurpleBuddy *buddy) {
 }
 
 void GlooxMessageHandler::purpleBuddyTypingStopped(PurpleAccount *account, const char *who) {
+  PurpleConversation *conv = purple_find_conversation_with_account(PURPLE_CONV_TYPE_IM, who, account);
+  if (0 == conv) {
+    return;
+  }
+  
 	User *user = (User *) userManager()->getUserByAccount(account);
 	if (user != NULL) {
 		user->purpleBuddyTypingStopped((std::string) who);
@@ -1362,9 +1378,9 @@ void GlooxMessageHandler::handlePresence(const Presence &stanza){
 	}
 	// get entity capabilities
 	Tag *c = NULL;
-	Log(stanza.from().full(), "Presence received (" << stanza.subtype() << ") for: " << stanza.to().full());
+	Log(stanza.from().full(), "Presence received (" << (int)stanza.subtype() << ") for: " << stanza.to().full());
 
-	if (stanza.presence() != Presence::Unavailable && ((stanza.to().username() == "" && !protocol()->tempAccountsAllowed()) || protocol()->isMUC(NULL, stanza.to().bare()))) {
+	if (stanza.presence() != Presence::Unavailable && ((stanza.to().username() == "" && !protocol()->tempAccountsAllowed()) || (protocol()->isMUC(NULL, stanza.to().bare()) && protocol()->tempAccountsAllowed()))) {
 		Tag *stanzaTag = stanza.tag();
 		if (!stanzaTag) return;
 		Tag *c = stanzaTag->findChildWithAttrib("xmlns","http://jabber.org/protocol/caps");
@@ -1383,7 +1399,7 @@ void GlooxMessageHandler::handlePresence(const Presence &stanza){
 	}
 	User *user;
 	std::string userkey;
-	if (protocol()->isMUC(NULL, stanza.to().bare())) {
+	if (protocol()->tempAccountsAllowed() && protocol()->isMUC(NULL, stanza.to().bare())) {
 		std::string server = stanza.to().username().substr(stanza.to().username().find("%") + 1, stanza.to().username().length() - stanza.to().username().find("%"));
 		userkey = stanza.from().bare() + server;
 		user = (User *) userManager()->getUserByJID(stanza.from().bare() + server);
@@ -1402,7 +1418,7 @@ void GlooxMessageHandler::handlePresence(const Presence &stanza){
 			tag->addAttribute("type", "unavailable");
 			j->send(tag);
 		}
-		else if (((stanza.to().username() == "" && !protocol()->tempAccountsAllowed()) || protocol()->isMUC(NULL, stanza.to().bare())) && stanza.presence() != Presence::Unavailable){
+		else if (((stanza.to().username() == "" && !protocol()->tempAccountsAllowed()) || ( protocol()->tempAccountsAllowed() && protocol()->isMUC(NULL, stanza.to().bare()))) && stanza.presence() != Presence::Unavailable){
 			UserRow res = sql()->getUserByJid(userkey);
 			if(res.id==-1 && !protocol()->tempAccountsAllowed()) {
 				// presence from unregistered user
@@ -1521,6 +1537,7 @@ void GlooxMessageHandler::onConnect() {
 		SHA sha;
 		sha.feed( id );
 		m_configuration.hash = Base64::encode64( sha.binary() );
+		j->disco()->registerNodeHandler( m_spectrumNodeHandler, "http://spectrum.im/transport#" + m_configuration.hash );
 
 		new AutoConnectLoop();
 		m_firstConnection = false;
@@ -1626,7 +1643,7 @@ void GlooxMessageHandler::handleMessage (const Message &msg, MessageSession *ses
 	if (msg.subtype() == Message::Error || msg.subtype() == Message::Invalid)
 		return;
 	User *user;
-	if (protocol()->isMUC(NULL, msg.to().bare())) {
+	if (protocol()->isMUC(NULL, msg.to().bare()) && protocol()->tempAccountsAllowed()) {
 		std::string server = msg.to().username().substr(msg.to().username().find("%") + 1, msg.to().username().length() - msg.to().username().find("%"));
 		user = (User *) userManager()->getUserByJID(msg.from().bare() + server);
 	}
@@ -1772,7 +1789,7 @@ int main( int argc, char* argv[] ) {
 	}
 
 	if (argc != 2)
-#if WIN32
+#ifdef WIN32
 		std::cout << "Usage: spectrum.exe <configuration_file.cfg>";
 #else
 		std::cout << g_option_context_get_help(context, FALSE, NULL);
@@ -1804,5 +1821,3 @@ int main( int argc, char* argv[] ) {
 	}
 	g_option_context_free(context);
 }
-
-

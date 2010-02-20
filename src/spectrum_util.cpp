@@ -63,7 +63,7 @@ int isValidEmail(const char *address) {
 	return (count >= 1);
 }
 
-void replace(std::string &str, const char *from, const char *to)
+void replace(std::string &str, const char *from, const char *to, int count)
 {
 	const size_t from_len = strlen(from);
 	const size_t to_len   = strlen(to);
@@ -76,6 +76,10 @@ void replace(std::string &str, const char *from, const char *to)
 	{
 		// Replace it
 		str.replace(index, from_len, to);
+		std::cout << "REPLACE " << count << " " << str << "\n";
+		count--;
+		if (count == 0)
+			return;
 		// Find the next one
 		index = str.find(from, index + to_len);
 	}

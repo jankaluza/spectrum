@@ -30,9 +30,12 @@
 
 static int create_dir(std::string dir) {
 #ifdef WIN32
-		replace(dir, "/", "\\");
+	replace(dir, "/", "\\");
 #endif
-		return purple_build_dir(g_path_get_dirname(dir.c_str()), 0755);
+	char *dirname = g_path_get_dirname(dir.c_str());
+	int ret = purple_build_dir(dirname, 0755);
+	g_free(dirname);
+	return ret;
 }
 
 Configuration DummyConfiguration;
@@ -42,6 +45,7 @@ ConfigFile::ConfigFile(const std::string &config) {
 	m_loaded = true;
 	m_jid = "";
 	m_protocol = "";
+	m_filename = "";
 #ifdef WIN32
 	char *appdata = wpurple_get_special_folder(CSIDL_APPDATA);
 	m_appdata = std::string(appdata ? appdata : "");
@@ -56,6 +60,10 @@ ConfigFile::ConfigFile(const std::string &config) {
 
 void ConfigFile::loadFromFile(const std::string &config) {
 	int flags = G_KEY_FILE_KEEP_COMMENTS | G_KEY_FILE_KEEP_TRANSLATIONS;
+	char *basename = g_path_get_basename(config.c_str());
+	std::string b(basename);
+	m_filename = b.substr(0, b.find_last_of('.'));
+	g_free(basename);
 
 	if (!g_key_file_load_from_file (keyfile, config.c_str(), (GKeyFileFlags)flags, NULL)) {
 		if (!g_key_file_load_from_file (keyfile, std::string( "/etc/spectrum/" + config + ".cfg").c_str(), (GKeyFileFlags)flags, NULL))
@@ -88,6 +96,7 @@ bool ConfigFile::loadString(std::string &variable, const std::string &section, c
 		if (!m_protocol.empty())
 			replace(variable, "$protocol", m_protocol.c_str());
 		replace(variable, "$appdata", m_appdata.c_str());
+		replace(variable, "$filename", m_filename.c_str());
 		g_free(value);
 	}
 	else {

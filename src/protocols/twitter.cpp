@@ -18,10 +18,10 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02111-1301  USA
  */
 
-#include "xmpp.h"
+#include "twitter.h"
 #include "../main.h"
 
-XMPPProtocol::XMPPProtocol(GlooxMessageHandler *main){
+TwitterProtocol::TwitterProtocol(GlooxMessageHandler *main){
 	m_main = main;
 	m_transportFeatures.push_back("jabber:iq:register");
 	m_transportFeatures.push_back("jabber:iq:gateway");
@@ -36,54 +36,51 @@ XMPPProtocol::XMPPProtocol(GlooxMessageHandler *main){
 	m_buddyFeatures.push_back("http://jabber.org/protocol/chatstates");
 	m_buddyFeatures.push_back("http://jabber.org/protocol/commands");
 
-	m_buddyFeatures.push_back("http://jabber.org/protocol/si/profile/file-transfer");
-	m_buddyFeatures.push_back("http://jabber.org/protocol/bytestreams");
-	m_buddyFeatures.push_back("http://jabber.org/protocol/si");
+// 	m_buddyFeatures.push_back("http://jabber.org/protocol/si/profile/file-transfer");
+// 	m_buddyFeatures.push_back("http://jabber.org/protocol/bytestreams");
+// 	m_buddyFeatures.push_back("http://jabber.org/protocol/si");
 }
 
-XMPPProtocol::~XMPPProtocol() {}
+TwitterProtocol::~TwitterProtocol() {}
 
-bool XMPPProtocol::isValidUsername(const std::string &str){
+bool TwitterProtocol::isValidUsername(const std::string &str){
 	// TODO: check valid email address
 	return true;
 }
 
-std::list<std::string> XMPPProtocol::transportFeatures(){
+std::list<std::string> TwitterProtocol::transportFeatures(){
 	return m_transportFeatures;
 }
 
-std::list<std::string> XMPPProtocol::buddyFeatures(){
+std::list<std::string> TwitterProtocol::buddyFeatures(){
 	return m_buddyFeatures;
 }
 
-std::string XMPPProtocol::text(const std::string &key) {
+std::string TwitterProtocol::text(const std::string &key) {
 	if (key == "instructions")
-		return "Enter your Jabber ID and password:";
+		return "Enter your Twitter username and password:";
 	return "not defined";
 }
 
-bool XMPPProtocol::onPresenceReceived(AbstractUser *user, const Presence &stanza) {
+bool TwitterProtocol::onPresenceReceived(AbstractUser *user, const Presence &stanza) {
 	Tag *stanzaTag = stanza.tag();
 	if (stanza.to().username() != "") {
 		if (user->isConnectedInRoom(stanza.to().username().c_str())) {
 		}
 		else if (isMUC(user, stanza.to().bare()) && stanza.presence() != Presence::Unavailable) {
 			if (user->isConnected()) {
-				GHashTable *comps = NULL;
 				std::string name = JID(stanzaTag->findAttribute("to")).username();
 				std::string nickname = JID(stanzaTag->findAttribute("to")).resource();
+				PurpleChat *chat = purple_blist_find_chat(user->account(), "Timeline: my");
+				if (chat == NULL) {
+					delete stanzaTag;
+					return false;
+				}
 
 				PurpleConnection *gc = purple_account_get_connection(user->account());
-				if (PURPLE_PLUGIN_PROTOCOL_INFO(gc->prpl)->chat_info_defaults != NULL) {
-					replace(name, "%", "@");
-					replace(name, "#", "");
-					name += "/" + nickname;
-					comps = PURPLE_PLUGIN_PROTOCOL_INFO(gc->prpl)->chat_info_defaults(gc, name.c_str());
-				}
-				if (comps) {
-					user->setRoomResource(name, JID(stanzaTag->findAttribute("from")).resource());
-					serv_join_chat(gc, comps);
-				}
+				user->setRoomResource(name, JID(stanzaTag->findAttribute("from")).resource());
+				std::cout << "joinchat " << purple_chat_get_components(chat) << "\n";
+				serv_join_chat(gc, purple_chat_get_components(chat));
 				
 				
 			}
@@ -91,10 +88,4 @@ bool XMPPProtocol::onPresenceReceived(AbstractUser *user, const Presence &stanza
 	}
 	delete stanzaTag;
 	return false;
-}
-
-std::string XMPPProtocol::prepareRoomName(const std::string &room) {
-	std::string r = "#" + room;
-	replace(r, "@", "%", 1);
-	return r;
 }

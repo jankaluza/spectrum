@@ -30,6 +30,8 @@
 #include "../spectrum_util.h"
 #include "cmds.h"
 
+#define IRCHELPER_ID "core-rlaager-irchelper"
+
 ConfigHandler::ConfigHandler(AbstractUser *user, const std::string &from, const std::string &id) : m_from(from), m_user(user) {
 	setRequestType(CALLER_ADHOC);
 	std::string bare(JID(from).bare());
@@ -98,6 +100,13 @@ IRCProtocol::IRCProtocol(GlooxMessageHandler *main){
 	
 	adhocCommand command = { "IRC Nickserv password configuration", false, createConfigHandler };
 	GlooxAdhocHandler::instance()->registerAdhocCommandHandler("transport_irc_config", command);
+	
+	m_irchelper = purple_plugins_find_with_id(IRCHELPER_ID);
+	if (m_irchelper) {
+		if (!purple_plugin_load(m_irchelper))
+			m_irchelper = NULL;
+	}
+	std::cout << "IRCHELPER " << m_irchelper << "\n";
 
 }
 
@@ -147,15 +156,18 @@ void IRCProtocol::onUserCreated(AbstractUser *user) {
 
 void IRCProtocol::onConnected(AbstractUser *user) {
 	IRCProtocolData *data = (IRCProtocolData *) user->protocolData();
-	const char *n = purple_value_get_string(user->getSetting("nickserv"));
-	std::string nickserv(n ? n : "");
-	if (!nickserv.empty()) {
-		// receivedMessage will send PM according to resource, so it doesn't matter what's before it... :)
-		Message msg(Message::Chat, JID("#test%test@server.cz/NickServ"), "identify " + nickserv);
-		msg.setFrom(user->jid());
-		User *handler = (User *) user;
-// 		GlooxMessageHandler::instance()->handleMessage(msg);
-		handler->handleMessage(msg);
+
+	// IRC helper is not loaded, so we have to authenticate by ourself
+	if (m_irchelper == NULL) {
+		const char *n = purple_value_get_string(user->getSetting("nickserv"));
+		std::string nickserv(n ? n : "");
+		if (!nickserv.empty()) {
+			// receivedMessage will send PM according to resource, so it doesn't matter what's before it... :)
+			Message msg(Message::Chat, JID("#test%test@server.cz/NickServ"), "identify " + nickserv);
+			msg.setFrom(user->jid());
+			User *handler = (User *) user;
+			handler->handleMessage(msg);
+		}
 	}
 
 	for (std::list <Tag*>::iterator it = data->autoConnectRooms.begin(); it != data->autoConnectRooms.end() ; it++ ) {
@@ -214,96 +226,7 @@ bool IRCProtocol::onPresenceReceived(AbstractUser *user, const Presence &stanza)
 			}
 		}
 	}
-// 
-// 	// this presence is for the transport
-// 	if ( !tempAccountsAllowed() || isMUC(NULL, stanza.to().bare()) ){
-// 		if(stanza.presence() == Presence::Unavailable) {
-// 			// disconnect from legacy network if we are connected
-// 			if (user->isConnected()) {
-// 				if (g_hash_table_size(user->mucs()) == 0) {
-// 					Log(user->jid(), "disconecting");
-// 					purple_account_disconnect(user->account());
-// 					m_main->userManager()->removeUserTimer(user);
-// 				}
-// // 				else {
-// // 					iter = m_resources.begin();
-// // 					m_resource=(*iter).first;
-// // 				}
-// 			}
-// 			else {
-// 				if (!user->getResources().empty() && int(time(NULL))>int(user->connectionStart())+10){
-// 					user->setActiveResource();
-// 				}
-// 				else if (user->account()){
-// 					Log(user->jid(), "disconecting2");
-// 					purple_account_disconnect(user->account());
-// 				}
-// 			}
-// 		} else {
-// 			std::string resource = stanza.from().resource();
-// 			if (user->hasResource(resource)) {
-// 				user->setResource(stanza);
-// 			}
-// 
-// 			Log(user->jid(), "resource: " << user->getResource().name);
-// 			if (!user->isConnected()) {
-// 				// we are not connected to legacy network, so we should do it when disco#info arrive :)
-// 				Log(user->jid(), "connecting: resource=" << user->getResource().name);
-// 				if (user->readyForConnect()==false){
-// 					user->setReadyForConnect(true);
-// 					if (user->getResource().caps == -1){
-// 						// caps not arrived yet, so we can't connect just now and we have to wait for caps
-// 					}
-// 					else{
-// 						user->connect();
-// 					}
-// 				}
-// 			}
-// 			else {
-// 				Log(user->jid(), "mirroring presence to legacy network");
-// 				// we are already connected so we have to change status
-// 				PurpleSavedStatus *status;
-// 				int PurplePresenceType;
-// 				std::string statusMessage;
-// 
-// 				// mirror presence types
-// 				switch(stanza.presence()) {
-// 					case Presence::Available: {
-// 						PurplePresenceType=PURPLE_STATUS_AVAILABLE;
-// 						break;
-// 					}
-// 					case Presence::Chat: {
-// 						PurplePresenceType=PURPLE_STATUS_AVAILABLE;
-// 						break;
-// 					}
-// 					case Presence::Away: {
-// 						PurplePresenceType=PURPLE_STATUS_AWAY;
-// 						break;
-// 					}
-// 					case Presence::DND: {
-// 						PurplePresenceType=PURPLE_STATUS_UNAVAILABLE;
-// 						break;
-// 					}
-// 					case Presence::XA: {
-// 						PurplePresenceType=PURPLE_STATUS_EXTENDED_AWAY;
-// 						break;
-// 					}
-// 					default: break;
-// 				}
-// 				// send presence to our legacy network
-// 				status = purple_savedstatus_new(NULL, (PurpleStatusPrimitive)PurplePresenceType);
-// 
-// 				statusMessage.clear();
-// 
-// 				statusMessage.append(stanza.status());
-// 
-// 				if (!statusMessage.empty())
-// 					purple_savedstatus_set_message(status,statusMessage.c_str());
-// 				purple_savedstatus_activate_for_account(status,user->account());
-// 			}
-// 		}
-// 	}
-// 	delete stanzaTag;
+	delete stanzaTag;
 	return false;
 }
 
@@ -313,4 +236,10 @@ void IRCProtocol::onDestroy(AbstractUser *user) {
 	delete data;
 }
 
-
+void IRCProtocol::onPurpleAccountCreated(PurpleAccount *account) {
+	User *user = (User *) account->ui_data;
+	const char *n = purple_value_get_string(user->getSetting("nickserv"));
+	if (n) {
+		purple_account_set_string(account, IRCHELPER_ID "_nickpassword", n);
+	}
+}

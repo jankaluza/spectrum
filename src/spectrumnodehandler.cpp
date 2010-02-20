@@ -18,34 +18,30 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02111-1301  USA
  */
 
-#ifndef UTIL_H
-#define UTIL_H
+#include "spectrumnodehandler.h"
+#include "log.h"
+#include "transport.h"
 
-#include <string>
-#include <sstream>
-#include <cstdio>
-#include <iostream>
-#include "glib.h"
-#include <vector>
-
-template <class T> std::string stringOf(T object) {
-	std::ostringstream os;
-	os << object;
-	return (os.str());
+SpectrumNodeHandler::SpectrumNodeHandler() {
+	
 }
 
-/* Replace all instances of from with to in string str in-place */
-void replace(std::string &str, const char *from, const char *to, int count = 0);
-int isValidEmail(const char *address);
-const std::string generateUUID();
+SpectrumNodeHandler::~SpectrumNodeHandler() {
+	
+}
 
-std::vector<std::string> &split(const std::string &s, char delim, std::vector<std::string> &elems);
-std::vector<std::string> split(const std::string &s, char delim);
+StringList SpectrumNodeHandler::handleDiscoNodeFeatures (const JID &from, const std::string &node) {
+	return Transport::instance()->protocol()->buddyFeatures();
+}
 
+Disco::IdentityList SpectrumNodeHandler::handleDiscoNodeIdentities (const JID &from, const std::string &node) {
+	Disco::IdentityList l;
+	l.push_back( new Disco::Identity("gateway", Transport::instance()->protocol()->gatewayIdentity(), "Spectrum") );
+	return l;
+}
 
+Disco::ItemList SpectrumNodeHandler::handleDiscoNodeItems (const JID &from, const JID &to, const std::string &node) {
+	Disco::ItemList lst;
+	return lst;
+}
 
-#ifndef WIN32
-void process_mem_usage(double& vm_usage, double& resident_set);
-#endif
-
-#endif

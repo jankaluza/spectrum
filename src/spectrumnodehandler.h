@@ -18,34 +18,27 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02111-1301  USA
  */
 
-#ifndef UTIL_H
-#define UTIL_H
+#ifndef SPECTRUM_NODE_HANDLER_H
+#define SPECTRUM_NODE_HANDLER_H
 
 #include <string>
-#include <sstream>
-#include <cstdio>
-#include <iostream>
+#include "purple.h"
+#include "account.h"
 #include "glib.h"
-#include <vector>
+#include "gloox/disconodehandler.h"
+#include <algorithm>
 
-template <class T> std::string stringOf(T object) {
-	std::ostringstream os;
-	os << object;
-	return (os.str());
-}
+using namespace gloox;
 
-/* Replace all instances of from with to in string str in-place */
-void replace(std::string &str, const char *from, const char *to, int count = 0);
-int isValidEmail(const char *address);
-const std::string generateUUID();
+class SpectrumNodeHandler : public DiscoNodeHandler {
+	public:
+		SpectrumNodeHandler();
+		~SpectrumNodeHandler();
 
-std::vector<std::string> &split(const std::string &s, char delim, std::vector<std::string> &elems);
-std::vector<std::string> split(const std::string &s, char delim);
+		StringList handleDiscoNodeFeatures (const JID &from, const std::string &node);
+		Disco::IdentityList handleDiscoNodeIdentities (const JID &from, const std::string &node);
+		Disco::ItemList handleDiscoNodeItems (const JID &from, const JID &to, const std::string &node=EmptyString);
 
-
-
-#ifndef WIN32
-void process_mem_usage(double& vm_usage, double& resident_set);
-#endif
+};
 
 #endif

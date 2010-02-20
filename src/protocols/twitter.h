@@ -18,31 +18,29 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02111-1301  USA
  */
 
-#ifndef _HI_XMPP_PROTOCOL_H
-#define _HI_XMPP_PROTOCOL_H
+#ifndef _HI_Twitter_PROTOCOL_H
+#define _HI_Twitter_PROTOCOL_H
 
 #include "abstractprotocol.h"
 
 class GlooxMessageHandler;
 
-class XMPPProtocol : AbstractProtocol
+class TwitterProtocol : AbstractProtocol
 {
 	public:
-		XMPPProtocol(GlooxMessageHandler *main);
-		~XMPPProtocol();
-		const std::string gatewayIdentity() { return "xmpp"; }
-		const std::string protocol() { return "prpl-jabber"; }
+		TwitterProtocol(GlooxMessageHandler *main);
+		~TwitterProtocol();
+		const std::string gatewayIdentity() { return "twitter"; }
+		const std::string protocol() { return "prpl-twitter"; }
 		bool isValidUsername(const std::string &username);
 		std::list<std::string> transportFeatures();
 		std::list<std::string> buddyFeatures();
 		std::string text(const std::string &key);
 		Tag *getVCardTag(AbstractUser *user, GList *vcardEntries) { return NULL; }
 		bool isMUC(AbstractUser *user, const std::string &jid) { return jid.find("#") == 0; }
-		const std::string userSearchAction() { return "Search for Users..."; }
-		const std::string userSearchColumn() { return "Jabber ID"; }
 		bool onPresenceReceived(AbstractUser *user, const Presence &stanza);
-		std::string prepareRoomName(const std::string &room);
-
+		std::string prepareRoomName(const std::string &room) { return "#home"; }
+		void onPurpleAccountCreated(PurpleAccount *account) { purple_account_set_string(account, "twitter_last_home_timeline_id", ""); }
 	private:
 		GlooxMessageHandler *m_main;
 		std::list<std::string> m_transportFeatures;
