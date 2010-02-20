@@ -46,6 +46,7 @@ include_directories(${LIBPOCO_INCLUDE_DIR})
 
 if(GLIB2_FOUND)
 	include_directories(${GLIB2_INCLUDE_DIR})
+	message( STATUS "Found GLIB2: ${GLIB2_INCLUDE_DIR} ${GLIB2_LIBRARIES}")
 else(GLIB2_FOUND)
 	message(FATAL_ERROR "No GLIB2")
 endif(GLIB2_FOUND)

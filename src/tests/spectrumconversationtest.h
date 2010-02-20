@@ -4,20 +4,20 @@
 #include <cppunit/extensions/HelperMacros.h>
 #include "blist.h"
 #include "testinguser.h"
+#include "abstracttest.h"
 
 using namespace std;
 
 class SpectrumConversation;
 
-class SpectrumConversationTest : public CPPUNIT_NS :: TestFixture
-{
+class SpectrumConversationTest : public AbstractTest {
 	CPPUNIT_TEST_SUITE (SpectrumConversationTest);
 	CPPUNIT_TEST (handleMessage);
 	CPPUNIT_TEST_SUITE_END ();
 
 	public:
-		void setUp (void);
-		void tearDown (void);
+		void up (void);
+		void down (void);
 
 	protected:
 		void handleMessage();
@@ -25,7 +25,6 @@ class SpectrumConversationTest : public CPPUNIT_NS :: TestFixture
 	private:
 		SpectrumConversation *m_conv;
 		TestingUser *m_user;
-		std::list <Tag *> m_tags;
 };
 
 CPPUNIT_TEST_SUITE_REGISTRATION (SpectrumConversationTest);

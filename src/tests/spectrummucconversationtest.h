@@ -19,8 +19,8 @@ class SpectrumMUCConversationTest : public AbstractTest
 	CPPUNIT_TEST_SUITE_END ();
 
 	public:
-		void setUp (void);
-		void tearDown (void);
+		void up (void);
+		void down (void);
 
 	protected:
 		void handleMessage();

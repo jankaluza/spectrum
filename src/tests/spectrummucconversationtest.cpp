@@ -3,15 +3,14 @@
 #include "transport.h"
 #include "../capabilityhandler.h"
 
-void SpectrumMUCConversationTest::setUp (void) {
+void SpectrumMUCConversationTest::up (void) {
 	m_user = new TestingUser("key", "user@example.com");
 	m_conv = new SpectrumMUCConversation(NULL, "#room%irc.freenode.net@icq.localhost", "psi");
 }
 
-void SpectrumMUCConversationTest::tearDown (void) {
+void SpectrumMUCConversationTest::down (void) {
 	delete m_conv;
 	delete m_user;
-	tearDown_();
 }
 
 void SpectrumMUCConversationTest::handleMessage() {

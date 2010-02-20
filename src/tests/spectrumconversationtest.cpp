@@ -3,21 +3,14 @@
 #include "transport.h"
 #include "../capabilityhandler.h"
 
-void SpectrumConversationTest::setUp (void) {
+void SpectrumConversationTest::up (void) {
 	m_user = new TestingUser("key", "user@example.com");
 	m_conv = new SpectrumConversation(NULL, SPECTRUM_CONV_CHAT);
 }
 
-void SpectrumConversationTest::tearDown (void) {
- 	delete m_conv;
- 	delete m_user;
-	
- 	while (m_tags.size() != 0) {
- 		Tag *tag = m_tags.front();
- 		m_tags.remove(tag);
- 		delete tag;
- 	}
-	Transport::instance()->clearTags();
+void SpectrumConversationTest::down (void) {
+	delete m_conv;
+	delete m_user;
 }
 
 void SpectrumConversationTest::handleMessage() {
