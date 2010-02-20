@@ -15,7 +15,7 @@ class SpectrumMUCConversationTest : public AbstractTest
 	CPPUNIT_TEST_SUITE (SpectrumMUCConversationTest);
 	CPPUNIT_TEST (handleMessage);
 	CPPUNIT_TEST (addUsers);
-// 	CPPUNIT_TEST (renameUser);
+	CPPUNIT_TEST (renameUser);
 	CPPUNIT_TEST_SUITE_END ();
 
 	public:
@@ -25,7 +25,7 @@ class SpectrumMUCConversationTest : public AbstractTest
 	protected:
 		void handleMessage();
 		void addUsers();
-// 		void renameUser();
+		void renameUser();
 		
 	private:
 		SpectrumMUCConversation *m_conv;

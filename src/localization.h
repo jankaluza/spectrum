@@ -25,18 +25,21 @@
 #include "glib.h"
 #include "purple.h"
 
-class Localization {
-    public:
-	Localization();
-	~Localization();
+#ifndef WIN32
+#include <gettext-po.h>
+#endif
 
-	const char * translate(const char *lang, const char *key);
-	const char * translate(const char *lang, const std::string &key)
-			    { return translate(lang, key.c_str()); }
-	bool loadLocale(const std::string &lang)
-			    { return false; };
-    private:
-	GHashTable *m_locales;
+class Localization {
+	public:
+		Localization();
+		~Localization();
+
+		bool loadLocale(const std::string &lang);
+		const char * translate(const char *lang, const char *key);
+		const char * translate(const char *lang, const std::string &key) { return translate(lang, key.c_str()); }
+
+	private:
+		GHashTable *m_locales;		// xml_lang, hash table with localizations
 };
 
 #endif

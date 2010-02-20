@@ -71,16 +71,8 @@ void SpectrumMUCConversationTest::addUsers() {
 	compare(r_none);
 
 }
-/*
+
 void SpectrumMUCConversationTest::renameUser() {
 	m_conv->renameUser(m_user, "Frank", "Bob", "Bob the King");
-	m_tags = Transport::instance()->getTags();
-	CPPUNIT_ASSERT_MESSAGE ("There has to be 2 presence stanzas sent", m_tags.size() == 2);
-	
-	// TODO: write test here
-	
-	delete m_tags.front();
-	delete m_tags.back();
-	m_tags.clear();
-	Transport::instance()->clearTags();
-}*/
+	testTagCount(2);
+}
