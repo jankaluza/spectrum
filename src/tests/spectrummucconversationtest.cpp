@@ -29,27 +29,27 @@ void SpectrumMUCConversationTest::addUsers() {
 	std::string r_halfop;
 	std::string r_voice;
 	std::string r_none;
-	r_founder =	"<presence from='#room%irc.freenode.net@icq.localhost/Frank_founder' to='user@example.com/psi'>
+	r_founder =	"<presence from='#room%irc.freenode.net@icq.localhost/Frank_founder' to='user@example.com/psi'>"
 					"<x xmlns='http://jabber.org/protocol/muc#user'>"
 						"<item affiliation='owner' role='moderator'/>"
 					"</x>"
 				"</presence>";
-	r_op =		"<presence from='#room%irc.freenode.net@icq.localhost/Frank_op' to='user@example.com/psi'>
+	r_op =		"<presence from='#room%irc.freenode.net@icq.localhost/Frank_op' to='user@example.com/psi'>"
 					"<x xmlns='http://jabber.org/protocol/muc#user'>"
 						"<item affiliation='admin' role='moderator'/>"
 					"</x>"
 				"</presence>";
-	r_halfop =	"<presence from='#room%irc.freenode.net@icq.localhost/Frank_halfop' to='user@example.com/psi'>
+	r_halfop =	"<presence from='#room%irc.freenode.net@icq.localhost/Frank_halfop' to='user@example.com/psi'>"
 					"<x xmlns='http://jabber.org/protocol/muc#user'>"
 						"<item affiliation='admin' role='moderator'/>"
 					"</x>"
 				"</presence>";
-	r_voice =	"<presence from='#room%irc.freenode.net@icq.localhost/Frank_voice' to='user@example.com/psi'>
+	r_voice =	"<presence from='#room%irc.freenode.net@icq.localhost/Frank_voice' to='user@example.com/psi'>"
 					"<x xmlns='http://jabber.org/protocol/muc#user'>"
 						"<item affiliation='member' role='participant'/>"
 					"</x>"
 				"</presence>";
-	r_none =	"<presence from='#room%irc.freenode.net@icq.localhost/Frank_voice' to='user@example.com/psi'>
+	r_none =	"<presence from='#room%irc.freenode.net@icq.localhost/Frank_voice' to='user@example.com/psi'>"
 					"<x xmlns='http://jabber.org/protocol/muc#user'>"
 						"<item affiliation='member' role='participant'/>"
 					"</x>"
@@ -69,7 +69,7 @@ void SpectrumMUCConversationTest::addUsers() {
 	compare(r_voice);
 	compare(r_none);
 }
-
+/*
 void SpectrumMUCConversationTest::renameUser() {
 	m_conv->renameUser(m_user, "Frank", "Bob", "Bob the King");
 	m_tags = Transport::instance()->getTags();
@@ -81,4 +81,4 @@ void SpectrumMUCConversationTest::renameUser() {
 	delete m_tags.back();
 	m_tags.clear();
 	Transport::instance()->clearTags();
-}
+}*/
