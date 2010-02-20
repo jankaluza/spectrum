@@ -153,11 +153,16 @@ class spectrum:
 
 		# filetransfer cache
 		filetransfer_cache = self.config.get( 'service', 'filetransfer_cache' )
-		self.check_exists( filetransfer_cache, 'dir' )
-		self.check_ownership( filetransfer_cache )
-		self.check_permissions( filetransfer_cache, # rwxr-x---
-			[ stat.S_IRUSR, stat.S_IWUSR, stat.S_IXUSR, 
-			  stat.S_IRGRP, stat.S_IXGRP ] )
+		try:
+			self.check_exists( filetransfer_cache, 'dir' )
+			self.check_ownership( filetransfer_cache )
+			self.check_permissions( filetransfer_cache, # rwxr-x---
+				[ stat.S_IRUSR, stat.S_IWUSR, stat.S_IXUSR, 
+				  stat.S_IRGRP, stat.S_IXGRP ] )
+		except RuntimeError:
+			dir = os.path.dirname( log_file )
+			self.check_exists( dir )
+			self.check_writable( dir )
 
 		# pid_file:
 		pid_file = self.config.get( 'service', 'pid_file' )
@@ -175,6 +180,7 @@ class spectrum:
 				[ stat.S_IRUSR, stat.S_IWUSR, stat.S_IRGRP ] )
 		except RuntimeError:
 			dir = os.path.dirname( log_file )
+			self.check_exists( dir )
 			self.check_writable( dir )
 
 		# sqlite database
@@ -192,11 +198,16 @@ class spectrum:
 		
 		# purple userdir
 		userdir = self.config.get( 'purple', 'userdir' )
-		self.check_exists( userdir, 'dir' )
-		self.check_ownership( userdir )
-		self.check_permissions( userdir, # rwxr-x---
-			[ stat.S_IRUSR, stat.S_IWUSR, stat.S_IXUSR, 
-			  stat.S_IRGRP, stat.S_IXGRP ] )
+		try:
+			self.check_exists( userdir, 'dir' )
+			self.check_ownership( userdir )
+			self.check_permissions( userdir, # rwxr-x---
+				[ stat.S_IRUSR, stat.S_IWUSR, stat.S_IXUSR, 
+				  stat.S_IRGRP, stat.S_IXGRP ] )
+		except RuntimeError:
+			dir = os.path.dirname( log_file )
+			self.check_exists( dir )
+			self.check_writable( dir )
 
 		return 0, 'ok'
 
