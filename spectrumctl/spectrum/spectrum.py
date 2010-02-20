@@ -78,9 +78,11 @@ class spectrum:
 
 		stat = os.stat( node )
 		if uid != -1 and stat.st_uid != uid:
-				raise RuntimeError( node, 'Unsafe ownership' )
+			name = pwd.getpwuid( uid ).pw_name
+			raise RuntimeError( node, 'Unsafe ownership (Should be %s)'%(name) )
 		if gid != -1 and stat.st_gid != gid:
-				raise RuntimeError( node, 'Unsafe group ownership' )
+			name = grp.getgrgid( gid ).gr_name
+			raise RuntimeError( node, 'Unsafe group ownership (Should be %s)'%(name) )
 	
 	def check_permissions( self, file, permissions, wildcards=[] ):
 		all = [ stat.S_IRUSR, stat.S_IWUSR, stat.S_IXUSR,
