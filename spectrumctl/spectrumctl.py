@@ -50,10 +50,14 @@ parser.add_option_group( start_group )
 options, args = parser.parse_args()
 action = args[0]
 
+init_actions = [ 'start', 'stop', 'restart', 'reload', 'status' ]
+complex_actions = [ 'list' ]
+all_actions = init_actions + complex_actions
+
 if len( args ) != 1:
 	print( "Error: Please give exactly one action." )
 	sys.exit(1)
-elif action not in dir( spectrum.spectrum ):
+elif action not in all_actions:
 	print( "Unknown action." )
 	sys.exit(1)
 
@@ -70,50 +74,38 @@ def act( instance ):
 		if not options.quiet:
 			print( "%s is disabled in config-file." %(instance.get_jid()) )
 		return 0
-	if action != "list":
-		log( "%s %s..."%(action.title(), instance.get_jid()), False )
+
+	log( "%s %s..."%(action.title(), instance.get_jid()), False )
 	exit, string = getattr( instance, action )()
 	log( string )
 	return exit
 
 if options.config:
 	instance = spectrum.spectrum( options, options.config )
-	ret = act( instance )
-	sys.exit( ret )
+
+	if action in init_actions:
+		ret = act( instance )
+		sys.exit( ret )
+	else:
+		ret = getattr( actions, action )( [instance] )
 else:
 	if not os.path.exists( options.config_dir ):
 		log( "Error: %s: No such directory"%(options.config_dir) )
 		sys.exit(1)
-	if action == "list":
-		list = [ ('PID', 'PROTOCOL', 'HOSTNAME', 'STATUS' ) ]
 
 	ret = 0
-	for file in os.listdir( options.config_dir ):
+	config_list = os.listdir( options.config_dir )
+	instances = []
+	for file in config_list:
 		path = '%s/%s'%(options.config_dir, file)
-		instance = spectrum.spectrum( options, path )
-		if action == "list":
-			list.append( instance.list() )
-		else:
-			retVal = act( instance )
-			if retVal != 0:
-				ret = retVal
+		instances.append( spectrum.spectrum( options, path ) )
+
+	if action in init_actions:
+		for instance in instances:
+			ret += act( instance )
+	else:
+		ret = getattr( actions, action )( instances )
 
 	if ret != 0:
 		log( "Warning: Some actions failed." )
 		sys.exit( ret )
-	else:
-		if action == "list":
-			widths = [0,0,0,0]
-			for item in list:
-				for i in range(0,4):
-					val = str( item[i] )
-					if len( val ) > widths[i]:
-						widths[i] = len( val )
-
-			for item in list:
-				for i in range(0,4):
-					val = str( item[i] )
-					val += ' ' * (widths[i]-len(val)) + '  '
-					print val,
-				print
-		sys.exit( 0 )
