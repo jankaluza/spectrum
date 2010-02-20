@@ -1,6 +1,7 @@
 === Things we want for a 0.2 release ===
 * fix IRC
 * statistics by spectrumctl
+* well-tested permission checking by spectrumctl
 * manpages for spectrum and spectrumctl
 * Answer all IQ packaets (Issue #45)
 	This can really be a pain in the ass for scripts

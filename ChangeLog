@@ -7,6 +7,10 @@ version 0.2 (20??-??-??):
 	  can't receive file.
 	* Twitter protocol support (Twitter with http://code.google.com/p/prpltwtr/)
 
+	spectrumctl:
+	* The script now does rigorous checking of ownership and permissions
+	  on all the importand files and directories.
+
 	XMPP:
 	* MUC support for XMPP
 
