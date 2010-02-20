@@ -10,7 +10,6 @@
 
 int main (int argc, char* argv[])
 {
-	
 	Transport *transport = new Transport("icq.localhost");
 	TestingBackend *backend = new TestingBackend();
 	TestingProtocol *protocol = new TestingProtocol();

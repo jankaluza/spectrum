@@ -249,6 +249,7 @@ if (CPPUNIT_FOUND)
 include_directories(${CPPUNIT_INCLUDE_DIR})
 
 set(spectrum_tests_SRCS
+	src/tests/abstracttest.cpp
 	src/tests/autoconnectlooptest.cpp
 	src/tests/capabilityhandlertest.cpp
 	src/tests/configfiletest.cpp
@@ -288,6 +289,7 @@ set(spectrum_tests_SRCS
 )
 
 set(spectrum_tests_MOC_HDRS
+	src/tests/abstracttest.h
 	src/tests/autoconnectlooptest.h
 	src/tests/capabilityhandlertest.h
 	src/tests/configfiletest.h

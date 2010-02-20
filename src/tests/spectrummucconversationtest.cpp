@@ -9,37 +9,51 @@ void SpectrumMUCConversationTest::setUp (void) {
 }
 
 void SpectrumMUCConversationTest::tearDown (void) {
- 	delete m_conv;
- 	delete m_user;
-	
- 	while (m_tags.size() != 0) {
- 		Tag *tag = m_tags.front();
- 		m_tags.remove(tag);
- 		delete tag;
- 	}
-	Transport::instance()->clearTags();
+	delete m_conv;
+	delete m_user;
 }
 
 void SpectrumMUCConversationTest::handleMessage() {
+	std::string r;
+	r =	"<message to='user@example.com/psi' from='#room%irc.freenode.net@icq.localhost/Frank' type='groupchat'>"
+			"<body>Hi, how are you?</body>"
+		"</message>";
 	m_conv->handleMessage(m_user, "Frank", "Hi, how are you?", PURPLE_MESSAGE_RECV, time(NULL));
-	m_tags = Transport::instance()->getTags();
-
-	CPPUNIT_ASSERT_MESSAGE ("There has to be 1 message stanza sent", m_tags.size() == 1);
-
-	Tag *tag = m_tags.front();
-	CPPUNIT_ASSERT (tag->name() == "message");
-	CPPUNIT_ASSERT (tag->findAttribute("to") == "user@example.com/psi");
-	CPPUNIT_ASSERT (tag->findAttribute("from") == "#room%irc.freenode.net@icq.localhost/Frank");
-	CPPUNIT_ASSERT (tag->findAttribute("type") == "groupchat");
-	CPPUNIT_ASSERT (tag->findChild("body") != NULL);
-	CPPUNIT_ASSERT (tag->findChild("body")->cdata() == "Hi, how are you?");
-
-	delete m_tags.front();
-	m_tags.clear();
-	Transport::instance()->clearTags();
+	testTagCount(1);
+	compare(r);
 }
 
 void SpectrumMUCConversationTest::addUsers() {
+	std::string r_founder;
+	std::string r_op;
+	std::string r_halfop;
+	std::string r_voice;
+	std::string r_none;
+	r_founder =	"<presence from='#room%irc.freenode.net@icq.localhost/Frank_founder' to='user@example.com/psi'>
+					"<x xmlns='http://jabber.org/protocol/muc#user'>"
+						"<item affiliation='owner' role='moderator'/>"
+					"</x>"
+				"</presence>";
+	r_op =		"<presence from='#room%irc.freenode.net@icq.localhost/Frank_op' to='user@example.com/psi'>
+					"<x xmlns='http://jabber.org/protocol/muc#user'>"
+						"<item affiliation='admin' role='moderator'/>"
+					"</x>"
+				"</presence>";
+	r_halfop =	"<presence from='#room%irc.freenode.net@icq.localhost/Frank_halfop' to='user@example.com/psi'>
+					"<x xmlns='http://jabber.org/protocol/muc#user'>"
+						"<item affiliation='admin' role='moderator'/>"
+					"</x>"
+				"</presence>";
+	r_voice =	"<presence from='#room%irc.freenode.net@icq.localhost/Frank_voice' to='user@example.com/psi'>
+					"<x xmlns='http://jabber.org/protocol/muc#user'>"
+						"<item affiliation='member' role='participant'/>"
+					"</x>"
+				"</presence>";
+	r_none =	"<presence from='#room%irc.freenode.net@icq.localhost/Frank_voice' to='user@example.com/psi'>
+					"<x xmlns='http://jabber.org/protocol/muc#user'>"
+						"<item affiliation='member' role='participant'/>"
+					"</x>"
+				"</presence>";
 	GList *cbuddies = NULL;
 	cbuddies = g_list_prepend(cbuddies, purple_conv_chat_cb_new("Frank_none", NULL, PURPLE_CBFLAGS_NONE));
 	cbuddies = g_list_prepend(cbuddies, purple_conv_chat_cb_new("Frank_voice", NULL, PURPLE_CBFLAGS_VOICE));
@@ -48,41 +62,12 @@ void SpectrumMUCConversationTest::addUsers() {
 	cbuddies = g_list_prepend(cbuddies, purple_conv_chat_cb_new("Frank_founder", NULL, PURPLE_CBFLAGS_FOUNDER));
 	m_conv->addUsers(m_user, cbuddies);
 	
-	m_tags = Transport::instance()->getTags();
-	CPPUNIT_ASSERT_MESSAGE ("There has to be 6 message stanza sent", m_tags.size() == 5);
-	
-	while (m_tags.size() != 0) {
-		Tag *tag = m_tags.front();
-		CPPUNIT_ASSERT (tag->name() == "presence");
-		CPPUNIT_ASSERT (tag->findAttribute("to") == "user@example.com/psi");
-		CPPUNIT_ASSERT (tag->findChild("x") != NULL);
-		CPPUNIT_ASSERT (tag->findChild("x")->findChild("item") != NULL);
-		if (tag->findAttribute("from") == "#room%irc.freenode.net@icq.localhost/Frank_founder") {
-			CPPUNIT_ASSERT (tag->findChild("x")->findChild("item")->findAttribute("affiliation") == "owner");
-			CPPUNIT_ASSERT (tag->findChild("x")->findChild("item")->findAttribute("role") == "moderator");
-		}
-		else if (tag->findAttribute("from") == "#room%irc.freenode.net@icq.localhost/Frank_voice") {
-			CPPUNIT_ASSERT (tag->findChild("x")->findChild("item")->findAttribute("affiliation") == "member");
-			CPPUNIT_ASSERT (tag->findChild("x")->findChild("item")->findAttribute("role") == "participant");
-		}
-		else if (tag->findAttribute("from") == "#room%irc.freenode.net@icq.localhost/Frank_halfop") {
-			CPPUNIT_ASSERT (tag->findChild("x")->findChild("item")->findAttribute("affiliation") == "admin");
-			CPPUNIT_ASSERT (tag->findChild("x")->findChild("item")->findAttribute("role") == "moderator");
-		}
-		else if (tag->findAttribute("from") == "#room%irc.freenode.net@icq.localhost/Frank_op") {
-			CPPUNIT_ASSERT (tag->findChild("x")->findChild("item")->findAttribute("affiliation") == "admin");
-			CPPUNIT_ASSERT (tag->findChild("x")->findChild("item")->findAttribute("role") == "moderator");
-		}
-		else if (tag->findAttribute("from") == "#room%irc.freenode.net@icq.localhost/Frank_none") {
-			CPPUNIT_ASSERT (tag->findChild("x")->findChild("item")->findAttribute("affiliation") == "member");
-			CPPUNIT_ASSERT (tag->findChild("x")->findChild("item")->findAttribute("role") == "participant");
-		}
-		else
-			CPPUNIT_ASSERT_MESSAGE ("Presence for unknown user", 1 == 0);
-		m_tags.remove(tag);
-		delete tag;
-	}
-	Transport::instance()->clearTags();
+	testTagCount(6);
+	compare(r_founder);
+	compare(r_op);
+	compare(r_halfop);
+	compare(r_voice);
+	compare(r_none);
 }
 
 void SpectrumMUCConversationTest::renameUser() {
