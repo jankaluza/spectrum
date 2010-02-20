@@ -95,6 +95,10 @@ static GOptionEntry options_entries[] = {
 	{ NULL, 0, 0, G_OPTION_ARG_NONE, NULL, "", NULL }
 };
 
+struct DummyHandle {
+	void *ptr;
+};
+
 static void daemonize(void) {
 #ifndef WIN32
 	pid_t pid, sid;
@@ -368,7 +372,8 @@ static void * requestAction(const char *title, const char *primary,const char *s
 			((PurpleRequestActionCb) va_arg(actions, GCallback)) (user_data, 2);
 		}
 	}
-	return NULL;
+	DummyHandle *handle = new DummyHandle;
+	return handle;
 }
 
 static void requestClose(PurpleRequestType type, void *ui_handle) {
@@ -389,6 +394,8 @@ static void requestClose(PurpleRequestType type, void *ui_handle) {
 			delete repeater;
 		}
 	}
+	DummyHandle *r = (DummyHandle*) ui_handle;
+	delete r;
 }
 
 /*
@@ -455,6 +462,14 @@ static void * notifyMessage(PurpleNotifyMsgType type, const char *title, const c
 	return NULL;
 }
 
+static void xferCanceled(PurpleXfer *xfer) {
+	Log("xfercanceled", xfer);
+	FiletransferRepeater *repeater = (FiletransferRepeater *) xfer->ui_data;
+	if (!repeater)
+		return;
+	repeater->xferDestroyed();
+}
+
 static void XferCreated(PurpleXfer *xfer) {
 	std::string remote_user(purple_xfer_get_remote_user(xfer));
 	
@@ -483,6 +498,7 @@ static void XferCreated(PurpleXfer *xfer) {
 }
 
 static void XferDestroyed(PurpleXfer *xfer) {
+	Log("xfer", "xferDestroyed");
 	FiletransferRepeater *repeater = (FiletransferRepeater *) xfer->ui_data;
 	if (!repeater)
 		return;
@@ -660,8 +676,8 @@ static PurpleXferUiOps xferUiOps =
 	XferDestroyed,
 	NULL,
 	NULL,
-	NULL,
-	NULL,
+	xferCanceled,
+	xferCanceled,
 	XferWrite,
 	XferRead,
 	XferNotSent,

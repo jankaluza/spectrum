@@ -3,7 +3,7 @@
 #include "transport.h"
 
 
-void RosterManagerTest::setUp (void) {
+void RosterManagerTest::up (void) {
 	m_buddy1 = new SpectrumBuddyTest(1, NULL);
 	m_buddy1->setName("user1@example.com");
 	m_buddy1->setAlias("Frank");
@@ -18,18 +18,11 @@ void RosterManagerTest::setUp (void) {
 	m_manager = new SpectrumRosterManager(m_user);
 }
 
-void RosterManagerTest::tearDown (void) {
+void RosterManagerTest::down (void) {
 	delete m_buddy1;
 	delete m_buddy2;
 	delete m_manager;
 	delete m_user;
-
-	while (m_tags.size() != 0) {
-		Tag *tag = m_tags.front();
-		m_tags.remove(tag);
-		delete tag;
-	}
-	Transport::instance()->clearTags();
 }
 
 void RosterManagerTest::setRoster() {
@@ -40,7 +33,6 @@ void RosterManagerTest::setRoster() {
 	CPPUNIT_ASSERT(m_manager->getRosterItem(m_buddy1->getName()) == m_buddy1);
 	CPPUNIT_ASSERT(m_manager->getRosterItem(m_buddy2->getName()) == m_buddy2);
 	CPPUNIT_ASSERT(m_manager->getRosterItem("something") == NULL);
-	
 }
 
 void RosterManagerTest::generatePresenceStanza() {
@@ -50,55 +42,46 @@ void RosterManagerTest::generatePresenceStanza() {
 	m_buddy1->setIconHash("somehash");
 	Tag *tag;
 	
+	std::string r;
+	r =	"<presence from='user1%example.com@icq.localhost/bot'>"
+			"<status>I'm here</status>"
+			"<x xmlns='vcard-temp:x:update'>"
+				"<photo>somehash</photo>"
+			"</x>"
+		"</presence>";
 	tag = m_buddy1->generatePresenceStanza(TRANSPORT_FEATURE_AVATARS);
-	CPPUNIT_ASSERT (tag->name() == "presence");
-	CPPUNIT_ASSERT (tag->findAttribute("from") == "user1%example.com@icq.localhost/bot");
-	CPPUNIT_ASSERT (tag->findChild("show") == NULL);
-	CPPUNIT_ASSERT (tag->findChild("status") != NULL);
-	CPPUNIT_ASSERT (tag->findChild("status")->cdata() == "I'm here");
-	CPPUNIT_ASSERT (tag->findChild("x") != NULL);
-	CPPUNIT_ASSERT (tag->findChild("x")->findAttribute("xmlns") == "vcard-temp:x:update");
-	CPPUNIT_ASSERT (tag->findChild("x")->findChild("photo") != NULL);
-	CPPUNIT_ASSERT (tag->findChild("x")->findChild("photo")->cdata() == "somehash");
+	compare(tag, r);
 
+	r =	"<presence from='user1%example.com@icq.localhost/bot'>"
+			"<status>I'm here</status>"
+		"</presence>";
 	tag = m_buddy1->generatePresenceStanza(0);
-	CPPUNIT_ASSERT (tag->name() == "presence");
-	CPPUNIT_ASSERT (tag->findAttribute("from") == "user1%example.com@icq.localhost/bot");
-	CPPUNIT_ASSERT (tag->findChild("show") == NULL);
-	CPPUNIT_ASSERT (tag->findChild("status") != NULL);
-	CPPUNIT_ASSERT (tag->findChild("status")->cdata() == "I'm here");
-	CPPUNIT_ASSERT (tag->findChild("x") == NULL);
-	
+	compare(tag, r);
+
+	r =	"<presence from='user1%example.com@icq.localhost/bot'>"
+			"<show>away</show>"
+			"<status>I'm here</status>"
+		"</presence>";
 	m_buddy1->setStatus(PURPLE_STATUS_AWAY);
 	tag = m_buddy1->generatePresenceStanza(0);
-	CPPUNIT_ASSERT (tag->name() == "presence");
-	CPPUNIT_ASSERT (tag->findAttribute("from") == "user1%example.com@icq.localhost/bot");
-	CPPUNIT_ASSERT (tag->findChild("status") != NULL);
-	CPPUNIT_ASSERT (tag->findChild("status")->cdata() == "I'm here");
-	CPPUNIT_ASSERT (tag->findChild("show") != NULL);
-	CPPUNIT_ASSERT (tag->findChild("show")->cdata() == "away");
-	CPPUNIT_ASSERT (tag->findChild("x") == NULL);
-	
+	compare(tag, r);
+
+	r =	"<presence from='user1%example.com@icq.localhost/bot'>"
+			"<show>away</show>"
+		"</presence>";
 	m_buddy1->setStatusMessage("");
 	tag = m_buddy1->generatePresenceStanza(0);
-	CPPUNIT_ASSERT (tag->name() == "presence");
-	CPPUNIT_ASSERT (tag->findAttribute("from") == "user1%example.com@icq.localhost/bot");
-	CPPUNIT_ASSERT (tag->findChild("status") == NULL);
-	CPPUNIT_ASSERT (tag->findChild("show") != NULL);
-	CPPUNIT_ASSERT (tag->findChild("show")->cdata() == "away");
-	CPPUNIT_ASSERT (tag->findChild("x") == NULL);
+	compare(tag, r);
 }
 
 
 void RosterManagerTest::sendUnavailablePresenceToAll() {
 	m_manager->sendUnavailablePresenceToAll();
-	m_tags = Transport::instance()->getTags();
-	
-	CPPUNIT_ASSERT (m_tags.size() == 0);
+	testTagCount(0);
 	
 	setRoster();
 	m_manager->sendUnavailablePresenceToAll();
-	m_tags = Transport::instance()->getTags();
+	testTagCount(2);
 
 	std::list <std::string> users;
 	users.push_back("user1%example.com@icq.localhost/bot");
