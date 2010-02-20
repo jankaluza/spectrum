@@ -6,10 +6,13 @@ version 0.2 (20??-??-??):
 	* Working filetransfer from XMPP to legacy network when legacy network user
 	  can't receive file.
 	* Twitter protocol support (Twitter with http://code.google.com/p/prpltwtr/)
+	* $filename now is an implicitly set to the name of the file without
+	  the extension. 
 
 	spectrumctl:
 	* The script now does rigorous checking of ownership and permissions
 	  on all the importand files and directories.
+	* Accept $filename as variable
 
 	XMPP:
 	* MUC support for XMPP
