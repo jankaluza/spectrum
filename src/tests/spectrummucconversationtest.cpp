@@ -11,6 +11,7 @@ void SpectrumMUCConversationTest::setUp (void) {
 void SpectrumMUCConversationTest::tearDown (void) {
 	delete m_conv;
 	delete m_user;
+	tearDown_();
 }
 
 void SpectrumMUCConversationTest::handleMessage() {
@@ -62,12 +63,13 @@ void SpectrumMUCConversationTest::addUsers() {
 	cbuddies = g_list_prepend(cbuddies, purple_conv_chat_cb_new("Frank_founder", NULL, PURPLE_CBFLAGS_FOUNDER));
 	m_conv->addUsers(m_user, cbuddies);
 	
-	testTagCount(6);
+	testTagCount(5);
 	compare(r_founder);
 	compare(r_op);
 	compare(r_halfop);
 	compare(r_voice);
 	compare(r_none);
+
 }
 /*
 void SpectrumMUCConversationTest::renameUser() {

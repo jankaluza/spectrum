@@ -37,8 +37,18 @@ void GlooxParser::getTag(std::string str, void (*handleTagCallback)(Tag *tag, vo
 		m_handleTagCallback(NULL, m_userdata);
 }
 
+Tag *GlooxParser::getTag(std::string str) {
+	m_tag = NULL;
+	m_handleTagCallback = NULL;
+	m_parser->cleanup();
+	m_parser->feed(str);
+	return m_tag;
+}
+
 void GlooxParser::handleTag(Tag *tag) {
-	m_handleTagCallback(tag->clone(), m_userdata);
+	if (m_handleTagCallback)
+		m_handleTagCallback(tag->clone(), m_userdata);
+	m_tag = tag->clone();
 }
 
 
