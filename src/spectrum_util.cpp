@@ -76,7 +76,6 @@ void replace(std::string &str, const char *from, const char *to, int count)
 	{
 		// Replace it
 		str.replace(index, from_len, to);
-		std::cout << "REPLACE " << count << " " << str << "\n";
 		count--;
 		if (count == 0)
 			return;
