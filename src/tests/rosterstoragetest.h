@@ -5,12 +5,13 @@
 #include "blist.h"
 #include "spectrumbuddytest.h"
 #include "testinguser.h"
+#include "abstracttest.h"
 
 using namespace std;
 
 class RosterStorage;
 
-class RosterStorageTest : public CPPUNIT_NS :: TestFixture
+class RosterStorageTest : public AbstractTest
 {
 	CPPUNIT_TEST_SUITE (RosterStorageTest);
 	CPPUNIT_TEST (storeBuddies);
@@ -18,8 +19,8 @@ class RosterStorageTest : public CPPUNIT_NS :: TestFixture
 	CPPUNIT_TEST_SUITE_END ();
 
 	public:
-		void setUp (void);
-		void tearDown (void);
+		void up (void);
+		void down (void);
 
 	protected:
 		void storeBuddies();

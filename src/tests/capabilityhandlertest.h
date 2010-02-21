@@ -4,12 +4,13 @@
 #include <cppunit/extensions/HelperMacros.h>
 #include "blist.h"
 #include "testinguser.h"
+#include "abstracttest.h"
 
 using namespace std;
 
 class CapabilityHandler;
 
-class CapabilityHandlerTest : public CPPUNIT_NS :: TestFixture
+class CapabilityHandlerTest : public AbstractTest
 {
 	CPPUNIT_TEST_SUITE (CapabilityHandlerTest);
 	CPPUNIT_TEST (handleDiscoInfo);
@@ -22,8 +23,8 @@ class CapabilityHandlerTest : public CPPUNIT_NS :: TestFixture
 	CPPUNIT_TEST_SUITE_END ();
 
 	public:
-		void setUp (void);
-		void tearDown (void);
+		void up (void);
+		void down (void);
 		Tag *getCorrectQuery();
 
 	protected:

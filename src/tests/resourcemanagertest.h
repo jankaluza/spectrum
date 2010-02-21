@@ -3,20 +3,21 @@
 #include <cppunit/TestFixture.h>
 #include <cppunit/extensions/HelperMacros.h>
 #include "blist.h"
+#include "abstracttest.h"
 
 using namespace std;
 
 class ResourceManager;
 
-class ResourceManagerTest : public CPPUNIT_NS :: TestFixture
+class ResourceManagerTest : public AbstractTest
 {
 	CPPUNIT_TEST_SUITE (ResourceManagerTest);
 	CPPUNIT_TEST (setResource);
 	CPPUNIT_TEST_SUITE_END ();
 
 	public:
-		void setUp (void);
-		void tearDown (void);
+		void up (void);
+		void down (void);
 
 	protected:
 		void setResource();

@@ -5,13 +5,14 @@
 #include "blist.h"
 #include "spectrumbuddytest.h"
 #include "testinguser.h"
+#include "abstracttest.h"
 
 using namespace std;
 
 class GlooxRegisterHandler;
 class TestingBackend;
 
-class RegisterHandlerTest : public CPPUNIT_NS :: TestFixture
+class RegisterHandlerTest : public AbstractTest
 {
 	CPPUNIT_TEST_SUITE (RegisterHandlerTest);
 	CPPUNIT_TEST (handleIqNoPermission);
@@ -23,8 +24,8 @@ class RegisterHandlerTest : public CPPUNIT_NS :: TestFixture
 	CPPUNIT_TEST_SUITE_END ();
 
 	public:
-		void setUp (void);
-		void tearDown (void);
+		void up (void);
+		void down (void);
 
 	protected:
 		void handleIqNoPermission();
@@ -39,7 +40,6 @@ class RegisterHandlerTest : public CPPUNIT_NS :: TestFixture
 		GlooxRegisterHandler *m_handler;
 		TestingUser *m_user;
 		TestingBackend *m_backend;
-		std::list <Tag *> m_tags;
 };
 
 CPPUNIT_TEST_SUITE_REGISTRATION (RegisterHandlerTest);

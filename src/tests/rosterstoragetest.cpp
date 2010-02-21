@@ -3,7 +3,7 @@
 #include "transport.h"
 #include "testingbackend.h"
 
-void RosterStorageTest::setUp (void) {
+void RosterStorageTest::up (void) {
 	m_buddy1 = new SpectrumBuddyTest(-1, NULL);
 	m_buddy1->setName("user1@example.com");
 	m_buddy1->setAlias("Frank");
@@ -18,7 +18,7 @@ void RosterStorageTest::setUp (void) {
 	m_storage = new RosterStorage(m_user);
 }
 
-void RosterStorageTest::tearDown (void) {
+void RosterStorageTest::down (void) {
 	delete m_buddy1;
 	delete m_buddy2;
 	delete m_storage;

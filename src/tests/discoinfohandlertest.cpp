@@ -3,18 +3,12 @@
 #include "transport.h"
 #include "testingbackend.h"
 
-void GlooxDiscoInfoHandlerTest::setUp (void) {
+void GlooxDiscoInfoHandlerTest::up (void) {
 	m_handler = new GlooxDiscoInfoHandler();
 }
 
-void GlooxDiscoInfoHandlerTest::tearDown (void) {
+void GlooxDiscoInfoHandlerTest::down (void) {
 	delete m_handler;
-	while (m_tags.size() != 0) {
-		Tag *tag = m_tags.front();
-		m_tags.remove(tag);
-		delete tag;
-	}
-	Transport::instance()->clearTags();
 }
 
 Tag *GlooxDiscoInfoHandlerTest::getCorrectTag(const std::string &to) {
@@ -34,7 +28,5 @@ Tag *GlooxDiscoInfoHandlerTest::getCorrectTag(const std::string &to) {
 void GlooxDiscoInfoHandlerTest::handleIq() {
 	Tag *iq = getCorrectTag("buddy1@icq.localhost");
 	m_handler->handleIq(iq);
-	m_tags = Transport::instance()->getTags();
-	
-	CPPUNIT_ASSERT (m_tags.size() == 1);
+	testTagCount(1);
 }

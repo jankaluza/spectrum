@@ -3,24 +3,24 @@
 #include "transport.h"
 #include "testingbackend.h"
 
-void RegisterHandlerTest::setUp (void) {
+void RegisterHandlerTest::up (void) {
 	m_handler = new GlooxRegisterHandler();
 	m_backend = (TestingBackend *) Transport::instance()->sql();
 }
 
-void RegisterHandlerTest::tearDown (void) {
+void RegisterHandlerTest::down (void) {
 	delete m_handler;
 	m_backend->reset();
-	
-	while (m_tags.size() != 0) {
-		Tag *tag = m_tags.front();
-		m_tags.remove(tag);
-		delete tag;
-	}
-	Transport::instance()->clearTags();
 }
 
 void RegisterHandlerTest::handleIqNoPermission() {
+	std::string r;
+	r =	"<iq id='reg1' type='error' from='icq.localhost' to='user@spectrum.im/psi'>"
+			"<error code='400' type='modify'>"
+				"<bad-request xmlns='urn:ietf:params:xml:ns:xmpp-stanzas'/>"
+			"</error>"
+		"</iq>";
+
 	Configuration cfg;
 	cfg.onlyForVIP = true;
 	cfg.allowedServers.push_back("example.com");
@@ -37,24 +37,39 @@ void RegisterHandlerTest::handleIqNoPermission() {
 	
 	m_handler->handleIq(iq);
 	
-	m_tags = Transport::instance()->getTags();
-	CPPUNIT_ASSERT (m_tags.size() == 1);
-	
-	Tag *tag = m_tags.front();
-	
-	CPPUNIT_ASSERT (tag->name() == "iq");
-	CPPUNIT_ASSERT (tag->findAttribute("type") == "error");
-	CPPUNIT_ASSERT (tag->findAttribute("id") == "reg1");
-	CPPUNIT_ASSERT (tag->findAttribute("from") == "icq.localhost");
-	CPPUNIT_ASSERT (tag->findAttribute("to") == "user@spectrum.im/psi");
-	CPPUNIT_ASSERT (tag->findChild("error") != NULL);
-	CPPUNIT_ASSERT (tag->findChild("error")->findAttribute("code") == "400");
-	CPPUNIT_ASSERT (tag->findChild("error")->findAttribute("type") == "modify");
-	CPPUNIT_ASSERT (tag->findChild("error")->findChild("bad-request") != NULL);
-	CPPUNIT_ASSERT (tag->findChild("error")->findChild("bad-request")->findAttribute("xmlns") == "urn:ietf:params:xml:ns:xmpp-stanzas");
+	testTagCount(1);
+	compare(r);
 }
 
 void RegisterHandlerTest::handleIqGetNewUser() {
+	std::string r;
+	r =	"<iq id='reg1' type='result' to='user@spectrum.im/psi' from='icq.localhost'>"
+			"<query xmlns='jabber:iq:register'>"
+				"<instructions>Enter your screenname and password:</instructions>"
+				"<username/>"
+				"<password/>"
+				"<x xmlns='jabber:x:data' type='form'>"
+					"<title>Registration</title>"
+					"<instructions>Enter your screenname and password:</instructions>"
+					"<field type='hidden' var='FORM_TYPE'>"
+						"<value>jabber:iq:register</value>"
+					"</field>"
+					"<field type='text-single' var='username' label='Network username'>"
+						"<required/>"
+					"</field>"
+					"<field type='text-private' var='password' label='Password'/>"
+					"<field type='list-single' var='language' label='Language'>"
+						"<value>en</value>"
+						"<option label='Cesky'><value>cs</value></option>"
+						"<option label='English'><value>en</value></option>"
+					"</field>"
+					"<field type='text-single' var='encoding' label='Encoding'>"
+						"<value>windows-1250</value>"
+					"</field>"
+				"</x>"
+			"</query>"
+		"</iq>";
+
 	Configuration cfg;
 	cfg.onlyForVIP = true;
 	cfg.allowedServers.push_back("spectrum.im");
@@ -72,75 +87,50 @@ void RegisterHandlerTest::handleIqGetNewUser() {
 	iq->addChild(query);
 	
 	m_handler->handleIq(iq);
-	
-	m_tags = Transport::instance()->getTags();
-	CPPUNIT_ASSERT (m_tags.size() == 1);
-	
-	Tag *tag = m_tags.front();
-	CPPUNIT_ASSERT (tag->name() == "iq");
-	CPPUNIT_ASSERT (tag->findAttribute("type") == "result");
-	CPPUNIT_ASSERT (tag->findAttribute("from") == "icq.localhost");
-	CPPUNIT_ASSERT (tag->findAttribute("to") == "user@spectrum.im/psi");
-	CPPUNIT_ASSERT (tag->findAttribute("id") == "reg1");
-	CPPUNIT_ASSERT (tag->findChild("query", "xmlns", "jabber:iq:register") != NULL);
-	CPPUNIT_ASSERT (tag->findChild("query")->findChild("instructions") != NULL);
-	CPPUNIT_ASSERT (tag->findChild("query")->findChild("instructions")->cdata() != "");
-	CPPUNIT_ASSERT (tag->findChild("query")->findChild("registered") == NULL);
-	CPPUNIT_ASSERT (tag->findChild("query")->findChild("username") != NULL);
-	CPPUNIT_ASSERT (tag->findChild("query")->findChild("username")->cdata() == "");
-	CPPUNIT_ASSERT (tag->findChild("query")->findChild("password") != NULL);
-	CPPUNIT_ASSERT (tag->findChild("query")->findChild("password")->cdata() == "");
-	CPPUNIT_ASSERT (tag->findChild("query")->findChild("x") != NULL);
-	Tag *x = tag->findChild("query")->findChild("x");
-	CPPUNIT_ASSERT (x->findAttribute("xmlns") == "jabber:x:data");
-	CPPUNIT_ASSERT (x->findAttribute("type") == "form");
-	CPPUNIT_ASSERT (x->findChild("title") != NULL);
-	CPPUNIT_ASSERT (x->findChild("title")->cdata() != "");
-	CPPUNIT_ASSERT (x->findChild("instructions") != NULL);
-	CPPUNIT_ASSERT (x->findChild("instructions")->cdata() != "");
-	CPPUNIT_ASSERT (x->findChild("instructions")->cdata() != "");
-	CPPUNIT_ASSERT (x->findChild("field", "var", "FORM_TYPE") != NULL);
-	CPPUNIT_ASSERT (x->findChild("field", "var", "FORM_TYPE")->findAttribute("type") == "hidden");
-	CPPUNIT_ASSERT (x->findChild("field", "var", "FORM_TYPE")->findChild("value") != NULL);
-	CPPUNIT_ASSERT (x->findChild("field", "var", "FORM_TYPE")->findChild("value")->cdata() == "jabber:iq:register");
-	CPPUNIT_ASSERT (x->findChild("field", "var", "username") != NULL);
-	CPPUNIT_ASSERT (x->findChild("field", "var", "username")->findAttribute("type") == "text-single");
-	CPPUNIT_ASSERT (x->findChild("field", "var", "username")->findAttribute("label") != "");
-	CPPUNIT_ASSERT (x->findChild("field", "var", "username")->findChild("value") == NULL);
-// 	CPPUNIT_ASSERT (x->findChild("field", "var", "username")->findChild("value")->cdata() == "");
-	CPPUNIT_ASSERT (x->findChild("field", "var", "username")->findChild("required") != NULL);
-	CPPUNIT_ASSERT (x->findChild("field", "var", "password") != NULL);
-	CPPUNIT_ASSERT (x->findChild("field", "var", "password")->findAttribute("type") == "text-private");
-	CPPUNIT_ASSERT (x->findChild("field", "var", "password")->findAttribute("label") != "");
-	CPPUNIT_ASSERT (x->findChild("field", "var", "password")->findChild("value") == NULL);
-	CPPUNIT_ASSERT (x->findChild("field", "var", "language") != NULL);
-	CPPUNIT_ASSERT (x->findChild("field", "var", "language")->findAttribute("type") == "list-single");
-	CPPUNIT_ASSERT (x->findChild("field", "var", "language")->findAttribute("label") != "");
-	CPPUNIT_ASSERT (x->findChild("field", "var", "language")->findChild("value") != NULL);
-	CPPUNIT_ASSERT (x->findChild("field", "var", "language")->findChild("value")->cdata() == "en");
-	CPPUNIT_ASSERT (x->findChild("field", "var", "language")->findChild("required") == NULL);
-	CPPUNIT_ASSERT (x->findChild("field", "var", "language")->findChild("option") != NULL);
-	CPPUNIT_ASSERT (x->findChild("field", "var", "encoding") != NULL);
-	CPPUNIT_ASSERT (x->findChild("field", "var", "encoding")->findAttribute("type") == "text-single");
-	CPPUNIT_ASSERT (x->findChild("field", "var", "encoding")->findAttribute("label") != "");
-	CPPUNIT_ASSERT (x->findChild("field", "var", "encoding")->findChild("value") != NULL);
-	CPPUNIT_ASSERT (x->findChild("field", "var", "encoding")->findChild("value")->cdata() == "windows-1250");
-	CPPUNIT_ASSERT (x->findChild("field", "var", "encoding")->findChild("required") == NULL);
-	CPPUNIT_ASSERT (x->findChild("field", "var", "unregister") == NULL);
-// 	CPPUNIT_ASSERT (x->findChild("field", "var", "unregister")->findAttribute("type") == "boolean");
-// 	CPPUNIT_ASSERT (x->findChild("field", "var", "unregister")->findAttribute("label") != "");
-// 	CPPUNIT_ASSERT (x->findChild("field", "var", "unregister")->findChild("value") != NULL);
-// 	CPPUNIT_ASSERT (x->findChild("field", "var", "unregister")->findChild("value")->cdata() == "0");
+	testTagCount(1);
+	compare(r);
 }
 
 void RegisterHandlerTest::handleIqGetExistingUser() {
+	std::string r;
+	r =	"<iq id='reg1' type='result' to='user@spectrum.im/psi' from='icq.localhost'>"
+			"<query xmlns='jabber:iq:register'>"
+				"<instructions>Enter your screenname and password:</instructions>"
+				"<registered/>"
+				"<username>someuin</username>"
+				"<password/>"
+				"<x xmlns='jabber:x:data' type='form'>"
+					"<title>Registration</title>"
+					"<instructions>Enter your screenname and password:</instructions>"
+					"<field type='hidden' var='FORM_TYPE'>"
+						"<value>jabber:iq:register</value>"
+					"</field>"
+					"<field type='text-single' var='username' label='Network username'>"
+						"<required/>"
+						"<value>someuin</value>"
+					"</field>"
+					"<field type='text-private' var='password' label='Password'/>"
+					"<field type='list-single' var='language' label='Language'>"
+						"<value>cs</value>"
+						"<option label='Cesky'><value>cs</value></option>"
+						"<option label='English'><value>en</value></option>"
+					"</field>"
+					"<field type='text-single' var='encoding' label='Encoding'>"
+						"<value>utf8</value>"
+					"</field>"
+					"<field type='boolean' var='unregister' label='Unregister transport'>"
+						"<value>0</value>"
+					"</field>"
+				"</x>"
+			"</query>"
+		"</iq>";
+
 	Configuration cfg;
 	cfg.onlyForVIP = true;
 	cfg.allowedServers.push_back("spectrum.im");
 	cfg.language = "en";
 	cfg.encoding = "windows-1250";
 	m_backend->setConfiguration(cfg);
-	
 	m_backend->addUser("user@spectrum.im", "someuin", "secret", "cs", "utf8");
 	
 	Tag *iq = new Tag("iq");
@@ -153,68 +143,16 @@ void RegisterHandlerTest::handleIqGetExistingUser() {
 	iq->addChild(query);
 	
 	m_handler->handleIq(iq);
-	
-	m_tags = Transport::instance()->getTags();
-	CPPUNIT_ASSERT (m_tags.size() == 1);
-	
-	Tag *tag = m_tags.front();
-	CPPUNIT_ASSERT (tag->name() == "iq");
-	CPPUNIT_ASSERT (tag->findAttribute("type") == "result");
-	CPPUNIT_ASSERT (tag->findAttribute("from") == "icq.localhost");
-	CPPUNIT_ASSERT (tag->findAttribute("to") == "user@spectrum.im/psi");
-	CPPUNIT_ASSERT (tag->findAttribute("id") == "reg1");
-	CPPUNIT_ASSERT (tag->findChild("query", "xmlns", "jabber:iq:register") != NULL);
-	CPPUNIT_ASSERT (tag->findChild("query")->findChild("instructions") != NULL);
-	CPPUNIT_ASSERT (tag->findChild("query")->findChild("instructions")->cdata() != "");
-	CPPUNIT_ASSERT (tag->findChild("query")->findChild("registered") != NULL);
-	CPPUNIT_ASSERT (tag->findChild("query")->findChild("username") != NULL);
-	CPPUNIT_ASSERT (tag->findChild("query")->findChild("username")->cdata() == "someuin");
-	CPPUNIT_ASSERT (tag->findChild("query")->findChild("password") != NULL);
-	CPPUNIT_ASSERT (tag->findChild("query")->findChild("password")->cdata() == "");
-	CPPUNIT_ASSERT (tag->findChild("query")->findChild("x") != NULL);
-	Tag *x = tag->findChild("query")->findChild("x");
-	CPPUNIT_ASSERT (x->findAttribute("xmlns") == "jabber:x:data");
-	CPPUNIT_ASSERT (x->findAttribute("type") == "form");
-	CPPUNIT_ASSERT (x->findChild("title") != NULL);
-	CPPUNIT_ASSERT (x->findChild("title")->cdata() != "");
-	CPPUNIT_ASSERT (x->findChild("instructions") != NULL);
-	CPPUNIT_ASSERT (x->findChild("instructions")->cdata() != "");
-	CPPUNIT_ASSERT (x->findChild("instructions")->cdata() != "");
-	CPPUNIT_ASSERT (x->findChild("field", "var", "FORM_TYPE") != NULL);
-	CPPUNIT_ASSERT (x->findChild("field", "var", "FORM_TYPE")->findAttribute("type") == "hidden");
-	CPPUNIT_ASSERT (x->findChild("field", "var", "FORM_TYPE")->findChild("value") != NULL);
-	CPPUNIT_ASSERT (x->findChild("field", "var", "FORM_TYPE")->findChild("value")->cdata() == "jabber:iq:register");
-	CPPUNIT_ASSERT (x->findChild("field", "var", "username") != NULL);
-	CPPUNIT_ASSERT (x->findChild("field", "var", "username")->findAttribute("type") == "text-single");
-	CPPUNIT_ASSERT (x->findChild("field", "var", "username")->findAttribute("label") != "");
-	CPPUNIT_ASSERT (x->findChild("field", "var", "username")->findChild("value") != NULL);
-	CPPUNIT_ASSERT (x->findChild("field", "var", "username")->findChild("value")->cdata() == "someuin");
-	CPPUNIT_ASSERT (x->findChild("field", "var", "username")->findChild("required") != NULL);
-	CPPUNIT_ASSERT (x->findChild("field", "var", "password") != NULL);
-	CPPUNIT_ASSERT (x->findChild("field", "var", "password")->findAttribute("type") == "text-private");
-	CPPUNIT_ASSERT (x->findChild("field", "var", "password")->findAttribute("label") != "");
-	CPPUNIT_ASSERT (x->findChild("field", "var", "password")->findChild("value") == NULL);
-	CPPUNIT_ASSERT (x->findChild("field", "var", "language") != NULL);
-	CPPUNIT_ASSERT (x->findChild("field", "var", "language")->findAttribute("type") == "list-single");
-	CPPUNIT_ASSERT (x->findChild("field", "var", "language")->findAttribute("label") != "");
-	CPPUNIT_ASSERT (x->findChild("field", "var", "language")->findChild("value") != NULL);
-	CPPUNIT_ASSERT (x->findChild("field", "var", "language")->findChild("value")->cdata() == "cs");
-	CPPUNIT_ASSERT (x->findChild("field", "var", "language")->findChild("required") == NULL);
-	CPPUNIT_ASSERT (x->findChild("field", "var", "language")->findChild("option") != NULL);
-	CPPUNIT_ASSERT (x->findChild("field", "var", "encoding") != NULL);
-	CPPUNIT_ASSERT (x->findChild("field", "var", "encoding")->findAttribute("type") == "text-single");
-	CPPUNIT_ASSERT (x->findChild("field", "var", "encoding")->findAttribute("label") != "");
-	CPPUNIT_ASSERT (x->findChild("field", "var", "encoding")->findChild("value") != NULL);
-	CPPUNIT_ASSERT (x->findChild("field", "var", "encoding")->findChild("value")->cdata() == "utf8");
-	CPPUNIT_ASSERT (x->findChild("field", "var", "encoding")->findChild("required") == NULL);
-	CPPUNIT_ASSERT (x->findChild("field", "var", "unregister") != NULL);
-	CPPUNIT_ASSERT (x->findChild("field", "var", "unregister")->findAttribute("type") == "boolean");
-	CPPUNIT_ASSERT (x->findChild("field", "var", "unregister")->findAttribute("label") != "");
-	CPPUNIT_ASSERT (x->findChild("field", "var", "unregister")->findChild("value") != NULL);
-	CPPUNIT_ASSERT (x->findChild("field", "var", "unregister")->findChild("value")->cdata() == "0");
+	testTagCount(1);
+	compare(r);
 }
 
 void RegisterHandlerTest::handleIqRegisterLegacy() {
+	std::string r;
+	std::string presence;
+	r =			"<iq id='reg1' type='result' from='icq.localhost' to='user@spectrum.im/psi'/>";
+	presence =	"<presence type='subscribe' from='icq.localhost' to='user@spectrum.im' from='icq.localhost'/>";
+
 	Configuration cfg;
 	cfg.onlyForVIP = true;
 	cfg.allowedServers.push_back("spectrum.im");
@@ -237,28 +175,22 @@ void RegisterHandlerTest::handleIqRegisterLegacy() {
 	CPPUNIT_ASSERT (row.id == -1);
 	
 	m_handler->handleIq(iq);
-	
-	m_tags = Transport::instance()->getTags();
-	CPPUNIT_ASSERT (m_tags.size() == 2);
-	
-	Tag *tag = m_tags.front();
-	CPPUNIT_ASSERT (tag->name() == "iq");
-	CPPUNIT_ASSERT (tag->findAttribute("type") == "result");
-	CPPUNIT_ASSERT (tag->findAttribute("from") == "icq.localhost");
-	CPPUNIT_ASSERT (tag->findAttribute("to") == "user@spectrum.im/psi");
-	CPPUNIT_ASSERT (tag->findAttribute("id") == "reg1");
-	
-	tag = m_tags.back();
-	CPPUNIT_ASSERT (tag->name() == "presence");
-	CPPUNIT_ASSERT (tag->findAttribute("type") == "subscribe");
-	CPPUNIT_ASSERT (tag->findAttribute("to") == "user@spectrum.im");
-	CPPUNIT_ASSERT (tag->findAttribute("from") == "icq.localhost");
+	testTagCount(2);
+	compare(r);
+	compare(presence);
 	
 	row = m_backend->getUserByJid("user@spectrum.im");
 	CPPUNIT_ASSERT (row.id != -1);
 }
 
 void RegisterHandlerTest::handleIqRegisterLegacyNoPassword() {
+	std::string r;
+	r =	"<iq id='reg1' type='error' from='icq.localhost' to='user@spectrum.im/psi'>"
+			"<error code='406' type='modify'>"
+				"<not-acceptable xmlns='urn:ietf:params:xml:ns:xmpp-stanzas'/>"
+			"</error>"
+		"</iq>";
+
 	Configuration cfg;
 	cfg.onlyForVIP = true;
 	cfg.allowedServers.push_back("spectrum.im");
@@ -278,25 +210,18 @@ void RegisterHandlerTest::handleIqRegisterLegacyNoPassword() {
 	iq->addChild(query);
 	
 	m_handler->handleIq(iq);
-
-	m_tags = Transport::instance()->getTags();
-	CPPUNIT_ASSERT (m_tags.size() == 1);
-
-	Tag *tag = m_tags.front();
-	
-	CPPUNIT_ASSERT (tag->name() == "iq");
-	CPPUNIT_ASSERT (tag->findAttribute("type") == "error");
-	CPPUNIT_ASSERT (tag->findAttribute("id") == "reg1");
-	CPPUNIT_ASSERT (tag->findAttribute("from") == "icq.localhost");
-	CPPUNIT_ASSERT (tag->findAttribute("to") == "user@spectrum.im/psi");
-	CPPUNIT_ASSERT (tag->findChild("error") != NULL);
-	CPPUNIT_ASSERT (tag->findChild("error")->findAttribute("code") == "406");
-	CPPUNIT_ASSERT (tag->findChild("error")->findAttribute("type") == "modify");
-	CPPUNIT_ASSERT (tag->findChild("error")->findChild("not-acceptable") != NULL);
-	CPPUNIT_ASSERT (tag->findChild("error")->findChild("not-acceptable")->findAttribute("xmlns") == "urn:ietf:params:xml:ns:xmpp-stanzas");
+	testTagCount(1);
+	compare(r);
 }
 
 void RegisterHandlerTest::handleIqRegisterLegacyNoUsername() {
+	std::string r;
+	r =	"<iq id='reg1' type='error' from='icq.localhost' to='user@spectrum.im/psi'>"
+			"<error code='406' type='modify'>"
+				"<not-acceptable xmlns='urn:ietf:params:xml:ns:xmpp-stanzas'/>"
+			"</error>"
+		"</iq>";
+
 	Configuration cfg;
 	cfg.onlyForVIP = true;
 	cfg.allowedServers.push_back("spectrum.im");
@@ -316,25 +241,16 @@ void RegisterHandlerTest::handleIqRegisterLegacyNoUsername() {
 	iq->addChild(query);
 	
 	m_handler->handleIq(iq);
-
-	m_tags = Transport::instance()->getTags();
-	CPPUNIT_ASSERT (m_tags.size() == 1);
-
-	Tag *tag = m_tags.front();
-	
-	CPPUNIT_ASSERT (tag->name() == "iq");
-	CPPUNIT_ASSERT (tag->findAttribute("type") == "error");
-	CPPUNIT_ASSERT (tag->findAttribute("id") == "reg1");
-	CPPUNIT_ASSERT (tag->findAttribute("from") == "icq.localhost");
-	CPPUNIT_ASSERT (tag->findAttribute("to") == "user@spectrum.im/psi");
-	CPPUNIT_ASSERT (tag->findChild("error") != NULL);
-	CPPUNIT_ASSERT (tag->findChild("error")->findAttribute("code") == "406");
-	CPPUNIT_ASSERT (tag->findChild("error")->findAttribute("type") == "modify");
-	CPPUNIT_ASSERT (tag->findChild("error")->findChild("not-acceptable") != NULL);
-	CPPUNIT_ASSERT (tag->findChild("error")->findChild("not-acceptable")->findAttribute("xmlns") == "urn:ietf:params:xml:ns:xmpp-stanzas");
+	testTagCount(1);
+	compare(r);
 }
 
 void RegisterHandlerTest::handleIqRegisterXData() {
+	std::string r;
+	std::string presence;
+	r =			"<iq id='reg1' type='result' from='icq.localhost' to='user@spectrum.im/psi'/>";
+	presence =	"<presence type='subscribe' from='icq.localhost' to='user@spectrum.im' from='icq.localhost'/>";
+
 	Configuration cfg;
 	cfg.onlyForVIP = true;
 	cfg.allowedServers.push_back("spectrum.im");
@@ -394,22 +310,9 @@ void RegisterHandlerTest::handleIqRegisterXData() {
 	CPPUNIT_ASSERT (row.id == -1);
 	
 	m_handler->handleIq(iq);
-	
-	m_tags = Transport::instance()->getTags();
-	CPPUNIT_ASSERT (m_tags.size() == 2);
-	
-	Tag *tag = m_tags.front();
-	CPPUNIT_ASSERT (tag->name() == "iq");
-	CPPUNIT_ASSERT (tag->findAttribute("type") == "result");
-	CPPUNIT_ASSERT (tag->findAttribute("from") == "icq.localhost");
-	CPPUNIT_ASSERT (tag->findAttribute("to") == "user@spectrum.im/psi");
-	CPPUNIT_ASSERT (tag->findAttribute("id") == "reg1");
-	
-	tag = m_tags.back();
-	CPPUNIT_ASSERT (tag->name() == "presence");
-	CPPUNIT_ASSERT (tag->findAttribute("type") == "subscribe");
-	CPPUNIT_ASSERT (tag->findAttribute("to") == "user@spectrum.im");
-	CPPUNIT_ASSERT (tag->findAttribute("from") == "icq.localhost");
+	testTagCount(2);
+	compare(r);
+	compare(presence);
 	
 	row = m_backend->getUserByJid("user@spectrum.im");
 	CPPUNIT_ASSERT (row.id != -1);

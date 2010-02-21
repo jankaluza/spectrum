@@ -3,12 +3,13 @@
 #include <cppunit/TestFixture.h>
 #include <cppunit/extensions/HelperMacros.h>
 #include "blist.h"
+#include "abstracttest.h"
 
 using namespace std;
 
 class ConfigFile;
 
-class ConfigFileTest : public CPPUNIT_NS :: TestFixture
+class ConfigFileTest : public AbstractTest
 {
 	CPPUNIT_TEST_SUITE (ConfigFileTest);
 	CPPUNIT_TEST (loadString);
@@ -18,8 +19,8 @@ class ConfigFileTest : public CPPUNIT_NS :: TestFixture
 	CPPUNIT_TEST_SUITE_END ();
 
 	public:
-		void setUp (void);
-		void tearDown (void);
+		void up (void);
+		void down (void);
 
 	protected:
 		void loadString();

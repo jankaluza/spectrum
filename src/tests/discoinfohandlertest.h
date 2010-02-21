@@ -4,20 +4,21 @@
 #include <cppunit/extensions/HelperMacros.h>
 #include "blist.h"
 #include "gloox/tag.h"
+#include "abstracttest.h"
 
 using namespace gloox;
 
 class GlooxDiscoInfoHandler;
 
-class GlooxDiscoInfoHandlerTest : public CPPUNIT_NS :: TestFixture
+class GlooxDiscoInfoHandlerTest : public AbstractTest
 {
 	CPPUNIT_TEST_SUITE (GlooxDiscoInfoHandlerTest);
 	CPPUNIT_TEST (handleIq);
 	CPPUNIT_TEST_SUITE_END ();
 
 	public:
-		void setUp (void);
-		void tearDown (void);
+		void up (void);
+		void down (void);
 		Tag *getCorrectTag(const std::string &to);
 
 	protected:
@@ -25,7 +26,6 @@ class GlooxDiscoInfoHandlerTest : public CPPUNIT_NS :: TestFixture
 
 	private:
 		GlooxDiscoInfoHandler *m_handler;
-		std::list <Tag *> m_tags;
 };
 
 CPPUNIT_TEST_SUITE_REGISTRATION (GlooxDiscoInfoHandlerTest);

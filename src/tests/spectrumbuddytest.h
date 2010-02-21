@@ -18,7 +18,7 @@ class SpectrumBuddyTest : public AbstractSpectrumBuddy {
 		std::string getIconHash();
 		std::string getGroup() { return "Buddies"; }
 		PurpleBuddy *getBuddy() { return NULL; }
-		std::string getSafeName() { return ""; }
+		std::string getSafeName();
 		
 		// these functions are only in SpectrumBuddyTest class
 		void setAlias(const std::string &alias);

@@ -4,7 +4,7 @@
 #include "../capabilityhandler.h"
 #include "../usermanager.h"
 
-void CapabilityHandlerTest::setUp (void) {
+void CapabilityHandlerTest::up (void) {
 	m_handler = new CapabilityHandler();
 	m_user = new TestingUser("user@example.com", "user@example.com");
 	// Set resource without capabilities.
@@ -13,7 +13,7 @@ void CapabilityHandlerTest::setUp (void) {
 	Transport::instance()->userManager()->addUser(m_user);
 }
 
-void CapabilityHandlerTest::tearDown (void) {
+void CapabilityHandlerTest::down (void) {
 	delete m_handler;
 	Transport::instance()->userManager()->removeUser(m_user);
 }

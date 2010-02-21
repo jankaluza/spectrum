@@ -112,20 +112,22 @@ Tag *AbstractSpectrumBuddy::generatePresenceStanza(int features) {
 			break;
 	}
 
-	// caps
-	Tag *c = new Tag("c");
-	c->addAttribute("xmlns", "http://jabber.org/protocol/caps");
-	c->addAttribute("hash", "sha-1");
-	c->addAttribute("node", "http://spectrum.im/transport");
-	c->addAttribute("ver", Transport::instance()->hash());
-	tag->addChild(c);
+	if (s != PURPLE_STATUS_OFFLINE) {
+		// caps
+		Tag *c = new Tag("c");
+		c->addAttribute("xmlns", "http://jabber.org/protocol/caps");
+		c->addAttribute("hash", "sha-1");
+		c->addAttribute("node", "http://spectrum.im/transport");
+		c->addAttribute("ver", Transport::instance()->hash());
+		tag->addChild(c);
 
-	if (features & TRANSPORT_FEATURE_AVATARS) {
-		// vcard-temp:x:update
-		Tag *x = new Tag("x");
-		x->addAttribute("xmlns","vcard-temp:x:update");
-		x->addChild( new Tag("photo", getIconHash()) );
-		tag->addChild(x);
+		if (features & TRANSPORT_FEATURE_AVATARS) {
+			// vcard-temp:x:update
+			Tag *x = new Tag("x");
+			x->addAttribute("xmlns","vcard-temp:x:update");
+			x->addChild( new Tag("photo", getIconHash()) );
+			tag->addChild(x);
+		}
 	}
 
 	return tag;

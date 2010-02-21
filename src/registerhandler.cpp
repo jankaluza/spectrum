@@ -370,9 +370,6 @@ bool GlooxRegisterHandler::handleIq(Tag *iqTag) {
 		reply->addAttribute( "type", "result" );
 		reply->addAttribute( "to", iqTag->findAttribute("from") );
 		reply->addAttribute( "from", Transport::instance()->jid() );
-		Tag *rquery = new Tag( "query" );
-		rquery->addAttribute( "xmlns", "jabber:iq:register" );
-		reply->addChild(rquery);
 		Transport::instance()->send( reply );
 
 		if (sendsubscribe) {

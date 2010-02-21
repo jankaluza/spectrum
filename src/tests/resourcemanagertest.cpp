@@ -4,11 +4,11 @@
 #include "testingbackend.h"
 #include "../capabilityhandler.h"
 
-void ResourceManagerTest::setUp (void) {
+void ResourceManagerTest::up (void) {
 	m_manager = new ResourceManager();
 }
 
-void ResourceManagerTest::tearDown (void) {
+void ResourceManagerTest::down (void) {
 	delete m_manager;
 }
 

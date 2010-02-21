@@ -4,11 +4,11 @@
 #include "transport.h"
 #include "log.h"
 
-void ConfigFileTest::setUp (void) {
+void ConfigFileTest::up (void) {
 	m_file = new ConfigFile("");
 }
 
-void ConfigFileTest::tearDown (void) {
+void ConfigFileTest::down (void) {
 	delete m_file;
 }
 

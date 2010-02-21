@@ -1,5 +1,9 @@
 #include "spectrumbuddytest.h"
 
+struct replaceBadJidCharacters {
+	void operator()(char& c) { if(c == '@') c = '%';}
+};
+
 SpectrumBuddyTest::SpectrumBuddyTest(long id, PurpleBuddy *buddy) : AbstractSpectrumBuddy(id) {
 }
 
@@ -41,6 +45,12 @@ void SpectrumBuddyTest::setStatusMessage(const std::string &statusMessage) {
 
 void SpectrumBuddyTest::setIconHash(const std::string &iconHash) {
 	m_iconHash = iconHash;
+}
+
+std::string SpectrumBuddyTest::getSafeName() {
+	std::string name = getName();
+	std::for_each( name.begin(), name.end(), replaceBadJidCharacters() );
+	return name;
 }
 
 
