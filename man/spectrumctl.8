@@ -1,0 +1,131 @@
+.\"
+.\"     Title: spectrumctl
+.\"    Author: Moritz Wilhelmy <crap@wzff.de>
+.\"  Language: English
+.\"      Date: 2010-02-21
+.\" This document is the result of painful hand work. I still like writing manpages more than html :)
+.\"
+.TH spectrumctl 8  "February 21, 2010" "Version 0.1\-git" "Spectrum Manual"
+.SH NAME
+spectrumctl \- util to control spectrum instances
+.SH SYNOPSIS
+.B spectrumctl
+[options] operation
+.SH DESCRIPTION
+spectrumctl is a small tool written in python which can be used to control instances of the spectrum XMPP transport.
+spectrum only handles one legacy network per instance, so you need more than one spectrum instance if you want support for more than one legacy network.
+By default, spectrumctl acts on all transports defined in \fI/etc/spectrum/\fR.
+.SH OPERATIONS
+.PP
+\fBstart\fR, \fBstop\fR, \fBrestart\fR
+.RS 4
+Start, stop or restart given spectrum instances (all of them per default).
+.sp
+.RE
+\fBlist\fR
+.RS 4
+Show a list of spectrum configurations (and their corresponding instances with PID if running)
+.sp
+.RE
+\fBreload\fR
+.RS 4
+Reload given spectrum configurations.
+.sp
+.RE
+\fBhelp\fR
+.RS 4
+Show the help message, alias for \fI\-\-help\fR.
+.SH OPTIONS
+.RE
+\fB\-c\fR \fIFILE\fR, \fB\-\-config\fR=\fIFILE\fR
+.RS 4
+Only act on transport configured in FILE (ignored for list)
+.sp
+.RE
+\fB\-d\fR \fIDIR\fR, \fB\-\-config\-dir\fR=\fIDIR\fR
+.RS 4
+Act on all transports configured in DIR (default: \fI/etc/spectrum\fR)
+.sp
+.RE
+\fB\-q\fR, \fB\-\-quiet\fR
+.RS 4
+Do not print any output (ignored for list)
+.sp
+.RE
+Options for action "\fBlist\fR":
+.sp
+.RS 4
+\fB\-\-status\fR=\fISTATUS\fR
+.RS 4
+Only show transports with given status. Valid values are "\fIrunning\fR", "\fIstopped\fR" and "\fIunknown\fR"
+.sp
+.RE
+.RE
+Options for action "\fBstart\fR":
+.RS 4
+\fB\-\-su\fR=\fISU\fR
+.RS 4
+Start spectrum as this user (default: \fIspectrum\fR)
+.RE
+.RE
+.sp
+\fB\-h\fR, \fB\-\-help\fR
+.RS 4
+show a help message and exit
+.sp
+.RE
+\fB\-\-version\fR
+.RS 4
+show program's version number and exit
+.RE
+.SH AUTHORS
+Copyright \(co 2009\-2010 by Spectrum engineers:
+.sp
+.\" template start
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Foo Bar <baz@holygrail\&.net>
+.RE
+.\" template end, and once again template start
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Jan Kaluza <dunno address@foobar\&.net>
+.RE
+.\" template end ;)
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Mati <dunno address@foobar\&.net>
+.RE
+.\" again template end
+.sp
+.br
+License GPLv3+: GNU GPL version 3 or later.
+This is free software: you are free to change and redistribute it.
+There is NO WARRANTY, to the extent permitted by law.
+.sp
+See http://gnu.org/licenses/gpl.html for more information.
+.SH SEE ALSO
+\fBspectrum\fP(8)
+.sp
+For more information, see the spectrum homepage at http://spectrum.im/
+
+.SH BUGS
+Please submit bugs to our issue tracker at github: http://github.com/hanzz/spectrum/issues
