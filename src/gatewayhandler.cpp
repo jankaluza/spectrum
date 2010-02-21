@@ -99,7 +99,7 @@ bool GlooxGatewayHandler::handleIq (const IQ &stanza){
 		std::string uin(prompt->cdata());
 		
 		AbstractUser *user = Transport::instance()->userManager()->getUserByJID(stanza.from().bare());
-		PurpleAccount *account = user->account();
+		PurpleAccount *account = user ? user->account() : NULL;
 
 		Transport::instance()->protocol()->prepareUsername(uin, account);
 		std::for_each( uin.begin(), uin.end(), replaceBadJidCharacters() );
