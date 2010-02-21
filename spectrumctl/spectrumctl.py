@@ -48,7 +48,6 @@ start_group.add_option( '--su', default='spectrum',
 parser.add_option_group( start_group )
 
 options, args = parser.parse_args()
-action = args[0]
 
 init_actions = [ 'start', 'stop', 'restart', 'reload', 'status' ]
 complex_actions = [ 'list' ]
@@ -57,7 +56,9 @@ all_actions = init_actions + complex_actions
 if len( args ) != 1:
 	print( "Error: Please give exactly one action." )
 	sys.exit(1)
-elif action not in all_actions:
+
+action = args[0]
+if action not in all_actions:
 	print( "Unknown action." )
 	sys.exit(1)
 
