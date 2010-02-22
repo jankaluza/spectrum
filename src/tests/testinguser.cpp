@@ -1,5 +1,6 @@
 #include "testinguser.h"
 #include "../capabilityhandler.h"
+#include "transport.h"
 
 TestingUser::TestingUser(const std::string &userkey, const std::string &jid) {
 	setResource("psi", 10, GLOOX_FEATURE_ROSTERX);
@@ -13,6 +14,7 @@ TestingUser::TestingUser(const std::string &userkey, const std::string &jid) {
 	g_hash_table_replace(m_settings, g_strdup("enable_avatars"), m_value);
 	m_connected = true;
 	m_readyForConnect = false;
+	m_features = TRANSPORT_FEATURE_AVATARS | TRANSPORT_FEATURE_TYPING_NOTIFY | TRANSPORT_FEATURE_FILETRANSFER;
 	removeTimer = 0;
 }
 

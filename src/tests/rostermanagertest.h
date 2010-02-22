@@ -21,10 +21,15 @@ class RosterManagerTest : public AbstractTest {
 	CPPUNIT_TEST (addRosterItem);
 	CPPUNIT_TEST (sendPresence);
 	CPPUNIT_TEST (handleBuddySignedOn);
+	CPPUNIT_TEST (handleBuddyStatusChanged);
 	CPPUNIT_TEST (handleBuddySignedOff);
 	CPPUNIT_TEST (handleBuddyCreatedRIE);
+	CPPUNIT_TEST (handleBuddyCreatedRIEOneBoth);
 	CPPUNIT_TEST (handleBuddyCreatedSubscribe);
+	CPPUNIT_TEST (handleBuddyCreatedSubscribeOneBoth);
 	CPPUNIT_TEST (handleBuddyCreatedRemove);
+	CPPUNIT_TEST (handlePresenceProbe);
+	CPPUNIT_TEST (handleAuthorizationRequest);
 	CPPUNIT_TEST (handleSubscriptionSubscribe);
 	CPPUNIT_TEST_SUITE_END ();
 
@@ -41,10 +46,15 @@ class RosterManagerTest : public AbstractTest {
 		void addRosterItem();
 		void sendPresence();
 		void handleBuddySignedOn();
+		void handleBuddyStatusChanged();
 		void handleBuddySignedOff();
 		void handleBuddyCreatedRIE();
+		void handleBuddyCreatedRIEOneBoth();
 		void handleBuddyCreatedSubscribe();
+		void handleBuddyCreatedSubscribeOneBoth();
 		void handleBuddyCreatedRemove();
+		void handlePresenceProbe();
+		void handleAuthorizationRequest();
 		void handleSubscriptionSubscribe();
 		
 	private:

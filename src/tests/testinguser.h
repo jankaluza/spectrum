@@ -16,8 +16,9 @@ class TestingUser : public AbstractUser {
 		PurpleAccount *account() { return NULL; }
 		const std::string &jid() { return m_jid; }
 		PurpleValue *getSetting(const char *key) { return m_value; }
-		bool hasTransportFeature(int feature) { return true; }
-		int getFeatures() { return 256; }
+		bool hasTransportFeature(int feature) { return m_features & feature; }
+		int getFeatures() { return m_features; }
+		void setFeatures(int features) { m_features = features; }
 		long storageId() { return 1; }
 		const std::string &username() { return m_username; }
 		GHashTable *settings() { return m_settings; }
@@ -37,6 +38,7 @@ class TestingUser : public AbstractUser {
 		std::string m_jid;
 		bool m_readyForConnect;
 		bool m_connected;
+		int m_features;
 };
 
 #endif

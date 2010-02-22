@@ -101,15 +101,6 @@ SpectrumRosterManager::~SpectrumRosterManager() {
 }
 
 bool SpectrumRosterManager::isInRoster(const std::string &name, const std::string &subscription) {
-// 	std::map<std::string,RosterRow>::iterator iter = m_roster.begin();
-// 	iter = m_roster.find(name);
-// 	if (iter != m_roster.end()) {
-// 		if (subscription.empty())
-// 			return true;
-// 		if (m_roster[name].subscription == subscription)
-// 			return true;
-// 	}
-
 	AbstractSpectrumBuddy *s_buddy = (AbstractSpectrumBuddy *) g_hash_table_lookup(m_roster, name.c_str());
 
 	if (s_buddy) {
