@@ -5,6 +5,10 @@ try:
 	import MySQLdb
 except:
     print "MySQLdb is not installed"
+try:
+	import sqlite3
+except:
+	print "sqlite3 is not installed"
 
 from twisted.web import microdom as dom
 from twisted.web.domhelpers import *
@@ -55,9 +59,7 @@ def start():
 		if not os.path.exists(sys.argv[2]):
 			print "Run Spectrum to create this DB file first and then run this script again with the DB file created by Spectrum."
 			return
-		print "sqlite is not supported yet"
-		return
-		#db = adbapi.ConnectionPool('sqlite3', sys.argv[2])
+		db = sqlite3.connect(sys.argv[2])
 	else:
 		db = MySQLdb.connect(host=sys.argv[5], user=sys.argv[3], passwd=sys.argv[4], db=sys.argv[2])
 	cursor = db.cursor()
@@ -76,7 +78,7 @@ def start():
 			except:
 				print "Can't parse", f, ". Skipping..."
 				continue
-			jid = f.replace('%','@')[:-4]
+			jid = os.path.basename(f).replace('%','@')[:-4]
 			p = x.getElementsByTagName('password')
 			if len(p) != 1:
 				print "No password for jid", jid, ". Skipping..."
@@ -85,13 +87,23 @@ def start():
 			u = x.getElementsByTagName('username')
 			uin = gatherTextNodes(u[0])
 
-			cursor.execute('insert ignore into ' + prefix + 'users (jid, uin, password, language) values (%s, %s, %s, "en")', (jid, uin, password))
-			cursor.execute('select id from ' + prefix + 'users WHERE jid = %s', (jid))
+			if len(sys.argv) == 3 or len(sys.argv) == 4:
+				cursor.execute('insert or ignore into ' + prefix + 'users (jid, uin, password, language) values (?, ?, ?, "en")', (jid, uin, password))
+			else:
+				cursor.execute('insert ignore into ' + prefix + 'users (jid, uin, password, language) values (%s, %s, %s, "en")', (jid, uin, password))
+			if len(sys.argv) == 3 or len(sys.argv) == 4:
+				cursor.execute('select id from ' + prefix + 'users WHERE jid = "'+jid+'"')
+			else:
+				cursor.execute('select id from ' + prefix + 'users WHERE jid = %s', (jid))
 			row = cursor.fetchone()
 			user_id = int(row[0])
 			items = x.getElementsByTagName('item')
 			for j in items:
-				cursor.execute('insert ignore into ' + prefix + 'buddies (uin, user_id, nickname, groups, subscription) values (%s, %s, %s,"Buddies", "both")',(j.getAttribute('jid'), str(user_id), j.getAttribute('jid')))
+				if len(sys.argv) == 3 or len(sys.argv) == 4:
+					cursor.execute('insert or ignore into ' + prefix + 'buddies (uin, user_id, nickname, groups, subscription) values (?, ?, ?,"Buddies", "both")',(j.getAttribute('jid'), str(user_id), j.getAttribute('jid')))
+				else:
+					cursor.execute('insert ignore into ' + prefix + 'buddies (uin, user_id, nickname, groups, subscription) values (%s, %s, %s,"Buddies", "both")',(j.getAttribute('jid'), str(user_id), j.getAttribute('jid')))
+	db.commit()
 	cursor.close()
 	db.close()
 	#print "Everything done!"
