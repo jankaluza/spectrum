@@ -91,7 +91,7 @@ set(spectrum_SRCS
 	src/commands.cpp
 	src/configfile.cpp
 	src/configinterface.cpp
-	src/discoinfohandler.cpp
+# 	src/discoinfohandler.cpp
 	src/filetransfermanager.cpp
 	src/filetransferrepeater.cpp
 	src/gatewayhandler.cpp
@@ -155,7 +155,7 @@ set(spectrum_MOC_HDRS
 	src/commands.h
 	src/configfile.h
 	src/configinterface.h
-	src/discoinfohandler.h
+# 	src/discoinfohandler.h
 	src/filetransfermanager.h
 	src/filetransferrepeater.h
 	src/gatewayhandler.h
@@ -244,7 +244,7 @@ set(spectrum_tests_SRCS
 	src/tests/autoconnectlooptest.cpp
 	src/tests/capabilityhandlertest.cpp
 	src/tests/configfiletest.cpp
-	src/tests/discoinfohandlertest.cpp
+# 	src/tests/discoinfohandlertest.cpp
 	src/tests/main.cpp
 	src/tests/spectrumbuddytest.cpp
 	src/tests/spectrumconversationtest.cpp
@@ -264,7 +264,7 @@ set(spectrum_tests_SRCS
 	src/capabilityhandler.cpp
 	src/capabilitymanager.cpp
 	src/configfile.cpp
-	src/discoinfohandler.cpp
+# 	src/discoinfohandler.cpp
 	src/parser.cpp
 	src/rostermanager.cpp
 	src/rosterstorage.cpp
@@ -284,7 +284,7 @@ set(spectrum_tests_MOC_HDRS
 	src/tests/autoconnectlooptest.h
 	src/tests/capabilityhandlertest.h
 	src/tests/configfiletest.h
-	src/tests/discoinfohandler.h
+# 	src/tests/discoinfohandler.h
 	src/tests/spectrumbuddytest.h
 	src/tests/spectrumconversationtest.h
 	src/tests/spectrummucconversationtest.h
@@ -302,7 +302,7 @@ set(spectrum_tests_MOC_HDRS
 	src/capabilityhandler.h
 	src/capabilitymanager.h
 	src/configfile.h
-	src/discoinfohandler.h
+# 	src/discoinfohandler.h
 	src/parser.h
 	src/registerhandler.h
 	src/rostermanager.h

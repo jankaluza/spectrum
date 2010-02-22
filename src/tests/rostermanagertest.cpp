@@ -463,5 +463,6 @@ void RosterManagerTest::handleAuthorizationRequest() {
 }
 
 void RosterManagerTest::handleSubscriptionSubscribe() {
-	Subscription s(Subscription::Subscribe, JID("user1%example.com@icq.localhost"));
+// 	Subscription s(Subscription::Subscribe, JID("user1%example.com@icq.localhost"));
+// 	TODO
 }

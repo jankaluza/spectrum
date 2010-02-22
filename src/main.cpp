@@ -41,7 +41,7 @@
 #include "searchrepeater.h"
 #include "filetransferrepeater.h"
 #include "registerhandler.h"
-#include "discoinfohandler.h"
+// #include "discoinfohandler.h"
 #include "statshandler.h"
 #include "vcardhandler.h"
 #include "gatewayhandler.h"
