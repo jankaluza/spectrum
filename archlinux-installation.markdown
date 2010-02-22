@@ -25,5 +25,7 @@ The only thing left to do now is installing spectrum itself, which is done by
 
 After that, you have (hopefully successfully) installed spectrum, and configure it by editing files in /etc/spectrum/.
 If you have any questions, send me an E-Mail to wzff.de with crap@ prepended.
+
 I do not take any liability for harmful effects which might be caused by the installation of the software in this repository.
+
 Enjoy!
