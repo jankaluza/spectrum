@@ -2,86 +2,99 @@
 # -*- coding: utf-8 -*-
 import os,  os.path, sys
 try:
-    from twisted.web import microdom as dom
-    from twisted.web.domhelpers import *
-    from twisted.internet import defer, utils
-    from twisted.enterprise import adbapi, util as dbutil
-    from twisted.words.protocols.jabber import jid
-    from twisted.enterprise import util
+	import MySQLdb
 except:
-    print "python-twisted is not installed"
+    print "MySQLdb is not installed"
 
-s = util.safe
-from twisted.internet import reactor
+from twisted.web import microdom as dom
+from twisted.web.domhelpers import *
 
-def error(result):
-    print 'SQL ERROR ' + unicode(result)
+
+def dirEntries(dir_name, subdir, *args):
+	'''Return a list of file names found in directory 'dir_name'
+	If 'subdir' is True, recursively access subdirectories under 'dir_name'.
+	Additional arguments, if any, are file extensions to match filenames. Matched
+		file names are added to the list.
+	If there are no additional arguments, all files found in the directory are
+		added to the list.
+	Example usage: fileList = dirEntries(r'H:\TEMP', False, 'txt', 'py')
+		Only files with 'txt' and 'py' extensions will be added to the list.
+	Example usage: fileList = dirEntries(r'H:\TEMP', True)
+		All files and all the files in subdirectories under H:\TEMP will be added
+		to the list.
+	'''
+	fileList = []
+	for file in os.listdir(dir_name):
+		dirfile = os.path.join(dir_name, file)
+		if os.path.isfile(dirfile):
+			if not args:
+				fileList.append(dirfile)
+			else:
+				if os.path.splitext(dirfile)[1][1:] in args:
+					fileList.append(dirfile)
+		# recursively access file names in subdirectories
+		elif os.path.isdir(dirfile) and subdir:
+			print "Accessing directory:", dirfile
+			fileList.extend(dirEntries(dirfile, subdir, *args))
+	return fileList
 
 def start():
-    if len(sys.argv) != 6 and len(sys.argv) != 7 and len(sys.argv) != 3 and len(sys.argv) != 4:
-        print "Usage for MySQL: " + sys.argv[0] + " transport_path database username password host [mysql_prefix]"
-        print "Usage for SQLite: " + sys.argv[0] + " transport_path database [prefix]"
-        reactor.stop()
-        return
-    maindir = sys.argv[1]
+	if len(sys.argv) != 6 and len(sys.argv) != 7 and len(sys.argv) != 3 and len(sys.argv) != 4:
+		print "Usage for MySQL: " + sys.argv[0] + " transport_path database username password host [mysql_prefix]"
+		print "Usage for SQLite: " + sys.argv[0] + " transport_path database [prefix]"
+		return
+	maindir = sys.argv[1]
+	files = dirEntries(maindir, True, "xml")
 
-    prefix = ""
-    if len(sys.argv) == 7:
-        prefix = sys.argv[6]
-    elif len(sys.argv) == 4:
-        prefix = sys.argv[3]
-    dict = {}
-    if len(sys.argv) == 3 or len(sys.argv) == 4:
-        if not os.path.exists(sys.argv[2]):
-            print "Run Spectrum to create this DB file first and then run this script again with the DB file created by Spectrum."
-            reactor.stop()
-            return
-        db = adbapi.ConnectionPool('sqlite3', sys.argv[2])
-    else:
-        db = adbapi.ConnectionPool('MySQLdb', db = sys.argv[2], user = sys.argv[3], passwd = sys.argv[4], host = sys.argv[5], cp_min=1, cp_max=1)
-    c = 0
-    for dr in os.listdir(maindir):
-        if os.path.isdir(maindir+dr):
-            for f in os.listdir(maindir+dr):
-                if os.path.isfile(maindir+dr+'/'+f) and not f in ['pubsub', 'avatars']:
-                    fp = open(maindir+dr+'/'+f, 'r')
-                    c += 1
-                    buff = fp.read()
-                    fp.close()
-                    try:
-                        x = dom.parseXMLString(buff)
-                    except:
-                        print "Can't parse", maindir+dr+'/'+dr2+'/'+f, ". Skipping..."
-                        continue
-                    jid = f.replace('%','@')[:-4]
-                    p = x.getElementsByTagName('password')
-                    if len(p) != 1:
-                        print "No password for jid", jid, ". Skipping..."
-                        continue
-                    password =  gatherTextNodes(p[0])
-                    u = x.getElementsByTagName('username')
-                    uin = gatherTextNodes(u[0])
-                    print "Adding", jid
+	prefix = ""
+	if len(sys.argv) == 7:
+		prefix = sys.argv[6]
+	elif len(sys.argv) == 4:
+		prefix = sys.argv[3]
+	if len(sys.argv) == 3 or len(sys.argv) == 4:
+		if not os.path.exists(sys.argv[2]):
+			print "Run Spectrum to create this DB file first and then run this script again with the DB file created by Spectrum."
+			return
+		print "sqlite is not supported yet"
+		return
+		#db = adbapi.ConnectionPool('sqlite3', sys.argv[2])
+	else:
+		db = MySQLdb.connect(host=sys.argv[5], user=sys.argv[3], passwd=sys.argv[4], db=sys.argv[2])
+	cursor = db.cursor()
+	c = 0
+	size = len(files)
+	for f in files:
+		if os.path.isfile(f) and not f in ['pubsub', 'avatars']:
+			c += 1
+			print "[" + str(c) + "/" + str(size) + "] " + f
+			fp = open(f, 'r')
+			
+			buff = fp.read()
+			fp.close()
+			try:
+				x = dom.parseXMLString(buff)
+			except:
+				print "Can't parse", f, ". Skipping..."
+				continue
+			jid = f.replace('%','@')[:-4]
+			p = x.getElementsByTagName('password')
+			if len(p) != 1:
+				print "No password for jid", jid, ". Skipping..."
+				continue
+			password =  gatherTextNodes(p[0])
+			u = x.getElementsByTagName('username')
+			uin = gatherTextNodes(u[0])
 
-                    def done2(res, x2):
-                        user_id = int(res[0][0])
-                        print "user_id =", user_id
-                        print "Adding buddies of", jid
-                        items = x2.getElementsByTagName('item')
-                        for j in items:
-                            if len(sys.argv) == 3 or len(sys.argv) == 4:
-                                db.runQuery('insert or ignore into ' + prefix + 'buddies (uin, user_id, nickname, groups, subscription) values ("%s", "%s", "%s","Buddies", "both")'%(s(j.getAttribute('jid')), s(str(user_id)), s(j.getAttribute('jid')))).addErrback(error)
-                            else:
-                                db.runQuery('insert ignore into ' + prefix + 'buddies (uin, user_id, nickname, groups, subscription) values ("%s", "%s", "%s","Buddies", "both")'%(s(j.getAttribute('jid')), s(str(user_id)), s(j.getAttribute('jid')))).addErrback(error)
-                        print "done!"
+			cursor.execute('insert ignore into ' + prefix + 'users (jid, uin, password, language) values (%s, %s, %s, "en")', (jid, uin, password))
+			cursor.execute('select id from ' + prefix + 'users WHERE jid = %s', (jid))
+			row = cursor.fetchone()
+			user_id = int(row[0])
+			items = x.getElementsByTagName('item')
+			for j in items:
+				cursor.execute('insert ignore into ' + prefix + 'buddies (uin, user_id, nickname, groups, subscription) values (%s, %s, %s,"Buddies", "both")',(j.getAttribute('jid'), str(user_id), j.getAttribute('jid')))
+	cursor.close()
+	db.close()
+	#print "Everything done!"
+	#reactor.stop()
 
-                    if len(sys.argv) == 3 or len(sys.argv) == 4:
-                        db.runQuery('insert or ignore into ' + prefix + 'users (jid, uin, password, language) values ("%s", "%s", "%s", "en")'%(s(jid), s(uin),s(password))).addErrback(error)
-                    else:
-                        db.runQuery('insert ignore into ' + prefix + 'users (jid, uin, password, language) values ("%s", "%s", "%s", "en")'%(s(jid), s(uin),s(password))).addErrback(error)
-                    db.runQuery('select id from users WHERE jid = "'+jid+'";').addCallback(done2, x).addErrback(error)
-    #print "Everything done!"
-    #reactor.stop()
-
-reactor.callWhenRunning(start)
-reactor.run()
+start()
