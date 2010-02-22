@@ -9,6 +9,7 @@ title: Documentation
 * [Building from source code on Linux](building-from-source-code.html)
 * [Building from source code on Windows](building-from-source-code-windows.html)
 * [Installing on Debian/Ubuntu](debian-ubuntu-installation.html)
+* [Installing on Archlinux](archlinux-installation.html)
 * [Configuring new spectrum instances](new-spectrum-instances.html)
 
 #### Features
