@@ -34,7 +34,7 @@ using namespace gloox;
 // Class representing IM Conversation
 class SpectrumConversation : public AbstractConversation {
 	public:
-		SpectrumConversation(PurpleConversation *conv, SpectrumConversationType type);
+		SpectrumConversation(PurpleConversation *conv, SpectrumConversationType type, const std::string &roomt = "");
 		virtual ~SpectrumConversation();
 
 		// Handles message which should be resend to XMPP user.
@@ -45,6 +45,7 @@ class SpectrumConversation : public AbstractConversation {
 
 	private:
 		PurpleConversation *m_conv;		// Conversation associated with this class.
+		std::string m_room;
 };
 
 #endif

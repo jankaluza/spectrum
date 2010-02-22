@@ -24,7 +24,6 @@
 #include "protocols/abstractprotocol.h"
 #include "usermanager.h"
 #include "gloox/chatstate.h"
-#include "muchandler.h"
 #include "cmds.h"
 #include "parser.h"
 #include "proxy.h"

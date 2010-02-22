@@ -19,6 +19,7 @@ version 0.2 (20??-??-??):
 
 	IRC:
 	* IRC Nickserv password can be set via Adhoc command
+	* Fixed Private Messages
 	* Using IRC Helper (http://plugins.guifications.org/trac/wiki/irchelper) for
 	  identyfing user. Used only if IRC Helper is installed.
 

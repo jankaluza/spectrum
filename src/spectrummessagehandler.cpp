@@ -95,13 +95,13 @@ void SpectrumMessageHandler::handleWriteIM(PurpleConversation *conv, const char 
 #endif
 	}
 
-	if (Transport::instance()->getConfiguration().protocol == "irc") {
-		char *who_final = g_strdup_printf("%s%%%s", who, JID(m_user->username()).server().c_str());
-		m_conversations[name]->handleMessage(m_user, who_final, msg, flags, mtime, m_currentBody);
-		g_free(who_final);
-	}
-	else
-		m_conversations[name]->handleMessage(m_user, who, msg, flags, mtime, m_currentBody);
+// 	if (Transport::instance()->getConfiguration().protocol == "irc") {
+// 		char *who_final = g_strdup_printf("%s%%%s", who, JID(m_user->username()).server().c_str());
+// 		m_conversations[name]->handleMessage(m_user, who_final, msg, flags, mtime, m_currentBody);
+// 		g_free(who_final);
+// 	}
+// 	else
+	m_conversations[name]->handleMessage(m_user, who, msg, flags, mtime, m_currentBody);
 }
 
 void SpectrumMessageHandler::handleWriteChat(PurpleConversation *conv, const char *who, const char *msg, PurpleMessageFlags flags, time_t mtime) {
@@ -165,22 +165,25 @@ void SpectrumMessageHandler::purpleChatRemoveUsers(PurpleConversation *conv, GLi
 void SpectrumMessageHandler::handleMessage(const Message& msg) {
 	PurpleConversation * conv;
 	std::string username = msg.to().username();
-	if (!Transport::instance()->protocol()->isMUC(m_user, username)) {
+	std::string room = "";
+	if (!Transport::instance()->protocol()->isMUC(m_user, username) && Transport::instance()->getConfiguration().protocol != "irc") {
 		std::for_each( username.begin(), username.end(), replaceJidCharacters() );
 	}
 	else if (!msg.to().resource().empty() && msg.to().resource() != "bot") {
 		username = msg.to().resource();
+		room = msg.to().username();
 	}
 	else if (msg.to().resource() == "bot") {
 		size_t pos = username.find("%");
 		if (pos != std::string::npos)
 			username.erase((int) pos, username.length() - (int) pos);
 	}
+	Log("SpectrumMessageHandler::handleMessage", "username " << username);
 	// open new conversation or get the opened one
 	if (!isOpenedConversation(username)) {
 		conv = purple_conversation_new(PURPLE_CONV_TYPE_IM, m_user->account() , username.c_str());
 #ifndef TESTS
-		addConversation(conv, new SpectrumConversation(conv, SPECTRUM_CONV_CHAT), username);
+		addConversation(conv, new SpectrumConversation(conv, SPECTRUM_CONV_CHAT, room), username);
 #endif
 		m_conversations[username]->setResource(msg.from().resource());
 	}
@@ -273,6 +276,13 @@ std::string SpectrumMessageHandler::getConversationName(PurpleConversation *conv
 
 		std::for_each( name.begin(), name.end(), replaceBadJidCharacters() );
 		std::transform(name.begin(), name.end(), name.begin(),(int(*)(int)) std::tolower);
+
+		if (Transport::instance()->getConfiguration().protocol == "irc") {
+			if (!isOpenedConversation(name)) {
+				name += "%" + JID(m_user->username()).server();
+			}
+		}
+		
 	}
 	else {
 		name = Transport::instance()->protocol()->prepareRoomName(name);

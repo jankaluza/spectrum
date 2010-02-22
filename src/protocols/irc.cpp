@@ -20,7 +20,6 @@
 
 #include "irc.h"
 #include "../main.h"
-#include "../muchandler.h"
 #include "../usermanager.h"
 #include "../sql.h"
 #include "../user.h"

@@ -38,8 +38,8 @@ static void sendXhtmlTag(Tag *body, void *data) {
 	Transport::instance()->send(stanzaTag);
 }
 
-SpectrumConversation::SpectrumConversation(PurpleConversation *conv, SpectrumConversationType type) : AbstractConversation(type),
-	m_conv(conv) {
+SpectrumConversation::SpectrumConversation(PurpleConversation *conv, SpectrumConversationType type, const std::string &room) : AbstractConversation(type),
+	m_conv(conv), m_room(room) {
 }
 
 SpectrumConversation::~SpectrumConversation() {
@@ -70,7 +70,10 @@ void SpectrumConversation::handleMessage(AbstractUser *user, const char *who, co
 
 	if (flags & PURPLE_MESSAGE_ERROR /* && message == "Unable to send message: The message is too large."*/) {
 		Message s(Message::Error, to, currentBody);
-		s.setFrom(name + std::string(getType() == SPECTRUM_CONV_CHAT ? "" : ("%" + JID(user->username()).server())) + "@" + Transport::instance()->jid() + "/bot");
+		if (!m_room.empty())
+			s.setFrom(m_room + "%" + JID(user->username()).server() + "@" + Transport::instance()->jid() + "/" + name);
+		else
+			s.setFrom(name + std::string(getType() == SPECTRUM_CONV_CHAT ? "" : ("%" + JID(user->username()).server())) + "@" + Transport::instance()->jid() + "/bot");
 		Error *c = new Error(StanzaErrorTypeModify, StanzaErrorNotAcceptable);
 		c->setText(message);
 		s.addExtension(c);
@@ -81,9 +84,11 @@ void SpectrumConversation::handleMessage(AbstractUser *user, const char *who, co
 		return;
 	}
 	
-	
 	Message s(Message::Chat, to, message);
-	s.setFrom(name + std::string(getType() == SPECTRUM_CONV_CHAT ? "" : ("%" + JID(user->username()).server())) + "@" + Transport::instance()->jid() + "/bot");
+	if (!m_room.empty())
+		s.setFrom(m_room + "@" + Transport::instance()->jid() + "/" + name);
+	else
+		s.setFrom(name + std::string(getType() == SPECTRUM_CONV_CHAT ? "" : ("%" + JID(user->username()).server())) + "@" + Transport::instance()->jid() + "/bot");
 
 	// chatstates
 	if (purple_value_get_boolean(user->getSetting("enable_chatstate"))) {

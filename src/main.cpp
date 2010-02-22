@@ -1659,7 +1659,8 @@ void GlooxMessageHandler::handleMessage (const Message &msg, MessageSession *ses
 	if (msg.subtype() == Message::Error || msg.subtype() == Message::Invalid)
 		return;
 	User *user;
-	if (protocol()->isMUC(NULL, msg.to().bare()) && protocol()->tempAccountsAllowed()) {
+	// TODO; move it to IRCProtocol
+	if (m_configuration.protocol == "irc") {
 		std::string server = msg.to().username().substr(msg.to().username().find("%") + 1, msg.to().username().length() - msg.to().username().find("%"));
 		user = (User *) userManager()->getUserByJID(msg.from().bare() + server);
 	}
