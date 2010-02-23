@@ -58,7 +58,10 @@ void SpectrumMessageHandler::handlePurpleMessage(PurpleAccount* account, char * 
 	if (conv == NULL) {
 		conv = purple_conversation_new(PURPLE_CONV_TYPE_IM, account, name);
 #ifndef TESTS
-		addConversation(conv, new SpectrumConversation(conv, SPECTRUM_CONV_CHAT));
+		if (Transport::instance()->getConfiguration().protocol == "irc")
+			addConversation(conv, new SpectrumConversation(conv, SPECTRUM_CONV_GROUPCHAT));
+		else
+			addConversation(conv, new SpectrumConversation(conv, SPECTRUM_CONV_CHAT));
 #endif
 	}
 }
@@ -286,7 +289,6 @@ std::string SpectrumMessageHandler::getConversationName(PurpleConversation *conv
 
 		std::for_each( name.begin(), name.end(), replaceBadJidCharacters() );
 		std::transform(name.begin(), name.end(), name.begin(),(int(*)(int)) std::tolower);
-
 		if (Transport::instance()->getConfiguration().protocol == "irc") {
 			if (!isOpenedConversation(name)) {
 				name += "%" + JID(m_user->username()).server();
