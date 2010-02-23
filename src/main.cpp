@@ -386,12 +386,14 @@ static void requestClose(PurpleRequestType type, void *ui_handle) {
 			std::string from = repeater->getInitiator();
 			GlooxMessageHandler::instance()->adhoc()->unregisterSession(from);
 			delete repeater;
+			return;
 		}
 		else if (r->requestType() == CALLER_SEARCH) {
 			SearchRepeater * repeater = (SearchRepeater *) r;
 			std::string from = repeater->getInitiator();
 			GlooxMessageHandler::instance()->searchHandler()->unregisterSession(from);
 			delete repeater;
+			return;
 		}
 	}
 	DummyHandle *r = (DummyHandle*) ui_handle;
