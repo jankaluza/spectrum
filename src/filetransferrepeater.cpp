@@ -555,9 +555,11 @@ void FiletransferRepeater::ready() {
 
 void FiletransferRepeater::xferDestroyed() {
 	Log("xferdestroyed", "in ftrepeater");
-	m_xfer->ui_data = NULL;
-	purple_xfer_unref(m_xfer);
-	m_xfer = NULL;
+	if (m_xfer) {
+		m_xfer->ui_data = NULL;
+		purple_xfer_unref(m_xfer);
+		m_xfer = NULL;
+	}
 	if (!m_resender) {
 		AbstractUser *user = Transport::instance()->userManager()->getUserByJID(m_to.bare());
 		if (!user)
