@@ -121,6 +121,7 @@ static gpointer sendFileStraightCallback(gpointer data) {
 		if (!resender->send())
 			break;
 	}
+	resender->m_thread = NULL;
 	return NULL;
 }
 
@@ -132,7 +133,7 @@ SendFileStraight::SendFileStraight(Bytestream *stream, int size, FiletransferRep
 	m_parent = manager;
 	if (m_stream->connect())
 		std::cout << "stream connected\n";
-    g_thread_create(&sendFileStraightCallback, this, false, NULL);
+	execute(&sendFileStraightCallback, this);
 }
 
 SendFileStraight::~SendFileStraight() {
@@ -166,6 +167,14 @@ bool SendFileStraight::send() {
 	}
 	if (m_stream->recv(2000) != ConnNoError)
 		return false;
+	g_mutex_lock(getMutex());
+	bool stop = m_stop;
+	g_mutex_unlock(getMutex());
+	if (stop) {
+		Log("SendFileStraight", "stopping thread");
+		return false;
+	}
+	
 	return true;
 }
 
@@ -277,11 +286,12 @@ void ReceiveFile::handleBytestreamClose(gloox::Bytestream *s5b) {
 }
 
 static gpointer receiveFunc(gpointer data) {
-	gloox::Bytestream *stream = (gloox::Bytestream *) data;
+	ReceiveFileStraight *repeater = (ReceiveFileStraight *) data;
 	while (true) {
-		if (stream->recv() != ConnNoError)
+		if (!repeater->receive())
 			break;
 	}
+	repeater->m_thread = NULL;
 	return NULL;
 }
 
@@ -296,27 +306,24 @@ ReceiveFileStraight::ReceiveFileStraight(gloox::Bytestream *stream, int size, Fi
         return;
     }
 //     run();
-	g_thread_create(&receiveFunc, m_stream, false, NULL);
-	
+	execute(&receiveFunc, this);
 }
 
 ReceiveFileStraight::~ReceiveFileStraight() {
 
 }
 
-void ReceiveFileStraight::exec() {
-// 	Log().Get("ReceiveFileStraight") << "starting receiveFile thread";
-// 	m_stream->handleConnect(m_stream->connectionImpl());
-// 	Log().Get("ReceiveFileStraight") << "begin receiving this file";
-//     m_file.open("dump.bin", std::ios_base::out | std::ios_base::binary );
-//     if (!m_file) {
-//         Log().Get(m_filename) << "can't create this file!";
-//         return;
-//     }
-	while (!m_finished) {
-		m_stream->recv();
+bool ReceiveFileStraight::receive() {
+	if (m_stream->recv() != ConnNoError)
+		return false;
+	g_mutex_lock(getMutex());
+	bool stop = m_stop;
+	g_mutex_unlock(getMutex());
+	if (stop) {
+		Log("ReceiveFileStraight", "stopping thread");
+		return false;
 	}
-// 	m_file.close();
+	return true;
 }
 
 void ReceiveFileStraight::handleBytestreamData(gloox::Bytestream *s5b, const std::string &data) {
@@ -340,14 +347,6 @@ void ReceiveFileStraight::handleBytestreamOpen(gloox::Bytestream *s5b) {
 }
 
 void ReceiveFileStraight::handleBytestreamClose(gloox::Bytestream *s5b) {
-    if (m_finished){
-// 		Log().Get("ReceiveFileStraight") << "Transfer finished and we're already finished => deleting receiveFile thread";
-		delete this;
-	}
-	else{
-// 		Log().Get("ReceiveFileStraight") << "Transfer finished";
-		m_finished = true;
-	}
 }
 
 FiletransferRepeater::FiletransferRepeater(const JID& to, const std::string& sid, SIProfileFT::StreamType type, const JID& from, long size) {
@@ -363,6 +362,7 @@ FiletransferRepeater::FiletransferRepeater(const JID& to, const std::string& sid
 	m_resender = NULL;
 	m_send = false;
 	m_readyCalled = false;
+	m_readyTimer = 0;
 }
 
 FiletransferRepeater::FiletransferRepeater(const JID& from, const JID& to) {
@@ -377,6 +377,7 @@ FiletransferRepeater::FiletransferRepeater(const JID& from, const JID& to) {
 	m_send = true;
 	m_wantsData = false;
 	m_readyCalled = false;
+	m_readyTimer = 0;
 }
 
 void FiletransferRepeater::registerXfer(PurpleXfer *xfer) {
@@ -549,26 +550,41 @@ int FiletransferRepeater::getDataToSend(std::string &data) {
 
 void FiletransferRepeater::ready() {
 	if (!m_readyCalled && m_xfer)
-		g_timeout_add(0, &ui_got_data, m_xfer);
+		m_readyTimer = g_timeout_add(0, &ui_got_data, m_xfer);
 	m_readyCalled = true;
 }
 
 void FiletransferRepeater::xferDestroyed() {
 	Log("xferdestroyed", "in ftrepeater");
 	if (m_xfer) {
-		m_xfer->ui_data = NULL;
-		purple_xfer_unref(m_xfer);
-		m_xfer = NULL;
-		if (!m_resender) {
-			AbstractUser *user = Transport::instance()->userManager()->getUserByJID(m_to.bare());
-			if (!user)
-				user = Transport::instance()->userManager()->getUserByJID(m_from.bare());
-			if (!user)
-				return;
-			user->removeFiletransfer(m_to.username().c_str());
-			user->removeFiletransfer(m_from.username().c_str());
-			delete this;
+		if (m_resender) {
+			Log("xferdestroyed", m_resender);
+			if (m_resender->isRunning()) {
+				Log("xferdestroyed", "resender is running, trying to stop it");
+				m_resender->stop();
+				g_mutex_lock(m_resender->getMutex());
+				m_resender->wakeUp();
+				g_mutex_unlock(m_resender->getMutex());
+				m_resender->join();
+				Log("xferdestroyed", "resender stopped.");
+			}
+			Log("xferdestroyed", m_resender);
+			delete m_resender;
+			m_resender = NULL;
 		}
+		if (m_readyTimer != 0)
+			purple_timeout_remove(m_readyTimer);
+		m_xfer->ui_data = NULL;
+// 		purple_xfer_unref(m_xfer);
+		m_xfer = NULL;
+		AbstractUser *user = Transport::instance()->userManager()->getUserByJID(m_to.bare());
+		if (!user)
+			user = Transport::instance()->userManager()->getUserByJID(m_from.bare());
+		if (!user)
+			return;
+		user->removeFiletransfer(m_to.username().c_str());
+		user->removeFiletransfer(m_from.username().c_str());
+		delete this;
 	}
 }
 
