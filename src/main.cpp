@@ -1030,7 +1030,7 @@ void GlooxMessageHandler::purpleConnectionError(PurpleConnection *gc,PurpleConne
 	PurpleAccount *account = purple_connection_get_account(gc);
 	User *user = (User *) userManager()->getUserByAccount(account);
 	if (user != NULL) {
-		Log(user->jid(), "Disconnected from legacy network because of error " << int(reason));
+		Log(user->jid(), "Disconnected from legacy network because of error " << int(reason) << " " << std::string(text ? text : ""));
 		if (text)
 			Log(user->jid(), std::string(text));
 		// fatal error => account will be disconnected, so we have to remove it
