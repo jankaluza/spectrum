@@ -1557,7 +1557,8 @@ void GlooxMessageHandler::onConnect() {
 		m_configuration.hash = Base64::encode64( sha.binary() );
 		j->disco()->registerNodeHandler( m_spectrumNodeHandler, "http://spectrum.im/transport#" + m_configuration.hash );
 
-		new AutoConnectLoop();
+		if (m_configuration.protocol != "irc")
+			new AutoConnectLoop();
 		m_firstConnection = false;
 		purple_timeout_add_seconds(60, &sendPing, this);
 	}
