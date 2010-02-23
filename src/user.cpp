@@ -190,6 +190,17 @@ void User::connect() {
 		Log(m_jid, "connect() has been called before");
 		return;
 	}
+	
+	// check if it's valid uin
+	bool valid = false;
+	if (!m_username.empty()) {
+		valid = p->protocol()->isValidUsername(m_username);
+	}
+	if (!valid) {
+		Log(m_jid, m_username << " This username is not valid, not connecting.");
+		return;
+	}
+
 	if (purple_accounts_find(m_username.c_str(), this->p->protocol()->protocol().c_str()) != NULL){
 		Log(m_jid, "this account already exists");
 		m_account = purple_accounts_find(m_username.c_str(), this->p->protocol()->protocol().c_str());
@@ -227,12 +238,6 @@ void User::connect() {
 		purple_account_set_proxy_info(m_account, info);
 	}
 
-
-	// check if it's valid uin
-	bool valid = false;
-	if (!m_username.empty()) {
-		valid = p->protocol()->isValidUsername(m_username);
-	}
 	if (valid && purple_value_get_boolean(getSetting("enable_transport"))) {
 		purple_account_set_enabled(m_account, PURPLE_UI, TRUE);
 		purple_account_connect(m_account);
