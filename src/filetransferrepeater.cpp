@@ -559,16 +559,16 @@ void FiletransferRepeater::xferDestroyed() {
 		m_xfer->ui_data = NULL;
 		purple_xfer_unref(m_xfer);
 		m_xfer = NULL;
-	}
-	if (!m_resender) {
-		AbstractUser *user = Transport::instance()->userManager()->getUserByJID(m_to.bare());
-		if (!user)
-			user = Transport::instance()->userManager()->getUserByJID(m_from.bare());
-		if (!user)
-			return;
-		user->removeFiletransfer(m_to.username().c_str());
-		user->removeFiletransfer(m_from.username().c_str());
-		delete this;
+		if (!m_resender) {
+			AbstractUser *user = Transport::instance()->userManager()->getUserByJID(m_to.bare());
+			if (!user)
+				user = Transport::instance()->userManager()->getUserByJID(m_from.bare());
+			if (!user)
+				return;
+			user->removeFiletransfer(m_to.username().c_str());
+			user->removeFiletransfer(m_from.username().c_str());
+			delete this;
+		}
 	}
 }
 
