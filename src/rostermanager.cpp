@@ -380,7 +380,6 @@ authRequest *SpectrumRosterManager::handleAuthorizationRequest(PurpleAccount *ac
 void SpectrumRosterManager::removeAuthRequest(const std::string &remote_user) {
 	if (m_authRequests.find(remote_user) == m_authRequests.end())
 		return;
-	delete m_authRequests[remote_user];
 	m_authRequests.erase(remote_user);
 }
 
