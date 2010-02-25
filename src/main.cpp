@@ -1155,6 +1155,7 @@ void GlooxMessageHandler::purpleAuthorizeClose(void *data) {
 	else {
 		Log("purple", "purpleAuthorizationClose called, but user does not exist!!!");
 	}
+	delete d;
 }
 
 void * GlooxMessageHandler::purpleAuthorizeReceived(PurpleAccount *account, const char *remote_user, const char *id, const char *alias, const char *message, gboolean on_list, PurpleAccountRequestAuthorizationCb authorize_cb, PurpleAccountRequestAuthorizationCb deny_cb, void *user_data){

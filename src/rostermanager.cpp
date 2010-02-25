@@ -92,12 +92,6 @@ SpectrumRosterManager::SpectrumRosterManager(AbstractUser *user) : RosterStorage
 SpectrumRosterManager::~SpectrumRosterManager() {
 	g_hash_table_destroy(m_roster);
 	delete m_syncTimer;
-	
-	for(std::map<std::string, authRequest *>::iterator iter = m_authRequests.begin(); iter != m_authRequests.end(); ++iter) {
-		authRequest *req = (*iter).second;
-		delete req;
-	}
-	m_authRequests.clear();
 }
 
 bool SpectrumRosterManager::isInRoster(const std::string &name, const std::string &subscription) {
