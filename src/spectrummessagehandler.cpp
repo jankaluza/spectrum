@@ -191,6 +191,13 @@ void SpectrumMessageHandler::handleMessage(const Message& msg) {
 		if (pos != std::string::npos)
 			username.erase((int) pos, username.length() - (int) pos);
 	}
+	
+	if (Transport::instance()->getConfiguration().protocol == "irc") {
+		if (!isOpenedConversation(username)) {
+			username += "%" + JID(m_user->username()).server();
+		}
+	}
+	
 	Log("SpectrumMessageHandler::handleMessage", "username " << username);
 	// open new conversation or get the opened one
 	if (!isOpenedConversation(username)) {
