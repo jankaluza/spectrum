@@ -223,9 +223,11 @@ class spectrum:
 
 		# config_interface:
 		config_interface = self.config.get( 'service', 'config_interface' )
-		dir = os.path.dirname( config_interface )
-		self.check_exists( dir, 'dir' )
-		self.check_writable( dir )
+		if config_interface:
+			# on some old (pre 0.1) installations config_interface does not exist
+			dir = os.path.dirname( config_interface )
+			self.check_exists( dir, 'dir' )
+			self.check_writable( dir )
 
 		# filetransfer cache
 		filetransfer_cache = self.config.get( 'service', 'filetransfer_cache' )
