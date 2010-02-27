@@ -22,12 +22,23 @@ try:
 except ImportError:
 	import spectrumconfigparser
 
+class ExistsError( RuntimeError ):
+	"""Thrown when a file or directory does not exist."""
+	pass
+
 class spectrum:
 	def __init__( self, options, config_path ):
+		self.options = options
 		self.config_path = os.path.normpath( config_path )
+		
+		# check permissions for config-file:
+		self.check_ownership( self.config_path, 0 )
+		# we don't care about user permissions, group MUST be read-only
+		self.check_permissions( self.config_path, [ stat.S_IRGRP ],
+			[ stat.S_IRUSR, stat.S_IWUSR, stat.S_IXUSR ] )
+
 		filename = os.path.splitext( os.path.basename( self.config_path ) )[0]
 		self.config = spectrumconfigparser.SpectrumConfigParser({'filename': filename})
-		self.options = options
 		self.config.read( config_path )
 		self.pid_file = self.config.get( 'service', 'pid_file' )
 
@@ -52,12 +63,12 @@ class spectrum:
 
 	def check_exists( self, file, typ=file ):
 		if not os.path.exists( file ):
-			raise RuntimeError( file, 'Does not exists' )
+			raise ExistsError( file, 'Does not exist' )
 
 		if typ == 'file' and not os.path.isfile( file ):
-			raise RuntimeError( file, 'Not a file' )
+			raise ExistsError( file, 'Not a file' )
 		if typ == 'dir' and not os.path.isdir( file ):
-			raise RuntimeError( file, 'Not a directory' )
+			raise ExistsError( file, 'Not a directory' )
 
 		return True
 
@@ -70,7 +81,7 @@ class spectrum:
 		"""
 
 		if uid == -1 and gid == -1:
-			print( "uid and gid are -1. That doesn't make sense." )
+			print( "Warning: uid and gid are -1. That doesn't make sense." )
 
 		if not os.path.exists( node ):
 			raise RuntimeError( node, "Does not exist" )
@@ -83,24 +94,71 @@ class spectrum:
 		stat = os.stat( node )
 		if uid != -1 and stat.st_uid != uid:
 			name = pwd.getpwuid( uid ).pw_name
-			raise RuntimeError( node, 'Unsafe ownership (Should be %s)'%(name) )
+			raise RuntimeError( node, 'Unsafe ownership (fix with "chown %s %s")'%(name, node) )
 		if gid != -1 and stat.st_gid != gid:
 			name = grp.getgrgid( gid ).gr_name
-			raise RuntimeError( node, 'Unsafe group ownership (Should be %s)'%(name) )
+			raise RuntimeError( node, 'Unsafe ownership (fix with "chgrp %s %s")'%(name, node) )
+	
+	def perm_translate( self, perm ):
+		"""
+		Transforms one of the modes defined in the stats module into a
+		string tuple ('x', 'y') where 'x' is one of 'u', 'g' or 'o' and
+		'y' is either 'r', 'w' or 'x'. This method can be used transform
+		a permission into string that can be used with chmod.
+		"""
+		if perm == stat.S_IRUSR:
+			return ('u', 'r')
+		elif perm == stat.S_IWUSR:
+			return ('u', 'w')
+		elif perm == stat.S_IXUSR:
+			return ('u', 'x')
+		elif perm == stat.S_IRGRP:
+			return ('g', 'r')
+		elif perm == stat.S_IWGRP:
+			return ('g', 'w')
+		elif perm == stat.S_IXGRP:
+			return ('g', 'x')
+		elif perm == stat.S_IROTH:
+			return ('o', 'r')
+		elif perm == stat.S_IWOTH:
+			return ('o', 'w')
+		elif perm == stat.S_IXOTH:
+			return ('o', 'x')
+
+	def chmod_translate( self, add, rem ):
+		changes = []
+
+		for who, what in add.iteritems():
+			if what != []:
+				changes.append( who + '+' + ''.join( what ) )
+		for who, what in rem.iteritems():
+			if what != []:
+				changes.append( who + '-' + ''.join( what ) )
+
+		return ','.join( changes )
 	
 	def check_permissions( self, file, permissions, wildcards=[] ):
 		all = [ stat.S_IRUSR, stat.S_IWUSR, stat.S_IXUSR,
 			stat.S_IRGRP, stat.S_IWGRP, stat.S_IXGRP,
 			stat.S_IROTH, stat.S_IWOTH, stat.S_IXOTH ]
 		mode = os.stat( file )[stat.ST_MODE]
+		add = { 'u': [], 'g': [], 'o': [] }
+		rem = { 'u': [], 'g': [], 'o': [] }
 
 		for p in permissions:
 			if (mode & p) == 0:
-				raise RuntimeError( file, 'Incorrect permissions' )
+				who, what = self.perm_translate( p )
+				add[who].append( what )
 
 		for p in [ p for p in all if ( p not in permissions and p not in wildcards )]:
 			if (mode & p) != 0:
-				raise RuntimeError( file, 'Incorrect permissions' )
+				who, what = self.perm_translate( p )
+				rem[who].append( what )
+
+		mode_string = self.chmod_translate( add, rem )
+		if mode_string:
+			string = 'chmod ' + mode_string + ' ' + file
+			raise RuntimeError( file, 'Incorrect permissions (fix with "%s")' %(string) )
 
 	def check_writable( self, node, uid=None ):
 		if uid == None:
@@ -152,12 +210,6 @@ class spectrum:
 			# we need
 			return 0, "ok"
 
-		# config-file
-		self.check_ownership( self.config_path, 0 )
-		# we don't care about user permissions, group MUST be read-only
-		self.check_permissions( self.config_path, [ stat.S_IRGRP ],
-			[ stat.S_IRUSR, stat.S_IWUSR, stat.S_IXUSR ] )
-
 		# config_interface:
 		config_interface = self.config.get( 'service', 'config_interface' )
 		dir = os.path.dirname( config_interface )
@@ -172,7 +224,7 @@ class spectrum:
 			self.check_permissions( filetransfer_cache, # rwxr-x---
 				[ stat.S_IRUSR, stat.S_IWUSR, stat.S_IXUSR, 
 				  stat.S_IRGRP, stat.S_IXGRP ] )
-		except RuntimeError:
+		except ExistsError:
 			dir = os.path.dirname( filetransfer_cache )
 			self.check_exists( dir )
 			self.check_writable( dir )
@@ -191,7 +243,7 @@ class spectrum:
 			self.check_ownership( log_file, gid=-1 )
 			self.check_permissions( log_file, # rw-r-----
 				[ stat.S_IRUSR, stat.S_IWUSR, stat.S_IRGRP ] )
-		except RuntimeError:
+		except ExistError:
 			dir = os.path.dirname( log_file )
 			self.check_exists( dir )
 			self.check_writable( dir )
@@ -205,7 +257,7 @@ class spectrum:
 				self.check_ownership( db_file )
 				self.check_permissions( db_file, # rw-r-----
 					[ stat.S_IRUSR, stat.S_IWUSR, stat.S_IRGRP ] )
-			except RuntimeError:
+			except ExistsError:
 				dir = os.path.dirname( db_file )
 				self.check_writable( dir )
 		
@@ -217,7 +269,7 @@ class spectrum:
 			self.check_permissions( userdir, # rwxr-x---
 				[ stat.S_IRUSR, stat.S_IWUSR, stat.S_IXUSR, 
 				  stat.S_IRGRP, stat.S_IXGRP ] )
-		except RuntimeError:
+		except ExistsError:
 			dir = os.path.dirname( userdir )
 			self.check_exists( dir )
 			self.check_writable( dir )
