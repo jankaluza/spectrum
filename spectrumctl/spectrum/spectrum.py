@@ -195,10 +195,6 @@ class spectrum:
 		return [ 'su', user, '-s', '/bin/bash', '-c', ' '.join( cmd ) ]
 
 	def check_environment( self ):
-		# we must be root
-		if os.getuid() != 0:
-			raise RuntimeError( "User", "Must be root to start spectrum" )
-
 		# check if spectrum user exists:
 		if os.name == 'posix':
 			try:
@@ -209,6 +205,10 @@ class spectrum:
 			# on windows, there is no real way to get the info that
 			# we need
 			return 0, "ok"
+		
+		# we must be root
+		if os.getuid() != 0:
+			raise RuntimeError( "User", "Must be root to start spectrum" )
 
 		# config_interface:
 		config_interface = self.config.get( 'service', 'config_interface' )
