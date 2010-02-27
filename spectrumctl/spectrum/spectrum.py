@@ -62,8 +62,12 @@ class spectrum:
 		return True
 
 	def check_ownership( self, node, uid=None, gid=None ):
-		# pass -1 to uid/gid to not check those permissions
-		# pass None to use parameter passed by --su
+		"""
+		Check the ownership and group ownership of the given filesystem
+		node. If uid or gid is None, the uid (and its respective primary
+		gid) is used. If you don't want to check uid or gid, just pass
+		-1.
+		"""
 
 		if uid == -1 and gid == -1:
 			print( "uid and gid are -1. That doesn't make sense." )
