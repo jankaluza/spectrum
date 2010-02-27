@@ -107,22 +107,26 @@ class spectrum:
 		s = os.stat( node )
 		groups = [g for g in grp.getgrall() if user.pw_name in g.gr_mem]
 		groups.append( user.pw_gid )
+		cmd = ''
 		if s.st_uid == user.pw_uid:
 			# user owns the file
 			if s.st_mode & stat.S_IWUSR == 0:
-				raise RuntimeError( node, 'Not writable (user write bit not set)' )
+				cmd = 'chmod u+w %s' %(node)
 			if os.path.isdir( node ) and s.st_mode & stat.S_IXUSR == 0:
-				raise RuntimeError( node, 'Not writable (user execute bit not set)' )
+				cmd = 'chmod u+wx %s' %(node)
 		elif s.st_gid in groups:
 			if s.st_mode & stat.S_IWGRP == 0:
-				raise RuntimeError( node, 'Not writable (group write bit not set)' )
+				cmd = 'chmod g+w %s' %(node)
 			if os.path.isdir( node ) and s.st_mode & stat.S_IXGRP == 0:
-				raise RuntimeError( node, 'Not writable (group execute bit not set)' )
+				cmd = 'chmod g+wx %s' %(node)
 		else: 
 			if s.st_mode & stat.S_IWOTH == 0:
-				raise RuntimeError( node, 'Not writable (other write bit not set)' )
+				cmd = 'chmod o+w %s' %(node)
 			if os.path.isdir( node ) and s.st_mode & stat.S_IXOTH == 0:
-				raise RuntimeError( node, 'Not writable (other execute bit not set)' )
+				cmd = 'chmod o+wx %s' %(node)
+		
+		if cmd != '':
+			raise RuntimeError( node, 'Not writable (fix with %s)' %(cmd) )
 	
 	def su_cmd( self, cmd ):
 		user = self.options.su
