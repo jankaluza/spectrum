@@ -13,8 +13,9 @@ version 0.2 (20??-??-??):
 
 	spectrumctl:
 	* The script now does rigorous checking of ownership and permissions
-	  on all the importand files and directories.
+	  on all the important files and directories.
 	* Accept $filename as variable
+	* Statistics gathering via config_interface
 
 	XMPP:
 	* MUC support for XMPP
