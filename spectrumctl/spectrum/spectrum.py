@@ -38,7 +38,18 @@ class spectrum:
 			[ stat.S_IRUSR, stat.S_IWUSR, stat.S_IXUSR ] )
 
 		filename = os.path.splitext( os.path.basename( self.config_path ) )[0]
-		self.config = spectrumconfigparser.SpectrumConfigParser({'filename': filename})
+		self.config = spectrumconfigparser.SpectrumConfigParser({
+			'filename': filename,
+			'filetransfer_web': '',
+			'config_interface': '',
+			'pid_file': '/var/run/spectrum/$jid',
+			'language': 'en',
+			'encoding': '',
+			'log_file': '',
+			'only_for_vip': 'false',
+			'vip_mode': 'false',
+			'use_proxy': 'false'
+			})
 		self.config.read( config_path )
 		self.pid_file = self.config.get( 'service', 'pid_file' )
 
