@@ -60,6 +60,7 @@ class ConfigInterface : public ConnectionTCPServer, public ConnectionHandler, pu
 		std::map <ConnectionBase *, guint> m_clients;
 		ConnectionBase *m_connection;
 		std::list <AbstractConfigInterfaceHandler *> m_handlers;
+		bool m_loaded;
 
 };
 

@@ -88,12 +88,12 @@ class AbstractResendClass {
 		
 };
 
-class ReceiveFile : public AbstractResendClass, public BytestreamDataHandler, public Thread{
+class ReceiveFile : public BytestreamDataHandler, public Thread{
 	public:
 		ReceiveFile(Bytestream *stream, int size, const std::string &filename, AbstractUser *user, FiletransferRepeater *manager);
 		~ReceiveFile();
 
-		void exec();
+		bool receive();
 		void handleBytestreamData(Bytestream *s5b, const std::string &data);
 		void handleBytestreamError(Bytestream *s5b, const IQ &iq);
 		void handleBytestreamOpen(Bytestream *s5b);
@@ -115,7 +115,7 @@ class ReceiveFile : public AbstractResendClass, public BytestreamDataHandler, pu
 		std::ofstream m_file;
 };
 
-class ReceiveFileStraight : public AbstractResendClass, public BytestreamDataHandler {
+class ReceiveFileStraight : public BytestreamDataHandler, public Thread {
 	public:
 		ReceiveFileStraight(Bytestream *stream, int size, FiletransferRepeater *manager);
 		~ReceiveFileStraight();
@@ -137,12 +137,12 @@ class ReceiveFileStraight : public AbstractResendClass, public BytestreamDataHan
 		std::ofstream m_file;
 };
 
-class SendFile : public AbstractResendClass, public BytestreamDataHandler, public Thread {
+class SendFile : public BytestreamDataHandler, public Thread {
 	public:
 		SendFile(Bytestream *stream, int size, const std::string &filename, AbstractUser *user, FiletransferRepeater *manager);
 		~SendFile();
 
-		void exec();
+		bool send();
 		void handleBytestreamData(Bytestream *s5b, const std::string &data);
 		void handleBytestreamError(Bytestream *s5b, const IQ &iq);
 		void handleBytestreamOpen(Bytestream *s5b);
@@ -161,7 +161,7 @@ class SendFile : public AbstractResendClass, public BytestreamDataHandler, publi
 		std::ofstream m_file;
 };
 
-class SendFileStraight : public AbstractResendClass, public BytestreamDataHandler, public Thread {
+class SendFileStraight : public BytestreamDataHandler, public Thread {
 	public:
 		SendFileStraight(Bytestream *stream, int size, FiletransferRepeater *manager);
 		~SendFileStraight();
@@ -203,7 +203,6 @@ class FiletransferRepeater {
 		bool isSending() { return m_send; }
 
 		std::string & getBuffer() { return a; }
-		AbstractResendClass *getResender() { return m_resender; }
 		void wantsData() { m_wantsData = true; if (m_resender) m_resender->wakeUp(); }
 		void ready();
 		std::ofstream m_file;
@@ -224,7 +223,7 @@ class FiletransferRepeater {
 		guchar *m_buffer;
 		size_t m_buffer_size;
 		size_t m_max_buffer_size;
-		AbstractResendClass *m_resender;
+		Thread *m_resender;
 		bool m_wantsData;
 
 };

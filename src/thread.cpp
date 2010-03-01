@@ -20,146 +20,60 @@
 
 #include "thread.h"
 
-
-#ifdef HAVE_PTHREADS
-void *thread_thread(void *v) {
-        static_cast<Thread*>(v)->exec();
-        return 0;
-}
-#elif defined(WIN32)
-DWORD WINAPI thread_thread(LPVOID v) {
-    static_cast<Thread*>(v)->exec();
-    return 0;
-}
-#else
-#error NO THREADING SUPPORT
-#endif
-
 Thread::Thread() {
-#ifdef HAVE_PTHREADS
-
-#elif defined(WIN32)
-    m_handle = CreateThread(0, 0, thread_thread, this, CREATE_SUSPENDED, &m_id);
-#endif
+	m_mutex = g_mutex_new();
+	m_cond = g_cond_new();
+	m_stop = false;
+	m_thread = NULL;
 }
 
 Thread::~Thread() {
-#ifdef HAVE_PTHREADS
-
-#elif defined(WIN32)
-    CloseHandle(m_handle);
-#endif
+	g_mutex_free(m_mutex);
+	g_cond_free(m_cond);
 }
 
-void Thread::run() {
-#ifdef HAVE_PTHREADS
-        /*int status = */pthread_create(&m_id, NULL, thread_thread, this);
-#elif defined(WIN32)
-    ResumeThread(m_handle);
-#endif
+void Thread::lockMutex() {
+	g_mutex_lock(m_mutex);
+}
+
+void Thread::unlockMutex() {
+	g_mutex_unlock(m_mutex);
+}
+
+void Thread::wait() {
+	g_cond_wait(m_cond, m_mutex);
+}
+
+void Thread::wakeUp() {
+	g_cond_signal(m_cond);
+}
+
+void Thread::stop() {
+	g_mutex_lock(m_mutex);
+	m_stop = true;
+	g_mutex_unlock(m_mutex);
+}
+
+void Thread::run(GThreadFunc func, gpointer data) {
+	m_thread = g_thread_create(func, data, true, NULL);
 }
 
 void Thread::join() {
-#ifdef HAVE_PTHREADS
-        void *value;
-        pthread_join(m_id, &value);
-#elif defined(WIN32)
-    WaitForSingleObject(m_handle, INFINITE);
-#endif
+	if (m_thread)
+		g_thread_join(m_thread);
 }
 
-MyMutex::MyMutex() {
-#ifdef HAVE_PTHREADS
-        pthread_mutex_init(&m_mutex, NULL);
-#elif defined(WIN32)
-    InitializeCriticalSection(&m_cs);
-#endif
+void Thread::stopped() {
+	m_thread = NULL;
 }
 
-MyMutex::~MyMutex() {
-#ifdef HAVE_PTHREADS
-        pthread_mutex_destroy(&m_mutex);
-#elif defined(WIN32)
-    DeleteCriticalSection(&m_cs);
-#endif
+bool Thread::shouldStop() {
+	g_mutex_lock(m_mutex);
+	bool stop = m_stop;
+	g_mutex_unlock(m_mutex);
+	return stop;
 }
 
-void MyMutex::lock() {
-#ifdef HAVE_PTHREADS
-        pthread_mutex_lock(&m_mutex);
-#elif defined(WIN32)
-    EnterCriticalSection(&m_cs);
-#endif
+bool Thread::isRunning() {
+	return m_thread != NULL;
 }
-
-bool MyMutex::tryLock() {
-#ifdef HAVE_PTHREADS
-        if (pthread_mutex_trylock(&m_mutex) != EBUSY) {
-                return true;
-        } else {
-                return false;
-        }
-#elif defined(WIN32)
-    if (TryEnterCriticalSection(&m_cs) != 0) {
-        return true;
-    } else {
-        return false;
-    }
-#endif
-        return false;
-}
-
-void MyMutex::unlock() {
-#ifdef HAVE_PTHREADS
-        pthread_mutex_unlock(&m_mutex);
-#elif defined(WIN32)
-    LeaveCriticalSection(&m_cs);
-#endif
-}
-
-WaitCondition::WaitCondition() {
-#ifdef HAVE_PTHREADS
-	pthread_mutex_init(&m_mutex, NULL);
-	pthread_cond_init(&m_cond, NULL);
-#else
-	m_handle = NULL;
-	m_handle = CreateEvent(NULL, FALSE, FALSE, NULL);
-#endif
-}
-
-WaitCondition::~WaitCondition() {
-#ifdef HAVE_PTHREADS
-	pthread_mutex_destroy(&m_mutex);
-	pthread_cond_destroy(&m_cond);
-#else
-	if (m_handle) {
-		CloseHandle(m_handle);
-	}
-#endif
-}
-
-void WaitCondition::wait() {
-#ifdef HAVE_PTHREADS
-	pthread_mutex_lock(&m_mutex);
-	pthread_cond_wait(&m_cond, &m_mutex);
-	pthread_mutex_unlock(&m_mutex);
-#else
-	bool wait_success = false;
-	if (m_handle) {
-		wait_success = WaitForSingleObject(m_handle, INFINITE) == WAIT_OBJECT_0;
-	}
-#endif
-}
-
-void WaitCondition::wakeUp() {
-#ifdef HAVE_PTHREADS
-	pthread_mutex_lock(&m_mutex);
-	pthread_cond_broadcast(&m_cond);
-	pthread_mutex_unlock(&m_mutex);
-#else
-	if (m_handle) {
-		SetEvent(m_handle);
-	}
-#endif
-}
-

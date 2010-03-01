@@ -53,6 +53,8 @@ ConfigInterface::ConfigInterface(const std::string &sockfile, const LogSink &log
 	int m_socket;
 	socklen_t length;
 	struct sockaddr_un local;
+	m_loaded = false;
+	m_socketId = 0;
 	
 	if ((m_socket = getUnixSocket()) == -1)
 		Log("ConfigInterface", "Could not create UNIX socket: " << strerror(errno));
@@ -64,21 +66,29 @@ ConfigInterface::ConfigInterface(const std::string &sockfile, const LogSink &log
 	
 	length = offsetof(struct sockaddr_un, sun_path) + strlen(sockfile.c_str());
 
-	if (bind(m_socket, (struct sockaddr *) &local, length) == -1)
+	if (bind(m_socket, (struct sockaddr *) &local, length) == -1) {
 		Log("ConfigInterface", "Could not bind to UNIX socket: " << sockfile << " " << strerror(errno));
+		return;
+	}
 	
-	if (listen(m_socket, 5) == -1)
+	if (listen(m_socket, 5) == -1) {
 		Log("ConfigInterface", "Could not listen to UNIX socket: " << sockfile << " " << strerror(errno));
+		return;
+	}
 
 	setSocket(m_socket);
 	m_socketId = purple_input_add(m_socket, PURPLE_INPUT_READ, gotData, this);
+	m_loaded = true;
 }
 
 ConfigInterface::~ConfigInterface() {
-	g_source_remove(m_socketId);
+	if (m_socketId)
+		g_source_remove(m_socketId);
 }
 
 void ConfigInterface::handleIncomingConnection(ConnectionBase *server, ConnectionBase *connection) {
+	if (!m_loaded)
+		return;
 	Log("ConfigInterface", "Incomming connection " << connection);
 	connection->registerConnectionDataHandler(this);
 	ConnectionTCPBase *tcpBase = (ConnectionTCPBase *) connection;
@@ -86,6 +96,8 @@ void ConfigInterface::handleIncomingConnection(ConnectionBase *server, Connectio
 }
 
 void ConfigInterface::handleReceivedData( const ConnectionBase* connection, const std::string& data ) {
+	if (!m_loaded)
+		return;
 	Log("ConfigInterface", "[XML IN] " << data);
 	std::map <ConnectionBase *, guint>::iterator it = m_clients.find( const_cast<ConnectionBase*>( connection ) );
 	m_connection = (*it).first;
@@ -95,6 +107,8 @@ void ConfigInterface::handleReceivedData( const ConnectionBase* connection, cons
 void ConfigInterface::handleConnect( const ConnectionBase* connection ) {}
 
 void ConfigInterface::handleDisconnect( const ConnectionBase* connection, ConnectionError reason ) {
+	if (!m_loaded)
+		return;
 	Log("ConfigInterface", "Disconnect connection " << connection);
 	g_source_remove(m_clients[const_cast<ConnectionBase*>( connection )]);
 	m_clients.erase(const_cast<ConnectionBase*>( connection ));
