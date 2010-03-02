@@ -251,6 +251,10 @@ bool GlooxRegisterHandler::handleIq(Tag *iqTag) {
 					sendError(406, "not-acceptable", iqTag);
 					return false;
 				}
+				if (username == from.bare()) {
+					sendError(406, "not-acceptable", iqTag);
+					return false;
+				}
 			}
 		}
 
