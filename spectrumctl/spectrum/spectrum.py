@@ -256,7 +256,7 @@ class spectrum:
 			self.check_ownership( log_file, gid=-1 )
 			self.check_permissions( log_file, # rw-r-----
 				[ stat.S_IRUSR, stat.S_IWUSR, stat.S_IRGRP ] )
-		except ExistError:
+		except ExistsError:
 			dir = os.path.dirname( log_file )
 			self.check_exists( dir )
 			self.check_writable( dir )
