@@ -10,6 +10,8 @@ version 0.2 (20??-??-??):
 	  the extension. 
 	* Fixed crash when legacy network user canceled filetransfer
 	* Don't forward typing notification without opened conversation
+	* Fixed transport unregister process. Buddies are now removed also if user
+	  doesn't support Roster Item Exchange.
 
 	spectrumctl:
 	* The script now does rigorous checking of ownership and permissions

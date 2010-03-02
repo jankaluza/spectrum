@@ -285,7 +285,8 @@ class SQLClass : public AbstractBackend {
 
 		UserRow getUserByJid(const std::string &jid);
 		std::map<std::string, UserRow> getUsersByJid(const std::string &jid);
-		GHashTable *getBuddies(long userId, PurpleAccount *account = NULL);
+		GHashTable *getBuddies(long userId, PurpleAccount *account);
+		std::list <std::string> getBuddies(long userId);
 		bool loaded() { return m_loaded; }
 		std::vector<std::string> getOnlineUsers();
 		void setUserOnline(long userId, bool online);

@@ -28,6 +28,7 @@
 #include "protocols/abstractprotocol.h"
 #include "user.h"
 #include "transport.h"
+#include "main.h"
 
 RegisterExtension::RegisterExtension() : StanzaExtension( ExtRegistration )
 {
@@ -263,9 +264,7 @@ bool GlooxRegisterHandler::handleIq(Tag *iqTag) {
 					user->disconnected();
 				}
 			}
-			// TODO: uncomment this line when jabbim will know rosterx
-			//if (user->hasFeature(GLOOX_FEATURE_ROSTERX)){
-			if (true){
+			if (user && user->hasFeature(GLOOX_FEATURE_ROSTERX) && false) {
 				std::cout << "* sending rosterX\n";
 				Tag *tag = new Tag("message");
 				tag->addAttribute( "to", from.bare() );
@@ -276,36 +275,49 @@ bool GlooxRegisterHandler::handleIq(Tag *iqTag) {
 				Tag *x = new Tag("x");
 				x->addAttribute("xmlns","http://jabber.org/protocol/rosterx");
 
-				std::map<std::string,RosterRow> roster;
-// 				roster = Transport::instance()->sql()->getBuddies(res.id);
-// 				Tag *item;
-// 				// add users which are added to roster
-// 				for(std::map<std::string, RosterRow>::iterator u = roster.begin(); u != roster.end() ; u++){
-// 					if (!(*u).second.uin.empty()){
-// 						item = new Tag("item");
-// 						item->addAttribute("action","delete");
-// 						item->addAttribute("jid",(*u).second.uin+"@"+Transport::instance()->jid());
-// 						x->addChild(item);
-// 					}
-// 				}
+				std::list <std::string> roster;
+				roster = Transport::instance()->sql()->getBuddies(res.id);
+
+				Tag *item;
+				for(std::list<std::string>::iterator u = roster.begin(); u != roster.end() ; u++){
+					std::string name = *u;
+					std::for_each( name.begin(), name.end(), replaceBadJidCharacters() );
+					item = new Tag("item");
+					item->addAttribute("action", "delete");
+					item->addAttribute("jid", name + "@" + Transport::instance()->jid());
+					x->addChild(item);
+				}
 
 				tag->addChild(x);
-				std::cout << "* sending " << tag->xml() << "\n";
 				Transport::instance()->send(tag);
-				if (res.id != -1) {
-					Transport::instance()->sql()->removeUser(res.id);
-				}
 // 				if (account)
 // 					Transport::instance()->collector()->collectNow(account, true);
 			}
 			else{
-				// TODO: remove contacts from roster with unsubscribe presence
-// 					for(std::map<std::string, RosterRow>::iterator u = user->roster.begin(); u != user->roster.end() ; u++){
-// 						item = new Tag("item");
-// 						item->addAttribute("action","delete");
-// 						item->addAttribute("jid",(*u).uin+"@"+Transport::instance()->jid());
-// 						x->addChild(item);
-// 					}
+				std::list <std::string> roster;
+				roster = Transport::instance()->sql()->getBuddies(res.id);
+
+				Tag *tag;
+				for(std::list<std::string>::iterator u = roster.begin(); u != roster.end() ; u++){
+					std::string name = *u;
+					std::for_each( name.begin(), name.end(), replaceBadJidCharacters() );
+
+					tag = new Tag("presence");
+					tag->addAttribute( "to", from.bare() );
+					tag->addAttribute( "type", "unsubscribe" );
+					tag->addAttribute( "from", name + "@" + Transport::instance()->jid());
+					Transport::instance()->send( tag );
+
+					tag = new Tag("presence");
+					tag->addAttribute( "to", from.bare() );
+					tag->addAttribute( "type", "unsubscribed" );
+					tag->addAttribute( "from", name + "@" + Transport::instance()->jid());
+					Transport::instance()->send( tag );
+				}
+			}
+
+			if (res.id != -1) {
+				Transport::instance()->sql()->removeUser(res.id);
 			}
 
 			if (user != NULL) {

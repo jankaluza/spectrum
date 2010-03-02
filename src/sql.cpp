@@ -707,6 +707,21 @@ GHashTable *SQLClass::getBuddies(long userId, PurpleAccount *account){
 	return roster;
 }
 
+std::list <std::string> SQLClass::getBuddies(long userId) {
+	std::list <std::string> list;
+	
+	m_stmt_getBuddies.user_id = userId;
+	STATEMENT_EXECUTE_BEGIN();
+		do {
+			if (!m_stmt_getBuddies.stmt->execute())
+				break;
+			list.push_back(m_stmt_getBuddies.resUin);
+		} while (!m_stmt_getBuddies.stmt->done());
+	STATEMENT_EXECUTE_END(m_stmt_getBuddies.stmt, getBuddies(userId));
+
+	return list;
+}
+
 // settings
 
 void SQLClass::addSetting(long userId, const std::string &key, const std::string &value, PurpleType type) {
