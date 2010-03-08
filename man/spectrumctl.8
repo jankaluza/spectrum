@@ -57,6 +57,17 @@ Act on all transports configured in DIR (default: \fI/etc/spectrum\fR)
 Do not print any output (ignored for list)
 .sp
 .RE
+\fB\-h\fR, \fB\-\-help\fR
+.RS 4
+show a help message and exit
+.sp
+.RE
+\fB\-\-version\fR
+.RS 4
+show program's version number and exit
+.RE
+.sp
+.RE
 Options for action "\fBlist\fR":
 .sp
 .RS 4
@@ -74,15 +85,12 @@ Options for action "\fBstart\fR":
 Start spectrum as this user (default: \fIspectrum\fR)
 .RE
 .RE
+.SH ENVIRONMENT
+The behaviour of spectrumctl can be influenced by the following environment variables:
 .sp
-\fB\-h\fR, \fB\-\-help\fR
+\fBSPECTRUM_PATH\fR
 .RS 4
-show a help message and exit
-.sp
-.RE
-\fB\-\-version\fR
-.RS 4
-show program's version number and exit
+Path where the spectrum binary is located. If omitted, spectrum is assumed to be in your PATH.
 .RE
 .SH AUTHORS
 Copyright \(co 2009\-2010 by Spectrum engineers:

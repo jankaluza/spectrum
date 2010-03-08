@@ -355,7 +355,12 @@ class spectrum:
 		except RuntimeError, e:
 			return 1, "%s: %s" % e.args
 
-		cmd = [ 'spectrum', self.config_path ]
+		try:
+			binary = os.environ['SPECTRUM_PATH']
+		except KeyError:
+			binary = 'spectrum'
+
+		cmd = [ binary, self.config_path ]
 		cmd = self.su_cmd( cmd )
 		retVal = subprocess.call( cmd )
 		if retVal != 0:

@@ -1,5 +1,14 @@
 #!/usr/bin/python
 
+import sys
+d = {'a':'a'}
+try:
+	a = d['a']
+except KeyError:
+	a = 'a'
+print a
+sys.exit()
+
 import os, sys, xmpp, socket
 from spectrum import *
 
