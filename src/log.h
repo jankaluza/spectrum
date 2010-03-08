@@ -57,7 +57,7 @@ class LogClass : public LogHandler {
 		void setLogFile(const std::string &file) {
 			if (m_file.is_open())
 				m_file.close();
-			m_file.open(file.c_str());
+			m_file.open(file.c_str(), std::ios_base::app);
 		}
 		
 		std::ofstream &fileStream() { return m_file; }
