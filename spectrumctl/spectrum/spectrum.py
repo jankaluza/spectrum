@@ -203,7 +203,7 @@ class spectrum:
 	
 	def su_cmd( self, cmd ):
 		user = self.options.su
-		return [ 'su', user, '-s', '/bin/bash', '-c', ' '.join( cmd ) ]
+		return [ 'su', user, '-s', '/bin/sh', '-c', ' '.join( cmd ) ]
 
 	def check_environment( self ):
 		# check if spectrum user exists:
