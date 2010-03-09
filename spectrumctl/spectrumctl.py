@@ -58,8 +58,11 @@ if len( args ) != 1:
 	sys.exit(1)
 
 action = args[0]
+if action == 'help':
+	parser.print_help()
+	sys.exit(0)
 if action not in all_actions:
-	print( "Unknown action." )
+	print( "Error: %s: Unknown action." )
 	sys.exit(1)
 
 def log( msg, newline=True ):
