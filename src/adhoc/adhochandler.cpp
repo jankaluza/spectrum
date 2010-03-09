@@ -271,5 +271,10 @@ void GlooxAdhocHandler::registerAdhocCommandHandler(const std::string &name, con
 	m_handlers[name] = command;
 }
 
+void GlooxAdhocHandler::unregisterSession(const std::string &jid) {
+	Log("unregistering adhoc session", jid);
+	m_sessions.erase(jid);
+}
+
 GlooxAdhocHandler* GlooxAdhocHandler::m_pInstance = NULL;
 
