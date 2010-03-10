@@ -1222,7 +1222,7 @@ void GlooxMessageHandler::signedOn(PurpleConnection *gc, gpointer unused) {
 	User *user = (User *) userManager()->getUserByAccount(account);
 	if (user != NULL) {
 		Log(user->jid(), "logged in to legacy network");
-		purple_timeout_add_seconds(0, &getVCard, g_strdup(user->jid().c_str()));
+		purple_timeout_add_seconds(30, &getVCard, g_strdup(user->jid().c_str()));
 		user->connected();
 	}
 }
