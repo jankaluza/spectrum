@@ -34,6 +34,7 @@
 #include "capabilityhandler.h"
 #include "spectrumbuddy.h"
 #include "transport.h"
+#include "gloox/sha.h"
 
 User::User(GlooxMessageHandler *parent, JID jid, const std::string &username, const std::string &password, const std::string &userKey, long id, const std::string &encoding) : SpectrumRosterManager(this), SpectrumMessageHandler(this) {
 	p = parent;
@@ -279,6 +280,18 @@ void User::receivedPresence(const Presence &stanza) {
 		Log("LANG", lang << " " << lang.c_str());
 	}
 	
+	if (stanza.to().username() == "" && isConnected()) {
+		Tag *x_vcard = stanzaTag->findChild("x");
+		if (x_vcard) {
+			Tag *photo = x_vcard->findChild("photo");
+			if (photo && !photo->cdata().empty()) {
+				if (photo->cdata() != m_photoHash) {
+					p->fetchVCard(jid());
+				}
+			}
+		}
+	}
+	
 	handlePresence(stanza);
 
 	if (p->protocol()->onPresenceReceived(this, stanza)) {
@@ -418,6 +431,22 @@ void User::receivedPresence(const Presence &stanza) {
 		}
 	}
 	delete stanzaTag;
+}
+
+void User::handleVCard(const VCard* vcard) {
+	Log("handleVCard", "setting account icon for " << m_jid);
+	gssize size = vcard->photo().binval.size();
+	// this will be freed by libpurple
+	guchar *photo = (guchar *) g_malloc(size * sizeof(guchar));
+	Log("tEST", size * sizeof(guchar));
+	Log("tEST", size);
+	memcpy(photo, vcard->photo().binval.c_str(), size);
+	purple_buddy_icons_set_account_icon(m_account, photo, size);
+
+	SHA sha;
+	sha.feed( vcard->photo().binval );
+	m_photoHash = sha.hex();
+	Log("handleVCard", "new photoHash is " << m_photoHash);
 }
 
 User::~User(){

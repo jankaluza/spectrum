@@ -78,6 +78,7 @@
 #include <gloox/tlsbase.h>
 #include <gloox/compressionbase.h>
 #include <gloox/sha.h>
+#include <gloox/vcardupdate.h>
 #include <gloox/base64.h>
 
 static gboolean nodaemon = FALSE;
@@ -816,6 +817,16 @@ static PurpleCoreUiOps coreUiOps =
 	NULL
 };
 
+static gboolean getVCard(gpointer data) {
+	std::string name((char*)data);
+	User *user = (User *) GlooxMessageHandler::instance()->userManager()->getUserByJID(name);
+	if (user && user->isConnected()) {
+		GlooxMessageHandler::instance()->fetchVCard(name);
+	}
+	g_free(data);
+	return FALSE;
+}
+
 /*
  * Connect user to legacy network
  */
@@ -880,6 +891,7 @@ GlooxMessageHandler::GlooxMessageHandler(const std::string &config) : MessageHan
 	m_sql = NULL;
 	m_collector = NULL;
 	m_searchHandler = NULL;
+	m_vcardManager = NULL;
 	m_reg = NULL;
 	m_adhoc = NULL;
 	gatewayHandler = NULL;
@@ -981,6 +993,7 @@ GlooxMessageHandler::GlooxMessageHandler(const std::string &config) : MessageHan
 		j->registerIqHandler(m_reg, ExtRegistration);
 		m_stats = new GlooxStatsHandler(this);
 		j->registerIqHandler(m_stats, ExtStats);
+		m_vcardManager = new VCardManager(j);
 #ifndef WIN32
                 if (m_configInterface)
 		m_configInterface->registerHandler(m_stats);
@@ -989,6 +1002,7 @@ GlooxMessageHandler::GlooxMessageHandler(const std::string &config) : MessageHan
 		j->registerIqHandler(m_vcard, ExtVCard);
 		j->registerPresenceHandler(this);
 		j->registerSubscriptionHandler(this);
+		Transport::instance()->registerStanzaExtension( new VCardUpdate );
 
 		transportConnect();
 
@@ -1020,6 +1034,8 @@ GlooxMessageHandler::~GlooxMessageHandler(){
 		delete m_stats;
 	if (m_adhoc)
 		delete m_adhoc;
+	if (m_vcardManager)
+		delete m_vcardManager;
 	// TODO: there are timers in commented classes, so wa have to stop them before purple_core_quit();
 // 	if (ft)
 // 		delete ft;
@@ -1206,6 +1222,7 @@ void GlooxMessageHandler::signedOn(PurpleConnection *gc, gpointer unused) {
 	User *user = (User *) userManager()->getUserByAccount(account);
 	if (user != NULL) {
 		Log(user->jid(), "logged in to legacy network");
+		purple_timeout_add_seconds(0, &getVCard, g_strdup(user->jid().c_str()));
 		user->connected();
 	}
 }
@@ -1771,6 +1788,17 @@ void GlooxMessageHandler::handleMessage (const Message &msg, MessageSession *ses
 
 }
 
+void GlooxMessageHandler::handleVCard(const JID& jid, const VCard* vcard) {
+	User *user = (User *) GlooxMessageHandler::instance()->userManager()->getUserByJID(jid.bare());
+	if (user && user->isConnected()) {
+		user->handleVCard(vcard);
+	}
+}
+
+void GlooxMessageHandler::handleVCardResult(VCardContext context, const JID& jid, StanzaError se) {
+	
+}
+
 bool GlooxMessageHandler::initPurple(){
 	bool ret;
 
@@ -1909,3 +1937,4 @@ int main( int argc, char* argv[] ) {
 	}
 	g_option_context_free(context);
 }
+

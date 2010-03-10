@@ -25,6 +25,7 @@
 #include <gloox/clientbase.h>
 #include <gloox/messagesession.h>
 #include <gloox/siprofileft.h>
+#include <gloox/vcard.h>
 #include <glib.h>
 #include "purple.h"
 #include "abstractuser.h"
@@ -61,6 +62,7 @@ class User : public AbstractUser, public SpectrumRosterManager, public SpectrumM
 		void purpleBuddyTyping(const std::string &uin);
 		void connected();
 		void disconnected();
+		void handleVCard(const VCard* vcard);
 
 		std::string actionData;
 
@@ -120,6 +122,7 @@ class User : public AbstractUser, public SpectrumRosterManager, public SpectrumM
 		GHashTable *m_settings;		// user settings
 		long m_userID;				// userID for Database
 		bool m_loadingBuddiesFromDB;
+		std::string m_photoHash;
 };
 
 #endif

@@ -42,6 +42,8 @@
 #include <gloox/siprofileft.h>
 #include <gloox/message.h>
 #include <gloox/eventhandler.h>
+#include <gloox/vcardhandler.h>
+#include <gloox/vcardmanager.h>
 
 #include "purple.h"
 #include "account.h"
@@ -125,7 +127,7 @@ typedef enum {	ExtGateway = 1024,
  * Main transport class. It inits libpurple and Gloox, runs event loop and handles almost all signals.
  * This class is created only once and can be reached by static GlooxMessageHandler::instance() function.
  */
-class GlooxMessageHandler : public MessageHandler, ConnectionListener, PresenceHandler, SubscriptionHandler, LogHandler, public EventHandler {
+class GlooxMessageHandler : public MessageHandler, ConnectionListener, PresenceHandler, SubscriptionHandler, LogHandler, public EventHandler, public VCardHandler {
 public:
 	GlooxMessageHandler(const std::string &config);
 	~GlooxMessageHandler();
@@ -179,6 +181,9 @@ public:
 	void handleSubscription(const Subscription &stanza);
 	void handleLog(LogLevel level, LogArea area, const std::string &message);
 	void handleEvent (const Event &event) {}
+	void handleVCard(const JID& jid, const VCard* vcard);
+	void handleVCardResult(VCardContext context, const JID& jid, StanzaError se);
+	void fetchVCard(const std::string &jid) { m_vcardManager->fetchVCard(jid, this); }
 
 	UserManager *userManager() { return m_userManager; }
 	GlooxStatsHandler *stats() { return m_stats; }
@@ -226,6 +231,7 @@ private:
 	GlooxSearchHandler *m_searchHandler;		// jabber:iq:search handler
 	GlooxAdhocHandler *m_adhoc;					// Ad-Hoc commands handler
 	GlooxParser *m_parser;						// Gloox parser - makes Tag* from std::string
+	VCardManager* m_vcardManager;
 	SpectrumNodeHandler *m_spectrumNodeHandler;
 #ifndef WIN32
 	ConfigInterface *m_configInterface;
