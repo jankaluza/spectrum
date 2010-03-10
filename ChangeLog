@@ -12,6 +12,7 @@ version 0.2 (20??-??-??):
 	* Don't forward typing notification without opened conversation
 	* Fixed transport unregister process. Buddies are now removed also if user
 	  doesn't support Roster Item Exchange.
+	* Forward VCard avatars from XMPP to legacy network.
 
 	spectrumctl:
 	* The script now does rigorous checking of ownership and permissions
