@@ -1789,6 +1789,8 @@ void GlooxMessageHandler::handleMessage (const Message &msg, MessageSession *ses
 }
 
 void GlooxMessageHandler::handleVCard(const JID& jid, const VCard* vcard) {
+	if (!vcard)
+		return;
 	User *user = (User *) GlooxMessageHandler::instance()->userManager()->getUserByJID(jid.bare());
 	if (user && user->isConnected()) {
 		user->handleVCard(vcard);
