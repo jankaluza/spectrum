@@ -9,6 +9,7 @@ version 0.2 (20??-??-??):
 	* $filename now is an implicitly set to the name of the file without
 	  the extension. 
 	* Fixed crash when legacy network user canceled filetransfer
+	* Fixed crash when XMPP user canceled Adhoc command execution.
 	* Don't forward typing notification without opened conversation
 	* Fixed transport unregister process. Buddies are now removed also if user
 	  doesn't support Roster Item Exchange.

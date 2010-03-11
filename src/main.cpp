@@ -373,15 +373,16 @@ static void * requestAction(const char *title, const char *primary,const char *s
 			((PurpleRequestActionCb) va_arg(actions, GCallback)) (user_data, 2);
 		}
 	}
-	DummyHandle *handle = new DummyHandle;
+	AbstractPurpleRequest *handle = new AbstractPurpleRequest;
+	handle->setRequestType((AdhocDataCallerType) 0);
 	return handle;
 }
 
 static void requestClose(PurpleRequestType type, void *ui_handle) {
 	if (!ui_handle)
 		return;
+	AbstractPurpleRequest *r = (AbstractPurpleRequest *) ui_handle;
 	if (type == PURPLE_REQUEST_INPUT) {
-		AbstractPurpleRequest *r = (AbstractPurpleRequest *) ui_handle;
 		if (r->requestType() == CALLER_ADHOC) {
 			AdhocCommandHandler * repeater = (AdhocCommandHandler *) r;
 			std::string from = repeater->getInitiator();
@@ -397,7 +398,15 @@ static void requestClose(PurpleRequestType type, void *ui_handle) {
 			return;
 		}
 	}
-	DummyHandle *r = (DummyHandle*) ui_handle;
+	else if (type == PURPLE_REQUEST_FIELDS || type == PURPLE_REQUEST_ACTION) {
+		if (r->requestType() == CALLER_ADHOC) {
+			AdhocCommandHandler * repeater = (AdhocCommandHandler *) r;
+			std::string from = repeater->getInitiator();
+			GlooxMessageHandler::instance()->adhoc()->unregisterSession(from);
+			delete repeater;
+			return;
+		}
+	}
 	delete r;
 }
 
