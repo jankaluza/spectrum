@@ -254,7 +254,7 @@ bool GlooxRegisterHandler::handleIq(Tag *iqTag) {
 			}
 		}
 
-		if (JID(username).bare() == from.bare()) {
+		if ((JID(username).bare() == from.bare()) && Transport::instance()->getConfiguration().protocol == "xmpp" ) {
 			sendError(406, "not-acceptable", iqTag);
 			return false;
 		}
