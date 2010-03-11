@@ -30,7 +30,7 @@ is used to sign the packages in the repository. You can do this in two ways:
 
         apt-get update
         apt-get install fsinf-keyring
-	apt-get update
+        apt-get update
 
 Don't worry about the warnings that the packages can't be identified, they will
 be gone after you installed the fsinf-keyring package.
