@@ -10,6 +10,7 @@ version 0.2 (20??-??-??):
 	  the extension. 
 	* Fixed crash when legacy network user canceled filetransfer
 	* Fixed crash when XMPP user canceled Adhoc command execution.
+	* Fixed crash when two XMPP users use one legacy network account.
 	* Don't forward typing notification without opened conversation
 	* Fixed transport unregister process. Buddies are now removed also if user
 	  doesn't support Roster Item Exchange.

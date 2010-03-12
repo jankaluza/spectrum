@@ -1556,12 +1556,12 @@ void GlooxMessageHandler::handlePresence(const Presence &stanza){
 				}
 				else {
 					if (purple_accounts_find(res.uin.c_str(), protocol()->protocol().c_str()) != NULL) {
-// 						PurpleAccount *act = purple_accounts_find(res.uin.c_str(), protocol()->protocol().c_str());
-// 						user = (User *) userManager()->getUserByAccount(act);
-// 						if (user) {
-// 							Log(stanza.from().full(), "This account is already connected by another jid " << user->jid());
-// 							return;
-// 						}
+						PurpleAccount *act = purple_accounts_find(res.uin.c_str(), protocol()->protocol().c_str());
+						user = (User *) userManager()->getUserByAccount(act);
+						if (user) {
+							Log(stanza.from().full(), "This account is already connected by another jid " << user->jid());
+							return;
+						}
 					}
 					user = new User(this, stanza.from(), res.uin, res.password, stanza.from().bare(), res.id, res.encoding);
 				}
