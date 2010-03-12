@@ -1271,17 +1271,20 @@ void * GlooxMessageHandler::purpleAuthorizeReceived(PurpleAccount *account, cons
 
 bool GlooxMessageHandler::loadConfigFile(const std::string &config) {
 	ConfigFile cfg(config.empty() ? m_config : config);
-	m_configuration = cfg.getConfiguration();
-	if (!m_configuration)
-		return false;
-
-	if (!lock_file)
-		lock_file = g_strdup(m_configuration.pid_f.c_str());
+	Configuration c = cfg.getConfiguration();
+	
 	if (logfile)
 		m_configuration.logfile = std::string(logfile);
 	
 	if (!m_configuration.logfile.empty())
 		Log_.setLogFile(m_configuration.logfile);
+	
+	if (!c)
+		return false;
+	m_configuration = c;
+
+	if (!lock_file)
+		lock_file = g_strdup(m_configuration.pid_f.c_str());
 	
 	return true;
 }
