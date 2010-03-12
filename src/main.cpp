@@ -1940,7 +1940,10 @@ int main( int argc, char* argv[] ) {
 			return -1;
 		}
 
-		if (signal(SIGHUP, spectrum_sighup_handler) == SIG_ERR) {
+		struct sigaction sa;
+		memset(&sa, 0, sizeof(sa)); 
+		sa.sa_handler = spectrum_sighup_handler;
+		if (sigaction(SIGHUP, &sa, NULL)) {
 			std::cout << "SIGHUP handler can't be set\n";
 			g_option_context_free(context);
 			return -1;
