@@ -135,7 +135,7 @@ Tag *AbstractSpectrumBuddy::generatePresenceStanza(int features, bool only_new) 
 			delete tag;
 			return NULL;
 		}
-		m_lastPresence == tag->xml();
+		m_lastPresence = tag->xml();
 	}
 
 	return tag;
