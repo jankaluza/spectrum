@@ -164,8 +164,8 @@ void SpectrumRosterManager::loadRoster() {
 	m_loadingFromDB = false;
 }
 
-void SpectrumRosterManager::sendPresence(AbstractSpectrumBuddy *s_buddy, const std::string &resource) {
-	Tag *tag = s_buddy->generatePresenceStanza(m_user->getFeatures());
+void SpectrumRosterManager::sendPresence(AbstractSpectrumBuddy *s_buddy, const std::string &resource, bool only_new) {
+	Tag *tag = s_buddy->generatePresenceStanza(m_user->getFeatures(), only_new);
 	if (tag) {
 		tag->addAttribute("to", m_user->jid() + std::string(resource.empty() ? "" : "/" + resource));
 		Transport::instance()->send(tag);
@@ -190,7 +190,7 @@ void SpectrumRosterManager::sendPresence(const std::string &name, const std::str
 }
 
 void SpectrumRosterManager::handleBuddySignedOn(AbstractSpectrumBuddy *s_buddy) {
-	sendPresence(s_buddy);
+	sendPresence(s_buddy, "", true);
 	s_buddy->setOnline();
 }
 
@@ -200,7 +200,7 @@ void SpectrumRosterManager::handleBuddySignedOn(PurpleBuddy *buddy) {
 }
 
 void SpectrumRosterManager::handleBuddySignedOff(AbstractSpectrumBuddy *s_buddy) {
-	sendPresence(s_buddy);
+	sendPresence(s_buddy, "", true);
 	s_buddy->setOffline();
 }
 
@@ -210,7 +210,7 @@ void SpectrumRosterManager::handleBuddySignedOff(PurpleBuddy *buddy) {
 }
 
 void SpectrumRosterManager::handleBuddyStatusChanged(AbstractSpectrumBuddy *s_buddy, PurpleStatus *status, PurpleStatus *old_status) {
-	sendPresence(s_buddy);
+	sendPresence(s_buddy, "", true);
 	s_buddy->setOnline();
 }
 

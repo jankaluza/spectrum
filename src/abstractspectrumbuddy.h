@@ -56,7 +56,8 @@ class AbstractSpectrumBuddy {
 
 		// Generates whole <presence> stanza without "to" attribute. That attribute
 		// has to be added manually.
-		Tag *generatePresenceStanza(int features);
+		// only_new - if the stanza is the same as previous generated one, returns NULL.
+		Tag *generatePresenceStanza(int features, bool only_new = false);
 
 		// Sets online/offline state information.
 		void setOnline();
@@ -97,6 +98,7 @@ class AbstractSpectrumBuddy {
 		long m_id;
 		bool m_online;
 		std::string m_subscription;
+		std::string m_lastPresence;
 };
 
 #endif

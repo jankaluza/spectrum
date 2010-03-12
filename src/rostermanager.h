@@ -77,7 +77,7 @@ class SpectrumRosterManager : public RosterStorage {
 		bool isInRoster(const std::string &name, const std::string &subscription = "");
 
 		// Sends current presence of buddy `s_buddy`.
-		void sendPresence(AbstractSpectrumBuddy *s_buddy, const std::string &resource = "");
+		void sendPresence(AbstractSpectrumBuddy *s_buddy, const std::string &resource = "", bool only_new = false);
 
 		// Sends current presene of buddy. If he doesn't exist, unavailable presence
 		// is send.

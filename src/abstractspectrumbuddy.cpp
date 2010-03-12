@@ -73,7 +73,7 @@ const std::string &AbstractSpectrumBuddy::getSubscription() {
 	return m_subscription;
 }
 
-Tag *AbstractSpectrumBuddy::generatePresenceStanza(int features) {
+Tag *AbstractSpectrumBuddy::generatePresenceStanza(int features, bool only_new) {
 	std::string alias = getAlias();
 	std::string name = getSafeName();
 
@@ -128,6 +128,14 @@ Tag *AbstractSpectrumBuddy::generatePresenceStanza(int features) {
 			x->addChild( new Tag("photo", getIconHash()) );
 			tag->addChild(x);
 		}
+	}
+
+	if (only_new) {
+		if (m_lastPresence == tag->xml()) {
+			delete tag;
+			return NULL;
+		}
+		m_lastPresence == tag->xml();
 	}
 
 	return tag;
