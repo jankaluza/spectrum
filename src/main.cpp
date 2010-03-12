@@ -75,6 +75,7 @@
 #include "cmds.h"
 
 #include "gloox/adhoc.h"
+#include "gloox/error.h"
 #include <gloox/tlsbase.h>
 #include <gloox/compressionbase.h>
 #include <gloox/sha.h>
@@ -1788,14 +1789,23 @@ void GlooxMessageHandler::handleMessage (const Message &msg, MessageSession *ses
 		}
 	}
 	else {
-		Message s(Message::Chat, msg.from().full(), tr(configuration().language.c_str(),_("This message couldn't be sent, because you are not connected to legacy network. You will be automatically reconnected soon.")));
-		s.setFrom(msg.to().full());
-		j->send(s);
-		Tag *stanza = new Tag("presence");
-		stanza->addAttribute( "to", msg.from().bare());
-		stanza->addAttribute( "type", "probe");
-		stanza->addAttribute( "from", jid());
-		j->send(stanza);
+		Tag *msgTag = msg.tag();
+		if (!msgTag) return;
+		if (msgTag->findChild("body") != NULL) {
+			Message s(Message::Error, msg.from().full(), msg.body());
+			s.setFrom(msg.to().full());
+			Error *c = new Error(StanzaErrorTypeWait, StanzaErrorRecipientUnavailable);
+			c->setText(tr(configuration().language.c_str(),_("This message couldn't be sent, because you are not connected to legacy network. You will be automatically reconnected soon.")));
+			s.addExtension(c);
+			j->send(s);
+
+			Tag *stanza = new Tag("presence");
+			stanza->addAttribute( "to", msg.from().bare());
+			stanza->addAttribute( "type", "probe");
+			stanza->addAttribute( "from", jid());
+			j->send(stanza);
+		}
+		delete msgTag;
 	}
 
 }
