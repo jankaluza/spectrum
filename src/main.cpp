@@ -375,7 +375,7 @@ static void * requestAction(const char *title, const char *primary,const char *s
 		}
 	}
 	AbstractPurpleRequest *handle = new AbstractPurpleRequest;
-	handle->setRequestType((AdhocDataCallerType) 0);
+	handle->setRequestType((AdhocDataCallerType) CALLER_DUMMY);
 	return handle;
 }
 

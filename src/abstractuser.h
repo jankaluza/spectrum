@@ -31,7 +31,8 @@
 #endif
 
 typedef enum { 	CALLER_ADHOC,
-				CALLER_SEARCH
+				CALLER_SEARCH,
+				CALLER_DUMMY
 				} AdhocDataCallerType;
 
 struct AdhocData {
