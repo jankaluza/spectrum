@@ -206,7 +206,7 @@ void User::purpleBuddyTypingPaused(const std::string &uin){
 }
 
 /*
- * Called when we're ready to connect (we know caps)
+ * Called when we're ready to connect (we know caps).
  */
 void User::connect() {
 	if (!m_readyForConnect) {
