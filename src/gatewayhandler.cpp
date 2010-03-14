@@ -39,7 +39,6 @@ GatewayExtension::GatewayExtension(const Tag *tag) : StanzaExtension( ExtGateway
 
 GatewayExtension::~GatewayExtension()
 {
-	Log("GatewayExtension", "deleting GatewayExtension()");
 	delete m_tag;
 }
 
