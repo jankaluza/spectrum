@@ -147,7 +147,7 @@ void User::purpleBuddyTypingStopped(const std::string &uin){
 	s->addAttribute("from",username + "@" + p->jid() + "/bot");
 
 	// chatstates
-	Tag *active = new Tag("paused");
+	Tag *active = new Tag("active");
 	active->addAttribute("xmlns","http://jabber.org/protocol/chatstates");
 	s->addChild(active);
 
@@ -173,6 +173,32 @@ void User::purpleBuddyTyping(const std::string &uin){
 
 	// chatstates
 	Tag *active = new Tag("composing");
+	active->addAttribute("xmlns","http://jabber.org/protocol/chatstates");
+	s->addChild(active);
+
+	p->j->send( s );
+}
+
+/*
+ * Called when legacy network user stops typing.
+ */
+void User::purpleBuddyTypingPaused(const std::string &uin){
+	if (!hasFeature(GLOOX_FEATURE_CHATSTATES) || !hasTransportFeature(TRANSPORT_FEATURE_TYPING_NOTIFY))
+		return;
+	if (!purple_value_get_boolean(getSetting("enable_chatstate")))
+		return;
+	Log(m_jid, uin << " paused typing");
+	std::string username(uin);
+	std::for_each( username.begin(), username.end(), replaceBadJidCharacters() );
+
+
+	Tag *s = new Tag("message");
+	s->addAttribute("to",m_jid);
+	s->addAttribute("type","chat");
+	s->addAttribute("from",username + "@" + p->jid() + "/bot");
+
+	// chatstates
+	Tag *active = new Tag("paused");
 	active->addAttribute("xmlns","http://jabber.org/protocol/chatstates");
 	s->addChild(active);
 

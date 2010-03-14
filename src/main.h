@@ -156,6 +156,7 @@ public:
 	void purpleChatRemoveUsers(PurpleConversation *conv, GList *users);
 	void * purpleAuthorizeReceived(PurpleAccount *account, const char *remote_user, const char *id, const char *alias, const char *message, gboolean on_list, PurpleAccountRequestAuthorizationCb authorize_cb, PurpleAccountRequestAuthorizationCb deny_cb, void *user_data);
 	void purpleBuddyTyping(PurpleAccount *account, const char *who);
+	void purpleBuddyTypingPaused(PurpleAccount *account, const char *who);
 	void purpleBuddyTypingStopped(PurpleAccount *account, const char *who);
 	void purpleBuddyRemoved(PurpleBuddy *buddy);
 	void purpleBuddyCreated(PurpleBuddy *buddy);

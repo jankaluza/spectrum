@@ -236,6 +236,13 @@ static void buddyTyping(PurpleAccount *account, const char *who, gpointer null) 
 }
 
 /*
+ * Called when somebody from legacy network paused typing.
+ */
+static void buddyTyped(PurpleAccount *account, const char *who, gpointer null) {
+	GlooxMessageHandler::instance()->purpleBuddyTypingPaused(account, who);
+}
+
+/*
  * Called when somebody from legacy network stops typing
  */
 static void buddyTypingStopped(PurpleAccount *account, const char *who, gpointer null){
@@ -1227,6 +1234,21 @@ void GlooxMessageHandler::purpleBuddyTypingStopped(PurpleAccount *account, const
 	}
 }
 
+void GlooxMessageHandler::purpleBuddyTypingPaused(PurpleAccount *account, const char *who) {
+  PurpleConversation *conv = purple_find_conversation_with_account(PURPLE_CONV_TYPE_IM, who, account);
+  if (0 == conv) {
+    return;
+  }
+  
+	User *user = (User *) userManager()->getUserByAccount(account);
+	if (user != NULL) {
+		user->purpleBuddyTypingPaused((std::string) who);
+	}
+	else {
+		Log("purple", "purpleBuddyTypingStopped called, but user does not exist!!!");
+	}
+}
+
 void GlooxMessageHandler::signedOn(PurpleConnection *gc, gpointer unused) {
 	PurpleAccount *account = purple_connection_get_account(gc);
 	User *user = (User *) userManager()->getUserByAccount(account);
@@ -1867,6 +1889,7 @@ bool GlooxMessageHandler::initPurple(){
 
 		purple_signal_connect(purple_conversations_get_handle(), "received-im-msg", &conversation_handle, PURPLE_CALLBACK(newMessageReceived), NULL);
 		purple_signal_connect(purple_conversations_get_handle(), "buddy-typing", &conversation_handle, PURPLE_CALLBACK(buddyTyping), NULL);
+		purple_signal_connect(purple_conversations_get_handle(), "buddy-typed", &conversation_handle, PURPLE_CALLBACK(buddyTyped), NULL);
 		purple_signal_connect(purple_conversations_get_handle(), "buddy-typing-stopped", &conversation_handle, PURPLE_CALLBACK(buddyTypingStopped), NULL);
 		purple_signal_connect(purple_xfers_get_handle(), "file-send-start", &xfer_handle, PURPLE_CALLBACK(fileSendStart), NULL);
 		purple_signal_connect(purple_xfers_get_handle(), "file-recv-start", &xfer_handle, PURPLE_CALLBACK(fileRecvStart), NULL);

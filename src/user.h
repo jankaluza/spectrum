@@ -60,6 +60,7 @@ class User : public AbstractUser, public SpectrumRosterManager, public SpectrumM
 
 		void purpleBuddyTypingStopped(const std::string &uin);
 		void purpleBuddyTyping(const std::string &uin);
+		void purpleBuddyTypingPaused(const std::string &uin);
 		void connected();
 		void disconnected();
 		void handleVCard(const VCard* vcard);
