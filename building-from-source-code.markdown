@@ -22,13 +22,14 @@ Once you have these dependencies installed, you can get Spectrum’s source code
 		git clone git://github.com/hanzz/spectrum.git
 
 2. Stable version
+
 	You can get stable version from [Download page](http://spectrum.im/download/source/).
 
-After you have downloaded the source code, you can build Spectrum:
+Once you have downloaded the source code, you can build Spectrum:
 
 	cd spectrum
 	cmake .
 	make
 	sudo make install
 
-After you have successfully installed spectrum, you can start [configuring spectrum instances](new-spectrum-instances.html).
+When you have Spectrum successfully installed, you can start [configuring spectrum instances](new-spectrum-instances.html).
