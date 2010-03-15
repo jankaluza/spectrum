@@ -32,10 +32,10 @@ class spectrum:
 		self.config_path = os.path.normpath( config_path )
 		
 		# check permissions for config-file:
-		self.check_ownership( self.config_path, 0 )
+#		self.check_ownership( self.config_path, 0 )
 		# we don't care about user permissions, group MUST be read-only
-		self.check_permissions( self.config_path, [ stat.S_IRGRP ],
-			[ stat.S_IRUSR, stat.S_IWUSR, stat.S_IXUSR ] )
+#		self.check_permissions( self.config_path, [ stat.S_IRGRP ],
+#			[ stat.S_IRUSR, stat.S_IWUSR, stat.S_IXUSR ] )
 
 		filename = os.path.splitext( os.path.basename( self.config_path ) )[0]
 		self.config = spectrumconfigparser.SpectrumConfigParser({
@@ -350,10 +350,11 @@ class spectrum:
 		elif status != 3:
 			return 1, "status unknown." # We cannot start if status != 3
 
-		try:
-			self.check_environment()
-		except RuntimeError, e:
-			return 1, "%s: %s" % e.args
+
+#		try:
+#			self.check_environment()
+#		except RuntimeError, e:
+#			return 1, "%s: %s" % e.args
 
 		try:
 			binary = os.environ['SPECTRUM_PATH']
@@ -362,20 +363,19 @@ class spectrum:
 
 		cmd = [ binary ]
 		# --debug implies --no-daemon:
-#		if self.options.debug:
-#			self.options.no_daemon = True
+		if self.options.debug:
+			self.options.no_daemon = True
 
 		# get the absolute path of the config file, so we can change to
 		# spectrums homedir
 		path = os.path.abspath( self.config_path )
-		home = pwd.getpwnam('spectrum')['pw_dir']
+		home = pwd.getpwnam( self.options.su )[5]
 		os.chdir( home )
 
-		#cmd = [ binary ]
-#		if self.options.no_daemon:
-#			cmd.append( '-n' )
-#		if self.options.debug:
-#			binary = 'ulimit -c unlimited; ' + binary
+		if self.options.no_daemon:
+			cmd.append( '-n' )
+		if self.options.debug:
+			cmd[0] = 'ulimit -c unlimited; ' + cmd[0]
 		cmd.append( path )
 		cmd = self.su_cmd( cmd )
 		retVal = subprocess.call( cmd )
