@@ -361,8 +361,8 @@ class spectrum:
 			binary = 'spectrum'
 
 		# --debug implies --no-daemon:
-		if self.options.debug:
-			self.options.no_daemon = True
+#		if self.options.debug:
+#			self.options.no_daemon = True
 
 		# get the absolute path of the config file, so we can change to
 		# spectrums homedir
@@ -371,10 +371,10 @@ class spectrum:
 		os.chdir( home )
 
 		cmd = [ binary ]
-		if self.options.no_daemon:
-			cmd.append( '-n' )
-		if self.options.debug:
-			binary = 'ulimit -c unlimited; ' + binary
+#		if self.options.no_daemon:
+#			cmd.append( '-n' )
+#		if self.options.debug:
+#			binary = 'ulimit -c unlimited; ' + binary
 		cmd.append( path )
 		cmd = self.su_cmd( cmd )
 		retVal = subprocess.call( cmd )
