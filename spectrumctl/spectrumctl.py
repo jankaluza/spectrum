@@ -45,6 +45,10 @@ parser.add_option_group( list_group )
 start_group = OptionGroup( parser, 'Options for action "start"' )
 start_group.add_option( '--su', default='spectrum',
 	help = 'Start spectrum as this user (default: %default)' )
+start_group.add_option( '--no-daemon', type='store_true', default=False,
+	help = 'Do not start spectrum in daemon mode' )
+start_group.add_option( '--debug', type='store_true', default=False,
+	help = 'Start spectrum in debug mode, implies --no-daemon.' )
 parser.add_option_group( start_group )
 
 options, args = parser.parse_args()
