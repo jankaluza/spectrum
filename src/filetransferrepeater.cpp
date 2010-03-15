@@ -156,6 +156,7 @@ bool SendFileStraight::send() {
 	}
 	else {
 		std::cout << "stream not open!\n";
+		sleep(1);
 	}
 	if (m_stream->recv(2000) != ConnNoError)
 		return false;
