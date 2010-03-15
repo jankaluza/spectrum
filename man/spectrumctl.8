@@ -86,6 +86,16 @@ Options for action "\fBstart\fR":
 .RS 4
 Start spectrum as this user (default: \fIspectrum\fR)
 .RE
+.sp
+\fB\-\-no-daemon\fR
+.RS 4
+Do not start spectrum as daemon.
+.sp
+.RE
+\fB\-\-debug\fR
+.RS 4
+Start spectrum in debug mode. Currently this just sets the maximum size of the
+core files to unlimited. Implies \fB--no-daemon\fB.
 .RE
 .SH ENVIRONMENT
 The behaviour of spectrumctl can be influenced by the following environment variables:
