@@ -101,7 +101,7 @@ struct DummyHandle {
 	void *ptr;
 };
 
-static void daemonize(void) {
+static void daemonize(const char *cwd) {
 #ifndef WIN32
 	pid_t pid, sid;
 	FILE* lock_file_f;
@@ -133,7 +133,7 @@ static void daemonize(void) {
 
 	/* Change the current working directory.  This prevents the current
 		directory from being locked; hence not being able to remove it. */
-	if ((chdir("/")) < 0) {
+	if ((chdir(cwd)) < 0) {
 		exit(1);
 	}
 	
@@ -925,7 +925,7 @@ GlooxMessageHandler::GlooxMessageHandler(const std::string &config) : MessageHan
 		loaded = false;
 
 	if (loaded && !nodaemon)
-		daemonize();
+		daemonize(configuration().userDir.c_str());
 
 #ifndef WIN32
 	if (!nodaemon) {
