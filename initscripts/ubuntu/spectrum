@@ -29,59 +29,56 @@ check_user() {
 . /lib/lsb/init-functions
 
 start() {
-    for i in $CONFSDIR/*.cfg ; do
-      if grep "enable" $i | grep "=" | grep "1" > /dev/null ; then
-        CONF=`basename $i`
-        log_daemon_msg "Starting spectrum instance:" "$CONF"
-	spectrumctl --su $USER -q -c $i start
-	log_end_msg $?
-      fi
-    done
+	for i in $CONFSDIR/*.cfg ; do
+		CONF=`basename $i`
+		log_daemon_msg "Starting spectrum instance:" "$CONF"
+		output=$(spectrumctl --su $USER -c $i start)
+		if [[ "$?" -ne 0 ]]; then
+			echo $output
+		fi
+		log_end_msg $?
+	done
 }
 
 stop() {
-    for i in $CONFSDIR/*.cfg ; do
-      if grep "enable" $i | grep "=" | grep "1" > /dev/null ; then
-        CONF=`basename $i`
-        log_daemon_msg "Stopping spectrum instance:" "$CONF"
-	spectrumctl -q -c $i stop
-	log_end_msg $?
-      fi
-    done
+	for i in $CONFSDIR/*.cfg ; do
+		CONF=`basename $i`
+		log_daemon_msg "Stopping spectrum instance:" "$CONF"
+		spectrumctl -q -c $i stop
+		log_end_msg $?
+	done
 }
 
 reload() {
-    for i in $CONFSDIR/*.cfg ; do
-      if grep "enable" $i | grep "=" | grep "1" > /dev/null ; then
-        CONF=`basename $i`
-        log_daemon_msg "Reloading spectrum instance:" "$CONF"
-	spectrumctl -q -c $i reload
-	log_end_msg $?
-      fi
-    done
+	for i in $CONFSDIR/*.cfg ; do
+		CONF=`basename $i`
+		log_daemon_msg "Reloading spectrum instance:" "$CONF"
+		spectrumctl -q -c $i reload
+		log_end_msg $?
+	done
 }
 
 case "$1" in
-  start)
-    check_user
-    start
-    ;;
-  stop)
-    stop
-    ;;
-  restart)
-    stop
-    start
-    ;;
-  reload)
-    reload
-    ;;
-  force-reload)
-    reload
-    ;;
-  *)
-    log_action_msg "Usage: /etc/init.d/spectrum {start|stop|restart|reload|force-reload}"
-    exit 1
+	start)
+		check_user
+		start
+		;;
+	stop)
+		stop
+		;;
+	restart)
+		stop
+		start
+		;;
+	reload)
+		reload
+		;;
+	force-reload)
+		reload
+		;;
+	*)
+		log_action_msg "Usage: /etc/init.d/spectrum {start|stop|restart|reload|force-reload}"
+		exit 1
 esac
-      
+		  
 exit 0;
