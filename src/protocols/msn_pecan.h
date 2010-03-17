@@ -31,7 +31,7 @@ class MSNPecanProtocol : AbstractProtocol
 		MSNPecanProtocol(GlooxMessageHandler *main);
 		~MSNPecanProtocol();
 		const std::string gatewayIdentity() { return "msn"; }
-		const std::string protocol() { return "prpl-msn_pecan"; }
+		const std::string protocol() { return "prpl-msn-pecan"; }
 		bool isValidUsername(const std::string &username);
 		std::list<std::string> transportFeatures();
 		std::list<std::string> buddyFeatures();
