@@ -65,6 +65,7 @@
 #include "protocols/icq.h"
 #include "protocols/irc.h"
 #include "protocols/msn.h"
+#include "protocols/msn_pecan.h"
 #include "protocols/myspace.h"
 #include "protocols/qq.h"
 #include "protocols/simple.h"
@@ -1081,6 +1082,8 @@ bool GlooxMessageHandler::loadProtocol(){
 		m_protocol = (AbstractProtocol*) new IRCProtocol(this);
 	else if (configuration().protocol == "msn")
 		m_protocol = (AbstractProtocol*) new MSNProtocol(this);
+	else if (configuration().protocol == "msn_pecan")
+		m_protocol = (AbstractProtocol*) new MSNPecanProtocol(this);
 	else if (configuration().protocol == "myspace")
 		m_protocol = (AbstractProtocol*) new MyspaceProtocol(this);
 	else if (configuration().protocol == "qq")

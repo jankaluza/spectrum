@@ -128,6 +128,7 @@ set(spectrum_SRCS
 	src/protocols/icq.cpp
 	src/protocols/irc.cpp
 	src/protocols/msn.cpp
+	src/protocols/msn_pecan.cpp
 	src/protocols/myspace.cpp
 	src/protocols/qq.cpp
 	src/protocols/simple.cpp
@@ -191,6 +192,7 @@ set(spectrum_MOC_HDRS
 	src/protocols/icq.h
 	src/protocols/irc.h
 	src/protocols/msn.h
+	src/protocols/msn_pecan.h
 	src/protocols/myspace.h
 	src/protocols/qq.h
 	src/protocols/simple.h
