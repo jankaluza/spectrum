@@ -471,8 +471,6 @@ void User::handleVCard(const VCard* vcard) {
 	gssize size = vcard->photo().binval.size();
 	// this will be freed by libpurple
 	guchar *photo = (guchar *) g_malloc(size * sizeof(guchar));
-	Log("tEST", size * sizeof(guchar));
-	Log("tEST", size);
 	memcpy(photo, vcard->photo().binval.c_str(), size);
 	purple_buddy_icons_set_account_icon(m_account, photo, size);
 
