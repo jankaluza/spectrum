@@ -464,6 +464,9 @@ void User::receivedPresence(const Presence &stanza) {
 	delete stanzaTag;
 }
 
+/* XXX: This needs to handle conversion to the right size and format,
+ * per the PurplePluginProtocolInfo::icon_spec spec.
+ */
 void User::handleVCard(const VCard* vcard) {
 	Log("handleVCard", "setting account icon for " << m_jid);
 	gssize size = vcard->photo().binval.size();

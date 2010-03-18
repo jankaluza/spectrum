@@ -2,3 +2,7 @@
 * fix IRC
 * well-tested permission checking by spectrumctl
 * manpages for spectrum
+
+=== Things that should happen at some point ===
+* Translating avatars from XMPP->legacy needs to respect the
+  PurplePluginProtocolInfo::icon_spec format and size restrictions.
