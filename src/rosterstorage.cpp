@@ -67,7 +67,7 @@ static gboolean storeAbstractSpectrumBuddy(gpointer key, gpointer v, gpointer da
 		s_buddy->setId(id);
 	}
 	Log("buddyListSaveNode", id << " " << name << " " << alias << " " << s_buddy->getSubscription());
-	if (s_buddy->getBuddy()) {
+	if (s_buddy->getBuddy() && id != -1) {
 		PurpleBuddy *buddy = s_buddy->getBuddy();
 		SaveData *s = new SaveData;
 		s->user = user;
