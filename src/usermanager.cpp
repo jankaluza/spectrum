@@ -41,7 +41,7 @@ static void removeUserCallback(gpointer key, gpointer v, gpointer data) {
 	tag->addAttribute("from", Transport::instance()->jid());
 	Transport::instance()->send(tag);
 	delete user;
-	usleep(10000);
+	g_usleep(10000);
 }
 
 UserManager::UserManager() {
