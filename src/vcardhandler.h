@@ -51,7 +51,6 @@ class GlooxMessageHandler;
 #include "util.h"
 #include "whiteboard.h"
 #include "privacy.h"
-#include "striphtmltags.h"
 
 #include "user.h"
 

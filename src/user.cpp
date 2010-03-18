@@ -29,7 +29,6 @@
 #include "proxy.h"
 #include "filetransferrepeater.h"
 #include "accountcollector.h"
-#include "striphtmltags.h"
 #include "sql.h"
 #include "capabilityhandler.h"
 #include "spectrumbuddy.h"

@@ -39,7 +39,6 @@ spectrum_SOURCES = adhoc/adhocadmin.cpp \
 	spectrumtimer.cpp \
 	sql.cpp \
 	statshandler.cpp \
-	striphtmltags.cpp \
 	thread.cpp \
 	transport.cpp \
 	user.cpp \
@@ -51,9 +50,11 @@ spectrum_SOURCES = adhoc/adhocadmin.cpp \
 	protocols/icq.cpp \
 	protocols/irc.cpp \
 	protocols/msn.cpp \
+	protocols/msn_pecan.cpp \
 	protocols/myspace.cpp \
 	protocols/qq.cpp \
 	protocols/simple.cpp \
+	protocols/twitter.cpp \
 	protocols/xmpp.cpp \
 	protocols/yahoo.cpp \
 	protocols/sipe.cpp

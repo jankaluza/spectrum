@@ -25,7 +25,6 @@
 #include "sql.h"
 #include "usermanager.h"
 
-#include "striphtmltags.h"
 #include "transport.h"
 
 SpectrumBuddy::SpectrumBuddy(long id, PurpleBuddy *buddy) : AbstractSpectrumBuddy(id), m_buddy(buddy) {
@@ -59,8 +58,9 @@ bool SpectrumBuddy::getStatus(PurpleStatusPrimitive &status, std::string &status
 	const char *message = purple_status_get_attr_string(stat, "message");
 
 	if (message != NULL) {
-		statusMessage = std::string(message);
-		stripHTMLTags(statusMessage);
+		char *stripped = purple_markup_strip_html(message);
+		statusMessage = std::string(stripped);
+		g_free(stripped);
 	}
 	else
 		statusMessage = "";
