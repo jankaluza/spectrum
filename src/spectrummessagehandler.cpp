@@ -88,7 +88,9 @@ void SpectrumMessageHandler::handleWriteIM(PurpleConversation *conv, const char 
 		return;
 
 	// Don't resend our own messages.
-	if (flags & PURPLE_MESSAGE_SEND || flags & PURPLE_MESSAGE_SYSTEM)
+	// PURPLE_MESSAGE_RAW should be probably sent, but the only one usage just now is for msn error messages,
+	// and we MUST NOT send them, so if you plan to comment out PURPLE_MESSAGE_RAW condition, fix msn error message at first.
+	if (flags & PURPLE_MESSAGE_SEND || flags & PURPLE_MESSAGE_SYSTEM || flags & PURPLE_MESSAGE_RAW)
 		return;
 	
 	std::string name = getConversationName(conv);
