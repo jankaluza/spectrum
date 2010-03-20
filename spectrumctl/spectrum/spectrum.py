@@ -32,10 +32,10 @@ class spectrum:
 		self.config_path = os.path.normpath( config_path )
 		
 		# check permissions for config-file:
-#		self.check_ownership( self.config_path, 0 )
+		self.check_ownership( self.config_path, 0 )
 		# we don't care about user permissions, group MUST be read-only
-#		self.check_permissions( self.config_path, [ stat.S_IRGRP ],
-#			[ stat.S_IRUSR, stat.S_IWUSR, stat.S_IXUSR ] )
+		self.check_permissions( self.config_path, [ stat.S_IRGRP ],
+			[ stat.S_IRUSR, stat.S_IWUSR, stat.S_IXUSR ] )
 
 		filename = os.path.splitext( os.path.basename( self.config_path ) )[0]
 		self.config = spectrumconfigparser.SpectrumConfigParser({
@@ -350,11 +350,11 @@ class spectrum:
 		elif status != 3:
 			return 1, "status unknown." # We cannot start if status != 3
 
-
-#		try:
-#			self.check_environment()
-#		except RuntimeError, e:
-#			return 1, "%s: %s" % e.args
+		# do rigorous permission-checking:
+		try:
+			self.check_environment()
+		except RuntimeError, e:
+			return 1, "%s: %s" % e.args
 
 		try:
 			binary = os.environ['SPECTRUM_PATH']
