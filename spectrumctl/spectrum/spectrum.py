@@ -362,9 +362,6 @@ class spectrum:
 			binary = 'spectrum'
 
 		cmd = [ binary ]
-		# --debug implies --no-daemon:
-		if self.options.debug:
-			self.options.no_daemon = True
 
 		# get the absolute path of the config file, so we can change to
 		# spectrums homedir
