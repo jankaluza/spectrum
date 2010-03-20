@@ -63,6 +63,11 @@ void ConfigFile::loadFromFile(const std::string &config) {
 	char *basename = g_path_get_basename(config.c_str());
 	std::string b(basename);
 	m_filename = b.substr(0, b.find_last_of('.'));
+	if (b.find_last_of(':') == std::string::npos)
+		m_port = -1;
+	else
+		m_port = atoi(m_filename.substr(b.find_last_of(':') + 1, b.size()).c_str());
+	m_filename = m_filename.substr(0, b.find_last_of(':'));
 	g_free(basename);
 
 	if (!g_key_file_load_from_file (keyfile, config.c_str(), (GKeyFileFlags)flags, NULL)) {
@@ -111,6 +116,10 @@ bool ConfigFile::loadString(std::string &variable, const std::string &section, c
 }
 
 bool ConfigFile::loadInteger(int &variable, const std::string &section, const std::string &key, int def) {
+	if (key == "port" && m_port != -1) {
+		variable = m_port;
+		return true;
+	}
 	if (g_key_file_has_key(keyfile, section.c_str(), key.c_str(), NULL)) {
 		GError *error = NULL;
 		variable = (int) g_key_file_get_integer(keyfile, section.c_str(), key.c_str(), &error);
