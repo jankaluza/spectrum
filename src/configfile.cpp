@@ -68,6 +68,12 @@ void ConfigFile::loadFromFile(const std::string &config) {
 	else
 		m_port = atoi(m_filename.substr(b.find_last_of(':') + 1, b.size()).c_str());
 	m_filename = m_filename.substr(0, b.find_last_of(':'));
+
+	if (m_filename.find_last_of(':') == std::string::npos)
+		m_transport = "";
+	else
+		m_transport = m_filename.substr(m_filename.find_last_of(':') + 1, m_filename.size()).c_str();
+	m_filename = m_filename.substr(0, m_filename.find_last_of(':'));
 	g_free(basename);
 
 	if (!g_key_file_load_from_file (keyfile, config.c_str(), (GKeyFileFlags)flags, NULL)) {
@@ -94,6 +100,10 @@ void ConfigFile::loadFromData(const std::string &data) {
 
 bool ConfigFile::loadString(std::string &variable, const std::string &section, const std::string &key, const std::string &def) {
 	char *value;
+	if (key == "protocol" && m_transport != "") {
+		variable = m_transport;
+		return true;
+	}
 	if ((value = g_key_file_get_string(keyfile, section.c_str(), key.c_str(), NULL)) != NULL) {
 		variable.assign(value);
 		if (!m_jid.empty())
