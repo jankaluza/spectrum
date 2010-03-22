@@ -238,6 +238,14 @@ Configuration ConfigFile::getConfiguration() {
 	loadBoolean(configuration.VIPEnabled, "service", "vip_mode", false);
 	loadBoolean(configuration.useProxy, "service", "use_proxy", false);
 	loadBoolean(configuration.require_tls, "service", "require_tls", true);
+	
+	std::string ft_proxy;
+	loadString(ft_proxy, "service", "filetransfer_proxy_bind", "");
+	if (ft_proxy.find_last_of(':') == std::string::npos)
+		configuration.filetransfer_proxy_port = 0;
+	else
+		configuration.filetransfer_proxy_port = atoi(ft_proxy.substr(ft_proxy.find_last_of(':') + 1, ft_proxy.size()).c_str());
+	configuration.filetransfer_proxy_ip = ft_proxy.substr(0, ft_proxy.find_last_of(':'));	
 
 	if(g_key_file_has_key(keyfile,"service","transport_features",NULL)) {
 		bind = g_key_file_get_string_list (keyfile,"service","transport_features",NULL, NULL);

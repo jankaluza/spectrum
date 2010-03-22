@@ -52,6 +52,9 @@ struct Configuration {
 	std::string language;			// Default language.
 	bool useProxy;					// True if transport has to use proxy to connect legacy network.
 	bool require_tls;
+	std::string filetransfer_proxy_ip;
+	int filetransfer_proxy_port;
+	
 
 	std::string userDir;			// Directory used to store avatars.
 	std::string filetransferCache;	// Directory where transfered files are stored.
