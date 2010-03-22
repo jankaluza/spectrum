@@ -134,8 +134,9 @@ bool ConfigFile::loadInteger(int &variable, const std::string &section, const st
 		GError *error = NULL;
 		variable = (int) g_key_file_get_integer(keyfile, section.c_str(), key.c_str(), &error);
 		if (error) {
-			if (error->code == G_KEY_FILE_ERROR_INVALID_VALUE)
+			if (error->code == G_KEY_FILE_ERROR_INVALID_VALUE) {
 				Log("loadConfigFile", "Value of key `" << key << "` in [" << section << "] section is not integer.");
+			}
 			g_error_free(error);
 			return false;
 		}

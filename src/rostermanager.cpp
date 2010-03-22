@@ -67,8 +67,10 @@ static void sendCurrentPresence(gpointer key, gpointer v, gpointer data) {
 	SendPresenceToAllData *d = (SendPresenceToAllData *) data;
 	int features = d->features;
 	std::string &to = d->to;
+	std::cout << "online: " << s_buddy->isOnline() << "\n";
 	if (s_buddy->isOnline()) {
 		Tag *tag = s_buddy->generatePresenceStanza(features);
+		std::cout << "online: " << tag << "\n";
 		if (tag) {
 			tag->addAttribute("to", to);
 			Transport::instance()->send( tag );

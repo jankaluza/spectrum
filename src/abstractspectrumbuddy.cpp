@@ -59,6 +59,7 @@ void AbstractSpectrumBuddy::setOffline() {
 		Transport::instance()->userManager()->buddyOffline();
 #endif
 	m_online = false;
+	m_lastPresence = "";
 }
 
 bool AbstractSpectrumBuddy::isOnline() {
