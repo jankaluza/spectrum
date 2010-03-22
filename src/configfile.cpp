@@ -237,6 +237,7 @@ Configuration ConfigFile::getConfiguration() {
 	loadBoolean(configuration.onlyForVIP, "service", "only_for_vip", false);
 	loadBoolean(configuration.VIPEnabled, "service", "vip_mode", false);
 	loadBoolean(configuration.useProxy, "service", "use_proxy", false);
+	loadBoolean(configuration.require_tls, "service", "require_tls", true);
 
 	if(g_key_file_has_key(keyfile,"service","transport_features",NULL)) {
 		bind = g_key_file_get_string_list (keyfile,"service","transport_features",NULL, NULL);

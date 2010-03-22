@@ -51,6 +51,7 @@ struct Configuration {
 	int VIPFeatures;				// Transport features for VIP users.
 	std::string language;			// Default language.
 	bool useProxy;					// True if transport has to use proxy to connect legacy network.
+	bool require_tls;
 
 	std::string userDir;			// Directory used to store avatars.
 	std::string filetransferCache;	// Directory where transfered files are stored.
