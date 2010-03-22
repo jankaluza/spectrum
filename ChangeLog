@@ -16,8 +16,8 @@ version 0.2 (20??-??-??):
 	* Fixed transport unregister process. Buddies are now removed also if user
 	  doesn't support Roster Item Exchange.
 	* Forward VCard avatars from XMPP to legacy network.
-	* Added filetransfer_proxy_bind config variable to be able to set
-	  IP and port for filetransfer proxy.
+	* Added filetransfer_bind_address and filetransfer_public_address config
+	  variables to be able to set IP and port for filetransfer proxy.
 
 	spectrumctl:
 	* The script now does rigorous checking of ownership and permissions

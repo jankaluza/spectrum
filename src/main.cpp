@@ -998,7 +998,7 @@ GlooxMessageHandler::GlooxMessageHandler(const std::string &config) : MessageHan
 		ftManager->setSIProfileFT(ft);
 		ftServer = new SOCKS5BytestreamServer(j->logInstance(), m_configuration.filetransfer_proxy_port, m_configuration.filetransfer_proxy_ip);
 		if( ftServer->listen() != ConnNoError ) {}
-		ft->addStreamHost( j->jid(), m_configuration.filetransfer_proxy_ip, m_configuration.filetransfer_proxy_port);
+		ft->addStreamHost( j->jid(), m_configuration.filetransfer_proxy_streamhost_ip, m_configuration.filetransfer_proxy_streamhost_port);
 		ft->registerSOCKS5BytestreamServer( ftServer );
 		if (m_configuration.transportFeatures & TRANSPORT_FEATURE_FILETRANSFER) {
 			purple_timeout_add(50, &ftServerReceive, NULL);

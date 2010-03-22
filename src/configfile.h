@@ -54,6 +54,8 @@ struct Configuration {
 	bool require_tls;
 	std::string filetransfer_proxy_ip;
 	int filetransfer_proxy_port;
+	std::string filetransfer_proxy_streamhost_ip;
+	int filetransfer_proxy_streamhost_port;
 	
 
 	std::string userDir;			// Directory used to store avatars.
