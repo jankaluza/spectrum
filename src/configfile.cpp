@@ -100,10 +100,6 @@ void ConfigFile::loadFromData(const std::string &data) {
 
 bool ConfigFile::loadString(std::string &variable, const std::string &section, const std::string &key, const std::string &def) {
 	char *value;
-	if (key == "protocol" && m_transport != "") {
-		variable = m_transport;
-		return true;
-	}
 	if ((value = g_key_file_get_string(keyfile, section.c_str(), key.c_str(), NULL)) != NULL) {
 		variable.assign(value);
 		if (!m_jid.empty())
@@ -111,7 +107,8 @@ bool ConfigFile::loadString(std::string &variable, const std::string &section, c
 		if (!m_protocol.empty())
 			replace(variable, "$protocol", m_protocol.c_str());
 		replace(variable, "$appdata", m_appdata.c_str());
-		replace(variable, "$filename", m_filename.c_str());
+		replace(variable, "$filename:jid", m_filename.c_str());
+		replace(variable, "$filename:protocol", m_transport.c_str());
 		g_free(value);
 	}
 	else {
@@ -126,15 +123,19 @@ bool ConfigFile::loadString(std::string &variable, const std::string &section, c
 }
 
 bool ConfigFile::loadInteger(int &variable, const std::string &section, const std::string &key, int def) {
-	if (key == "port" && m_port != -1) {
-		variable = m_port;
-		return true;
-	}
 	if (g_key_file_has_key(keyfile, section.c_str(), key.c_str(), NULL)) {
 		GError *error = NULL;
 		variable = (int) g_key_file_get_integer(keyfile, section.c_str(), key.c_str(), &error);
 		if (error) {
 			if (error->code == G_KEY_FILE_ERROR_INVALID_VALUE) {
+				char *value;
+				if ((value = g_key_file_get_string(keyfile, section.c_str(), key.c_str(), NULL)) != NULL) {
+					if (strcmp( value,"$filename:port") == 0) {
+						variable = m_port;
+						g_error_free(error);
+						return true;
+					}
+				}
 				Log("loadConfigFile", "Value of key `" << key << "` in [" << section << "] section is not integer.");
 			}
 			g_error_free(error);
