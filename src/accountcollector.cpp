@@ -57,7 +57,7 @@ void AccountCollector::collect(PurpleAccount *account) {
 
 void AccountCollector::collectNow(PurpleAccount *account, bool remove) {
 	if (account->ui_data == NULL) {
-		std::cout << "AccountCollector => freeing account " << purple_account_get_username(account) << "\n";
+		Log("AccountCollector","freeing account " << purple_account_get_username(account));
 		
 		if (remove)
 			g_hash_table_remove(m_accounts, purple_account_get_username(account));

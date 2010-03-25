@@ -25,6 +25,9 @@
 #include "purple.h"
 #include "account.h"
 #include <iostream>
+#include "log.h"
+
+extern LogClass Log_;
 
 class AccountCollector {
 	public:
