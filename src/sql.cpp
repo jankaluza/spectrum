@@ -244,10 +244,19 @@ void SQLClass::createStatements() {
 	if (!m_stmt_getOnlineUsers.stmt)
 		m_stmt_getOnlineUsers.stmt = new Statement( ( STATEMENT("SELECT jid FROM " + p->configuration().sqlPrefix + "users WHERE online=1"),
 													into(m_stmt_getOnlineUsers.resUsers) ) );
-	if (!m_stmt_setUserOnline.stmt)
-		m_stmt_setUserOnline.stmt = new Statement( ( STATEMENT("UPDATE " + p->configuration().sqlPrefix + "users SET online=? WHERE id=?"),
-														use(m_stmt_setUserOnline.online),
-														use(m_stmt_setUserOnline.user_id) ) );
+#ifdef WITH_SQLITE
+	if (p->configuration().sqlType == "sqlite") {
+		if (!m_stmt_setUserOnline.stmt)
+			m_stmt_setUserOnline.stmt = new Statement( ( STATEMENT("UPDATE " + p->configuration().sqlPrefix + "users SET online=?, last_login=DATETIME('NOW')  WHERE id=?"),
+															use(m_stmt_setUserOnline.online),
+															use(m_stmt_setUserOnline.user_id) ) );
+	}
+	else
+#endif
+		if (!m_stmt_setUserOnline.stmt)
+			m_stmt_setUserOnline.stmt = new Statement( ( STATEMENT("UPDATE " + p->configuration().sqlPrefix + "users SET online=?, last_login=NOW()  WHERE id=?"),
+															use(m_stmt_setUserOnline.online),
+															use(m_stmt_setUserOnline.user_id) ) );
 }
 
 void SQLClass::addUser(const std::string &jid,const std::string &uin,const std::string &password,const std::string &language, const std::string &encoding){
