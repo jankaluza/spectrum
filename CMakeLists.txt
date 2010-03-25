@@ -213,15 +213,15 @@ file(APPEND src/transport_config.h "#define INSTALL_DIR \"" ${CMAKE_INSTALL_PREF
 if (SPECTRUM_VERSION)
 	file(APPEND src/transport_config.h "#define VERSION \"" ${SPECTRUM_VERSION} "\"\n")
 else (SPECTRUM_VERSION)
-	if (EXISTS .git)
-		execute_process(COMMAND git rev-parse --short HEAD
+	if (EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/.git)
+		execute_process(COMMAND git "--git-dir=${CMAKE_CURRENT_SOURCE_DIR}/.git" rev-parse --short HEAD
 						OUTPUT_VARIABLE GIT_REVISION
 						OUTPUT_STRIP_TRAILING_WHITESPACE
 		)
 		file(APPEND src/transport_config.h "#define VERSION \"0.2-git-" ${GIT_REVISION} "\"\n")
-	else (EXISTS .git)
+	else (EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/.git)
 		file(APPEND src/transport_config.h "#define VERSION \"0.2\"\n")
-	endif (EXISTS .git)
+	endif (EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/.git)
 endif (SPECTRUM_VERSION)
 
 
