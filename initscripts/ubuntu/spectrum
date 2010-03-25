@@ -33,7 +33,7 @@ start() {
 		CONF=`basename $i`
 		log_daemon_msg "Starting spectrum instance:" "$CONF"
 		output=$(spectrumctl --su $USER -c $i start)
-		if [[ "$?" -ne 0 ]]; then
+		if [ "$?" -ne 0 ]; then
 			echo $output
 		fi
 		log_end_msg $?
