@@ -37,10 +37,7 @@ class spectrum:
 		self.check_permissions( self.config_path, [ stat.S_IRGRP ],
 			[ stat.S_IRUSR, stat.S_IWUSR, stat.S_IXUSR ] )
 
-		filename = os.path.splitext( os.path.basename( self.config_path ) )[0]
-		self.config = spectrumconfigparser.SpectrumConfigParser({
-			'filename': filename,
-			'filetransfer_web': '',
+		defaults = { 'filetransfer_web': '',
 			'config_interface': '',
 			'pid_file': '/var/run/spectrum/$jid',
 			'language': 'en',
@@ -48,8 +45,17 @@ class spectrum:
 			'log_file': '',
 			'only_for_vip': 'false',
 			'vip_mode': 'false',
-			'use_proxy': 'false'
-			})
+			'use_proxy': 'false' }
+
+		filename = os.path.splitext( os.path.basename( self.config_path ) )[0]
+		parts = filename.split( ':' )
+		defaults['filename:jid'] = parts[0]
+		if len( parts ) >= 2:
+			defaults['filename:protocol'] = parts[1]
+		if len( parts ) >= 3:
+			defaults['filename:port'] = parts[2]
+
+		self.config = spectrumconfigparser.SpectrumConfigParser( defaults )
 		self.config.read( config_path )
 		self.pid_file = self.config.get( 'service', 'pid_file' )
 

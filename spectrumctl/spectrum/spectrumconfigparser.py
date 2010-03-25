@@ -22,7 +22,7 @@ except ImportError:
 	import configparser as ConfigParser
 
 class SpectrumConfigParser( ConfigParser.ConfigParser ):
-	variables = [ 'jid', 'protocol', 'filename' ]
+	variables = [ 'jid', 'protocol', 'filename:jid', 'filename:protocol', 'filename:port' ]
 
 	def _interpolate( self, section, option, rawval, vars ):
 		value = rawval
