@@ -210,19 +210,19 @@ endif(DEFINED WITH_STATIC_GLOOX)
 message(STATUS "Transport will be installed into: " ${CMAKE_INSTALL_PREFIX})
 file(APPEND src/transport_config.h "#define INSTALL_DIR \"" ${CMAKE_INSTALL_PREFIX} "\"\n")
 
-if (DEFINED SPECTRUM_VERSION)
+if (SPECTRUM_VERSION)
 	file(APPEND src/transport_config.h "#define VERSION \"" ${SPECTRUM_VERSION} "\"\n")
-else (DEFINED SPECTRUM_VERSION)
+else (SPECTRUM_VERSION)
 	if (EXISTS .git)
-		execute_process(COMMAND git rev-parse HEAD
+		execute_process(COMMAND git rev-parse --short HEAD
 						OUTPUT_VARIABLE GIT_REVISION
 						OUTPUT_STRIP_TRAILING_WHITESPACE
 		)
-		file(APPEND src/transport_config.h "#define VERSION \"0.1-git-" ${GIT_REVISION} "\"\n")
+		file(APPEND src/transport_config.h "#define VERSION \"0.2-git-" ${GIT_REVISION} "\"\n")
 	else (EXISTS .git)
-		file(APPEND src/transport_config.h "#define VERSION \"0.1\"\n")
+		file(APPEND src/transport_config.h "#define VERSION \"0.2\"\n")
 	endif (EXISTS .git)
-endif (DEFINED SPECTRUM_VERSION)
+endif (SPECTRUM_VERSION)
 
 
 
