@@ -378,6 +378,7 @@ class spectrum:
 		if self.options.no_daemon:
 			cmd.append( '-n' )
 		if self.options.debug:
+			os.environ['MALLOC_PERTURB_'] = '254'
 			cmd[0] = 'ulimit -c unlimited; ' + cmd[0]
 		cmd.append( path )
 		cmd = self.su_cmd( cmd )
