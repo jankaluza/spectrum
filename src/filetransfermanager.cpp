@@ -110,7 +110,7 @@ void FileTransferManager::sendFile(const std::string &jid, const std::string &fr
     if (f) {
         struct stat info;
         if (stat(file.c_str(), &info) != 0 ) {
-            std::cout << "FileTransferManager::sendFile" << " stat() call failed!\n";
+            Log("FileTransferManager::sendFile", "stat() call failed!");
             return;
         }
 		std::cout << "requesting filetransfer " << jid <<" " << file <<" as " << name << " " << info.st_size << "\n";
@@ -119,6 +119,6 @@ void FileTransferManager::sendFile(const std::string &jid, const std::string &fr
         m_info[sid].size = info.st_size;
         f.close();
     } else {
-        std::cout << "FileTransferManager::sendFile" << " Couldn't open the file " << file << "!\n";
+        Log("FileTransferManager::sendFile", " Couldn't open the file " << file << "!");
     }
 }
