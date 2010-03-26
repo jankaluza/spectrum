@@ -581,7 +581,6 @@ static void buddyListSaveAccount(PurpleAccount *account) {
 }
 
 static gssize XferWrite(PurpleXfer *xfer, const guchar *buffer, gssize size) {
-	std::cout << "gotData\n";
 	FiletransferRepeater *repeater = (FiletransferRepeater *) xfer->ui_data;
 	return repeater->handleLibpurpleData(buffer, size);
 }
@@ -1582,7 +1581,6 @@ void GlooxMessageHandler::handlePresence(const Presence &stanza){
 				Log(stanza.from().full(), "Creating new User instance");
 				if (protocol()->tempAccountsAllowed()) {
 					std::string server = stanza.to().username().substr(stanza.to().username().find("%") + 1, stanza.to().username().length() - stanza.to().username().find("%"));
-					std::cout << "SERVER" << stanza.from().bare() + server << "\n";
 					user = new User(this, stanza.from(), stanza.to().resource() + "@" + server, "", stanza.from().bare() + server, res.id, res.encoding);
 				}
 				else {
