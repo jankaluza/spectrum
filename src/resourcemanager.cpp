@@ -69,7 +69,8 @@ void ResourceManager::setActiveResource(const std::string &resource) {
 }
 
 bool ResourceManager::hasResource(const std::string &r) {
-	return m_resources.find(r) != m_resources.end();
+// 	return m_resources.find(r) != m_resources.end();
+	return false;
 }
 
 Resource & ResourceManager::getResource(const std::string &r) {
