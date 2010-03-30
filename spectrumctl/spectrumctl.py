@@ -101,6 +101,7 @@ if options.config:
 		sys.exit( ret )
 	else:
 		ret = getattr( actions, action )( options, [instance] )
+		sys.exit( ret )
 else:
 	if not os.path.exists( options.config_dir ):
 		log( "Error: %s: No such directory"%(options.config_dir) )
