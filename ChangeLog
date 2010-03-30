@@ -25,7 +25,8 @@ version 0.2 (20??-??-??):
 	* Accept $filename:jid, $filename:port and $filename:protocol as 
 	  variable
 	* Statistics gathering via config_interface
-	* Two new command-line options: --no-daemon and --debug.
+	* Two new command-line options for start: --no-daemon and --debug.
+	* New command-line option for list: --machine-readable
 	* env-variable SPECTRUM_PATH can now configure how spectrumctl is
 	  called. If the variable is set, it assumes that spectrum is in its
 	  PATH.

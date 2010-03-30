@@ -1,10 +1,15 @@
 import socket
 
-def list( instances ):
+def list( options, instances ):
 	lines = [ ('PID', 'PROTOCOL', 'HOSTNAME', 'STATUS' ) ]
 
 	for instance in instances:
 		lines.append( instance.list() )
+
+	if options.machine_readable:
+		for line in lines[1:]:
+			print( ','.join( line ) )
+		return 0
 
 	widths = [0,0,0,0]
 	for item in lines:
@@ -21,7 +26,7 @@ def list( instances ):
 		print
 	return 0
 
-def stats( instances ):
+def stats( options, instances ):
 	try:
 		import xmpp
 	except ImportError:

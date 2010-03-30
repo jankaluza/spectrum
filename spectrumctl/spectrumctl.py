@@ -51,6 +51,11 @@ start_group.add_option( '--debug', action='store_true', default=False,
 	help = 'Start spectrum in debug mode.' )
 parser.add_option_group( start_group )
 
+list_group = OptionGroup( parser, 'Options for action "list"' )
+list_group.add_option( '--machine-readable', action='store_true', default=False,
+	help= 'Output data as comma-seperated values' )
+parser.add_option_group( list_group )
+
 options, args = parser.parse_args()
 
 init_actions = [ 'start', 'stop', 'restart', 'reload', 'status' ]
@@ -95,7 +100,7 @@ if options.config:
 		ret = act( instance )
 		sys.exit( ret )
 	else:
-		ret = getattr( actions, action )( [instance] )
+		ret = getattr( actions, action )( options, [instance] )
 else:
 	if not os.path.exists( options.config_dir ):
 		log( "Error: %s: No such directory"%(options.config_dir) )
@@ -112,7 +117,7 @@ else:
 		for instance in instances:
 			ret += act( instance )
 	else:
-		ret = getattr( actions, action )( instances )
+		ret = getattr( actions, action )( options, instances )
 
 	if ret != 0:
 		log( "Warning: Some actions failed." )
