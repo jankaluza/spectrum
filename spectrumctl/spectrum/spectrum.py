@@ -83,9 +83,9 @@ class spectrum:
 			raise ExistsError( file, 'Does not exist' )
 
 		if typ == 'file' and not os.path.isfile( file ):
-			raise ExistsError( file, 'Not a file' )
+			raise RuntimeError( file, 'Not a file' )
 		if typ == 'dir' and not os.path.isdir( file ):
-			raise ExistsError( file, 'Not a directory' )
+			raise RuntimeError( file, 'Not a directory' )
 
 		return True
 
@@ -177,6 +177,12 @@ class spectrum:
 			string = 'chmod ' + mode_string + ' ' + file
 			raise RuntimeError( file, 'Incorrect permissions (fix with "%s")' %(string) )
 
+	def get_uid( self ):
+		return pwd.getpwnam( self.options.su ).pw_uid
+
+	def get_gid( self ):
+		return pwd.getpwnam( self.options.su ).pw_gid
+
 	def check_writable( self, node, uid=None ):
 		if uid == None:
 			user = pwd.getpwnam( self.options.su )
@@ -211,6 +217,11 @@ class spectrum:
 		user = self.options.su
 		return [ 'su', user, '-s', '/bin/sh', '-c', ' '.join( cmd ) ]
 
+	def create_dir( self, dir ):
+		os.makedirs( dir )
+		os.chmod( dir, stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR | stat.S_IRGRP | stat.S_IXGRP )
+		os.chown( dir, self.get_uid(), self.get_gid() )
+
 	def check_environment( self ):
 		# check if spectrum user exists:
 		if os.name == 'posix':
@@ -232,8 +243,11 @@ class spectrum:
 		if config_interface:
 			# on some old (pre 0.1) installations config_interface does not exist
 			dir = os.path.dirname( config_interface )
-			self.check_exists( dir, 'dir' )
-			self.check_writable( dir )
+			try: 
+				self.check_exists( dir, 'dir' )
+				self.check_writable( dir )
+			except ExistsError:
+				self.create_dir( dir )
 
 		# filetransfer cache
 		filetransfer_cache = self.config.get( 'service', 'filetransfer_cache' )
@@ -244,15 +258,16 @@ class spectrum:
 				[ stat.S_IRUSR, stat.S_IWUSR, stat.S_IXUSR, 
 				  stat.S_IRGRP, stat.S_IXGRP ] )
 		except ExistsError:
-			dir = os.path.dirname( filetransfer_cache )
-			self.check_exists( dir )
-			self.check_writable( dir )
+			self.create_dir( filetransfer_cache )
 
 		# pid_file:
 		pid_file = self.config.get( 'service', 'pid_file' )
-		dir = os.path.dirname( pid_file )
-		self.check_exists( dir )
-		self.check_writable( dir )
+		pid_dir = os.path.dirname( pid_file )
+		try:
+			self.check_exists( pid_dir )
+			self.check_writable( pid_dir )
+		except ExistsError:
+			self.create_dir( pid_dir )
 
 		# log file
 		log_file = self.config.get( 'logging', 'log_file' )
@@ -263,9 +278,7 @@ class spectrum:
 			self.check_permissions( log_file, # rw-r-----
 				[ stat.S_IRUSR, stat.S_IWUSR, stat.S_IRGRP ] )
 		except ExistsError:
-			dir = os.path.dirname( log_file )
-			self.check_exists( dir )
-			self.check_writable( dir )
+			self.create_dir( os.path.dirname( log_file ) )
 
 		# sqlite database
 		if self.config.get( 'database', 'type' ) == 'sqlite':
@@ -277,8 +290,7 @@ class spectrum:
 				self.check_permissions( db_file, # rw-r-----
 					[ stat.S_IRUSR, stat.S_IWUSR, stat.S_IRGRP ] )
 			except ExistsError:
-				dir = os.path.dirname( db_file )
-				self.check_writable( dir )
+				self.create_dir( os.path.dirname( db_file ) )
 		
 		# purple userdir
 		userdir = self.config.get( 'purple', 'userdir' )
@@ -289,9 +301,7 @@ class spectrum:
 				[ stat.S_IRUSR, stat.S_IWUSR, stat.S_IXUSR, 
 				  stat.S_IRGRP, stat.S_IXGRP ] )
 		except ExistsError:
-			dir = os.path.dirname( userdir )
-			self.check_exists( dir )
-			self.check_writable( dir )
+			self.create_dir( userdir )
 
 		return 0, 'ok'
 
