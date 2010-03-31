@@ -1,14 +1,16 @@
-version 0.2 (20??-??-??):
+version 0.2 (2010-??-??):
 	General:
-	* Proper disco#info handling (#51)
-	* Added Windows compilation support
-	* Send unavailable presences when shutting transport down
+	* Don't answer error IQ stanza on disco#info request.
+	* Added Windows compilation support.
+	* Send unavailable presences when shutting transport down.
 	* Working filetransfer from XMPP to legacy network when legacy network user
-	  can't receive file.
+	  can't receive file. File is then stored on server and the link to file is
+	  sent. Web address and file storage directory can be set in config file.
 	* Twitter protocol support (using http://code.google.com/p/prpltwtr/)
-	* $filename now is an implicitly set to the name of the file without
-	  the extension.
-	* Fixed crash when legacy network user cancels filetransfer
+	* Added $filename:jid, $filename:protocol and $filename:port config variables
+	  which are set according to config filename. It has to be named as
+	  jid:protocol:port.cfg (for example icq.localhost:icq:5432.cfg).
+	* Fixed crash when legacy network user cancels filetransfer.
 	* Fixed crash when XMPP user cancels Adhoc command execution.
 	* Fixed crash when two XMPP users try to use one legacy network account.
 	* Don't send duplicate presences.
@@ -25,7 +27,7 @@ version 0.2 (20??-??-??):
 	* Spectrum can now open a local socket that allows (fast) statistics
 	  gathering. This is already used by spectrumctl. The path to the
 	  local socket is configured with the config_interface option.
-	* new man pages for spectrum.cfg and spectrumctl.
+	* New man pages for spectrum.cfg and spectrumctl.
 
 	spectrumctl:
 	* The script now does rigorous checking of ownership and permissions
@@ -48,8 +50,8 @@ version 0.2 (20??-??-??):
 	* MUC support for XMPP
 
 	IRC:
-	* IRC Nickserv password can be set via Adhoc command
-	* Fixed Private Messages
+	* IRC Nickserv password can be set via Adhoc command.
+	* Fixed Private Messages.
 	* Using IRC Helper (http://plugins.guifications.org/trac/wiki/irchelper) for
 	  identyfing user. Used only if IRC Helper is installed.
 

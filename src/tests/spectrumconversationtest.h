@@ -14,6 +14,7 @@ class SpectrumConversationTest : public AbstractTest {
 	CPPUNIT_TEST_SUITE (SpectrumConversationTest);
 	CPPUNIT_TEST (handleMessage);
 	CPPUNIT_TEST (handleMessageDelay);
+	CPPUNIT_TEST (handleMessageMSNTimeoutError);
 	CPPUNIT_TEST_SUITE_END ();
 
 	public:
@@ -23,6 +24,7 @@ class SpectrumConversationTest : public AbstractTest {
 	protected:
 		void handleMessage();
 		void handleMessageDelay();
+		void handleMessageMSNTimeoutError();
 		
 	private:
 		SpectrumConversation *m_conv;

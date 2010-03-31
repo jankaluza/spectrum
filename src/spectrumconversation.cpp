@@ -25,6 +25,7 @@
 #include "gloox/error.h"
 #include "transport.h"
 #include "usermanager.h"
+#include "spectrumtimer.h"
 
 static void sendXhtmlTag(Tag *body, void *data) {
 	Tag *stanzaTag = (Tag*) data;
@@ -38,15 +39,35 @@ static void sendXhtmlTag(Tag *body, void *data) {
 	Transport::instance()->send(stanzaTag);
 }
 
+static gboolean resendMessage(gpointer data) {
+	SpectrumConversation *conv = (SpectrumConversation *) data;
+	return conv->resendRawMessage();
+}
+
 SpectrumConversation::SpectrumConversation(PurpleConversation *conv, SpectrumConversationType type, const std::string &room) : AbstractConversation(type),
-	m_conv(conv), m_room(room) {
+	m_conv(conv), m_room(room), m_resendNextRawMessage(false) {
+	m_timer = new SpectrumTimer(1000, &resendMessage, this);
 }
 
 SpectrumConversation::~SpectrumConversation() {
+	delete m_timer;
+}
+
+bool SpectrumConversation::resendRawMessage() {
+	for (std::map <std::string, int>::iterator it = m_rawMessages.begin(); it != m_rawMessages.end(); it++) {
+		if ((*it).second == 0) {
+			std::string msg((*it).first);
+#ifndef TESTS
+			PurpleConvIm *im = purple_conversation_get_im_data(m_conv);
+			purple_conv_im_send(im, msg.c_str());
+#endif
+			(*it).second++;
+		}
+	}
+	return false;
 }
 
 void SpectrumConversation::handleMessage(AbstractUser *user, const char *who, const char *msg, PurpleMessageFlags flags, time_t mtime, const std::string &currentBody) {
-
 	std::string name(who);
 	// Remove resource if it's XMPP JID
 	size_t pos = name.find("/");
@@ -62,26 +83,51 @@ void SpectrumConversation::handleMessage(AbstractUser *user, const char *who, co
 	purple_markup_html_to_xhtml(newline, &xhtml, &strip);
 	std::string message(strip);
 
+	std::string m(xhtml);
+	if (m.find("<body>") == 0) {
+		m.erase(0,6);
+		m.erase(m.length() - 7, 7);
+	}
+	g_free(newline);
+	g_free(xhtml);
+	g_free(strip);
+
 	std::string to;
 	if (getResource().empty())
 		to = user->jid();
 	else
 		to = user->jid() + "/" + getResource();
 
-	if (flags & PURPLE_MESSAGE_ERROR /* && message == "Unable to send message: The message is too large."*/) {
-		Message s(Message::Error, to, currentBody);
-		if (!m_room.empty())
-			s.setFrom(m_room + "%" + JID(user->username()).server() + "@" + Transport::instance()->jid() + "/" + name);
-		else
-			s.setFrom(name + std::string(getType() == SPECTRUM_CONV_CHAT ? "" : ("%" + JID(user->username()).server())) + "@" + Transport::instance()->jid() + "/bot");
-		Error *c = new Error(StanzaErrorTypeModify, StanzaErrorNotAcceptable);
-		c->setText(message);
-		s.addExtension(c);
-		Transport::instance()->send(s.tag());
-		g_free(newline);
-		g_free(xhtml);
-		g_free(strip);
+	if (flags & PURPLE_MESSAGE_RAW && m_resendNextRawMessage) {
+		if (m_rawMessages.find(message) == m_rawMessages.end()) {
+			m_rawMessages[message] = 0;
+			m_timer->start();
+		}
+		else if (!m_timer->isRunning()) {
+			// don't send it twice in a row...
+			m_rawMessages.erase(message);
+		}
+		m_resendNextRawMessage = false;
 		return;
+	}
+
+	if (flags & PURPLE_MESSAGE_ERROR) {
+		// That's handles MSN bug when switchboard timeouts and we should try to resend the message, but only just once.
+		if (message == "Message could not be sent because an error with the switchboard occurred:") {
+			m_resendNextRawMessage = true;
+			return;
+		} else {
+			Message s(Message::Error, to, currentBody);
+			if (!m_room.empty())
+				s.setFrom(m_room + "%" + JID(user->username()).server() + "@" + Transport::instance()->jid() + "/" + name);
+			else
+				s.setFrom(name + std::string(getType() == SPECTRUM_CONV_CHAT ? "" : ("%" + JID(user->username()).server())) + "@" + Transport::instance()->jid() + "/bot");
+			Error *c = new Error(StanzaErrorTypeModify, StanzaErrorNotAcceptable);
+			c->setText(message);
+			s.addExtension(c);
+			Transport::instance()->send(s.tag());
+			return;
+		}
 	}
 	
 	Message s(Message::Chat, to, message);
@@ -108,15 +154,6 @@ void SpectrumConversation::handleMessage(AbstractUser *user, const char *who, co
 	}
 
 	Tag *stanzaTag = s.tag();
-
-	std::string m(xhtml);
-	if (m.find("<body>") == 0) {
-		m.erase(0,6);
-		m.erase(m.length() - 7, 7);
-	}
-	g_free(newline);
-	g_free(xhtml);
-	g_free(strip);
 
 	std::string res = getResource();
 	if (user->hasFeature(GLOOX_FEATURE_XHTML_IM, res) && m != message) {

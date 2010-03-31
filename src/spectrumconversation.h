@@ -31,6 +31,8 @@
 
 using namespace gloox;
 
+class SpectrumTimer;
+
 // Class representing IM Conversation
 class SpectrumConversation : public AbstractConversation {
 	public:
@@ -42,10 +44,17 @@ class SpectrumConversation : public AbstractConversation {
 
 		// Returns pointer to PurpleConversation associated with this conversation.
 		PurpleConversation *getConv() { return m_conv; }
-
+		
+		bool resendRawMessage();
 	private:
+#ifdef TESTS
+	public:
+#endif
 		PurpleConversation *m_conv;		// Conversation associated with this class.
 		std::string m_room;
+		bool m_resendNextRawMessage;
+		SpectrumTimer *m_timer;
+		std::map<std::string, int> m_rawMessages;
 };
 
 #endif

@@ -50,6 +50,8 @@ class SpectrumTimer {
 		// because purple_timout_add calls static function which has to call public
 		// SpectrumTimer::timeout().
 		gboolean timeout();
+		
+		bool isRunning() {return m_id != 0;}
 
 	private:
 		void *m_data;						// Data to be passed to callback.
