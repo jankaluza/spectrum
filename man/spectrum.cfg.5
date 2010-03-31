@@ -49,15 +49,13 @@ parts are optional. You can use these settings by using the strings
 "$filename:jid", "$filename:protocol" and "$filename:port" (without quotes) in
 the configuration file.
 .SH COMMON OPTIONS
-Most options are common to all protocol configurations. Settings are mandatory
-except where noted.
+Most options are common to all protocol configurations. Settings can only be
+omitted if there is a default value or if it is explicitly marked as optional.
 
 .SS SECTION service
 \fBenable\fR=\fIbool\fR
 .RS
-Optional. To disable the spectrum instance, set \fIbool\fR to \fI0\fR.
-
-TODO: I hope this is optional?
+To disable the spectrum instance, set \fIbool\fR to \fI0\fR (default: enable=1).
 .RE
 
 \fBprotocol\fR=\fIprotocol\fR
@@ -69,22 +67,11 @@ Have this spectrum instance use \fIprotocol\fR. Valid values are \fIaim\fR,
 
 \fBserver\fR=\fIaddress\fR
 .RS
-Your XMPP-server is available at \fIaddress\fR. Usually \fI127.0.0.1\fR.
+Your XMPP-server is available at \fIaddress\fR, the setting can be any IPv4- or
+IPv6-address or a fully qualified domain name. Most of the time \fIaddress\fR will
+just be \fI127.0.0.1\fR.
 
-TODO: what are valid values? IPv4? IPv6? FQDN?
-.RE
-
-\fBuse_proxy\fR=\fIbool\fR
-.RS
-If \fIbool\fR is 1, the http_proxy env var will be used as the proxy server
-for example export http_proxy="http://user:passwd@your.proxy.server:port/"
-
-TODO: Optional?
-.RE
-
-\fBjid\fR=\fIjid\fR
-.RS
-Use \fIjid\fR as the component JID.
+\fBNote:\fR IPv6 support is currently untested.
 .RE
 
 \fBport\fR=\fIport\fR
@@ -92,40 +79,61 @@ Use \fIjid\fR as the component JID.
 Use \fIport\fR as the component port.
 .RE
 
+\fBjid\fR=\fIjid\fR
+.RS
+Use \fIjid\fR as the component JID.
+.RE
+
+\fBuse_proxy\fR=\fIbool\fR
+.RS
+If \fIbool\fR is 1, the http_proxy env var will be used as the proxy server
+(default: 0).
+Example: 
+.RS
+http_proxy="http://user:passwd@your.proxy.server:port/"
+.RE
+.RE
+
 \fBconfig_interface\fR=\fIpath\fR
 .RS
-Optional. If set, spectrum opens local socket at \fIpath\fR where it replies to
-some XMPP-packets. This setting is required by the spectrumctl-action
-\fIstats\fR and the munin plugin. Example: /var/run/spectrum/$filename:jid.sock.
+Optional. If set, spectrum opens a local socket at \fIpath\fR where it replies to some 
+XMPP-packets. This setting is required by the spectrumctl-action \fIstats\fR
+and the munin plugin. Example: /var/run/spectrum/$filename:jid.sock. 
 .RE
 
 \fBfiletransfer_bind_address\fR=\fIIP\fR:\fIport\fR
 .RS
-Optional. The filetransfer proxy will bind to \fIIP\fR:\fIport\fR. \fIIP\fR has
-to be a public IP. Example: 4.2.2.1:12345.
+The filetransfer proxy will bind to \fIIP\fR:\fIport\fR. \fIIP\fR has
+to be a public IP. Example: 4.2.2.1:12345. 
+Only used when filetransfer is enabled (see \fItransport_features\fR and
+\fIvip_features\fR settings).
 .RE
 
 \fBfiletransfer_public_address\fR=\fIIP\fR:\fIport\fR
 .RS
 The \fIIP\fR and \fIport\fR that will be sent as a stream host upon a 
 filetransfer request. Example: 4.2.2.1:12345.
+Only used when filetransfer is enabled (see \fItransport_features\fR and
+\fIvip_features\fR settings).
 .RE
 
 \fBfiletransfer_cache=\fR=\fIdirectory\fR
 .RS
 Downloaded files will be saved at \fIdirectory\fR.
-.RE
-
-\fBadmins\fR=\fIuser@example.com,...\fR
-.RS
-Optional. Comma-seperated list of transport administrators who have access to
-admin adhoc commands.
+Only used when filetransfer is enabled (see \fItransport_features\fR and
+\fIvip_features\fR settings).
 .RE
 
 \fBfiletransfer_web\fR=\fIURL\fR
 .RS
 Downloaded files will be available at \fIURL\fR. Note that it is your job to
 configure your webserver accordingly.
+.RE
+
+\fBadmins\fR=\fIuser@example.com,...\fR
+.RS
+Optional. Comma-seperated list of transport administrators who have access to
+admin adhoc commands.
 .RE
 
 \fBname\fR=\fIname\fR
@@ -135,7 +143,7 @@ The transport will show up in Service Discovery as \fIname\fR.
 
 \fBlanguage\fR=\fIen\fR
 .RS
-The default language.
+The default language (default: en).
 .RE
 
 \fBtransport_features\fR=\fIfeature\fR;\fI...\fR
@@ -143,21 +151,19 @@ The default language.
 List of features available on the transport, seperated by semicolons (';'),
 \fIfeature\fR must be a combination of \fIavatars\fR, \fIchatstates\fR and
 \fIfiletransfer\fR. If the setting is omitted, all three features will be used.
-
-TODO: Is that really semicolons? HanzZ mixes up these.
 .RE
 
 \fBvip_mode\fR=\fImode\fR
 .RS
-Optional. If \fImode\fR is \fI1\fR, users will be devided into two groups based
+If \fImode\fR is \fI1\fR, users will be devided into two groups based
 on a database table. See also: \fIonly_for_vip\fR, \fIallowed_servers\fR and
-\fIvip_features\fR.
+\fIvip_features\fR (default: 0).
 .RE
 
 \fBonly_for_vip\fR=\fIbool\fR
 .RS
 If both \fIvip_mode\fR and \fIonly_for_vip\fR are set to \fI1\fR, the transport
-will only be available to VIP users.
+will only be available to VIP users (default: 0).
 .RE
 
 \fBallowed_servers\fR=\fIserver\fR;\fI...\fR
@@ -168,8 +174,6 @@ are able to use the transport even if they are not VIP users.
 This feature is useful if you want to enable transport only for users from your
 server, but also want to give access to VIP users from other servers (for example
 from GTalk).
-
-TODO: Is that really semicolons? HanzZ mixes up these.
 .RE
 
 \fBvip_features\fR=\fIfeature\fR;\fI...\fR
@@ -177,20 +181,11 @@ TODO: Is that really semicolons? HanzZ mixes up these.
 List of features available only for VIP users. Ignored if
 \fIvip_mode\fR=\fI0\fR. List of features is the same as in
 \fItransport_feauters\fR.
-
-TODO: Is that really semicolons? HanzZ mixes up these.
 .RE
 
 \fBpid_file\fR=\fIpath\fR
 .RS
-Spectrum will put its PID file at \fIpath\fR. 
-.RE
-
-\fBrequire_tls\fR=\fIbool\fR
-.RS
-Require TLS to connect to the legacy network.
-
-TODO: Isn't this only for XMPP?
+Spectrum will put its PID file at \fIpath\fR (default: /var/run/spectrum/$jid). 
 .RE
 
 .SS SECTION logging
@@ -207,7 +202,7 @@ A combination of \fIpurple\fR and \fIxml\fR.
 .SS SECTION database
 \fBtype\fR=\fItype\fR
 .RS
-Either use \fIsqlite\fR or \fImysql\fR for \fItype\fR.
+Either use \fIsqlite\fR or \fImysql\fR as database backend.
 .RE
 
 \fBhost\fR=\fIhostname\fR
@@ -249,8 +244,16 @@ all addresses.
 Store dynamic user data in \fIdirectory\fR.
 .RE
 
+.SH XMPP specific options
+.SS SECTION service
+\fBrequire_tls\fR=\fIbool\fR
+.RS
+Require TLS to connect to the legacy network. Set this to \fI0\fR to enable
+connectivity to the Facebook Jabber server (default: \fI1\fR).
+.RE
+
 .SH AUTHOR
-opyright \(co 2009\-2010 by Spectrum engineers:
+Copyright \(co 2009\-2010 by Spectrum engineers:
 .sp
 .\" template start
 .RS 4
