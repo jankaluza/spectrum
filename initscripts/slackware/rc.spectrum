@@ -1,0 +1,47 @@
+#!/bin/sh
+#
+# rc.spectrum - manage multiple spectrum (XMPP Transport) instances in
+# Salix OS/Slackware Linux
+#
+# Copyright (C) 2010 Thorsten Muehlfelder <thenktor(at)gmx.de>
+#
+# Distributable under the terms of the GNU GPL version 2.
+#
+# Version: 0.2
+
+USER=spectrum
+CONFDIR=/etc/spectrum/
+CTL=/usr/bin/spectrumctl
+
+# Check that user exists
+check_user() {
+	if ! getent passwd $USER >/dev/null; then
+		echo "User not found: $USER"
+		exit 1;
+	fi
+}
+
+case "$1" in
+	start)
+		check_user
+		$CTL --config-dir=$CONFDIR --su=$USER start
+		;;
+	stop)
+		$CTL --config-dir=$CONFDIR stop
+		;;
+	restart)
+		check_user
+		$CTL --config-dir=$CONFDIR --su=$USER start
+		;;
+	status)
+		$CTL --config-dir=$CONFDIR list
+		;;
+	reload)
+		$CTL --config-dir=$CONFDIR reload
+		;;
+	*)
+		echo "Usage: /etc/init.d/spectrum {start|stop|restart|reload|status}"
+		;;
+esac
+
+exit 0;
