@@ -289,7 +289,11 @@ class spectrum:
 			self.check_permissions( log_file, # rw-r-----
 				[ stat.S_IRUSR, stat.S_IWUSR, stat.S_IRGRP ] )
 		except ExistsError:
-			self.create_dir( os.path.dirname( log_file ) )
+			log_dir = os.path.dirname( log_file )
+			try:
+				self.check_exists( log_dir )
+			except ExistsError:
+				self.create_dir( log_dir )
 
 		# sqlite database
 		if self.config.get( 'database', 'type' ) == 'sqlite':
@@ -301,7 +305,15 @@ class spectrum:
 				self.check_permissions( db_file, # rw-r-----
 					[ stat.S_IRUSR, stat.S_IWUSR, stat.S_IRGRP ] )
 			except ExistsError:
-				self.create_dir( os.path.dirname( db_file ) )
+				db_dir = os.path.dirname( db_file )
+				try:
+					self.check_exists( db_dir )
+					self.check_ownership( db_dir )
+					self.check_permissions( db_dir, # rwxr-x---
+						[ stat.S_IRUSR, stat.S_IWUSR, stat.S_IXUSR, 
+						  stat.S_IRGRP, stat.S_IXGRP ] )
+				except ExistsError:
+					self.create_dir( os.path.dirname( db_file ) )
 		
 		# purple userdir
 		userdir = self.config.get( 'purple', 'userdir' )
