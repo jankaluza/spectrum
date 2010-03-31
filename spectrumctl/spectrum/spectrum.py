@@ -104,9 +104,9 @@ class spectrum:
 			raise RuntimeError( node, "Does not exist" )
 
 		if uid == None:
-			uid = pwd.getpwnam( self.options.su ).pw_uid
+			uid = self.get_uid()
 		if gid == None:
-			gid = pwd.getpwnam( self.options.su ).pw_gid
+			gid = self.get_gid()
 
 		stat = os.stat( node )
 		if uid != -1 and stat.st_uid != uid:
@@ -185,7 +185,7 @@ class spectrum:
 
 	def check_writable( self, node, uid=None ):
 		if uid == None:
-			user = pwd.getpwnam( self.options.su )
+			user = pwd.getpwuid( self.get_uid() )
 		else:
 			user = pwd.getpwuid( uid )
 
