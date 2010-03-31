@@ -178,6 +178,10 @@ class spectrum:
 			raise RuntimeError( file, 'Incorrect permissions (fix with "%s")' %(string) )
 
 	def get_uid( self ):
+		#TODO:
+		# if we explicitly name something, we use that.
+		# if we have env-variable set, we use that
+		# otherwise we default to spectrum
 		return pwd.getpwnam( self.options.su ).pw_uid
 
 	def get_gid( self ):
@@ -214,7 +218,7 @@ class spectrum:
 			raise RuntimeError( node, 'Not writable (fix with %s)' %(cmd) )
 	
 	def su_cmd( self, cmd ):
-		user = self.options.su
+		user = pwd.getpwuid( self.get_uid() ).pw_name
 		return [ 'su', user, '-s', '/bin/sh', '-c', ' '.join( cmd ) ]
 
 	def create_dir( self, dir ):
@@ -226,9 +230,9 @@ class spectrum:
 		# check if spectrum user exists:
 		if os.name == 'posix':
 			try:
-				user = pwd.getpwnam( self.options.su )
+				user = pwd.getpwuid( self.get_uid() )
 			except KeyError:
-				raise RuntimeError( self.options.su, 'User does not exist' )
+				raise RuntimeError( self.get_uid(), 'UID does not exist' )
 		else:
 			# on windows, there is no real way to get the info that
 			# we need
@@ -382,7 +386,7 @@ class spectrum:
 		# get the absolute path of the config file, so we can change to
 		# spectrums homedir
 		path = os.path.abspath( self.config_path )
-		home = pwd.getpwnam( self.options.su )[5]
+		home = pwd.getpwuid( self.get_uid() )[5]
 		os.chdir( home )
 
 		if self.options.no_daemon:

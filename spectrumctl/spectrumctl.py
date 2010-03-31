@@ -57,6 +57,9 @@ list_group.add_option( '--machine-readable', action='store_true', default=False,
 parser.add_option_group( list_group )
 
 options, args = parser.parse_args()
+print dir( parser )
+print dir( parser.option_list[1] )
+sys.exit()
 
 init_actions = [ 'start', 'stop', 'restart', 'reload', 'status' ]
 complex_actions = [ 'list', 'stats' ]
