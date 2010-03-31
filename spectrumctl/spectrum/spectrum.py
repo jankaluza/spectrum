@@ -412,6 +412,7 @@ class spectrum:
 			cmd.append( '-n' )
 		if self.options.debug:
 			os.environ['MALLOC_PERTURB_'] = '254'
+			os.environ['PURPLE_VERBOSE_DEBUG'] = '1'
 			cmd[0] = 'ulimit -c unlimited; ' + cmd[0]
 		cmd.append( path )
 		cmd = self.su_cmd( cmd )
