@@ -30,6 +30,8 @@ version 0.2 (20??-??-??):
 	* env-variable SPECTRUM_PATH can now configure how spectrumctl is
 	  called. If the variable is set, it assumes that spectrum is in its
 	  PATH.
+	* env-variable SPECTRUM_USER can now configure the name of the
+	  spectrum-user. This is still overridden by --su.
 
 	XMPP:
 	* MUC support for XMPP

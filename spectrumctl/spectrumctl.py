@@ -43,8 +43,10 @@ list_group.add_option( '--status', choices=['running', 'stopped', 'unknown'],
 parser.add_option_group( list_group )
 
 start_group = OptionGroup( parser, 'Options for action "start"' )
-start_group.add_option( '--su', default='spectrum',
-	help = 'Start spectrum as this user (default: %default)' )
+start_group.add_option( '--su', # NOTE: the default is set by 
+	# spectrum.get_uid(). We need this so we can distinguish between
+	# actually setting --su=spectrum and setting nothing at all.
+	help = 'Start spectrum as this user (default: spectrum)' )
 start_group.add_option( '--no-daemon', action='store_true', default=False,
 	help = 'Do not start spectrum in daemon mode' )
 start_group.add_option( '--debug', action='store_true', default=False,

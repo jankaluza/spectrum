@@ -178,14 +178,21 @@ class spectrum:
 			raise RuntimeError( file, 'Incorrect permissions (fix with "%s")' %(string) )
 
 	def get_uid( self ):
-		#TODO:
-		# if we explicitly name something, we use that.
-		# if we have env-variable set, we use that
-		# otherwise we default to spectrum
-		return pwd.getpwnam( self.options.su ).pw_uid
+		# if we explicitly name something on the CLI, we use that:
+		if self.options.su:
+			return pwd.getpwnam( self.options.su ).pw_uid
+			
+		try:
+			# if we have env-variable set, we use that:
+			username = os.environ['SPECTRUM_USER']
+		except KeyError:
+			# otherwise we default to spectrum:
+			username = 'spectrum'
+
+		return pwd.getpwnam( username ).pw_uid
 
 	def get_gid( self ):
-		return pwd.getpwnam( self.options.su ).pw_gid
+		return pwd.getpwuid( self.get_uid() ).pw_gid
 
 	def check_writable( self, node, uid=None ):
 		if uid == None:

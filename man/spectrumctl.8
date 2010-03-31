@@ -89,7 +89,9 @@ Options for action "\fBstart\fR":
 .RS 4
 \fB\-\-su\fR=\fISU\fR
 .RS 4
-Start spectrum as this user (default: \fIspectrum\fR)
+Start spectrum as this user (default: \fIspectrum\fR). Overrides the SPECTRUM_USER environment variable.
+If neither --su nor SPECTRUM_USER is specified, the user defaults to 
+\fIspectrum\fR.
 .RE
 .sp
 \fB\-\-no-daemon\fR
@@ -108,6 +110,14 @@ The behaviour of spectrumctl can be influenced by the following environment vari
 \fBSPECTRUM_PATH\fR
 .RS 4
 Path where the spectrum binary is located. If omitted, spectrum is assumed to be in your PATH.
+.RE
+.sp
+\fBSPECTRUM_USER\fR
+.RS 4
+The user with which spectrum is started. Overridden by the --su command line
+option. 
+If neither --su nor SPECTRUM_USER is specified, the user defaults to 
+\fIspectrum\fR.
 .RE
 .SH AUTHORS
 Copyright \(co 2009\-2010 by Spectrum engineers:
@@ -155,7 +165,7 @@ There is NO WARRANTY, to the extent permitted by law.
 .sp
 See http://gnu.org/licenses/gpl.html for more information.
 .SH SEE ALSO
-\fBspectrum\fP(8)
+\fBspectrum\fP(1), \fBspectrum.cfg\fP(5)
 .sp
 For more information, see the spectrum homepage at http://spectrum.im/
 
