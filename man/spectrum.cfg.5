@@ -61,8 +61,8 @@ To disable the spectrum instance, set \fIbool\fR to \fI0\fR (default: enable=1).
 \fBprotocol\fR=\fIprotocol\fR
 .RS
 Have this spectrum instance use \fIprotocol\fR. Valid values are \fIaim\fR,
-\fIfacebook\fR, \fIgg\fR, \fIicq\fR, \fIirc\fR, \fImsn\fR, \fImyspace\fR,
-\fIqq\fR, \fIsimple\fR, \fIxmpp\fR or \fIyahoo\fR. 
+\fIfacebook\fR, \fIgg\fR, \fIicq\fR, \fIirc\fR, \fImsn\fR, \fImsn_pecan\fR,
+\fImyspace\fR, \fIqq\fR, \fIsimple\fR, \fItwitter\fR, \fIxmpp\fR or \fIyahoo\fR.
 .RE
 
 \fBserver\fR=\fIaddress\fR
@@ -233,12 +233,6 @@ database.
 .RE
 
 .SS SECTION purple
-\fBbind\fR=\fIaddress\fR;\fI...\fR
-.RS
-Semicolon-seperated list of addresses to bind to. Use \fI0.0.0.0\fR to bind to
-all addresses.
-.RE
-
 \fBuserdir\fR=\fIdirectory\fR
 .RS
 Store dynamic user data in \fIdirectory\fR.
