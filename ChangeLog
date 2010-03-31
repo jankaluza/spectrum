@@ -5,23 +5,19 @@ version 0.2 (20??-??-??):
 	* Send unavailable presences when shutting transport down
 	* Working filetransfer from XMPP to legacy network when legacy network user
 	  can't receive file.
-	* Twitter protocol support (using http://code.google.com/p/prpltwtr/)
+	* Twitter protocol support (Twitter with http://code.google.com/p/prpltwtr/)
 	* $filename now is an implicitly set to the name of the file without
-	  the extension.
-	* Fixed crash when legacy network user cancels filetransfer
-	* Fixed crash when XMPP user cancels Adhoc command execution.
-	* Fixed crash when two XMPP users try to use one legacy network account.
-	* Don't send duplicate presences.
-	* Don't forward typing notification without an existing conversation.
+	  the extension. 
+	* Fixed crash when legacy network user canceled filetransfer
+	* Fixed crash when XMPP user canceled Adhoc command execution.
+	* Fixed crash when two XMPP users use one legacy network account.
+	* Don't send duplicates presences.
+	* Don't forward typing notification without opened conversation
 	* Fixed transport unregister process. Buddies are now removed also if user
 	  doesn't support Roster Item Exchange.
-	* Forward VCard avatars from XMPP to legacy network, with the caveat that
-	  this only works if the VCard avatar adheres to the file type, size,
-	  and dimension constraints of the legacy network (no scaling is currently
-	  done).
+	* Forward VCard avatars from XMPP to legacy network.
 	* Added filetransfer_bind_address and filetransfer_public_address config
-	  variables to be able to set IP and port for filetransfer proxy.  The
-	  public address is used if Spectrum is behind a NAT.
+	  variables to be able to set IP and port for filetransfer proxy.
 
 	spectrumctl:
 	* The script now does rigorous checking of ownership and permissions
