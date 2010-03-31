@@ -18,15 +18,22 @@ version 0.2 (20??-??-??):
 	* Forward VCard avatars from XMPP to legacy network.
 	* Added filetransfer_bind_address and filetransfer_public_address config
 	  variables to be able to set IP and port for filetransfer proxy.
+	* Spectrum can now open a local socket that allows (fast) statistics
+	  gathering. This is already used by spectrumctl. The path to the
+	  local socket is configured with the config_interface option.
+	* new man pages for spectrum.cfg and spectrumctl.
 
 	spectrumctl:
 	* The script now does rigorous checking of ownership and permissions
 	  on all the important files and directories.
-	* Accept $filename:jid, $filename:port and $filename:protocol as 
-	  variable
-	* Statistics gathering via config_interface
-	* Two new command-line options for start: --no-daemon and --debug.
-	* New command-line option for list: --machine-readable
+	* New action "stats" which gathers statistics via the config_interface
+	  (see above).
+	* Two new command-line options for start: 
+	  * --no-daemon: Do not start spectrum as a daemon
+	  * --debug: Sets some environment variables, a coredump will be made
+	    to $HOME in case of a segfault.
+	* New command-line option for list: 
+	  * --machine-readable: Output data as comma-seperated values
 	* env-variable SPECTRUM_PATH can now configure how spectrumctl is
 	  called. If the variable is set, it assumes that spectrum is in its
 	  PATH.
