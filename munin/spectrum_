@@ -75,7 +75,7 @@ messages
 memory""" )
 		sys.exit(0)
 
-import os, xmpp, time, socket, hashlib, re, ConfigParser
+import os, xmpp, socket, re, ConfigParser
 from spectrum import * 
 
 # filter forbidden characters for munin fieldnames
