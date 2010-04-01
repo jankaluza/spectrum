@@ -55,5 +55,8 @@ version 0.2 (2010-??-??):
 	* Using IRC Helper (http://plugins.guifications.org/trac/wiki/irchelper) for
 	  identyfing user. Used only if IRC Helper is installed.
 
+	Munin plugin
+	* Now use config_interface instead of XMPP-connection.
+
 version 0.1 (2010-02-05):
 	* initial version
