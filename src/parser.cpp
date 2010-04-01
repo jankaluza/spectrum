@@ -47,8 +47,10 @@ Tag *GlooxParser::getTag(std::string str) {
 
 void GlooxParser::handleTag(Tag *tag) {
 	if (m_handleTagCallback)
+		// current tag is deleted after this function, so we have to clone it.
 		m_handleTagCallback(tag->clone(), m_userdata);
-	m_tag = tag->clone();
+	else
+		m_tag = tag->clone();
 }
 
 

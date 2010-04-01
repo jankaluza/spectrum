@@ -120,6 +120,7 @@ void ConfigInterface::handleTag(Tag *tag) {
 			Tag *response = (*i)->handleTag(tag);
 			if (response) {
 				m_connection->send(response->xml());
+				delete response;
 				break;
 			}
 		}
