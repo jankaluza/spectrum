@@ -29,6 +29,7 @@
 #include "proxy.h"
 #include "filetransferrepeater.h"
 #include "accountcollector.h"
+#include "adhoc/adhochandler.h"
 #include "sql.h"
 #include "capabilityhandler.h"
 #include "spectrumbuddy.h"
@@ -343,6 +344,7 @@ void User::receivedPresence(const Presence &stanza) {
 					if (hasResource(stanza.from().resource())) {
 						removeResource(stanza.from().resource());
 						removeConversationResource(stanza.from().resource());
+						p->adhoc()->unregisterSession(stanza.from().full());
 					}
 					sendUnavailablePresenceToAll(stanza.from().resource());
 				}
@@ -352,6 +354,7 @@ void User::receivedPresence(const Presence &stanza) {
 					Log(m_jid, "disconecting");
 					sendUnavailablePresenceToAll();
 					purple_account_disconnect(m_account);
+					p->adhoc()->unregisterSession(stanza.from().full());
 					p->userManager()->removeUserTimer(this);
 				}
 				else {
