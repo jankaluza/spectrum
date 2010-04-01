@@ -38,20 +38,20 @@ Follow the instructions, that are provided in the README.Slackware file in
 
 1. Create a user
 
-	adduser --system --disabled-login --no-create-home \
-	  --home /var/lib/spectrum --group spectrum
+		adduser --system --disabled-login --no-create-home \
+		  --home /var/lib/spectrum --group spectrum
 
 2. You have to create these 3 directories:
 
-	mkdir -p -m750 /var/lib/spectrum
-	mkdir -p -m750 /var/log/spectrum/
-	mkdir -p -m750 /var/run/spectrum
+		mkdir -p -m750 /var/lib/spectrum
+		mkdir -p -m750 /var/log/spectrum/
+		mkdir -p -m750 /var/run/spectrum
 
 3. Owner and group of both dirs have to be set to the previously created ones:
 
-	chown spectrum:spectrum /var/lib/spectrum
-	chown spectrum:spectrum /var/run/spectrum
-	chown spectrum:spectrum /var/log/spectrum
+		chown spectrum:spectrum /var/lib/spectrum
+		chown spectrum:spectrum /var/run/spectrum
+		chown spectrum:spectrum /var/log/spectrum
 
 4. Configure spectrum config files in /etc/spectrum/
    There is already an example cfg file included in current dir. The config
