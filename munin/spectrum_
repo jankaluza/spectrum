@@ -72,6 +72,7 @@ online
 legacy_registered
 legacy_online
 messages
+messages_sec
 memory""" )
 		sys.exit(0)
 
@@ -116,7 +117,12 @@ elif suffix == 'messages':
 	stat = [ 'messages/in', 'messages/out' ]
 	suffixes = [ 'in', 'out' ]
 	title = "Messages send over transport"
-	vlabel = "Messages"
+	vlabel = "messages"
+elif suffix == 'messages_sec':
+	stat = [ 'messages/in', 'messages/out' ]
+	suffixes = [ 'in', 'out' ]
+	title = "Messages send over transport per second"
+	vlabel = "messages/sec"
 elif suffix == 'memory':
 	stat = [ 'memory-usage' ]
 	title = "Memory usage of transports"
@@ -143,6 +149,8 @@ graph_category transports""" %(title, vlabel) )
 			label = jid + ' total'
 			fieldname = handle_field( label )
 			print( '%s.label %s' %(fieldname, label) )
+			if suffix == 'messages_sec':
+				print( '%s.type DERIVE' )
 
 			# to not print individual fields if verbose is not set:
 			if not verbose: 
@@ -155,6 +163,8 @@ graph_category transports""" %(title, vlabel) )
 				label += ' ' + suffixes[i]
 			fieldname = handle_field( label )
 			print( '%s.label %s' %(fieldname, label) )
+			if suffix == 'messages_sec':
+				print( '%s.type DERIVE' )
 	sys.exit(0)
 
 # callback to handle incoming packets
