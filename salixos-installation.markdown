@@ -37,6 +37,7 @@ Follow the instructions, that are provided in the README.Slackware file in
 /usr/doc/spectrum-$VERSION/:
 
 1. Create a user
+
 	adduser --system --disabled-login --no-create-home \
 	  --home /var/lib/spectrum --group spectrum
 
