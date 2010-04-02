@@ -39,7 +39,6 @@ class SpectrumConfigParser( ConfigParser.ConfigParser ):
 			'use_proxy': 'false' }
 		for key, value in default_defaults.iteritems():
 			if not self.has_option( 'DEFAULT', key ):
-				print( key )
 				self.set( 'DEFAULT', key, value )
 
 	def read(self, filenames):
