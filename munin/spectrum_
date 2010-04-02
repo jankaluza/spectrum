@@ -86,7 +86,7 @@ def handle_field( string ):
 	return string
 
 # get runtime variables
-suffix = sys.argv[0].rpartition('_')[2]
+suffix = sys.argv[0].partition('_')[2]
 verbose = os.environ.get( 'verbose' )
 cfgs = os.environ.get( 'cfgs' )
 base = os.environ.get( 'base', '/etc/spectrum' )
@@ -137,9 +137,9 @@ graph_scale no
 graph_vlabel %s
 graph_category transports""" %(title, vlabel) )
 	for cfg in cfgs.split( ',' ):
-		path = cfg
+		path = cfg.strip()
 		if not os.path.isabs( path ):
-			path = base + '/' + path
+			path = os.path.normpath( base + '/' + path )
 
 		config = spectrumconfigparser.SpectrumConfigParser()
 		config.read( path )
@@ -150,7 +150,7 @@ graph_category transports""" %(title, vlabel) )
 			fieldname = handle_field( label )
 			print( '%s.label %s' %(fieldname, label) )
 			if suffix == 'messages_sec':
-				print( '%s.type DERIVE' )
+				print( '%s.type DERIVE' %(fieldname) )
 
 			# to not print individual fields if verbose is not set:
 			if not verbose: 
@@ -164,7 +164,7 @@ graph_category transports""" %(title, vlabel) )
 			fieldname = handle_field( label )
 			print( '%s.label %s' %(fieldname, label) )
 			if suffix == 'messages_sec':
-				print( '%s.type DERIVE' )
+				print( '%s.type DERIVE' %(fieldname) )
 	sys.exit(0)
 
 # callback to handle incoming packets
@@ -223,6 +223,7 @@ for cfg in cfgs.split( ',' ):
 		# send and receive via local socket:
 		config_interface = config.get( 'service', 'config_interface' )
 		s = socket.socket( socket.AF_UNIX )
+		s.settimeout( 3.0 )
 		s.connect( config_interface )
 		s.send( str( pkg ) )
 		data = s.recv( 10240 )
