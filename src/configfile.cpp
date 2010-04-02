@@ -81,8 +81,10 @@ void ConfigFile::loadFromFile(const std::string &config) {
 		{
 			if (!g_key_file_load_from_file (keyfile, std::string( m_appdata + "/spectrum/" + config).c_str(), (GKeyFileFlags)flags, NULL))
 			{
-				Log("loadConfigFile", "Can't load config file!");
-				Log("loadConfigFile", std::string("/etc/spectrum/" + config + ".cfg") << " or ./" << config);
+				Log("loadConfigFile", "Can't load config file! Tried these paths:");
+				Log("loadConfigFile", std::string(config));
+				Log("loadConfigFile", std::string("/etc/spectrum/" + config + ".cfg"));
+				Log("loadConfigFile", std::string("./" + config));
 				m_loaded = false;
 			}
 		}
@@ -171,6 +173,9 @@ Configuration ConfigFile::getConfiguration() {
 	Configuration configuration;
 	char **bind;
 	int i;
+	
+	if (!m_loaded)
+		return DummyConfiguration;
 
 	if (!loadString(configuration.protocol, "service", "protocol"))
 		return DummyConfiguration;
