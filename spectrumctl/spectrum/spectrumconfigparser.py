@@ -16,6 +16,7 @@
 # You should have received a copy of the GNU General Public License along with
 # this program; if not, see <http://www.gnu.org/licenses/>.
 
+import os
 try:
 	import ConfigParser
 except ImportError:
@@ -23,6 +24,38 @@ except ImportError:
 
 class SpectrumConfigParser( ConfigParser.ConfigParser ):
 	variables = [ 'jid', 'protocol', 'filename:jid', 'filename:protocol', 'filename:port' ]
+
+	def __init__( self, defaults=None ):
+		ConfigParser.ConfigParser.__init__( self, defaults )
+
+		default_defaults = { 'filetransfer_web': '',
+			'config_interface': '',
+			'pid_file': '/var/run/spectrum/$jid',
+			'language': 'en',
+			'encoding': '',
+			'log_file': '',
+			'only_for_vip': 'false',
+			'vip_mode': 'false',
+			'use_proxy': 'false' }
+		for key, value in default_defaults.iteritems():
+			if not self.has_option( 'DEFAULT', key ):
+				print( key )
+				self.set( 'DEFAULT', key, value )
+
+	def read(self, filenames):
+		ConfigParser.ConfigParser.read( self, filenames )
+		if type( filenames ) == type( [] ):
+			filename == filenames[0]
+		else:
+			filename = filenames
+
+		filename = os.path.splitext( os.path.basename( filename ) )[0]
+		parts = filename.split( ':' )
+		self.set( 'DEFAULT', 'filename:jid', parts[0] )
+		if len( parts ) >= 2:
+			self.set( 'DEFAULT', 'filename:protocol', parts[1] )
+		if len( parts ) >= 3:
+			self.set( 'DEFAULT', 'filename:port', parts[2] )
 
 	def _interpolate( self, section, option, rawval, vars ):
 		value = rawval
