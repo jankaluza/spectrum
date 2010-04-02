@@ -112,6 +112,7 @@ void ConfigInterface::handleDisconnect( const ConnectionBase* connection, Connec
 	Log("ConfigInterface", "Disconnect connection " << connection);
 	g_source_remove(m_clients[const_cast<ConnectionBase*>( connection )]);
 	m_clients.erase(const_cast<ConnectionBase*>( connection ));
+	delete connection;
 }
 
 void ConfigInterface::handleTag(Tag *tag) {
