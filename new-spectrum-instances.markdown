@@ -20,7 +20,7 @@ the configuration file exists.
 If you use MySQL, there are some additional steps needed:
 
 	mysql -uroot -p -e "create database my_database;
-	    GRANT SELECT, UPDATE, INSERT, DELETE FROM ON my_database.*
+	    GRANT SELECT, UPDATE, INSERT, DELETE ON my_database.*
 	        TO 'my_user'@'my_host' IDENTIFIED BY 'db_password';
 	    flush privileges;"
 	mysql -uroot -p my_database < schema_file
