@@ -24,6 +24,7 @@
 #include "configfile.h"
 #include "thread.h"
 #include "purple.h"
+#include "filetransferrepeater.h"
 
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -34,6 +35,18 @@
 #include <algorithm>
 
 using namespace gloox;
+
+struct Info {
+	std::string filename;
+	int size;
+	bool straight;
+};
+
+struct WaitingXferData {
+	std::string sid;
+	std::string from;
+	long size;
+};
 
 // Manages and creates filetransfer requests.
 class FileTransferManager : public gloox::SIProfileFTHandler {
@@ -66,17 +79,27 @@ class FileTransferManager : public gloox::SIProfileFTHandler {
 			m_info[r_sid].size = size;
 			m_info[r_sid].straight = straight;
 		}
+		
+		void setWaitingForXfer(const std::string &from, const std::string &to, const std::string &name, long size, const std::string &r_sid) {
+			m_waitingForXfer[to+name].sid = r_sid;
+			m_waitingForXfer[to+name].from = from;
+			m_waitingForXfer[to+name].size = size;
+		}
+		
+		WaitingXferData &getWaitingForXfer(const std::string &to, const std::string &name) {
+			return m_waitingForXfer[to+name];
+		}
+
+		const Info &getTransferInfo(const std::string &r_sid) { return m_info[r_sid]; }
+		
+		void setRepeater(const std::string &sid, FiletransferRepeater *repeater) { m_repeaters[sid] = repeater; }
 
 	private:
-		struct Info {
-			std::string filename;
-			int size;
-			bool straight;
-		};
-
 		gloox::SIProfileFT *m_sip;
 		std::list<std::string> m_sendlist;
 		std::map<std::string, Info> m_info;
+		std::map<std::string, WaitingXferData> m_waitingForXfer;
+		std::map<std::string, FiletransferRepeater *> m_repeaters;
 };
 #endif
 

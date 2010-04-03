@@ -38,7 +38,7 @@ void FileTransferManager::setSIProfileFT(gloox::SIProfileFT *sipft) {
 }
 
 void FileTransferManager::handleFTRequest (const JID &from, const JID &to, const std::string &sid, const std::string &name, long size, const std::string &hash, const std::string &date, const std::string &mimetype, const std::string &desc, int stypes) {
-	Log("Received file transfer request from ", from.full() << " " << to.full() << " " << sid);
+	Log("Received file transfer request from ", from.full() << " " << to.full() << " " << sid << " " << name);
 
 	std::string uname = to.username();
 	std::for_each( uname.begin(), uname.end(), replaceJidCharacters() );
@@ -49,8 +49,9 @@ void FileTransferManager::handleFTRequest (const JID &from, const JID &to, const
 		Log("CanSendFile = ", canSendFile);
 		Log("filetransferWeb = ", Transport::instance()->getConfiguration().filetransferWeb);
 		setTransferInfo(sid, name, size, canSendFile);
+		setWaitingForXfer(from.full(), to.bare(), "", size, sid);
 
-		user->addFiletransfer(from, sid, SIProfileFT::FTTypeS5B, to, size);
+// 		user->addFiletransfer(from, sid, SIProfileFT::FTTypeS5B, to, size);
 		// if we can't send file straightly, we just receive it and send link to buddy.
 		if (canSendFile)
 			serv_send_file(purple_account_get_connection(user->account()), uname.c_str(), name.c_str());
@@ -78,20 +79,22 @@ void FileTransferManager::handleFTBytestream (Bytestream *bs) {
 			purple_build_dir(directory.c_str(), 0755);
 			filename = directory + "/" + filename;
 		}
-		AbstractUser *user = Transport::instance()->userManager()->getUserByJID(bs->initiator().bare());
-		FiletransferRepeater *repeater = NULL;
-		if (user) {
-			Log("handleFTBytestream", "wants repeater " << bs->target().username());
-			repeater = user->removeFiletransfer(bs->target().username());
-			if (!repeater) return;
-		}
-		else {
-			AbstractUser *user = Transport::instance()->userManager()->getUserByJID(bs->target().bare());
-			if (!user)
-				return;
-			repeater = user->removeFiletransfer(bs->initiator().username());
-			if (!repeater) return;
-		}
+		FiletransferRepeater *repeater = m_repeaters[bs->sid()];
+		if (!repeater) return;
+// 		AbstractUser *user = Transport::instance()->userManager()->getUserByJID(bs->initiator().bare());
+// 		FiletransferRepeater *repeater = NULL;
+// 		if (user) {
+// 			Log("handleFTBytestream", "wants repeater " << bs->target().username());
+// // 			repeater = user->removeFiletransfer(bs->target().username());
+// 			if (!repeater) return;
+// 		}
+// 		else {
+// 			AbstractUser *user = Transport::instance()->userManager()->getUserByJID(bs->target().bare());
+// 			if (!user)
+// 				return;
+// // 			repeater = user->removeFiletransfer(bs->initiator().username());
+// 			if (!repeater) return;
+// 		}
 
 		if (repeater->isSending())
 			repeater->handleFTSendBytestream(bs, filename);

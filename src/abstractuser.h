@@ -70,7 +70,7 @@ class AbstractUser : public ResourceManager
 		void *protocolData() { return m_protocolData; }
 		std::string getRoomResource(const std::string &room) { return m_roomResources[room]; }
 		void setRoomResource(const std::string &room, const std::string &resource) { m_roomResources[room] = resource; }
-
+/*
 #ifndef TESTS
 		void addFiletransfer( const JID& to, const std::string& sid, SIProfileFT::StreamType type, const JID& from, long size ) {
 			FiletransferRepeater *ft = new FiletransferRepeater(to, sid, type, from, size);
@@ -87,7 +87,7 @@ class AbstractUser : public ResourceManager
 		FiletransferRepeater* getFiletransfer(const std::string &from) {
 			FiletransferRepeater *repeater = (FiletransferRepeater *) g_hash_table_lookup(m_filetransfers, from.c_str()); return repeater;
 		}
-#endif
+#endif*/
 		guint removeTimer;
 
 	private:

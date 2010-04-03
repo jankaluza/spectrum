@@ -500,22 +500,44 @@ static void XferCreated(PurpleXfer *xfer) {
 	User *user = (User *) GlooxMessageHandler::instance()->userManager()->getUserByAccount(purple_xfer_get_account(xfer));
 	if (!user) return;
 
-	FiletransferRepeater *repeater = user->getFiletransfer(remote_user);
-	Log(user->jid(), "get filetransferRepeater" << remote_user);
-	if (repeater) {
-		Log(user->jid(), "registerXfer");
-		repeater->registerXfer(xfer);
+	std::string name(xfer->who);
+	std::for_each( name.begin(), name.end(), replaceBadJidCharacters() );
+	size_t pos = name.find("/");
+	if (pos != std::string::npos)
+		name.erase((int) pos, name.length() - (int) pos);
+	std::string to(name + "@" + GlooxMessageHandler::instance()->jid() + "/bot");
+
+	FiletransferRepeater *repeater;
+	if (purple_xfer_get_type(xfer) == PURPLE_XFER_SEND) {
+// 		std::string filename(purple_xfer_get_local_filename(xfer) ? purple_xfer_get_local_filename(xfer) : "");
+// 		Log("xfercreated", "filename = " << filename);
+		WaitingXferData data = GlooxMessageHandler::instance()->ftManager->getWaitingForXfer(remote_user + "@" + GlooxMessageHandler::instance()->jid(), "");
+		Log("xfercreated", "sid = " << data.sid);
+		repeater = new FiletransferRepeater(data.from, data.sid, SIProfileFT::FTTypeS5B, to, data.size);
+		GlooxMessageHandler::instance()->ftManager->setRepeater(data.sid, repeater);
 	}
 	else {
-		std::string name(xfer->who);
-		std::for_each( name.begin(), name.end(), replaceBadJidCharacters() );
-		size_t pos = name.find("/");
-		if (pos != std::string::npos)
-			name.erase((int) pos, name.length() - (int) pos);
-		user->addFiletransfer(name + "@" + GlooxMessageHandler::instance()->jid() + "/bot");
-		FiletransferRepeater *repeater = user->getFiletransfer(name);
-		repeater->registerXfer(xfer);
+		repeater = new FiletransferRepeater(to, user->jid() + "/" + user->getResource().name);
 	}
+	repeater->registerXfer(xfer);
+
+
+// 	FiletransferRepeater *repeater = user->getFiletransfer(remote_user);
+// 	Log(user->jid(), "get filetransferRepeater" << remote_user);
+// 	if (repeater) {
+// 		Log(user->jid(), "registerXfer");
+// 		repeater->registerXfer(xfer);
+// 	}
+// 	else {
+// 		std::string name(xfer->who);
+// 		std::for_each( name.begin(), name.end(), replaceBadJidCharacters() );
+// 		size_t pos = name.find("/");
+// 		if (pos != std::string::npos)
+// 			name.erase((int) pos, name.length() - (int) pos);
+// 		user->addFiletransfer(name + "@" + GlooxMessageHandler::instance()->jid() + "/bot");
+// 		FiletransferRepeater *repeater = user->getFiletransfer(name);
+// 		repeater->registerXfer(xfer);
+// 	}
 }
 
 static void XferDestroyed(PurpleXfer *xfer) {
@@ -1337,7 +1359,8 @@ void GlooxMessageHandler::purpleFileReceiveRequest(PurpleXfer *xfer) {
 	if (user != NULL) {
 		FiletransferRepeater *repeater = (FiletransferRepeater *) xfer->ui_data;
 		if (user->hasFeature(GLOOX_FEATURE_FILETRANSFER)) {
-			repeater->requestFT();
+			std::string sid = repeater->requestFT();
+			GlooxMessageHandler::instance()->ftManager->setRepeater(sid, repeater);
 		}
 		else {
 			purple_xfer_request_accepted(xfer, std::string(configuration().filetransferCache+"/"+remote_user+"-"+j->getID()+"-"+filename).c_str());
