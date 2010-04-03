@@ -420,22 +420,6 @@ static void requestClose(PurpleRequestType type, void *ui_handle) {
 }
 
 /*
- * Called when somebody from legacy network wants to send file to us.
- */
-static void newXfer(PurpleXfer *xfer) {
-	Log("purple filetransfer", "new file transfer request from legacy network");
-	GlooxMessageHandler::instance()->ftManager->handleXferFileReceiveRequest(xfer);
-}
-
-/*
- * Called when file from legacy network is completely received.
- */
-static void XferComplete(PurpleXfer *xfer) {
-	Log("purple filetransfer", "filetransfer complete");
-	GlooxMessageHandler::instance()->purpleFileReceiveComplete(xfer);
-}
-
-/*
  * Called when somebody from legacy network wants to authorize some jabber user.
  * We can return some object which will be connected with this request all the time...
  */
@@ -483,40 +467,6 @@ static void * notifyMessage(PurpleNotifyMsgType type, const char *title, const c
 	return NULL;
 }
 
-static void xferCanceled(PurpleXfer *xfer) {
-	Log("xfercanceled", xfer);
-	FiletransferRepeater *repeater = (FiletransferRepeater *) xfer->ui_data;
-	if (!repeater)
-		return;
-	repeater->xferDestroyed();
-}
-
-static void XferCreated(PurpleXfer *xfer) {
-	if (xfer) {
-		GlooxMessageHandler::instance()->ftManager->handleXferCreated(xfer);
-	}
-}
-
-static void XferDestroyed(PurpleXfer *xfer) {
-	Log("xfer", "xferDestroyed");
-	FiletransferRepeater *repeater = (FiletransferRepeater *) xfer->ui_data;
-	if (!repeater)
-		return;
-	repeater->xferDestroyed();
-}
-
-static void fileSendStart(PurpleXfer *xfer) {
-	FiletransferRepeater *repeater = (FiletransferRepeater *) xfer->ui_data;
-	repeater->fileSendStart();
-	Log("filesend", "fileSendStart()");
-}
-
-static void fileRecvStart(PurpleXfer *xfer) {
-	FiletransferRepeater *repeater = (FiletransferRepeater *) xfer->ui_data;
-	repeater->fileRecvStart();
-	Log("filesend", "fileRecvStart()");
-}
-
 static void buddyListSaveNode(PurpleBlistNode *node) {
 	if (!PURPLE_BLIST_NODE_IS_BUDDY(node))
 		return;
@@ -557,28 +507,6 @@ static void buddyListRemoveNode(PurpleBlistNode *node) {
 }
 
 static void buddyListSaveAccount(PurpleAccount *account) {
-}
-
-static gssize XferWrite(PurpleXfer *xfer, const guchar *buffer, gssize size) {
-	FiletransferRepeater *repeater = (FiletransferRepeater *) xfer->ui_data;
-	return repeater->handleLibpurpleData(buffer, size);
-}
-
-static void XferNotSent(PurpleXfer *xfer, const guchar *buffer, gsize size) {
-	Log("REPEATER", "xferNotSent" << size);
-	FiletransferRepeater *repeater = (FiletransferRepeater *) xfer->ui_data;
-	repeater->handleDataNotSent(buffer, size);
-}
-
-static gssize XferRead(PurpleXfer *xfer, guchar **buffer, gssize size) {
-	Log("REPEATER", "xferRead");
-	FiletransferRepeater *repeater = (FiletransferRepeater *) xfer->ui_data;
-	int data_size = repeater->getDataToSend(buffer, size);
-	if (data_size == 0)
-		return 0;
-	Log("REPEATER", "Passing data to libpurple, size:" << data_size);
-	
-	return data_size;
 }
 
 static void printDebug(PurpleDebugLevel level, const char *category, const char *arg_s) {
@@ -666,20 +594,6 @@ static PurpleRequestUiOps requestUiOps =
 	NULL,
 	NULL,
 	NULL,
-	NULL
-};
-
-static PurpleXferUiOps xferUiOps =
-{
-	XferCreated,
-	XferDestroyed,
-	NULL,
-	NULL,
-	xferCanceled,
-	xferCanceled,
-	XferWrite,
-	XferRead,
-	XferNotSent,
 	NULL
 };
 
@@ -796,7 +710,7 @@ static void transport_core_ui_init(void)
 	purple_accounts_set_ui_ops(&accountUiOps);
 	purple_notify_set_ui_ops(&notifyUiOps);
 	purple_request_set_ui_ops(&requestUiOps);
-	purple_xfers_set_ui_ops(&xferUiOps);
+	purple_xfers_set_ui_ops(getXferUiOps());
 	purple_connections_set_ui_ops(&conn_ui_ops);
 	purple_conversations_set_ui_ops(&conversation_ui_ops);
 }
@@ -1295,35 +1209,6 @@ bool GlooxMessageHandler::loadConfigFile(const std::string &config) {
 	return true;
 }
 
-void GlooxMessageHandler::purpleFileReceiveComplete(PurpleXfer *xfer) {
-	std::string filename(purple_xfer_get_filename(xfer));
-	std::string remote_user(purple_xfer_get_remote_user(xfer));
-	if (purple_xfer_get_local_filename(xfer)) {
-		std::string localname(purple_xfer_get_local_filename(xfer));
-		std::string basename(g_path_get_basename(purple_xfer_get_local_filename(xfer)));
-		User *user = (User *) userManager()->getUserByAccount(purple_xfer_get_account(xfer));
-		if (user != NULL) {
-			if (user->isConnected()) {
-				if (user->isVIP()) {
-					sql()->addDownload(basename,"1");
-				}
-				else {
-					sql()->addDownload(basename,"0");
-				}
-				Message s(Message::Chat, user->jid(), tr(user->getLang(),_("File '"))+filename+tr(user->getLang(), _("' was received. You can download it here: ")) + "http://soumar.jabbim.cz/icq/" + basename +" .");
-				s.setFrom(remote_user + "@" + jid() + "/bot");
-				j->send(s);
-			}
-			else{
-				Log(user->jid(), "purpleFileReceiveComplete called for unconnected user...");
-			}
-		}
-		else
-			Log("purple", "purpleFileReceiveComplete called, but user does not exist!!!");
-	}
-}
-
-
 void GlooxMessageHandler::purpleMessageReceived(PurpleAccount* account, char * name, char *msg, PurpleConversation *conv, PurpleMessageFlags flags) {
 	User *user = (User *) userManager()->getUserByAccount(account);
 	if (user) {
@@ -1813,7 +1698,6 @@ bool GlooxMessageHandler::initPurple(){
 	if (ret) {
 		static int conversation_handle;
 		static int conn_handle;
-		static int xfer_handle;
 		static int blist_handle;
 
 		purple_set_blist(purple_blist_new());
@@ -1843,10 +1727,6 @@ bool GlooxMessageHandler::initPurple(){
 		purple_signal_connect(purple_conversations_get_handle(), "buddy-typing", &conversation_handle, PURPLE_CALLBACK(buddyTyping), NULL);
 		purple_signal_connect(purple_conversations_get_handle(), "buddy-typed", &conversation_handle, PURPLE_CALLBACK(buddyTyped), NULL);
 		purple_signal_connect(purple_conversations_get_handle(), "buddy-typing-stopped", &conversation_handle, PURPLE_CALLBACK(buddyTypingStopped), NULL);
-		purple_signal_connect(purple_xfers_get_handle(), "file-send-start", &xfer_handle, PURPLE_CALLBACK(fileSendStart), NULL);
-		purple_signal_connect(purple_xfers_get_handle(), "file-recv-start", &xfer_handle, PURPLE_CALLBACK(fileRecvStart), NULL);
-		purple_signal_connect(purple_xfers_get_handle(), "file-recv-request", &xfer_handle, PURPLE_CALLBACK(newXfer), NULL);
-		purple_signal_connect(purple_xfers_get_handle(), "file-recv-complete", &xfer_handle, PURPLE_CALLBACK(XferComplete), NULL);
 		purple_signal_connect(purple_connections_get_handle(), "signed-on", &conn_handle,PURPLE_CALLBACK(signed_on), NULL);
 		purple_signal_connect(purple_blist_get_handle(), "buddy-removed", &blist_handle,PURPLE_CALLBACK(buddyRemoved), NULL);
 		purple_signal_connect(purple_blist_get_handle(), "buddy-signed-on", &blist_handle,PURPLE_CALLBACK(buddySignedOn), NULL);

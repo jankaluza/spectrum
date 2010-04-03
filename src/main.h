@@ -164,7 +164,6 @@ public:
 	void purpleBuddySignedOn(PurpleBuddy *buddy);
 	void purpleBuddySignedOff(PurpleBuddy *buddy);
 	void purpleAuthorizeClose(void *data);
-	void purpleFileReceiveComplete(PurpleXfer *xfer);
 	void notifyEmail(PurpleConnection *gc, const char *subject, const char *from, const char *to, const char *url);
 	void signedOn(PurpleConnection *gc, gpointer unused);
 

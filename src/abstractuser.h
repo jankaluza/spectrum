@@ -70,24 +70,7 @@ class AbstractUser : public ResourceManager
 		void *protocolData() { return m_protocolData; }
 		std::string getRoomResource(const std::string &room) { return m_roomResources[room]; }
 		void setRoomResource(const std::string &room, const std::string &resource) { m_roomResources[room] = resource; }
-/*
-#ifndef TESTS
-		void addFiletransfer( const JID& to, const std::string& sid, SIProfileFT::StreamType type, const JID& from, long size ) {
-			FiletransferRepeater *ft = new FiletransferRepeater(to, sid, type, from, size);
-			g_hash_table_replace(m_filetransfers, g_strdup(to.bare() == jid() ? from.username().c_str() : to.username().c_str()), ft);
-		}
-		void addFiletransfer( const JID& to ) {
-			FiletransferRepeater *ft = new FiletransferRepeater(to, jid() + "/" + getResource().name);
-			g_hash_table_replace(m_filetransfers, g_strdup(to.username().c_str()), ft);
-		}
-		FiletransferRepeater* removeFiletransfer(const std::string &from) {
-			FiletransferRepeater *repeater = (FiletransferRepeater *) g_hash_table_lookup(m_filetransfers, from.c_str()); if (repeater) g_hash_table_remove(m_filetransfers, from.c_str()); return repeater;
-			return NULL;
-		}
-		FiletransferRepeater* getFiletransfer(const std::string &from) {
-			FiletransferRepeater *repeater = (FiletransferRepeater *) g_hash_table_lookup(m_filetransfers, from.c_str()); return repeater;
-		}
-#endif*/
+
 		guint removeTimer;
 
 	private:

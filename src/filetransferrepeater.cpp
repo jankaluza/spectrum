@@ -574,5 +574,3 @@ void FiletransferRepeater::xferDestroyed() {
 		delete this;
 	}
 }
-
-

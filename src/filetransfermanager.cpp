@@ -35,7 +35,92 @@
 #include "user.h"
 #endif
 
+static void XferCreated(PurpleXfer *xfer) {
+	if (xfer) {
+		GlooxMessageHandler::instance()->ftManager->handleXferCreated(xfer);
+	}
+}
+
+static void XferDestroyed(PurpleXfer *xfer) {
+	Log("xfer", "xferDestroyed");
+	FiletransferRepeater *repeater = (FiletransferRepeater *) xfer->ui_data;
+	if (!repeater)
+		return;
+	repeater->xferDestroyed();
+}
+
+static void xferCanceled(PurpleXfer *xfer) {
+	Log("xfercanceled", xfer);
+	FiletransferRepeater *repeater = (FiletransferRepeater *) xfer->ui_data;
+	if (!repeater)
+		return;
+	repeater->xferDestroyed();
+}
+
+static void fileSendStart(PurpleXfer *xfer) {
+	FiletransferRepeater *repeater = (FiletransferRepeater *) xfer->ui_data;
+	repeater->fileSendStart();
+	Log("filesend", "fileSendStart()");
+}
+
+static void fileRecvStart(PurpleXfer *xfer) {
+	FiletransferRepeater *repeater = (FiletransferRepeater *) xfer->ui_data;
+	repeater->fileRecvStart();
+	Log("filesend", "fileRecvStart()");
+}
+
+static void newXfer(PurpleXfer *xfer) {
+	Log("purple filetransfer", "new file transfer request from legacy network");
+	GlooxMessageHandler::instance()->ftManager->handleXferFileReceiveRequest(xfer);
+}
+
+static void XferComplete(PurpleXfer *xfer) {
+	Log("purple filetransfer", "filetransfer complete");
+	GlooxMessageHandler::instance()->ftManager->handleXferFileReceiveComplete(xfer);
+}
+
+static gssize XferWrite(PurpleXfer *xfer, const guchar *buffer, gssize size) {
+	FiletransferRepeater *repeater = (FiletransferRepeater *) xfer->ui_data;
+	return repeater->handleLibpurpleData(buffer, size);
+}
+
+static void XferNotSent(PurpleXfer *xfer, const guchar *buffer, gsize size) {
+	Log("REPEATER", "xferNotSent" << size);
+	FiletransferRepeater *repeater = (FiletransferRepeater *) xfer->ui_data;
+	repeater->handleDataNotSent(buffer, size);
+}
+
+static gssize XferRead(PurpleXfer *xfer, guchar **buffer, gssize size) {
+	Log("REPEATER", "xferRead");
+	FiletransferRepeater *repeater = (FiletransferRepeater *) xfer->ui_data;
+	int data_size = repeater->getDataToSend(buffer, size);
+	if (data_size == 0)
+		return 0;
+	Log("REPEATER", "Passing data to libpurple, size:" << data_size);
+	
+	return data_size;
+}
+
+static PurpleXferUiOps xferUiOps =
+{
+	XferCreated,
+	XferDestroyed,
+	NULL,
+	NULL,
+	xferCanceled,
+	xferCanceled,
+	XferWrite,
+	XferRead,
+	XferNotSent,
+	NULL
+};
+
 FileTransferManager::FileTransferManager() {
+	static int xfer_handle;
+	purple_signal_connect(purple_xfers_get_handle(), "file-send-start", &xfer_handle, PURPLE_CALLBACK(fileSendStart), NULL);
+	purple_signal_connect(purple_xfers_get_handle(), "file-recv-start", &xfer_handle, PURPLE_CALLBACK(fileRecvStart), NULL);
+	purple_signal_connect(purple_xfers_get_handle(), "file-recv-request", &xfer_handle, PURPLE_CALLBACK(newXfer), NULL);
+	purple_signal_connect(purple_xfers_get_handle(), "file-recv-complete", &xfer_handle, PURPLE_CALLBACK(XferComplete), NULL);
 }
 
 FileTransferManager::~FileTransferManager() {
@@ -197,6 +282,28 @@ void FileTransferManager::handleXferFileReceiveRequest(PurpleXfer *xfer) {
 	}
 }
 
+void FileTransferManager::handleXferFileReceiveComplete(PurpleXfer *xfer) {
+	std::string filename(purple_xfer_get_filename(xfer));
+	std::string remote_user(purple_xfer_get_remote_user(xfer));
+	if (purple_xfer_get_local_filename(xfer)) {
+		std::string localname(purple_xfer_get_local_filename(xfer));
+		std::string basename(g_path_get_basename(purple_xfer_get_local_filename(xfer)));
+		AbstractUser *user = Transport::instance()->userManager()->getUserByAccount(purple_xfer_get_account(xfer));
+		if (user != NULL) {
+			if (user->isConnected()) {
+				Message s(Message::Chat, user->jid(), tr(user->getLang(),_("File '"))+filename+tr(user->getLang(), _("' was received. You can download it here: ")) + "http://soumar.jabbim.cz/icq/" + basename +" .");
+				s.setFrom(remote_user + "@" + Transport::instance()->jid() + "/bot");
+				Transport::instance()->send(s.tag());
+			}
+			else{
+				Log(user->jid(), "purpleFileReceiveComplete called for unconnected user...");
+			}
+		}
+		else
+			Log("purple", "purpleFileReceiveComplete called, but user does not exist!!!");
+	}
+}
+
 void FileTransferManager::sendFile(const std::string &jid, const std::string &from, const std::string &name, const std::string &file) {
     m_sendlist.push_back(jid);
     std::ifstream f;
@@ -215,4 +322,8 @@ void FileTransferManager::sendFile(const std::string &jid, const std::string &fr
     } else {
         Log("FileTransferManager::sendFile", " Couldn't open the file " << file << "!");
     }
+}
+
+PurpleXferUiOps * getXferUiOps() {
+	return &xferUiOps;
 }

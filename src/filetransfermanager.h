@@ -68,6 +68,9 @@ class FileTransferManager : public gloox::SIProfileFTHandler {
 		// Handles file receive request.
 		void handleXferFileReceiveRequest(PurpleXfer *xfer);
 
+		// Called when file is received.
+		void handleXferFileReceiveComplete(PurpleXfer *xfer);
+
 		// Handles OOB request (http://xmpp.org/extensions/xep-0066.html).
 		const std::string handleOOBRequestResult (const JID &from, const JID &to, const std::string &sid) { return ""; }
 
@@ -99,5 +102,8 @@ class FileTransferManager : public gloox::SIProfileFTHandler {
 		std::map<std::string, WaitingXferData> m_waitingForXfer;
 		std::map<std::string, FiletransferRepeater *> m_repeaters;
 };
+
+PurpleXferUiOps * getXferUiOps();
+
 #endif
 
