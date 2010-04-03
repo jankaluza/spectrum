@@ -26,6 +26,14 @@
 #include "abstractuser.h"
 #include "usermanager.h"
 #include "spectrum_util.h"
+#include "abstractuser.h"
+#include "abstractspectrumbuddy.h"
+#include "utf8.h"
+#include "capabilityhandler.h"
+
+#ifndef TESTS
+#include "user.h"
+#endif
 
 FileTransferManager::FileTransferManager() {
 }
@@ -49,9 +57,11 @@ void FileTransferManager::handleFTRequest (const JID &from, const JID &to, const
 		Log("CanSendFile = ", canSendFile);
 		Log("filetransferWeb = ", Transport::instance()->getConfiguration().filetransferWeb);
 		setTransferInfo(sid, name, size, canSendFile);
-		setWaitingForXfer(from.full(), to.bare(), "", size, sid);
+		
+		m_waitingForXfer[to.bare()].sid = sid;
+		m_waitingForXfer[to.bare()].from = from.full();
+		m_waitingForXfer[to.bare()].size = size;
 
-// 		user->addFiletransfer(from, sid, SIProfileFT::FTTypeS5B, to, size);
 		// if we can't send file straightly, we just receive it and send link to buddy.
 		if (canSendFile)
 			serv_send_file(purple_account_get_connection(user->account()), uname.c_str(), name.c_str());
@@ -79,22 +89,9 @@ void FileTransferManager::handleFTBytestream (Bytestream *bs) {
 			purple_build_dir(directory.c_str(), 0755);
 			filename = directory + "/" + filename;
 		}
+
 		FiletransferRepeater *repeater = m_repeaters[bs->sid()];
 		if (!repeater) return;
-// 		AbstractUser *user = Transport::instance()->userManager()->getUserByJID(bs->initiator().bare());
-// 		FiletransferRepeater *repeater = NULL;
-// 		if (user) {
-// 			Log("handleFTBytestream", "wants repeater " << bs->target().username());
-// // 			repeater = user->removeFiletransfer(bs->target().username());
-// 			if (!repeater) return;
-// 		}
-// 		else {
-// 			AbstractUser *user = Transport::instance()->userManager()->getUserByJID(bs->target().bare());
-// 			if (!user)
-// 				return;
-// // 			repeater = user->removeFiletransfer(bs->initiator().username());
-// 			if (!repeater) return;
-// 		}
 
 		if (repeater->isSending())
 			repeater->handleFTSendBytestream(bs, filename);
@@ -104,6 +101,100 @@ void FileTransferManager::handleFTBytestream (Bytestream *bs) {
         m_sendlist.erase(std::find(m_sendlist.begin(), m_sendlist.end(), bs->target().full()));
     }
     m_info.erase(bs->sid());
+	m_repeaters.erase(bs->sid());
+}
+
+void FileTransferManager::handleXferCreated(PurpleXfer *xfer) {
+	std::string remote_user(purple_xfer_get_remote_user(xfer));
+	std::for_each( remote_user.begin(), remote_user.end(), replaceBadJidCharacters() );
+	Log("xfercreated", "get user " << remote_user);
+	
+	AbstractUser *user = (AbstractUser *) Transport::instance()->userManager()->getUserByAccount(purple_xfer_get_account(xfer));
+	if (!user) {
+		Log("xfercreated", "no user " << remote_user);
+		return;
+	}
+
+#ifdef TESTS
+	AbstractSpectrumBuddy *buddy = NULL;
+#else
+	User *user_ = (User *) user;
+	AbstractSpectrumBuddy *buddy = user_->getRosterItem(std::string(xfer->who));
+#endif
+
+	std::string to;
+	// buddy should be always there, but maybe there's network where you can receive file
+	// from user who's not in roster...
+	if (buddy) {
+		to = buddy->getJid();
+	}
+	else {
+		std::string name(xfer->who);
+		std::for_each( name.begin(), name.end(), replaceBadJidCharacters() );
+		size_t pos = name.find("/");
+		if (pos != std::string::npos)
+			name.erase((int) pos, name.length() - (int) pos);
+		to = name + "@" + Transport::instance()->jid() + "/bot";
+	}
+
+	FiletransferRepeater *repeater;
+	if (purple_xfer_get_type(xfer) == PURPLE_XFER_SEND) {
+		std::string key = remote_user + "@" + Transport::instance()->jid();
+		if (m_waitingForXfer.find(key) == m_waitingForXfer.end()) {
+			// TODO: DO SOMETHING WITH THAT PURPLE_XFER. PROBABLY REJECT IT.
+			Log("xfercreated", "We're not waiting new PurpleXfer for key " << key);
+		}
+		else {
+			WaitingXferData data = m_waitingForXfer[key];
+			Log("xfercreated", "sid = " << data.sid);
+			repeater = new FiletransferRepeater(data.from, data.sid, SIProfileFT::FTTypeS5B, to, data.size);
+			if (m_repeaters.find(data.sid) != m_repeaters.end()) {
+				Log("xfercreated", "there's already repeater for this sid: " << data.sid);
+			}
+			else {
+				m_repeaters[data.sid] = repeater;
+			}
+			m_waitingForXfer.erase(key);
+		}
+	}
+	else {
+		repeater = new FiletransferRepeater(to, user->jid() + "/" + user->getResource().name);
+	}
+	repeater->registerXfer(xfer);
+}
+
+void FileTransferManager::handleXferFileReceiveRequest(PurpleXfer *xfer) {
+	std::string tempname(purple_xfer_get_filename(xfer));
+	std::string remote_user(purple_xfer_get_remote_user(xfer));
+
+	std::string filename;
+	filename.resize(tempname.size());
+
+	// replace invalid characters
+	utf8::replace_invalid(tempname.begin(), tempname.end(), filename.begin(), '_');
+	for (std::string::iterator it = filename.begin(); it != filename.end(); ++it) {
+		if (*it == '\\' || *it == '&' || *it == '/' || *it == '?' || *it == '*' || *it == ':') {
+			*it = '_';
+		}
+	}
+
+	AbstractUser *user = Transport::instance()->userManager()->getUserByAccount(purple_xfer_get_account(xfer));
+	if (user != NULL) {
+		FiletransferRepeater *repeater = (FiletransferRepeater *) xfer->ui_data;
+		if (user->hasFeature(GLOOX_FEATURE_FILETRANSFER)) {
+			// TODO: CHECK IF requestFT could be part of this class...
+			std::string sid = repeater->requestFT();
+			if (m_repeaters.find(sid) != m_repeaters.end()) {
+				Log("handleXferFileReceiveRequest", "there's already repeater for this sid: " << sid);
+			}
+			else {
+				m_repeaters[sid] = repeater;
+			}
+		}
+		else {
+			purple_xfer_request_accepted(xfer, std::string(Transport::instance()->getConfiguration().filetransferCache+"/"+remote_user+"-"+Transport::instance()->getId()+"-"+filename).c_str());
+		}
+	}
 }
 
 void FileTransferManager::sendFile(const std::string &jid, const std::string &from, const std::string &name, const std::string &file) {

@@ -424,7 +424,7 @@ static void requestClose(PurpleRequestType type, void *ui_handle) {
  */
 static void newXfer(PurpleXfer *xfer) {
 	Log("purple filetransfer", "new file transfer request from legacy network");
-	GlooxMessageHandler::instance()->purpleFileReceiveRequest(xfer);
+	GlooxMessageHandler::instance()->ftManager->handleXferFileReceiveRequest(xfer);
 }
 
 /*
@@ -492,52 +492,9 @@ static void xferCanceled(PurpleXfer *xfer) {
 }
 
 static void XferCreated(PurpleXfer *xfer) {
-	std::string remote_user(purple_xfer_get_remote_user(xfer));
-	
-	std::for_each( remote_user.begin(), remote_user.end(), replaceBadJidCharacters() );
-	
-	Log("xfercreated", "get user " << remote_user);
-	User *user = (User *) GlooxMessageHandler::instance()->userManager()->getUserByAccount(purple_xfer_get_account(xfer));
-	if (!user) return;
-
-	std::string name(xfer->who);
-	std::for_each( name.begin(), name.end(), replaceBadJidCharacters() );
-	size_t pos = name.find("/");
-	if (pos != std::string::npos)
-		name.erase((int) pos, name.length() - (int) pos);
-	std::string to(name + "@" + GlooxMessageHandler::instance()->jid() + "/bot");
-
-	FiletransferRepeater *repeater;
-	if (purple_xfer_get_type(xfer) == PURPLE_XFER_SEND) {
-// 		std::string filename(purple_xfer_get_local_filename(xfer) ? purple_xfer_get_local_filename(xfer) : "");
-// 		Log("xfercreated", "filename = " << filename);
-		WaitingXferData data = GlooxMessageHandler::instance()->ftManager->getWaitingForXfer(remote_user + "@" + GlooxMessageHandler::instance()->jid(), "");
-		Log("xfercreated", "sid = " << data.sid);
-		repeater = new FiletransferRepeater(data.from, data.sid, SIProfileFT::FTTypeS5B, to, data.size);
-		GlooxMessageHandler::instance()->ftManager->setRepeater(data.sid, repeater);
+	if (xfer) {
+		GlooxMessageHandler::instance()->ftManager->handleXferCreated(xfer);
 	}
-	else {
-		repeater = new FiletransferRepeater(to, user->jid() + "/" + user->getResource().name);
-	}
-	repeater->registerXfer(xfer);
-
-
-// 	FiletransferRepeater *repeater = user->getFiletransfer(remote_user);
-// 	Log(user->jid(), "get filetransferRepeater" << remote_user);
-// 	if (repeater) {
-// 		Log(user->jid(), "registerXfer");
-// 		repeater->registerXfer(xfer);
-// 	}
-// 	else {
-// 		std::string name(xfer->who);
-// 		std::for_each( name.begin(), name.end(), replaceBadJidCharacters() );
-// 		size_t pos = name.find("/");
-// 		if (pos != std::string::npos)
-// 			name.erase((int) pos, name.length() - (int) pos);
-// 		user->addFiletransfer(name + "@" + GlooxMessageHandler::instance()->jid() + "/bot");
-// 		FiletransferRepeater *repeater = user->getFiletransfer(name);
-// 		repeater->registerXfer(xfer);
-// 	}
 }
 
 static void XferDestroyed(PurpleXfer *xfer) {
@@ -1336,36 +1293,6 @@ bool GlooxMessageHandler::loadConfigFile(const std::string &config) {
 		lock_file = g_strdup(m_configuration.pid_f.c_str());
 	
 	return true;
-}
-
-void GlooxMessageHandler::purpleFileReceiveRequest(PurpleXfer *xfer) {
-	std::string tempname(purple_xfer_get_filename(xfer));
-	std::string remote_user(purple_xfer_get_remote_user(xfer));
-
-    std::string filename;
-
-    filename.resize(tempname.size());
-
-    utf8::replace_invalid(tempname.begin(), tempname.end(), filename.begin(), '_');
-
-    // replace invalid characters
-    for (std::string::iterator it = filename.begin(); it != filename.end(); ++it) {
-        if (*it == '\\' || *it == '&' || *it == '/' || *it == '?' || *it == '*' || *it == ':') {
-            *it = '_';
-        }
-    }
-
-	User *user = (User *) userManager()->getUserByAccount(purple_xfer_get_account(xfer));
-	if (user != NULL) {
-		FiletransferRepeater *repeater = (FiletransferRepeater *) xfer->ui_data;
-		if (user->hasFeature(GLOOX_FEATURE_FILETRANSFER)) {
-			std::string sid = repeater->requestFT();
-			GlooxMessageHandler::instance()->ftManager->setRepeater(sid, repeater);
-		}
-		else {
-			purple_xfer_request_accepted(xfer, std::string(configuration().filetransferCache+"/"+remote_user+"-"+j->getID()+"-"+filename).c_str());
-		}
-	}
 }
 
 void GlooxMessageHandler::purpleFileReceiveComplete(PurpleXfer *xfer) {

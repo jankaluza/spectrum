@@ -42,13 +42,9 @@ struct Info {
 	bool straight;
 };
 
-struct WaitingXferData {
-	std::string sid;
-	std::string from;
-	long size;
-};
-
 // Manages and creates filetransfer requests.
+// FiletransferManager::handleFTRequest(...) forwards filetransfer request to libpurple. Libpurple then
+// should create PurpleXfer and Spectrum will create FiletransferRepe
 class FileTransferManager : public gloox::SIProfileFTHandler {
 	public:
 		FileTransferManager();
@@ -66,35 +62,37 @@ class FileTransferManager : public gloox::SIProfileFTHandler {
 		// Handles newly created Bytestream used to send/receive file.
 		void handleFTBytestream (Bytestream *bs);
 
+		// Handles newly created PurpleXfer.
+		void handleXferCreated(PurpleXfer *xfer);
+
+		// Handles file receive request.
+		void handleXferFileReceiveRequest(PurpleXfer *xfer);
+
 		// Handles OOB request (http://xmpp.org/extensions/xep-0066.html).
 		const std::string handleOOBRequestResult (const JID &from, const JID &to, const std::string &sid) { return ""; }
 
 		// Sends file to user.
 		void sendFile(const std::string &jid, const std::string &from, const std::string &name, const std::string &file);
 
-		// Sets informations about filetransfer. Used when requesting filetransfer. If `straight` is false, file 
-		// will be stored on server and link will be sent (straight is false if receiver doesn't support filetransfer).
+		// Sets informations about filetransfer according to SID. Used when requesting filetransfer. If `straight`
+		// is false, file will be stored on server and link will be sent (straight is false if receiver doesn't
+		// support filetransfer).
 		void setTransferInfo(const std::string &r_sid, const std::string &name, long size, bool straight) {
 			m_info[r_sid].filename = name;
 			m_info[r_sid].size = size;
 			m_info[r_sid].straight = straight;
 		}
-		
-		void setWaitingForXfer(const std::string &from, const std::string &to, const std::string &name, long size, const std::string &r_sid) {
-			m_waitingForXfer[to+name].sid = r_sid;
-			m_waitingForXfer[to+name].from = from;
-			m_waitingForXfer[to+name].size = size;
-		}
-		
-		WaitingXferData &getWaitingForXfer(const std::string &to, const std::string &name) {
-			return m_waitingForXfer[to+name];
-		}
 
+		// Returns filetransfer info.
 		const Info &getTransferInfo(const std::string &r_sid) { return m_info[r_sid]; }
-		
-		void setRepeater(const std::string &sid, FiletransferRepeater *repeater) { m_repeaters[sid] = repeater; }
 
 	private:
+		struct WaitingXferData {
+			std::string sid;
+			std::string from;
+			long size;
+		};
+
 		gloox::SIProfileFT *m_sip;
 		std::list<std::string> m_sendlist;
 		std::map<std::string, Info> m_info;
