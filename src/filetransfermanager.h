@@ -86,6 +86,12 @@ class FileTransferManager : public gloox::SIProfileFTHandler {
 			m_info[r_sid].straight = straight;
 		}
 
+		// Removes all informations for this sid.
+		void removeSID(const std::string &sid) {
+			m_info.erase(sid);
+			m_repeaters.erase(sid);
+		}
+
 		// Returns filetransfer info.
 		const Info &getTransferInfo(const std::string &r_sid) { return m_info[r_sid]; }
 

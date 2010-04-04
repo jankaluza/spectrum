@@ -577,3 +577,8 @@ void FiletransferRepeater::tryToDeleteMe() {
 		Log("xfer-tryToDeleteMe", "can't delete, because status is " << (int) purple_xfer_get_status(m_xfer));
 	}
 }
+
+void FiletransferRepeater::handleXferCanceled() {
+	Log("xfer-cancelede", "deleting...");
+	delete this;
+}

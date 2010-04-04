@@ -146,6 +146,9 @@ class FiletransferRepeater {
 		// Registers PurpleXfer with FiletransferRepeater.
 		void registerXfer(PurpleXfer *xfer);
 
+		// Called when libpurple cancels filetransfer.
+		void handleXferCanceled();
+
 		// Called when libpurple starts sending file to legacy network.
 		void fileSendStart();
 
@@ -185,6 +188,9 @@ class FiletransferRepeater {
 
 		// Sets UI ready for the transfer.
 		void ready();
+
+		// Returns filetransfer SID.
+		const std::string &getSID() { return m_sid; }
 
 		// Callback which tells libpurple that UI is ready.
 		// MUST be called only by timer.

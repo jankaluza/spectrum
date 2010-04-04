@@ -50,7 +50,8 @@ static void xferCanceled(PurpleXfer *xfer) {
 	FiletransferRepeater *repeater = (FiletransferRepeater *) xfer->ui_data;
 	if (!repeater)
 		return;
-// 	repeater->xferCanceled();
+	GlooxMessageHandler::instance()->ftManager->removeSID(repeater->getSID());
+	repeater->handleXferCanceled();
 }
 
 static void fileSendStart(PurpleXfer *xfer) {
@@ -166,7 +167,7 @@ void FileTransferManager::handleFTRequest (const JID &from, const JID &to, const
 
 void FileTransferManager::handleFTBytestream (Bytestream *bs) {
 	Log("handleFTBytestream", "target: " << bs->target().full() << " initiator: " << bs->initiator().full());
-	if (std::find(m_sendlist.begin(), m_sendlist.end(), bs->target().full()) == m_sendlist.end()) {
+	if (m_info.find(bs->sid()) != m_info.end()) {
 		std::string filename = "";
 		// if we will store file, we have to replace invalid characters and prepare directories.
 		if (m_info[bs->sid()].straight == false) {
@@ -189,9 +190,7 @@ void FileTransferManager::handleFTBytestream (Bytestream *bs) {
 			repeater->handleFTSendBytestream(bs, filename);
 		else
 			repeater->handleFTReceiveBytestream(bs, filename);
-    } else {
-        m_sendlist.erase(std::find(m_sendlist.begin(), m_sendlist.end(), bs->target().full()));
-    }
+	}
     m_info.erase(bs->sid());
 	m_repeaters.erase(bs->sid());
 }
