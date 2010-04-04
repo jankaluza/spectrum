@@ -41,53 +41,6 @@ using namespace gloox;
 
 class FiletransferRepeater;
 
-class AbstractResendClass {
-	public:
-		AbstractResendClass() {
-			m_mutex = g_mutex_new();
-			m_cond = g_cond_new();
-			m_stop = false;
-			m_thread = NULL;
-		}
-		virtual ~AbstractResendClass() { g_mutex_free(m_mutex); g_cond_free(m_cond); }
-
-		GMutex *getMutex() { return m_mutex; }
-		void wait() {
-			g_cond_wait(m_cond, m_mutex);
-		}
-
-		void wakeUp() {
-			g_cond_signal(m_cond);
-		}
-		
-		void stop() {
-			g_mutex_lock(m_mutex);
-			m_stop = true;
-			g_mutex_unlock(m_mutex);
-		}
-		
-		void execute(GThreadFunc func, gpointer data) {
-			m_thread = g_thread_create(func, data, true, NULL);
-		}
-		
-		void join() {
-			if(m_thread)
-				g_thread_join(m_thread);
-		}
-
-		bool isRunning() {
-			return m_thread != NULL;
-		}
-
-	bool m_stop;
-	GThread *m_thread;
-
-	private:
-		GMutex *m_mutex;
-		GCond *m_cond;
-		
-};
-
 class ReceiveFile : public BytestreamDataHandler, public Thread{
 	public:
 		ReceiveFile(Bytestream *stream, int size, const std::string &filename, AbstractUser *user, FiletransferRepeater *manager);
