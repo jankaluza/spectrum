@@ -292,22 +292,19 @@ static gpointer receiveFunc(gpointer data) {
 	return NULL;
 }
 
-ReceiveFileStraight::ReceiveFileStraight(gloox::Bytestream *stream, int size, FiletransferRepeater *manager) {
-    m_stream = stream;
-    m_size = size;
-	m_stream->registerBytestreamDataHandler (this);
-    m_finished = false;
+ReceiveFileStraight::ReceiveFileStraight(gloox::Bytestream *stream, FiletransferRepeater *manager) {
+	m_stream = stream;
+	m_finished = false;
 	m_parent = manager;
-    if(!m_stream->connect()) {
-//         Log().Get("ReceiveFileStraight") << "connection can't be established!";
-        return;
-    }
-//     run();
+	m_stream->registerBytestreamDataHandler(this);
+	if (!m_stream->connect()) {
+		Log("ReceiveFileStraight", "connection can't be established!");
+		return;
+	}
 	run(&receiveFunc, this);
 }
 
 ReceiveFileStraight::~ReceiveFileStraight() {
-
 }
 
 bool ReceiveFileStraight::receive() {
@@ -324,23 +321,16 @@ bool ReceiveFileStraight::receive() {
 }
 
 void ReceiveFileStraight::handleBytestreamData(gloox::Bytestream *s5b, const std::string &data) {
-	bool w;
 	lockMutex();
-// 	m_file.write(data.c_str(), data.size());
-	w = m_parent->gotData(data);
-	if (w) {
+	if (m_parent->gotData(data))
 		wait();
-	}
 	unlockMutex();
 }
 
 void ReceiveFileStraight::handleBytestreamError(gloox::Bytestream *s5b, const gloox::IQ &iq) {
-// 	Log().Get("ReceiveFileStraight") << "STREAM ERROR!";
-// 	Log().Get("ReceiveFileStraight") << stanza->xml();
 }
 
 void ReceiveFileStraight::handleBytestreamOpen(gloox::Bytestream *s5b) {
-// 	Log().Get("ReceiveFileStraight") << "stream opened...";
 }
 
 void ReceiveFileStraight::handleBytestreamClose(gloox::Bytestream *s5b) {
@@ -381,22 +371,20 @@ void FiletransferRepeater::registerXfer(PurpleXfer *xfer) {
 	m_xfer = xfer;
 	purple_xfer_ref(m_xfer);
 
-// 	purple_xfer_set_local_filename(xfer, filename);
 	if (m_size != -1)
 		purple_xfer_set_size(xfer, m_size);
+
 	m_xfer->ui_data = this;
 }
 
 void FiletransferRepeater::fileSendStart() {
-	Log("ReceiveFileStraight", "fileSendStart!" << m_from.full() << " " << m_to.full());
-	Log("ReceiveFileStraight", m_sid);
-	Log("ReceiveFileStraight", (int)m_type);
-	
+	Log("FiletransferRepeater::fileSendStart", "accepting FT, data:" << m_from.full() << " " << m_to.full());
 	Transport::instance()->acceptFT(m_to, m_sid, m_type, m_from.resource().empty() ? std::string(m_from.bare() + "/bot") : m_from);
 }
 
 void FiletransferRepeater::fileRecvStart() {
-	Log("SendFileStraight", "fileRecvStart!" << m_from.full() << " " << m_to.full());
+	Log("FiletransferRepeater::fileRecvStart", "accepting FT, data:" << m_from.full() << " " << m_to.full());
+	// We have to say to libpurple that we are ready to receive first data...
 	if (m_resender && m_xfer)
 		g_timeout_add(0, &ui_got_data, this);
 }
@@ -408,9 +396,8 @@ std::string FiletransferRepeater::requestFT() {
 }
 
 void FiletransferRepeater::handleFTReceiveBytestream(Bytestream *bs, const std::string &filename) {
-	Log("ReceiveFileStraight", "new!");
 	if (filename.empty())
-		m_resender = new ReceiveFileStraight(bs, 0, this);
+		m_resender = new ReceiveFileStraight(bs, this);
 	else {
 		AbstractUser *user = Transport::instance()->userManager()->getUserByJID(bs->initiator().bare());
 		m_resender = new ReceiveFile(bs, 0, filename, user, this);
@@ -418,9 +405,8 @@ void FiletransferRepeater::handleFTReceiveBytestream(Bytestream *bs, const std::
 }
 
 void FiletransferRepeater::handleFTSendBytestream(Bytestream *bs, const std::string &filename) {
-	Log("SendFileStraight", "new!");
 	if (!m_xfer) {
-		Log("SendFileStraight", "no xfer");
+		Log("FiletransferRepeater::handleFTSendBytestream", "no xfer");
 		return;
 	}
 	purple_xfer_request_accepted(m_xfer, NULL);
@@ -434,23 +420,17 @@ void FiletransferRepeater::handleFTSendBytestream(Bytestream *bs, const std::str
 
 bool FiletransferRepeater::gotData(const std::string &data) {
 	std::cout << "FiletransferRepeater::gotData " << data.size() << "\n";
+	// If buffer was empty, we have to say to libpurple that we're ready and have new data for it.
 	if (m_buffer_size == 0)
 		ready();
+
+	// Append new data to buffer
 	guchar *c = m_buffer + m_buffer_size;
 	memcpy(c, data.c_str(), data.size());
 	m_buffer_size += data.size();
 
-// 	for (unsigned int i = 0; i < data.size(); i++) {
-// 		m_buffer->append("a");
-// 	}
-	
-	if (m_send) {
-		std::cout << "WakeUP\n";
-		m_resender->wakeUp();
-	}
+	// If we have too much data, repeater will just wait for libpurple to handle it.
 	bool wait = m_buffer_size > 5000;
-// 	if (wait)
-// 		g_timeout_add(7,&getData,this);
 	return wait;
 }
 
@@ -458,6 +438,8 @@ gssize FiletransferRepeater::handleLibpurpleData(const guchar *data, gssize size
 	std::cout << "FiletransferRepeater::handleLibpurpleData " << m_buffer_size + size << "\n";
 	if (m_resender)
 		m_resender->lockMutex();
+
+	// Increase buffer size if we've too much data.
 	gssize data_size = size;
 	if (m_buffer_size + data_size > m_max_buffer_size) {
 		m_max_buffer_size = data_size + m_buffer_size;
@@ -465,14 +447,17 @@ gssize FiletransferRepeater::handleLibpurpleData(const guchar *data, gssize size
 		std::cout << "new m_max_buffer_size is " << m_max_buffer_size << "\n";
 	}
 
+	// Append new data to buffer.
 	guchar *c = m_buffer + m_buffer_size;
 	memcpy(c, data, data_size);
 	m_buffer_size += data_size;
 
+	// Wake up resender thread and let it handle new data.
 	m_resender->wakeUp();
 
 	if (m_resender)
 		m_resender->unlockMutex();
+
 	return data_size;
 }
 
@@ -487,7 +472,8 @@ void FiletransferRepeater::handleDataNotSent(const guchar *data, gssize size) {
 
 	// Copy data to buffer
 	memcpy(m_buffer, data, size);
-	
+
+	// We've unset data again, so we're ready.
 	ready();
 	if (m_resender)
 		m_resender->unlockMutex();
@@ -500,7 +486,7 @@ int FiletransferRepeater::getDataToSend(guchar **data, gssize size) {
 	int data_size = 0;
 
 	if ((gssize) m_buffer_size > size) {
-		// Store `size` bytes into `data`.
+		// Store first `size` bytes into `data`.
 		(*data) = (guchar *) g_malloc0(size);
 		memcpy((*data), m_buffer, size);
 		data_size = (int) size;
@@ -511,16 +497,17 @@ int FiletransferRepeater::getDataToSend(guchar **data, gssize size) {
 		m_buffer_size = m_buffer_size - size;
 	}
 	else {
+		// Copy whole buffer and mark it as sent.
 		(*data) = (guchar *) g_malloc0(m_buffer_size);
 		memcpy((*data), m_buffer, m_buffer_size);
 		data_size = (int) m_buffer_size;
 		m_buffer_size = 0;
 	}
 
-	bool wakeUp = m_buffer_size < 1000;
 	m_readyCalled = false;
-	
-	if (wakeUp) {
+
+	// If we have almost empty buffer, wake up resender and let it receive some new data.
+	if (m_buffer_size < 1000) {
 		Log("REPEATER", "WakeUP");
 		if (m_resender)
 			m_resender->wakeUp();
@@ -530,7 +517,8 @@ int FiletransferRepeater::getDataToSend(guchar **data, gssize size) {
 	
 	if (m_resender)
 		m_resender->unlockMutex();
-	
+
+	// Try to finish the transfer if we can't have new data and buffer is empty.
 	if (m_resender && m_resender->isRunning() == false && m_buffer_size == 0) {
 		g_timeout_add(0, &try_to_delete_me, this);
 	}

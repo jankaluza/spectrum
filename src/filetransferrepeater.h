@@ -70,7 +70,7 @@ class ReceiveFile : public BytestreamDataHandler, public Thread{
 
 class ReceiveFileStraight : public BytestreamDataHandler, public Thread {
 	public:
-		ReceiveFileStraight(Bytestream *stream, int size, FiletransferRepeater *manager);
+		ReceiveFileStraight(Bytestream *stream, FiletransferRepeater *manager);
 		~ReceiveFileStraight();
 
 		bool receive();
@@ -84,7 +84,6 @@ class ReceiveFileStraight : public BytestreamDataHandler, public Thread {
 	private:
 		Bytestream *m_stream;
 		std::string m_filename;
-		int m_size;
 		bool m_finished;
 		FiletransferRepeater *m_parent;
 		std::ofstream m_file;
