@@ -123,31 +123,24 @@ static gpointer sendFileStraightCallback(gpointer data) {
 }
 
 SendFileStraight::SendFileStraight(Bytestream *stream, int size, FiletransferRepeater *manager) {
-    std::cout << "SendFileStraight::SendFileStraight" << " Constructor.\n";
-    m_stream = stream;
-    m_size = size;
+	m_stream = stream;
+	m_size = size;
 	m_stream->registerBytestreamDataHandler (this);
 	m_parent = manager;
-	if (m_stream->connect())
-		std::cout << "stream connected\n";
+	if (!m_stream->connect()) {
+		// TODO:
+	}
 	run(&sendFileStraightCallback, this);
 }
 
 SendFileStraight::~SendFileStraight() {
-
 }
 
-void SendFileStraight::exec() { }
-
 bool SendFileStraight::send() {
-//     char input[200024];
 	if (m_stream->isOpen()){
-		std::cout << "BEFORE MUTEX LOCK\n";
 		lockMutex();
-		std::cout << "TRYING TO SEND\n";
 		std::string data;
 		int size = m_parent->getDataToSend(data);
-		
 		if (size != 0) {
 			int ret = m_stream->send(data);
 			if (ret < 1) {
@@ -229,26 +222,25 @@ static gpointer receiveFileCallback(gpointer data) {
 }
 
 ReceiveFile::ReceiveFile(gloox::Bytestream *stream, int size, const std::string &filename, AbstractUser *user, FiletransferRepeater *manager) {
-    m_stream = stream;
-    m_size = size;
+	m_stream = stream;
+	m_size = size;
 	m_filename = filename;
 	m_user = user;
 	m_stream->registerBytestreamDataHandler (this);
 	m_target = stream->target().bare();
-    m_finished = false;
+	m_finished = false;
 	m_parent = manager;
     if(!m_stream->connect()) {
 		// TODO:
-    }
-    m_file.open(m_filename.c_str(), std::ios_base::out | std::ios_base::binary );
-    if (!m_file) {
-        // TODO;
-    }
-    run(receiveFileCallback, this);
+	}
+	m_file.open(m_filename.c_str(), std::ios_base::out | std::ios_base::binary );
+	if (!m_file) {
+		// TODO;
+	}
+	run(receiveFileCallback, this);
 }
 
 ReceiveFile::~ReceiveFile() {
-
 }
 
 void ReceiveFile::dispose() {
@@ -271,12 +263,9 @@ void ReceiveFile::handleBytestreamData(gloox::Bytestream *s5b, const std::string
 }
 
 void ReceiveFile::handleBytestreamError(gloox::Bytestream *s5b, const gloox::IQ &iq) {
-// 	Log().Get("ReceiveFile") << "STREAM ERROR!";
-// 	Log().Get("ReceiveFile") << stanza->xml();
 }
 
 void ReceiveFile::handleBytestreamOpen(gloox::Bytestream *s5b) {
-// 	Log().Get("ReceiveFile") << "stream opened...";
 }
 
 void ReceiveFile::handleBytestreamClose(gloox::Bytestream *s5b) {
