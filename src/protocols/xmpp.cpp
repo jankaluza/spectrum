@@ -101,6 +101,6 @@ std::string XMPPProtocol::prepareRoomName(const std::string &room) {
 
 void XMPPProtocol::onPurpleAccountCreated(PurpleAccount *account) {
 	std::string jid(purple_account_get_username(account));
-	if (JID(jid).serverfd() == "chat.facebook.com")
+	if (JID(jid).server() == "chat.facebook.com")
 		purple_account_set_bool(account, "require_tls", false);
 }
