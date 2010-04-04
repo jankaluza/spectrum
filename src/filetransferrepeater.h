@@ -132,34 +132,67 @@ class SendFileStraight : public BytestreamDataHandler, public Thread {
 		FiletransferRepeater *m_parent;
 };
 
+// Class which acts as repeater between Gloox and libpurple.
 class FiletransferRepeater {
-
 	public:
+		// Constructor for XMPP -> Legacy network transfer.
 		FiletransferRepeater(const JID& to, const std::string& sid, SIProfileFT::StreamType type, const JID& from, long size);
-		FiletransferRepeater(const JID& from, const JID& to);
-		~FiletransferRepeater() {}
 
+		// Constructor for Legacy network -> XMPP transfer.
+		FiletransferRepeater(const JID& from, const JID& to);
+
+		~FiletransferRepeater();
+
+		// Registers PurpleXfer with FiletransferRepeater.
 		void registerXfer(PurpleXfer *xfer);
+
+		// Called when libpurple starts sending file to legacy network.
 		void fileSendStart();
+
+		// Called when libpurple starts receiving file from legacy network.
 		void fileRecvStart();
+
+		// Called when Gloox has opened bytestream to receive file from XMPP.
 		void handleFTReceiveBytestream(Bytestream *bs, const std::string &filename = "");
+
+		// Called when Gloox has opened bytestream to send file over XMPP.
 		void handleFTSendBytestream(Bytestream *bs, const std::string &filename = "");
-		bool gotData(const std::string &data);
+
+		// Called by resender thread when it has new data.
+		// Returns true if FiletransferRepeater doesn't want more data for now, thread will sleep
+		// until it's waked up.
+		bool handleGlooxData(const std::string &data);
+
+		// Called by libpurple when it has new data. Returns the size of really handled data.
 		gssize handleLibpurpleData(const guchar *data, gssize size);
+
+		// Handles data which couldn't be sent by libpurple. They should be sent in next libpurple
+		// request.
 		void handleDataNotSent(const guchar *data, gssize size);
+
+		// Copies data which will be passed to libpurple and sent to legacy network into 'data'.
+		// Returns size of 'data'.
 		int getDataToSend(guchar **data, gssize size);
+
+		// Copies data which will be sent by Gloox over XMPP into 'data'. Returns size of 'data'.
 		int getDataToSend(std::string &data);
-		void xferDestroyed();
+
+		// Sends filetransfer request to XMPP user.
 		std::string requestFT();
 
+		// Returns true if we're sending file from legacy network to XMPP.
 		bool isSending() { return m_send; }
-		void ui_ready_callback();
-		void tryToDeleteMe();
 
-		std::string & getBuffer() { return a; }
-		void wantsData() { m_wantsData = true; if (m_resender) m_resender->wakeUp(); }
+		// Sets UI ready for the transfer.
 		void ready();
-		std::ofstream m_file;
+
+		// Callback which tells libpurple that UI is ready.
+		// MUST be called only by timer.
+		void ui_ready_callback();
+
+		// Callback which tries to delete this class.
+		// MUST be called only by timer.
+		void tryToDeleteMe();
 
 	private:
 		JID m_to;
@@ -169,16 +202,12 @@ class FiletransferRepeater {
 		long m_size;
 		PurpleXfer *m_xfer;
 		bool m_send;
-		std::string a;
 		bool m_readyCalled;
 		guint m_readyTimer;
-
-
 		guchar *m_buffer;
 		size_t m_buffer_size;
 		size_t m_max_buffer_size;
 		Thread *m_resender;
-		bool m_wantsData;
 
 };
 

@@ -322,7 +322,7 @@ bool ReceiveFileStraight::receive() {
 
 void ReceiveFileStraight::handleBytestreamData(gloox::Bytestream *s5b, const std::string &data) {
 	lockMutex();
-	if (m_parent->gotData(data))
+	if (m_parent->handleGlooxData(data))
 		wait();
 	unlockMutex();
 }
@@ -345,7 +345,6 @@ FiletransferRepeater::FiletransferRepeater(const JID& to, const std::string& sid
 	m_max_buffer_size = 65535;
 	m_buffer = (guchar *) g_malloc0(m_max_buffer_size);
 	m_buffer_size = 0;
-	m_wantsData = false;
 	m_resender = NULL;
 	m_send = false;
 	m_readyCalled = false;
@@ -362,9 +361,34 @@ FiletransferRepeater::FiletransferRepeater(const JID& from, const JID& to) {
 	m_resender = NULL;
 	m_size = -1;
 	m_send = true;
-	m_wantsData = false;
 	m_readyCalled = false;
 	m_readyTimer = 0;
+}
+
+FiletransferRepeater::~FiletransferRepeater() {
+	Log("xferdestroyed", "in ftrepeater");
+	if (m_xfer) {
+		if (m_resender) {
+			Log("xferdestroyed", m_resender);
+			if (m_resender->isRunning()) {
+				Log("xferdestroyed", "resender is running, trying to stop it");
+				m_resender->stop();
+				m_resender->lockMutex();
+				m_resender->wakeUp();
+				m_resender->unlockMutex();
+				m_resender->join();
+				Log("xferdestroyed", "resender stopped.");
+			}
+			Log("xferdestroyed", m_resender);
+			delete m_resender;
+			m_resender = NULL;
+		}
+		if (m_readyTimer != 0)
+			purple_timeout_remove(m_readyTimer);
+		m_xfer->ui_data = NULL;
+		purple_xfer_unref(m_xfer);
+		m_xfer = NULL;
+	}
 }
 
 void FiletransferRepeater::registerXfer(PurpleXfer *xfer) {
@@ -418,8 +442,8 @@ void FiletransferRepeater::handleFTSendBytestream(Bytestream *bs, const std::str
 	}
 }
 
-bool FiletransferRepeater::gotData(const std::string &data) {
-	std::cout << "FiletransferRepeater::gotData " << data.size() << "\n";
+bool FiletransferRepeater::handleGlooxData(const std::string &data) {
+	std::cout << "FiletransferRepeater::handleGlooxData " << data.size() << "\n";
 	// If buffer was empty, we have to say to libpurple that we're ready and have new data for it.
 	if (m_buffer_size == 0)
 		ready();
@@ -551,36 +575,9 @@ void FiletransferRepeater::ui_ready_callback() {
 void FiletransferRepeater::tryToDeleteMe() {
 	if (purple_xfer_get_status(m_xfer) == PURPLE_XFER_STATUS_DONE && m_buffer_size == 0) {
 		Log("xfer-tryToDeleteMe", "xfer is done, buffer_size = 0 => finishing it and removing repeater");
-		xferDestroyed();
+		delete this;
 	}
 	else {
 		Log("xfer-tryToDeleteMe", "can't delete, because status is " << (int) purple_xfer_get_status(m_xfer));
-	}
-}
-
-void FiletransferRepeater::xferDestroyed() {
-	Log("xferdestroyed", "in ftrepeater");
-	if (m_xfer) {
-		if (m_resender) {
-			Log("xferdestroyed", m_resender);
-			if (m_resender->isRunning()) {
-				Log("xferdestroyed", "resender is running, trying to stop it");
-				m_resender->stop();
-				m_resender->lockMutex();
-				m_resender->wakeUp();
-				m_resender->unlockMutex();
-				m_resender->join();
-				Log("xferdestroyed", "resender stopped.");
-			}
-			Log("xferdestroyed", m_resender);
-			delete m_resender;
-			m_resender = NULL;
-		}
-		if (m_readyTimer != 0)
-			purple_timeout_remove(m_readyTimer);
-		m_xfer->ui_data = NULL;
-		purple_xfer_unref(m_xfer);
-		m_xfer = NULL;
-		delete this;
 	}
 }
