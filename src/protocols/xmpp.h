@@ -22,8 +22,10 @@
 #define _HI_XMPP_PROTOCOL_H
 
 #include "abstractprotocol.h"
+#include "gloox/jid.h"
 
 class GlooxMessageHandler;
+using namespace gloox;
 
 class XMPPProtocol : AbstractProtocol
 {
@@ -42,6 +44,7 @@ class XMPPProtocol : AbstractProtocol
 		const std::string userSearchColumn() { return "Jabber ID"; }
 		bool onPresenceReceived(AbstractUser *user, const Presence &stanza);
 		std::string prepareRoomName(const std::string &room);
+		void onPurpleAccountCreated(PurpleAccount *account);
 
 	private:
 		GlooxMessageHandler *m_main;
