@@ -46,6 +46,7 @@ void Transport::registerStanzaExtension(StanzaExtension *extension) {
 }
 
 bool Transport::canSendFile(PurpleAccount *account, const std::string &uname) {
+	return false;
 	PurplePlugin *prpl = NULL;
 	PurplePluginProtocolInfo *prpl_info = NULL;
 	PurpleConnection *gc = purple_account_get_connection(account);

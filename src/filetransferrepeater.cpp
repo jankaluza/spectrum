@@ -253,6 +253,7 @@ ReceiveFile::~ReceiveFile() {
 
 void ReceiveFile::dispose() {
 	Transport::instance()->disposeBytestream(m_stream);
+	g_timeout_add(0, &try_to_delete_me, m_parent);
 }
 
 bool ReceiveFile::receive() {
@@ -349,6 +350,7 @@ FiletransferRepeater::FiletransferRepeater(const JID& to, const std::string& sid
 	m_send = false;
 	m_readyCalled = false;
 	m_readyTimer = 0;
+	m_xfer = NULL;
 }
 
 FiletransferRepeater::FiletransferRepeater(const JID& from, const JID& to) {
@@ -363,28 +365,29 @@ FiletransferRepeater::FiletransferRepeater(const JID& from, const JID& to) {
 	m_send = true;
 	m_readyCalled = false;
 	m_readyTimer = 0;
+	m_xfer = NULL;
 }
 
 FiletransferRepeater::~FiletransferRepeater() {
 	Log("xferdestroyed", "in ftrepeater");
-	if (m_xfer) {
-		if (m_resender) {
-			Log("xferdestroyed", m_resender);
-			if (m_resender->isRunning()) {
-				Log("xferdestroyed", "resender is running, trying to stop it");
-				m_resender->stop();
-				m_resender->lockMutex();
-				m_resender->wakeUp();
-				m_resender->unlockMutex();
-				m_resender->join();
-				Log("xferdestroyed", "resender stopped.");
-			}
-			Log("xferdestroyed", m_resender);
-			delete m_resender;
-			m_resender = NULL;
+	if (m_resender) {
+		Log("xferdestroyed", m_resender);
+		if (m_resender->isRunning()) {
+			Log("xferdestroyed", "resender is running, trying to stop it");
+			m_resender->stop();
+			m_resender->lockMutex();
+			m_resender->wakeUp();
+			m_resender->unlockMutex();
+			m_resender->join();
+			Log("xferdestroyed", "resender stopped.");
 		}
-		if (m_readyTimer != 0)
-			purple_timeout_remove(m_readyTimer);
+		Log("xferdestroyed", m_resender);
+		delete m_resender;
+		m_resender = NULL;
+	}
+	if (m_readyTimer != 0)
+		purple_timeout_remove(m_readyTimer);
+	if (m_xfer) {
 		m_xfer->ui_data = NULL;
 		purple_xfer_unref(m_xfer);
 		m_xfer = NULL;
@@ -573,7 +576,11 @@ void FiletransferRepeater::ui_ready_callback() {
 }
 
 void FiletransferRepeater::tryToDeleteMe() {
-	if (purple_xfer_get_status(m_xfer) == PURPLE_XFER_STATUS_DONE && m_buffer_size == 0) {
+	if (m_xfer == NULL && m_buffer_size == 0) {
+		Log("xfer-tryToDeleteMe", "there's not xfer, buffer_size = 0 => finishing it and removing repeater");
+		delete this;
+	}
+	else if (purple_xfer_get_status(m_xfer) == PURPLE_XFER_STATUS_DONE && m_buffer_size == 0) {
 		Log("xfer-tryToDeleteMe", "xfer is done, buffer_size = 0 => finishing it and removing repeater");
 		delete this;
 	}
