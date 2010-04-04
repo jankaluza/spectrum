@@ -201,6 +201,8 @@ class FiletransferRepeater {
 		std::string requestFT();
 
 		bool isSending() { return m_send; }
+		void ui_ready_callback();
+		void tryToDeleteMe();
 
 		std::string & getBuffer() { return a; }
 		void wantsData() { m_wantsData = true; if (m_resender) m_resender->wakeUp(); }

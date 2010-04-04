@@ -43,10 +43,6 @@ static void XferCreated(PurpleXfer *xfer) {
 
 static void XferDestroyed(PurpleXfer *xfer) {
 	Log("xfer", "xferDestroyed");
-	FiletransferRepeater *repeater = (FiletransferRepeater *) xfer->ui_data;
-	if (!repeater)
-		return;
-	repeater->xferDestroyed();
 }
 
 static void xferCanceled(PurpleXfer *xfer) {
@@ -54,7 +50,7 @@ static void xferCanceled(PurpleXfer *xfer) {
 	FiletransferRepeater *repeater = (FiletransferRepeater *) xfer->ui_data;
 	if (!repeater)
 		return;
-	repeater->xferDestroyed();
+// 	repeater->xferCanceled();
 }
 
 static void fileSendStart(PurpleXfer *xfer) {
@@ -74,9 +70,17 @@ static void newXfer(PurpleXfer *xfer) {
 	GlooxMessageHandler::instance()->ftManager->handleXferFileReceiveRequest(xfer);
 }
 
-static void XferComplete(PurpleXfer *xfer) {
-	Log("purple filetransfer", "filetransfer complete");
+static void XferReceiveComplete(PurpleXfer *xfer) {
+	Log("purple filetransfer", "filetransfer receive complete");
+	FiletransferRepeater *repeater = (FiletransferRepeater *) xfer->ui_data;
+	repeater->tryToDeleteMe();
 	GlooxMessageHandler::instance()->ftManager->handleXferFileReceiveComplete(xfer);
+}
+
+static void XferSendComplete(PurpleXfer *xfer) {
+	Log("purple filetransfer", "filetransfer send complete");
+	FiletransferRepeater *repeater = (FiletransferRepeater *) xfer->ui_data;
+	repeater->tryToDeleteMe();
 }
 
 static gssize XferWrite(PurpleXfer *xfer, const guchar *buffer, gssize size) {
@@ -120,7 +124,8 @@ FileTransferManager::FileTransferManager() {
 	purple_signal_connect(purple_xfers_get_handle(), "file-send-start", &xfer_handle, PURPLE_CALLBACK(fileSendStart), NULL);
 	purple_signal_connect(purple_xfers_get_handle(), "file-recv-start", &xfer_handle, PURPLE_CALLBACK(fileRecvStart), NULL);
 	purple_signal_connect(purple_xfers_get_handle(), "file-recv-request", &xfer_handle, PURPLE_CALLBACK(newXfer), NULL);
-	purple_signal_connect(purple_xfers_get_handle(), "file-recv-complete", &xfer_handle, PURPLE_CALLBACK(XferComplete), NULL);
+	purple_signal_connect(purple_xfers_get_handle(), "file-recv-complete", &xfer_handle, PURPLE_CALLBACK(XferReceiveComplete), NULL);
+	purple_signal_connect(purple_xfers_get_handle(), "file-send-complete", &xfer_handle, PURPLE_CALLBACK(XferSendComplete), NULL);
 }
 
 FileTransferManager::~FileTransferManager() {

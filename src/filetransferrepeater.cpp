@@ -29,9 +29,14 @@
 #include "spectrummessagehandler.h"
 
 static gboolean ui_got_data(gpointer data){
-	PurpleXfer *xfer = (PurpleXfer*) data;
-	purple_xfer_ui_ready(xfer);
-	std::cout << "READY!!\n";
+	FiletransferRepeater *repeater = (FiletransferRepeater *) data;
+	repeater->ui_ready_callback();
+	return FALSE;
+}
+
+static gboolean try_to_delete_me(gpointer data){
+	FiletransferRepeater *repeater = (FiletransferRepeater *) data;
+	repeater->tryToDeleteMe();
 	return FALSE;
 }
 
@@ -158,8 +163,10 @@ bool SendFileStraight::send() {
 		std::cout << "stream not open!\n";
 		g_usleep(G_USEC_PER_SEC);
 	}
-	if (m_stream->recv(2000) != ConnNoError)
+	if (m_stream->recv(2000) != ConnNoError) {
+		g_timeout_add(0, &try_to_delete_me, m_parent);
 		return false;
+	}
 	if (shouldStop()) {
 		Log("SendFileStraight", "stopping thread");
 		return false;
@@ -304,8 +311,11 @@ ReceiveFileStraight::~ReceiveFileStraight() {
 }
 
 bool ReceiveFileStraight::receive() {
-	if (m_stream->recv() != ConnNoError)
+	if (m_stream->recv() != ConnNoError) {
+		Log("ReceiveFileStraight", "socket closed => stopping thread");
+		g_timeout_add(0, &try_to_delete_me, m_parent);
 		return false;
+	}
 	if (shouldStop()) {
 		Log("ReceiveFileStraight", "stopping thread");
 		return false;
@@ -369,6 +379,7 @@ FiletransferRepeater::FiletransferRepeater(const JID& from, const JID& to) {
 
 void FiletransferRepeater::registerXfer(PurpleXfer *xfer) {
 	m_xfer = xfer;
+	purple_xfer_ref(m_xfer);
 
 // 	purple_xfer_set_local_filename(xfer, filename);
 	if (m_size != -1)
@@ -387,7 +398,7 @@ void FiletransferRepeater::fileSendStart() {
 void FiletransferRepeater::fileRecvStart() {
 	Log("SendFileStraight", "fileRecvStart!" << m_from.full() << " " << m_to.full());
 	if (m_resender && m_xfer)
-		g_timeout_add(0, &ui_got_data, m_xfer);
+		g_timeout_add(0, &ui_got_data, this);
 }
 
 std::string FiletransferRepeater::requestFT() {
@@ -519,6 +530,10 @@ int FiletransferRepeater::getDataToSend(guchar **data, gssize size) {
 	
 	if (m_resender)
 		m_resender->unlockMutex();
+	
+	if (m_resender && m_resender->isRunning() == false && m_buffer_size == 0) {
+		g_timeout_add(0, &try_to_delete_me, this);
+	}
 
 	return data_size;
 }
@@ -537,8 +552,22 @@ int FiletransferRepeater::getDataToSend(std::string &data) {
 
 void FiletransferRepeater::ready() {
 	if (!m_readyCalled && m_xfer)
-		m_readyTimer = g_timeout_add(0, &ui_got_data, m_xfer);
+		m_readyTimer = g_timeout_add(0, &ui_got_data, this);
 	m_readyCalled = true;
+}
+
+void FiletransferRepeater::ui_ready_callback() {
+	purple_xfer_ui_ready(m_xfer);
+}
+
+void FiletransferRepeater::tryToDeleteMe() {
+	if (purple_xfer_get_status(m_xfer) == PURPLE_XFER_STATUS_DONE && m_buffer_size == 0) {
+		Log("xfer-tryToDeleteMe", "xfer is done, buffer_size = 0 => finishing it and removing repeater");
+		xferDestroyed();
+	}
+	else {
+		Log("xfer-tryToDeleteMe", "can't delete, because status is " << (int) purple_xfer_get_status(m_xfer));
+	}
 }
 
 void FiletransferRepeater::xferDestroyed() {
@@ -562,15 +591,8 @@ void FiletransferRepeater::xferDestroyed() {
 		if (m_readyTimer != 0)
 			purple_timeout_remove(m_readyTimer);
 		m_xfer->ui_data = NULL;
-// 		purple_xfer_unref(m_xfer);
+		purple_xfer_unref(m_xfer);
 		m_xfer = NULL;
-// 		AbstractUser *user = Transport::instance()->userManager()->getUserByJID(m_to.bare());
-// 		if (!user)
-// 			user = Transport::instance()->userManager()->getUserByJID(m_from.bare());
-// 		if (!user)
-// 			return;
-// 		user->removeFiletransfer(m_to.username().c_str());
-// 		user->removeFiletransfer(m_from.username().c_str());
 		delete this;
 	}
 }
