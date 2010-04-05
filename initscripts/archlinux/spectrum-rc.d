@@ -13,6 +13,7 @@
 
 check_user() {
 	if ! getent passwd $SPECTRUM_USER >/dev/null; then
+		printhl "unknown user '$SPECTRUM_USER', please change /etc/conf.d/spectrum"
 		exit 1;
 	fi
 }
@@ -21,9 +22,9 @@ check_user() {
 case "$1" in
   start)
     check_user
-    for i in $SPECTRUM_CONF/* ; do
-      if grep "enable" $i | grep "=" | grep "1" > /dev/null ; then
-        CONF=`basename $i .cfg`
+    for i in $SPECTRUM_CONF/*.cfg; do
+      if egrep -q '^\s*enable\s*=\s*1\s*$' "$i"; then
+        CONF="`basename "$i" .cfg`"
         stat_busy "Starting spectrum instance: ${CONF}"
 	spectrumctl --su $SPECTRUM_USER -q -c $i start
     	  if [ $? -gt 0 ]; then
@@ -36,9 +37,9 @@ case "$1" in
     done
     ;;
   stop)
-    for i in $SPECTRUM_CONF/* ; do
-      if grep "enable" $i | grep "=" | grep "1" > /dev/null ; then
-        CONF=`basename $i .cfg`
+    for i in $SPECTRUM_CONF/*.cfg; do
+      if egrep -q '^\s*enable\s*=\s*1\s*$' "$i"; then
+        CONF="`basename $i .cfg`"
         stat_busy "Stopping spectrum instance: ${CONF}"
 	spectrumctl -q -c $i stop
         if [ $? -gt 0 ]; then
@@ -56,9 +57,9 @@ case "$1" in
     $0 start
     ;;
   reload)
-    for i in $SPECTRUM_CONF/*.cfg ; do
-      if grep "enable" $i | grep "=" | grep "1" > /dev/null ; then
-        CONF=`basename $i`
+    for i in $SPECTRUM_CONF/*.cfg; do
+      if egrep -q '^\s*enable\s*=\s*1\s*$' "$i"; then
+        CONF="`basename $i .cfg`"
         stat_busy "Reloading spectrum instance: ${CONF}"
 	spectrumctl -q -c $i reload
 
