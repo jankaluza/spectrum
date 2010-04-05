@@ -10,8 +10,8 @@
 #     spectrum_uptime (monitor uptime of transports)
 #     spectrum_registered (how many users are registered to the transport)
 #     spectrum_online (how many users are online)
-#     spectrum_legacy_registered
-#     spectrum_legacy_online (same as above, only for the legacy network)
+#     spectarm_contacts_registered
+#     spectrum_contacts_online (same as above, only for the legacy network)
 #     spectrum_messages (how many messages have been sent over this transport)
 #     spectrum_memory (how much memory the transport consumes)
 #
@@ -79,8 +79,8 @@ if len( sys.argv ) > 1:
 		print( """uptime
 registered
 online
-legacy_registered
-legacy_online
+contacts_registered
+contacts_online
 messages
 messages_sec
 memory""" )
@@ -118,14 +118,14 @@ elif suffix == 'online':
 	title = "Online users"
 	vlabel = "users"
 	info = ''
-elif suffix == 'legacy_registered':
+elif suffix == 'contacts_registered':
 	stat = { 'contacts/total': None }
-	title = "Buddies online"
+	title = "Buddies in roster (total)"
 	vlabel = "users"
 	info = ''
-elif suffix == 'legacy_online':
+elif suffix == 'contacts_online':
 	stat = { 'contacts/online': None }
-	title = "Buddies in roster (total)"
+	title = "Buddies online"
 	vlabel = "users"
 	info = ''
 elif suffix == 'messages':
