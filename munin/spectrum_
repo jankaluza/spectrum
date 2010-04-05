@@ -245,4 +245,8 @@ for cfg in cfgs.split( ',' ):
 	except ConfigParser.NoOptionError, e:
 		print( 'Error: %s: %s' %(path, e) )
 	except socket.error, msg:
-		print( 'Error: %s: %s' %(config_interface, msg.strerror ) )
+		if hasattr( msg, 'strerror' ):
+			err = msg.strerror
+		else:
+			err = msg.message
+		print( 'Error: %s: %s' %(config_interface, err ) )
