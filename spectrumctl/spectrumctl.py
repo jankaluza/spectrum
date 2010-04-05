@@ -29,7 +29,7 @@ description='''spectrumctl can be used to control your spectrum-instances.
 Valid actions are start, stop, restart, reload, list and stats. By default, spectrumctl 
 acts on all transports defined in /etc/spectrum/'''
 
-parser = OptionParser( usage='Usage: %prog [options] action', version='0.1', description=description)
+parser = OptionParser( usage='Usage: %prog [options] action', version='0.2', description=description)
 parser.add_option( '-c', '--config', metavar='FILE',
 	help = 'Only act on transport configured in FILE (ignored for list)' )
 parser.add_option( '-d', '--config-dir', metavar='DIR', default='/etc/spectrum',
