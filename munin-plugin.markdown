@@ -50,9 +50,9 @@ By default, the plugin will monitor all instances configured in /etc/spectrum.
 If you want to use a different directory, you can use the environment variable
 "base" to specify a different one. If you do not want to monitor all instances,
 you can use the environment variable "cfgs" to monitor only those named
-explicitly by a comma-seperated list. If you give an absolute path "base" will
+explicitly by a comma-seperated list. If you give an absolute path, "base" will
 not be used. This more thorough example configuration would only monitor
-xmpp.cfg and irc.cfg in /usr/local/etc/spectrum as well as /root/etc/icq.cfg.
+xmpp.cfg and irc.cfg in /usr/local/etc/spectrum as well as /root/etc/icq.cfg:
 
 	[spectrum_*]
 	user spectrum
