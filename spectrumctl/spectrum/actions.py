@@ -45,7 +45,7 @@ def stats( options, instances ):
 		pkg = xmpp.Iq( typ='get', queryNS=ns, to=jid )
 		for name in [ 'uptime', 'users/registered', 'users/online', 
 					'contacts/online',
-					'contacts/registered',
+					'contacts/total',
 					'messages/in', 'messages/out',
 					'memory-usage' ]:
 			child = xmpp.simplexml.Node( 'stat', {'name': name} )

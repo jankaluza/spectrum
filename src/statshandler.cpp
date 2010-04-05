@@ -118,7 +118,7 @@ Tag* GlooxStatsHandler::handleTag (Tag *stanzaTag){
 		query->addChild(t);
 
 		t = new Tag("stat");
-		t->addAttribute("name","contacts/online");
+		t->addAttribute("name","contacts/total");
 		query->addChild(t);
 
 		t = new Tag("stat");
@@ -190,9 +190,9 @@ Tag* GlooxStatsHandler::handleTag (Tag *stanzaTag){
 				t->addAttribute("units","users");
 				t->addAttribute("value",registeredUsers);
 				query->addChild(t);
-			} else if (name == "contacts/online") {
+			} else if (name == "contacts/total") {
 				t = new Tag("stat");
-				t->addAttribute("name","contacts/online");
+				t->addAttribute("name","contacts/total");
 				t->addAttribute("units","users");
 				t->addAttribute("value",users);
 				query->addChild(t);
