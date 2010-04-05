@@ -31,12 +31,6 @@ class spectrum:
 		self.options = options
 		self.config_path = os.path.normpath( config_path )
 		
-		# check permissions for config-file:
-		self.check_ownership( self.config_path, 0 )
-		# we don't care about user permissions, group MUST be read-only
-		self.check_permissions( self.config_path, [ stat.S_IRGRP ],
-			[ stat.S_IRUSR, stat.S_IWUSR, stat.S_IXUSR ] )
-
 		self.config = spectrumconfigparser.SpectrumConfigParser()
 		self.config.read( config_path )
 		self.pid_file = self.config.get( 'service', 'pid_file' )
@@ -230,6 +224,12 @@ class spectrum:
 		# we must be root
 		if os.getuid() != 0:
 			raise RuntimeError( "User", "Must be root to start spectrum" )
+		
+		# check permissions for config-file:
+		self.check_ownership( self.config_path, 0 )
+		# we don't care about user permissions, group MUST be read-only
+		self.check_permissions( self.config_path, [ stat.S_IRGRP ],
+			[ stat.S_IRUSR, stat.S_IWUSR, stat.S_IXUSR ] )
 
 		# config_interface:
 		config_interface = self.config.get( 'service', 'config_interface' )
