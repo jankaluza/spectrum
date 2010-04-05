@@ -22,6 +22,8 @@
 #     different path-prefix. 
 #     
 #     [spectrum_*]
+#     user spectrum
+#     group spectrum
 #     env.cfgs xmpp.example.com.cfg,irc.example.com.cfg
 #     env.base /etc/spectrum
 #
