@@ -16,12 +16,14 @@
 # Short-Description:    Spectrum XMPP Transport Service
 ### END INIT INFO
 
-USER=spectrum
+SPECTRUM_USER=spectrum
 CONFSDIR=/etc/spectrum/
+
+test -f /etc/default/spectrum && . /etc/default/spectrum
 
 # Check that user exists
 check_user() {
-	if ! getent passwd $USER >/dev/null; then
+	if ! getent passwd $SPECTRUM_USER >/dev/null; then
 		exit 1;
 	fi
 }
@@ -32,7 +34,7 @@ start() {
 	for i in $CONFSDIR/*.cfg ; do
 		CONF=`basename $i`
 		log_daemon_msg "Starting spectrum instance:" "$CONF"
-		output=$(spectrumctl --su $USER -c $i start)
+		output=$(spectrumctl -c $i start)
 		if [ "$?" -ne 0 ]; then
 			echo $output
 		fi
