@@ -96,9 +96,9 @@ http_proxy="http://user:passwd@your.proxy.server:port/"
 
 \fBconfig_interface\fR=\fIpath\fR
 .RS
-Optional. If set, spectrum opens a local socket at \fIpath\fR where it replies to some 
-XMPP-packets. This setting is required by the spectrumctl-action \fIstats\fR
-and the munin plugin. Example: /var/run/spectrum/$filename:jid.sock. 
+Spectrum opens a local socket at \fIpath\fR where it replies to some 
+XMPP-packets. This setting is used by the spectrumctl-action \fIstats\fR
+and the munin plugin. The default is /var/run/spectrum/$jid.sock
 .RE
 
 \fBfiletransfer_bind_address\fR=\fIIP\fR:\fIport\fR
@@ -141,16 +141,16 @@ admin adhoc commands.
 The transport will show up in Service Discovery as \fIname\fR.
 .RE
 
-\fBlanguage\fR=\fIen\fR
+\fBlanguage\fR=\fIlang\fR
 .RS
-The default language (default: en).
+Use \fIlang\fR as the default language for spetrum (default: en).
 .RE
 
 \fBtransport_features\fR=\fIfeature\fR;\fI...\fR
 .RS
 List of features available on the transport, seperated by semicolons (';'),
 \fIfeature\fR must be a combination of \fIavatars\fR, \fIchatstates\fR and
-\fIfiletransfer\fR. If the setting is omitted, all three features will be used.
+\fIfiletransfer\fR. By default, spectrum offers all three features.
 .RE
 
 \fBvip_mode\fR=\fImode\fR
