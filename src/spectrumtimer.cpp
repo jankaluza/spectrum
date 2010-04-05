@@ -37,6 +37,7 @@ SpectrumTimer::SpectrumTimer (int time, SpectrumTimerCallback callback, void *da
 }
 
 SpectrumTimer::~SpectrumTimer() {
+	Log("SpectrumTimer", "destructor id " << m_id);
 	stop();
 }
 
@@ -55,6 +56,7 @@ void SpectrumTimer::start() {
 
 void SpectrumTimer::stop() {
 	if (m_id != 0) {
+		Log("SpectrumTimer", "stopping timer");
 #ifndef TESTS
 		purple_timeout_remove(m_id);
 #endif

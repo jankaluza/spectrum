@@ -50,6 +50,7 @@ SpectrumConversation::SpectrumConversation(PurpleConversation *conv, SpectrumCon
 }
 
 SpectrumConversation::~SpectrumConversation() {
+	Log("SpectrumConversation", "destructor");
 	delete m_timer;
 }
 
