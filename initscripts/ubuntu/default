@@ -1,0 +1,12 @@
+# This is a configuration file for /etc/init.d/spectrum; it allows you to
+# perform common modifications to the behavior of the spectrum daemon
+# startup without editing the init script (and thus getting prompted
+# by dpkg on upgrades).  We all love dpkg prompts. Note that changes here
+# affect all spectrum instances.
+
+# If you want to run spectrum as a different user, you can specify it here:
+#SPECTRUM_USER=spectrum
+
+# If you want to override the spectrum binary with something like a wrapper
+# script, you can do that here:
+#SPECTRUM_PATH=/usr/local/bin/spectrum-wrapper
