@@ -29,7 +29,7 @@ class SpectrumConfigParser( ConfigParser.ConfigParser ):
 		ConfigParser.ConfigParser.__init__( self, defaults )
 
 		default_defaults = { 'filetransfer_web': '',
-			'config_interface': '',
+			'config_interface': '/var/run/spectrum/$jid.sock',
 			'pid_file': '/var/run/spectrum/$jid',
 			'language': 'en',
 			'encoding': '',

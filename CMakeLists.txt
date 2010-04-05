@@ -370,6 +370,10 @@ INSTALL(FILES
     ${CMAKE_CURRENT_SOURCE_DIR}/man/spectrumctl.8
 	DESTINATION share/man/man8
     )
+INSTALL(FILES
+    ${CMAKE_CURRENT_SOURCE_DIR}/man/spectrum.cfg.5
+	DESTINATION share/man/man5
+    )
 
 endif (NOT WITHOUT_SPECTRUMCTL)
 

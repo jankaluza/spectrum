@@ -203,7 +203,7 @@ Configuration ConfigFile::getConfiguration() {
 	
 	loadString(configuration.filetransferWeb, "service", "filetransfer_web", "");
 
-	if (!loadString(configuration.config_interface, "service", "config_interface", ""))
+	if (!loadString(configuration.config_interface, "service", "config_interface", "/var/run/spectrum/" + configuration.jid + ".sock"))
 		return DummyConfiguration;
 	create_dir(configuration.config_interface, 0640);
 
