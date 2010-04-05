@@ -103,41 +103,47 @@ cfgs = os.environ.get( 'cfgs', ','.join( os.listdir( base ) ) )
 
 # set variables based on wildcard 
 if suffix == 'uptime':
-	stat = [ 'uptime' ]
+	stat = { 'uptime': None }
 	title = "Uptime"
 	vlabel = "days"
+	info = ''
 	transformer = lambda value: float(value)/60.0/60.0/24.0
 elif suffix == 'registered':
-	stat = [ 'users/registered' ]
+	stat = { 'users/registered': None }
 	title = "Registered users"
 	vlabel = "users"
+	info = ''
 elif suffix == 'online':
-	stat = [ 'users/online' ]
+	stat = { 'users/online': None }
 	title = "Online users"
 	vlabel = "users"
+	info = ''
 elif suffix == 'legacy_registered':
-	stat = [ 'legacy-network-users/registered' ]
+	stat = { 'legacy-network-users/registered': None }
 	title = "Buddies online"
 	vlabel = "users"
+	info = ''
 elif suffix == 'legacy_online':
-	stat = [ 'legacy-network-users/online' ]
+	stat = { 'legacy-network-users/online': None }
 	title = "Buddies in roster (total)"
 	vlabel = "users"
+	info = ''
 elif suffix == 'messages':
-	stat = [ 'messages/in', 'messages/out' ]
-	suffixes = [ 'in', 'out' ]
+	stat = { 'messages/in': 'in', 'messages/out': 'out' }
 	title = "Messages send over transport"
 	vlabel = "messages"
+	info = ''
 elif suffix == 'messages_sec':
-	stat = [ 'messages/in', 'messages/out' ]
-	suffixes = [ 'in', 'out' ]
+	stat = { 'messages/in': 'in', 'messages/out': 'out' }
 	title = "Messages send over transport per second"
 	vlabel = "messages/sec"
+	info = ''
 elif suffix == 'memory':
-	stat = [ 'memory-usage' ]
+	stat = { 'memory-usage': None }
 	title = "Memory usage of transports"
 	vlabel = "megabytes"
 	transformer = lambda value: float(value)/1024.0
+	info = ''
 
 # handle config
 if len( sys.argv ) > 1 and  sys.argv[1] == 'config':
@@ -145,7 +151,8 @@ if len( sys.argv ) > 1 and  sys.argv[1] == 'config':
 graph_args --base 1000 -l 0
 graph_scale no
 graph_vlabel %s
-graph_category transports""" %(title, vlabel) )
+graph_category transports
+graph_info %s""" %(title, vlabel, info) )
 	for cfg in cfgs.split( ',' ):
 		path = cfg.strip()
 		if not os.path.isabs( path ):
@@ -166,11 +173,10 @@ graph_category transports""" %(title, vlabel) )
 			if not verbose: 
 				continue
 
-		for i in range(0, len(stat)):
-			line = stat[i]
+		for name, field_suffix in stat.iteritems():
 			label = jid
-			if 'suffixes' in globals():
-				label += ' ' + suffixes[i]
+			if field_suffix:
+				label += ' ' + field_suffix
 			fieldname = handle_field( label )
 			print( '%s.label %s' %(fieldname, label) )
 			if suffix == 'messages_sec':
@@ -182,22 +188,20 @@ def handler_fetch( packet ):
 	jid = str( packet.getFrom() )
 	total = None
 
-	children = [ child for child in packet.getChildren()[0].getChildren()
-		if child.getAttr('name') in stat ] # google list-comprehension
-	for child in children:
+	for child in packet.getChildren()[0].getChildren():
 		label = jid
 		value = child.getAttr( 'value' )
 		if len( stat ) > 1:
-			i = stat.index( child.getAttr( 'name' ) )
-			suffix = suffixes[i]
-			label += ' ' + suffix
 			if total == None:
 				total = int( value )
 			else:
 				total += int( value )
 			if not verbose:
 				continue
-			
+		
+		field_suffix = stat[ child.getAttr( 'name' ) ]
+		if field_suffix:
+			label += ' ' + field_suffix
 		fieldname = handle_field( label )
 		if 'transformer' in globals():
 			value = transformer(value)
@@ -212,11 +216,7 @@ def handler_fetch( packet ):
 
 # form basic package:
 pkg = xmpp.Iq( typ='get', queryNS='http://jabber.org/protocol/stats' )
-for name in [ 'uptime', 'users/registered', 'users/online',
-		'legacy-network-users/online',
-		'legacy-network-users/registered',
-		'messages/in', 'messages/out',
-		'memory-usage' ]:
+for name in stat.keys():
 	child = xmpp.simplexml.Node( 'stat', {'name': name} )
 	pkg.kids[0].addChild( node=child )
 
