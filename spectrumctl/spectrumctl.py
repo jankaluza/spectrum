@@ -114,7 +114,8 @@ else:
 	instances = []
 	for file in config_list:
 		path = '%s/%s'%(options.config_dir, file)
-		instances.append( spectrum.spectrum( options, path ) )
+		if os.path.isfile( path ) and path.endswith( '.cfg' ):
+			instances.append( spectrum.spectrum( options, path ) )
 
 	if action in init_actions:
 		for instance in instances:
