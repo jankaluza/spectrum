@@ -41,7 +41,7 @@ version 0.2 (2010-??-??):
 	* New command-line option for list: 
 	  * --machine-readable: Output data as comma-seperated values
 	* env-variable SPECTRUM_PATH can now configure how spectrumctl is
-	  called. If the variable is set, it assumes that spectrum is in its
+	  called. If the variable is not set, it assumes that spectrum is in its
 	  PATH.
 	* env-variable SPECTRUM_USER can now configure the name of the
 	  spectrum-user. This is still overridden by --su.
