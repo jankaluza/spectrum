@@ -44,8 +44,8 @@ def stats( options, instances ):
 		ns = 'http://jabber.org/protocol/stats'
 		pkg = xmpp.Iq( typ='get', queryNS=ns, to=jid )
 		for name in [ 'uptime', 'users/registered', 'users/online', 
-					'legacy-network-users/online',
-					'legacy-network-users/registered',
+					'contacts/online',
+					'contacts/registered',
 					'messages/in', 'messages/out',
 					'memory-usage' ]:
 			child = xmpp.simplexml.Node( 'stat', {'name': name} )

@@ -119,12 +119,12 @@ elif suffix == 'online':
 	vlabel = "users"
 	info = ''
 elif suffix == 'legacy_registered':
-	stat = { 'legacy-network-users/registered': None }
+	stat = { 'contacts/total': None }
 	title = "Buddies online"
 	vlabel = "users"
 	info = ''
 elif suffix == 'legacy_online':
-	stat = { 'legacy-network-users/online': None }
+	stat = { 'contacts/online': None }
 	title = "Buddies in roster (total)"
 	vlabel = "users"
 	info = ''

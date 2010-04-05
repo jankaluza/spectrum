@@ -118,11 +118,11 @@ Tag* GlooxStatsHandler::handleTag (Tag *stanzaTag){
 		query->addChild(t);
 
 		t = new Tag("stat");
-		t->addAttribute("name","legacy-network-users/online");
+		t->addAttribute("name","contacts/online");
 		query->addChild(t);
 
 		t = new Tag("stat");
-		t->addAttribute("name","legacy-network-users/registered");
+		t->addAttribute("name","contacts/registered");
 		query->addChild(t);
 
 		t = new Tag("stat");
@@ -184,15 +184,15 @@ Tag* GlooxStatsHandler::handleTag (Tag *stanzaTag){
 				t->addAttribute("units","users");
 				t->addAttribute("value",p->userManager()->userCount());
 				query->addChild(t);
-			} else if (name == "legacy-network-users/registered") {
+			} else if (name == "contacts/registered") {
 				t = new Tag("stat");
-				t->addAttribute("name","legacy-network-users/registered");
+				t->addAttribute("name","contacts/registered");
 				t->addAttribute("units","users");
 				t->addAttribute("value",registeredUsers);
 				query->addChild(t);
-			} else if (name == "legacy-network-users/online") {
+			} else if (name == "contacts/online") {
 				t = new Tag("stat");
-				t->addAttribute("name","legacy-network-users/online");
+				t->addAttribute("name","contacts/online");
 				t->addAttribute("units","users");
 				t->addAttribute("value",users);
 				query->addChild(t);
