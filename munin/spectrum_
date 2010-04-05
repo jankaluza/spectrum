@@ -117,11 +117,11 @@ elif suffix == 'online':
 	vlabel = "users"
 elif suffix == 'legacy_registered':
 	stat = [ 'legacy-network-users/registered' ]
-	title = "Users registered to legacy network"
+	title = "Buddies online"
 	vlabel = "users"
 elif suffix == 'legacy_online':
 	stat = [ 'legacy-network-users/online' ]
-	title = "Users online on legacy network"
+	title = "Buddies in roster (total)"
 	vlabel = "users"
 elif suffix == 'messages':
 	stat = [ 'messages/in', 'messages/out' ]
