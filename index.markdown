@@ -10,6 +10,7 @@ title: Documentation
 * [Building from source code on Windows](building-from-source-code-windows.html)
 * [Installing on Debian/Ubuntu](debian-ubuntu-installation.html)
 * [Installing on Archlinux](archlinux-installation.html)
+* [Installing on Salix OS/Slackware](salixos-installation.html)
 * [Configuring new spectrum instances](new-spectrum-instances.html)
 
 #### Features
