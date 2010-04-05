@@ -3,11 +3,11 @@
   !define MULTIUSER_EXECUTIONLEVEL Highest
   !define MULTIUSER_MUI
   !define MULTIUSER_INSTALLMODE_COMMANDLINE
-  !define MULTIUSER_INSTALLMODE_DEFAULT_REGISTRY_KEY "Software\Spectrum\0.1"
+  !define MULTIUSER_INSTALLMODE_DEFAULT_REGISTRY_KEY "Software\Spectrum"
   !define MULTIUSER_INSTALLMODE_DEFAULT_REGISTRY_VALUENAME ""
-  !define MULTIUSER_INSTALLMODE_INSTDIR_REGISTRY_KEY "Software\Spectrum\0.1"
+  !define MULTIUSER_INSTALLMODE_INSTDIR_REGISTRY_KEY "Software\Spectrum"
   !define MULTIUSER_INSTALLMODE_INSTDIR_REGISTRY_VALUENAME ""
-  !define MULTIUSER_INSTALLMODE_INSTDIR "Spectrum 0.1"
+  !define MULTIUSER_INSTALLMODE_INSTDIR "Spectrum"
   !include "MultiUser.nsh"
   !include "MUI2.nsh"
   !include "nsDialogs.nsh"
@@ -17,8 +17,8 @@
 ;General
 
   ;Name and file
-  Name "Spectrum"
-  OutFile "spectrum-0.1-win32.exe"
+  Name "Spectrum 0.2"
+  OutFile "spectrum-0.2-win32.exe"
 
 ;--------------------------------
 ;Variables
@@ -46,7 +46,7 @@
 
   ;Remember the installer language
   !define MUI_LANGDLL_REGISTRY_ROOT "SHCTX" 
-  !define MUI_LANGDLL_REGISTRY_KEY "Software\Spectrum\0.1" 
+  !define MUI_LANGDLL_REGISTRY_KEY "Software\Spectrum" 
   !define MUI_LANGDLL_REGISTRY_VALUENAME "Installer Language"
 
 ;--------------------------------
@@ -60,9 +60,9 @@
 
   ;Start Menu Folder Page Configuration
   !define MUI_STARTMENUPAGE_REGISTRY_ROOT "SHCTX" 
-  !define MUI_STARTMENUPAGE_REGISTRY_KEY "Software\Spectrum\0.1" 
+  !define MUI_STARTMENUPAGE_REGISTRY_KEY "Software\Spectrum" 
   !define MUI_STARTMENUPAGE_REGISTRY_VALUENAME "Start Menu Folder"
-  !define MUI_STARTMENUPAGE_DEFAULTFOLDER "Spectrum 0.1"
+  !define MUI_STARTMENUPAGE_DEFAULTFOLDER "Spectrum"
   
   !insertmacro MUI_PAGE_STARTMENU Application $StartMenuFolder
 
@@ -99,20 +99,20 @@ Section "Spectrum" SpectrumSection
   File /r ..\spectrum-git\*.*
   
   ;Store installation folder
-  WriteRegStr SHCTX "Software\Spectrum\0.1" "" $INSTDIR
+  WriteRegStr SHCTX "Software\Spectrum" "" $INSTDIR
   
   ;Create uninstaller
   WriteUninstaller "$INSTDIR\Uninstall.exe"
   
   ;Add uninstall information
-  WriteRegStr SHCTX "Software\Microsoft\Windows\CurrentVersion\Uninstall\Spectrum 0.1" "DisplayName" "Spectrum 0.1" 
-  WriteRegStr SHCTX "Software\Microsoft\Windows\CurrentVersion\Uninstall\Spectrum 0.1" "DisplayIcon" "$\"$INSTDIR\spectrum.exe$\""
-  WriteRegStr SHCTX "Software\Microsoft\Windows\CurrentVersion\Uninstall\Spectrum 0.1" "UninstallString" "$\"$INSTDIR\Uninstall.exe$\""
-  WriteRegStr SHCTX "Software\Microsoft\Windows\CurrentVersion\Uninstall\Spectrum 0.1" "QuietUninstallString" "$\"$INSTDIR\Uninstall.exe$\" /S"
-  WriteRegStr SHCTX "Software\Microsoft\Windows\CurrentVersion\Uninstall\Spectrum 0.1" "URLInfoAbout" "www.spectrum.im"
-  WriteRegStr SHCTX "Software\Microsoft\Windows\CurrentVersion\Uninstall\Spectrum 0.1" "DisplayVersion" "0.1"
-  WriteRegDWORD SHCTX "Software\Microsoft\Windows\CurrentVersion\Uninstall\Spectrum 0.1" "NoModify" 1
-  WriteRegDWORD SHCTX "Software\Microsoft\Windows\CurrentVersion\Uninstall\Spectrum 0.1" "NoRepair" 1
+  WriteRegStr SHCTX "Software\Microsoft\Windows\CurrentVersion\Uninstall\Spectrum" "DisplayName" "Spectrum 0.2" 
+  WriteRegStr SHCTX "Software\Microsoft\Windows\CurrentVersion\Uninstall\Spectrum" "DisplayIcon" "$\"$INSTDIR\spectrum.exe$\""
+  WriteRegStr SHCTX "Software\Microsoft\Windows\CurrentVersion\Uninstall\Spectrum" "UninstallString" "$\"$INSTDIR\Uninstall.exe$\""
+  WriteRegStr SHCTX "Software\Microsoft\Windows\CurrentVersion\Uninstall\Spectrum" "QuietUninstallString" "$\"$INSTDIR\Uninstall.exe$\" /S"
+  WriteRegStr SHCTX "Software\Microsoft\Windows\CurrentVersion\Uninstall\Spectrum" "URLInfoAbout" "www.spectrum.im"
+  WriteRegStr SHCTX "Software\Microsoft\Windows\CurrentVersion\Uninstall\Spectrum" "DisplayVersion" "0.2"
+  WriteRegDWORD SHCTX "Software\Microsoft\Windows\CurrentVersion\Uninstall\Spectrum" "NoModify" 1
+  WriteRegDWORD SHCTX "Software\Microsoft\Windows\CurrentVersion\Uninstall\Spectrum" "NoRepair" 1
   
   !insertmacro MUI_STARTMENU_WRITE_BEGIN Application
     
@@ -244,8 +244,7 @@ Section "Uninstall"
   Delete "$SMPROGRAMS\$StartMenuFolder\Uninstall.lnk"
   RMDir "$SMPROGRAMS\$StartMenuFolder"
 
-  DeleteRegKey SHCTX "Software\Microsoft\Windows\CurrentVersion\Uninstall\Spectrum 0.1"
-  DeleteRegKey /ifempty SHCTX "Spectrum\0.1"
+  DeleteRegKey SHCTX "Software\Microsoft\Windows\CurrentVersion\Uninstall\Spectrum"
   DeleteRegKey /ifempty SHCTX "Spectrum"
 
 SectionEnd
