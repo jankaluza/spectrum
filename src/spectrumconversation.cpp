@@ -115,6 +115,7 @@ void SpectrumConversation::handleMessage(AbstractUser *user, const char *who, co
 	if (flags & PURPLE_MESSAGE_ERROR) {
 		// That's handles MSN bug when switchboard timeouts and we should try to resend the message, but only just once.
 		if (message == "Message could not be sent because an error with the switchboard occurred:") {
+			Log("MSN SWITCHBOARD ERROR", message);
 			m_resendNextRawMessage = true;
 			return;
 		} else {
