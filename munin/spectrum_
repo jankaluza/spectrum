@@ -16,11 +16,19 @@
 #     spectrum_memory (how much memory the transport consumes)
 #
 # Configuration:
-#     The environment variable "cfgs" is a comma-seperated list of config-files.
-#     Each config-file is assumed to have the variable config_interface set. The
-#     variable "base" (which defaults to /etc/spectrum) can be set to specify a
-#     different path-prefix. 
+#     You need to configure this plugin (just like any other plugin) in
+#	     plugin-conf.d/munin-node.
+#     You have to configure the plugin to run as user and group "spectrum".
+#
+#     By default, the plugin monitors all instances configured in a config-file
+#     in /etc/spectrum. If you use a different directory, you can specify the
+#     environment-variable "base". If you do not want to monitor all instances,
+#     you can give an explicit listing of the corresponding configuration files
+#     with the environment variable "cfgs".
 #     
+#     Here is an example of a configuration. Note again that you can ommit both
+#     env.cfgs and env.base:
+#
 #     [spectrum_*]
 #     user spectrum
 #     group spectrum
@@ -90,8 +98,8 @@ def handle_field( string ):
 # get runtime variables
 suffix = sys.argv[0].partition('_')[2]
 verbose = os.environ.get( 'verbose' )
-cfgs = os.environ.get( 'cfgs' )
 base = os.environ.get( 'base', '/etc/spectrum' )
+cfgs = os.environ.get( 'cfgs', ','.join( os.listdir( base ) ) )
 
 # set variables based on wildcard 
 if suffix == 'uptime':
