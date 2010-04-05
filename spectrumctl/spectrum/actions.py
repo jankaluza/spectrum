@@ -61,7 +61,7 @@ def stats( options, instances ):
 			s = socket.socket( socket.AF_UNIX )
 			s.connect( config_interface )
 		except socket.error, msg:
-			if hasattr( msg, 'strerror' )
+			if hasattr( msg, 'strerror' ):
 				# python2.5 does not have msg.strerror
 				err = msg.strerror
 			else:
