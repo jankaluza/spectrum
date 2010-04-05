@@ -15,7 +15,6 @@ spectrum_SOURCES = adhoc/adhocadmin.cpp \
 	commands.cpp \
 	configfile.cpp \
 	configuration.cpp \
-	discoinfohandler.cpp \
 	filetransfermanager.cpp \
 	filetransferrepeater.cpp \
 	gatewayhandler.cpp \

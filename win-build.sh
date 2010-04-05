@@ -2,7 +2,7 @@ mkdir -p win-deps
 cd win-deps
 
 ### PIDGIN-FETCH
-if [ ! -d pidgin-2.6.5 ]
+if [ ! -d pidgin-*.*.? ]
 then
     wget -c http://gaim-extprefs.sf.net/winpidgin-build-fetcher.sh
     sh winpidgin-build-fetcher.sh
@@ -33,7 +33,7 @@ cd ..
 cd ..
 
 ### LIBPURPLE
-cd pidgin-2.6.5
+cd pidgin-*.*.?
 cd libpurple
 if [ ! -e libpurple.dll ]
 then
@@ -133,7 +133,7 @@ autoconf
 echo "removing .deps"
 rm -rf src/.deps
 ./configure
-#make clean
+make clean
 make
 if [ "$?" -ne 0 ]
 then
@@ -146,7 +146,7 @@ mkdir -p bin
 cp src/spectrum.exe bin/spectrum.exe
 strip bin/spectrum.exe
 cp spectrum.cfg.win bin/spectrum.cfg
-cp -r win-deps/pidgin-2.6.5/win32-install-dir/* bin/
+cp -r win-deps/pidgin-*.*.?/win32-install-dir/* bin/
 cp win-deps/bin/*.dll bin/
 cp nsis/*.bat bin/
 cp win-deps/gtk_installer/gtk_install_files/bin/intl.dll bin/
