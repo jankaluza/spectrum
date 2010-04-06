@@ -181,6 +181,7 @@ graph_info %s""" %(title, vlabel, info) )
 			print( '%s.label %s' %(fieldname, label) )
 			if suffix == 'messages_sec':
 				print( '%s.type DERIVE' %(fieldname) )
+				print( '%s.min 0' %(fieldname) )
 	sys.exit(0)
 
 # callback to handle incoming packets
