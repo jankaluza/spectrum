@@ -75,8 +75,6 @@ void ConfigFile::loadFromFile(const std::string &config) {
 		m_transport = m_filename.substr(m_filename.find_last_of(':') + 1, m_filename.size()).c_str();
 	m_filename = m_filename.substr(0, m_filename.find_last_of(':'));
 	g_free(basename);
-	
-	std::cout << "'" << m_port << "' '" << m_transport << "' '" << m_filename << "'\n";
 
 	if (!g_key_file_load_from_file (keyfile, config.c_str(), (GKeyFileFlags)flags, NULL)) {
 		if (!g_key_file_load_from_file (keyfile, std::string( "/etc/spectrum/" + config + ".cfg").c_str(), (GKeyFileFlags)flags, NULL))
