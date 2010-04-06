@@ -33,6 +33,11 @@ static gboolean storageTimeout(gpointer data) {
 }
 
 static void save_settings(gpointer k, gpointer v, gpointer data) {
+#ifndef WIN32
+	double vm, rss;
+	process_mem_usage(vm, rss);
+	Log("MEMORY USAGE BEFORE SETTINGS", rss);
+#endif
 	PurpleValue *value = (PurpleValue *) v;
 	std::string key((char *) k);
 	SaveData *s = (SaveData *) data;
@@ -47,9 +52,18 @@ static void save_settings(gpointer k, gpointer v, gpointer data) {
 	else if (purple_value_get_type(value) == PURPLE_TYPE_STRING) {
 		Transport::instance()->sql()->addBuddySetting(user->storageId(), id, key, purple_value_get_string(value), purple_value_get_type(value));
 	}
+#ifndef WIN32
+	process_mem_usage(vm, rss);
+	Log("MEMORY USAGE AFTER SETTINGS", rss);
+#endif
 }
 
 static gboolean storeAbstractSpectrumBuddy(gpointer key, gpointer v, gpointer data) {
+#ifndef WIN32
+	double vm, rss;
+	process_mem_usage(vm, rss);
+	Log("MEMORY USAGE BEFORE STORE", rss);
+#endif
 	AbstractUser *user = (AbstractUser *) data;
 	AbstractSpectrumBuddy *s_buddy = (AbstractSpectrumBuddy *) v;
 	
@@ -75,6 +89,10 @@ static gboolean storeAbstractSpectrumBuddy(gpointer key, gpointer v, gpointer da
 		g_hash_table_foreach(buddy->node.settings, save_settings, s);
 		delete s;
 	}
+#ifndef WIN32
+	process_mem_usage(vm, rss);
+	Log("MEMORY USAGE AFTER STORE", rss);
+#endif
 	return TRUE;
 }
 
