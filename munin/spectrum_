@@ -79,7 +79,7 @@ if len( sys.argv ) > 1:
 		print( """uptime
 registered
 online
-contacts_registered
+contacts_total
 contacts_online
 messages
 messages_sec
@@ -118,7 +118,7 @@ elif suffix == 'online':
 	title = "Online users"
 	vlabel = "users"
 	info = ''
-elif suffix == 'contacts_registered':
+elif suffix == 'contacts_total':
 	stat = { 'contacts/total': None }
 	title = "Buddies in roster (total)"
 	vlabel = "users"

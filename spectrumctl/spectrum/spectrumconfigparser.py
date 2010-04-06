@@ -48,12 +48,21 @@ class SpectrumConfigParser( ConfigParser.ConfigParser ):
 		else:
 			filename = filenames
 
-		filename = os.path.splitext( os.path.basename( filename ) )[0]
-		parts = filename.split( ':' )
-		self.set( 'DEFAULT', 'filename:jid', parts[0] )
-		if len( parts ) >= 2:
+		basename = os.path.splitext( os.path.basename( filename ) )[0]
+		parts = basename.split( ':' )
+		if len( parts ) == 1:
+			self.set( 'DEFAULT', 'filename:jid', parts[0] )
+		elif len( parts ) == 2:
+			self.set( 'DEFAULT', 'filename:protocol', parts[0] )
+			self.set( 'DEFAULT', 'filename:port', parts[1] )
+		elif len( parts ) == 3:
+			self.set( 'DEFAULT', 'filename:jid', parts[0] )
 			self.set( 'DEFAULT', 'filename:protocol', parts[1] )
-		if len( parts ) >= 3:
+			self.set( 'DEFAULT', 'filename:port', parts[2] )
+		else:
+			print( "Warning: %s: Filename contains more than one ':'." %(basename) )
+			self.set( 'DEFAULT', 'filename:jid', parts[0] )
+			self.set( 'DEFAULT', 'filename:protocol', parts[1] )
 			self.set( 'DEFAULT', 'filename:port', parts[2] )
 
 	def _interpolate( self, section, option, rawval, vars ):

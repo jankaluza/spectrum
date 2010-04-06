@@ -41,13 +41,15 @@ to have only one file and symlink (see ln(1)) it for each instance.
 The syntax of the filename is:
 .RS 4
 .sp
-\fBjid[:protocol[:port]].cfg\fR
+\fBjid[:protocol[:port]].cfg\fR or
+.br
+\fBprotocol:port.cfg\fR
 .sp
 .RE
-So a full filename would be \fBxmpp.example.com:xmpp:1000.cfg\fR. The two latter
-parts are optional. You can use these settings by using the strings
-"$filename:jid", "$filename:protocol" and "$filename:port" (without quotes) in
-the configuration file.
+So a full filename would be \fBxmpp.example.com:xmpp:1000.cfg\fR or, if only two
+fields are given, \fBxmpp:1000.cfg\fR. You can use these settings by using the
+strings "$filename:jid" (if given), "$filename:protocol" and "$filename:port"
+(without quotes) in the configuration file.
 .SH COMMON OPTIONS
 Most options are common to all protocol configurations. Settings can only be
 omitted if there is a default value or if it is explicitly marked as optional.
