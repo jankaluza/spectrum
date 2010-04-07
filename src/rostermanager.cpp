@@ -448,9 +448,16 @@ void SpectrumRosterManager::handleSubscription(const Subscription &subscription)
 				Log(m_user->jid(), "subscribe presence; user is not in roster => adding to legacy network");
 				// this user is not in local roster, so we have to send add_buddy request
 				// to our legacy network and wait for response
+				m_loadingFromDB = true;
 				PurpleBuddy *buddy = purple_buddy_new(m_user->account(), remote_user.c_str(), remote_user.c_str());
 				purple_blist_add_buddy(buddy, NULL, NULL ,NULL);
 				purple_account_add_buddy(m_user->account(), buddy);
+#ifndef TESTS
+				SpectrumBuddy *s_buddy = new SpectrumBuddy(-1, buddy);
+				buddy->node.ui_data = (void *) s_buddy;
+				s_buddy->setSubscription("to");
+#endif
+				m_loadingFromDB = false;
 			}
 			return;
 		} else if (subscription.subtype() == Subscription::Unsubscribe || subscription.subtype() == Subscription::Unsubscribed) {
