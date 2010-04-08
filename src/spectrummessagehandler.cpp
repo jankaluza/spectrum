@@ -59,7 +59,8 @@ void SpectrumMessageHandler::handlePurpleMessage(PurpleAccount* account, char * 
 		conv = purple_conversation_new(PURPLE_CONV_TYPE_IM, account, name);
 #ifndef TESTS
 		if (Transport::instance()->getConfiguration().protocol == "irc")
-			addConversation(conv, new SpectrumConversation(conv, SPECTRUM_CONV_GROUPCHAT));
+// 			addConversation(conv, new SpectrumConversation(conv, SPECTRUM_CONV_GROUPCHAT));
+			m_conversations[getConversationName(conv)] = new SpectrumConversation(conv, SPECTRUM_CONV_GROUPCHAT);
 		else
 			addConversation(conv, new SpectrumConversation(conv, SPECTRUM_CONV_CHAT));
 #endif
