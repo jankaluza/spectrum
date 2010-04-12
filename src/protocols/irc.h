@@ -66,6 +66,8 @@ class IRCProtocol : AbstractProtocol
 		bool isMUC(AbstractUser *user, const std::string &jid) { return jid.find("%") != std::string::npos && jid.find("#") == 0; }
 		bool tempAccountsAllowed() { return true; }
 		bool changeNickname(const std::string &nick, PurpleConversation *conv);
+		std::string prepareRoomName(AbstractUser *user, const std::string &room);
+		std::string prepareName(AbstractUser *user, const JID &jid);
 
 		// SIGNALS
 

@@ -39,7 +39,7 @@ class TwitterProtocol : AbstractProtocol
 		Tag *getVCardTag(AbstractUser *user, GList *vcardEntries) { return NULL; }
 		bool isMUC(AbstractUser *user, const std::string &jid) { return jid.find("#") == 0; }
 		bool onPresenceReceived(AbstractUser *user, const Presence &stanza);
-		std::string prepareRoomName(const std::string &room) { return "#home"; }
+		std::string prepareRoomName(AbstractUser *user, const std::string &room) { return "#home"; }
 		void onPurpleAccountCreated(PurpleAccount *account) { purple_account_set_string(account, "twitter_last_home_timeline_id", ""); }
 	private:
 		GlooxMessageHandler *m_main;

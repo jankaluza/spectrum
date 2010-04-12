@@ -43,7 +43,7 @@ class XMPPProtocol : AbstractProtocol
 		const std::string userSearchAction() { return "Search for Users..."; }
 		const std::string userSearchColumn() { return "Jabber ID"; }
 		bool onPresenceReceived(AbstractUser *user, const Presence &stanza);
-		std::string prepareRoomName(const std::string &room);
+		std::string prepareRoomName(AbstractUser *user, const std::string &room);
 		void onPurpleAccountCreated(PurpleAccount *account);
 
 	private:

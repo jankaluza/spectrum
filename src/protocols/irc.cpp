@@ -242,3 +242,27 @@ void IRCProtocol::onPurpleAccountCreated(PurpleAccount *account) {
 		purple_account_set_string(account, IRCHELPER_ID "_nickpassword", n);
 	}
 }
+
+std::string IRCProtocol::prepareRoomName(AbstractUser *user, const std::string &room) {
+	std::string name(room);
+	if (name.find("%") == std::string::npos) {
+		std::transform(name.begin(), name.end(), name.begin(),(int(*)(int)) std::tolower);
+		name = name + "%" + JID(user->username()).server();
+	}
+	return name;
+}
+
+std::string IRCProtocol::prepareName(AbstractUser *user, const JID &to) {
+	std::string username = to.username();
+	// "#pidgin%irc.freenode.org/HanzZ"
+	if (!to.resource().empty() && to.resource() != "bot") {
+		username = to.resource();
+	}
+	// "hanzz%irc.freenode.org/bot"
+	else if (to.resource() == "bot") {
+		size_t pos = username.find("%");
+		if (pos != std::string::npos)
+			username.erase((int) pos, username.length() - (int) pos);
+	}
+	return username;
+}

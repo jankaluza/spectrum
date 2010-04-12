@@ -42,6 +42,13 @@ const std::string generateUUID();
 std::vector<std::string> &split(const std::string &s, char delim, std::vector<std::string> &elems);
 std::vector<std::string> split(const std::string &s, char delim);
 
+struct replaceBadJidCharacters {
+	void operator()(char& c) { if(c == '@') c = '%';}
+};
+
+struct replaceJidCharacters {
+	void operator()(char& c) { if(c == '%') c = '@'; }
+};
 
 
 #ifndef WIN32

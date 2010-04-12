@@ -108,13 +108,6 @@ struct User;
 struct UserRow;
 struct authData;
 
-struct replaceBadJidCharacters {
-	void operator()(char& c) { if(c == '@') c = '%';}
-};
-
-struct replaceJidCharacters {
-	void operator()(char& c) { if(c == '%') c = '@'; }
-};
 				
 /*
  * Enum used by gloox::StanzaExtension to identify StanzaExtension by Gloox.

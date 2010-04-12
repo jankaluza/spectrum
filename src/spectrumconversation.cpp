@@ -76,7 +76,6 @@ void SpectrumConversation::handleMessage(AbstractUser *user, const char *who, co
 		name.erase((int) pos, name.length() - (int) pos);
 
 	std::for_each( name.begin(), name.end(), replaceBadJidCharacters() );
-	std::transform(name.begin(), name.end(), name.begin(),(int(*)(int)) std::tolower);
 	
 	// Escape HTML characters.
 	char *newline = purple_strdup_withhtml(msg);
@@ -122,8 +121,10 @@ void SpectrumConversation::handleMessage(AbstractUser *user, const char *who, co
 			Message s(Message::Error, to, currentBody);
 			if (!m_room.empty())
 				s.setFrom(m_room + "%" + JID(user->username()).server() + "@" + Transport::instance()->jid() + "/" + name);
-			else
+			else {
+				std::transform(name.begin(), name.end(), name.begin(),(int(*)(int)) std::tolower);
 				s.setFrom(name + std::string(getType() == SPECTRUM_CONV_CHAT ? "" : ("%" + JID(user->username()).server())) + "@" + Transport::instance()->jid() + "/bot");
+			}
 			Error *c = new Error(StanzaErrorTypeModify, StanzaErrorNotAcceptable);
 			c->setText(message);
 			s.addExtension(c);
@@ -135,8 +136,10 @@ void SpectrumConversation::handleMessage(AbstractUser *user, const char *who, co
 	Message s(Message::Chat, to, message);
 	if (!m_room.empty())
 		s.setFrom(m_room + "@" + Transport::instance()->jid() + "/" + name);
-	else
+	else {
+		std::transform(name.begin(), name.end(), name.begin(),(int(*)(int)) std::tolower);
 		s.setFrom(name + std::string(getType() == SPECTRUM_CONV_CHAT ? "" : ("%" + JID(user->username()).server())) + "@" + Transport::instance()->jid() + "/bot");
+	}
 
 	// chatstates
 	if (purple_value_get_boolean(user->getSetting("enable_chatstate"))) {

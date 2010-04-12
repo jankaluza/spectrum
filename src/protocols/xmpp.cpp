@@ -93,7 +93,7 @@ bool XMPPProtocol::onPresenceReceived(AbstractUser *user, const Presence &stanza
 	return false;
 }
 
-std::string XMPPProtocol::prepareRoomName(const std::string &room) {
+std::string XMPPProtocol::prepareRoomName(AbstractUser *user, const std::string &room) {
 	std::string r = "#" + room;
 	replace(r, "@", "%", 1);
 	return r;
