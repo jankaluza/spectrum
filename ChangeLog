@@ -1,4 +1,9 @@
-version 0.2 (2010-??-??):
+version 0.3 (2010-??-??):
+	IRC:
+	* Fixed bug when user stays connected to IRC after he logged out from Jabber.
+	* Fixed sending first private message from XMPP to IRC.
+
+version 0.2 (2010-04-08):
 	General:
 	* Don't answer error IQ stanza on disco#info request.
 	* Added Windows compilation support.
