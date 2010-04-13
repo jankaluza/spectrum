@@ -225,31 +225,33 @@ bool GlooxRegisterHandler::handleIq(Tag *iqTag) {
 		else {
 			if (query->hasChild( "remove" ))
 				remove = true;
-			usernametag = query->findChild("username");
-			passwordtag = query->findChild("password");
-			languagetag = query->findChild("language");
-			encodingtag = query->findChild("encoding");
-
-			if (languagetag)
-				language = languagetag->cdata();
-			else
-				language = Transport::instance()->getConfiguration().language;
-
-			if (encodingtag)
-				encoding = encodingtag->cdata();
-			else
-				encoding = Transport::instance()->getConfiguration().encoding;
-
-			if (usernametag==NULL || passwordtag==NULL) {
-				sendError(406, "not-acceptable", iqTag);
-				return false;
-			}
 			else {
-				username = usernametag->cdata();
-				password = passwordtag->cdata();
-				if (username.empty() || password.empty()) {
+				usernametag = query->findChild("username");
+				passwordtag = query->findChild("password");
+				languagetag = query->findChild("language");
+				encodingtag = query->findChild("encoding");
+
+				if (languagetag)
+					language = languagetag->cdata();
+				else
+					language = Transport::instance()->getConfiguration().language;
+
+				if (encodingtag)
+					encoding = encodingtag->cdata();
+				else
+					encoding = Transport::instance()->getConfiguration().encoding;
+
+				if (usernametag==NULL || passwordtag==NULL) {
 					sendError(406, "not-acceptable", iqTag);
 					return false;
+				}
+				else {
+					username = usernametag->cdata();
+					password = passwordtag->cdata();
+					if (username.empty() || password.empty()) {
+						sendError(406, "not-acceptable", iqTag);
+						return false;
+					}
 				}
 			}
 		}
