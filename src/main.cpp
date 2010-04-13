@@ -792,6 +792,7 @@ static gboolean transportDataReceived(GIOChannel *source, GIOCondition condition
 
 GlooxMessageHandler::GlooxMessageHandler(const std::string &config) : MessageHandler(),ConnectionListener(),PresenceHandler(),SubscriptionHandler() {
 	m_pInstance = this;
+	m_reconnectCount = 0;
 	m_config = config;
 	m_firstConnection = true;
 	ftManager = NULL;
@@ -1484,6 +1485,7 @@ void GlooxMessageHandler::handlePresence(const Presence &stanza){
 
 void GlooxMessageHandler::onConnect() {
 	Log("gloox", "CONNECTED!");
+	m_reconnectCount = 0;
 
 	if (m_firstConnection) {
 		j->disco()->setIdentity("gateway", protocol()->gatewayIdentity(), configuration().discoName);
@@ -1591,6 +1593,9 @@ void GlooxMessageHandler::onDisconnect(ConnectionError e) {
 		case NonSaslNotAuthorized: Log("gloox", "Auth error: Non sasl not authorized"); break;
 	};
 
+	if (m_reconnectCount == 1)
+		m_userManager->removeAllUsers();
+	
 	Log("gloox", "trying to reconnect after 3 seconds");
 	purple_timeout_add_seconds(3, &transportReconnect, NULL);
 
@@ -1601,6 +1606,7 @@ void GlooxMessageHandler::onDisconnect(ConnectionError e) {
 }
 
 void GlooxMessageHandler::transportConnect() {
+	m_reconnectCount++;
 	j->connect(false);
 	int mysock = dynamic_cast<ConnectionTCPClient*>( j->connectionImpl() )->socket();
 	if (mysock > 0) {

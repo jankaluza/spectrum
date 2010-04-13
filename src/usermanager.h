@@ -51,6 +51,9 @@ class UserManager
 		// Removes user from GLib's event loop. (setups timer with 0 timeout).
 		void removeUserTimer(AbstractUser *user);
 
+		// Removes all users.
+		void removeAllUsers();
+
 		// Sets buddy online.
 		void buddyOnline();
 

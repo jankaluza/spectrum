@@ -32,7 +32,7 @@ static gboolean deleteUser(gpointer data){
 	return FALSE;
 }
 
-static void removeUserCallback(gpointer key, gpointer v, gpointer data) {
+static gboolean removeUserCallback(gpointer key, gpointer v, gpointer data) {
 	AbstractUser *user = (AbstractUser *) v;
 	Log("logout", "Removing user " << user->jid());
 	Tag *tag = new Tag("presence");
@@ -42,6 +42,7 @@ static void removeUserCallback(gpointer key, gpointer v, gpointer data) {
 	Transport::instance()->send(tag);
 	delete user;
 	g_usleep(10000);
+	return TRUE;
 }
 
 UserManager::UserManager() {
@@ -51,7 +52,7 @@ UserManager::UserManager() {
 }
 
 UserManager::~UserManager(){
-	g_hash_table_foreach(m_users, removeUserCallback, NULL);
+	g_hash_table_foreach_remove(m_users, removeUserCallback, NULL);
 	g_hash_table_destroy(m_users);
 }
 
@@ -110,4 +111,9 @@ long UserManager::onlineBuddiesCount() {
 
 int UserManager::userCount() {
 	return g_hash_table_size(m_users);
+}
+
+void UserManager::removeAllUsers() {
+	g_hash_table_foreach_remove(m_users, removeUserCallback, NULL);
+	m_cachedUser = NULL;
 }

@@ -237,6 +237,7 @@ private:
 	Transport *m_transport;
 	GMainLoop *m_loop;
 	std::string m_config;
+	unsigned int m_reconnectCount;
 };
 
 #endif

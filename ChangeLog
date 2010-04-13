@@ -1,6 +1,7 @@
 version 0.3 (2010-??-??):
 	General
 	* Try to reconnect to Jabber server for all stream errors.
+	* Disconnect users from legacy network when Jabber server gets down.
 
 	IRC:
 	* Fixed bug when user stays connected to IRC after he logged out from Jabber.
