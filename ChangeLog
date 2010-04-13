@@ -1,4 +1,7 @@
 version 0.3 (2010-??-??):
+	General
+	* Try to reconnect to Jabber server for all stream errors.
+
 	IRC:
 	* Fixed bug when user stays connected to IRC after he logged out from Jabber.
 	* Fixed sending first private message from XMPP to IRC.

@@ -1591,10 +1591,9 @@ void GlooxMessageHandler::onDisconnect(ConnectionError e) {
 		case NonSaslNotAuthorized: Log("gloox", "Auth error: Non sasl not authorized"); break;
 	};
 
-	if (j->streamError() == 0 || j->streamError() == 24) {
-		Log("gloox", "trying to reconnect after 3 seconds");
-		purple_timeout_add_seconds(3, &transportReconnect, NULL);
-	}
+	Log("gloox", "trying to reconnect after 3 seconds");
+	purple_timeout_add_seconds(3, &transportReconnect, NULL);
+
 	if (connectIO) {
 		g_source_remove(connectID);
 		connectIO = NULL;
