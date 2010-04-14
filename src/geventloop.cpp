@@ -20,7 +20,7 @@
 
 #include "geventloop.h"
 #ifdef _WIN32
-#include "win32dep.h"
+#include "win32/win32dep.h"
 #endif
 
 typedef struct _PurpleIOClosure {
