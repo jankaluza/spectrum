@@ -27,6 +27,9 @@
 #include <arpa/inet.h>
 #include <netdb.h>
 #include "string.h"
+#include "log.h"
+
+extern LogClass Log_;
 
 struct ResolverData {
 	PurpleDnsQueryData *query_data;
@@ -40,10 +43,8 @@ static gboolean resolve_ip(ResolverData *data) {
 	PurpleDnsQueryData *query_data = (PurpleDnsQueryData *) data->query_data;
 	struct sockaddr_in sin;
 	if (inet_aton(purple_dnsquery_get_host(query_data), &sin.sin_addr)) {
-		/*
-		 * The given "hostname" is actually an IP address, so we
-		 * don't need to do anything.
-		 */
+		// The given "hostname" is actually an IP address, so we don't need to do anything.
+		Log("DNSResolver", "Resolving " << purple_dnsquery_get_host(query_data) << ": It's IP, don't do anything.");
 		GSList *hosts = NULL;
 		sin.sin_family = AF_INET;
 		sin.sin_port = htons(purple_dnsquery_get_port(query_data));
@@ -66,12 +67,14 @@ dns_main_thread_cb(gpointer d)
 	/* We're done, so purple_dnsquery_destroy() shouldn't think it is canceling an in-progress lookup */
 // 	query_data->resolver = NULL;
 
-	if (data->error_message != NULL)
+	if (data->error_message != NULL) {
+		Log("DNSResolver", "Resolving " << purple_dnsquery_get_host(query_data) << ": Resolving failed: " << data->error_message);
 		data->failed_cb(query_data, data->error_message);
+	}
 	else
 	{
+		Log("DNSResolver", "Resolving " << purple_dnsquery_get_host(query_data) << ": Successfully resolved");
 		GSList *hosts;
-
 		/* We don't want purple_dns_query_resolved() to free(hosts) */
 		hosts = data->hosts;
 		data->hosts = NULL;
@@ -165,16 +168,20 @@ static gpointer dns_thread(gpointer d) {
 }
 
 static gboolean resolve_host(PurpleDnsQueryData *query_data, PurpleDnsQueryResolvedCallback resolved_cb, PurpleDnsQueryFailedCallback failed_cb) {
-	ResolverData *data = new ResolverData;
 	GError *err = NULL;
+
+	ResolverData *data = new ResolverData;
 	data->query_data = query_data;
 	data->resolved_cb = resolved_cb;
 	data->failed_cb = failed_cb;
 	data->error_message = NULL;
 	data->hosts = NULL;
+
 	if (!resolve_ip(data)) {
+		Log("DNSResolver", "Resolving " << purple_dnsquery_get_host(query_data) << ": Starting resolver thread.");
 		if (g_thread_create(dns_thread, data, FALSE, &err) == NULL)
 		{
+			Log("DNSResolver", "Resolving " << purple_dnsquery_get_host(query_data) << ": Resolver thread couldn't been started.");
 			char message[1024];
 			g_snprintf(message, sizeof(message), "Thread creation failure: %s",
 					(err && err->message) ? err->message : "Unknown reason");
