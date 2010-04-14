@@ -1795,9 +1795,16 @@ int main( int argc, char* argv[] ) {
 
 	if (argc != 2)
 #ifdef WIN32
-		std::cout << "Usage: spectrum.exe <configuration_file.cfg>";
+		std::cout << "Usage: spectrum.exe <configuration_file.cfg>\n";
 #else
-		std::cout << g_option_context_get_help(context, FALSE, NULL);
+
+#if GLIB_CHECK_VERSION(2,14,0)
+	std::cout << g_option_context_get_help(context, FALSE, NULL);
+#else
+	std::cout << "Usage: spectrum <configuration_file.cfg>\n";
+	std::cout << "See \"man spectrum\" for more info.\n";
+#endif
+		
 #endif
 	else {
 #ifndef WIN32
