@@ -712,9 +712,11 @@ static void transport_core_ui_init(void)
 	purple_notify_set_ui_ops(&notifyUiOps);
 	purple_request_set_ui_ops(&requestUiOps);
 	purple_xfers_set_ui_ops(getXferUiOps());
-	purple_dnsquery_set_ui_ops(getDNSUiOps());
 	purple_connections_set_ui_ops(&conn_ui_ops);
 	purple_conversations_set_ui_ops(&conversation_ui_ops);
+#ifndef WIN32
+	purple_dnsquery_set_ui_ops(getDNSUiOps());
+#endif
 }
 
 static PurpleCoreUiOps coreUiOps =
