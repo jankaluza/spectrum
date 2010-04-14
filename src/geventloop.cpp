@@ -19,6 +19,9 @@
  */
 
 #include "geventloop.h"
+#ifdef _WIN32
+#include "win32dep.h"
+#endif
 
 typedef struct _PurpleIOClosure {
 	PurpleInputFunction function;
@@ -78,7 +81,11 @@ static guint input_add(gint fd,
 		cond = (GIOCondition)tmp;
 	}
 
+#ifdef WIN32
+	channel = wpurple_g_io_channel_win32_new_socket(fd);
+#else
 	channel = g_io_channel_unix_new(fd);
+#endif
 	closure->result = g_io_add_watch_full(channel, G_PRIORITY_DEFAULT, cond,
 	io_invoke, closure, io_destroy);
 
