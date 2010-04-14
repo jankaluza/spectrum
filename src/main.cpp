@@ -31,6 +31,7 @@
 #include "geventloop.h"
 #include "accountcollector.h"
 #include "autoconnectloop.h"
+#include "dnsresolver.h"
 #include "usermanager.h"
 #include "adhoc/adhochandler.h"
 #include "adhoc/adhocrepeater.h"
@@ -711,6 +712,7 @@ static void transport_core_ui_init(void)
 	purple_notify_set_ui_ops(&notifyUiOps);
 	purple_request_set_ui_ops(&requestUiOps);
 	purple_xfers_set_ui_ops(getXferUiOps());
+	purple_dnsquery_set_ui_ops(getDNSUiOps());
 	purple_connections_set_ui_ops(&conn_ui_ops);
 	purple_conversations_set_ui_ops(&conversation_ui_ops);
 }

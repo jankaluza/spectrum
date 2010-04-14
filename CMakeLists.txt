@@ -91,6 +91,7 @@ set(spectrum_SRCS
 	src/commands.cpp
 	src/configfile.cpp
 	src/configinterface.cpp
+	src/dnsresolver.cpp
 # 	src/discoinfohandler.cpp
 	src/filetransfermanager.cpp
 	src/filetransferrepeater.cpp
@@ -155,6 +156,7 @@ set(spectrum_MOC_HDRS
 	src/commands.h
 	src/configfile.h
 	src/configinterface.h
+	src/dnsresolver.h
 # 	src/discoinfohandler.h
 	src/filetransfermanager.h
 	src/filetransferrepeater.h
