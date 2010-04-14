@@ -43,10 +43,14 @@ class SpectrumConfigParser( ConfigParser.ConfigParser ):
 
 	def read(self, filenames):
 		ConfigParser.ConfigParser.read( self, filenames )
-		if type( filenames ) == type( [] ):
+		if filenames.__class__ == list:
 			filename == filenames[0]
 		else:
 			filename = filenames
+
+		if not os.path.exists( filename ):
+			import errno
+			raise IOError( errno.ENOENT, filename, os.strerror( errno.ENOENT ) )
 
 		basename = os.path.splitext( os.path.basename( filename ) )[0]
 		parts = basename.split( ':' )
