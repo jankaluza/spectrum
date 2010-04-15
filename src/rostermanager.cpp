@@ -320,9 +320,11 @@ void SpectrumRosterManager::sendNewBuddies() {
 				tag->addAttribute("type", "subscribe");
 				tag->addAttribute("from", s_buddy->getBareJid());
 				tag->addAttribute("to", m_user->jid());
-				Tag *nick = new Tag("nick", alias);
-				nick->addAttribute("xmlns","http://jabber.org/protocol/nick");
-				tag->addChild(nick);
+				if (!alias.empty()) {
+					Tag *nick = new Tag("nick", alias);
+					nick->addAttribute("xmlns","http://jabber.org/protocol/nick");
+					tag->addChild(nick);
+				}
 				Transport::instance()->send(tag);
 
 				s_buddy->setSubscription("ask");
