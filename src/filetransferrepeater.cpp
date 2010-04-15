@@ -35,7 +35,7 @@ static gboolean ui_got_data(gpointer data){
 	return FALSE;
 }
 
-static gboolean try_to_delete_me(gpointer data){
+static gboolean try_to_delete_me(gpointer data) {
 	FiletransferRepeater *repeater = (FiletransferRepeater *) data;
 	repeater->_tryToDeleteMe();
 	return FALSE;

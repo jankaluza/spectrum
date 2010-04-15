@@ -33,15 +33,18 @@ SpectrumTimer::SpectrumTimer (int time, SpectrumTimerCallback callback, void *da
 	m_data = data;
 	m_callback = callback;
 	m_timeout = time;
+	m_mutex = g_mutex_new();
 	m_id = 0;
 }
 
 SpectrumTimer::~SpectrumTimer() {
 	Log("SpectrumTimer", "destructor id " << m_id);
 	stop();
+	g_mutex_free(m_mutex);
 }
 
 void SpectrumTimer::start() {
+	g_mutex_lock(m_mutex);
 	if (m_id == 0) {
 #ifdef TESTS
 		m_id = 1;
@@ -52,9 +55,11 @@ void SpectrumTimer::start() {
 			m_id = purple_timeout_add(m_timeout, _callback, this);
 #endif
 	}
+	g_mutex_unlock(m_mutex);
 }
 
 void SpectrumTimer::stop() {
+	g_mutex_lock(m_mutex);
 	if (m_id != 0) {
 		Log("SpectrumTimer", "stopping timer");
 #ifndef TESTS
@@ -62,8 +67,10 @@ void SpectrumTimer::stop() {
 #endif
 		m_id = 0;
 	}
+	g_mutex_unlock(m_mutex);
 }
 
+// this is always in main thread.
 gboolean SpectrumTimer::timeout() {
 	gboolean ret = m_callback(m_data);
 	if (!ret)

@@ -58,6 +58,7 @@ class SpectrumTimer {
 		SpectrumTimerCallback m_callback;	// Callback which is called on timeout.
 		int m_timeout;						// Miliseconds.
 		guint m_id;							// Timer ID.
+		GMutex *m_mutex;					// Mutex.
 };
 
 #endif
