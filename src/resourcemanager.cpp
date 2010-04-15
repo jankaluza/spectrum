@@ -30,6 +30,8 @@ ResourceManager::~ResourceManager() {
 }
 
 void ResourceManager::setResource(const std::string &resource, int priority, int caps) {
+	if (resource.empty())
+		return;
 	if (!hasResource(resource))
 		m_resources[resource].caps = -1;
 	if (priority != -256)
@@ -43,6 +45,8 @@ void ResourceManager::setResource(const std::string &resource, int priority, int
 
 void ResourceManager::setResource(const Presence &stanza) {
 	std::string resource = stanza.from().resource();
+	if (resource.empty())
+		return;
 	Tag *stanzaTag = stanza.tag();
 	Tag *c = stanzaTag->findChildWithAttrib("xmlns", "http://jabber.org/protocol/caps");
 	int caps = -1;
@@ -57,6 +61,7 @@ void ResourceManager::setResource(const Presence &stanza) {
 void ResourceManager::setActiveResource(const std::string &resource) {
 	if (resource.empty()) {
 		int highest = -256;
+		m_resource = "";
 		for (std::map <std::string, Resource>::iterator iter = m_resources.begin(); iter != m_resources.end(); iter++) {
 			if ((*iter).second.priority > highest) {
 				highest = (*iter).second.priority;
@@ -73,10 +78,10 @@ bool ResourceManager::hasResource(const std::string &r) {
 }
 
 Resource & ResourceManager::getResource(const std::string &r) {
-	if (r.empty())
-		return m_resources[m_resource];
-	else
-		return m_resources[r];
+	std::string resource = r.empty() ? m_resource : r;
+	if (resource.empty() || !hasResource(resource))
+		return DummyResource;
+	return m_resources[resource];
 }
 
 Resource & ResourceManager::findResourceWithFeature(int feature) {
