@@ -496,7 +496,7 @@ void FiletransferRepeater::handleDataNotSent(const guchar *data, gssize size) {
 	// Copy data to buffer
 	memcpy(m_buffer, data, size);
 
-	// We've unset data again, so we're ready.
+	// We've unsent data again, so we're ready.
 	ready();
 	if (m_resender)
 		m_resender->unlockMutex();
