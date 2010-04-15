@@ -27,6 +27,7 @@
 #include "abstractuser.h"
 #include "transport.h"
 #include "spectrummessagehandler.h"
+#include "spectrumtimer.h"
 
 static gboolean ui_got_data(gpointer data){
 	FiletransferRepeater *repeater = (FiletransferRepeater *) data;
@@ -36,7 +37,7 @@ static gboolean ui_got_data(gpointer data){
 
 static gboolean try_to_delete_me(gpointer data){
 	FiletransferRepeater *repeater = (FiletransferRepeater *) data;
-	repeater->tryToDeleteMe();
+	repeater->_tryToDeleteMe();
 	return FALSE;
 }
 
@@ -157,7 +158,8 @@ bool SendFileStraight::send() {
 		g_usleep(G_USEC_PER_SEC);
 	}
 	if (m_stream->recv(2000) != ConnNoError) {
-		g_timeout_add(0, &try_to_delete_me, m_parent);
+		m_parent->tryToDeleteMe();
+// 		g_timeout_add(0, &try_to_delete_me, m_parent);
 		return false;
 	}
 	if (shouldStop()) {
@@ -245,7 +247,8 @@ ReceiveFile::~ReceiveFile() {
 
 void ReceiveFile::dispose() {
 	Transport::instance()->disposeBytestream(m_stream);
-	g_timeout_add(0, &try_to_delete_me, m_parent);
+	m_parent->tryToDeleteMe();
+// 	g_timeout_add(0, &try_to_delete_me, m_parent);
 }
 
 bool ReceiveFile::receive() {
@@ -300,7 +303,8 @@ ReceiveFileStraight::~ReceiveFileStraight() {
 bool ReceiveFileStraight::receive() {
 	if (m_stream->recv() != ConnNoError) {
 		Log("ReceiveFileStraight", "socket closed => stopping thread");
-		g_timeout_add(0, &try_to_delete_me, m_parent);
+		m_parent->tryToDeleteMe();
+// 		g_timeout_add(0, &try_to_delete_me, m_parent);
 		return false;
 	}
 	if (shouldStop()) {
@@ -340,6 +344,7 @@ FiletransferRepeater::FiletransferRepeater(const JID& to, const std::string& sid
 	m_readyCalled = false;
 	m_readyTimer = 0;
 	m_xfer = NULL;
+	m_deleteMeTimer = new SpectrumTimer(0, try_to_delete_me, this);
 }
 
 FiletransferRepeater::FiletransferRepeater(const JID& from, const JID& to) {
@@ -355,6 +360,7 @@ FiletransferRepeater::FiletransferRepeater(const JID& from, const JID& to) {
 	m_readyCalled = false;
 	m_readyTimer = 0;
 	m_xfer = NULL;
+	m_deleteMeTimer = new SpectrumTimer(0, try_to_delete_me, this);
 }
 
 FiletransferRepeater::~FiletransferRepeater() {
@@ -381,6 +387,7 @@ FiletransferRepeater::~FiletransferRepeater() {
 		purple_xfer_unref(m_xfer);
 		m_xfer = NULL;
 	}
+	delete m_deleteMeTimer;
 }
 
 void FiletransferRepeater::registerXfer(PurpleXfer *xfer) {
@@ -536,7 +543,8 @@ int FiletransferRepeater::getDataToSend(guchar **data, gssize size) {
 
 	// Try to finish the transfer if we can't have new data and buffer is empty.
 	if (m_resender && m_resender->isRunning() == false && m_buffer_size == 0) {
-		g_timeout_add(0, &try_to_delete_me, this);
+		tryToDeleteMe();
+// 		g_timeout_add(0, &try_to_delete_me, this);
 	}
 
 	return data_size;
@@ -565,6 +573,10 @@ void FiletransferRepeater::ui_ready_callback() {
 }
 
 void FiletransferRepeater::tryToDeleteMe() {
+	m_deleteMeTimer->start();
+}
+
+void FiletransferRepeater::_tryToDeleteMe() {
 	if (m_xfer == NULL && m_buffer_size == 0) {
 		Log("xfer-tryToDeleteMe", "there's not xfer, buffer_size = 0 => finishing it and removing repeater");
 		delete this;

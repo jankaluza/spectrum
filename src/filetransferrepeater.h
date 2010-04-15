@@ -34,6 +34,7 @@
 #include <fstream>
 
 class AbstractUser;
+class SpectrumTimer;
 
 extern Localization localization;
 
@@ -196,11 +197,15 @@ class FiletransferRepeater {
 		// MUST be called only by timer.
 		void ui_ready_callback();
 
-		// Callback which tries to delete this class.
-		// MUST be called only by timer.
+		// Adds timer for _tryToDeleteMe function.
 		void tryToDeleteMe();
 
+		// Callback which tries to delete this class.
+		// MUST be called only by timer.
+		void _tryToDeleteMe();
+
 	private:
+		SpectrumTimer *m_deleteMeTimer;
 		JID m_to;
 		std::string m_sid;
 		SIProfileFT::StreamType m_type;
