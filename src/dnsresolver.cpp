@@ -37,7 +37,10 @@ struct ResolverData {
 	PurpleDnsQueryFailedCallback failed_cb;
 	gchar *error_message;
 	GSList *hosts;
+	bool destroyed;
 };
+
+static GHashTable *query_data_cache = NULL;
 
 static gboolean resolve_ip(ResolverData *data) {
 	PurpleDnsQueryData *query_data = (PurpleDnsQueryData *) data->query_data;
@@ -62,7 +65,12 @@ static gboolean
 dns_main_thread_cb(gpointer d)
 {
 	ResolverData *data = (ResolverData *) d;
+	if (data->destroyed) {
+		delete data;
+		return FALSE;
+	}
 	PurpleDnsQueryData *query_data = data->query_data;
+	g_hash_table_remove(query_data_cache, query_data);
 
 	/* We're done, so purple_dnsquery_destroy() shouldn't think it is canceling an in-progress lookup */
 // 	query_data->resolver = NULL;
@@ -176,6 +184,7 @@ static gboolean resolve_host(PurpleDnsQueryData *query_data, PurpleDnsQueryResol
 	data->failed_cb = failed_cb;
 	data->error_message = NULL;
 	data->hosts = NULL;
+	data->destroyed = false;
 
 	if (!resolve_ip(data)) {
 		Log("DNSResolver", "Resolving " << purple_dnsquery_get_host(query_data) << ": Starting resolver thread.");
@@ -196,7 +205,13 @@ static gboolean resolve_host(PurpleDnsQueryData *query_data, PurpleDnsQueryResol
 }
 
 static void destroy(PurpleDnsQueryData *query_data) {
-	
+	Log("DNSResolver", "Destroying " << purple_dnsquery_get_host(query_data));
+	ResolverData *data = (ResolverData *) g_hash_table_lookup(query_data_cache, query_data);
+	if (data) {
+		Log("DNSResolver", "Destroying " << purple_dnsquery_get_host(query_data) << ": will be destroyed soon...");
+		data->destroyed = true;
+		g_hash_table_remove(query_data_cache, query_data);
+	}
 }
 
 static PurpleDnsQueryUiOps dnsUiOps =
@@ -210,6 +225,8 @@ static PurpleDnsQueryUiOps dnsUiOps =
 };
 
 PurpleDnsQueryUiOps * getDNSUiOps() {
+	// TODO: this leaks, but there's not proper API to g_hash_table_destroy it somewhere...
+	query_data_cache = g_hash_table_new_full(g_direct_hash, g_direct_equal, NULL, NULL);
 	return &dnsUiOps;
 }
 
