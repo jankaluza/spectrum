@@ -1793,7 +1793,7 @@ int main( int argc, char* argv[] ) {
 		return 0;
 	}
 
-	if (argc != 2)
+	if (argc != 2) {
 #ifdef WIN32
 		std::cout << "Usage: spectrum.exe <configuration_file.cfg>\n";
 #else
@@ -1806,6 +1806,7 @@ int main( int argc, char* argv[] ) {
 #endif
 		
 #endif
+	}
 	else {
 #ifndef WIN32
 		signal(SIGPIPE, SIG_IGN);
