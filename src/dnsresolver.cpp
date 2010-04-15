@@ -199,6 +199,9 @@ static gboolean resolve_host(PurpleDnsQueryData *query_data, PurpleDnsQueryResol
 			delete data;
 			return FALSE;
 		}
+		else {
+			g_hash_table_replace(query_data_cache, query_data, data);
+		}
 	}
 
 	return TRUE;
