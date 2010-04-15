@@ -256,9 +256,19 @@ bool GlooxRegisterHandler::handleIq(Tag *iqTag) {
 			}
 		}
 
-		if ((JID(username).bare() == from.bare()) && Transport::instance()->getConfiguration().protocol == "xmpp" ) {
-			sendError(406, "not-acceptable", iqTag);
-			return false;
+		if (Transport::instance()->getConfiguration().protocol == "xmpp") {
+			// User tries to register himself.
+			if ((JID(username).bare() == from.bare())) {
+				sendError(406, "not-acceptable", iqTag);
+				return false;
+			}
+
+			// User tries to register someone who's already registered.
+			UserRow user_row = Transport::instance()->sql()->getUserByJid(JID(username).bare());
+			if (user_row.id != -1) {
+				sendError(406, "not-acceptable", iqTag);
+				return false;
+			}
 		}
 
 		if (remove) {
