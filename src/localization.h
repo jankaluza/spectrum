@@ -24,10 +24,35 @@
 #include <map>
 #include "glib.h"
 #include "purple.h"
+#include <iostream>
+#include <fstream>
 
 #ifndef WIN32
 #include <gettext-po.h>
 #endif
+
+
+class MoFile {
+	public:
+		MoFile(const std::string &filename);
+		~MoFile();
+
+		const char *lookup(const char *s);
+
+		bool isLoaded();
+		bool isReversed() { return m_reversed; }
+		char *getData() { return m_data; }
+
+	private:
+		std::ifstream::pos_type m_size;
+		char *m_data;
+		bool m_reversed;
+		int m_num_strings;
+		int m_original_table_offset;
+		int m_translated_table_offset;
+		int m_hash_num_entries;
+		int m_hash_offset;
+};
 
 class Localization {
 	public:
