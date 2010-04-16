@@ -146,6 +146,7 @@ bool SendFileStraight::send() {
 			int ret = m_stream->send(data);
 			if (ret < 1) {
 				std::cout << "error in sending or sending probably finished\n";
+				unlockMutex();
 				return false;
 			};
 		}
