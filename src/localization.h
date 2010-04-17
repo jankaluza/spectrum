@@ -54,6 +54,18 @@ class MoFile {
 		int m_hash_offset;
 };
 
+class Translation {
+	public:
+		Translation(const std::string &lang);
+		~Translation();
+
+		const char * translate(const char *key);
+
+	private:
+		MoFile *m_spectrum;
+		MoFile *m_pidgin;
+};
+
 class Localization {
 	public:
 		Localization();

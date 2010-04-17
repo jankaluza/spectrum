@@ -161,13 +161,37 @@ const char *MoFile::lookup(const char *s) {
 	return t;
 }
 
-static void deleteMoFile(gpointer data) {
-	MoFile *mo = (MoFile *) data;
-	delete mo;
+static void deleteTranslation(gpointer data) {
+	Translation *trans = (Translation *) data;
+	delete trans;
+}
+
+
+Translation::Translation(const std::string &lang) {
+	char *l;
+	l = g_build_filename(INSTALL_DIR, "share", "locale", lang.c_str(), "LC_MESSAGES", "spectrum.mo", NULL);
+	m_spectrum = new MoFile(l);
+	g_free(l);
+
+	l = g_build_filename(INSTALL_DIR, "share", "locale", lang.c_str(), "LC_MESSAGES", "pidgin.mo", NULL);
+	m_pidgin = new MoFile(l);
+	g_free(l);
+}
+
+Translation::~Translation() {
+	delete m_pidgin;
+	delete m_spectrum;
+}
+
+const char * Translation::translate(const char *key) {
+	const char *ret = m_spectrum->lookup(key);
+	if (strcmp(ret, key) == 0)
+		return m_pidgin->lookup(key);
+	return ret;
 }
 
 Localization::Localization() {
-	m_locales = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, deleteMoFile);
+	m_locales = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, deleteTranslation);
 }
 
 Localization::~Localization() {
@@ -175,16 +199,15 @@ Localization::~Localization() {
 }
 
 const char * Localization::translate(const char *lang, const char *key) {
-	const char *ret = key;
-	MoFile *mo;
-	if (!(mo = (MoFile*) g_hash_table_lookup(m_locales, lang))) {
+	Translation *trans;
+	if (!(trans = (Translation *) g_hash_table_lookup(m_locales, lang))) {
 		loadLocale(lang);
-		mo = (MoFile*) g_hash_table_lookup(m_locales, lang);
+		trans = (Translation *) g_hash_table_lookup(m_locales, lang);
 	}
-	if (mo) {
-		return mo->lookup(key);
+	if (trans) {
+		return trans->translate(key);
 	}
-	return ret;
+	return key;
 }
 
 bool Localization::loadLocale(const std::string &lang) {
@@ -192,10 +215,8 @@ bool Localization::loadLocale(const std::string &lang) {
 	if (g_hash_table_lookup(m_locales, lang.c_str()))
 		return true;
 #ifndef WIN32
-	char *l = g_build_filename(/*INSTALL_DIR, "share", "spectrum", */"locales", std::string(lang + ".mo").c_str(), NULL);
-	MoFile *mo = new MoFile(l);
-	g_free(l);
-	g_hash_table_replace(m_locales, g_strdup(lang.c_str()), mo);
+	Translation *trans = new Translation(lang);
+	g_hash_table_replace(m_locales, g_strdup(lang.c_str()), trans);
 #endif
 	return false;
 }
