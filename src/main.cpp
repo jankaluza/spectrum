@@ -1792,7 +1792,7 @@ int main( int argc, char* argv[] ) {
 		g_option_context_free(context);
 		return 0;
 	}
-	std::cout << tr("cs", _("(Re-)Request authorization")) << "\n";
+
 	if (argc != 2) {
 #ifdef WIN32
 		std::cout << "Usage: spectrum.exe <configuration_file.cfg>\n";
