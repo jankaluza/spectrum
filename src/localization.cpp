@@ -161,9 +161,13 @@ const char *MoFile::lookup(const char *s) {
 	return t;
 }
 
+static void deleteMoFile(gpointer data) {
+	MoFile *mo = (MoFile *) data;
+	delete mo;
+}
 
 Localization::Localization() {
-	m_locales = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
+	m_locales = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, deleteMoFile);
 }
 
 Localization::~Localization() {
