@@ -161,11 +161,10 @@ void IRCProtocol::onConnected(AbstractUser *user) {
 		const char *n = purple_value_get_string(user->getSetting("nickserv"));
 		std::string nickserv(n ? n : "");
 		if (!nickserv.empty()) {
-			// receivedMessage will send PM according to resource, so it doesn't matter what's before it... :)
-			Message msg(Message::Chat, JID("#test%test@server.cz/NickServ"), "identify " + nickserv);
-			msg.setFrom(user->jid());
-			User *handler = (User *) user;
-			handler->handleMessage(msg);
+			std::string msg = "identify " + nickserv;
+			PurpleConversation *conv = purple_conversation_new(PURPLE_CONV_TYPE_IM, user->account(), "NickServ");
+			purple_conv_chat_send(PURPLE_CONV_CHAT(conv), msg.c_str());
+			purple_conversation_destroy(conv);
 		}
 	}
 
