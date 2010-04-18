@@ -206,6 +206,7 @@ class FiletransferRepeater {
 
 	private:
 		SpectrumTimer *m_deleteMeTimer;
+		SpectrumTimer *m_readyTimer;
 		JID m_to;
 		std::string m_sid;
 		SIProfileFT::StreamType m_type;
@@ -214,7 +215,6 @@ class FiletransferRepeater {
 		PurpleXfer *m_xfer;
 		bool m_send;
 		bool m_readyCalled;
-		guint m_readyTimer;
 		guchar *m_buffer;
 		size_t m_buffer_size;
 		size_t m_max_buffer_size;

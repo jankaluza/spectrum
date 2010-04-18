@@ -343,9 +343,10 @@ FiletransferRepeater::FiletransferRepeater(const JID& to, const std::string& sid
 	m_resender = NULL;
 	m_send = false;
 	m_readyCalled = false;
-	m_readyTimer = 0;
 	m_xfer = NULL;
 	m_deleteMeTimer = new SpectrumTimer(0, try_to_delete_me, this);
+	m_readyTimer = new SpectrumTimer(0, ui_got_data, this);
+	
 }
 
 FiletransferRepeater::FiletransferRepeater(const JID& from, const JID& to) {
@@ -359,7 +360,6 @@ FiletransferRepeater::FiletransferRepeater(const JID& from, const JID& to) {
 	m_size = -1;
 	m_send = true;
 	m_readyCalled = false;
-	m_readyTimer = 0;
 	m_xfer = NULL;
 	m_deleteMeTimer = new SpectrumTimer(0, try_to_delete_me, this);
 }
@@ -381,14 +381,13 @@ FiletransferRepeater::~FiletransferRepeater() {
 		delete m_resender;
 		m_resender = NULL;
 	}
-	if (m_readyTimer != 0)
-		purple_timeout_remove(m_readyTimer);
 	if (m_xfer) {
 		m_xfer->ui_data = NULL;
 		purple_xfer_unref(m_xfer);
 		m_xfer = NULL;
 	}
 	delete m_deleteMeTimer;
+	delete m_readyTimer;
 }
 
 void FiletransferRepeater::registerXfer(PurpleXfer *xfer) {
@@ -565,7 +564,7 @@ int FiletransferRepeater::getDataToSend(std::string &data) {
 
 void FiletransferRepeater::ready() {
 	if (!m_readyCalled && m_xfer)
-		m_readyTimer = g_timeout_add(0, &ui_got_data, this);
+		m_readyTimer->start();
 	m_readyCalled = true;
 }
 
