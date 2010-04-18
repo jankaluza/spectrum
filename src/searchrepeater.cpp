@@ -26,6 +26,7 @@
 #include "user.h"
 #include "main.h"
 #include <iostream>
+#include "transport.h"
 
 static gboolean removeRepeater(gpointer data){
 	SearchRepeater *repeater = (SearchRepeater*) data;
@@ -68,6 +69,8 @@ SearchRepeater::SearchRepeater(GlooxMessageHandler *m, User *user, const std::st
 	// </x>
 	// </query>
 	// </iq>
+	
+	const char *language = Transport::instance()->getConfiguration().language.c_str();
 
 	IQ _response(IQ::Result, data.from, data.id);
 	Tag *response = _response.tag();
@@ -75,9 +78,9 @@ SearchRepeater::SearchRepeater(GlooxMessageHandler *m, User *user, const std::st
 
 	Tag *query = new Tag("query");
 	query->addAttribute("xmlns", "jabber:iq:search");
-	query->addChild( new Tag("instructions", "<instructions>You need an x:data capable client to search</instructions>") );
+	query->addChild( new Tag("instructions", tr(m_user ? m_user->getLang() : language, _("You need an x:data capable client to search"))) );
 
-	query->addChild( xdataFromRequestInput(title, primaryString, value, multiline) );
+	query->addChild( xdataFromRequestInput(language, title, primaryString, value, multiline) );
 
 	response->addChild(query);
 	main->j->send(response);
@@ -110,7 +113,13 @@ SearchRepeater::SearchRepeater(GlooxMessageHandler *m, User *user, const std::st
 	actions->addChild(new Tag("complete"));
 	c->addChild(actions);
 
-	c->addChild( xdataFromRequestFields(title, primaryString, fields) );
+	std::string language;
+	if (user)
+		language = std::string(user->getLang());
+	else
+		language = Transport::instance()->getConfiguration().language;
+	
+	c->addChild( xdataFromRequestFields(language, title, primaryString, fields) );
 	response->addChild(c);
 	main->j->send(response);
 }

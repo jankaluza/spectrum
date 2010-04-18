@@ -56,7 +56,7 @@ std::list<std::string> ICQProtocol::buddyFeatures(){
 
 std::string ICQProtocol::text(const std::string &key) {
 	if (key == "instructions")
-		return "Enter your UIN and password:";
+		return _("Enter your UIN and password:");
 	return "not defined";
 }
 

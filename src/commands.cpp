@@ -32,12 +32,12 @@ static void get_settings(gpointer key, gpointer v, gpointer data) {
 	GString *s = (GString *) data;
 	if (purple_value_get_type(value) == PURPLE_TYPE_BOOLEAN) {
 		if (purple_value_get_boolean(value))
-			g_string_append_printf(s, "%s = True \n", (char *) key);
+			g_string_append_printf(s, tr("en",_("%s = True \n")), (char *) key);
 		else
-			g_string_append_printf(s, "%s = False \n", (char *) key);
+			g_string_append_printf(s, tr("en",_("%s = False \n")), (char *) key);
 	}
 	else if (purple_value_get_type(value) == PURPLE_TYPE_STRING) {
-		g_string_append_printf(s, "%s = %s \n", (char *) key, purple_value_get_string(value));
+		g_string_append_printf(s, tr("en",_("%s = %s \n")), (char *) key, purple_value_get_string(value));
 	}
 }
 
@@ -64,19 +64,19 @@ static PurpleCmdRet settings_command_cb(PurpleConversation *conv, const char *cm
 						purple_value_set_boolean(value, atoi(args[2]));
 						user->updateSetting(args[1], value);
 						if (purple_value_get_boolean(value))
-							g_string_append_printf(s, "%s is now True \n", args[1]);
+							g_string_append_printf(s, tr(user->getLang(),_("%s is now True \n")), args[1]);
 						else
-							g_string_append_printf(s, "%s is now False \n", args[1]);
+							g_string_append_printf(s, tr(user->getLang(),_("%s is now False \n")), args[1]);
 					}
 					else if (purple_value_get_type(value) == PURPLE_TYPE_STRING) {
 						value = purple_value_new(PURPLE_TYPE_STRING);
 						purple_value_set_string(value, args[2]);
 						user->updateSetting(args[1], value);
-						g_string_append_printf(s, "%s is now \"%s\" \n", args[1], args[2]);
+						g_string_append_printf(s, tr(user->getLang(),_("%s is now \"%s\" \n")), args[1], args[2]);
 					}
 				}
 				else {
-					g_string_append_printf(s, " This setting key doesn't exist. Try to use \"/transport settings list\" to get settings keys.\n");
+					g_string_append(s, tr(user->getLang(), _(" This setting key doesn't exist. Try to use \"/transport settings list\" to get settings keys.\n")));
 				}
 			}
 		}

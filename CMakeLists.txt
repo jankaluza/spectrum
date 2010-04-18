@@ -278,6 +278,7 @@ set(spectrum_tests_SRCS
 	src/spectrumtimer.cpp
 	src/usermanager.cpp
 	src/log.cpp
+	src/localization.cpp
 )
 
 set(spectrum_tests_MOC_HDRS
@@ -303,6 +304,7 @@ set(spectrum_tests_MOC_HDRS
 	src/capabilityhandler.h
 	src/capabilitymanager.h
 	src/configfile.h
+	src/localization.h
 # 	src/discoinfohandler.h
 	src/parser.h
 	src/registerhandler.h
@@ -330,7 +332,7 @@ endif(DEFINED WITH_STATIC_GLOOX)
 endif (CPPUNIT_FOUND)
 
 
-
+ADD_CUSTOM_TARGET (xgettext xgettext ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp ${CMAKE_CURRENT_SOURCE_DIR}/src/protocols/*.cpp ${CMAKE_CURRENT_SOURCE_DIR}/src/adhoc/*.cpp --output-dir=${CMAKE_CURRENT_SOURCE_DIR}/locales --from-code="UTF-8" -C --keyword="_")
 
 
 

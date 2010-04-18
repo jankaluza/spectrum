@@ -139,7 +139,7 @@ const char *MoFile::lookup(const char *s) {
 		int string_offset = read4_from_offset(this, addr_offset);
 
 		char *t = ((char *)m_data) + string_offset;
-
+		
 		if (strcmp(s, t) == 0) {
 			target_index = index;
 			break;
@@ -184,10 +184,10 @@ Translation::~Translation() {
 }
 
 const char * Translation::translate(const char *key) {
-	const char *ret = m_spectrum->lookup(key);
-	if (strcmp(ret, key) == 0)
+// 	const char *ret = m_spectrum->lookup(key);
+// 	if (strcmp(ret, key) == 0)
 		return m_pidgin->lookup(key);
-	return ret;
+// 	return ret;
 }
 
 Localization::Localization() {

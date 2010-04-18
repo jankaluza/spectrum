@@ -65,6 +65,7 @@ class AdhocRepeater : public AdhocCommandHandler
 		std::map<int, GCallback> m_actions;		// callbacks for PURPLE_REQUEST_ACTION
 		PurpleRequestFields *m_fields;			// fields for PURPLE_REQUEST_FIELDS
 		std::string m_defaultString;			// default value of PURPLE_REQUEST_INPUT
+		std::string m_language;
 };
 
 #endif

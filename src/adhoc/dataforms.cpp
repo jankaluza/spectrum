@@ -22,9 +22,10 @@
 #include <iostream>
 #include <sstream>
 #include <string>
+#include "main.h"
 
 
-Tag * xdataFromRequestInput(const std::string &title, const std::string &primaryString, const std::string &value, gboolean multiline) {
+Tag * xdataFromRequestInput(const std::string &language, const std::string &title, const std::string &primaryString, const std::string &value, gboolean multiline) {
 	Tag *xdata = new Tag("x");
 	xdata->addAttribute("xmlns","jabber:x:data");
 	xdata->addAttribute("type","form");
@@ -36,7 +37,7 @@ Tag * xdataFromRequestInput(const std::string &title, const std::string &primary
 		field->addAttribute("type","text-multi");
 	else
 		field->addAttribute("type","text-single");
-	field->addAttribute("label","Field:");
+	field->addAttribute("label",tr(language, _("Field:")));
 	field->addAttribute("var","result");
 	field->addChild(new Tag("value",value));
 	xdata->addChild(field);
@@ -44,7 +45,7 @@ Tag * xdataFromRequestInput(const std::string &title, const std::string &primary
 	return xdata;
 }
 
-Tag * xdataFromRequestAction(const std::string &title, const std::string &primaryString, size_t action_count, va_list acts) {
+Tag * xdataFromRequestAction(const std::string &language, const std::string &title, const std::string &primaryString, size_t action_count, va_list acts) {
 	Tag *xdata = new Tag("x");
 	xdata->addAttribute("xmlns","jabber:x:data");
 	xdata->addAttribute("type","form");
@@ -53,7 +54,7 @@ Tag * xdataFromRequestAction(const std::string &title, const std::string &primar
 
 	Tag *field = new Tag("field");
 	field->addAttribute("type","list-single");
-	field->addAttribute("label","Actions");
+	field->addAttribute("label",tr(language, _("Actions")));
 
 	for (unsigned int i = 0; i < action_count; i++) {
 		Tag *option;
@@ -73,7 +74,7 @@ Tag * xdataFromRequestAction(const std::string &title, const std::string &primar
 	return xdata;
 }
 
-Tag * xdataFromRequestFields(const std::string &title, const std::string &primaryString, PurpleRequestFields *fields) {
+Tag * xdataFromRequestFields(const std::string &language, const std::string &title, const std::string &primaryString, PurpleRequestFields *fields) {
 	GList *gl, *fl;
 	PurpleRequestField *fld;
 	Tag *field;
@@ -96,7 +97,7 @@ Tag * xdataFromRequestFields(const std::string &title, const std::string &primar
 		if (purple_request_field_group_get_title(group) != NULL) {
 			field = new Tag("field");
 			field->addAttribute("type","fixed");
-			field->addChild(new Tag("value", (std::string) purple_request_field_group_get_title(group)));
+			field->addChild(new Tag("value", tr(language, purple_request_field_group_get_title(group))));
 			xdata->addChild(field);
 		}
 
@@ -122,7 +123,7 @@ Tag * xdataFromRequestFields(const std::string &title, const std::string &primar
 					field->addAttribute("type","text-single");
 				else
 					field->addAttribute("type","text-multi");
-				field->addAttribute("label", field_label ? (std::string) field_label : (std::string) purple_request_field_get_id(fld));
+				field->addAttribute("label", tr(language, field_label ? (std::string) field_label : (std::string) purple_request_field_get_id(fld)));
 				field->addAttribute("var",(std::string) purple_request_field_get_id(fld));
 				if (v)
 					field->addChild(new Tag("value", (std::string) v));
@@ -132,7 +133,7 @@ Tag * xdataFromRequestFields(const std::string &title, const std::string &primar
 				int v = purple_request_field_int_get_default_value(fld);
 				field = new Tag("field");
 				field->addAttribute("type","text-single");
-				field->addAttribute("label", field_label ? (std::string) field_label : (std::string) purple_request_field_get_id(fld));
+				field->addAttribute("label", tr(language, field_label ? (std::string) field_label : (std::string) purple_request_field_get_id(fld)));
 				field->addAttribute("var",(std::string) purple_request_field_get_id(fld));
 				if (v!=0) {
 					std::ostringstream os;
@@ -144,7 +145,7 @@ Tag * xdataFromRequestFields(const std::string &title, const std::string &primar
 			else if (type == PURPLE_REQUEST_FIELD_BOOLEAN) {
 				field = new Tag("field");
 				field->addAttribute("type","boolean");
-				field->addAttribute("label", field_label ? (std::string) field_label : (std::string) purple_request_field_get_id(fld));
+				field->addAttribute("label", tr(language, field_label ? (std::string) field_label : (std::string) purple_request_field_get_id(fld)));
 				field->addAttribute("var",(std::string) purple_request_field_get_id(fld));
 				if (purple_request_field_bool_get_default_value(fld))
 					field->addChild(new Tag("value", "1"));
@@ -158,7 +159,7 @@ Tag * xdataFromRequestFields(const std::string &title, const std::string &primar
 				GList *l;
 				field = new Tag("field");
 				field->addAttribute("type","list-single");
-				field->addAttribute("label", field_label ? (std::string) field_label : (std::string) purple_request_field_get_id(fld));
+				field->addAttribute("label", tr(language, field_label ? (std::string) field_label : (std::string) purple_request_field_get_id(fld)));
 				field->addAttribute("var",(std::string) purple_request_field_get_id(fld));
 
 				for (l = labels; l != NULL; l = l->next, i++) {
@@ -169,7 +170,7 @@ Tag * xdataFromRequestFields(const std::string &title, const std::string &primar
 					if (i == 0)
 						field->addChild(new Tag("value",os.str()));
 					option = new Tag("option");
-					option->addAttribute("label",name);
+					option->addAttribute("label",tr(language, name));
 					option->addChild( new Tag("value",os.str()) );
 					field->addChild(option);
 				}
@@ -184,7 +185,7 @@ Tag * xdataFromRequestFields(const std::string &title, const std::string &primar
 					field->addAttribute("type","list-multi");
 				else
 					field->addAttribute("type","list-single");
-				field->addAttribute("label", field_label ? (std::string) field_label : (std::string) purple_request_field_get_id(fld));
+				field->addAttribute("label", tr(language, field_label ? (std::string) field_label : (std::string) purple_request_field_get_id(fld)));
 				field->addAttribute("var",(std::string) purple_request_field_get_id(fld));
 
 				for (l = purple_request_field_list_get_items(fld); l != NULL; l = l->next, i++) {
@@ -193,7 +194,7 @@ Tag * xdataFromRequestFields(const std::string &title, const std::string &primar
 					if (i == 0)
 						field->addChild(new Tag("value",name));
 					option = new Tag("option");
-					option->addAttribute("label",name);
+					option->addAttribute("label",tr(language, name));
 					option->addChild( new Tag("value",name) );
 					field->addChild(option);
 				}

@@ -22,6 +22,7 @@
 #include "gloox/stanza.h"
 #include "dataforms.h"
 #include "user.h"
+#include "transport.h"
 
 static gboolean removeRepeater(gpointer data){
 	AdhocRepeater *repeater = (AdhocRepeater*) data;
@@ -41,6 +42,11 @@ AdhocRepeater::AdhocRepeater(GlooxMessageHandler *m, User *user, const std::stri
 
 	setType(PURPLE_REQUEST_INPUT);
 	setRequestType(CALLER_ADHOC);
+	
+	if (user)
+		m_language = std::string(user->getLang());
+	else
+		m_language = Transport::instance()->getConfiguration().language;
 
 	// generate IQ-result for IQ-get (that IQ-get is handled in AdhocHandler class)
 	IQ _response(IQ::Result, data.from, data.id);
@@ -58,7 +64,7 @@ AdhocRepeater::AdhocRepeater(GlooxMessageHandler *m, User *user, const std::stri
 	actions->addChild(new Tag("complete"));
 	c->addChild(actions);
 
-	c->addChild( xdataFromRequestInput(title, primaryString, value, multiline) );
+	c->addChild( xdataFromRequestInput(m_language, tr(m_language,title.c_str()), tr(m_language,primaryString.c_str()), tr(m_language,value), multiline) );
 
 	m_defaultString = value;
 
@@ -106,7 +112,7 @@ AdhocRepeater::AdhocRepeater(GlooxMessageHandler *m, User *user, const std::stri
 	for (unsigned int i = 0; i < action_count; i++)
 		m_actions[i] = va_arg(acts, GCallback);
 
-	c->addChild( xdataFromRequestAction(title, primaryString, action_count, acts) );
+	c->addChild( xdataFromRequestAction(m_language, tr(m_language,title.c_str()), tr(m_language,primaryString.c_str()), action_count, acts) );
 	response->addChild(c);
 	main->j->send(response);
 
@@ -140,7 +146,7 @@ AdhocRepeater::AdhocRepeater(GlooxMessageHandler *m, User *user, const std::stri
 	actions->addChild(new Tag("complete"));
 	c->addChild(actions);
 
-	c->addChild( xdataFromRequestFields(title, primaryString, fields) );
+	c->addChild( xdataFromRequestFields(m_language, tr(m_language,title.c_str()), tr(m_language,primaryString.c_str()), fields) );
 	response->addChild(c);
 	main->j->send(response);
 }

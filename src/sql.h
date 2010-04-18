@@ -175,6 +175,7 @@ struct getUserByJidStatement {
 	std::string resUin;
 	std::string resPassword;
 	std::string resEncoding;
+	std::string resLanguage;
 };
 
 struct getBuddiesStatement {

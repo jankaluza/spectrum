@@ -174,13 +174,14 @@ void SQLClass::createStatements() {
 															use(m_stmt_updateBuddySubscription.user_id),
 															use(m_stmt_updateBuddySubscription.uin) ) );
 	if (!m_stmt_getUserByJid.stmt)
-		m_stmt_getUserByJid.stmt = new Statement( ( STATEMENT("SELECT id, jid, uin, password, encoding FROM " + p->configuration().sqlPrefix + "users WHERE jid=?"),
+		m_stmt_getUserByJid.stmt = new Statement( ( STATEMENT("SELECT id, jid, uin, password, encoding, language FROM " + p->configuration().sqlPrefix + "users WHERE jid=?"),
 													use(m_stmt_getUserByJid.jid),
 													into(m_stmt_getUserByJid.resId, -1),
 													into(m_stmt_getUserByJid.resJid),
 													into(m_stmt_getUserByJid.resUin),
 													into(m_stmt_getUserByJid.resPassword),
 													into(m_stmt_getUserByJid.resEncoding),
+													into(m_stmt_getUserByJid.resLanguage),
 													limit(1),
 													range(0, 1) ) );
 	if (!m_stmt_getBuddies.stmt)
@@ -566,6 +567,7 @@ UserRow SQLClass::getUserByJid(const std::string &jid){
 				user.uin = m_stmt_getUserByJid.resUin;
 				user.password = m_stmt_getUserByJid.resPassword;
 				user.encoding = m_stmt_getUserByJid.resEncoding;
+				user.language = m_stmt_getUserByJid.resLanguage;
 				m_stmt_getUserByJid.stmt->execute();
 			} while (!m_stmt_getUserByJid.stmt->done());
 		}

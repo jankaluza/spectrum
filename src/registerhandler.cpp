@@ -72,6 +72,7 @@ bool GlooxRegisterHandler::handleIq(const IQ &iq) {
 
 bool GlooxRegisterHandler::handleIq(Tag *iqTag) {
 	Log("GlooxRegisterHandler", iqTag->findAttribute("from") << ": iq:register received (" << iqTag->findAttribute("type") << ")");
+	const char *language = Transport::instance()->getConfiguration().language.c_str();
 	
 	JID from(iqTag->findAttribute("from"));
 	
@@ -98,13 +99,13 @@ bool GlooxRegisterHandler::handleIq(Tag *iqTag) {
 
 		if (res.id == -1) {
 			Log("GlooxRegisterHandler", "* sending registration form; user is not registered");
-			query->addChild( new Tag("instructions", Transport::instance()->protocol()->text("instructions")) );
+			query->addChild( new Tag("instructions", tr(language, Transport::instance()->protocol()->text("instructions"))) );
 			query->addChild( new Tag("username") );
 			query->addChild( new Tag("password") );
 		}
 		else {
 			Log("GlooxRegisterHandler", "* sending registration form; user is registered");
-			query->addChild( new Tag("instructions", Transport::instance()->protocol()->text("instructions")) );
+			query->addChild( new Tag("instructions", tr(language, Transport::instance()->protocol()->text("instructions"))) );
 			query->addChild( new Tag("registered") );
 			query->addChild( new Tag("username", res.uin));
 			query->addChild( new Tag("password"));
@@ -113,8 +114,8 @@ bool GlooxRegisterHandler::handleIq(Tag *iqTag) {
 		Tag *x = new Tag("x");
 		x->addAttribute("xmlns", "jabber:x:data");
 		x->addAttribute("type", "form");
-		x->addChild( new Tag("title", "Registration") );
-		x->addChild( new Tag("instructions", Transport::instance()->protocol()->text("instructions")) );
+		x->addChild( new Tag("title", tr(language, _("Registration"))));
+		x->addChild( new Tag("instructions", tr(language, Transport::instance()->protocol()->text("instructions"))) );
 
 		Tag *field = new Tag("field");
 		field->addAttribute("type", "hidden");
@@ -125,7 +126,7 @@ bool GlooxRegisterHandler::handleIq(Tag *iqTag) {
 		field = new Tag("field");
 		field->addAttribute("type", "text-single");
 		field->addAttribute("var", "username");
-		field->addAttribute("label", "Network username");
+		field->addAttribute("label", tr(language, _("Network username")));
 		field->addChild( new Tag("required") );
 		if (res.id!=-1)
 			field->addChild( new Tag("value", res.uin) );
@@ -134,13 +135,13 @@ bool GlooxRegisterHandler::handleIq(Tag *iqTag) {
 		field = new Tag("field");
 		field->addAttribute("type", "text-private");
 		field->addAttribute("var", "password");
-		field->addAttribute("label", "Password");
+		field->addAttribute("label", tr(language, _("Password")));
 		x->addChild(field);
 
 		field = new Tag("field");
 		field->addAttribute("type", "list-single");
 		field->addAttribute("var", "language");
-		field->addAttribute("label", "Language");
+		field->addAttribute("label", tr(language, _("Language")));
 		if (res.id!=-1)
 			field->addChild( new Tag("value", res.language) );
 		else
@@ -160,7 +161,7 @@ bool GlooxRegisterHandler::handleIq(Tag *iqTag) {
 		field = new Tag("field");
 		field->addAttribute("type", "text-single");
 		field->addAttribute("var", "encoding");
-		field->addAttribute("label", "Encoding");
+		field->addAttribute("label", tr(language, _("Encoding")));
 		if (res.id!=-1)
 			field->addChild( new Tag("value", res.encoding) );
 		else
@@ -171,7 +172,7 @@ bool GlooxRegisterHandler::handleIq(Tag *iqTag) {
 			field = new Tag("field");
 			field->addAttribute("type", "boolean");
 			field->addAttribute("var", "unregister");
-			field->addAttribute("label", "Unregister transport");
+			field->addAttribute("label", tr(language, _("Unregister transport")));
 			field->addChild( new Tag("value", "0") );
 			x->addChild(field);
 		}
@@ -386,7 +387,7 @@ bool GlooxRegisterHandler::handleIq(Tag *iqTag) {
 		}
 		else {
 			// change passwordhttp://soumar.jabbim.cz/phpmyadmin/index.php
-			Log("GlooxRegisterHandler", "changing user password: "<< jid << ", " << username << ", " << password);
+			Log("GlooxRegisterHandler", "changing user password: "<< jid << ", " << username);
 			res.jid = from.bare();
 			res.password = password;
 			res.language = language;

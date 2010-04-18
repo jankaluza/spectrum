@@ -58,6 +58,6 @@ std::list<std::string> SIPEProtocol::buddyFeatures(){
 
 std::string SIPEProtocol::text(const std::string &key) {
 	if (key == "instructions")
-		return "Enter your SIPE username and password:";
+		return _("Enter your SIPE username and password:");
 	return "not defined";
 }

@@ -59,7 +59,7 @@ std::list<std::string> MyspaceProtocol::buddyFeatures(){
 
 std::string MyspaceProtocol::text(const std::string &key) {
 	if (key == "instructions")
-		return "Enter your Myspace name and password:";
+		return _("Enter your Myspace name and password:");
 	return "not defined";
 }
 

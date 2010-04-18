@@ -36,7 +36,7 @@
 #include "transport.h"
 #include "gloox/sha.h"
 
-User::User(GlooxMessageHandler *parent, JID jid, const std::string &username, const std::string &password, const std::string &userKey, long id, const std::string &encoding) : SpectrumRosterManager(this), SpectrumMessageHandler(this) {
+User::User(GlooxMessageHandler *parent, JID jid, const std::string &username, const std::string &password, const std::string &userKey, long id, const std::string &encoding, const std::string &language) : SpectrumRosterManager(this), SpectrumMessageHandler(this) {
 	p = parent;
 	m_jid = jid.bare();
 	m_userID = id;
@@ -60,7 +60,7 @@ User::User(GlooxMessageHandler *parent, JID jid, const std::string &username, co
 	m_connectionStart = time(NULL);
 	m_subscribeLastCount = -1;
 	m_reconnectCount = 0;
-	m_lang = NULL;
+	m_lang = g_strdup(language.c_str());
 	m_features = 0;
 	PurpleValue *value;
 	
@@ -303,14 +303,12 @@ void User::receivedPresence(const Presence &stanza) {
 	Tag *stanzaTag = stanza.tag();
 	if (!stanzaTag)
 		return;
-	if (m_lang == NULL) {
-		std::string lang = stanzaTag->findAttribute("xml:lang");
-		if (lang == "")
-			lang = "en";
-		setLang(lang.c_str());
-		localization.loadLocale(getLang());
-		Log("LANG", lang << " " << lang.c_str());
-	}
+
+// 	std::string lang = stanzaTag->findAttribute("xml:lang");
+// 	if (lang != "") {
+// 		setLang(lang.c_str());
+// 		localization.loadLocale(getLang());
+// 	}
 	
 	if (stanza.to().username() == "" && isConnected()) {
 		Tag *x_vcard = stanzaTag->findChild("x");
@@ -485,6 +483,7 @@ void User::handleVCard(const VCard* vcard) {
 }
 
 User::~User(){
+	g_free(m_lang);
 	if (m_account)
 		purple_account_set_enabled(m_account, PURPLE_UI, FALSE);
 

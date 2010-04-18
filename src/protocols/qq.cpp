@@ -69,6 +69,6 @@ std::list<std::string> QQProtocol::buddyFeatures(){
 
 std::string QQProtocol::text(const std::string &key) {
 	if (key == "instructions")
-		return "Enter your QQ username and password:";
+		return _("Enter your QQ username and password:");
 	return "not defined";
 }

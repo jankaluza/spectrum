@@ -59,6 +59,6 @@ std::list<std::string> YahooProtocol::buddyFeatures(){
 
 std::string YahooProtocol::text(const std::string &key) {
 	if (key == "instructions")
-		return "Enter your Yahoo Messenger username and password:";
+		return _("Enter your Yahoo Messenger username and password:");
 	return "not defined";
 }

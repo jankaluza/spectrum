@@ -24,11 +24,17 @@
 #include "transport.h"
 #include "../log.h"
 #include "adhoctag.h"
+#include "main.h"
 
 AdhocAdmin::AdhocAdmin(AbstractUser *user, const std::string &from, const std::string &id) {
 	setRequestType(CALLER_ADHOC);
 	m_from = std::string(from);
 	m_state = ADHOC_ADMIN_INIT;
+	
+	if (user)
+		m_language = std::string(user->getLang());
+	else
+		m_language = Transport::instance()->getConfiguration().language;
 
 	IQ _response(IQ::Result, from, id);
 	Tag *response = _response.tag();
@@ -36,11 +42,11 @@ AdhocAdmin::AdhocAdmin(AbstractUser *user, const std::string &from, const std::s
 
 	AdhocTag *adhocTag = new AdhocTag(Transport::instance()->getId(), "transport_admin", "executing");
 	adhocTag->setAction("next");
-	adhocTag->setTitle("Transport administration");
-	adhocTag->setInstructions("Please select the group you want to change.");
+	adhocTag->setTitle(tr(m_language.c_str(), _("Transport administration")));
+	adhocTag->setInstructions(tr(m_language.c_str(), _("Please select the group you want to change.")));
 	
 	std::list <std::string> values;
-	values.push_back("Logging");
+	values.push_back(tr(m_language.c_str(), _("Logging")));
 	adhocTag->addListSingle("Config area", "config_area", values);
 
 	response->addChild(adhocTag);
@@ -74,7 +80,7 @@ bool AdhocAdmin::handleIq(const IQ &stanza) {
 				}
 			}
 			
-			if (result == "Logging") {
+			if (result == tr(m_language.c_str(), _("Logging"))) {
 				m_state = ADHOC_ADMIN_LOGGING;
 
 				IQ _response(IQ::Result, stanza.from().full(), stanza.id());
@@ -83,10 +89,10 @@ bool AdhocAdmin::handleIq(const IQ &stanza) {
 
 				AdhocTag *adhocTag = new AdhocTag(tag->findAttribute("sessionid"), "transport_admin", "executing");
 				adhocTag->setAction("complete");
-				adhocTag->setTitle("Logging settings");
-				adhocTag->setInstructions("You can change logging settings here.");
-				adhocTag->addBoolean("Log XML", "log_xml", Transport::instance()->getConfiguration().logAreas & LOG_AREA_XML);
-				adhocTag->addBoolean("Log Purple messages", "log_purple", Transport::instance()->getConfiguration().logAreas & LOG_AREA_PURPLE);
+				adhocTag->setTitle(tr(m_language.c_str(), _("Logging settings")));
+				adhocTag->setInstructions(tr(m_language.c_str(), _("You can change logging settings here.")));
+				adhocTag->addBoolean(tr(m_language.c_str(), _("Log XML")), "log_xml", Transport::instance()->getConfiguration().logAreas & LOG_AREA_XML);
+				adhocTag->addBoolean(tr(m_language.c_str(), _("Log Purple messages")), "log_purple", Transport::instance()->getConfiguration().logAreas & LOG_AREA_PURPLE);
 
 				response->addChild(adhocTag);
 				Transport::instance()->send(response);

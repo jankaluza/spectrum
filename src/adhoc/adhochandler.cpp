@@ -44,11 +44,11 @@ static AdhocCommandHandler * createAdminHandler(AbstractUser *user, const std::s
 GlooxAdhocHandler::GlooxAdhocHandler() {
 	m_pInstance = this;
 
-	m_handlers["transport_settings"].name = "Transport settings";
+	m_handlers["transport_settings"].name = _("Transport settings");
 	m_handlers["transport_settings"].admin = false;
 	m_handlers["transport_settings"].createHandler = createSettingsHandler;
 
-	m_handlers["transport_admin"].name = "Transport administration";
+	m_handlers["transport_admin"].name = _("Transport administration");
 	m_handlers["transport_admin"].admin = true;
 	m_handlers["transport_admin"].createHandler = createAdminHandler;
 }
@@ -67,17 +67,21 @@ Disco::ItemList GlooxAdhocHandler::handleDiscoNodeItems( const JID &_from, const
 	std::string to = _to.bare();
 	Log("GlooxAdhocHandler", "seding items from " << from << " to " << to);
 
+	AbstractUser *user = Transport::instance()->userManager()->getUserByJID(from);
+	std::string language;
+	if (user)
+		language = std::string(user->getLang());
+	else
+		language = Transport::instance()->getConfiguration().language;
+	
 	if (to == Transport::instance()->jid()) {
-		AbstractUser *user = Transport::instance()->userManager()->getUserByJID(from);
 		std::list<std::string> const &admins = Transport::instance()->getConfiguration().admins;
 
 		// add internal commands from m_handlers
 		for (std::map<std::string, adhocCommand>::iterator u = m_handlers.begin(); u != m_handlers.end() ; u++) {
 			Log("GlooxAdhocHandler", "seding item " << (*u).first << " " << (*u).second.name);
-			if (user)
-				lst.push_back( new Disco::Item( Transport::instance()->jid(), (*u).first, (std::string) tr(user->getLang(), (*u).second.name) ) );
-			else if (((*u).second.admin && std::find(admins.begin(), admins.end(), from) != admins.end()) || (*u).second.admin == false)
-				lst.push_back( new Disco::Item( Transport::instance()->jid(), (*u).first, (*u).second.name) );
+			if (((*u).second.admin && std::find(admins.begin(), admins.end(), from) != admins.end()) || (*u).second.admin == false)
+				lst.push_back( new Disco::Item( Transport::instance()->jid(), (*u).first, (std::string) tr(language, (*u).second.name)) );
 		}
 
 		if (user) {
@@ -104,7 +108,6 @@ Disco::ItemList GlooxAdhocHandler::handleDiscoNodeItems( const JID &_from, const
 		}
 	}
 	else {
-		AbstractUser *user = Transport::instance()->userManager()->getUserByJID(from);
 		if (user) {
 			if (user->isConnected() && purple_account_get_connection(user->account())) {
 				GList *l, *ll;
@@ -132,9 +135,15 @@ Disco::ItemList GlooxAdhocHandler::handleDiscoNodeItems( const JID &_from, const
 /*
  * Returns IdentityList (copied from Gloox :) )
  */
-Disco::IdentityList GlooxAdhocHandler::handleDiscoNodeIdentities( const JID& jid, const std::string& node ) {
+Disco::IdentityList GlooxAdhocHandler::handleDiscoNodeIdentities( const JID& from, const std::string& node ) {
+	AbstractUser *user = Transport::instance()->userManager()->getUserByJID(from.bare());
+	std::string language;
+	if (user)
+		language = std::string(user->getLang());
+	else
+		language = Transport::instance()->getConfiguration().language;
 	Disco::IdentityList l;
-	l.push_back( new Disco::Identity( "automation",node == XMLNS_ADHOC_COMMANDS ? "command-list" : "command-node",node == XMLNS_ADHOC_COMMANDS ? "Ad-Hoc Commands" : "") );
+	l.push_back( new Disco::Identity( "automation",node == XMLNS_ADHOC_COMMANDS ? "command-list" : "command-node",node == XMLNS_ADHOC_COMMANDS ? tr(language,_("Ad-Hoc Commands")) : "") );
 	return l;
 }
 

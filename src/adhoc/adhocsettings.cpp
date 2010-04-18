@@ -24,11 +24,17 @@
 #include "abstractuser.h"
 #include "transport.h"
 #include "adhoctag.h"
+#include "main.h"
 
 AdhocSettings::AdhocSettings(AbstractUser *user, const std::string &from, const std::string &id) :
 	m_from(from), m_user(user) {
 	setRequestType(CALLER_ADHOC);
 
+	if (user)
+		m_language = std::string(user->getLang());
+	else
+		m_language = Transport::instance()->getConfiguration().language;
+	
 	PurpleValue *value;
 
 	IQ _response(IQ::Result, from, id);
@@ -37,24 +43,24 @@ AdhocSettings::AdhocSettings(AbstractUser *user, const std::string &from, const 
 
 	AdhocTag *adhocTag = new AdhocTag(Transport::instance()->getId(), "transport_settings", "executing");
 	adhocTag->setAction("complete");
-	adhocTag->setTitle("Transport settings");
+	adhocTag->setTitle(tr(m_language, _("Transport settings")));
 	if (user) {
-		adhocTag->setInstructions("Change your transport settings here.");
+		adhocTag->setInstructions(tr(m_language, _("Change your transport settings here.")));
 		
 		value = m_user->getSetting("enable_transport");
-		adhocTag->addBoolean("Enable transport", "enable_transport", purple_value_get_boolean(value));
+		adhocTag->addBoolean(tr(m_language, _("Enable transport")), "enable_transport", purple_value_get_boolean(value));
 
 		value = m_user->getSetting("enable_notify_email");
-		adhocTag->addBoolean("Enable network notification", "enable_notify_email", purple_value_get_boolean(value));
+		adhocTag->addBoolean(tr(m_language, _("Enable network notification")), "enable_notify_email", purple_value_get_boolean(value));
 
 		value = m_user->getSetting("enable_avatars");
-		adhocTag->addBoolean("Enable avatars", "enable_avatars", purple_value_get_boolean(value));
+		adhocTag->addBoolean(tr(m_language, _("Enable avatars")), "enable_avatars", purple_value_get_boolean(value));
 
 		value = m_user->getSetting("enable_chatstate");
-		adhocTag->addBoolean("Enable chatstates", "enable_chatstate", purple_value_get_boolean(value));
+		adhocTag->addBoolean(tr(m_language, _("Enable chatstates")), "enable_chatstate", purple_value_get_boolean(value));
 	}
 	else {
-		adhocTag->setInstructions("You have to be online to change transport settings.");
+		adhocTag->setInstructions(tr(m_language, _("You have to be online to change transport settings.")));
 	}
 
 	response->addChild(adhocTag);

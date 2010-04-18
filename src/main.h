@@ -74,7 +74,7 @@
 #include "configfile.h"
 
 #define PURPLE_UI "spectrum"
-#define tr(lang,STRING)    localization.translate(lang,STRING)
+#define tr(lang,STRING)    localization.translate((lang),(STRING))
 #define _(STRING)    STRING
 
 using namespace gloox;

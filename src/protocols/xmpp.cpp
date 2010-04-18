@@ -58,7 +58,7 @@ std::list<std::string> XMPPProtocol::buddyFeatures(){
 
 std::string XMPPProtocol::text(const std::string &key) {
 	if (key == "instructions")
-		return "Enter your Jabber ID and password:";
+		return _("Enter your Jabber ID and password:");
 	return "not defined";
 }
 

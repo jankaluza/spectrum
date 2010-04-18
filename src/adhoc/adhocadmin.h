@@ -52,6 +52,7 @@ class AdhocAdmin : public AdhocCommandHandler
 		std::string m_from;				// full jid
 		AbstractUser *m_user;					// User class
 		int m_state;					// current executing state
+		std::string m_language;
 };
 
 #endif

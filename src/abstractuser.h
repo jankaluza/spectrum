@@ -55,7 +55,7 @@ class AbstractUser : public ResourceManager
 		virtual bool hasTransportFeature(int feature) = 0;
 		virtual int getFeatures() = 0;
 		virtual const std::string &username() = 0;
-		const char *getLang() { return "en"; }
+		virtual const char *getLang() { return "en"; }
 		virtual GHashTable *settings() = 0;
 		virtual bool isConnectedInRoom(const std::string &room) = 0;
 		virtual bool isConnected() = 0;

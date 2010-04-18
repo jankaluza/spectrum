@@ -58,6 +58,6 @@ std::list<std::string> AIMProtocol::buddyFeatures(){
 
 std::string AIMProtocol::text(const std::string &key) {
 	if (key == "instructions")
-		return "Enter your screenname and password:";
+		return _("Enter your screenname and password:");
 	return "not defined";
 }

@@ -58,7 +58,7 @@ std::list<std::string> MSNPecanProtocol::buddyFeatures(){
 
 std::string MSNPecanProtocol::text(const std::string &key) {
 	if (key == "instructions")
-		return "Enter your Passport username and pssword:";
+		return _("Enter your Passport username and pssword:");
 	return "not defined";
 }
 

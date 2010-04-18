@@ -28,9 +28,9 @@
 
 using namespace gloox;
 
-Tag * xdataFromRequestInput(const std::string &title, const std::string &primaryString, const std::string &value, gboolean multiline);
-Tag * xdataFromRequestAction(const std::string &title, const std::string &primaryString, size_t action_count, va_list acts);
-Tag * xdataFromRequestFields(const std::string &title, const std::string &primaryString, PurpleRequestFields *fields);
+Tag * xdataFromRequestInput(const std::string &language, const std::string &title, const std::string &primaryString, const std::string &value, gboolean multiline);
+Tag * xdataFromRequestAction(const std::string &language, const std::string &title, const std::string &primaryString, size_t action_count, va_list acts);
+Tag * xdataFromRequestFields(const std::string &language, const std::string &title, const std::string &primaryString, PurpleRequestFields *fields);
 void setRequestFields(PurpleRequestFields *m_fields, Tag *x);
 
 #endif

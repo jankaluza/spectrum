@@ -44,6 +44,7 @@ class AdhocSettings : public AdhocCommandHandler
 	private:
 		std::string m_from;				// full jid
 		AbstractUser *m_user;			// User class
+		std::string m_language;
 };
 
 #endif

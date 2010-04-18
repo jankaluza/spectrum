@@ -58,7 +58,7 @@ std::list<std::string> FacebookProtocol::buddyFeatures(){
 
 std::string FacebookProtocol::text(const std::string &key) {
 	if (key == "instructions")
-		return "Enter your Facebook email and password:";
+		return _("Enter your Facebook email and password:");
 	return "not defined";
 }
 

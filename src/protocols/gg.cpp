@@ -57,6 +57,6 @@ std::list<std::string> GGProtocol::buddyFeatures(){
 
 std::string GGProtocol::text(const std::string &key) {
 	if (key == "instructions")
-		return "Enter your GG number and password:";
+		return _("Enter your GG number and password:");
 	return "not defined";
 }

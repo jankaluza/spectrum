@@ -126,7 +126,7 @@ void SpectrumConversation::handleMessage(AbstractUser *user, const char *who, co
 				s.setFrom(name + std::string(getType() == SPECTRUM_CONV_CHAT ? "" : ("%" + JID(user->username()).server())) + "@" + Transport::instance()->jid() + "/bot");
 			}
 			Error *c = new Error(StanzaErrorTypeModify, StanzaErrorNotAcceptable);
-			c->setText(message);
+			c->setText(tr(user->getLang(), message));
 			s.addExtension(c);
 			Transport::instance()->send(s.tag());
 			return;
