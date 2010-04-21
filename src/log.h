@@ -7,6 +7,8 @@
 #include <iostream>
 #include <fstream>
 #include "gloox/loghandler.h"
+#include <glib.h>
+#include <glib/gstdio.h>
 
 using namespace gloox;
 
@@ -58,6 +60,7 @@ class LogClass : public LogHandler {
 			if (m_file.is_open())
 				m_file.close();
 			m_file.open(file.c_str(), std::ios_base::app);
+			g_chmod(file.c_str(), 0640);
 		}
 		
 		std::ofstream &fileStream() { return m_file; }
