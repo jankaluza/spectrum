@@ -30,10 +30,13 @@
 #include "abstractspectrumbuddy.h"
 #include "utf8.h"
 #include "capabilityhandler.h"
+#include "Poco/Format.h"
 
 #ifndef TESTS
 #include "user.h"
 #endif
+
+using namespace gloox;
 
 static void XferCreated(PurpleXfer *xfer) {
 	if (xfer) {
@@ -297,7 +300,8 @@ void FileTransferManager::handleXferFileReceiveComplete(PurpleXfer *xfer) {
 		AbstractUser *user = Transport::instance()->userManager()->getUserByAccount(purple_xfer_get_account(xfer));
 		if (user != NULL) {
 			if (user->isConnected()) {
-				Message s(Message::Chat, user->jid(), tr(user->getLang(),_("File '"))+filename+tr(user->getLang(), _("' was received. You can download it here: ")) + "http://soumar.jabbim.cz/icq/" + basename +" .");
+				std::string message  = Poco::format(_("File '%s' was received. You can download it here: %s ."), filename, std::string("http://soumar.jabbim.cz/icq/" + basename) );
+				Message s(Message::Chat, user->jid(), tr(user->getLang(), message));
 				s.setFrom(remote_user + "@" + Transport::instance()->jid() + "/bot");
 				Transport::instance()->send(s.tag());
 			}

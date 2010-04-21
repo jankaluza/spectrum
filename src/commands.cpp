@@ -76,7 +76,7 @@ static PurpleCmdRet settings_command_cb(PurpleConversation *conv, const char *cm
 					}
 				}
 				else {
-					g_string_append(s, tr(user->getLang(), _(" This setting key doesn't exist. Try to use \"/transport settings list\" to get settings keys.\n")));
+					g_string_append(s, tr(user->getLang(), std::string(" ") + _("This setting key doesn't exist. Try to use \"/transport settings list\" to get settings keys.\n")));
 				}
 			}
 		}
