@@ -362,6 +362,7 @@ FiletransferRepeater::FiletransferRepeater(const JID& from, const JID& to) {
 	m_readyCalled = false;
 	m_xfer = NULL;
 	m_deleteMeTimer = new SpectrumTimer(0, try_to_delete_me, this);
+	m_readyTimer = new SpectrumTimer(0, ui_got_data, this);
 }
 
 FiletransferRepeater::~FiletransferRepeater() {
