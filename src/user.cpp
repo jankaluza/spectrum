@@ -338,14 +338,14 @@ void User::receivedPresence(const Presence &stanza) {
 		if (stanza.presence() == Presence::Unavailable) {
 			// disconnect from legacy network if we are connected
 			if (stanza.to().username() == "") {
-				if ((m_connected == false && int(time(NULL)) > int(m_connectionStart) + 10) || m_connected == true) {
+// 				if ((m_connected == false && int(time(NULL)) > int(m_connectionStart) + 10) || m_connected == true) {
 					if (hasResource(stanza.from().resource())) {
 						removeResource(stanza.from().resource());
 						removeConversationResource(stanza.from().resource());
 						p->adhoc()->unregisterSession(stanza.from().full());
 					}
 					sendUnavailablePresenceToAll(stanza.from().resource());
-				}
+// 				}
 			}
 			if (m_connected) {
 				if (getResources().empty() || (p->protocol()->tempAccountsAllowed() && !hasOpenedMUC())){
@@ -361,7 +361,7 @@ void User::receivedPresence(const Presence &stanza) {
 // 				m_connected=false;
 			}
 			else {
-				if (!getResources().empty() && int(time(NULL)) > int(m_connectionStart) + 10) {
+				if (!getResources().empty()) {
 					setActiveResource();
 				}
 				else if (m_account) {
