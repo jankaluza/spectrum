@@ -349,11 +349,6 @@ if (NOT EXISTS /etc/spectrum)
 		)
 endif (NOT EXISTS /etc/spectrum)
 
-INSTALL(FILES
-    ${CMAKE_CURRENT_SOURCE_DIR}/locales/cs.po
-	DESTINATION share/spectrum/locales
-    )
-    
 if (NOT WITHOUT_SPECTRUMCTL)
 
 INSTALL(DIRECTORY
