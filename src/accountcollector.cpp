@@ -61,8 +61,9 @@ void AccountCollector::collectNow(PurpleAccount *account, bool remove) {
 		
 		if (remove)
 			g_hash_table_remove(m_accounts, purple_account_get_username(account));
-			
-		
+
+		purple_account_set_enabled(account, purple_core_get_ui(), FALSE);
+
 		purple_notify_close_with_handle(account);
 		purple_request_close_with_handle(account);
 
