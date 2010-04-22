@@ -1351,6 +1351,8 @@ void GlooxMessageHandler::handleSubscription(const Subscription &stanza) {
 	}
 	if (user)
 		user->handleSubscription(stanza);
+	else
+		Log(stanza.from().full(), "Subscribe presence received, but this user is not logged in");
 
 }
 

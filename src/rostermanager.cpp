@@ -502,4 +502,7 @@ void SpectrumRosterManager::handleSubscription(const Subscription &subscription)
 			return;
 		}
 	}
+	else {
+		Log(subscription.from().full(), "Subscribe presence received, but is not connected to legacy network yet.");
+	}
 }
