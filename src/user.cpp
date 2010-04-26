@@ -58,7 +58,6 @@ User::User(GlooxMessageHandler *parent, JID jid, const std::string &username, co
 	m_bindIP.clear();
 	m_password = password;
 	m_username = username;
-	m_jid.clear();
 	m_encoding = encoding;
 
 	m_lang = g_strdup(language.c_str());

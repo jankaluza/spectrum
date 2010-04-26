@@ -101,6 +101,7 @@ class User : public AbstractUser, public SpectrumRosterManager, public SpectrumM
 		bool isConnectedInRoom(const std::string &room) { return isOpenedConversation(room); }
 
 	private:
+		std::string m_jid;			// Jabber ID of this user
 		long m_userID;				// userID for Database
 		std::string m_userKey;
 		PurpleAccount *m_account;	// PurpleAccount to which this user is connected
@@ -114,7 +115,6 @@ class User : public AbstractUser, public SpectrumRosterManager, public SpectrumM
 		std::string m_bindIP;		// IP address to which libpurple will be binded
 		std::string m_password;		// password used to connect to legacy network
 		std::string m_username;		// legacy network user name
-		std::string m_jid;			// Jabber ID of this user
 		std::string m_encoding;
 		char *m_lang;			// xml:lang
 		int m_features;
