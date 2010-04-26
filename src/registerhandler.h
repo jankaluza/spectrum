@@ -47,18 +47,17 @@ public:
 private:
     Tag *m_tag;
 };
-																									
 
 class GlooxRegisterHandler : public IqHandler {
 	public:
 		GlooxRegisterHandler();
 		~GlooxRegisterHandler();
 		bool handleIq (const IQ &iq);
-		bool handleIq (Tag *iqTag);
+		bool handleIq (const Tag *iqTag);
 		void handleIqID (const IQ &iq, int context);
 
 	private:
-		void sendError(int code, const std::string &error, Tag *iqTag);
+		void sendError(int code, const std::string &error, const Tag *iqTag);
 };
 
 #endif

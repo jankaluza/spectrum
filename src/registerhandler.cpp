@@ -67,10 +67,13 @@ GlooxRegisterHandler::~GlooxRegisterHandler(){
 bool GlooxRegisterHandler::handleIq(const IQ &iq) {
 	Tag *iqTag = iq.tag();
 	if (!iqTag) return true;
-	return handleIq(iqTag);
+
+	bool ret = handleIq(iqTag);
+	delete iqTag;
+	return ret;
 }
 
-bool GlooxRegisterHandler::handleIq(Tag *iqTag) {
+bool GlooxRegisterHandler::handleIq(const Tag *iqTag) {
 	Log("GlooxRegisterHandler", iqTag->findAttribute("from") << ": iq:register received (" << iqTag->findAttribute("type") << ")");
 	const char *language = Transport::instance()->getConfiguration().language.c_str();
 	
@@ -419,7 +422,7 @@ void GlooxRegisterHandler::handleIqID (const IQ &iq, int context){
 	std::cout << "IQ ID IQ ID IQ ID\n";
 }
 
-void GlooxRegisterHandler::sendError(int code, const std::string &err, Tag *iqTag) {
+void GlooxRegisterHandler::sendError(int code, const std::string &err, const Tag *iqTag) {
 	Tag *iq = new Tag("iq");
 	iq->addAttribute("type", "error");
 	iq->addAttribute("from", Transport::instance()->jid());
