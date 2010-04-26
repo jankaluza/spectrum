@@ -66,6 +66,7 @@ User::User(GlooxMessageHandler *parent, JID jid, const std::string &username, co
 	m_connectionStart = time(NULL);
 	m_settings = p->sql()->getSettings(m_userID);
 
+	m_loadingBuddiesFromDB = false;
 	m_photoHash.clear();
 
 	/* Public!? */
