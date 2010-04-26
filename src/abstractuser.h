@@ -45,7 +45,8 @@ struct AdhocData {
 class AbstractUser : public ResourceManager
 {
 	public:
-		AbstractUser() { m_filetransfers = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL); }
+		AbstractUser() : removeTimer(0), m_protocolData(NULL), m_filetransfers(NULL)
+			{ m_filetransfers = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL); }
 		virtual ~AbstractUser() { g_hash_table_destroy(m_filetransfers); }
 		virtual const std::string &userKey() = 0;
 		virtual long storageId() = 0;
