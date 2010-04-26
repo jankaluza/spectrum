@@ -103,6 +103,7 @@ class User : public AbstractUser, public SpectrumRosterManager, public SpectrumM
 		guint removeTimer;
 
 	private:
+		long m_userID;				// userID for Database
 		std::string m_userKey;
 		PurpleAccount *m_account;	// PurpleAccount to which this user is connected
 		guint m_syncTimer;			// timer used for syncing purple buddy list and roster
@@ -121,7 +122,6 @@ class User : public AbstractUser, public SpectrumRosterManager, public SpectrumM
 		int m_features;
 		time_t m_connectionStart;	// connection start timestamp
 		GHashTable *m_settings;		// user settings
-		long m_userID;				// userID for Database
 		bool m_loadingBuddiesFromDB;
 		std::string m_photoHash;
 };

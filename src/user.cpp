@@ -39,29 +39,37 @@
 User::User(GlooxMessageHandler *parent, JID jid, const std::string &username, const std::string &password, const std::string &userKey, long id, const std::string &encoding, const std::string &language) : SpectrumRosterManager(this), SpectrumMessageHandler(this) {
 	p = parent;
 	m_jid = jid.bare();
-	m_userID = id;
 
 	Resource r;
 	setResource(jid.resource());
 	setActiveResource(jid.resource());
 
-	m_username = username;
-	m_encoding = encoding;
-	m_password = password;
+	m_userID = id;
 	m_userKey = userKey;
-	m_connected = false;
-	m_vip = p->sql()->isVIP(m_jid);
-	m_settings = p->sql()->getSettings(m_userID);
+	m_account = NULL;
 	m_syncTimer = 0;
-	removeTimer = 0;
+	m_subscribeLastCount = -1;
+	m_vip = p->sql()->isVIP(m_jid);
 	m_readyForConnect = false;
 	m_rosterXCalled = false;
-	m_account = NULL;
-	m_connectionStart = time(NULL);
-	m_subscribeLastCount = -1;
+	m_connected = false;
 	m_reconnectCount = 0;
+
+	m_bindIP.clear();
+	m_password = password;
+	m_username = username;
+	m_jid.clear();
+	m_encoding = encoding;
+
 	m_lang = g_strdup(language.c_str());
 	m_features = 0;
+	m_connectionStart = time(NULL);
+	m_settings = p->sql()->getSettings(m_userID);
+
+	m_photoHash.clear();
+
+	/* Public!? */
+	removeTimer = 0;
 	PurpleValue *value;
 	
 	PurpleAccount *act = purple_accounts_find(m_username.c_str(), this->p->protocol()->protocol().c_str());
