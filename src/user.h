@@ -111,7 +111,7 @@ class User : public AbstractUser, public SpectrumRosterManager, public SpectrumM
 		bool m_readyForConnect;		// true if the user user wants to connect and we're ready to do it
 		bool m_rosterXCalled;		// true if we are counting buddies for roster X
 		bool m_connected;			// true if this user is connected to legacy account
-		bool m_reconnectCount;		// number of passed reconnect tries
+		int m_reconnectCount;		// number of passed reconnect tries
 		std::string m_bindIP;		// IP address to which libpurple will be binded
 		std::string m_password;		// password used to connect to legacy network
 		std::string m_username;		// legacy network user name
