@@ -100,8 +100,6 @@ class User : public AbstractUser, public SpectrumRosterManager, public SpectrumM
 		bool loadingBuddiesFromDB() { return m_loadingBuddiesFromDB; }
 		bool isConnectedInRoom(const std::string &room) { return isOpenedConversation(room); }
 
-		guint removeTimer;
-
 	private:
 		long m_userID;				// userID for Database
 		std::string m_userKey;

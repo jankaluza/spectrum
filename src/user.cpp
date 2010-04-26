@@ -69,10 +69,8 @@ User::User(GlooxMessageHandler *parent, JID jid, const std::string &username, co
 	m_loadingBuddiesFromDB = false;
 	m_photoHash.clear();
 
-	/* Public!? */
-	removeTimer = 0;
 	PurpleValue *value;
-	
+
 	PurpleAccount *act = purple_accounts_find(m_username.c_str(), this->p->protocol()->protocol().c_str());
 	if (act)
 		p->collector()->stopCollecting(act);
