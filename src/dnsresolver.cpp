@@ -66,6 +66,12 @@ dns_main_thread_cb(gpointer d)
 {
 	ResolverData *data = (ResolverData *) d;
 	if (data->destroyed) {
+		while (data->hosts) {
+			data->hosts = g_slist_delete_link(data->hosts, data->hosts);
+			/* Free the address */
+			g_free(data->hosts->data);
+			data->hosts = g_slist_delete_link(data->hosts, data->hosts);
+		}
 		delete data;
 		return FALSE;
 	}
