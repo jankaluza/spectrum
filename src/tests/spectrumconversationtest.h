@@ -14,7 +14,7 @@ class SpectrumConversationTest : public AbstractTest {
 	CPPUNIT_TEST_SUITE (SpectrumConversationTest);
 	CPPUNIT_TEST (handleMessage);
 	CPPUNIT_TEST (handleMessageDelay);
-	CPPUNIT_TEST (handleMessageMSNTimeoutError);
+// 	CPPUNIT_TEST (handleMessageMSNTimeoutError);
 	CPPUNIT_TEST_SUITE_END ();
 
 	public:
