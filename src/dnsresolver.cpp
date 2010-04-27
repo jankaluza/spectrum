@@ -102,14 +102,14 @@ dns_main_thread_cb(gpointer d)
 static gpointer dns_thread(gpointer d) {
 	ResolverData *data = (ResolverData *) d;
 	PurpleDnsQueryData *query_data;
-#ifdef HAVE_GETADDRINFO
+// #ifdef HAVE_GETADDRINFO
 	int rc;
 	struct addrinfo hints, *res, *tmp;
 	char servname[20];
-#else
-	struct sockaddr_in sin;
-	struct hostent *hp;
-#endif
+// #else
+// 	struct sockaddr_in sin;
+// 	struct hostent *hp;
+// #endif
 	char *hostname;
 
 	query_data = data->query_data;
@@ -130,7 +130,7 @@ static gpointer dns_thread(gpointer d) {
 // #endif
 	hostname = g_strdup(purple_dnsquery_get_host(query_data));
 
-#ifdef HAVE_GETADDRINFO
+// #ifdef HAVE_GETADDRINFO
 	g_snprintf(servname, sizeof(servname), "%d", purple_dnsquery_get_port(query_data));
 	memset(&hints,0,sizeof(hints));
 
@@ -142,9 +142,9 @@ static gpointer dns_thread(gpointer d) {
 	 * library.
 	 */
 	hints.ai_socktype = SOCK_STREAM;
-#ifdef AI_ADDRCONFIG
-	hints.ai_flags |= AI_ADDRCONFIG;
-#endif /* AI_ADDRCONFIG */
+// #ifdef AI_ADDRCONFIG
+// 	hints.ai_flags |= AI_ADDRCONFIG;
+// #endif /* AI_ADDRCONFIG */
 	if ((rc = getaddrinfo(hostname, servname, &hints, &res)) == 0) {
 		tmp = res;
 		while(res) {
@@ -156,23 +156,23 @@ static gpointer dns_thread(gpointer d) {
 		}
 		freeaddrinfo(tmp);
 	} else {
-		data->error_message = g_strdup_printf(_("Error resolving %s:\n%s"), purple_dnsquery_get_host(query_data), purple_gai_strerror(rc));
+		data->error_message = g_strdup_printf("Error resolving %s:\n%s", purple_dnsquery_get_host(query_data), purple_gai_strerror(rc));
 	}
-#else
-	if ((hp = gethostbyname(hostname))) {
-		memset(&sin, 0, sizeof(struct sockaddr_in));
-		memcpy(&sin.sin_addr.s_addr, hp->h_addr, hp->h_length);
-		sin.sin_family = hp->h_addrtype;
-		sin.sin_port = htons(purple_dnsquery_get_port(query_data));
-
-		data->hosts = g_slist_append(data->hosts,
-				GSIZE_TO_POINTER(sizeof(sin)));
-		data->hosts = g_slist_append(data->hosts,
-				g_memdup(&sin, sizeof(sin)));
-	} else {
-		data->error_message = g_strdup_printf("Error resolving %s: %d", purple_dnsquery_get_host(query_data), h_errno);
-	}
-#endif
+// #else
+// 	if ((hp = gethostbyname(hostname))) {
+// 		memset(&sin, 0, sizeof(struct sockaddr_in));
+// 		memcpy(&sin.sin_addr.s_addr, hp->h_addr, hp->h_length);
+// 		sin.sin_family = hp->h_addrtype;
+// 		sin.sin_port = htons(purple_dnsquery_get_port(query_data));
+// 
+// 		data->hosts = g_slist_append(data->hosts,
+// 				GSIZE_TO_POINTER(sizeof(sin)));
+// 		data->hosts = g_slist_append(data->hosts,
+// 				g_memdup(&sin, sizeof(sin)));
+// 	} else {
+// 		data->error_message = g_strdup_printf("Error resolving %s: %d", purple_dnsquery_get_host(query_data), h_errno);
+// 	}
+// #endif
 	g_free(hostname);
 
 	/* back to main thread */
