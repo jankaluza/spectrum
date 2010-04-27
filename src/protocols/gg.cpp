@@ -55,6 +55,60 @@ std::list<std::string> GGProtocol::buddyFeatures(){
 	return m_buddyFeatures;
 }
 
+
+Tag *GGProtocol::getVCardTag(AbstractUser *user, GList *vcardEntries) {
+	Tag *N = new Tag("N");
+	Tag *head = new Tag("ADR");
+	PurpleNotifyUserInfoEntry *vcardEntry;
+	std::string firstName;
+	std::string lastName;
+	std::string header;
+	std::string label;
+
+	Tag *vcard = new Tag( "vCard" );
+	vcard->addAttribute( "xmlns", "vcard-temp" );
+
+	while (vcardEntries) {
+		vcardEntry = (PurpleNotifyUserInfoEntry *)(vcardEntries->data);
+		if (purple_notify_user_info_entry_get_label(vcardEntry) && purple_notify_user_info_entry_get_value(vcardEntry)){
+			label=(std::string)purple_notify_user_info_entry_get_label(vcardEntry);
+			Log("vcard label", label << " => " << (std::string)purple_notify_user_info_entry_get_value(vcardEntry));
+			if (label=="First Name"){
+				N->addChild( new Tag("GIVEN", (std::string)purple_notify_user_info_entry_get_value(vcardEntry)));
+				firstName = (std::string)purple_notify_user_info_entry_get_value(vcardEntry);
+			}
+			else if (label=="Last Name"){
+				N->addChild( new Tag("FAMILY", (std::string)purple_notify_user_info_entry_get_value(vcardEntry)));
+				lastName = (std::string)purple_notify_user_info_entry_get_value(vcardEntry);
+			}
+			else if (label=="Nickname"){
+				vcard->addChild( new Tag("NICKNAME", (std::string)purple_notify_user_info_entry_get_value(vcardEntry)));
+			}
+			else if (label=="Birth Year"){
+				vcard->addChild( new Tag("BDAY", (std::string)purple_notify_user_info_entry_get_value(vcardEntry)));
+			}
+			else if (label=="UIN"){
+				vcard->addChild( new Tag("UID", (std::string)purple_notify_user_info_entry_get_value(vcardEntry)));
+			}
+			else if (label=="City") {
+				head = new Tag("ADR");
+				head->addChild(new Tag("HOME"));
+				head->addChild( new Tag("LOCALITY", (std::string)purple_notify_user_info_entry_get_value(vcardEntry)));
+				vcard->addChild(head);
+			}
+		}
+		vcardEntries = vcardEntries->next;
+	}
+	// combine first name and last name to full name
+	if (!firstName.empty() || !lastName.empty())
+		vcard->addChild( new Tag("FN", firstName + " " + lastName));
+	// add and N if any
+	if(!N->children().empty())
+		vcard->addChild(N);
+
+	return vcard;
+}
+
 std::string GGProtocol::text(const std::string &key) {
 	if (key == "instructions")
 		return _("Enter your GG number and password:");
