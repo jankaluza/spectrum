@@ -363,7 +363,6 @@ bool GlooxRegisterHandler::handleIq(const Tag *iqTag) {
 			reply->addAttribute( "from", Transport::instance()->jid() );
 			Transport::instance()->send( reply );
 
-			delete iqTag;
 			return true;
 		}
 
@@ -412,7 +411,6 @@ bool GlooxRegisterHandler::handleIq(const Tag *iqTag) {
 			reply->addAttribute( "type", "subscribe" );
 			Transport::instance()->send( reply );
 		}
-		delete iqTag;
 		return true;
 	}
 	return false;
