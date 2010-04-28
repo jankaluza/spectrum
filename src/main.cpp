@@ -845,7 +845,6 @@ GlooxMessageHandler::GlooxMessageHandler(const std::string &config) : MessageHan
 #endif
 
 	m_transport = new Transport(m_configuration.jid);
-	m_spectrumNodeHandler = new SpectrumNodeHandler();
 
 	if (loaded) {
 		m_sql = new SQLClass(this, upgrade_db);	
@@ -877,6 +876,7 @@ GlooxMessageHandler::GlooxMessageHandler(const std::string &config) : MessageHan
 			m_configInterface = new ConfigInterface(m_configuration.config_interface, j->logInstance());
 #endif
 		m_discoHandler = new CapabilityHandler();
+		m_spectrumNodeHandler = new SpectrumNodeHandler();
 
 // 		m_discoInfoHandler = new GlooxDiscoInfoHandler();
 // 		j->registerIqHandler(m_discoInfoHandler,ExtDiscoInfo);
@@ -1512,6 +1512,10 @@ void GlooxMessageHandler::onConnect() {
 		}
 
 		std::list<std::string> f = protocol()->buddyFeatures();
+		if (find(f.begin(), f.end(), "http://jabber.org/protocol/disco#items") == f.end())
+			f.push_back("http://jabber.org/protocol/disco#items");
+		if (find(f.begin(), f.end(), "http://jabber.org/protocol/disco#info") == f.end())
+			f.push_back("http://jabber.org/protocol/disco#info");
 		f.sort();
 		for (std::list<std::string>::iterator it = f.begin(); it != f.end(); it++) {
 			id += (*it);

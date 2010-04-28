@@ -23,7 +23,11 @@
 #include "transport.h"
 
 SpectrumNodeHandler::SpectrumNodeHandler() {
-	
+	m_features = Transport::instance()->protocol()->buddyFeatures();
+	// These features are added there by gloox, so we have to remove them to don't have 
+	// duplicities there.
+	m_features.remove("http://jabber.org/protocol/disco#items");
+	m_features.remove("http://jabber.org/protocol/disco#info");
 }
 
 SpectrumNodeHandler::~SpectrumNodeHandler() {
@@ -31,7 +35,7 @@ SpectrumNodeHandler::~SpectrumNodeHandler() {
 }
 
 StringList SpectrumNodeHandler::handleDiscoNodeFeatures (const JID &from, const std::string &node) {
-	return Transport::instance()->protocol()->buddyFeatures();
+	return m_features;
 }
 
 Disco::IdentityList SpectrumNodeHandler::handleDiscoNodeIdentities (const JID &from, const std::string &node) {

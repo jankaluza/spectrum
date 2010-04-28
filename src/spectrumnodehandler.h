@@ -38,6 +38,9 @@ class SpectrumNodeHandler : public DiscoNodeHandler {
 		StringList handleDiscoNodeFeatures (const JID &from, const std::string &node);
 		Disco::IdentityList handleDiscoNodeIdentities (const JID &from, const std::string &node);
 		Disco::ItemList handleDiscoNodeItems (const JID &from, const JID &to, const std::string &node=EmptyString);
+	
+	private:
+		std::list<std::string> m_features;
 
 };
 
