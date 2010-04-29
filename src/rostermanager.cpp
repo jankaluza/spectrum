@@ -235,8 +235,10 @@ void SpectrumRosterManager::handleBuddyRemoved(PurpleBuddy *buddy) {
 void SpectrumRosterManager::handleBuddyCreated(AbstractSpectrumBuddy *s_buddy) {
 	std::string alias = s_buddy->getAlias();
 	std::string name = s_buddy->getName();
-	if (name.empty())
+	if (name.empty()) {
+		Log(m_user->jid(), "handleBuddyCreated ERROR! Name is EMPTY! " << name << " ("<< alias <<")");
 		return;
+	}
 
 	Log(m_user->jid(), "handleBuddyCreated: " << name << " ("<< alias <<")");
 
@@ -394,6 +396,10 @@ bool SpectrumRosterManager::hasAuthRequest(const std::string &remote_user) {
 void SpectrumRosterManager::handleSubscription(const Subscription &subscription) {
 	std::string remote_user(subscription.to().username());
 	std::for_each( remote_user.begin(), remote_user.end(), replaceJidCharacters() );
+	if (remote_user.empty()) {
+		Log(m_user->jid(), "handleSubscription: Remote user is EMPTY!");
+		return;
+	}
 
 	if (m_user->isConnected()) {
 		if (subscription.subtype() == Subscription::Subscribed) {

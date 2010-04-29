@@ -44,7 +44,11 @@ std::string SpectrumBuddy::getAlias() {
 }
 
 std::string SpectrumBuddy::getName() {
-	return std::string(purple_buddy_get_name(m_buddy));
+	std::string name(purple_buddy_get_name(m_buddy));
+	if (name.empty()) {
+		Log("SpectrumBuddy::getName", "Name is EMPTY!");
+	}
+	return name;
 }
 
 bool SpectrumBuddy::getStatus(PurpleStatusPrimitive &status, std::string &statusMessage) {
@@ -109,6 +113,9 @@ std::string SpectrumBuddy::getSafeName() {
 	std::string name = getName();
 	Transport::instance()->protocol()->prepareUsername(name, purple_buddy_get_account(m_buddy));
 	std::for_each( name.begin(), name.end(), replaceBadJidCharacters() );
+	if (name.empty()) {
+		Log("SpectrumBuddy::getSafeName", "Name is EMPTY! Previous was " << getName() << ".");
+	}
 	return name;
 }
 

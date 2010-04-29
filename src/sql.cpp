@@ -634,7 +634,7 @@ GHashTable *SQLClass::getBuddies(long userId, PurpleAccount *account){
 			user.online = false;
 			user.lastPresence = "";
 
-// 			if (!buddiesLoaded) {
+			if (!user.uin.empty()) {
 				// create group
 				std::string group = user.group.empty() ? "Buddies" : user.group;
 				PurpleGroup *g = purple_find_group(group.c_str());
@@ -699,7 +699,7 @@ GHashTable *SQLClass::getBuddies(long userId, PurpleAccount *account){
 						s_buddy->setSubscription(user.subscription);
 					}
 				}
-
+			}
 // 			rows[std::string(m_stmt_getBuddies.resUin)] = user;
 // 			m_stmt_getBuddies.stmt->execute();
 		} while (!m_stmt_getBuddies.stmt->done());
