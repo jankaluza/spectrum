@@ -1339,6 +1339,7 @@ void GlooxMessageHandler::handleSubscription(const Subscription &stanza) {
 		reply->addAttribute( "from", stanza.to().bare() );
 		reply->addAttribute( "type", "subscribed" );
 		j->send( reply );
+		return;
 	}
 
 	User *user;
