@@ -24,6 +24,7 @@
 #include "main.h"
 #include "spectrumbuddy.h"
 #include "spectrum_util.h"
+#include "protocols/abstractprotocol.h"
 
 
 #if !defined(WITH_MYSQL) && !defined(WITH_SQLITE) && !defined(WITH_ODBC)
@@ -504,6 +505,7 @@ void SQLClass::addDownload(const std::string &filename, const std::string &vip) 
 long SQLClass::addBuddy(long userId, const std::string &uin, const std::string &subscription, const std::string &group, const std::string &nickname) {
 	m_stmt_addBuddy.user_id = userId;
 	m_stmt_addBuddy.uin.assign(uin);
+	p->protocol()->prepareUsername(m_stmt_addBuddy.uin);
 	m_stmt_addBuddy.subscription.assign(subscription);
 	m_stmt_addBuddy.groups.assign(group);
 	m_stmt_addBuddy.nickname.assign(nickname);
