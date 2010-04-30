@@ -1503,7 +1503,7 @@ void GlooxMessageHandler::onConnect() {
 		id += protocol()->gatewayIdentity();
 		id += '/';
 		id += '/';
-		id += configuration().discoName;
+		id += "Spectrum";
 		id += '<';
 		
 		std::list<std::string> features = protocol()->transportFeatures();
