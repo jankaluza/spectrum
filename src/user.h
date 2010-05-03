@@ -74,9 +74,6 @@ class User : public AbstractUser, public SpectrumRosterManager, public SpectrumM
 		PurpleValue *getSetting(const char *key);
 		void updateSetting(const std::string &key, PurpleValue *value);
 
-		// bind IP
-		void setBindIP(const std::string& bindIP) { m_bindIP = bindIP; }
-
 		// connection start
 		time_t connectionStart() { return m_connectionStart; }
 
@@ -112,7 +109,6 @@ class User : public AbstractUser, public SpectrumRosterManager, public SpectrumM
 		bool m_rosterXCalled;		// true if we are counting buddies for roster X
 		bool m_connected;			// true if this user is connected to legacy account
 		int m_reconnectCount;		// number of passed reconnect tries
-		std::string m_bindIP;		// IP address to which libpurple will be binded
 		std::string m_password;		// password used to connect to legacy network
 		std::string m_username;		// legacy network user name
 		std::string m_encoding;

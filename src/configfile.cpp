@@ -28,6 +28,9 @@
 #include "win32/win32dep.h"
 #endif
 
+#define LOAD_REQUIRED_STRING(VARIABLE, SECTION, KEY) {if (!loadString((VARIABLE), (SECTION), (KEY))) return DummyConfiguration;}
+#define LOAD_STRING(VARIABLE, SECTION, KEY, DEFAULT) {if (!loadString((VARIABLE), (SECTION), (KEY), (DEFAULT))) return DummyConfiguration;}
+
 static int create_dir(std::string dir, int mode) {
 #ifdef WIN32
 	replace(dir, "/", "\\");
@@ -177,74 +180,44 @@ Configuration ConfigFile::getConfiguration() {
 	if (!m_loaded)
 		return DummyConfiguration;
 
-	if (!loadString(configuration.protocol, "service", "protocol"))
-		return DummyConfiguration;
+	// Service section
+	LOAD_REQUIRED_STRING(configuration.protocol, "service", "protocol");
 	m_protocol = configuration.protocol;
 
-	if (!loadString(configuration.jid, "service", "jid"))
-		return DummyConfiguration;
+	LOAD_REQUIRED_STRING(configuration.jid, "service", "jid");
 	m_jid = configuration.jid;
 
-	if (!loadString(configuration.discoName, "service", "name"))
-		return DummyConfiguration;
-
-	if (!loadString(configuration.server, "service", "server"))
-		return DummyConfiguration;
-
-	if (!loadString(configuration.password, "service", "password"))
-		return DummyConfiguration;
-
-	if (!loadInteger(configuration.port, "service", "port"))
-		return DummyConfiguration;
-
-	if (!loadString(configuration.filetransferCache, "service", "filetransfer_cache"))
-		return DummyConfiguration;
-	create_dir(configuration.filetransferCache, 0750);
-	
+	LOAD_REQUIRED_STRING(configuration.discoName, "service", "name");
+	LOAD_REQUIRED_STRING(configuration.server, "service", "server");
+	LOAD_REQUIRED_STRING(configuration.password, "service", "password");
+	LOAD_REQUIRED_STRING(configuration.filetransferCache, "service", "filetransfer_cache");
+	LOAD_STRING(configuration.config_interface, "service", "config_interface", "/var/run/spectrum/" + configuration.jid + ".sock");
+	if (!loadInteger(configuration.port, "service", "port")) return DummyConfiguration;
 	loadString(configuration.filetransferWeb, "service", "filetransfer_web", "");
-
-	if (!loadString(configuration.config_interface, "service", "config_interface", "/var/run/spectrum/" + configuration.jid + ".sock"))
-		return DummyConfiguration;
-	create_dir(configuration.config_interface, 0750);
-
 	loadString(configuration.pid_f, "service", "pid_file", "/var/run/spectrum/" + configuration.jid);
-	create_dir(configuration.pid_f, 0750);
-
-	if (!loadString(configuration.sqlType, "database", "type"))
-		return DummyConfiguration;
-
-	if (!loadString(configuration.sqlHost, "database", "host", configuration.sqlType == "sqlite" ? "optional" :""))
-		return DummyConfiguration;
-
-	if (!loadString(configuration.sqlPassword, "database", "password", configuration.sqlType == "sqlite" ? "optional" :""))
-		return DummyConfiguration;
-
-	if (!loadString(configuration.sqlUser, "database", "user", configuration.sqlType == "sqlite" ? "optional" :""))
-		return DummyConfiguration;
-
-
-	if (!loadString(configuration.sqlDb, "database", "database"))
-		return DummyConfiguration;
-	if (configuration.sqlType == "sqlite") {
-		create_dir(configuration.sqlDb, 0750);
-	}
-
-	if (!loadString(configuration.sqlPrefix, "database", "prefix", configuration.sqlType == "sqlite" ? "" : "required"))
-		return DummyConfiguration;
-
-	if (!loadString(configuration.userDir, "purple", "userdir"))
-		return DummyConfiguration;
-	create_dir(configuration.userDir, 0750);
-
 	loadString(configuration.language, "service", "language", "en");
 	loadString(configuration.encoding, "service", "encoding", "");
-	loadString(configuration.logfile, "logging", "log_file", "");
-	create_dir(configuration.logfile, 0750);
 	loadBoolean(configuration.onlyForVIP, "service", "only_for_vip", false);
 	loadBoolean(configuration.VIPEnabled, "service", "vip_mode", false);
 	loadBoolean(configuration.useProxy, "service", "use_proxy", false);
 	loadBoolean(configuration.require_tls, "service", "require_tls", true);
 	
+	if(g_key_file_has_key(keyfile,"service","allowed_servers",NULL)) {
+		bind = g_key_file_get_string_list(keyfile, "service", "allowed_servers", NULL, NULL);
+		for (i = 0; bind[i]; i++){
+			configuration.allowedServers.push_back((std::string) bind[i]);
+		}
+		g_strfreev (bind);
+	}
+
+	if(g_key_file_has_key(keyfile,"service","admins",NULL)) {
+		bind = g_key_file_get_string_list(keyfile, "service", "admins", NULL, NULL);
+		for (i = 0; bind[i]; i++){
+			configuration.admins.push_back((std::string) bind[i]);
+		}
+		g_strfreev (bind);
+	}
+
 	std::string ft_proxy;
 	loadString(ft_proxy, "service", "filetransfer_bind_address", "");
 	if (ft_proxy.find_last_of(':') == std::string::npos)
@@ -253,13 +226,16 @@ Configuration ConfigFile::getConfiguration() {
 		configuration.filetransfer_proxy_port = atoi(ft_proxy.substr(ft_proxy.find_last_of(':') + 1, ft_proxy.size()).c_str());
 	configuration.filetransfer_proxy_ip = ft_proxy.substr(0, ft_proxy.find_last_of(':'));
 
+	// lets make default value the same as filetransfer_bind_address
 	loadString(ft_proxy, "service", "filetransfer_public_address", ft_proxy);
 	if (ft_proxy.find_last_of(':') == std::string::npos)
 		configuration.filetransfer_proxy_streamhost_port = 0;
 	else
 		configuration.filetransfer_proxy_streamhost_port = atoi(ft_proxy.substr(ft_proxy.find_last_of(':') + 1, ft_proxy.size()).c_str());
-	configuration.filetransfer_proxy_streamhost_ip = ft_proxy.substr(0, ft_proxy.find_last_of(':'));	
+	configuration.filetransfer_proxy_streamhost_ip = ft_proxy.substr(0, ft_proxy.find_last_of(':'));
+	
 
+	// TODO: transport_features and vip_features are depracted. remove it for 0.4
 	if(g_key_file_has_key(keyfile,"service","transport_features",NULL)) {
 		bind = g_key_file_get_string_list (keyfile,"service","transport_features",NULL, NULL);
 		configuration.transportFeatures = 0;
@@ -291,9 +267,20 @@ Configuration ConfigFile::getConfiguration() {
 		g_strfreev (bind);
 	}
 	else configuration.VIPFeatures = TRANSPORT_FEATURE_AVATARS | TRANSPORT_FEATURE_FILETRANSFER | TRANSPORT_FEATURE_TYPING_NOTIFY;
-	
-	if (g_key_file_has_key(keyfile,"logging","log_areas",NULL)) {
-		bind = g_key_file_get_string_list (keyfile,"logging","log_areas", NULL, NULL);
+
+	// Database section
+	LOAD_REQUIRED_STRING(configuration.sqlType, "database", "type");
+	LOAD_REQUIRED_STRING(configuration.sqlDb, "database", "database");
+	LOAD_STRING(configuration.sqlHost, "database", "host", configuration.sqlType == "sqlite" ? "optional" : "");
+	LOAD_STRING(configuration.sqlPassword, "database", "password", configuration.sqlType == "sqlite" ? "optional" : "");
+	LOAD_STRING(configuration.sqlUser, "database", "user", configuration.sqlType == "sqlite" ? "optional" : "");
+	LOAD_STRING(configuration.sqlPrefix, "database", "prefix", configuration.sqlType == "sqlite" ? "" : "required");
+	LOAD_REQUIRED_STRING(configuration.userDir, "purple", "userdir");
+
+	// Logging section
+	loadString(configuration.logfile, "logging", "log_file", "");
+	if (g_key_file_has_key(keyfile, "logging", "log_areas", NULL)) {
+		bind = g_key_file_get_string_list(keyfile, "logging", "log_areas", NULL, NULL);
 		configuration.logAreas = 0;
 		for (i = 0; bind[i]; i++) {
 			std::string feature(bind[i]);
@@ -307,29 +294,13 @@ Configuration ConfigFile::getConfiguration() {
 	}
 	else configuration.logAreas = LOG_AREA_XML | LOG_AREA_PURPLE;
 	
-	if(g_key_file_has_key(keyfile,"purple","bind",NULL)) {
-		bind = g_key_file_get_string_list (keyfile,"purple","bind",NULL, NULL);
-		for (i = 0; bind[i]; i++){
-			configuration.bindIPs[i] = (std::string)bind[i];
-		}
-		g_strfreev (bind);
-	}
-
-	if(g_key_file_has_key(keyfile,"service","allowed_servers",NULL)) {
-		bind = g_key_file_get_string_list(keyfile, "service", "allowed_servers", NULL, NULL);
-		for (i = 0; bind[i]; i++){
-			configuration.allowedServers.push_back((std::string) bind[i]);
-		}
-		g_strfreev (bind);
-	}
-
-	if(g_key_file_has_key(keyfile,"service","admins",NULL)) {
-		bind = g_key_file_get_string_list(keyfile, "service", "admins", NULL, NULL);
-		for (i = 0; bind[i]; i++){
-			configuration.admins.push_back((std::string) bind[i]);
-		}
-		g_strfreev (bind);
-	}
+	if (configuration.sqlType == "sqlite")
+		create_dir(configuration.sqlDb, 0750);
+	create_dir(configuration.filetransferCache, 0750);
+	create_dir(configuration.config_interface, 0750);
+	create_dir(configuration.pid_f, 0750);
+	create_dir(configuration.userDir, 0750);
+	create_dir(configuration.logfile, 0750);
 	return configuration;
 }
 

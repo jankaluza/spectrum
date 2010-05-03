@@ -55,7 +55,6 @@ User::User(GlooxMessageHandler *parent, JID jid, const std::string &username, co
 	m_connected = false;
 	m_reconnectCount = 0;
 
-	m_bindIP.clear();
 	m_password = password;
 	m_username = username;
 	m_encoding = encoding;
@@ -265,8 +264,6 @@ void User::connect() {
 
 	m_connectionStart = time(NULL);
 	m_readyForConnect = false;
-	if (!m_bindIP.empty())
-		purple_account_set_string(m_account,"bind",std::string(m_bindIP).c_str());
 	purple_account_set_password(m_account,m_password.c_str());
 	Log(m_jid, "UIN:" << m_username << " USER_ID:" << m_userID);
 

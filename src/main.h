@@ -193,7 +193,6 @@ public:
 	FileTransferManager* ftManager;
 	SIProfileFT* ft;
 	Component *j;
-	int lastIP;
 	GlooxGatewayHandler *gatewayHandler;
 	SOCKS5BytestreamServer* ftServer;
 	GMainLoop *loop() { return m_loop; }

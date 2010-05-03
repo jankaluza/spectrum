@@ -801,7 +801,6 @@ GlooxMessageHandler::GlooxMessageHandler(const std::string &config) : MessageHan
 	m_firstConnection = true;
 	ftManager = NULL;
 	ft = NULL;
-	lastIP = 0;
 	m_parser = NULL;
 	m_sql = NULL;
 	m_collector = NULL;
@@ -1442,16 +1441,6 @@ void GlooxMessageHandler::handlePresence(const Presence &stanza){
 					if (Transport::instance()->hasClientCapabilities(c->findAttribute("ver")))
 						user->setResource(stanza.from().resource(), stanza.priority(), Transport::instance()->getCapabilities(c->findAttribute("ver")));
 
-				std::map<int,std::string> ::iterator iter = configuration().bindIPs.begin();
-				iter = configuration().bindIPs.find(lastIP);
-				if (iter != configuration().bindIPs.end()) {
-					user->setBindIP(configuration().bindIPs[lastIP]);
-					lastIP++;
-				}
-				else {
-					lastIP = 0;
-					user->setBindIP(configuration().bindIPs[lastIP]);
-				}
 				m_userManager->addUser(user);
 				user->receivedPresence(stanza);
 				if (protocol()->isMUC(NULL, stanza.to().bare())) {
