@@ -1,10 +1,20 @@
 version 0.3 (2010-??-??):
 	General
+	* Added localization support.
+	* Support for glib older than 2.14.
 	* Try to reconnect to Jabber server for all stream errors.
 	* Disconnect users from legacy network when Jabber server gets down.
+	* Fixed timestamps for delayed messages from legacy network.
+	* Entity capabilities hash is now computed correctly.
+
+	ICQ/AIM:
+	* Fixed connection issues on Windows.
+
+	Gadu-Gadu:
+	* Added support for receiving VCards.
 
 	IRC:
-	* Fixed bug when user stays connected to IRC after he logged out from Jabber.
+	* Fixed bug when user stays connected to IRC even he logs out from Jabber.
 	* Fixed sending first private message from XMPP to IRC.
 
 version 0.2 (2010-04-08):
