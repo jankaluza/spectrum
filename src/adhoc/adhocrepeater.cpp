@@ -195,7 +195,7 @@ bool AdhocRepeater::handleIq(const IQ &stanza) {
 		else {
 			std::string result("");
 			for(std::list<Tag*>::const_iterator it = x->children().begin(); it != x->children().end(); ++it){
-				if ((*it)->hasAttribute("var","result")){
+				if ((*it)->hasAttribute("var","result") && (*it)->findChild("value")) {
 					result = (*it)->findChild("value")->cdata();
 					break;
 				}
