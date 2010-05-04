@@ -254,6 +254,32 @@ void User::connect() {
 	purple_account_set_bool(m_account, "require_tls",  Transport::instance()->getConfiguration().require_tls);
 	purple_account_set_bool(m_account, "use_ssl",  Transport::instance()->getConfiguration().require_tls);
 
+	std::map <std::string, PurpleAccountSettingValue> &settings = Transport::instance()->getConfiguration().purple_account_settings;
+	for (std::map <std::string, PurpleAccountSettingValue>::iterator it = settings.begin(); it != settings.end(); it++) {
+		PurpleAccountSettingValue v = (*it).second;
+		std::string key((*it).first);
+		switch (v.type) {
+			case PURPLE_PREF_BOOLEAN:
+				purple_account_set_bool(m_account, key.c_str(), v.b);
+				break;
+
+			case PURPLE_PREF_INT:
+				purple_account_set_int(m_account, key.c_str(), v.i);
+				break;
+
+			case PURPLE_PREF_STRING:
+				purple_account_set_string(m_account, key.c_str(), v.str.c_str());
+				break;
+
+			case PURPLE_PREF_STRING_LIST:
+				// TODO:
+				break;
+
+			default:
+				continue;
+		}
+	}
+
 	m_account->ui_data = this;
 	
 	p->protocol()->onPurpleAccountCreated(m_account);

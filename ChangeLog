@@ -6,7 +6,7 @@ version 0.3 (2010-??-??):
 	* Disconnect users from legacy network when Jabber server gets down.
 	* Fixed timestamps for delayed messages from legacy network.
 	* Entity capabilities hash is now computed correctly.
-	* transport_features and vip_features config variables are depracted now.
+	* transport_features and vip_features config variables are deprecated now.
 	  Use [features] and [vip-features] sections instead of them. See default
 	  spectrum.cfg for more details and example.
 

@@ -29,6 +29,13 @@
 #include <string>
 #include "limits.h"
 
+struct PurpleAccountSettingValue {
+	std::string str;
+	int i;
+	bool b;
+	std::list <std::string> strlist;
+	PurplePrefType type;
+};
 
 // Structure used for storing transport configuration.
 struct Configuration {
@@ -74,6 +81,7 @@ struct Configuration {
 	std::list <std::string> allowedServers;		// Hostnames which are allowed to connect.
 	std::list <std::string> admins;				// JIDs of Spectrum administrators
 	std::map<int,std::string> bindIPs;			// IP addresses used to bind connections.
+	std::map<std::string, PurpleAccountSettingValue> purple_account_settings;
 
 	operator bool() const {
 		return !protocol.empty();
@@ -95,6 +103,9 @@ class ConfigFile {
 
 		// Returns parsed configuration.
 		Configuration getConfiguration();
+
+		// Loads PurpleAcccountSettings. This has to be called after libpurple initialization.
+		void loadPurpleAccountSettings(Configuration &configuration);
 
 #ifndef TESTS
 	private:

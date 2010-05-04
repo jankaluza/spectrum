@@ -187,7 +187,7 @@ bool ConfigFile::loadStringList(std::list <std::string> &variable, const std::st
 
 bool ConfigFile::loadHostPort(std::string &host, int &port, const std::string &section, const std::string &key, const std::string &def_host, const int &def_port) {
 	std::string str;
-	if(!loadString(str, section, key)) {
+	if (!g_key_file_has_key(keyfile, section.c_str(), key.c_str(), NULL)) {
 		if (def_host == "required") {
 			Log("loadConfigFile", "You have to specify `" << key << "` in [" << section << "] section of config file.");
 			return false;
@@ -196,6 +196,7 @@ bool ConfigFile::loadHostPort(std::string &host, int &port, const std::string &s
 		port = def_port;
 		return true;
 	}
+	loadString(str, section, key);
 	
 	if (str.find_last_of(':') == std::string::npos)
 		port = 0;
@@ -232,6 +233,55 @@ bool ConfigFile::loadFeatures(int &features, const std::string &section) {
 	}
 	g_strfreev(keys);
 	return true;
+}
+
+void ConfigFile::loadPurpleAccountSettings(Configuration &configuration) {
+	if (!m_loaded)
+		return;
+	if (!g_key_file_has_group(keyfile, "purple"))
+		return;
+
+	PurplePlugin *plugin = purple_find_prpl(Transport::instance()->protocol()->protocol().c_str());
+	PurplePluginProtocolInfo *prpl_info = PURPLE_PLUGIN_PROTOCOL_INFO(plugin);
+	for (GList *l = prpl_info->protocol_options; l != NULL; l = l->next) {
+		PurpleAccountOption *option = (PurpleAccountOption *) l->data;
+		PurpleAccountSettingValue v;
+		v.type = purple_account_option_get_type(option);
+		std::string key(purple_account_option_get_setting(option));
+
+		switch (v.type) {
+			case PURPLE_PREF_BOOLEAN:
+				if (g_key_file_has_key(keyfile, "purple", key.c_str(), NULL))
+					loadBoolean(v.b, "purple", key);
+				else
+					v.b = purple_account_option_get_default_bool(option);
+				break;
+
+			case PURPLE_PREF_INT:
+				if (g_key_file_has_key(keyfile, "purple", key.c_str(), NULL))
+					loadInteger(v.i, "purple", key);
+				else
+					v.i = purple_account_option_get_default_int(option);
+				break;
+
+			case PURPLE_PREF_STRING:
+				if (g_key_file_has_key(keyfile, "purple", key.c_str(), NULL))
+					loadString(v.str, "purple", key);
+				else
+					v.str = purple_account_option_get_default_string(option);
+				break;
+
+			case PURPLE_PREF_STRING_LIST:
+				if (g_key_file_has_key(keyfile, "purple", key.c_str(), NULL)) {
+					loadStringList(v.strlist, "purple", key);
+				}
+				break;
+
+			default:
+				continue;
+		}
+		configuration.purple_account_settings[key] = v;
+	}
 }
 
 Configuration ConfigFile::getConfiguration() {
