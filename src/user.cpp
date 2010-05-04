@@ -249,11 +249,6 @@ void User::connect() {
 		purple_accounts_add(m_account);
 	}
 
-	purple_account_set_string(m_account, "encoding", m_encoding.empty() ? Transport::instance()->getConfiguration().encoding.c_str() : m_encoding.c_str());
-	purple_account_set_bool(m_account, "use_clientlogin", false);
-	purple_account_set_bool(m_account, "require_tls",  Transport::instance()->getConfiguration().require_tls);
-	purple_account_set_bool(m_account, "use_ssl",  Transport::instance()->getConfiguration().require_tls);
-
 	std::map <std::string, PurpleAccountSettingValue> &settings = Transport::instance()->getConfiguration().purple_account_settings;
 	for (std::map <std::string, PurpleAccountSettingValue>::iterator it = settings.begin(); it != settings.end(); it++) {
 		PurpleAccountSettingValue v = (*it).second;
@@ -279,6 +274,11 @@ void User::connect() {
 				continue;
 		}
 	}
+
+	purple_account_set_string(m_account, "encoding", m_encoding.empty() ? Transport::instance()->getConfiguration().encoding.c_str() : m_encoding.c_str());
+	purple_account_set_bool(m_account, "use_clientlogin", false);
+	purple_account_set_bool(m_account, "require_tls",  Transport::instance()->getConfiguration().require_tls);
+	purple_account_set_bool(m_account, "use_ssl",  Transport::instance()->getConfiguration().require_tls);
 
 	m_account->ui_data = this;
 	
