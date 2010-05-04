@@ -332,59 +332,64 @@ void SQLClass::reconnect() {
 void SQLClass::initDb() {
 	if (p->configuration().sqlType == "sqlite") {
 		try {
-			*m_sess << "CREATE TABLE IF NOT EXISTS " + p->configuration().sqlPrefix + "buddies ("
-						"  id INTEGER PRIMARY KEY NOT NULL,"
-						"  user_id int(10) NOT NULL,"
-						"  uin varchar(255) NOT NULL,"
-						"  subscription varchar(20) NOT NULL,"
-						"  nickname varchar(255) NOT NULL,"
-						"  groups varchar(255) NOT NULL"
-						");", now;
-
-			*m_sess << "CREATE UNIQUE INDEX IF NOT EXISTS user_id ON " + p->configuration().sqlPrefix + "buddies (user_id, uin);", now;
-
-			*m_sess << "CREATE TABLE IF NOT EXISTS " + p->configuration().sqlPrefix + "buddies_settings ("
-						"  user_id int(10) NOT NULL,"
-						"  buddy_id int(10) NOT NULL,"
-						"  var varchar(50) NOT NULL,"
-						"  type int(4) NOT NULL,"
-						"  value varchar(255) NOT NULL,"
-						"  PRIMARY KEY (buddy_id, var)"
-						");", now;
-
-			*m_sess << "CREATE INDEX IF NOT EXISTS user_id02 ON " + p->configuration().sqlPrefix + "buddies_settings (user_id);", now;
-
-			*m_sess << "CREATE TABLE IF NOT EXISTS " + p->configuration().sqlPrefix + "users ("
-						"  id INTEGER PRIMARY KEY NOT NULL,"
-						"  jid varchar(255) NOT NULL,"
-						"  uin varchar(4095) NOT NULL,"
-						"  password varchar(255) NOT NULL,"
-						"  language varchar(25) NOT NULL,"
-						"  encoding varchar(50) NOT NULL DEFAULT 'utf8',"
-						"  last_login datetime,"
-						"  vip tinyint(1) NOT NULL DEFAULT '0',"
-						"  online int(1) NOT NULL DEFAULT '0'"
-						");", now;
-
-			*m_sess << "CREATE UNIQUE INDEX IF NOT EXISTS jid ON " + p->configuration().sqlPrefix + "users (jid);", now;
-
-			*m_sess << "CREATE TABLE " + p->configuration().sqlPrefix + "users_settings ("
-						"  user_id int(10) NOT NULL,"
-						"  var varchar(50) NOT NULL,"
-						"  type int(4) NOT NULL,"
-						"  value varchar(255) NOT NULL,"
-						"  PRIMARY KEY (user_id, var)"
-						");", now;
-						
-			*m_sess << "CREATE INDEX IF NOT EXISTS user_id03 ON " + p->configuration().sqlPrefix + "users_settings (user_id);", now;
-
-			*m_sess << "CREATE TABLE IF NOT EXISTS " + p->configuration().sqlPrefix + "db_version ("
-				"  ver INTEGER NOT NULL DEFAULT '1'"
-				");", now;
-			*m_sess << "REPLACE INTO " + p->configuration().sqlPrefix + "db_version (ver) values(1)", now;
+			m_version_stmt->execute();
 		}
 		catch (Poco::Exception e) {
-			Log("SQL ERROR", e.displayText());
+			try {
+				*m_sess << "CREATE TABLE IF NOT EXISTS " + p->configuration().sqlPrefix + "buddies ("
+							"  id INTEGER PRIMARY KEY NOT NULL,"
+							"  user_id int(10) NOT NULL,"
+							"  uin varchar(255) NOT NULL,"
+							"  subscription varchar(20) NOT NULL,"
+							"  nickname varchar(255) NOT NULL,"
+							"  groups varchar(255) NOT NULL"
+							");", now;
+
+				*m_sess << "CREATE UNIQUE INDEX IF NOT EXISTS user_id ON " + p->configuration().sqlPrefix + "buddies (user_id, uin);", now;
+
+				*m_sess << "CREATE TABLE IF NOT EXISTS " + p->configuration().sqlPrefix + "buddies_settings ("
+							"  user_id int(10) NOT NULL,"
+							"  buddy_id int(10) NOT NULL,"
+							"  var varchar(50) NOT NULL,"
+							"  type int(4) NOT NULL,"
+							"  value varchar(255) NOT NULL,"
+							"  PRIMARY KEY (buddy_id, var)"
+							");", now;
+
+				*m_sess << "CREATE INDEX IF NOT EXISTS user_id02 ON " + p->configuration().sqlPrefix + "buddies_settings (user_id);", now;
+
+				*m_sess << "CREATE TABLE IF NOT EXISTS " + p->configuration().sqlPrefix + "users ("
+							"  id INTEGER PRIMARY KEY NOT NULL,"
+							"  jid varchar(255) NOT NULL,"
+							"  uin varchar(4095) NOT NULL,"
+							"  password varchar(255) NOT NULL,"
+							"  language varchar(25) NOT NULL,"
+							"  encoding varchar(50) NOT NULL DEFAULT 'utf8',"
+							"  last_login datetime,"
+							"  vip tinyint(1) NOT NULL DEFAULT '0',"
+							"  online int(1) NOT NULL DEFAULT '0'"
+							");", now;
+
+				*m_sess << "CREATE UNIQUE INDEX IF NOT EXISTS jid ON " + p->configuration().sqlPrefix + "users (jid);", now;
+
+				*m_sess << "CREATE TABLE " + p->configuration().sqlPrefix + "users_settings ("
+							"  user_id int(10) NOT NULL,"
+							"  var varchar(50) NOT NULL,"
+							"  type int(4) NOT NULL,"
+							"  value varchar(255) NOT NULL,"
+							"  PRIMARY KEY (user_id, var)"
+							");", now;
+							
+				*m_sess << "CREATE INDEX IF NOT EXISTS user_id03 ON " + p->configuration().sqlPrefix + "users_settings (user_id);", now;
+
+				*m_sess << "CREATE TABLE IF NOT EXISTS " + p->configuration().sqlPrefix + "db_version ("
+					"  ver INTEGER NOT NULL DEFAULT '1'"
+					");", now;
+				*m_sess << "REPLACE INTO " + p->configuration().sqlPrefix + "db_version (ver) values(1)", now;
+			}
+			catch (Poco::Exception e) {
+				Log("SQL ERROR", e.displayText());
+			}
 		}
 	}
 

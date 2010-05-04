@@ -89,12 +89,14 @@ static gchar *logfile = NULL;
 static gchar *lock_file = NULL;
 static gboolean ver = FALSE;
 static gboolean upgrade_db = FALSE;
+static gboolean list_purple_settings = FALSE;
 
 static GOptionEntry options_entries[] = {
 	{ "nodaemon", 'n', 0, G_OPTION_ARG_NONE, &nodaemon, "Disable background daemon mode", NULL },
 	{ "logfile", 'l', 0, G_OPTION_ARG_STRING, &logfile, "Set file to log", NULL },
 	{ "pidfile", 'p', 0, G_OPTION_ARG_STRING, &lock_file, "File where to write transport PID", NULL },
 	{ "version", 'v', 0, G_OPTION_ARG_NONE, &ver, "Shows Spectrum version", NULL },
+	{ "list-purple-settings", 's', 0, G_OPTION_ARG_NONE, &list_purple_settings, "Lists purple settings which can be used in config file", NULL },
 	{ "upgrade-db", 'u', 0, G_OPTION_ARG_NONE, &upgrade_db, "Upgrades Spectrum database", NULL },
 	{ NULL, 0, 0, G_OPTION_ARG_NONE, NULL, "", NULL }
 };
@@ -794,6 +796,47 @@ static gboolean transportDataReceived(GIOChannel *source, GIOCondition condition
 	return TRUE;
 }
 
+static void listPurpleSettings() {
+	std::cout << "You can use those variables in [purple] section in Spectrum config file.\n";
+	PurplePlugin *plugin = purple_find_prpl(Transport::instance()->protocol()->protocol().c_str());
+	PurplePluginProtocolInfo *prpl_info = PURPLE_PLUGIN_PROTOCOL_INFO(plugin);
+	for (GList *l = prpl_info->protocol_options; l != NULL; l = l->next) {
+		PurpleAccountOption *option = (PurpleAccountOption *) l->data;
+		std::string key(purple_account_option_get_setting(option));
+		std::string type;
+		std::string def;
+
+		switch (purple_account_option_get_type(option)) {
+			case PURPLE_PREF_BOOLEAN:
+				type = "boolean";
+				def = stringOf(purple_account_option_get_default_bool(option));
+				break;
+
+			case PURPLE_PREF_INT:
+				type = "integer";
+				def = stringOf(purple_account_option_get_default_int(option));
+				break;
+
+			case PURPLE_PREF_STRING:
+				type = "string";
+				def = stringOf(purple_account_option_get_default_string(option));
+				break;
+
+			case PURPLE_PREF_STRING_LIST:
+				type = "string list";
+// 				def = StringOf(purple_account_option_get_default_string_list(option));
+				break;
+
+			default:
+				continue;
+		}
+		std::cout << "Key: " << key << "\n";
+		std::cout << "\tType: " << type << "\n";
+		std::cout << "\tDescription: " << purple_account_option_get_text(option) << "\n";
+		std::cout << "\tDefault value: " << def << "\n";
+	}
+}
+
 GlooxMessageHandler::GlooxMessageHandler(const std::string &config) : MessageHandler(),ConnectionListener(),PresenceHandler(),SubscriptionHandler() {
 	m_pInstance = this;
 	m_reconnectCount = 0;
@@ -821,6 +864,40 @@ GlooxMessageHandler::GlooxMessageHandler(const std::string &config) : MessageHan
 	if (!loadConfigFile(config))
 		loaded = false;
 
+	m_transport = new Transport(m_configuration.jid);
+
+	j = new HiComponent("jabber:component:accept",m_configuration.server,m_configuration.jid,m_configuration.password,m_configuration.port);
+
+	if (m_configuration.logAreas & LOG_AREA_PURPLE)
+		j->logInstance().registerLogHandler(LogLevelDebug, LogAreaXmlIncoming | LogAreaXmlOutgoing, &Log_);
+	
+	m_loop = g_main_loop_new(NULL, FALSE);
+	g_thread_init(NULL);
+
+	m_userManager = new UserManager();
+	m_adhoc = new GlooxAdhocHandler();
+	m_searchHandler = NULL;
+
+	if (list_purple_settings)
+		m_configuration.logAreas = 0;
+	
+	if (loaded && !initPurple())
+		loaded = false;
+	
+	if (loaded && !loadProtocol())
+		loaded = false;
+
+	if (list_purple_settings) {
+		listPurpleSettings();
+		loaded = false;
+	}
+
+	if (loaded) {
+		m_sql = new SQLClass(this, upgrade_db);	
+		if (!m_sql->loaded())
+			loaded = false;
+	}
+
 	if (loaded && !nodaemon)
 		daemonize(configuration().userDir.c_str());
 
@@ -842,32 +919,6 @@ GlooxMessageHandler::GlooxMessageHandler(const std::string &config) : MessageHan
 		close(logfd);
 	}
 #endif
-
-	m_transport = new Transport(m_configuration.jid);
-
-	if (loaded) {
-		m_sql = new SQLClass(this, upgrade_db);	
-		if (!m_sql->loaded())
-			loaded = false;
-	}
-
-	j = new HiComponent("jabber:component:accept",m_configuration.server,m_configuration.jid,m_configuration.password,m_configuration.port);
-
-	if (m_configuration.logAreas & LOG_AREA_PURPLE)
-		j->logInstance().registerLogHandler(LogLevelDebug, LogAreaXmlIncoming | LogAreaXmlOutgoing, &Log_);
-	
-	m_loop = g_main_loop_new(NULL, FALSE);
-	g_thread_init(NULL);
-
-	m_userManager = new UserManager();
-	m_adhoc = new GlooxAdhocHandler();
-	m_searchHandler = NULL;
-
-	if (loaded && !initPurple())
-		loaded = false;
-	
-	if (loaded && !loadProtocol())
-		loaded = false;
 
 	if (loaded) {
 #ifndef WIN32
