@@ -44,7 +44,6 @@ static int create_dir(std::string dir, int mode) {
 Configuration DummyConfiguration;
 
 ConfigFile::ConfigFile(const std::string &config) {
-
 	m_loaded = true;
 	m_jid = "";
 	m_protocol = "";
@@ -206,6 +205,35 @@ bool ConfigFile::loadHostPort(std::string &host, int &port, const std::string &s
 	return true;
 }
 
+bool ConfigFile::loadFeatures(int &features, const std::string &section) {
+	if (!g_key_file_has_group(keyfile, section.c_str()))
+		return false;
+	char **keys = g_key_file_get_keys(keyfile, section.c_str(), NULL, NULL);
+	bool val;
+	int feature;
+	features = TRANSPORT_FEATURE_ALL;
+	for (int i = 0; keys[i]; i++) {
+		std::string key(keys[i]);
+		loadBoolean(val, section, key);
+
+		if (key == "chatstate")
+			feature = TRANSPORT_FEATURE_TYPING_NOTIFY;
+		else if (key == "avatars")
+			feature = TRANSPORT_FEATURE_AVATARS;
+		else if (key == "filetransfer")
+			feature = TRANSPORT_FEATURE_FILETRANSFER;
+		else
+			continue;
+		
+		if (val)
+			features = features | feature;
+		else
+			features = features & (~feature);
+	}
+	g_strfreev(keys);
+	return true;
+}
+
 Configuration ConfigFile::getConfiguration() {
 	Configuration configuration;
 	char **bind;
@@ -240,38 +268,42 @@ Configuration ConfigFile::getConfiguration() {
 	loadHostPort(configuration.filetransfer_proxy_ip, configuration.filetransfer_proxy_port, "service", "filetransfer_bind_address", "", 0);
 	loadHostPort(configuration.filetransfer_proxy_streamhost_ip, configuration.filetransfer_proxy_streamhost_port, "service", "filetransfer_public_address", configuration.filetransfer_proxy_ip, configuration.filetransfer_proxy_port);
 
-	// TODO: transport_features and vip_features are depracted. remove it for 0.4
-	if(g_key_file_has_key(keyfile,"service","transport_features",NULL)) {
-		bind = g_key_file_get_string_list (keyfile,"service","transport_features",NULL, NULL);
-		configuration.transportFeatures = 0;
-		for (i = 0; bind[i]; i++){
-			std::string feature(bind[i]);
-			if (feature == "avatars")
-				configuration.transportFeatures = configuration.transportFeatures | TRANSPORT_FEATURE_AVATARS;
-			else if (feature == "chatstate")
-				configuration.transportFeatures = configuration.transportFeatures | TRANSPORT_FEATURE_TYPING_NOTIFY;
-			else if (feature == "filetransfer")
-				configuration.transportFeatures = configuration.transportFeatures | TRANSPORT_FEATURE_FILETRANSFER;
+	if (!loadFeatures(configuration.transportFeatures, "features")) {
+		// TODO: transport_features and vip_features are depracted. remove it for 0.4
+		if(g_key_file_has_key(keyfile,"service","transport_features",NULL)) {
+			bind = g_key_file_get_string_list (keyfile,"service","transport_features",NULL, NULL);
+			configuration.transportFeatures = 0;
+			for (i = 0; bind[i]; i++){
+				std::string feature(bind[i]);
+				if (feature == "avatars")
+					configuration.transportFeatures = configuration.transportFeatures | TRANSPORT_FEATURE_AVATARS;
+				else if (feature == "chatstate")
+					configuration.transportFeatures = configuration.transportFeatures | TRANSPORT_FEATURE_TYPING_NOTIFY;
+				else if (feature == "filetransfer")
+					configuration.transportFeatures = configuration.transportFeatures | TRANSPORT_FEATURE_FILETRANSFER;
+			}
+			g_strfreev (bind);
 		}
-		g_strfreev (bind);
+		else configuration.transportFeatures = TRANSPORT_FEATURE_AVATARS | TRANSPORT_FEATURE_FILETRANSFER | TRANSPORT_FEATURE_TYPING_NOTIFY;
 	}
-	else configuration.transportFeatures = TRANSPORT_FEATURE_AVATARS | TRANSPORT_FEATURE_FILETRANSFER | TRANSPORT_FEATURE_TYPING_NOTIFY;
 
-	if(g_key_file_has_key(keyfile,"service","vip_features",NULL)) {
-		bind = g_key_file_get_string_list (keyfile,"service","vip_features",NULL, NULL);
-		configuration.VIPFeatures = 0;
-		for (i = 0; bind[i]; i++){
-			std::string feature(bind[i]);
-			if (feature == "avatars")
-				configuration.VIPFeatures |= TRANSPORT_FEATURE_AVATARS;
-			else if (feature == "chatstate")
-				configuration.VIPFeatures |= TRANSPORT_FEATURE_TYPING_NOTIFY;
-			else if (feature == "filetransfer")
-				configuration.VIPFeatures |= TRANSPORT_FEATURE_FILETRANSFER;
+	if (!loadFeatures(configuration.VIPFeatures, "vip-features")) {
+		if(g_key_file_has_key(keyfile,"service","vip_features",NULL)) {
+			bind = g_key_file_get_string_list (keyfile,"service","vip_features",NULL, NULL);
+			configuration.VIPFeatures = 0;
+			for (i = 0; bind[i]; i++){
+				std::string feature(bind[i]);
+				if (feature == "avatars")
+					configuration.VIPFeatures |= TRANSPORT_FEATURE_AVATARS;
+				else if (feature == "chatstate")
+					configuration.VIPFeatures |= TRANSPORT_FEATURE_TYPING_NOTIFY;
+				else if (feature == "filetransfer")
+					configuration.VIPFeatures |= TRANSPORT_FEATURE_FILETRANSFER;
+			}
+			g_strfreev (bind);
 		}
-		g_strfreev (bind);
+		else configuration.VIPFeatures = TRANSPORT_FEATURE_AVATARS | TRANSPORT_FEATURE_FILETRANSFER | TRANSPORT_FEATURE_TYPING_NOTIFY;
 	}
-	else configuration.VIPFeatures = TRANSPORT_FEATURE_AVATARS | TRANSPORT_FEATURE_FILETRANSFER | TRANSPORT_FEATURE_TYPING_NOTIFY;
 
 	// Database section
 	LOAD_REQUIRED_STRING(configuration.sqlType, "database", "type");

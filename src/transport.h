@@ -37,10 +37,10 @@ class UserManager;
 /*
  * Transport features used to configure transport.
  */
-typedef enum { 	TRANSPORT_FEATURE_TYPING_NOTIFY = 2,
-				TRANSPORT_FEATURE_AVATARS = 4,
-                TRANSPORT_MANGLE_STATUS = 8,
-				TRANSPORT_FEATURE_FILETRANSFER = 16
+typedef enum { 	TRANSPORT_FEATURE_TYPING_NOTIFY = 1,
+				TRANSPORT_FEATURE_AVATARS = 2,
+				TRANSPORT_FEATURE_FILETRANSFER = 4,
+				TRANSPORT_FEATURE_ALL = 255
 				} TransportFeatures;
 
 

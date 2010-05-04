@@ -116,6 +116,14 @@ void ConfigFileTest::getConfig() {
 	"log_file=/var/log/spectrum/$jid.log\n"
 	"log_areas=xml;purple\n"
 	"\n"
+	"[features]\n"
+	"filetransfer=0\n"
+	"avatars=0\n"
+	"\n"
+	"[vip-features]\n"
+	"filetransfer=0\n"
+	"chatstate=0\n"
+	"\n"
 	"[database]\n"
 	"type=mysql\n"
 	"host=localhost\n"
@@ -146,9 +154,13 @@ void ConfigFileTest::getConfig() {
 	CPPUNIT_ASSERT (conf.filetransfer_proxy_streamhost_port == 2222);
 	CPPUNIT_ASSERT (conf.onlyForVIP == true);
 	CPPUNIT_ASSERT (conf.VIPEnabled == true);
-	CPPUNIT_ASSERT (conf.transportFeatures == (TRANSPORT_FEATURE_AVATARS | TRANSPORT_FEATURE_FILETRANSFER | TRANSPORT_FEATURE_TYPING_NOTIFY));
+	CPPUNIT_ASSERT (conf.transportFeatures & TRANSPORT_FEATURE_TYPING_NOTIFY);
+	CPPUNIT_ASSERT (!(conf.transportFeatures & TRANSPORT_FEATURE_FILETRANSFER));
+	CPPUNIT_ASSERT (!(conf.transportFeatures & TRANSPORT_FEATURE_AVATARS));
 	CPPUNIT_ASSERT (conf.language == "en");
-	CPPUNIT_ASSERT (conf.VIPFeatures == (TRANSPORT_FEATURE_AVATARS | TRANSPORT_FEATURE_FILETRANSFER | TRANSPORT_FEATURE_TYPING_NOTIFY));
+	CPPUNIT_ASSERT (!(conf.VIPFeatures & TRANSPORT_FEATURE_FILETRANSFER));
+	CPPUNIT_ASSERT (!(conf.VIPFeatures & TRANSPORT_FEATURE_TYPING_NOTIFY));
+	CPPUNIT_ASSERT ((conf.VIPFeatures & TRANSPORT_FEATURE_AVATARS));
 	CPPUNIT_ASSERT (conf.useProxy == false);
 	CPPUNIT_ASSERT (conf.allowedServers.front() == "localhost");
 	CPPUNIT_ASSERT (conf.admins.front() == "admin@example.com");
