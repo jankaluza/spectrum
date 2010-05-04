@@ -111,6 +111,8 @@ class ConfigFile {
 		bool loadString(std::string &variable, const std::string &section, const std::string &key, const std::string &def = "required");
 		bool loadInteger(int &variable, const std::string &section, const std::string &key, int def = INT_MAX);
 		bool loadBoolean(bool &variable, const std::string &section, const std::string &key, bool def = false, bool required = false);
+		bool loadStringList(std::list <std::string> &variable, const std::string &section, const std::string &key);
+		bool loadHostPort(std::string &variable, int &port, const std::string &section, const std::string &key, const std::string &def_host = "required", const int &def_port = 0);
 };
 
 #endif

@@ -172,6 +172,40 @@ bool ConfigFile::loadBoolean(bool &variable, const std::string &section, const s
 	return true;
 }
 
+bool ConfigFile::loadStringList(std::list <std::string> &variable, const std::string &section, const std::string &key) {
+	char **bind;
+	variable.clear();
+	if (g_key_file_has_key(keyfile, section.c_str(), key.c_str(), NULL)) {
+		bind = g_key_file_get_string_list(keyfile, section.c_str(), key.c_str(), NULL, NULL);
+		for (int i = 0; bind[i]; i++) {
+			variable.push_back(bind[i]);
+		}
+		g_strfreev (bind);
+		return true;
+	}
+	return false;
+}
+
+bool ConfigFile::loadHostPort(std::string &host, int &port, const std::string &section, const std::string &key, const std::string &def_host, const int &def_port) {
+	std::string str;
+	if(!loadString(str, section, key)) {
+		if (def_host == "required") {
+			Log("loadConfigFile", "You have to specify `" << key << "` in [" << section << "] section of config file.");
+			return false;
+		}
+		host = def_host;
+		port = def_port;
+		return true;
+	}
+	
+	if (str.find_last_of(':') == std::string::npos)
+		port = 0;
+	else
+		port = atoi(str.substr(str.find_last_of(':') + 1, str.size()).c_str());
+	host = str.substr(0, str.find_last_of(':'));
+	return true;
+}
+
 Configuration ConfigFile::getConfiguration() {
 	Configuration configuration;
 	char **bind;
@@ -201,39 +235,10 @@ Configuration ConfigFile::getConfiguration() {
 	loadBoolean(configuration.VIPEnabled, "service", "vip_mode", false);
 	loadBoolean(configuration.useProxy, "service", "use_proxy", false);
 	loadBoolean(configuration.require_tls, "service", "require_tls", true);
-	
-	if(g_key_file_has_key(keyfile,"service","allowed_servers",NULL)) {
-		bind = g_key_file_get_string_list(keyfile, "service", "allowed_servers", NULL, NULL);
-		for (i = 0; bind[i]; i++){
-			configuration.allowedServers.push_back((std::string) bind[i]);
-		}
-		g_strfreev (bind);
-	}
-
-	if(g_key_file_has_key(keyfile,"service","admins",NULL)) {
-		bind = g_key_file_get_string_list(keyfile, "service", "admins", NULL, NULL);
-		for (i = 0; bind[i]; i++){
-			configuration.admins.push_back((std::string) bind[i]);
-		}
-		g_strfreev (bind);
-	}
-
-	std::string ft_proxy;
-	loadString(ft_proxy, "service", "filetransfer_bind_address", "");
-	if (ft_proxy.find_last_of(':') == std::string::npos)
-		configuration.filetransfer_proxy_port = 0;
-	else
-		configuration.filetransfer_proxy_port = atoi(ft_proxy.substr(ft_proxy.find_last_of(':') + 1, ft_proxy.size()).c_str());
-	configuration.filetransfer_proxy_ip = ft_proxy.substr(0, ft_proxy.find_last_of(':'));
-
-	// lets make default value the same as filetransfer_bind_address
-	loadString(ft_proxy, "service", "filetransfer_public_address", ft_proxy);
-	if (ft_proxy.find_last_of(':') == std::string::npos)
-		configuration.filetransfer_proxy_streamhost_port = 0;
-	else
-		configuration.filetransfer_proxy_streamhost_port = atoi(ft_proxy.substr(ft_proxy.find_last_of(':') + 1, ft_proxy.size()).c_str());
-	configuration.filetransfer_proxy_streamhost_ip = ft_proxy.substr(0, ft_proxy.find_last_of(':'));
-	
+	loadStringList(configuration.allowedServers, "service", "allowed_servers");
+	loadStringList(configuration.admins, "service", "admins");
+	loadHostPort(configuration.filetransfer_proxy_ip, configuration.filetransfer_proxy_port, "service", "filetransfer_bind_address", "", 0);
+	loadHostPort(configuration.filetransfer_proxy_streamhost_ip, configuration.filetransfer_proxy_streamhost_port, "service", "filetransfer_public_address", configuration.filetransfer_proxy_ip, configuration.filetransfer_proxy_port);
 
 	// TODO: transport_features and vip_features are depracted. remove it for 0.4
 	if(g_key_file_has_key(keyfile,"service","transport_features",NULL)) {

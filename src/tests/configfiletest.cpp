@@ -100,6 +100,8 @@ void ConfigFileTest::getConfig() {
 	"port=5347\n"
 	"admins=admin@example.com;foo@bar.cz\n"
 	"filetransfer_cache=/var/lib/spectrum/filetransfer_cache\n"
+	"filetransfer_bind_address=127.0.0.1:2222\n"
+	"filetransfer_cache=/var/lib/spectrum/filetransfer_cache\n"
 	"protocol=icq\n"
 	"name=My ICQ Transport\n"
 	"language=en\n"
@@ -138,6 +140,10 @@ void ConfigFileTest::getConfig() {
 	CPPUNIT_ASSERT (conf.logAreas == (LOG_AREA_XML | LOG_AREA_PURPLE));
 	CPPUNIT_ASSERT (conf.logfile == "/var/log/spectrum/icq.localhost.log");
 	CPPUNIT_ASSERT (conf.pid_f == "/var/run/spectrum/icq.localhost");
+	CPPUNIT_ASSERT (conf.filetransfer_proxy_ip == "127.0.0.1");
+	CPPUNIT_ASSERT (conf.filetransfer_proxy_port == 2222);
+	CPPUNIT_ASSERT (conf.filetransfer_proxy_streamhost_ip == "127.0.0.1");
+	CPPUNIT_ASSERT (conf.filetransfer_proxy_streamhost_port == 2222);
 	CPPUNIT_ASSERT (conf.onlyForVIP == true);
 	CPPUNIT_ASSERT (conf.VIPEnabled == true);
 	CPPUNIT_ASSERT (conf.transportFeatures == (TRANSPORT_FEATURE_AVATARS | TRANSPORT_FEATURE_FILETRANSFER | TRANSPORT_FEATURE_TYPING_NOTIFY));
