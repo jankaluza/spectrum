@@ -29,7 +29,7 @@
 #endif
 
 #define LOAD_REQUIRED_STRING(VARIABLE, SECTION, KEY) {if (!loadString((VARIABLE), (SECTION), (KEY))) return DummyConfiguration;}
-#define LOAD_STRING(VARIABLE, SECTION, KEY, DEFAULT) {if (!loadString((VARIABLE), (SECTION), (KEY), (DEFAULT))) return DummyConfiguration;}
+#define LOAD_REQUIRED_STRING_DEFAULT(VARIABLE, SECTION, KEY, DEFAULT) {if (!loadString((VARIABLE), (SECTION), (KEY), (DEFAULT))) return DummyConfiguration;}
 
 static int create_dir(std::string dir, int mode) {
 #ifdef WIN32
@@ -191,7 +191,7 @@ Configuration ConfigFile::getConfiguration() {
 	LOAD_REQUIRED_STRING(configuration.server, "service", "server");
 	LOAD_REQUIRED_STRING(configuration.password, "service", "password");
 	LOAD_REQUIRED_STRING(configuration.filetransferCache, "service", "filetransfer_cache");
-	LOAD_STRING(configuration.config_interface, "service", "config_interface", "/var/run/spectrum/" + configuration.jid + ".sock");
+	LOAD_REQUIRED_STRING_DEFAULT(configuration.config_interface, "service", "config_interface", "/var/run/spectrum/" + configuration.jid + ".sock");
 	if (!loadInteger(configuration.port, "service", "port")) return DummyConfiguration;
 	loadString(configuration.filetransferWeb, "service", "filetransfer_web", "");
 	loadString(configuration.pid_f, "service", "pid_file", "/var/run/spectrum/" + configuration.jid);
@@ -271,10 +271,10 @@ Configuration ConfigFile::getConfiguration() {
 	// Database section
 	LOAD_REQUIRED_STRING(configuration.sqlType, "database", "type");
 	LOAD_REQUIRED_STRING(configuration.sqlDb, "database", "database");
-	LOAD_STRING(configuration.sqlHost, "database", "host", configuration.sqlType == "sqlite" ? "optional" : "");
-	LOAD_STRING(configuration.sqlPassword, "database", "password", configuration.sqlType == "sqlite" ? "optional" : "");
-	LOAD_STRING(configuration.sqlUser, "database", "user", configuration.sqlType == "sqlite" ? "optional" : "");
-	LOAD_STRING(configuration.sqlPrefix, "database", "prefix", configuration.sqlType == "sqlite" ? "" : "required");
+	LOAD_REQUIRED_STRING_DEFAULT(configuration.sqlHost, "database", "host", configuration.sqlType == "sqlite" ? "optional" : "");
+	LOAD_REQUIRED_STRING_DEFAULT(configuration.sqlPassword, "database", "password", configuration.sqlType == "sqlite" ? "optional" : "");
+	LOAD_REQUIRED_STRING_DEFAULT(configuration.sqlUser, "database", "user", configuration.sqlType == "sqlite" ? "optional" : "");
+	LOAD_REQUIRED_STRING_DEFAULT(configuration.sqlPrefix, "database", "prefix", configuration.sqlType == "sqlite" ? "" : "required");
 	LOAD_REQUIRED_STRING(configuration.userDir, "purple", "userdir");
 
 	// Logging section
