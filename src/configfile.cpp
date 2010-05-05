@@ -265,10 +265,15 @@ void ConfigFile::loadPurpleAccountSettings(Configuration &configuration) {
 				break;
 
 			case PURPLE_PREF_STRING:
-				if (g_key_file_has_key(keyfile, "purple", key.c_str(), NULL))
-					loadString(v.str, "purple", key);
-				else
-					v.str = purple_account_option_get_default_string(option);
+				if (g_key_file_has_key(keyfile, "purple", key.c_str(), NULL)) {
+					std::string str;
+					loadString(str, "purple", key);
+					v.str = g_strdup(str.c_str());
+				}
+				else {
+					const char *str = purple_account_option_get_default_string(option);
+					v.str = str ? g_strdup(str) : NULL;
+				}
 				break;
 
 			case PURPLE_PREF_STRING_LIST:

@@ -30,7 +30,7 @@
 #include "limits.h"
 
 struct PurpleAccountSettingValue {
-	std::string str;
+	char *str;
 	int i;
 	bool b;
 	std::list <std::string> strlist;

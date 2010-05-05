@@ -263,7 +263,7 @@ void User::connect() {
 				break;
 
 			case PURPLE_PREF_STRING:
-				purple_account_set_string(m_account, key.c_str(), v.str.c_str());
+				purple_account_set_string(m_account, key.c_str(), v.str);
 				break;
 
 			case PURPLE_PREF_STRING_LIST:
