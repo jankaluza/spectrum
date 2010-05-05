@@ -251,17 +251,21 @@ void ConfigFile::loadPurpleAccountSettings(Configuration &configuration) {
 
 		switch (v.type) {
 			case PURPLE_PREF_BOOLEAN:
-				if (g_key_file_has_key(keyfile, "purple", key.c_str(), NULL))
+				if (g_key_file_has_key(keyfile, "purple", key.c_str(), NULL)) {
 					loadBoolean(v.b, "purple", key);
-				else
-					v.b = purple_account_option_get_default_bool(option);
+					configuration.purple_account_settings[key] = v;
+				}
+// 				else
+// 					v.b = purple_account_option_get_default_bool(option);
 				break;
 
 			case PURPLE_PREF_INT:
-				if (g_key_file_has_key(keyfile, "purple", key.c_str(), NULL))
+				if (g_key_file_has_key(keyfile, "purple", key.c_str(), NULL)) {
 					loadInteger(v.i, "purple", key);
-				else
-					v.i = purple_account_option_get_default_int(option);
+					configuration.purple_account_settings[key] = v;
+				}
+// 				else
+// 					v.i = purple_account_option_get_default_int(option);
 				break;
 
 			case PURPLE_PREF_STRING:
@@ -269,23 +273,24 @@ void ConfigFile::loadPurpleAccountSettings(Configuration &configuration) {
 					std::string str;
 					loadString(str, "purple", key);
 					v.str = g_strdup(str.c_str());
+					configuration.purple_account_settings[key] = v;
 				}
-				else {
-					const char *str = purple_account_option_get_default_string(option);
-					v.str = str ? g_strdup(str) : NULL;
-				}
+// 				else {
+// 					const char *str = purple_account_option_get_default_string(option);
+// 					v.str = str ? g_strdup(str) : NULL;
+// 				}
 				break;
 
 			case PURPLE_PREF_STRING_LIST:
 				if (g_key_file_has_key(keyfile, "purple", key.c_str(), NULL)) {
 					loadStringList(v.strlist, "purple", key);
+					configuration.purple_account_settings[key] = v;
 				}
 				break;
 
 			default:
 				continue;
 		}
-		configuration.purple_account_settings[key] = v;
 	}
 }
 

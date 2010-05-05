@@ -249,6 +249,13 @@ void User::connect() {
 		purple_accounts_add(m_account);
 	}
 
+	PurplePlugin *plugin = purple_find_prpl(Transport::instance()->protocol()->protocol().c_str());
+	PurplePluginProtocolInfo *prpl_info = PURPLE_PLUGIN_PROTOCOL_INFO(plugin);
+	for (GList *l = prpl_info->protocol_options; l != NULL; l = l->next) {
+		PurpleAccountOption *option = (PurpleAccountOption *) l->data;
+		purple_account_remove_setting(m_account, purple_account_option_get_setting(option));
+	}
+
 	std::map <std::string, PurpleAccountSettingValue> &settings = Transport::instance()->getConfiguration().purple_account_settings;
 	for (std::map <std::string, PurpleAccountSettingValue>::iterator it = settings.begin(); it != settings.end(); it++) {
 		PurpleAccountSettingValue v = (*it).second;
