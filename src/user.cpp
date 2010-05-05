@@ -480,8 +480,16 @@ void User::receivedPresence(const Presence &stanza) {
 				}
 			}
 		}
+		
+		if (purple_value_get_boolean(getSetting("enable_transport")) == false) {
+			Tag *tag = new Tag("presence");
+			tag->addAttribute("to", stanza.from().bare());
+			tag->addAttribute("type", "unavailable");
+			tag->addAttribute("from", p->jid());
+			p->j->send(tag);
+		}
 		// send presence about tranport status to user
-		if (m_connected || m_readyForConnect) {
+		else if (m_connected || m_readyForConnect) {
 			if (stanza.presence() == Presence::Unavailable) {
 				Presence tag(stanza.presence(), stanza.from().full(), stanza.status());
 				tag.setFrom(p->jid());
