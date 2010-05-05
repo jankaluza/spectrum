@@ -94,7 +94,7 @@ void UserManager::removeUserTimer(AbstractUser *user){
 		m_cachedUser = NULL;
 	}
 	// this will be called by gloop after all
-	user->removeTimer = purple_timeout_add(0,&deleteUser,user);
+	user->removeTimer = purple_timeout_add_seconds(1,&deleteUser,user);
 }
 
 void UserManager::buddyOnline() {
