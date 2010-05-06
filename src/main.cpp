@@ -864,6 +864,30 @@ GlooxMessageHandler::GlooxMessageHandler(const std::string &config) : MessageHan
 	if (!loadConfigFile(config))
 		loaded = false;
 
+	if (!list_purple_settings) {
+		if (loaded && !nodaemon)
+			daemonize(configuration().userDir.c_str());
+
+#ifndef WIN32
+		if (!nodaemon) {
+			int logfd = open("/dev/null", O_WRONLY | O_CREAT, 0644);
+			if (logfd <= 0) {
+				std::cout << "Can't open log file\n";
+				exit(1);
+			}
+			if (dup2(logfd, STDERR_FILENO) < 0) {
+				std::cout << "Can't redirect stderr\n";
+				exit(1);
+			}
+			if (dup2(logfd, STDOUT_FILENO) < 0) {
+				std::cout << "Can't redirect stdout\n";
+				exit(1);
+			}
+			close(logfd);
+		}
+#endif
+	}
+
 	m_transport = new Transport(m_configuration.jid);
 
 	j = new HiComponent("jabber:component:accept",m_configuration.server,m_configuration.jid,m_configuration.password,m_configuration.port);
@@ -897,28 +921,6 @@ GlooxMessageHandler::GlooxMessageHandler(const std::string &config) : MessageHan
 		if (!m_sql->loaded())
 			loaded = false;
 	}
-
-	if (loaded && !nodaemon)
-		daemonize(configuration().userDir.c_str());
-
-#ifndef WIN32
-	if (!nodaemon) {
-		int logfd = open("/dev/null", O_WRONLY | O_CREAT, 0644);
-		if (logfd <= 0) {
-			std::cout << "Can't open log file\n";
-			exit(1);
-		}
-		if (dup2(logfd, STDERR_FILENO) < 0) {
-			std::cout << "Can't redirect stderr\n";
-			exit(1);
-		}
-		if (dup2(logfd, STDOUT_FILENO) < 0) {
-			std::cout << "Can't redirect stdout\n";
-			exit(1);
-		}
-		close(logfd);
-	}
-#endif
 
 	if (loaded) {
 #ifndef WIN32
@@ -1063,8 +1065,8 @@ bool GlooxMessageHandler::loadProtocol(){
 	if (m_configuration.encoding.empty())
 		m_configuration.encoding = m_protocol->defaultEncoding();
 
-// 	ConfigFile cfg(m_config);
-// 	cfg.loadPurpleAccountSettings(m_configuration);
+	ConfigFile cfg(m_config);
+	cfg.loadPurpleAccountSettings(m_configuration);
 	
 	return true;
 }
@@ -1250,8 +1252,8 @@ bool GlooxMessageHandler::loadConfigFile(const std::string &config) {
 	ConfigFile cfg(config.empty() ? m_config : config);
 	Configuration c = cfg.getConfiguration();
 
-// 	if (m_configuration)
-// 		cfg.loadPurpleAccountSettings(c);
+	if (m_configuration)
+		cfg.loadPurpleAccountSettings(c);
 	
 	if (!c && !m_configuration)
 		return false;
