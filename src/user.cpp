@@ -248,7 +248,7 @@ void User::connect() {
 
 		purple_accounts_add(m_account);
 	}
-
+/*
 	PurplePlugin *plugin = purple_find_prpl(Transport::instance()->protocol()->protocol().c_str());
 	PurplePluginProtocolInfo *prpl_info = PURPLE_PLUGIN_PROTOCOL_INFO(plugin);
 	for (GList *l = prpl_info->protocol_options; l != NULL; l = l->next) {
@@ -283,7 +283,7 @@ void User::connect() {
 			default:
 				continue;
 		}
-	}
+	}*/
 
 	purple_account_set_string(m_account, "encoding", m_encoding.empty() ? Transport::instance()->getConfiguration().encoding.c_str() : m_encoding.c_str());
 	purple_account_set_bool(m_account, "use_clientlogin", false);
