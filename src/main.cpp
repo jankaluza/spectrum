@@ -1063,8 +1063,8 @@ bool GlooxMessageHandler::loadProtocol(){
 	if (m_configuration.encoding.empty())
 		m_configuration.encoding = m_protocol->defaultEncoding();
 
-	ConfigFile cfg(m_config);
-	cfg.loadPurpleAccountSettings(m_configuration);
+// 	ConfigFile cfg(m_config);
+// 	cfg.loadPurpleAccountSettings(m_configuration);
 	
 	return true;
 }
@@ -1250,8 +1250,8 @@ bool GlooxMessageHandler::loadConfigFile(const std::string &config) {
 	ConfigFile cfg(config.empty() ? m_config : config);
 	Configuration c = cfg.getConfiguration();
 
-	if (m_configuration)
-		cfg.loadPurpleAccountSettings(c);
+// 	if (m_configuration)
+// 		cfg.loadPurpleAccountSettings(c);
 	
 	if (!c && !m_configuration)
 		return false;
