@@ -79,6 +79,7 @@ bool TwitterProtocol::onPresenceReceived(AbstractUser *user, const Presence &sta
 
 				PurpleConnection *gc = purple_account_get_connection(user->account());
 				user->setRoomResource(name, JID(stanzaTag->findAttribute("from")).resource());
+				user->setRoomResource("timeline: home", JID(stanzaTag->findAttribute("from")).resource());
 				std::cout << "joinchat " << purple_chat_get_components(chat) << "\n";
 				serv_join_chat(gc, purple_chat_get_components(chat));
 				
