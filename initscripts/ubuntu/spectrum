@@ -17,7 +17,8 @@
 ### END INIT INFO
 
 SPECTRUM_USER=spectrum
-CONFSDIR=/etc/spectrum/
+SPECTRUM_CONFIG_DIR=/etc/spectrum/
+SPECTRUM_DEBUG=no
 
 test -f /etc/default/spectrum && . /etc/default/spectrum
 
@@ -31,10 +32,14 @@ check_user() {
 . /lib/lsb/init-functions
 
 start() {
-	for i in $CONFSDIR/*.cfg ; do
+	if [ $SPECTRUM_DEBUG == "yes" ]; then
+		ctl_args="--debug"
+	fi
+
+	for i in $SPECTRUM_CONFIG_DIR/*.cfg ; do
 		CONF=`basename $i`
 		log_daemon_msg "Starting spectrum instance:" "$CONF"
-		output=$(spectrumctl -c $i start)
+		output=$(spectrumctl $ctl_args -c $i start)
 		if [ "$?" -ne 0 ]; then
 			echo $output
 		fi
@@ -43,7 +48,7 @@ start() {
 }
 
 stop() {
-	for i in $CONFSDIR/*.cfg ; do
+	for i in $SPECTRUM_CONFIG_DIR/*.cfg ; do
 		CONF=`basename $i`
 		log_daemon_msg "Stopping spectrum instance:" "$CONF"
 		spectrumctl -q -c $i stop
@@ -52,7 +57,7 @@ stop() {
 }
 
 reload() {
-	for i in $CONFSDIR/*.cfg ; do
+	for i in $SPECTRUM_CONFIG_DIR/*.cfg ; do
 		CONF=`basename $i`
 		log_daemon_msg "Reloading spectrum instance:" "$CONF"
 		spectrumctl -q -c $i reload

@@ -10,3 +10,12 @@
 # If you want to override the spectrum binary with something like a wrapper
 # script, you can do that here:
 #SPECTRUM_PATH=/usr/local/bin/spectrum-wrapper
+
+# If you want to put your configuration files into a different directory, you
+# can do that here:
+#SPECTRUM_CONFIG_PATH=/etc/spectrum
+#
+# Start spectrum in debug mode by default. Be warned: This causes very large
+# log-files!
+#SPECTRUM_DEBUG=yes
+
