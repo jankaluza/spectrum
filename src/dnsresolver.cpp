@@ -64,6 +64,25 @@ static gboolean resolve_ip(ResolverData *data) {
 	return FALSE;
 }
 
+static gboolean start_resolver_thread(ResolverData *data) {
+	GError *err = NULL;
+	Log("DNSResolver", "Resolving " << purple_dnsquery_get_host(data->query_data) << ": Starting resolver thread.");
+	if (g_thread_create(dns_thread, data, FALSE, &err) == NULL) {
+		Log("DNSResolver", "Resolving " << purple_dnsquery_get_host(data->query_data) << ": Resolver thread couldn't been started.");
+		char message[1024];
+		g_snprintf(message, sizeof(message), "Thread creation failure: %s",
+				(err && err->message) ? err->message : "Unknown reason");
+		g_error_free(err);
+		data->failed_cb(data->query_data, message);
+		delete data;
+		return false;
+	}
+	else {
+		g_hash_table_replace(query_data_cache, data->query_data, data);
+	}
+	return true;
+}
+
 static gboolean
 dns_main_thread_cb(gpointer d)
 {
@@ -88,8 +107,7 @@ dns_main_thread_cb(gpointer d)
 		Log("DNSResolver", "Resolving " << purple_dnsquery_get_host(query_data) << ": Resolving failed: " << data->error_message);
 		data->failed_cb(query_data, data->error_message);
 	}
-	else
-	{
+	else {
 		Log("DNSResolver", "Resolving " << purple_dnsquery_get_host(query_data) << ": Successfully resolved");
 		GSList *hosts;
 		/* We don't want purple_dns_query_resolved() to free(hosts) */
@@ -100,22 +118,9 @@ dns_main_thread_cb(gpointer d)
 	delete data;
 
 	if (queue) {
-		GError *err = NULL;
 		data = (ResolverData *) queue->data;
 		queue = g_list_remove(queue, data);
-		if (g_thread_create(dns_thread, data, FALSE, &err) == NULL)
-		{
-			Log("DNSResolver", "Resolving " << purple_dnsquery_get_host(data->query_data) << ": Resolver thread couldn't been started.");
-			char message[1024];
-			g_snprintf(message, sizeof(message), "Thread creation failure: %s",
-					(err && err->message) ? err->message : "Unknown reason");
-			g_error_free(err);
-			data->failed_cb(query_data, message);
-			delete data;
-		}
-		else {
-			g_hash_table_replace(query_data_cache, data->query_data, data);
-		}
+		start_resolver_thread(data);
 	}
 
 	return FALSE;
@@ -204,8 +209,6 @@ static gpointer dns_thread(gpointer d) {
 }
 
 static gboolean resolve_host(PurpleDnsQueryData *query_data, PurpleDnsQueryResolvedCallback resolved_cb, PurpleDnsQueryFailedCallback failed_cb) {
-	GError *err = NULL;
-
 	ResolverData *data = new ResolverData;
 	data->query_data = query_data;
 	data->resolved_cb = resolved_cb;
@@ -220,21 +223,7 @@ static gboolean resolve_host(PurpleDnsQueryData *query_data, PurpleDnsQueryResol
 			queue = g_list_append(queue, data);
 		}
 		else {
-			Log("DNSResolver", "Resolving " << purple_dnsquery_get_host(query_data) << ": Starting resolver thread.");
-			if (g_thread_create(dns_thread, data, FALSE, &err) == NULL)
-			{
-				Log("DNSResolver", "Resolving " << purple_dnsquery_get_host(query_data) << ": Resolver thread couldn't been started.");
-				char message[1024];
-				g_snprintf(message, sizeof(message), "Thread creation failure: %s",
-						(err && err->message) ? err->message : "Unknown reason");
-				g_error_free(err);
-				failed_cb(query_data, message);
-				delete data;
-				return FALSE;
-			}
-			else {
-				g_hash_table_replace(query_data_cache, query_data, data);
-			}
+			return start_resolver_thread(data);
 		}
 	}
 
