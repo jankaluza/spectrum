@@ -120,13 +120,24 @@ void SQLClass::createStatements() {
 	}
 	
 	// Prepared statements
-	if (!m_stmt_addUser.stmt)
-		m_stmt_addUser.stmt = new Statement( ( STATEMENT("INSERT INTO " + p->configuration().sqlPrefix + "users (jid, uin, password, language, encoding, last_login) VALUES (?, ?, ?, ?, ?, DATETIME('NOW'))"),
-											use(m_stmt_addUser.jid),
-											use(m_stmt_addUser.uin),
-											use(m_stmt_addUser.password),
-											use(m_stmt_addUser.language),
-											use(m_stmt_addUser.encoding) ) );
+#ifdef WITH_SQLITE
+	if (p->configuration().sqlType == "sqlite") {
+		if (!m_stmt_addUser.stmt)
+			m_stmt_addUser.stmt = new Statement( ( STATEMENT("INSERT INTO " + p->configuration().sqlPrefix + "users (jid, uin, password, language, encoding, last_login) VALUES (?, ?, ?, ?, ?, DATETIME('NOW'))"),
+												use(m_stmt_addUser.jid),
+												use(m_stmt_addUser.uin),
+												use(m_stmt_addUser.password),
+												use(m_stmt_addUser.language),
+												use(m_stmt_addUser.encoding) ) );
+	} else
+#endif
+		if (!m_stmt_addUser.stmt)
+			m_stmt_addUser.stmt = new Statement( ( STATEMENT("INSERT INTO " + p->configuration().sqlPrefix + "users (jid, uin, password, language, encoding, last_login) VALUES (?, ?, ?, ?, ?, NOW())"),
+												use(m_stmt_addUser.jid),
+												use(m_stmt_addUser.uin),
+												use(m_stmt_addUser.password),
+												use(m_stmt_addUser.language),
+												use(m_stmt_addUser.encoding) ) );
 	if (!m_stmt_updateUserPassword.stmt)
 		m_stmt_updateUserPassword.stmt = new Statement( ( STATEMENT("UPDATE " + p->configuration().sqlPrefix + "users SET password=?, language=?, encoding=? WHERE jid=?"),
 														use(m_stmt_updateUserPassword.password),
