@@ -121,7 +121,7 @@ void SQLClass::createStatements() {
 	
 	// Prepared statements
 	if (!m_stmt_addUser.stmt)
-		m_stmt_addUser.stmt = new Statement( ( STATEMENT("INSERT INTO " + p->configuration().sqlPrefix + "users (jid, uin, password, language, encoding) VALUES (?, ?, ?, ?, ?)"),
+		m_stmt_addUser.stmt = new Statement( ( STATEMENT("INSERT INTO " + p->configuration().sqlPrefix + "users (jid, uin, password, language, encoding, last_login) VALUES (?, ?, ?, ?, ?, DATETIME('NOW'))"),
 											use(m_stmt_addUser.jid),
 											use(m_stmt_addUser.uin),
 											use(m_stmt_addUser.password),
