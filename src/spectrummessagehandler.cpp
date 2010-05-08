@@ -68,6 +68,7 @@ void SpectrumMessageHandler::handlePurpleMessage(PurpleAccount* account, char * 
 }
 
 void SpectrumMessageHandler::addConversation(PurpleConversation *conv, AbstractConversation *s_conv, const std::string &key) {
+	Log(m_user->jid()," Adding Conversation; name: " << (key.empty() ? getConversationName(conv) : key));
 	m_conversations[key.empty() ? getConversationName(conv) : key] = s_conv;
 	if (s_conv->getType() == SPECTRUM_CONV_GROUPCHAT)
 		m_mucs++;

@@ -74,14 +74,17 @@ bool XMPPProtocol::onPresenceReceived(AbstractUser *user, const Presence &stanza
 				std::string nickname = JID(stanzaTag->findAttribute("to")).resource();
 
 				PurpleConnection *gc = purple_account_get_connection(user->account());
+				std::string name2;
 				if (PURPLE_PLUGIN_PROTOCOL_INFO(gc->prpl)->chat_info_defaults != NULL) {
 					replace(name, "%", "@");
 					replace(name, "#", "");
+					name2 = name;
 					name += "/" + nickname;
 					comps = PURPLE_PLUGIN_PROTOCOL_INFO(gc->prpl)->chat_info_defaults(gc, name.c_str());
 				}
 				if (comps) {
-					user->setRoomResource(name, JID(stanzaTag->findAttribute("from")).resource());
+					std::cout << "USERNAME: " << name2 << "\n";
+					user->setRoomResource(name2, JID(stanzaTag->findAttribute("from")).resource());
 					serv_join_chat(gc, comps);
 				}
 				
@@ -97,6 +100,11 @@ std::string XMPPProtocol::prepareRoomName(AbstractUser *user, const std::string 
 	std::string r = "#" + room;
 	replace(r, "@", "%", 1);
 	return r;
+}
+
+std::string XMPPProtocol::prepareName(AbstractUser *user, const JID &to) {
+	std::string username = to.username();
+	return username;
 }
 
 void XMPPProtocol::onPurpleAccountCreated(PurpleAccount *account) {

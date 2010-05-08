@@ -377,7 +377,7 @@ bool GlooxRegisterHandler::handleIq(const Tag *iqTag) {
 
 		Transport::instance()->protocol()->prepareUsername(username);
 		if (!Transport::instance()->protocol()->isValidUsername(username)) {
-			Log("GlooxRegisterHandler", "This is now valid username: "<< username);
+			Log("GlooxRegisterHandler", "This is not valid username: "<< username);
 			sendError(400, "bad-request", iqTag);
 			return false;
 		}
