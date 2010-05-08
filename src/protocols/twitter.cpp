@@ -63,11 +63,12 @@ std::string TwitterProtocol::text(const std::string &key) {
 }
 
 bool TwitterProtocol::onPresenceReceived(AbstractUser *user, const Presence &stanza) {
+	bool isMUC = stanza.findExtension(ExtMUC) != NULL;
 	Tag *stanzaTag = stanza.tag();
 	if (stanza.to().username() != "") {
 		if (user->isConnectedInRoom(stanza.to().username().c_str())) {
 		}
-		else if (isMUC(user, stanza.to().bare()) && stanza.presence() != Presence::Unavailable) {
+		else if (isMUC && stanza.presence() != Presence::Unavailable) {
 			if (user->isConnected()) {
 				std::string name = JID(stanzaTag->findAttribute("to")).username();
 				std::string nickname = JID(stanzaTag->findAttribute("to")).resource();

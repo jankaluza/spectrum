@@ -369,12 +369,14 @@ void User::receivedPresence(const Presence &stanza) {
 		return;
 	}
 
-	if (stanza.to().username() != ""  && p->protocol()->isMUC(NULL, stanza.to().bare()) && stanza.presence() == Presence::Unavailable) {
+	bool isMUC = stanza.findExtension(ExtMUC) != NULL;
+
+	if (stanza.to().username() != ""  && stanza.presence() == Presence::Unavailable) {
 		removeConversation(stanza.to().username());
 	}
 
 	// this presence is for the transport
-	if (stanza.to().username() == ""  || ((p->protocol()->tempAccountsAllowed()) && p->protocol()->isMUC(NULL, stanza.to().bare()))) {
+	if (stanza.to().username() == ""  || (p->protocol()->tempAccountsAllowed())) {
 		if (stanza.presence() == Presence::Unavailable) {
 			// disconnect from legacy network if we are connected
 			if (stanza.to().username() == "") {

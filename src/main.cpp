@@ -80,6 +80,7 @@
 #include "gloox/error.h"
 #include <gloox/tlsbase.h>
 #include <gloox/compressionbase.h>
+#include <gloox/mucroom.h>
 #include <gloox/sha.h>
 #include <gloox/vcardupdate.h>
 #include <gloox/base64.h>
@@ -935,6 +936,7 @@ GlooxMessageHandler::GlooxMessageHandler(const std::string &config) : MessageHan
 		
 		j->registerIqHandler(m_adhoc, ExtAdhocCommand);
 		j->registerStanzaExtension( new Adhoc::Command() );
+		j->registerStanzaExtension( new MUCRoom::MUC() );
 		j->disco()->addFeature( XMLNS_ADHOC_COMMANDS );
 		j->disco()->registerNodeHandler( m_adhoc, XMLNS_ADHOC_COMMANDS );
 		j->disco()->registerNodeHandler( m_adhoc, std::string() );
@@ -1401,7 +1403,7 @@ void GlooxMessageHandler::handleSubscription(const Subscription &stanza) {
 	}
 
 	User *user;
-	if (protocol()->isMUC(NULL, stanza.to().bare())) {
+	if (protocol()->tempAccountsAllowed()) {
 		std::string server = stanza.to().username().substr(stanza.to().username().find("%") + 1, stanza.to().username().length() - stanza.to().username().find("%"));
 		user = (User *) userManager()->getUserByJID(stanza.from().bare() + server);
 	}
@@ -1422,8 +1424,9 @@ void GlooxMessageHandler::handlePresence(const Presence &stanza){
 	// get entity capabilities
 	Tag *c = NULL;
 	Log(stanza.from().full(), "Presence received (" << (int)stanza.subtype() << ") for: " << stanza.to().full());
+	bool isMUC = stanza.findExtension(ExtMUC) != NULL;
 
-	if (stanza.presence() != Presence::Unavailable && ((stanza.to().username() == "" && !protocol()->tempAccountsAllowed()) || (protocol()->isMUC(NULL, stanza.to().bare()) && protocol()->tempAccountsAllowed()))) {
+	if (stanza.presence() != Presence::Unavailable && ((stanza.to().username() == "" && !protocol()->tempAccountsAllowed()) || (isMUC && protocol()->tempAccountsAllowed()))) {
 		Tag *stanzaTag = stanza.tag();
 		if (!stanzaTag) return;
 		Tag *c = stanzaTag->findChildWithAttrib("xmlns","http://jabber.org/protocol/caps");
@@ -1442,7 +1445,7 @@ void GlooxMessageHandler::handlePresence(const Presence &stanza){
 	}
 	User *user;
 	std::string userkey;
-	if (protocol()->tempAccountsAllowed() && protocol()->isMUC(NULL, stanza.to().bare())) {
+	if (protocol()->tempAccountsAllowed()) {
 		std::string server = stanza.to().username().substr(stanza.to().username().find("%") + 1, stanza.to().username().length() - stanza.to().username().find("%"));
 		userkey = stanza.from().bare() + server;
 		user = (User *) userManager()->getUserByJID(stanza.from().bare() + server);
@@ -1461,7 +1464,7 @@ void GlooxMessageHandler::handlePresence(const Presence &stanza){
 			tag->addAttribute("type", "unavailable");
 			j->send(tag);
 		}
-		else if (((stanza.to().username() == "" && !protocol()->tempAccountsAllowed()) || ( protocol()->tempAccountsAllowed() && protocol()->isMUC(NULL, stanza.to().bare()))) && stanza.presence() != Presence::Unavailable){
+		else if (((stanza.to().username() == "" && !protocol()->tempAccountsAllowed()) || ( protocol()->tempAccountsAllowed() && isMUC)) && stanza.presence() != Presence::Unavailable){
 			UserRow res = sql()->getUserByJid(userkey);
 			if(res.id==-1 && !protocol()->tempAccountsAllowed()) {
 				// presence from unregistered user
@@ -1502,7 +1505,7 @@ void GlooxMessageHandler::handlePresence(const Presence &stanza){
 
 				m_userManager->addUser(user);
 				user->receivedPresence(stanza);
-				if (protocol()->isMUC(NULL, stanza.to().bare())) {
+				if (protocol()->tempAccountsAllowed()) {
 					std::string server = stanza.to().username().substr(stanza.to().username().find("%") + 1, stanza.to().username().length() - stanza.to().username().find("%"));
 					server = stanza.from().bare() + server;
 					purple_timeout_add_seconds(15, &connectUser, g_strdup(server.c_str()));

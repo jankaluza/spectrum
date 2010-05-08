@@ -68,10 +68,13 @@ void SpectrumMessageHandler::handlePurpleMessage(PurpleAccount* account, char * 
 }
 
 void SpectrumMessageHandler::addConversation(PurpleConversation *conv, AbstractConversation *s_conv, const std::string &key) {
-	Log(m_user->jid()," Adding Conversation; name: " << (key.empty() ? getConversationName(conv) : key));
-	m_conversations[key.empty() ? getConversationName(conv) : key] = s_conv;
-	if (s_conv->getType() == SPECTRUM_CONV_GROUPCHAT)
+	std::string k = key.empty() ? getConversationName(conv) : key;
+	Log(m_user->jid()," Adding Conversation; name: " << k);
+	m_conversations[k] = s_conv;
+	if (s_conv->getType() == SPECTRUM_CONV_GROUPCHAT) {
+		m_mucs_names[k] = 1;
 		m_mucs++;
+	}
 }
 
 void SpectrumMessageHandler::removeConversation(const std::string &name) {
@@ -182,7 +185,7 @@ void SpectrumMessageHandler::handleMessage(const Message& msg) {
 	PurpleConversation * conv;
 	
 	std::string room = "";
-	if (Transport::instance()->protocol()->isMUC(m_user, msg.to().username()))
+	if (m_mucs_names.find(msg.to().username()) != m_mucs_names.end())
 		room = msg.to().username();
 	
 	std::string username = Transport::instance()->protocol()->prepareName(m_user, msg.to());

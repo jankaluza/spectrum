@@ -82,7 +82,7 @@ void CapabilityHandler::handleDiscoInfo(const JID &jid, Tag *query, int context)
 
 	JID j(m_versions[context].jid);
 	AbstractUser *user;
-	if (Transport::instance()->protocol()->isMUC(NULL, j.bare())) {
+	if (Transport::instance()->protocol()->tempAccountsAllowed()) {
 		std::string server = j.username().substr(j.username().find("%") + 1, j.username().length() - j.username().find("%"));
 		user = (AbstractUser *) Transport::instance()->userManager()->getUserByJID(jid.bare() + server);
 	}

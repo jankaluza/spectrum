@@ -195,12 +195,13 @@ void IRCProtocol::onConnected(AbstractUser *user) {
 }
 
 bool IRCProtocol::onPresenceReceived(AbstractUser *user, const Presence &stanza) {
+	bool isMUC = stanza.findExtension(ExtMUC) != NULL;
 	Tag *stanzaTag = stanza.tag();
 	if (stanza.to().username() != "") {
 		IRCProtocolData *data = (IRCProtocolData *) user->protocolData();
 		if (user->isConnectedInRoom(stanza.to().username().c_str())) {
 		}
-		else if (isMUC(user, stanza.to().bare()) && stanza.presence() != Presence::Unavailable) {
+		else if (isMUC && stanza.presence() != Presence::Unavailable) {
 			if (user->isConnected()) {
 				GHashTable *comps = NULL;
 				std::string name = JID(stanzaTag->findAttribute("to")).username();
