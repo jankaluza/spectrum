@@ -89,7 +89,9 @@ class SpectrumMessageHandler {
 
 	private:
 		std::string getConversationName(PurpleConversation *conv);
+		std::string getSpectrumMUCConversation(PurpleConversation *conv);
 
+		// Contains AbstractConversations. Key is 
 		std::map <std::string, AbstractConversation *> m_conversations;
 		std::map <std::string, int> m_mucs_names;
 		std::string m_currentBody;

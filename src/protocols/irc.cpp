@@ -247,7 +247,7 @@ std::string IRCProtocol::prepareRoomName(AbstractUser *user, const std::string &
 	std::string name(room);
 	if (name.find("%") == std::string::npos) {
 		std::transform(name.begin(), name.end(), name.begin(),(int(*)(int)) std::tolower);
-		name = name + "%" + JID(user->username()).server();
+		name = name + "@" + JID(user->username()).server();
 	}
 	return name;
 }
@@ -264,5 +264,6 @@ std::string IRCProtocol::prepareName(AbstractUser *user, const JID &to) {
 		if (pos != std::string::npos)
 			username.erase((int) pos, username.length() - (int) pos);
 	}
+	std::for_each( username.begin(), username.end(), replaceJidCharacters() );
 	return username;
 }

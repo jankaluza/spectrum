@@ -98,15 +98,15 @@ bool XMPPProtocol::onPresenceReceived(AbstractUser *user, const Presence &stanza
 }
 
 std::string XMPPProtocol::prepareRoomName(AbstractUser *user, const std::string &room) {
-	std::string r = room;
-	replace(r, "@", "%", 1);
-	return r;
+// 	std::string r = room;
+// 	replace(r, "@", "%", 1);
+	return room;
 }
 
-std::string XMPPProtocol::prepareName(AbstractUser *user, const JID &to) {
-	std::string username = to.username();
-	return username;
-}
+// std::string XMPPProtocol::prepareName(AbstractUser *user, const JID &to) {
+// 	std::string username = to.username();
+// 	return username;
+// }
 
 void XMPPProtocol::onPurpleAccountCreated(PurpleAccount *account) {
 	std::string jid(purple_account_get_username(account));

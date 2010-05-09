@@ -372,7 +372,9 @@ void User::receivedPresence(const Presence &stanza) {
 	bool isMUC = stanza.findExtension(ExtMUC) != NULL;
 
 	if (stanza.to().username() != ""  && stanza.presence() == Presence::Unavailable) {
-		removeConversation(stanza.to().username());
+		std::string k = stanza.to().username();
+		std::for_each( k.begin(), k.end(), replaceJidCharacters() );
+		removeConversation(k);
 	}
 
 	// this presence is for the transport

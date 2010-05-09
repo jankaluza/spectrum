@@ -45,7 +45,7 @@ class XMPPProtocol : AbstractProtocol
 		bool onPresenceReceived(AbstractUser *user, const Presence &stanza);
 		std::string prepareRoomName(AbstractUser *user, const std::string &room);
 		void onPurpleAccountCreated(PurpleAccount *account);
-		std::string prepareName(AbstractUser *user, const JID &to);
+// 		std::string prepareName(AbstractUser *user, const JID &to);
 
 	private:
 		GlooxMessageHandler *m_main;
