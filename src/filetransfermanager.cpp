@@ -296,11 +296,18 @@ void FileTransferManager::handleXferFileReceiveComplete(PurpleXfer *xfer) {
 	std::string remote_user(purple_xfer_get_remote_user(xfer));
 	if (purple_xfer_get_local_filename(xfer)) {
 		std::string localname(purple_xfer_get_local_filename(xfer));
-		std::string basename(g_path_get_basename(purple_xfer_get_local_filename(xfer)));
 		AbstractUser *user = Transport::instance()->userManager()->getUserByAccount(purple_xfer_get_account(xfer));
 		if (user != NULL) {
 			if (user->isConnected()) {
-				std::string message  = Poco::format(_("Received file '%s'.  You can download it at: %s"), filename, std::string("http://soumar.jabbim.cz/icq/" + basename) );
+				// filename is in form "/full/path/to/file/HASH/file.tld" where "/full/path/to/file/"
+				// has to be replaced by filetransferWeb.
+				std::vector <std::string> dirs = split(filename, '/');
+				std::string url = Transport::instance()->getConfiguration().filetransferWeb;
+				std::string basename = dirs.back();
+				dirs.pop_back();
+				url += dirs.back() + "/";
+				url += basename;
+				std::string message  = Poco::format(_("Received file '%s'.  You can download it at: %s"), basename, url );
 				Message s(Message::Chat, user->jid(), tr(user->getLang(), message));
 				s.setFrom(remote_user + "@" + Transport::instance()->jid() + "/bot");
 				Transport::instance()->send(s.tag());
