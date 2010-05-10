@@ -90,7 +90,7 @@ void CapabilityHandler::handleDiscoInfo(const JID &jid, Tag *query, int context)
 		user = (AbstractUser *) Transport::instance()->userManager()->getUserByJID(jid.bare());
 	}
 	if (user && user->hasResource(jid.resource())) {
-		if (user->getResource(jid.resource()).caps == -1) {
+		if (user->getResource(jid.resource()).caps == 0) {
 			user->setResource(jid.resource(), -256, capabilities);
 			if (user->readyForConnect()) {
 				user->connect();
