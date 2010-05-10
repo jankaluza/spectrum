@@ -300,7 +300,7 @@ void FileTransferManager::handleXferFileReceiveComplete(PurpleXfer *xfer) {
 		AbstractUser *user = Transport::instance()->userManager()->getUserByAccount(purple_xfer_get_account(xfer));
 		if (user != NULL) {
 			if (user->isConnected()) {
-				std::string message  = Poco::format(_("File '%s' was received. You can download it here: %s ."), filename, std::string("http://soumar.jabbim.cz/icq/" + basename) );
+				std::string message  = Poco::format(_("Received file '%s'.  You can download it at: %s"), filename, std::string("http://soumar.jabbim.cz/icq/" + basename) );
 				Message s(Message::Chat, user->jid(), tr(user->getLang(), message));
 				s.setFrom(remote_user + "@" + Transport::instance()->jid() + "/bot");
 				Transport::instance()->send(s.tag());
