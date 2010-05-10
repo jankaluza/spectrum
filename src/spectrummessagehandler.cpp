@@ -193,19 +193,19 @@ void SpectrumMessageHandler::handleMessage(const Message& msg) {
 					break;
 				}
 			case PURPLE_CMD_STATUS_WRONG_ARGS:
-				purple_conversation_write(conv, "transport", tr(m_user->getLang(),_("Syntax Error:  You typed the wrong number of arguments to that command.")), PURPLE_MESSAGE_RECV, time(NULL));
+				purple_conversation_write(conv, "transport", tr(m_user->getLang(),_("Syntax Error: Wrong number of arguments.")), PURPLE_MESSAGE_RECV, time(NULL));
 				break;
 			case PURPLE_CMD_STATUS_FAILED:
-				purple_conversation_write(conv, "transport", tr(m_user->getLang(),error ? error : _("Your command failed for an unknown reason.")), PURPLE_MESSAGE_RECV, time(NULL));
+				purple_conversation_write(conv, "transport", tr(m_user->getLang(),error ? error : _("The command failed for an unknown reason.")), PURPLE_MESSAGE_RECV, time(NULL));
 				break;
 			case PURPLE_CMD_STATUS_WRONG_TYPE:
 				if(purple_conversation_get_type(conv) == PURPLE_CONV_TYPE_IM)
-					purple_conversation_write(conv, "transport", tr(m_user->getLang(),_("That command only works in Groupchats, not IMs.")), PURPLE_MESSAGE_RECV, time(NULL));
+					purple_conversation_write(conv, "transport", tr(m_user->getLang(),_("That command only works in group chats, not 1:1 conversations.")), PURPLE_MESSAGE_RECV, time(NULL));
 				else
-					purple_conversation_write(conv, "transport", tr(m_user->getLang(),_("That command only works in IMs, not Groupchats.")), PURPLE_MESSAGE_RECV, time(NULL));
+					purple_conversation_write(conv, "transport", tr(m_user->getLang(),_("That command only works in 1:1 conversations, not group chats.")), PURPLE_MESSAGE_RECV, time(NULL));
 				break;
 			case PURPLE_CMD_STATUS_WRONG_PRPL:
-				purple_conversation_write(conv, "transport", tr(m_user->getLang(),_("That command doesn't work on this protocol.")), PURPLE_MESSAGE_RECV, time(NULL));
+				purple_conversation_write(conv, "transport", tr(m_user->getLang(),_("That command is not supported for this legacy network.")), PURPLE_MESSAGE_RECV, time(NULL));
 				break;
 		}
 

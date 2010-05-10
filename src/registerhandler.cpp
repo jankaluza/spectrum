@@ -129,7 +129,7 @@ bool GlooxRegisterHandler::handleIq(const Tag *iqTag) {
 		field = new Tag("field");
 		field->addAttribute("type", "text-single");
 		field->addAttribute("var", "username");
-		field->addAttribute("label", tr(language, _("Network username")));
+		field->addAttribute("label", tr(language, _("Legacy Network username")));
 		field->addChild( new Tag("required") );
 		if (res.id!=-1)
 			field->addChild( new Tag("value", res.uin) );
@@ -175,7 +175,7 @@ bool GlooxRegisterHandler::handleIq(const Tag *iqTag) {
 			field = new Tag("field");
 			field->addAttribute("type", "boolean");
 			field->addAttribute("var", "unregister");
-			field->addAttribute("label", tr(language, _("Unregister transport")));
+			field->addAttribute("label", tr(language, _("Remove your registration")));
 			field->addChild( new Tag("value", "0") );
 			x->addChild(field);
 		}

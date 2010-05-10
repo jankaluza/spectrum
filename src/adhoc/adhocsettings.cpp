@@ -51,16 +51,16 @@ AdhocSettings::AdhocSettings(AbstractUser *user, const std::string &from, const 
 		adhocTag->addBoolean(tr(m_language, _("Enable transport")), "enable_transport", purple_value_get_boolean(value));
 
 		value = m_user->getSetting("enable_notify_email");
-		adhocTag->addBoolean(tr(m_language, _("Enable network notification")), "enable_notify_email", purple_value_get_boolean(value));
+		adhocTag->addBoolean(tr(m_language, _("Enable notification of new email (if the legacy network supports it)")), "enable_notify_email", purple_value_get_boolean(value));
 
 		value = m_user->getSetting("enable_avatars");
 		adhocTag->addBoolean(tr(m_language, _("Enable avatars")), "enable_avatars", purple_value_get_boolean(value));
 
 		value = m_user->getSetting("enable_chatstate");
-		adhocTag->addBoolean(tr(m_language, _("Enable chatstates")), "enable_chatstate", purple_value_get_boolean(value));
+		adhocTag->addBoolean(tr(m_language, _("Enable \"is typing\" notifications")), "enable_chatstate", purple_value_get_boolean(value));
 	}
 	else {
-		adhocTag->setInstructions(tr(m_language, _("You have to be online to change transport settings.")));
+		adhocTag->setInstructions(tr(m_language, _("You must be online to change transport settings.")));
 	}
 
 	response->addChild(adhocTag);

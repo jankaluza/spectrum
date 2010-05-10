@@ -59,6 +59,6 @@ std::list<std::string> SimpleProtocol::buddyFeatures(){
 
 std::string SimpleProtocol::text(const std::string &key) {
 	if (key == "instructions")
-		return _("Enter your Simple username and password:");
+		return _("Enter your SIMPLE username and password:");
 	return "not defined";
 }

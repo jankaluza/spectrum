@@ -80,8 +80,8 @@ bool GlooxGatewayHandler::handleIq (const IQ &stanza){
 		query->setXmlns("jabber:iq:gateway");
 
 		const char *language = Transport::instance()->getConfiguration().language.c_str();
-		query->addChild(new Tag("desc",tr(language, _("Please enter the ID of the person you would like to contact."))));
-		query->addChild(new Tag("prompt",tr(language,"Contact ID")));
+		query->addChild(new Tag("desc",tr(language, _("Please enter the legacy ID of your contact."))));
+		query->addChild(new Tag("prompt",tr(language, _("Contact ID"))));
 		s->addChild(query);
 
 		p->j->send( s );

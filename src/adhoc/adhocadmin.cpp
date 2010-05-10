@@ -43,7 +43,7 @@ AdhocAdmin::AdhocAdmin(AbstractUser *user, const std::string &from, const std::s
 	AdhocTag *adhocTag = new AdhocTag(Transport::instance()->getId(), "transport_admin", "executing");
 	adhocTag->setAction("next");
 	adhocTag->setTitle(tr(m_language.c_str(), _("Transport administration")));
-	adhocTag->setInstructions(tr(m_language.c_str(), _("Please select the group you want to change.")));
+	adhocTag->setInstructions(tr(m_language.c_str(), _("Please select a configuration area.")));
 	
 	std::list <std::string> values;
 	values.push_back(tr(m_language.c_str(), _("Logging")));
@@ -90,9 +90,9 @@ bool AdhocAdmin::handleIq(const IQ &stanza) {
 				AdhocTag *adhocTag = new AdhocTag(tag->findAttribute("sessionid"), "transport_admin", "executing");
 				adhocTag->setAction("complete");
 				adhocTag->setTitle(tr(m_language.c_str(), _("Logging settings")));
-				adhocTag->setInstructions(tr(m_language.c_str(), _("You can change logging settings here.")));
-				adhocTag->addBoolean(tr(m_language.c_str(), _("Log XML")), "log_xml", Transport::instance()->getConfiguration().logAreas & LOG_AREA_XML);
-				adhocTag->addBoolean(tr(m_language.c_str(), _("Log Purple messages")), "log_purple", Transport::instance()->getConfiguration().logAreas & LOG_AREA_PURPLE);
+				adhocTag->setInstructions(tr(m_language.c_str(), _("Determine whether to log these types of messages:")));
+				adhocTag->addBoolean(tr(m_language.c_str(), _("Log transport in/out XML")), "log_xml", Transport::instance()->getConfiguration().logAreas & LOG_AREA_XML);
+				adhocTag->addBoolean(tr(m_language.c_str(), _("Log libpurple messages")), "log_purple", Transport::instance()->getConfiguration().logAreas & LOG_AREA_PURPLE);
 
 				response->addChild(adhocTag);
 				Transport::instance()->send(response);

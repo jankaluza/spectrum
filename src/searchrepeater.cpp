@@ -78,7 +78,7 @@ SearchRepeater::SearchRepeater(GlooxMessageHandler *m, User *user, const std::st
 
 	Tag *query = new Tag("query");
 	query->addAttribute("xmlns", "jabber:iq:search");
-	query->addChild( new Tag("instructions", tr(m_user ? m_user->getLang() : language, _("You need an x:data capable client to search"))) );
+	query->addChild( new Tag("instructions", tr(m_user ? m_user->getLang() : language, _("Searching requires a client which supports Data Forms (XEP-0004)."))));
 
 	query->addChild( xdataFromRequestInput(language, title, primaryString, value, multiline) );
 
