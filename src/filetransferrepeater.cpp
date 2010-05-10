@@ -201,7 +201,7 @@ static gboolean transferFinished(gpointer data) {
 			dirs.pop_back();
 			url += dirs.back() + "/";
 			url += basename;
-			Message s(Message::Chat, receive->target(), "User sent you file '"+basename+"'. You can download it from " + url +" .");
+			Message s(Message::Chat, receive->target(), "This is an automated message generated on behalf of this user. She/he has sent you the file '" + basename + "'. You may download it from " + url);
 			s.setFrom(user->jid());
 			// TODO: rewrite me to not use GlooxMessageHandler
 #ifndef TESTS
