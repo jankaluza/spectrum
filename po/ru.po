@@ -19,27 +19,27 @@ msgstr ""
 #: /home/hanzz/code/test/transport/src/commands.cpp:35
 #, c-format
 msgid "%s = True \n"
-msgstr ""
+msgstr "%s = True \n"
 
 #: /home/hanzz/code/test/transport/src/commands.cpp:37
 #, c-format
 msgid "%s = False \n"
-msgstr ""
+msgstr "%s = False \n"
 
 #: /home/hanzz/code/test/transport/src/commands.cpp:40
 #, c-format
 msgid "%s = %s \n"
-msgstr ""
+msgstr "%s = %s \n"
 
 #: /home/hanzz/code/test/transport/src/commands.cpp:67
 #, c-format
 msgid "%s is now True\n"
-msgstr ""
+msgstr "%s is now True\n"
 
 #: /home/hanzz/code/test/transport/src/commands.cpp:69
 #, c-format
 msgid "%s is now False\n"
-msgstr ""
+msgstr "%s is now False\n"
 
 #: /home/hanzz/code/test/transport/src/commands.cpp:75
 #, c-format
@@ -53,17 +53,19 @@ msgstr "Параметр \"%s\" не найден. Попробуйте \"/trans
 
 #: /home/hanzz/code/test/transport/src/commands.cpp:115
 msgid "No such command (in this context)."
-msgstr ""
+msgstr "Нет такой команды (в данном контексте)"
 
 #: /home/hanzz/code/test/transport/src/commands.cpp:118
 msgid ""
 "Use \"/transport help &lt;command&gt;\" for help on a specific command.\n"
 "The following commands are available in this context:\n"
 msgstr ""
+"Используйте \"/transport help &lt;команда&gt;\" для получения помощи по данной команде.\n"
+"Доступны следующие команды:\n"
 
 #: /home/hanzz/code/test/transport/src/commands.cpp:142
 msgid "help &lt;command&gt;:  Help on a specific command."
-msgstr ""
+msgstr "help &lt;команда&gt;: помощь по выбранной команде."
 
 #: /home/hanzz/code/test/transport/src/commands.cpp:143
 #: /home/hanzz/code/test/transport/src/commands.cpp:144
@@ -121,7 +123,7 @@ msgstr "транспорт: неизвестная команда."
 
 #: /home/hanzz/code/test/transport/src/spectrummessagehandler.cpp:196
 msgid "Syntax Error: Wrong number of arguments."
-msgstr ""
+msgstr "Ошибка синтаксиса: неправильное число аргументов"
 
 #: /home/hanzz/code/test/transport/src/spectrummessagehandler.cpp:199
 msgid "The command failed for an unknown reason."
