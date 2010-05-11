@@ -44,12 +44,12 @@ msgstr ""
 #: /home/hanzz/code/test/transport/src/commands.cpp:75
 #, c-format
 msgid "%s is now \"%s\"\n"
-msgstr ""
+msgstr "%s сейчас \"%s\"\n"
 
 #: /home/hanzz/code/test/transport/src/commands.cpp:79
 #, c-format
 msgid "The setting \"%s\" does not exist.  Try \"/transport settings list\" to get a list of available settings.\n"
-msgstr ""
+msgstr "Параметр \"%s\" не найден. Попробуйте \"/transport settings list\" для получения списка доступных параметров. \n"
 
 #: /home/hanzz/code/test/transport/src/commands.cpp:115
 msgid "No such command (in this context)."
