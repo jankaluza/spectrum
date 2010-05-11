@@ -70,7 +70,7 @@ msgstr "help &lt;команда&gt;: помощь по выбранной ком
 #: /home/hanzz/code/test/transport/src/commands.cpp:143
 #: /home/hanzz/code/test/transport/src/commands.cpp:144
 msgid "settings set &lt;command&gt; settings list:  Configure transport."
-msgstr ""
+msgstr "settings set &lt;command&gt; settings list: Изменить настройки."
 
 #: /home/hanzz/code/test/transport/src/filetransfermanager.cpp:310
 #, c-format
