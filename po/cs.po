@@ -2,8 +2,7 @@
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the PACKAGE package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
-#
-#, fuzzy
+# 
 msgid ""
 msgstr ""
 "Project-Id-Version: Spectrum\n"
@@ -20,7 +19,7 @@ msgstr ""
 #: /home/hanzz/code/test/transport/src/commands.cpp:35
 #, c-format
 msgid "%s = True \n"
-msgstr ""
+msgstr "%s = Povoleno \n"
 
 #: /home/hanzz/code/test/transport/src/commands.cpp:37
 #, c-format
@@ -49,9 +48,7 @@ msgstr ""
 
 #: /home/hanzz/code/test/transport/src/commands.cpp:79
 #, c-format
-msgid ""
-"The setting \"%s\" does not exist.  Try \"/transport settings list\" to get "
-"a list of available settings.\n"
+msgid "The setting \"%s\" does not exist.  Try \"/transport settings list\" to get a list of available settings.\n"
 msgstr ""
 
 #: /home/hanzz/code/test/transport/src/commands.cpp:115
@@ -87,9 +84,7 @@ msgid "Contact ID"
 msgstr ""
 
 #: /home/hanzz/code/test/transport/src/main.cpp:1725
-msgid ""
-"This message couldn't be sent, because you are not connected to legacy "
-"network. You will be automatically reconnected soon."
+msgid "This message couldn't be sent, because you are not connected to legacy network. You will be automatically reconnected soon."
 msgstr ""
 
 #: /home/hanzz/code/test/transport/src/registerhandler.cpp:120
