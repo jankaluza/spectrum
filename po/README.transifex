@@ -4,8 +4,8 @@ Transifex.net Token Verification
 The list of tokens bellow guarantee the respective users to be able to enable 
 submission on components using the following repository url:
 
-git://github.com/hanzz/spectrum.git
+git@github.com:hanzz/spectrum.git
 
 Tokens:
 
-Q9buPmLwRsQVP4GNYbwR5kmLb23eKuq6 / hanzz
+QENLfV3ey5GAf99YWP7bST5CCw5DZ2dq / hanzz
