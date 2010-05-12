@@ -493,26 +493,24 @@ void User::receivedPresence(const Presence &stanza) {
 			p->j->send(tag);
 		}
 		// send presence about tranport status to user
-		else if (m_connected || m_readyForConnect) {
-			if (stanza.presence() == Presence::Unavailable) {
-				Presence tag(stanza.presence(), stanza.from().full(), stanza.status());
-				tag.setFrom(p->jid());
-				p->j->send(tag);
-			}
-			else {
-				Presence tag(stanza.presence(), m_jid, stanza.status());
-				tag.setFrom(p->jid());
-				p->j->send(tag);
-			}
-		} else {
-			if (getResources().empty()) {
-				Tag *tag = new Tag("presence");
-				tag->addAttribute("to", stanza.from().bare());
-				tag->addAttribute("type", "unavailable");
-				tag->addAttribute("from", p->jid());
-				p->j->send(tag);
-			}
+		else if (getResources().empty()) {
+			Tag *tag = new Tag("presence");
+			tag->addAttribute("to", stanza.from().bare());
+			tag->addAttribute("type", "unavailable");
+			tag->addAttribute("from", p->jid());
+			p->j->send(tag);
 		}
+		else if (stanza.presence() == Presence::Unavailable) {
+			Presence tag(stanza.presence(), stanza.from().full(), stanza.status());
+			tag.setFrom(p->jid());
+			p->j->send(tag);
+		}
+		else {
+			Presence tag(stanza.presence(), m_jid, stanza.status());
+			tag.setFrom(p->jid());
+			p->j->send(tag);
+		}
+
 	}
 	delete stanzaTag;
 }
