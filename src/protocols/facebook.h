@@ -44,8 +44,6 @@ class FacebookProtocol : AbstractProtocol
 
 		const std::string userSearchColumn() { return "ID"; }
 
-		void onPurpleRequestInput(AbstractUser *user, const char *title, const char *primary,const char *secondary, const char *default_value,gboolean multiline, gboolean masked, gchar *hint,const char *ok_text, GCallback ok_cb,const char *cancel_text, GCallback cancel_cb, PurpleAccount *account, const char *who,PurpleConversation *conv, void *user_data);
-
 	private:
 		GlooxMessageHandler *m_main;
 		std::list<std::string> m_transportFeatures;

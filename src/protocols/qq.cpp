@@ -48,10 +48,12 @@ void QQProtocol::onPurpleAccountCreated(PurpleAccount *account) {
 	purple_account_set_string(account, "client_version", "qq2008");
 }
 
-void QQProtocol::onPurpleRequestInput(AbstractUser *user, const char *title, const char *primary,const char *secondary, const char *default_value,gboolean multiline, gboolean masked, gchar *hint,const char *ok_text, GCallback ok_cb,const char *cancel_text, GCallback cancel_cb, PurpleAccount *account, const char *who,PurpleConversation *conv, void *user_data) {
+bool QQProtocol::onPurpleRequestInput(AbstractUser *user, const char *title, const char *primary,const char *secondary, const char *default_value,gboolean multiline, gboolean masked, gchar *hint,const char *ok_text, GCallback ok_cb,const char *cancel_text, GCallback cancel_cb, PurpleAccount *account, const char *who,PurpleConversation *conv, void *user_data) {
 	if (primary){
 		((PurpleRequestInputCb) ok_cb)(user_data,tr(user->getLang(),_("Please authorize me.")));
+		return true;
 	}
+	return false;
 }
 
 bool QQProtocol::isValidUsername(const std::string &str){

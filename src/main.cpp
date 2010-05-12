@@ -285,7 +285,7 @@ static void NodeRemoved(PurpleBlistNode *node, void *data) {
 	}
 	if (buddy->node.ui_data) {
 		SpectrumBuddy *s_buddy = (SpectrumBuddy *) buddy->node.ui_data;
-		Log("DELETING DATA FOR", s_buddy->getName());
+		Log("PurpleBuddy", "Deleting data for " << s_buddy->getName());
 		delete s_buddy;
 		buddy->node.ui_data = NULL;
 	}
@@ -302,12 +302,17 @@ static void connection_report_disconnect(PurpleConnection *gc,PurpleConnectionEr
  * Called when purple wants to some input from transport.
  */
 static void * requestInput(const char *title, const char *primary,const char *secondary, const char *default_value,gboolean multiline, gboolean masked, gchar *hint,const char *ok_text, GCallback ok_cb,const char *cancel_text, GCallback cancel_cb,PurpleAccount *account, const char *who,PurpleConversation *conv, void *user_data) {
-	Log("purple", "new requestInput");
+	std::string t(title ? title : "NULL");
+	std::string s(secondary ? secondary : "NULL");
+	User *user = (User *) GlooxMessageHandler::instance()->userManager()->getUserByAccount(account);
+	if (!user) {
+		Log("requestInput", "WARNING: purple_request_input not handled. No user for account =" << purple_account_get_username(account));
+		return NULL;
+	}
+
 	if (primary) {
 		std::string primaryString(primary);
-		Log("purple", "primary string: " << primaryString);
-		User *user = (User *) GlooxMessageHandler::instance()->userManager()->getUserByAccount(account);
-		if (!user) return NULL;
+		Log(user->jid(), "purple_request_input created:" << primaryString);
 		// Check if there is some adhocData. If it's there, this request will be handled by some handler registered to this data.
 		if (!user->adhocData().id.empty()) {
 			if (user->adhocData().callerType == CALLER_ADHOC) {
@@ -328,8 +333,11 @@ static void * requestInput(const char *title, const char *primary,const char *se
 			}
 		}
 		// emit protocol signal
-		GlooxMessageHandler::instance()->protocol()->onPurpleRequestInput(user, title, primary, secondary, default_value, multiline, masked, hint, ok_text, ok_cb, cancel_text, cancel_cb, account, who, conv, user_data);
+		bool handled = GlooxMessageHandler::instance()->protocol()->onPurpleRequestInput(user, title, primary, secondary, default_value, multiline, masked, hint, ok_text, ok_cb, cancel_text, cancel_cb, account, who, conv, user_data);
+		if (handled)
+			return NULL;
 	}
+	Log(user->jid(), "WARNING: purple_request_input not handled. primary == NULL, title ==" << t << ", secondary ==" << s);
 	return NULL;
 }
 
@@ -370,20 +378,33 @@ static void *requestFields(const char *title, const char *primary, const char *s
 
 static void * requestAction(const char *title, const char *primary,const char *secondary, int default_action,PurpleAccount *account, const char *who,PurpleConversation *conv, void *user_data,size_t action_count, va_list actions){
 	User *user = (User *) GlooxMessageHandler::instance()->userManager()->getUserByAccount(account);
-	if (user && !user->adhocData().id.empty()) {
-		AdhocRepeater *repeater = new AdhocRepeater(GlooxMessageHandler::instance(), user, title ? std::string(title) : std::string(), primary ? std::string(primary) : std::string(), secondary ? std::string(secondary) : std::string(), default_action, user_data, action_count, actions);
-		GlooxMessageHandler::instance()->adhoc()->registerSession(user->adhocData().from, repeater);
-		AdhocData data;
-		data.id = "";
-		user->setAdhocData(data);
-		return repeater;
+	bool handled = false;
+	if (!user) {
+		Log("requestAction", "WARNING: purple_request_action not handled. No user for account =" << purple_account_get_username(account));
 	}
-	else if (title) {
-		std::string headerString(title);
-		Log("purple", "header string: " << headerString);
-		if (headerString == "SSL Certificate Verification") {
-			va_arg(actions, char *);
-			((PurpleRequestActionCb) va_arg(actions, GCallback)) (user_data, 2);
+	else {
+		if (!user->adhocData().id.empty()) {
+			AdhocRepeater *repeater = new AdhocRepeater(GlooxMessageHandler::instance(), user, title ? std::string(title) : std::string(), primary ? std::string(primary) : std::string(), secondary ? std::string(secondary) : std::string(), default_action, user_data, action_count, actions);
+			GlooxMessageHandler::instance()->adhoc()->registerSession(user->adhocData().from, repeater);
+			AdhocData data;
+			data.id = "";
+			user->setAdhocData(data);
+			return repeater;
+		}
+		else if (title) {
+			std::string headerString(title);
+			Log("purple", "header string: " << headerString);
+			if (headerString == "SSL Certificate Verification") {
+				va_arg(actions, char *);
+				((PurpleRequestActionCb) va_arg(actions, GCallback)) (user_data, 2);
+				handled = true;
+			}
+		}
+		if (!handled) {
+			std::string t(title ? title : "NULL");
+			std::string p(primary ? primary : "NULL");
+			std::string s(secondary ? secondary : "NULL");
+			Log(user->jid(), "WARNING: purple_request_action not handled. No handler for title =" << t << ", primary =" << p << ", secondary =" << s);
 		}
 	}
 	AbstractPurpleRequest *handle = new AbstractPurpleRequest;
@@ -1115,6 +1136,7 @@ void GlooxMessageHandler::purpleConnectionError(PurpleConnection *gc,PurpleConne
 			}
 			else {
 				user->disconnected();
+				Log(user->jid(), "Reconnecting after 5 seconds");
 				purple_timeout_add_seconds(5, &reconnect, g_strdup(user->jid().c_str()));
 			}
 		}
@@ -1122,17 +1144,16 @@ void GlooxMessageHandler::purpleConnectionError(PurpleConnection *gc,PurpleConne
 }
 
 void GlooxMessageHandler::purpleBuddyTyping(PurpleAccount *account, const char *who){
-  PurpleConversation *conv = purple_find_conversation_with_account(PURPLE_CONV_TYPE_IM, who, account);
-  if (0 == conv) {
-    return;
-  }
-  
 	User *user = (User *) userManager()->getUserByAccount(account);
 	if (user != NULL) {
-		user->purpleBuddyTyping((std::string)who);
+		PurpleConversation *conv = purple_find_conversation_with_account(PURPLE_CONV_TYPE_IM, who, account);
+		if (0 == conv) {
+			return;
+		}
+		user->purpleBuddyTyping(who);
 	}
 	else {
-		Log("purple", "purpleBuddyTyping called, but user does not exist!!!");
+		Log("purpleBuddyTyping", "WARNING: there is no User for account =" << purple_account_get_username(account));
 	}
 }
 
@@ -1178,32 +1199,32 @@ void GlooxMessageHandler::purpleBuddySignedOff(PurpleBuddy *buddy) {
 }
 
 void GlooxMessageHandler::purpleBuddyTypingStopped(PurpleAccount *account, const char *who) {
-  PurpleConversation *conv = purple_find_conversation_with_account(PURPLE_CONV_TYPE_IM, who, account);
-  if (0 == conv) {
-    return;
-  }
+	PurpleConversation *conv = purple_find_conversation_with_account(PURPLE_CONV_TYPE_IM, who, account);
+	if (0 == conv) {
+		return;
+	}
   
 	User *user = (User *) userManager()->getUserByAccount(account);
 	if (user != NULL) {
 		user->purpleBuddyTypingStopped((std::string) who);
 	}
 	else {
-		Log("purple", "purpleBuddyTypingStopped called, but user does not exist!!!");
+		Log("purpleBuddyTypingStopped", "WARNING: there is no User for account =" << purple_account_get_username(account));
 	}
 }
 
 void GlooxMessageHandler::purpleBuddyTypingPaused(PurpleAccount *account, const char *who) {
-  PurpleConversation *conv = purple_find_conversation_with_account(PURPLE_CONV_TYPE_IM, who, account);
-  if (0 == conv) {
-    return;
-  }
+	PurpleConversation *conv = purple_find_conversation_with_account(PURPLE_CONV_TYPE_IM, who, account);
+	if (0 == conv) {
+		return;
+	}
   
 	User *user = (User *) userManager()->getUserByAccount(account);
 	if (user != NULL) {
 		user->purpleBuddyTypingPaused((std::string) who);
 	}
 	else {
-		Log("purple", "purpleBuddyTypingStopped called, but user does not exist!!!");
+		Log("purpleBuddyTypingPaused", "WARNING: there is no User for account =" << purple_account_get_username(account));
 	}
 }
 
@@ -1211,7 +1232,7 @@ void GlooxMessageHandler::signedOn(PurpleConnection *gc, gpointer unused) {
 	PurpleAccount *account = purple_connection_get_account(gc);
 	User *user = (User *) userManager()->getUserByAccount(account);
 	if (user != NULL) {
-		Log(user->jid(), "logged in to legacy network");
+		Log(user->jid(), "Logged in to legacy network");
 		purple_timeout_add_seconds(30, &getVCard, g_strdup(user->jid().c_str()));
 		user->connected();
 	}
@@ -1223,11 +1244,10 @@ void GlooxMessageHandler::purpleAuthorizeClose(void *data) {
 		return;
 	User *user = (User *) userManager()->getUserByAccount(d->account);
 	if (user != NULL) {
-		Log(user->jid(), "closing authorizeRequest");
 		user->removeAuthRequest(d->who);
 	}
 	else {
-		Log("purple", "purpleAuthorizationClose called, but user does not exist!!!");
+		Log("purpleAuthorizeClose", "WARNING: there is no User for account =" << purple_account_get_username(d->account));
 	}
 	delete d;
 }
@@ -1241,11 +1261,11 @@ void * GlooxMessageHandler::purpleAuthorizeReceived(PurpleAccount *account, cons
 			return user->handleAuthorizationRequest(account, remote_user, id, alias, message, on_list, authorize_cb, deny_cb, user_data);
 		}
 		else {
-			Log(user->jid(), "purpleAuthorizeReceived called for unconnected user...");
+			Log(user->jid(), "WARNING: purpleAuthorizeReceived for unconnected user from buddy = " << std::string(remote_user ? remote_user : "NULL"));
 		}
 	}
 	else {
-		Log("purple", "purpleAuthorizeReceived called, but user does not exist!!!");
+		Log("purpleAuthorizeReceived", "WARNING: there is no User for account =" << purple_account_get_username(account));
 	}
 	return NULL;
 }

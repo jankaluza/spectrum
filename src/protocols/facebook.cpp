@@ -131,12 +131,3 @@ Tag *FacebookProtocol::getVCardTag(AbstractUser *user, GList *vcardEntries) {
 	return vcard;
 }
 
-void FacebookProtocol::onPurpleRequestInput(AbstractUser *user, const char *title, const char *primary,const char *secondary, const char *default_value,gboolean multiline, gboolean masked, gchar *hint,const char *ok_text, GCallback ok_cb,const char *cancel_text, GCallback cancel_cb, PurpleAccount *account, const char *who,PurpleConversation *conv, void *user_data) {
-// 	if (primary){
-// 		std::string primaryString(primary);
-// 		if ( primaryString == "Set your Facebook status" ) {
-// 			((PurpleRequestInputCb) ok_cb)(user_data,user->actionData.c_str());
-// 		}
-// 	}
-}
-
