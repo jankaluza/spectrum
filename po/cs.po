@@ -24,7 +24,7 @@ msgstr "%s = Povoleno \n"
 #: /home/hanzz/code/test/transport/src/commands.cpp:37
 #, c-format
 msgid "%s = False \n"
-msgstr ""
+msgstr "%s = Zakázáno \n"
 
 #: /home/hanzz/code/test/transport/src/commands.cpp:40
 #, c-format
@@ -34,12 +34,12 @@ msgstr ""
 #: /home/hanzz/code/test/transport/src/commands.cpp:67
 #, c-format
 msgid "%s is now True\n"
-msgstr ""
+msgstr "%s je nyní Povoleno\n"
 
 #: /home/hanzz/code/test/transport/src/commands.cpp:69
 #, c-format
 msgid "%s is now False\n"
-msgstr ""
+msgstr "%s je nyní Zakázáno\n"
 
 #: /home/hanzz/code/test/transport/src/commands.cpp:75
 #, c-format
