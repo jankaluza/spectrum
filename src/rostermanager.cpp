@@ -451,6 +451,11 @@ void SpectrumRosterManager::handleSubscription(const Subscription &subscription)
 				reply->addAttribute( "from", subscription.to().bare() );
 				reply->addAttribute( "type", "subscribed" );
 				Transport::instance()->send( reply );
+				PurpleBuddy *buddy = purple_find_buddy(m_user->account(), remote_user.c_str());
+				if (buddy) {
+					Log(m_user->jid(), "Trying to purple_accound_add_buddy just to be sure.");
+					purple_account_add_buddy(m_user->account(), buddy);
+				}
 			}
 			else {
 				Log(m_user->jid(), "subscribe presence; user is not in roster => adding to legacy network");
