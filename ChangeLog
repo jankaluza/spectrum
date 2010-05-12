@@ -20,6 +20,10 @@ version 0.3 (2010-??-??):
 	Twitter:
 	* Added support for latest prpltwtr plugin (http://code.google.com/p/prpltwtr/).
 
+	XMPP:
+	* Room Jabber IDs don't start with "#" character. So proper JID to join our room
+	  is now "spectrum%conference.spectrum.im@xmpp.domain.tld".
+
 	ICQ/AIM:
 	* Fixed connection issues on Windows.
 
