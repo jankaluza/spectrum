@@ -348,7 +348,7 @@ ELSE(NOT GETTEXT_MSGFMT_EXECUTABLE)
  
         ADD_CUSTOM_TARGET(translations ALL)
  
-        FILE(GLOB PO_FILES po/*.po)
+        FILE(GLOB PO_FILES  ${CMAKE_CURRENT_SOURCE_DIR}/po/*.po)
  
         FOREACH(_poFile ${PO_FILES})
                 GET_FILENAME_COMPONENT(_poFileName ${_poFile} NAME)
@@ -358,7 +358,7 @@ ELSE(NOT GETTEXT_MSGFMT_EXECUTABLE)
  
                 IF( _langCode )
                         GET_FILENAME_COMPONENT(_lang po/${_poFile} NAME_WE)
-                        SET(_gmoFile ${CMAKE_CURRENT_BINARY_DIR}/po/${_lang}.mo)
+                        SET(_gmoFile ${CMAKE_CURRENT_SOURCE_DIR}/po/${_lang}.mo)
  
                         ADD_CUSTOM_COMMAND(TARGET translations
                                 COMMAND ${GETTEXT_MSGFMT_EXECUTABLE} --check -o ${_gmoFile} ${_poFile}
