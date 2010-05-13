@@ -205,9 +205,14 @@ class spectrum:
 		return [ 'su', user, '-s', '/bin/sh', '-c', ' '.join( cmd ) ]
 
 	def create_dir( self, dir ):
-		os.makedirs( dir )
-		os.chmod( dir, stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR | stat.S_IRGRP | stat.S_IXGRP )
+		if not dir: # this is the end of a recursion with a relative path
+			return
+		dirname = os.path.dirname( dir )
+		if not os.path.exists( dirname ):
+			self.create_dir( dirname )
+		os.mkdir( dir )
 		os.chown( dir, self.get_uid(), self.get_gid() )
+		os.chmod( dir, stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR | stat.S_IRGRP | stat.S_IXGRP )
 
 	def check_environment( self ):
 		# check if spectrum user exists:
