@@ -2,12 +2,12 @@
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the PACKAGE package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
-# 
+#
 msgid ""
 msgstr ""
 "Project-Id-Version: Spectrum\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2010-03-10 10:44+0100\n"
+"POT-Creation-Date: 2010-05-13 22:42+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -48,8 +48,12 @@ msgstr "%s сейчас \"%s\"\n"
 
 #: /home/hanzz/code/test/transport/src/commands.cpp:79
 #, c-format
-msgid "The setting \"%s\" does not exist.  Try \"/transport settings list\" to get a list of available settings.\n"
-msgstr "Параметр \"%s\" не найден. Попробуйте \"/transport settings list\" для получения списка доступных параметров. \n"
+msgid ""
+"The setting \"%s\" does not exist.  Try \"/transport settings list\" to get "
+"a list of available settings.\n"
+msgstr ""
+"Параметр \"%s\" не найден. Попробуйте \"/transport settings list\" для "
+"получения списка доступных параметров. \n"
 
 #: /home/hanzz/code/test/transport/src/commands.cpp:115
 msgid "No such command (in this context)."
@@ -60,7 +64,8 @@ msgid ""
 "Use \"/transport help &lt;command&gt;\" for help on a specific command.\n"
 "The following commands are available in this context:\n"
 msgstr ""
-"Используйте \"/transport help &lt;команда&gt;\" для получения помощи по данной команде.\n"
+"Используйте \"/transport help &lt;команда&gt;\" для получения помощи по "
+"данной команде.\n"
 "Доступны следующие команды:\n"
 
 #: /home/hanzz/code/test/transport/src/commands.cpp:142
@@ -85,31 +90,35 @@ msgstr "Введите ID Вашего контакта"
 msgid "Contact ID"
 msgstr "ID контакта"
 
-#: /home/hanzz/code/test/transport/src/main.cpp:1725
-msgid "This message couldn't be sent, because you are not connected to legacy network. You will be automatically reconnected soon."
-msgstr "Сообщение не может быть отправлено по причине того, что вы не подключены к сети. Ожидайте попытку подключения."
+#: /home/hanzz/code/test/transport/src/main.cpp:1745
+msgid ""
+"This message couldn't be sent, because you are not connected to legacy "
+"network. You will be automatically reconnected soon."
+msgstr ""
+"Сообщение не может быть отправлено по причине того, что вы не подключены к "
+"сети. Ожидайте попытку подключения."
 
-#: /home/hanzz/code/test/transport/src/registerhandler.cpp:120
+#: /home/hanzz/code/test/transport/src/registerhandler.cpp:121
 msgid "Registration"
 msgstr "Регистрация"
 
-#: /home/hanzz/code/test/transport/src/registerhandler.cpp:132
+#: /home/hanzz/code/test/transport/src/registerhandler.cpp:133
 msgid "Legacy Network username"
 msgstr "Имя пользователя"
 
-#: /home/hanzz/code/test/transport/src/registerhandler.cpp:141
+#: /home/hanzz/code/test/transport/src/registerhandler.cpp:142
 msgid "Password"
 msgstr "Пароль"
 
-#: /home/hanzz/code/test/transport/src/registerhandler.cpp:147
+#: /home/hanzz/code/test/transport/src/registerhandler.cpp:148
 msgid "Language"
 msgstr "Язык"
 
-#: /home/hanzz/code/test/transport/src/registerhandler.cpp:167
+#: /home/hanzz/code/test/transport/src/registerhandler.cpp:166
 msgid "Encoding"
 msgstr "Кодировка"
 
-#: /home/hanzz/code/test/transport/src/registerhandler.cpp:178
+#: /home/hanzz/code/test/transport/src/registerhandler.cpp:177
 msgid "Remove your registration"
 msgstr "Удалить регистрацию"
 
@@ -167,14 +176,15 @@ msgstr "Пожалуйста, добавьте меня."
 
 #: /home/hanzz/code/test/transport/src/protocols/msn.cpp:61
 #: /home/hanzz/code/test/transport/src/protocols/msn_pecan.cpp:61
-msgid "Enter your Passport username and pssword:"
+#, fuzzy
+msgid "Enter your Passport username and password:"
 msgstr "Введите Ваш Live ID и пароль:"
 
 #: /home/hanzz/code/test/transport/src/protocols/myspace.cpp:62
 msgid "Enter your Myspace name and password:"
 msgstr "Введите Ваше имя пользователя и пароль в сети MySpace:"
 
-#: /home/hanzz/code/test/transport/src/protocols/qq.cpp:72
+#: /home/hanzz/code/test/transport/src/protocols/qq.cpp:74
 msgid "Enter your QQ username and password:"
 msgstr "Введите Ваше имя пользователя и пароль в сети QQ:"
 

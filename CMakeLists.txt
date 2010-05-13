@@ -332,7 +332,7 @@ endif(DEFINED WITH_STATIC_GLOOX)
 endif (CPPUNIT_FOUND)
 
 
-ADD_CUSTOM_TARGET (xgettext xgettext ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp ${CMAKE_CURRENT_SOURCE_DIR}/src/protocols/*.cpp ${CMAKE_CURRENT_SOURCE_DIR}/src/adhoc/*.cpp --output-dir=${CMAKE_CURRENT_SOURCE_DIR}/locales --from-code="UTF-8" -C --keyword="_")
+ADD_CUSTOM_TARGET (xgettext xgettext ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp ${CMAKE_CURRENT_SOURCE_DIR}/src/protocols/*.cpp ${CMAKE_CURRENT_SOURCE_DIR}/src/adhoc/*.cpp --output-dir=${CMAKE_CURRENT_SOURCE_DIR}/po --from-code="UTF-8" -C --keyword="_" && sed -e 's/charset=CHARSET/charset=UTF-8/g' ${CMAKE_CURRENT_SOURCE_DIR}/po/messages.po > ${CMAKE_CURRENT_SOURCE_DIR}/po/messages.po.new && mv ${CMAKE_CURRENT_SOURCE_DIR}/po/messages.po.new ${CMAKE_CURRENT_SOURCE_DIR}/po/messages.po)
 
 
 FIND_PROGRAM(GETTEXT_MSGFMT_EXECUTABLE msgfmt)
@@ -363,6 +363,10 @@ ELSE(NOT GETTEXT_MSGFMT_EXECUTABLE)
                         ADD_CUSTOM_COMMAND(TARGET translations
                                 COMMAND ${GETTEXT_MSGFMT_EXECUTABLE} --check -o ${_gmoFile} ${_poFile}
                                 DEPENDS ${_poFile})
+
+                        ADD_CUSTOM_COMMAND(TARGET xgettext
+                                COMMAND msgmerge ${_poFile} ${CMAKE_CURRENT_SOURCE_DIR}/po/messages.po | msgattrib --no-obsolete > ${_poFile}.new && mv ${_poFile}.new ${_poFile}
+								)
                         INSTALL(FILES ${_gmoFile} DESTINATION share/locale/${_langCode}/LC_MESSAGES/ RENAME ${catalogname}.mo)
                 ENDIF( _langCode )
  
