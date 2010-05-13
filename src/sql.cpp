@@ -76,6 +76,7 @@ SQLClass::SQLClass(GlooxMessageHandler *parent, bool upgrade) {
 		if (p->configuration().sqlType == "sqlite") {
 			SQLite::Connector::registerConnector(); 
 			m_sess = new Session("SQLite", p->configuration().sqlDb);
+			g_chmod(p->configuration().sqlDb.c_str(), 0640);
 		}
 #endif
 	}
