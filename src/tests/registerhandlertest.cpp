@@ -59,10 +59,12 @@ void RegisterHandlerTest::handleIqGetNewUser() {
 					"</field>"
 					"<field type='text-private' var='password' label='Password'/>"
 					"<field type='list-single' var='language' label='Language'>"
-						"<value>en</value>"
-						"<option label='Cesky'><value>cs</value></option>"
-						"<option label='English'><value>en</value></option>"
-					"</field>"
+						"<value>en</value>";
+	std::map <std::string, std::string> languages = localization.getLanguages();
+	for (std::map <std::string, std::string>::iterator it = languages.begin(); it != languages.end(); it++) {
+		r +=			"<option label='" + (*it).first + "'><value>" + (*it).second + "</value></option>";
+	}
+	r +=			"</field>"
 					"<field type='text-single' var='encoding' label='Encoding'>"
 						"<value>windows-1250</value>"
 					"</field>"
@@ -111,10 +113,12 @@ void RegisterHandlerTest::handleIqGetExistingUser() {
 					"</field>"
 					"<field type='text-private' var='password' label='Password'/>"
 					"<field type='list-single' var='language' label='Language'>"
-						"<value>cs</value>"
-						"<option label='Cesky'><value>cs</value></option>"
-						"<option label='English'><value>en</value></option>"
-					"</field>"
+						"<value>cs</value>";
+	std::map <std::string, std::string> languages = localization.getLanguages();
+	for (std::map <std::string, std::string>::iterator it = languages.begin(); it != languages.end(); it++) {
+		r +=			"<option label='" + (*it).first + "'><value>" + (*it).second + "</value></option>";
+	}
+	r +=			"</field>"
 					"<field type='text-single' var='encoding' label='Encoding'>"
 						"<value>utf8</value>"
 					"</field>"
