@@ -75,9 +75,11 @@ class Localization {
 		const char * translate(const char *lang, const char *key);
 		const char * translate(const char *lang, const std::string &key) { return translate(lang, key.c_str()); }
 		const char * translate(const std::string &lang, const std::string &key) { return translate(lang.c_str(), key.c_str()); }
+		std::map <std::string, std::string> &getLanguages();
 
 	private:
 		GHashTable *m_locales;		// xml_lang, hash table with localizations
+		std::map<std::string, std::string> m_languages;
 };
 
 #endif

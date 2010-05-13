@@ -75,7 +75,6 @@ bool GlooxRegisterHandler::handleIq(const IQ &iq) {
 
 bool GlooxRegisterHandler::handleIq(const Tag *iqTag) {
 	Log("GlooxRegisterHandler", iqTag->findAttribute("from") << ": iq:register received (" << iqTag->findAttribute("type") << ")");
-	const char *language = Transport::instance()->getConfiguration().language.c_str();
 	
 	JID from(iqTag->findAttribute("from"));
 	
@@ -88,6 +87,8 @@ bool GlooxRegisterHandler::handleIq(const Tag *iqTag) {
 			return false;
 		}
 	}
+
+	const char *_language = user ? user->getLang() : Transport::instance()->getConfiguration().language.c_str();
 
 	// send registration form
 	if (iqTag->findAttribute("type") == "get") {
@@ -102,13 +103,13 @@ bool GlooxRegisterHandler::handleIq(const Tag *iqTag) {
 
 		if (res.id == -1) {
 			Log("GlooxRegisterHandler", "* sending registration form; user is not registered");
-			query->addChild( new Tag("instructions", tr(language, Transport::instance()->protocol()->text("instructions"))) );
+			query->addChild( new Tag("instructions", tr(_language, Transport::instance()->protocol()->text("instructions"))) );
 			query->addChild( new Tag("username") );
 			query->addChild( new Tag("password") );
 		}
 		else {
 			Log("GlooxRegisterHandler", "* sending registration form; user is registered");
-			query->addChild( new Tag("instructions", tr(language, Transport::instance()->protocol()->text("instructions"))) );
+			query->addChild( new Tag("instructions", tr(_language, Transport::instance()->protocol()->text("instructions"))) );
 			query->addChild( new Tag("registered") );
 			query->addChild( new Tag("username", res.uin));
 			query->addChild( new Tag("password"));
@@ -117,8 +118,8 @@ bool GlooxRegisterHandler::handleIq(const Tag *iqTag) {
 		Tag *x = new Tag("x");
 		x->addAttribute("xmlns", "jabber:x:data");
 		x->addAttribute("type", "form");
-		x->addChild( new Tag("title", tr(language, _("Registration"))));
-		x->addChild( new Tag("instructions", tr(language, Transport::instance()->protocol()->text("instructions"))) );
+		x->addChild( new Tag("title", tr(_language, _("Registration"))));
+		x->addChild( new Tag("instructions", tr(_language, Transport::instance()->protocol()->text("instructions"))) );
 
 		Tag *field = new Tag("field");
 		field->addAttribute("type", "hidden");
@@ -129,7 +130,7 @@ bool GlooxRegisterHandler::handleIq(const Tag *iqTag) {
 		field = new Tag("field");
 		field->addAttribute("type", "text-single");
 		field->addAttribute("var", "username");
-		field->addAttribute("label", tr(language, _("Legacy Network username")));
+		field->addAttribute("label", tr(_language, _("Legacy Network username")));
 		field->addChild( new Tag("required") );
 		if (res.id!=-1)
 			field->addChild( new Tag("value", res.uin) );
@@ -138,33 +139,31 @@ bool GlooxRegisterHandler::handleIq(const Tag *iqTag) {
 		field = new Tag("field");
 		field->addAttribute("type", "text-private");
 		field->addAttribute("var", "password");
-		field->addAttribute("label", tr(language, _("Password")));
+		field->addAttribute("label", tr(_language, _("Password")));
 		x->addChild(field);
 
 		field = new Tag("field");
 		field->addAttribute("type", "list-single");
 		field->addAttribute("var", "language");
-		field->addAttribute("label", tr(language, _("Language")));
+		field->addAttribute("label", tr(_language, _("Language")));
 		if (res.id!=-1)
 			field->addChild( new Tag("value", res.language) );
 		else
 			field->addChild( new Tag("value", Transport::instance()->getConfiguration().language) );
 		x->addChild(field);
 
-		Tag *option = new Tag("option");
-		option->addAttribute("label", "Cesky");
-		option->addChild( new Tag("value", "cs") );
-		field->addChild(option);
-
-		option = new Tag("option");
-		option->addAttribute("label", "English");
-		option->addChild( new Tag("value", "en") );
-		field->addChild(option);
+		std::map <std::string, std::string> languages = localization.getLanguages();
+		for (std::map <std::string, std::string>::iterator it = languages.begin(); it != languages.end(); it++) {
+			Tag *option = new Tag("option");
+			option->addAttribute("label", (*it).first);
+			option->addChild( new Tag("value", (*it).second) );
+			field->addChild(option);
+		}
 
 		field = new Tag("field");
 		field->addAttribute("type", "text-single");
 		field->addAttribute("var", "encoding");
-		field->addAttribute("label", tr(language, _("Encoding")));
+		field->addAttribute("label", tr(_language, _("Encoding")));
 		if (res.id!=-1)
 			field->addChild( new Tag("value", res.encoding) );
 		else
@@ -175,7 +174,7 @@ bool GlooxRegisterHandler::handleIq(const Tag *iqTag) {
 			field = new Tag("field");
 			field->addAttribute("type", "boolean");
 			field->addAttribute("var", "unregister");
-			field->addAttribute("label", tr(language, _("Remove your registration")));
+			field->addAttribute("label", tr(_language, _("Remove your registration")));
 			field->addChild( new Tag("value", "0") );
 			x->addChild(field);
 		}

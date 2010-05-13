@@ -192,6 +192,21 @@ const char * Translation::translate(const char *key) {
 
 Localization::Localization() {
 	m_locales = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, deleteTranslation);
+	char *l = g_build_filename(INSTALL_DIR, "share", "locale", NULL);
+	GDir *locale = g_dir_open(l, 0, NULL);
+	if (locale) {
+		const char *language;
+		while ( (language = g_dir_read_name(locale)) != NULL) {
+			char *spectrum = g_build_filename(INSTALL_DIR, "share", "locale", language, "LC_MESSAGES", "spectrum.mo", NULL);
+			if (g_file_test(spectrum, G_FILE_TEST_EXISTS)) {
+				std::string k(language);
+				m_languages[k] = k;
+			}
+			g_free(spectrum);
+		}
+		g_dir_close(locale);
+	}
+	g_free(l);
 }
 
 Localization::~Localization() {
@@ -219,6 +234,10 @@ bool Localization::loadLocale(const std::string &lang) {
 	g_hash_table_replace(m_locales, g_strdup(lang.c_str()), trans);
 #endif
 	return false;
+}
+
+std::map <std::string, std::string> &Localization::getLanguages() {
+	return m_languages;
 }
 
 Localization localization;

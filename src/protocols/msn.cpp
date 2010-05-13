@@ -58,7 +58,7 @@ std::list<std::string> MSNProtocol::buddyFeatures(){
 
 std::string MSNProtocol::text(const std::string &key) {
 	if (key == "instructions")
-		return _("Enter your Passport username and pssword:");
+		return _("Enter your Passport username and password:");
 	return "not defined";
 }
 
