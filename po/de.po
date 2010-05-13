@@ -2,7 +2,7 @@
 # Copyright (C) 2010
 # This file is distributed under the same license as the spectrum package.
 # Christian Dröge <christian@draugr.de>, 2010
-#
+# 
 msgid ""
 msgstr ""
 "Project-Id-Version: Spectrum\n"
@@ -68,8 +68,7 @@ msgstr ""
 msgid "help &lt;command&gt;:  Help on a specific command."
 msgstr "help &lt;Befehl&gt;:  Hilfe zu einem Befehl aufrufen."
 
-#: src/commands.cpp:143
-#: src/commands.cpp:144
+#: src/commands.cpp:143 src/commands.cpp:144
 msgid "settings set &lt;command&gt; settings list:  Configure transport."
 msgstr "settings set &lt;Einstellung&gt; settings list:  Transport konfigurieren."
 
@@ -158,15 +157,12 @@ msgstr "Gebe deine GG Nummer und Passwort ein:"
 msgid "Enter your UIN and password:"
 msgstr "Gebe deine ICQ Nummer und Passwort ein:"
 
-#: src/protocols/icq.cpp:159
-#: src/protocols/msn.cpp:161
-#: src/protocols/msn_pecan.cpp:161
-#: src/protocols/qq.cpp:53
+#: src/protocols/icq.cpp:159 src/protocols/msn.cpp:161
+#: src/protocols/msn_pecan.cpp:161 src/protocols/qq.cpp:53
 msgid "Please authorize me."
 msgstr "Bitte autorisiere mich."
 
-#: src/protocols/msn.cpp:61
-#: src/protocols/msn_pecan.cpp:61
+#: src/protocols/msn.cpp:61 src/protocols/msn_pecan.cpp:61
 msgid "Enter your Passport username and pssword:"
 msgstr "Gebe deinen Passport Benutzernamen und Passwort ein:"
 
@@ -198,8 +194,7 @@ msgstr "Gebe deine Jabber Adresse und Passwort ein:"
 msgid "Enter your Yahoo Messenger username and password:"
 msgstr "Gebe deinen Yahoo Messenger Benutzernamen und Passwort ein:"
 
-#: src/adhoc/adhocadmin.cpp:45
-#: src/adhoc/adhochandler.cpp:51
+#: src/adhoc/adhocadmin.cpp:45 src/adhoc/adhochandler.cpp:51
 msgid "Transport administration"
 msgstr "Transport Verwaltung"
 
@@ -207,8 +202,7 @@ msgstr "Transport Verwaltung"
 msgid "Please select a configuration area."
 msgstr "Bitte einen Konfigurationsbereich auswählen."
 
-#: src/adhoc/adhocadmin.cpp:49
-#: src/adhoc/adhocadmin.cpp:83
+#: src/adhoc/adhocadmin.cpp:49 src/adhoc/adhocadmin.cpp:83
 msgid "Logging"
 msgstr "Protokollierung"
 
@@ -228,8 +222,7 @@ msgstr "Gesendetes/Empfangenes XML mitschneiden"
 msgid "Log libpurple messages"
 msgstr "libpurple Meldungen mitschneiden"
 
-#: src/adhoc/adhochandler.cpp:47
-#: src/adhoc/adhocsettings.cpp:46
+#: src/adhoc/adhochandler.cpp:47 src/adhoc/adhocsettings.cpp:46
 msgid "Transport settings"
 msgstr "Transport Einstellungen"
 
@@ -247,7 +240,7 @@ msgstr "Transport aktivieren"
 
 #: src/adhoc/adhocsettings.cpp:54
 msgid "Enable notification of new email (if the legacy network supports it)"
-msgstr "Die Benachrichtigung über neue E-Mails aktivieren (wenn dies vom Fremdnetzwerk unterstützt wird)"
+msgstr "Benachrichtigung über neue E-Mails aktivieren (wenn dies vom Fremdnetzwerk unterstützt wird)"
 
 #: src/adhoc/adhocsettings.cpp:57
 msgid "Enable avatars"
@@ -268,4 +261,3 @@ msgstr "Feld:"
 #: src/adhoc/dataforms.cpp:57
 msgid "Actions"
 msgstr "Aktionen"
-
