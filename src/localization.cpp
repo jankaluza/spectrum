@@ -184,10 +184,10 @@ Translation::~Translation() {
 }
 
 const char * Translation::translate(const char *key) {
-// 	const char *ret = m_spectrum->lookup(key);
-// 	if (strcmp(ret, key) == 0)
+	const char *ret = m_spectrum->lookup(key);
+	if (strcmp(ret, key) == 0)
 		return m_pidgin->lookup(key);
-// 	return ret;
+	return ret;
 }
 
 Localization::Localization() {
