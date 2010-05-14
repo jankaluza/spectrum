@@ -2,8 +2,7 @@
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the PACKAGE package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
-#
-#, fuzzy
+# 
 msgid ""
 msgstr ""
 "Project-Id-Version: Spectrum\n"
@@ -17,256 +16,254 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 
 #: /home/hanzz/code/test/transport/src/commands.cpp:35
-#, c-format
+#, c-format, fuzzy
 msgid "%s = True \n"
-msgstr ""
+msgstr "%s = True \n"
 
 #: /home/hanzz/code/test/transport/src/commands.cpp:37
-#, c-format
+#, c-format, fuzzy
 msgid "%s = False \n"
-msgstr ""
+msgstr "%s = False \n"
 
 #: /home/hanzz/code/test/transport/src/commands.cpp:40
-#, c-format
+#, c-format, fuzzy
 msgid "%s = %s \n"
-msgstr ""
+msgstr "%s = %s \n"
 
 #: /home/hanzz/code/test/transport/src/commands.cpp:67
-#, c-format
+#, c-format, fuzzy
 msgid "%s is now True\n"
-msgstr ""
+msgstr "%s is now True\n"
 
 #: /home/hanzz/code/test/transport/src/commands.cpp:69
-#, c-format
+#, c-format, fuzzy
 msgid "%s is now False\n"
-msgstr ""
+msgstr "%s is now False\n"
 
 #: /home/hanzz/code/test/transport/src/commands.cpp:75
 #, c-format
 msgid "%s is now \"%s\"\n"
-msgstr ""
+msgstr "%s jest teraz \"%s\"\n"
 
 #: /home/hanzz/code/test/transport/src/commands.cpp:79
 #, c-format
-msgid ""
-"The setting \"%s\" does not exist.  Try \"/transport settings list\" to get "
-"a list of available settings.\n"
-msgstr ""
+msgid "The setting \"%s\" does not exist.  Try \"/transport settings list\" to get a list of available settings.\n"
+msgstr "Opcja \"%s\" nie istnieje.  Spróbuj \"/transport settings list\" by zobaczyć listę dostępnych opcji.\n"
 
 #: /home/hanzz/code/test/transport/src/commands.cpp:115
 msgid "No such command (in this context)."
-msgstr ""
+msgstr "Nie ma takiej komendy (w tym kontekście)."
 
 #: /home/hanzz/code/test/transport/src/commands.cpp:118
 msgid ""
 "Use \"/transport help &lt;command&gt;\" for help on a specific command.\n"
 "The following commands are available in this context:\n"
 msgstr ""
+"Użyj \"/transport help &lt;command&gt;\" by uzyskać pomoc dotyczącą wybranej komendy.\n"
+"Aktualnie dostępne komendy:\n"
 
 #: /home/hanzz/code/test/transport/src/commands.cpp:142
 msgid "help &lt;command&gt;:  Help on a specific command."
-msgstr ""
+msgstr "help &lt;command&gt;:  Pomoc dotycząca wybranej komendy."
 
 #: /home/hanzz/code/test/transport/src/commands.cpp:143
 #: /home/hanzz/code/test/transport/src/commands.cpp:144
 msgid "settings set &lt;command&gt; settings list:  Configure transport."
-msgstr ""
+msgstr "settings set &lt;command&gt; settings list:  Konfiguracja transportu."
 
 #: /home/hanzz/code/test/transport/src/filetransfermanager.cpp:310
 #, c-format
 msgid "Received file '%s'.  You can download it at: %s"
-msgstr ""
+msgstr "Otrzymano plik '%s'.  Możesz go pobrać z: %s"
 
 #: /home/hanzz/code/test/transport/src/gatewayhandler.cpp:83
 msgid "Please enter the legacy ID of your contact."
-msgstr ""
+msgstr "Proszę podać ID kontaktu."
 
 #: /home/hanzz/code/test/transport/src/gatewayhandler.cpp:84
 msgid "Contact ID"
-msgstr ""
+msgstr "ID kontaktu"
 
 #: /home/hanzz/code/test/transport/src/main.cpp:1745
-msgid ""
-"This message couldn't be sent, because you are not connected to legacy "
-"network. You will be automatically reconnected soon."
-msgstr ""
+msgid "This message couldn't be sent, because you are not connected to legacy network. You will be automatically reconnected soon."
+msgstr "Wiadomość nie mogła zostać wysłana, ponieważ nie jesteś połączony z wybraną siecią. Za chwilę zostaniesz połączony ponownie."
 
 #: /home/hanzz/code/test/transport/src/registerhandler.cpp:121
 msgid "Registration"
-msgstr ""
+msgstr "Rejestracja"
 
 #: /home/hanzz/code/test/transport/src/registerhandler.cpp:133
 msgid "Legacy Network username"
-msgstr ""
+msgstr "Nazwa użytkownika"
 
 #: /home/hanzz/code/test/transport/src/registerhandler.cpp:142
 msgid "Password"
-msgstr ""
+msgstr "Hasło"
 
 #: /home/hanzz/code/test/transport/src/registerhandler.cpp:148
 msgid "Language"
-msgstr ""
+msgstr "Język"
 
 #: /home/hanzz/code/test/transport/src/registerhandler.cpp:166
 msgid "Encoding"
-msgstr ""
+msgstr "Kodowanie"
 
 #: /home/hanzz/code/test/transport/src/registerhandler.cpp:177
 msgid "Remove your registration"
-msgstr ""
+msgstr "Usuń swoją rejestrację"
 
 #: /home/hanzz/code/test/transport/src/searchrepeater.cpp:81
 msgid "Searching requires a client which supports Data Forms (XEP-0004)."
-msgstr ""
+msgstr "Wyszukiwanie wymaga klienta z obsługa XEP-0004 (Data Forms)."
 
 #: /home/hanzz/code/test/transport/src/spectrummessagehandler.cpp:192
 msgid "Transport: Unknown command."
-msgstr ""
+msgstr "Transport: nieznana komenda."
 
 #: /home/hanzz/code/test/transport/src/spectrummessagehandler.cpp:196
 msgid "Syntax Error: Wrong number of arguments."
-msgstr ""
+msgstr "Błąd składni: Nieprawidłowa liczba argumentów."
 
 #: /home/hanzz/code/test/transport/src/spectrummessagehandler.cpp:199
 msgid "The command failed for an unknown reason."
-msgstr ""
+msgstr "Wykonanie komendy nie powiodło się z nieznanej przyczyny."
 
 #: /home/hanzz/code/test/transport/src/spectrummessagehandler.cpp:203
 msgid "That command only works in group chats, not 1:1 conversations."
-msgstr ""
+msgstr "Ta komenda działa tylko w czatach grupowych a nie rozmowach 1:1."
 
 #: /home/hanzz/code/test/transport/src/spectrummessagehandler.cpp:205
 msgid "That command only works in 1:1 conversations, not group chats."
-msgstr ""
+msgstr "Ta komenda działa tylko w rozmowach 1:1 a nie czatach grupowych."
 
 #: /home/hanzz/code/test/transport/src/spectrummessagehandler.cpp:208
 msgid "That command is not supported for this legacy network."
-msgstr ""
+msgstr "Ta komenda nie jest wspierana przez używaną sieć."
 
 #: /home/hanzz/code/test/transport/src/protocols/aim.cpp:61
 #: /home/hanzz/code/test/transport/src/protocols/stress.cpp:61
 msgid "Enter your screenname and password:"
-msgstr ""
+msgstr "Wpisz swoją nazwę użytkownika i hasło:"
 
 #: /home/hanzz/code/test/transport/src/protocols/facebook.cpp:61
 msgid "Enter your Facebook email and password:"
-msgstr ""
+msgstr "Wpisz swój Facebook ID i hasło:"
 
 #: /home/hanzz/code/test/transport/src/protocols/gg.cpp:114
 msgid "Enter your GG number and password:"
-msgstr ""
+msgstr "Wpisz swój numer GG i hasło:"
 
 #: /home/hanzz/code/test/transport/src/protocols/icq.cpp:59
 msgid "Enter your UIN and password:"
-msgstr ""
+msgstr "Wpisz swój numer i hasło:"
 
 #: /home/hanzz/code/test/transport/src/protocols/icq.cpp:159
 #: /home/hanzz/code/test/transport/src/protocols/msn.cpp:161
 #: /home/hanzz/code/test/transport/src/protocols/msn_pecan.cpp:161
 #: /home/hanzz/code/test/transport/src/protocols/qq.cpp:53
 msgid "Please authorize me."
-msgstr ""
+msgstr "Autoryzuj mnie, proszę."
 
 #: /home/hanzz/code/test/transport/src/protocols/msn.cpp:61
 #: /home/hanzz/code/test/transport/src/protocols/msn_pecan.cpp:61
 msgid "Enter your Passport username and password:"
-msgstr ""
+msgstr "Wpisz swoją nazwę użytkownika i hasło:"
 
 #: /home/hanzz/code/test/transport/src/protocols/myspace.cpp:62
 msgid "Enter your Myspace name and password:"
-msgstr ""
+msgstr "Wpisz swój Myspace ID i hasło:"
 
 #: /home/hanzz/code/test/transport/src/protocols/qq.cpp:74
 msgid "Enter your QQ username and password:"
-msgstr ""
+msgstr "Wpisz swój QQ ID i hasło:"
 
 #: /home/hanzz/code/test/transport/src/protocols/simple.cpp:62
 msgid "Enter your SIMPLE username and password:"
-msgstr ""
+msgstr "Wpisz swój SIMPLE ID i hasło:"
 
 #: /home/hanzz/code/test/transport/src/protocols/sipe.cpp:61
 msgid "Enter your SIPE username and password:"
-msgstr ""
+msgstr "Wpisz swój SIPE ID i hasło:"
 
 #: /home/hanzz/code/test/transport/src/protocols/twitter.cpp:61
 msgid "Enter your Twitter username and password:"
-msgstr ""
+msgstr "Wpisz swoją nazwę użytkownika i hasło:"
 
 #: /home/hanzz/code/test/transport/src/protocols/xmpp.cpp:61
 msgid "Enter your Jabber ID and password:"
-msgstr ""
+msgstr "Wpisz swój Jabber ID i hasło:"
 
 #: /home/hanzz/code/test/transport/src/protocols/yahoo.cpp:62
 msgid "Enter your Yahoo Messenger username and password:"
-msgstr ""
+msgstr "Wpisz swój Yahoo Messenger ID i hasło:"
 
 #: /home/hanzz/code/test/transport/src/adhoc/adhocadmin.cpp:45
 #: /home/hanzz/code/test/transport/src/adhoc/adhochandler.cpp:51
 msgid "Transport administration"
-msgstr ""
+msgstr "Administracja transportem"
 
 #: /home/hanzz/code/test/transport/src/adhoc/adhocadmin.cpp:46
 msgid "Please select a configuration area."
-msgstr ""
+msgstr "Wybierz dany przedział konfiguracji."
 
 #: /home/hanzz/code/test/transport/src/adhoc/adhocadmin.cpp:49
 #: /home/hanzz/code/test/transport/src/adhoc/adhocadmin.cpp:83
 msgid "Logging"
-msgstr ""
+msgstr "Logowanie"
 
 #: /home/hanzz/code/test/transport/src/adhoc/adhocadmin.cpp:92
 msgid "Logging settings"
-msgstr ""
+msgstr "Ustawienia logowania"
 
 #: /home/hanzz/code/test/transport/src/adhoc/adhocadmin.cpp:93
 msgid "Determine whether to log these types of messages:"
-msgstr ""
+msgstr "Określ czy logować podane typy wiadomości:"
 
 #: /home/hanzz/code/test/transport/src/adhoc/adhocadmin.cpp:94
 msgid "Log transport in/out XML"
-msgstr ""
+msgstr "Loguj stanzy XML z/do transportu"
 
 #: /home/hanzz/code/test/transport/src/adhoc/adhocadmin.cpp:95
 msgid "Log libpurple messages"
-msgstr ""
+msgstr "Loguj wiadomości libpurple"
 
 #: /home/hanzz/code/test/transport/src/adhoc/adhochandler.cpp:47
 #: /home/hanzz/code/test/transport/src/adhoc/adhocsettings.cpp:46
 msgid "Transport settings"
-msgstr ""
+msgstr "Ustawienia transportu"
 
 #: /home/hanzz/code/test/transport/src/adhoc/adhochandler.cpp:146
 msgid "Ad-Hoc Commands"
-msgstr ""
+msgstr "Komendy Ad-Hoc"
 
 #: /home/hanzz/code/test/transport/src/adhoc/adhocsettings.cpp:48
 msgid "Change your transport settings here."
-msgstr ""
+msgstr "Tutaj możesz zmienić swoje ustawienia transportu."
 
 #: /home/hanzz/code/test/transport/src/adhoc/adhocsettings.cpp:51
 msgid "Enable transport"
-msgstr ""
+msgstr "Aktywuj transport"
 
 #: /home/hanzz/code/test/transport/src/adhoc/adhocsettings.cpp:54
 msgid "Enable notification of new email (if the legacy network supports it)"
-msgstr ""
+msgstr "Aktywuj powiadomienia o nowych mailach (jeśli ta sieć to obsługuje)"
 
 #: /home/hanzz/code/test/transport/src/adhoc/adhocsettings.cpp:57
 msgid "Enable avatars"
-msgstr ""
+msgstr "Aktywuj awatary"
 
 #: /home/hanzz/code/test/transport/src/adhoc/adhocsettings.cpp:60
 msgid "Enable \"is typing\" notifications"
-msgstr ""
+msgstr "Aktywuj powiadomienia \"użytkownik piszę\""
 
 #: /home/hanzz/code/test/transport/src/adhoc/adhocsettings.cpp:63
 msgid "You must be online to change transport settings."
-msgstr ""
+msgstr "Musisz być zalogowany by zmienić ustawienia transportu."
 
 #: /home/hanzz/code/test/transport/src/adhoc/dataforms.cpp:40
 msgid "Field:"
-msgstr ""
+msgstr "Pole:"
 
 #: /home/hanzz/code/test/transport/src/adhoc/dataforms.cpp:57
 msgid "Actions"
-msgstr ""
+msgstr "Akcje"
