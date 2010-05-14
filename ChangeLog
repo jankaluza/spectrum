@@ -27,6 +27,10 @@ version 0.3 (2010-??-??):
 	ICQ/AIM:
 	* Fixed connection issues on Windows.
 
+	MSN:
+	* Send proper features in disco#info (Fixes filetransfer problems in some Jabber
+	  Clients).
+
 	Gadu-Gadu:
 	* Added support for receiving VCards.
 

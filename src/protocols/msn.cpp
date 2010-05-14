@@ -36,9 +36,9 @@ MSNProtocol::MSNProtocol(GlooxMessageHandler *main){
 	m_buddyFeatures.push_back("http://jabber.org/protocol/chatstates");
 	m_buddyFeatures.push_back("http://jabber.org/protocol/commands");
 
-// 	m_buddyFeatures.push_back("http://jabber.org/protocol/si/profile/file-transfer");
-// 	m_buddyFeatures.push_back("http://jabber.org/protocol/bytestreams");
-// 	m_buddyFeatures.push_back("http://jabber.org/protocol/si");
+	m_buddyFeatures.push_back("http://jabber.org/protocol/si/profile/file-transfer");
+	m_buddyFeatures.push_back("http://jabber.org/protocol/bytestreams");
+	m_buddyFeatures.push_back("http://jabber.org/protocol/si");
 }
 
 MSNProtocol::~MSNProtocol() {}
