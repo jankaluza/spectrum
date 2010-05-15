@@ -453,7 +453,7 @@ void SpectrumRosterManager::handleSubscription(const Subscription &subscription)
 				Transport::instance()->send( reply );
 				PurpleBuddy *buddy = purple_find_buddy(m_user->account(), remote_user.c_str());
 				if (buddy) {
-					Log(m_user->jid(), "Trying to purple_accound_add_buddy just to be sure.");
+					Log(m_user->jid(), "Trying to purple_account_add_buddy just to be sure.");
 					purple_account_add_buddy(m_user->account(), buddy);
 				}
 			}

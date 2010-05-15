@@ -61,7 +61,7 @@ using namespace gloox;
 #define STATEMENT_EXECUTE_END(STATEMENT,FUNC)	} \
 	catch (Poco::Exception e) { \
 		m_error++;\
-		LogMessage(Log_.fileStream()).Get("SQL ERROR") << e.code(); \
+		LogMessage(Log_.fileStream()).Get("SQL ERROR") << e.code() << " " << << e.displayText(); \
 		if (m_error != 3 && p->configuration().sqlType != "sqlite") { \
 			if (e.code() == 1243) { \
 				delete STATEMENT; \
