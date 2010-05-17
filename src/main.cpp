@@ -1834,6 +1834,11 @@ GlooxMessageHandler* GlooxMessageHandler::m_pInstance = NULL;
 static void spectrum_sigint_handler(int sig) {
 	delete GlooxMessageHandler::instance();
 }
+
+static void spectrum_sigterm_handler(int sig) {
+	delete GlooxMessageHandler::instance();
+}
+
 #ifndef WIN32
 static void spectrum_sigchld_handler(int sig)
 {
@@ -1897,6 +1902,12 @@ int main( int argc, char* argv[] ) {
 
 		if (signal(SIGINT, spectrum_sigint_handler) == SIG_ERR) {
 			std::cout << "SIGINT handler can't be set\n";
+			g_option_context_free(context);
+			return -1;
+		}
+
+		if (signal(SIGTERM, spectrum_sigterm_handler) == SIG_ERR) {
+			std::cout << "SIGTERM handler can't be set\n";
 			g_option_context_free(context);
 			return -1;
 		}
