@@ -4,6 +4,8 @@ version 0.3 (2010-??-??):
 	* Support for glib older than 2.14.
 	* Try to reconnect to Jabber server for all stream errors.
 	* Disconnect users from legacy network when Jabber server gets down.
+	* Send unavailable presences for all online buddies when restarting Spectrum
+	  with spectrumctl.
 	* Fixed timestamps for delayed messages from legacy network.
 	* Entity capabilities hash is now computed correctly.
 	* transport_features and vip_features config variables are deprecated now.
