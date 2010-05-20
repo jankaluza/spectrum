@@ -25,6 +25,8 @@
 #include "spectrumbuddy.h"
 #include "spectrum_util.h"
 #include "protocols/abstractprotocol.h"
+#include "transport.h"
+#include "usermanager.h"
 
 
 #if !defined(WITH_MYSQL) && !defined(WITH_SQLITE) && !defined(WITH_ODBC)
@@ -34,6 +36,11 @@
 #ifdef WITH_SQLITE
 #include <Poco/Data/SQLite/SQLiteException.h>
 #endif
+
+static gboolean reconnectMe(gpointer data) {
+	SQLClass *sql = (SQLClass *) data;
+	return sql->reconnectCallback();
+}
 
 SQLClass::SQLClass(GlooxMessageHandler *parent, bool upgrade) {
 	p = parent;
@@ -63,6 +70,7 @@ SQLClass::SQLClass(GlooxMessageHandler *parent, bool upgrade) {
 	m_stmt_removeBuddySettings.stmt = NULL;
 	
 	m_error = 0;
+	m_reconnectTimer = new SpectrumTimer(1000, reconnectMe, this);
 	
 	
 	try {
@@ -108,6 +116,7 @@ SQLClass::SQLClass(GlooxMessageHandler *parent, bool upgrade) {
 }
 
 SQLClass::~SQLClass() {
+	delete m_reconnectTimer;
 	if (m_loaded) {
 		m_sess->close();
 		delete m_sess;
@@ -333,12 +342,62 @@ void SQLClass::removeStatements() {
 	m_stmt_removeBuddySettings.stmt = NULL;
 }
 
-void SQLClass::reconnect() {
-	removeStatements();
-	m_sess->close();
-	delete m_sess;
-	m_sess = new Session("MySQL", "user=" + p->configuration().sqlUser + ";password=" + p->configuration().sqlPassword + ";host=" + p->configuration().sqlHost + ";db=" + p->configuration().sqlDb + ";auto-reconnect=true");
-	createStatements();
+bool SQLClass::reconnect() {
+	int i = 20;
+	if (m_loaded) {
+		removeStatements();
+		m_sess->close();
+		delete m_sess;
+
+		// This loop blocks whole transport and tries to reconnect 20x (without db transport just can't work,
+		// so that's feature, not bug).
+		for (i = 0; i < 20; i++) {
+			try {
+				m_sess = new Session("MySQL", "user=" + p->configuration().sqlUser + ";password=" + p->configuration().sqlPassword + ";host=" + p->configuration().sqlHost + ";db=" + p->configuration().sqlDb + ";auto-reconnect=true");
+				break;
+			}
+			catch (Poco::Exception e) {
+				Log("SQL ERROR", "Can't reconnect to db. Try number " << i + 1);
+			}
+			g_usleep(G_USEC_PER_SEC);
+		}
+	}
+
+	if (i == 20) {
+		if (m_loaded) {
+			m_loaded = false;
+			Log("SQL ERROR", "Removing All connected users.");
+			Transport::instance()->userManager()->removeAllUsers();
+			Log("SQL ERROR", "Disconnecting from Jabber");
+			p->j->disconnect();
+			m_reconnectTimer->start();
+		}
+		return false;
+	}
+	else {
+		createStatements();
+		m_version_stmt->execute();
+		m_loaded = true;
+	}
+	return true;
+}
+
+bool SQLClass::reconnectCallback() {
+	int i = 20;
+
+	try {
+		m_sess = new Session("MySQL", "user=" + p->configuration().sqlUser + ";password=" + p->configuration().sqlPassword + ";host=" + p->configuration().sqlHost + ";db=" + p->configuration().sqlDb + ";auto-reconnect=true");
+		createStatements();
+		m_version_stmt->execute();
+		m_loaded = true;
+	}
+	catch (Poco::Exception e) {
+		Log("SQL ERROR", "Can't reconnect to db. Will try it again after 1 second.");
+		m_loaded = false;
+		return true;
+	}
+
+	return false;
 }
 
 void SQLClass::initDb() {

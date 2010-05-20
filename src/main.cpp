@@ -1003,6 +1003,7 @@ GlooxMessageHandler::GlooxMessageHandler(const std::string &config) : MessageHan
 
 GlooxMessageHandler::~GlooxMessageHandler(){
 	delete m_userManager;
+	purple_blist_uninit();
 	purple_core_quit();
 	g_main_loop_quit(m_loop);
 	g_main_loop_unref(m_loop);
@@ -1443,8 +1444,9 @@ void GlooxMessageHandler::handlePresence(const Presence &stanza){
 	}
 	// get entity capabilities
 	Tag *c = NULL;
-	Log(stanza.from().full(), "Presence received (" << (int)stanza.subtype() << ") for: " << stanza.to().full());
 	bool isMUC = stanza.findExtension(ExtMUC) != NULL;
+	Log(stanza.from().full(), "Presence received (" << (int)stanza.subtype() << ") for: " << stanza.to().full() << "isMUC" << isMUC);
+	
 
 	if (stanza.presence() != Presence::Unavailable && ((stanza.to().username() == "" && !protocol()->tempAccountsAllowed()) || (isMUC && protocol()->tempAccountsAllowed()))) {
 		Tag *stanzaTag = stanza.tag();
@@ -1677,7 +1679,7 @@ void GlooxMessageHandler::onDisconnect(ConnectionError e) {
 
 	if (m_reconnectCount == 1)
 		m_userManager->removeAllUsers();
-	
+
 	Log("gloox", "trying to reconnect after 3 seconds");
 	purple_timeout_add_seconds(3, &transportReconnect, NULL);
 
@@ -1689,11 +1691,18 @@ void GlooxMessageHandler::onDisconnect(ConnectionError e) {
 
 void GlooxMessageHandler::transportConnect() {
 	m_reconnectCount++;
-	j->connect(false);
-	int mysock = dynamic_cast<ConnectionTCPClient*>( j->connectionImpl() )->socket();
-	if (mysock > 0) {
-		connectIO = g_io_channel_unix_new(mysock);
-		connectID = g_io_add_watch(connectIO, (GIOCondition) READ_COND, &transportDataReceived, NULL);
+	if (m_sql->loaded()) {
+		j->connect(false);
+		int mysock = dynamic_cast<ConnectionTCPClient*>( j->connectionImpl() )->socket();
+		if (mysock > 0) {
+			connectIO = g_io_channel_unix_new(mysock);
+			connectID = g_io_add_watch(connectIO, (GIOCondition) READ_COND, &transportDataReceived, NULL);
+		}
+	}
+	else {
+		Log("gloox", "Tried to reconnect, but database is not ready yet.");
+		Log("gloox", "trying to reconnect after 3 seconds");
+		purple_timeout_add_seconds(3, &transportReconnect, NULL);
 	}
 }
 

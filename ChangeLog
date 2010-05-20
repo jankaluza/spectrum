@@ -18,6 +18,8 @@ version 0.3 (2010-??-??):
 	  request.
 	* Fixed bug in adding new buddies when buddy wasn't properly added to legacy
 	  network contanct list in some cases.
+	* Fixed crash when database is stopped while Spectrum is running. Spectrum tries
+	  to reconnect automatically.
 
 	Twitter:
 	* Added support for latest prpltwtr plugin (http://code.google.com/p/prpltwtr/).

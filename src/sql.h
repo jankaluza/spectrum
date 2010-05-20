@@ -48,6 +48,7 @@
 #ifdef WITH_MYSQL
 #include "Poco/Data/MySQL/Connector.h"
 #endif // WITH_MYSQL
+#include "spectrumtimer.h"
 
 class GlooxMessageHandler;
 
@@ -69,13 +70,13 @@ using namespace gloox;
 				createStatements(); \
 				return FUNC; \
 			} \
-			else if (e.code() == 2013) { \
-				reconnect(); \
-				return FUNC; \
+			else if (e.code() == 2013 || e.code() == 2003) { \
+				if (reconnect()) \
+					return FUNC; \
 			} \
 			else if (e.code() == 0) { \
-				reconnect(); \
-				return FUNC; \
+				if (reconnect()) \
+					return FUNC; \
 			} \
 		} \
 		LogMessage(Log_.fileStream()).Get("SQL ERROR") << e.displayText(); \
@@ -273,7 +274,8 @@ class SQLClass : public AbstractBackend {
 		long getRegisteredUsersRosterCount();
 		void createStatements();
 		void removeStatements();
-		void reconnect();
+		bool reconnect();
+		bool reconnectCallback();
 		void upgradeDatabase();
 
 		// settings
@@ -325,6 +327,7 @@ class SQLClass : public AbstractBackend {
 		bool m_upgrade;
 		bool m_loaded;
 		int m_error;
+		SpectrumTimer *m_reconnectTimer;
 };
 
 #endif
