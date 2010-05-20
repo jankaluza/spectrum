@@ -1498,7 +1498,7 @@ void GlooxMessageHandler::handlePresence(const Presence &stanza){
 					sql()->addUser(userkey,stanza.from().username(),"","en",m_configuration.encoding);
 					res = sql()->getUserByJid(userkey);
 				}
-				bool isVip = sql()->isVIP(stanza.from().bare());
+				bool isVip = res.vip;
 				std::list<std::string> const &x = configuration().allowedServers;
 				if (configuration().onlyForVIP && !isVip && std::find(x.begin(), x.end(), stanza.from().server()) == x.end()) {
 					Log(stanza.from().full(), "This user is not VIP, can't login...");
@@ -1507,7 +1507,7 @@ void GlooxMessageHandler::handlePresence(const Presence &stanza){
 				Log(stanza.from().full(), "Creating new User instance");
 				if (protocol()->tempAccountsAllowed()) {
 					std::string server = stanza.to().username().substr(stanza.to().username().find("%") + 1, stanza.to().username().length() - stanza.to().username().find("%"));
-					user = new User(this, stanza.from(), stanza.to().resource() + "@" + server, "", stanza.from().bare() + server, res.id, res.encoding, res.language);
+					user = new User(this, stanza.from(), stanza.to().resource() + "@" + server, "", stanza.from().bare() + server, res.id, res.encoding, res.language, res.vip);
 				}
 				else {
 					if (purple_accounts_find(res.uin.c_str(), protocol()->protocol().c_str()) != NULL) {
@@ -1518,7 +1518,7 @@ void GlooxMessageHandler::handlePresence(const Presence &stanza){
 							return;
 						}
 					}
-					user = new User(this, stanza.from(), res.uin, res.password, stanza.from().bare(), res.id, res.encoding, res.language);
+					user = new User(this, stanza.from(), res.uin, res.password, stanza.from().bare(), res.id, res.encoding, res.language, res.vip);
 				}
 				user->setFeatures(isVip ? configuration().VIPFeatures : configuration().transportFeatures);
 				if (c != NULL)

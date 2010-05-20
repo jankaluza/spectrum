@@ -34,6 +34,7 @@ struct UserRow {
 	std::string password;
 	std::string language;
 	std::string encoding;
+	bool vip;
 };
 
 // Abstract storage backend.

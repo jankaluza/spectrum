@@ -36,7 +36,7 @@
 #include "transport.h"
 #include "gloox/sha.h"
 
-User::User(GlooxMessageHandler *parent, JID jid, const std::string &username, const std::string &password, const std::string &userKey, long id, const std::string &encoding, const std::string &language) : SpectrumRosterManager(this), SpectrumMessageHandler(this) {
+User::User(GlooxMessageHandler *parent, JID jid, const std::string &username, const std::string &password, const std::string &userKey, long id, const std::string &encoding, const std::string &language, bool vip) : SpectrumRosterManager(this), SpectrumMessageHandler(this) {
 	p = parent;
 	m_jid = jid.bare();
 
@@ -49,7 +49,7 @@ User::User(GlooxMessageHandler *parent, JID jid, const std::string &username, co
 	m_account = NULL;
 	m_syncTimer = 0;
 	m_subscribeLastCount = -1;
-	m_vip = p->sql()->isVIP(m_jid);
+	m_vip = vip;
 	m_readyForConnect = false;
 	m_rosterXCalled = false;
 	m_connected = false;

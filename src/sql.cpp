@@ -196,7 +196,7 @@ void SQLClass::createStatements() {
 															use(m_stmt_updateBuddySubscription.user_id),
 															use(m_stmt_updateBuddySubscription.uin) ) );
 	if (!m_stmt_getUserByJid.stmt)
-		m_stmt_getUserByJid.stmt = new Statement( ( STATEMENT("SELECT id, jid, uin, password, encoding, language FROM " + p->configuration().sqlPrefix + "users WHERE jid=?"),
+		m_stmt_getUserByJid.stmt = new Statement( ( STATEMENT("SELECT id, jid, uin, password, encoding, language, vip FROM " + p->configuration().sqlPrefix + "users WHERE jid=?"),
 													use(m_stmt_getUserByJid.jid),
 													into(m_stmt_getUserByJid.resId, -1),
 													into(m_stmt_getUserByJid.resJid),
@@ -204,6 +204,7 @@ void SQLClass::createStatements() {
 													into(m_stmt_getUserByJid.resPassword),
 													into(m_stmt_getUserByJid.resEncoding),
 													into(m_stmt_getUserByJid.resLanguage),
+													into(m_stmt_getUserByJid.resVIP),
 													limit(1),
 													range(0, 1) ) );
 	if (!m_stmt_getBuddies.stmt)
@@ -383,8 +384,6 @@ bool SQLClass::reconnect() {
 }
 
 bool SQLClass::reconnectCallback() {
-	int i = 20;
-
 	try {
 		m_sess = new Session("MySQL", "user=" + p->configuration().sqlUser + ";password=" + p->configuration().sqlPassword + ";host=" + p->configuration().sqlHost + ";db=" + p->configuration().sqlDb + ";auto-reconnect=true");
 		createStatements();
@@ -521,10 +520,6 @@ void SQLClass::upgradeDatabase() {
 	Log("SQL", "Done");
 }
 
-bool SQLClass::isVIP(const std::string &jid) {
-	return true;
-}
-
 long SQLClass::getRegisteredUsersCount(){
 	Poco::UInt64 users;
 	*m_sess << "SELECT count(*) FROM " + p->configuration().sqlPrefix + "users", into(users), now;
@@ -646,6 +641,7 @@ UserRow SQLClass::getUserByJid(const std::string &jid){
 				user.password = m_stmt_getUserByJid.resPassword;
 				user.encoding = m_stmt_getUserByJid.resEncoding;
 				user.language = m_stmt_getUserByJid.resLanguage;
+				user.vip = m_stmt_getUserByJid.resVIP;
 				m_stmt_getUserByJid.stmt->execute();
 			} while (!m_stmt_getUserByJid.stmt->done());
 		}

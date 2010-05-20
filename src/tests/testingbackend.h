@@ -79,7 +79,7 @@ class TestingBackend : public AbstractBackend {
 				return m_users[jid];
 		}
 		void addUser(const std::string &jid, const std::string &uin, const std::string &password, const std::string &language, const std::string &encoding) {
-			UserRow row = {1, jid, uin, password, language, encoding};
+			UserRow row = {1, jid, uin, password, language, encoding, 0};
 			m_users[jid] = row;
 		}
 		void removeUser(long userId) {}

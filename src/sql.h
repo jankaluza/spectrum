@@ -177,6 +177,7 @@ struct getUserByJidStatement {
 	std::string resPassword;
 	std::string resEncoding;
 	std::string resLanguage;
+	bool resVIP;
 };
 
 struct getBuddiesStatement {
@@ -269,7 +270,6 @@ class SQLClass : public AbstractBackend {
 		long addBuddy(long userId, const std::string &uin, const std::string &subscription, const std::string &group = "Buddies", const std::string &nickname = "");
 		void updateBuddySubscription(long userId, const std::string &uin, const std::string &subscription);
 		void removeBuddy(long userId, const std::string &uin, long buddy_id);
-		bool isVIP(const std::string &jid); // TODO: remove me, I'm not needed with new db schema
 		long getRegisteredUsersCount();
 		long getRegisteredUsersRosterCount();
 		void createStatements();
