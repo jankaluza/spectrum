@@ -20,4 +20,53 @@
 
 #include "log.h"
 
+LogMessage::LogMessage(std::ofstream &file, bool newline) : m_file(file), m_newline(newline) {
+}
+
+LogMessage::~LogMessage() {
+	if (m_newline)
+		os << std::endl;
+	fprintf(stdout, "%s", os.str().c_str());
+	fflush(stdout);
+	if (m_file.is_open()) {
+		m_file << os.str();
+		m_file.flush();
+	}
+}
+
+std::ostringstream &LogMessage::Get(const std::string &user) {
+	time_t now = time(0);
+	char timestamp_buf[25] = "";
+	strftime (timestamp_buf, 25, "%x %H:%M:%S", localtime(&now));
+	std::string timestamp = std::string(timestamp_buf);
+	os << "[" << timestamp << "] <" << user << "> ";
+	return os;
+}
+
+LogClass::LogClass() {
+}
+
+LogClass::~LogClass() {
+	if (m_file.is_open())
+		m_file.close();
+}
+
+void LogClass::setLogFile(const std::string &file) {
+	if (m_file.is_open())
+		m_file.close();
+	m_file.open(file.c_str(), std::ios_base::app);
+	g_chmod(file.c_str(), 0640);
+}
+
+std::ofstream &LogClass::fileStream() {
+	return m_file;
+}
+
+void LogClass::handleLog(LogLevel level, LogArea area, const std::string &message) {
+	if (area == LogAreaXmlIncoming)
+		LogMessage(m_file).Get("XML IN") << message;
+	else
+		LogMessage(m_file).Get("XML OUT") << message;
+}
+
 LogClass Log_;
