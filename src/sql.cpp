@@ -44,6 +44,7 @@ static gboolean reconnectMe(gpointer data) {
 
 SQLClass::SQLClass(GlooxMessageHandler *parent, bool upgrade) {
 	p = parent;
+	m_dbversion = DB_VERSION;
 	m_loaded = false;
 	m_upgrade = upgrade;
 	m_sess = NULL;
@@ -82,6 +83,7 @@ SQLClass::SQLClass(GlooxMessageHandler *parent, bool upgrade) {
 #endif
 #ifdef WITH_SQLITE
 		if (p->configuration().sqlType == "sqlite") {
+			m_dbversion++;
 			SQLite::Connector::registerConnector(); 
 			m_sess = new Session("SQLite", p->configuration().sqlDb);
 			g_chmod(p->configuration().sqlDb.c_str(), 0640);
@@ -126,7 +128,7 @@ SQLClass::~SQLClass() {
 
 void SQLClass::createStatements() {
 	if (!m_version_stmt) {
-		m_version_stmt = new Statement( ( STATEMENT("SELECT ver FROM " + p->configuration().sqlPrefix + "db_version LIMIT 1"), into(m_version) ) );
+		m_version_stmt = new Statement( ( STATEMENT("SELECT ver FROM " + p->configuration().sqlPrefix + "db_version ORDER BY ver DESC LIMIT 1"), into(m_version) ) );
 	}
 	
 	// Prepared statements
@@ -149,10 +151,11 @@ void SQLClass::createStatements() {
 												use(m_stmt_addUser.language),
 												use(m_stmt_addUser.encoding) ) );
 	if (!m_stmt_updateUserPassword.stmt)
-		m_stmt_updateUserPassword.stmt = new Statement( ( STATEMENT("UPDATE " + p->configuration().sqlPrefix + "users SET password=?, language=?, encoding=? WHERE jid=?"),
+		m_stmt_updateUserPassword.stmt = new Statement( ( STATEMENT("UPDATE " + p->configuration().sqlPrefix + "users SET password=?, language=?, encoding=?, vip=? WHERE jid=?"),
 														use(m_stmt_updateUserPassword.password),
 														use(m_stmt_updateUserPassword.language),
 														use(m_stmt_updateUserPassword.encoding),
+														use(m_stmt_updateUserPassword.vip),
 														use(m_stmt_updateUserPassword.jid) ) );
 	if (!m_stmt_removeBuddy.stmt)
 		m_stmt_removeBuddy.stmt = new Statement( ( STATEMENT("DELETE FROM " + p->configuration().sqlPrefix + "buddies WHERE user_id=? AND uin=?"),
@@ -436,7 +439,7 @@ void SQLClass::initDb() {
 							"  language varchar(25) NOT NULL,"
 							"  encoding varchar(50) NOT NULL DEFAULT 'utf8',"
 							"  last_login datetime,"
-							"  vip tinyint(1) NOT NULL DEFAULT '0',"
+							"  vip int(1) NOT NULL DEFAULT '0',"
 							"  online int(1) NOT NULL DEFAULT '0'"
 							");", now;
 
@@ -453,9 +456,9 @@ void SQLClass::initDb() {
 				*m_sess << "CREATE INDEX IF NOT EXISTS user_id03 ON " + p->configuration().sqlPrefix + "users_settings (user_id);", now;
 
 				*m_sess << "CREATE TABLE IF NOT EXISTS " + p->configuration().sqlPrefix + "db_version ("
-					"  ver INTEGER NOT NULL DEFAULT '1'"
+					"  ver INTEGER NOT NULL DEFAULT '2'"
 					");", now;
-				*m_sess << "REPLACE INTO " + p->configuration().sqlPrefix + "db_version (ver) values(1)", now;
+				*m_sess << "REPLACE INTO " + p->configuration().sqlPrefix + "db_version (ver) values(2)", now;
 			}
 			catch (Poco::Exception e) {
 				Log("SQL ERROR", e.displayText());
@@ -481,8 +484,9 @@ void SQLClass::initDb() {
 		}
 	}
 	Log("SQL", "Current DB version: " << m_version);
-	if ((p->configuration().sqlType == "sqlite" || (p->configuration().sqlType != "sqlite" && m_upgrade)) && m_version < DB_VERSION) {
+	if ((p->configuration().sqlType == "sqlite" || (p->configuration().sqlType != "sqlite" && m_upgrade)) && m_version < m_dbversion) {
 		Log("SQL", "Starting DB upgrade.");
+		m_loaded = true;
 		upgradeDatabase();
 		return;
 	}
@@ -493,7 +497,7 @@ void SQLClass::initDb() {
 
 void SQLClass::upgradeDatabase() {
 	try {
-		for (int i = (int) m_version; i < DB_VERSION; i++) {
+		for (int i = (int) m_version; i < m_dbversion; i++) {
 			Log("SQL", "Upgrading from version " << i << " to " << i + 1);
 			if (i == 0) {
 				if (p->configuration().sqlType == "sqlite") {
@@ -509,6 +513,26 @@ void SQLClass::upgradeDatabase() {
 					*m_sess << "ALTER TABLE " + p->configuration().sqlPrefix + "users ADD online tinyint(1) NOT NULL DEFAULT '0';", now;
 				}
 				*m_sess << "REPLACE INTO " + p->configuration().sqlPrefix + "db_version (ver) values(1)", now;
+			}
+			else if (i == 1) {
+				if (p->configuration().sqlType == "sqlite") {
+					*m_sess << "CREATE TABLE IF NOT EXISTS " + p->configuration().sqlPrefix + "users_new ("
+								"  id INTEGER PRIMARY KEY NOT NULL,"
+								"  jid varchar(255) NOT NULL,"
+								"  uin varchar(4095) NOT NULL,"
+								"  password varchar(255) NOT NULL,"
+								"  language varchar(25) NOT NULL,"
+								"  encoding varchar(50) NOT NULL DEFAULT 'utf8',"
+								"  last_login datetime,"
+								"  vip int(1) NOT NULL DEFAULT '0',"
+								"  online int(1) NOT NULL DEFAULT '0'"
+								");", now;
+					*m_sess << "INSERT INTO " + p->configuration().sqlPrefix + "users_new SELECT id,jid,uin,password,language,encoding,last_login,vip,online FROM " + p->configuration().sqlPrefix + "users;", now;
+					*m_sess << "DROP TABLE " + p->configuration().sqlPrefix + "users;", now;
+					*m_sess << "ALTER TABLE " + p->configuration().sqlPrefix + "users_new RENAME TO " + p->configuration().sqlPrefix + "users;", now;
+					*m_sess << "CREATE UNIQUE INDEX IF NOT EXISTS jid1 ON " + p->configuration().sqlPrefix + "users (jid);", now;
+					*m_sess << "REPLACE INTO " + p->configuration().sqlPrefix + "db_version (ver) values(2)", now;
+				}
 			}
 		}
 	}
@@ -537,6 +561,7 @@ void SQLClass::updateUser(const UserRow &user) {
 	m_stmt_updateUserPassword.password.assign(user.password);
 	m_stmt_updateUserPassword.language.assign(user.language);
 	m_stmt_updateUserPassword.encoding.assign(user.encoding);
+	m_stmt_updateUserPassword.vip = user.vip;
 	STATEMENT_EXECUTE_BEGIN();
 		m_stmt_updateUserPassword.stmt->execute();
 	STATEMENT_EXECUTE_END(m_stmt_updateUserPassword.stmt, updateUser(user));

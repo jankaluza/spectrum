@@ -120,6 +120,7 @@ struct updateUserPasswordStatement {
 	std::string password;
 	std::string language;
 	std::string encoding;
+	bool vip;
 	Poco::Data::Statement *stmt;
 };
 
@@ -328,6 +329,7 @@ class SQLClass : public AbstractBackend {
 		bool m_loaded;
 		int m_error;
 		SpectrumTimer *m_reconnectTimer;
+		int m_dbversion;
 };
 
 #endif
