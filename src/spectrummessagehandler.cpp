@@ -178,10 +178,13 @@ void SpectrumMessageHandler::handleMessage(const Message& msg) {
 	}
 	m_currentBody = msg.body();
 
-	if (m_currentBody.find("/transport") == 0) {
+	if (m_currentBody.find("/") == 0) {
 		PurpleCmdStatus status;
 		char *error = NULL;
-		m_currentBody.erase(0, 11);
+		if (m_currentBody.find("/transport") == 0)
+			m_currentBody.erase(0, 11);
+		else
+			m_currentBody.erase(0, 1);
 		status = purple_cmd_do_command(conv, m_currentBody.c_str(), m_currentBody.c_str(), &error);
 
 		switch (status) {
