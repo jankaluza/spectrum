@@ -25,6 +25,7 @@
 #include "../log.h"
 #include "adhoctag.h"
 #include "main.h"
+#include "Poco/Format.h"
 
 AdhocAdmin::AdhocAdmin(AbstractUser *user, const std::string &from, const std::string &id) {
 	setRequestType(CALLER_ADHOC);
@@ -46,6 +47,7 @@ AdhocAdmin::AdhocAdmin(AbstractUser *user, const std::string &from, const std::s
 	adhocTag->setInstructions(tr(m_language.c_str(), _("Please select a configuration area.")));
 	
 	std::list <std::string> values;
+	values.push_back(tr(m_language.c_str(), _("User")));
 	values.push_back(tr(m_language.c_str(), _("Logging")));
 	adhocTag->addListSingle("Config area", "config_area", values);
 
@@ -99,6 +101,24 @@ bool AdhocAdmin::handleIq(const IQ &stanza) {
 				delete stanzaTag;
 				return false;
 			}
+			else if (result == tr(m_language.c_str(), _("User"))) {
+				m_state = ADHOC_ADMIN_USER;
+
+				IQ _response(IQ::Result, stanza.from().full(), stanza.id());
+				Tag *response = _response.tag();
+				response->addAttribute("from", Transport::instance()->jid());
+
+				AdhocTag *adhocTag = new AdhocTag(tag->findAttribute("sessionid"), "transport_admin", "executing");
+				adhocTag->setAction("next");
+				adhocTag->setTitle(tr(m_language.c_str(), _("User information")));
+				adhocTag->setInstructions(tr(m_language.c_str(), _("Add bare JID of user you want to configure.")));
+				adhocTag->addTextSingle(tr(m_language.c_str(), _("Bare JID")), "user_jid");
+
+				response->addChild(adhocTag);
+				Transport::instance()->send(response);
+				delete stanzaTag;
+				return false;
+			}
 		}
 		else if (m_state == ADHOC_ADMIN_LOGGING) {
 			for (std::list<Tag*>::const_iterator it = x->children().begin(); it != x->children().end(); ++it) {
@@ -136,7 +156,84 @@ bool AdhocAdmin::handleIq(const IQ &stanza) {
 			response->addChild( new AdhocTag(tag->findAttribute("sessionid"), "transport_admin", "completed") );
 			Transport::instance()->send(response);
 		}
+		else if (m_state == ADHOC_ADMIN_USER) {
+			m_state = ADHOC_ADMIN_USER2;
+			for (std::list<Tag*>::const_iterator it = x->children().begin(); it != x->children().end(); ++it) {
+				std::string key = (*it)->findAttribute("var");
+				if (key.empty()) continue;
 
+				Tag *v =(*it)->findChild("value");
+				if (!v) continue;
+				
+				std::string data(v->cdata());
+				
+				if (key == "user_jid") {
+					IQ _response(IQ::Result, stanza.from().full(), stanza.id());
+					Tag *response = _response.tag();
+					response->addAttribute("from", Transport::instance()->jid());
+
+					AdhocTag *adhocTag = new AdhocTag(tag->findAttribute("sessionid"), "transport_admin", "executing");
+					adhocTag->setAction("complete");
+					adhocTag->setTitle(tr(m_language.c_str(), _("User information")));
+					adhocTag->setInstructions(tr(m_language.c_str(), _("User information")));
+					adhocTag->addHidden("user_jid", data);
+
+					UserRow u = Transport::instance()->sql()->getUserByJid(data);
+					if (u.id == -1) {
+						adhocTag->addFixedText(tr(m_language.c_str(), _("This user is not registered.")));
+					}
+					else {
+						adhocTag->addFixedText(tr(m_language.c_str(), Poco::format(_("JID: %s"), u.jid)));
+						adhocTag->addFixedText(tr(m_language.c_str(), Poco::format(_("Legacy network name: %s"), u.uin)));
+						adhocTag->addFixedText(tr(m_language.c_str(), Poco::format(_("Language: %s"), u.language)));
+						adhocTag->addFixedText(tr(m_language.c_str(), Poco::format(_("Encoding: %s"), u.encoding)));
+						adhocTag->addBoolean(tr(m_language.c_str(), _("VIP")), "user_vip", u.vip);
+					}
+					
+					response->addChild(adhocTag);
+					Transport::instance()->send(response);
+					delete stanzaTag;
+					return false;
+				}
+			}
+			IQ _response(IQ::Result, stanza.from().full(), stanza.id());
+			_response.setFrom(Transport::instance()->jid());
+			Tag *response = _response.tag();
+			response->addChild( new AdhocTag(tag->findAttribute("sessionid"), "transport_admin", "completed") );
+			Transport::instance()->send(response);
+		}
+		else if (m_state == ADHOC_ADMIN_USER2) {
+			std::string user_jid;
+			std::string user_vip;
+			for (std::list<Tag*>::const_iterator it = x->children().begin(); it != x->children().end(); ++it) {
+				std::string key = (*it)->findAttribute("var");
+				if (key.empty()) continue;
+
+				Tag *v =(*it)->findChild("value");
+				if (!v) continue;
+				
+				std::string data(v->cdata());
+				
+				if (key == "user_jid") {
+					user_jid = data;
+				}
+				else if (key == "user_vip") {
+					user_vip = data;
+				}
+			}
+			if (!user_jid.empty() && !user_vip.empty()) {
+				UserRow u = Transport::instance()->sql()->getUserByJid(user_jid);
+				if (u.id != -1) {
+					u.vip = user_vip == "1";
+					Transport::instance()->sql()->updateUser(u);
+				}
+			}
+			IQ _response(IQ::Result, stanza.from().full(), stanza.id());
+			_response.setFrom(Transport::instance()->jid());
+			Tag *response = _response.tag();
+			response->addChild( new AdhocTag(tag->findAttribute("sessionid"), "transport_admin", "completed") );
+			Transport::instance()->send(response);
+		}
 	}
 
 	delete stanzaTag;

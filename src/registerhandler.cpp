@@ -82,9 +82,12 @@ bool GlooxRegisterHandler::handleIq(const Tag *iqTag) {
 	if (Transport::instance()->getConfiguration().onlyForVIP) {
 		std::list<std::string> const &x = Transport::instance()->getConfiguration().allowedServers;
 		if (std::find(x.begin(), x.end(), from.server()) == x.end()) {
-			Log("GlooxRegisterHandler", "This user has no permissions to register an account");
-			sendError(400, "bad-request", iqTag);
-			return false;
+			UserRow res = Transport::instance()->sql()->getUserByJid(from.bare());
+			if (res.id == -1 || (res.id !=-1 && !res.vip)) {
+				Log("GlooxRegisterHandler", "This user has no permissions to register an account");
+				sendError(400, "bad-request", iqTag);
+				return false;
+			}
 		}
 	}
 

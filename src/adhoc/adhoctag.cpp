@@ -141,6 +141,27 @@ void AdhocTag::addTextPrivate(const std::string &label, const std::string &var, 
 	xdata->addChild(field);
 }
 
+void AdhocTag::addFixedText(const std::string &text) {
+	if (xdata == NULL)
+		initXData();
+	Tag *field = new Tag("field");
+	field->addAttribute("type", "fixed");
+	
+	field->addChild(new Tag("value", text));
+	xdata->addChild(field);
+}
+
+void AdhocTag::addHidden(const std::string &var, const std::string &value) {
+	if (xdata == NULL)
+		initXData();
+	Tag *field = new Tag("field");
+	field->addAttribute("type", "hidden");
+	field->addAttribute("var", var);
+	
+	field->addChild(new Tag("value", value));
+	xdata->addChild(field);
+}
+
 const std::string AdhocTag::getValue(const std::string &var) {
 	if (xdata == NULL)
 		return "";

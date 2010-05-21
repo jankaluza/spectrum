@@ -34,7 +34,9 @@ class AbstractUser;
 extern LogClass Log_;
 
 typedef enum {	ADHOC_ADMIN_INIT = 0,
-				ADHOC_ADMIN_LOGGING
+				ADHOC_ADMIN_LOGGING,
+				ADHOC_ADMIN_USER,
+				ADHOC_ADMIN_USER2
 				} AdhocAdminState;
 
 /*
