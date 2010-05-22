@@ -75,21 +75,18 @@ bool GlooxRegisterHandler::handleIq(const IQ &iq) {
 
 bool GlooxRegisterHandler::handleIq(const Tag *iqTag) {
 	Log("GlooxRegisterHandler", iqTag->findAttribute("from") << ": iq:register received (" << iqTag->findAttribute("type") << ")");
-	
+
 	JID from(iqTag->findAttribute("from"));
-	
+
 	AbstractUser *user = Transport::instance()->userManager()->getUserByJID(from.bare());
-	if (Transport::instance()->getConfiguration().onlyForVIP) {
-		std::list<std::string> const &x = Transport::instance()->getConfiguration().allowedServers;
-		if (std::find(x.begin(), x.end(), from.server()) == x.end()) {
-			UserRow res = Transport::instance()->sql()->getUserByJid(from.bare());
-			if (res.id == -1 || (res.id !=-1 && !res.vip)) {
-				Log("GlooxRegisterHandler", "This user has no permissions to register an account");
-				sendError(400, "bad-request", iqTag);
-				return false;
-			}
-		}
-	}
+// 	if (Transport::instance()->getConfiguration().onlyForVIP) {
+// 		std::list<std::string> const &x = Transport::instance()->getConfiguration().allowedServers;
+// 		if (std::find(x.begin(), x.end(), from.server()) == x.end()) {
+// 				Log("GlooxRegisterHandler", "This user has no permissions to register an account");
+// 				sendError(400, "bad-request", iqTag);
+// 				return false;
+// 		}
+// 	}
 
 	const char *_language = user ? user->getLang() : Transport::instance()->getConfiguration().language.c_str();
 
