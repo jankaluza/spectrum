@@ -278,11 +278,13 @@ std::string SpectrumMessageHandler::getSpectrumMUCConversation(PurpleConversatio
 
 	if (!isOpenedConversation(name)) {
 #ifndef TESTS
-		std::string resource(purple_conversation_get_name(conv));
+		std::string resource = purple_conversation_get_name(conv);
 		std::transform(resource.begin(), resource.end(), resource.begin(),(int(*)(int)) std::tolower);
 		std::string name_safe = name;
 		std::for_each( name_safe.begin(), name_safe.end(), replaceBadJidCharacters() );
-		addConversation(conv, new SpectrumMUCConversation(conv, name_safe + "@" + Transport::instance()->jid(), m_user->getRoomResource(resource)));
+		std::string j = name_safe + "@" + Transport::instance()->jid();
+		SpectrumMUCConversation *conversation = new SpectrumMUCConversation(conv, j, m_user->getRoomResource(resource));
+		addConversation(conv, conversation);
 #endif
 	}
 	return name;

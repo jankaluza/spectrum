@@ -69,7 +69,7 @@ class AbstractUser : public ResourceManager
 		
 		void setProtocolData(void *protocolData) { m_protocolData = protocolData; }
 		void *protocolData() { return m_protocolData; }
-		std::string getRoomResource(const std::string &room) { return m_roomResources[room]; }
+		std::string &getRoomResource(const std::string &room) { return m_roomResources[room]; }
 		void setRoomResource(const std::string &room, const std::string &resource) { m_roomResources[room] = resource; }
 
 		guint removeTimer;
