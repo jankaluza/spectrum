@@ -22,8 +22,21 @@ with this command:
 
 	sudo apt-get install gdb
 
-### Getting a backtrace
-Now you have all dependencies installed and you can obtain a backtrace. Run Spectrum in GDB:
+### Getting a backtrace from coredump
+This is preferred method how to get the backtrace, because Spectrum runs without performance issues and once it crashes, it generates coredump.
+At first you have to run Spectrum in debug mode to let it generate coredumps:
+
+	spectrumctl --debug -c /etc/spectrum/your_config_file.cfg start
+
+Now reproduce the crash and Spectrum will generate coredump (file named like "core.12345" where the number is Spectrum process ID) in the userdir (that directory is configurable in config file, default
+value is /var/lib/spectrum/$jid/userdir). Now you just have to get the backtrace from coredump:
+
+	cd /var/lib/spectrum/$jid/userdir
+	gdb spectrum core.12345
+	bt full
+
+### Getting a backtrace by running Spectrum in GDB
+This is harder method how to get backtrace and also running Spectrum in GDB brings performance issues. Run Spectrum in GDB:
 
 	gdb --args spectrum -n config_name
 
