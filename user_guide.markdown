@@ -23,6 +23,13 @@ title: Spectrum User Guide
 <div style="padding-left:20px;">
 <a href="#3.1.1">3.1.1 - Configuring ejabberd to work with Spectrum</a><br/>
 <a href="#3.1.2">3.1.2 - Configuring Spectrum to connect Jabber Server</a><br/>
+<a href="#3.1.3">3.1.3 - Configuration file variables</a><br/>
+</div>
+
+<a href="#3.2">3.2 - Advanced Configuration</a><br/>
+
+<div style="padding-left:20px;">
+<a href="#3.2.1">3.2.1 - Shared configuration files</a><br/>
 </div>
 </div>
 
@@ -251,6 +258,63 @@ Then you can edit icq.cfg and start configuring new Spectrum instance. Spectrum 
 	
 	# Jabber server port to which Spectrum should connect (port is configured in Jabber server config file)
 	port=5347
+
+Note, $protocol is one of configuration variables you can use in configuration files. Read [3.1.3 - Configuration file variables](#3.1.1) for more informations.
+
+
+
+<span id="3.1.3"></span>
+### 3.1.3 - Configuration file variables
+You can use configuration file variables in config files to make configuration easier and to avoid duplicities in config file. Each variable starts with "$" character and is replaced by it's value according to this table:
+
+* **$protocol**  
+	Value of "protocol" key in [service] section.  
+* **$jid**  
+	Value of "jid" key in [service] section.  
+
+
+
+
+<span id="3.2"></span>
+### 3.2 - Advanced configuration
+
+
+
+
+<span id="3.2.1"></span>
+### 3.2.1 - Shared configuration files
+If you use more Spectrum instances on same machine and you want to change something for all instances, you have to change it in all files. Therefore Spectrum allows to have one configuration file which is shared between different instances. Each instance uses symbolic link with special name to refer to shared configuration file.
+
+Lets presume you have configuration file stored in /etc/spectrum/transport.cfg. Then you can create symbolic link /etc/spectrum/icq.domain.tld:iq:5437.cfg which points to /etc/spectrum/transport.cfg. Symbolic links are named according to one of these formats: "jid:protocol:port.cfg" or "protocol:port.cfg".
+
+Variables defined in symbolic link name are accessible from main configuration file (/etc/spectrum/transport.cfg in our example) by these configuration file variables:
+
+* **$filename:jid**  
+* **$filename:protocol**  
+* **$filename:port**  
+
+So [service] section of /etc/spectrum/transport.cfg could for example look like this:
+
+	[service]
+	# enable this spectrum instance.
+	enable=1
+	
+	# one of: aim, facebook, gg, icq, irc, msn, myspace, qq, simple, xmpp, yahoo.
+	protocol=$filename:protocol
+	
+	# IP address of Jabber server Spectrum should connect to.
+	server=127.0.0.1
+	
+	# Spectrum transport Jabber ID (has to be the same as configured in Jabber server config file).
+	# You can also do jid=$protocol.domain.tld, if Spectrum should run on icq.domain.tld
+	jid=$filename:jid
+	
+	# Password which will be used by Spectrum to connect Jabber server (Password is configured in Jabber server config file)
+	password=secret
+	
+	# Jabber server port to which Spectrum should connect (port is configured in Jabber server config file)
+	port=$filename:port
+
 
 
 
