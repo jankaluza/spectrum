@@ -3,14 +3,24 @@ layout: default
 title: Configuring new Spectrum instances
 ---
 
-With spectrum, each protocol implementation runs as its own instance. So if you have
-an ICQ, an MSN and a QQ transport, spectrum will run three times, each time with a different
-config file
+With spectrum, each protocol implementation runs as its own instance. So if you
+have an ICQ, an MSN and a QQ transport, spectrum will run three times, each time
+with a different config file.
+
+### Setting up the XMPP server
+To run spectrum, you of course need an XMPP server that needs separate
+configuration. The exact details for your specific server are out of the scope
+of this document, please use your favorite search engine for details. 
+
+Note however that we **highly recommend** to only allow local users to access
+your transport. If you allow open access your transport will attract many very
+abusive users.
 
 ###Configuration file
-The configuration files are located in /etc/spectrum. You can find an example there.
-The file itself is well documented, so you simply need to fill out the details.
-The initscript will only recognize configuration files if the suffix is .cfg.
+The configuration files are located in /etc/spectrum. You can find an example
+there. The file itself is well documented, so you simply need to fill out the
+details. The initscript will only recognize configuration files if the suffix is
+.cfg.
 
 ###Setting up the database
 If you use SQLite as a database backend, you do not need to do anything to set
@@ -42,3 +52,4 @@ instead:
 	spectrumctl -c /etc/spectrum/new_config.cfg start
 
 In any case, you will also want to try "spectrumctl list".
+
