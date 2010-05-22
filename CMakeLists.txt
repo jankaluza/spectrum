@@ -319,10 +319,6 @@ set(spectrum_tests_MOC_HDRS
 
 add_executable(spectrum_tests ${spectrum_tests_SRCS} ${lrelease_outputs})
 set_target_properties(spectrum_tests PROPERTIES COMPILE_FLAGS -DTESTS)
-set_target_properties(spectrum PROPERTIES COMPILE_FLAGS -O0)
-SET(CMAKE_CXX_FLAGS_DISTRIBUTION "-O0")
-SET(CMAKE_C_FLAGS_DISTRIBUTION "-O0")
-
 
 if(DEFINED WITH_STATIC_GLOOX)
 	target_link_libraries(spectrum_tests ${WITH_STATIC_GLOOX} -lgnutls ${PURPLE_LIBRARY} ${CPPUNIT_LIBRARY} ${GLIB2_LIBRARIES} ${GETTEXTPO_LIBRARY} ${LIBPOCO_LIBRARIES} -export-dynamic)
