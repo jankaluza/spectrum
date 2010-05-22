@@ -15,7 +15,8 @@ class TestingBackend;
 class RegisterHandlerTest : public AbstractTest
 {
 	CPPUNIT_TEST_SUITE (RegisterHandlerTest);
-	CPPUNIT_TEST (handleIqNoPermission);
+	// Everybody can register now...
+// 	CPPUNIT_TEST (handleIqNoPermission);
 	CPPUNIT_TEST (handleIqGetNewUser);
 	CPPUNIT_TEST (handleIqGetExistingUser);
 	CPPUNIT_TEST (handleIqRegisterLegacy);
