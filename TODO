@@ -1,7 +1,12 @@
-=== Things we want for a 0.2 release ===
-* fix IRC
-* well-tested permission checking by spectrumctl
-* manpages for spectrum
+=== Things we want for a 0.3 release ===
+* Ad-Hoc commands:
+  ejabberd has quite a few usefull adhoc commands. Here is what could be useful
+  for spectrum:
+  * list all (online) users
+  * send a message to all (online) users
+  These features could also be accessable via config_interface and spectrumctl.
+* Make it possible to delete old unused accounts. 
+  
 
 === Things that should happen at some point ===
 * Translating avatars from XMPP->legacy needs to respect the
