@@ -655,6 +655,7 @@ void SQLClass::updateBuddySubscription(long userId, const std::string &uin, cons
 UserRow SQLClass::getUserByJid(const std::string &jid){
 	UserRow user;
 	user.id = -1;
+	user.vip = 0;
 	m_stmt_getUserByJid.jid.assign(jid);
 
 	STATEMENT_EXECUTE_BEGIN();

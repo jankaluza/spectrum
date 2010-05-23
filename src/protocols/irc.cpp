@@ -183,15 +183,12 @@ void IRCProtocol::onConnected(AbstractUser *user) {
 		if (comps) {
 			user->setRoomResource(name, JID(stanza->findAttribute("from")).resource());
 			serv_join_chat(gc, comps);
+			g_hash_table_destroy(comps);
 		}
-
-// 		MUCHandler *muc = new MUCHandler(user, JID(stanza->findAttribute("to")).bare(), JID(stanza->findAttribute("from")).full());
-// 		g_hash_table_replace(user->mucs(), g_strdup(JID(stanza->findAttribute("to")).username().c_str()), muc);
-// 		Tag * ret = muc->handlePresence(stanza);
-// 		if (ret)
-// 			m_main->j->send(ret);
-// 		delete (*it);
+		delete (*it);
 	};
+
+	data->autoConnectRooms.clear();
 }
 
 bool IRCProtocol::onPresenceReceived(AbstractUser *user, const Presence &stanza) {

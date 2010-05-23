@@ -41,6 +41,7 @@ class AbstractConversation {
 	public:
 		AbstractConversation(SpectrumConversationType type) { m_type = type; m_resource = ""; }
 		AbstractConversation() {};
+		virtual ~AbstractConversation() {}
 
 		// Sets the resource associated with this conversation.
 		void setResource(const std::string &resource);
