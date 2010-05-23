@@ -25,8 +25,10 @@
 
 SpectrumMUCConversation::SpectrumMUCConversation(PurpleConversation *conv, const std::string &jid, const std::string &resource) : AbstractConversation(SPECTRUM_CONV_GROUPCHAT) {
 	m_jid = jid;
-	m_resource = "/" + resource;
+	m_res = "/" + resource;
 	m_conv = conv;
+	m_connected = false;
+	m_lastPresence = NULL;
 }
 
 SpectrumMUCConversation::~SpectrumMUCConversation() {
@@ -37,7 +39,7 @@ void SpectrumMUCConversation::handleMessage(AbstractUser *user, const char *who,
 // 
 // 	// send message to user
 // 	std::string message(purple_unescape_html(msg));
-// 	Message s(Message::Groupchat, user->jid() + m_resource, message);
+// 	Message s(Message::Groupchat, user->jid() + m_res, message);
 // 	s.setFrom(m_jid + "/" + name);
 // 
 // 	Transport::instance()->send( s.tag() );
@@ -48,7 +50,7 @@ void SpectrumMUCConversation::handleMessage(AbstractUser *user, const char *who,
 	purple_markup_html_to_xhtml(newline, &xhtml, &strip);
 	std::string message(strip);
 
-	std::string to = user->jid() + m_resource;	
+	std::string to = user->jid() + m_res;	
 	
 	Message s(Message::Groupchat, to, message);
 	s.setFrom(m_jid + "/" + name);
@@ -97,7 +99,7 @@ void SpectrumMUCConversation::addUsers(AbstractUser *user, GList *cbuddies) {
 // 		</presence>
 		Tag *tag = new Tag("presence");
 		tag->addAttribute("from", m_jid + "/" + name);
-		tag->addAttribute("to", user->jid() + m_resource);
+		tag->addAttribute("to", user->jid() + m_res);
 
 		Tag *x = new Tag("x");
 		x->addAttribute("xmlns", "http://jabber.org/protocol/muc#user");
@@ -140,7 +142,7 @@ void SpectrumMUCConversation::renameUser(AbstractUser *user, const char *old_nam
 	std::string newName(new_name);
 	Tag *tag = new Tag("presence");
 	tag->addAttribute("from", m_jid + "/" + oldName);
-	tag->addAttribute("to", user->jid() + m_resource);
+	tag->addAttribute("to", user->jid() + m_res);
 	tag->addAttribute("type", "unavailable");
 
 	Tag *x = new Tag("x");
@@ -162,7 +164,7 @@ void SpectrumMUCConversation::renameUser(AbstractUser *user, const char *old_nam
 
 	tag = new Tag("presence");
 	tag->addAttribute("from", m_jid + "/" + newName);
-	tag->addAttribute("to", user->jid() + m_resource);
+	tag->addAttribute("to", user->jid() + m_res);
 
 	x = new Tag("x");
 	x->addAttribute("xmlns", "http://jabber.org/protocol/muc#user");
@@ -182,7 +184,7 @@ void SpectrumMUCConversation::removeUsers(AbstractUser *_user, GList *users) {
 		std::string user((char *)l->data);
 		Tag *tag = new Tag("presence");
 		tag->addAttribute("from", m_jid + "/" + user);
-		tag->addAttribute("to", _user->jid() + m_resource);
+		tag->addAttribute("to", _user->jid() + m_res);
 		tag->addAttribute("type", "unavailable");
 
 		Tag *x = new Tag("x");
@@ -208,7 +210,7 @@ void SpectrumMUCConversation::changeTopic(AbstractUser *user, const char *who, c
 void SpectrumMUCConversation::sendTopic(AbstractUser *user) {
 	Tag *m = new Tag("message");
 	m->addAttribute("from", m_jid + "/" + m_topicUser);
-	m->addAttribute("to", user->jid() + m_resource);
+	m->addAttribute("to", user->jid() + m_res);
 	m->addAttribute("type", "groupchat");
 	m->addChild( new Tag("subject", m_topic) );
 

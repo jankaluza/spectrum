@@ -66,7 +66,7 @@ class SpectrumMUCConversation : public AbstractConversation {
 		bool m_connected;				// True if addUsers has been called.
 		std::string m_topic;			// Current topic.
 		std::string m_topicUser;		// Name of user who set topic.
-		std::string m_resource;			// Current XMPP user's resource.
+		std::string m_res;			// Current XMPP user's resource.
 };
 
 #endif
