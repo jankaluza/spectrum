@@ -106,13 +106,12 @@ def adhoc_test( options, params, instances ):
 			s = socket.socket( socket.AF_UNIX )
 			s.connect( config_interface )
 		except socket.error, msg:
-			pass
-#			if hasattr( msg, 'strerror' ):
-#				# python2.5 does not have msg.strerror
-#				print( config_interface + ': ' + msg.strerror )
-#			else:
-#				print( config_interface + ': ' + msg.message )
-#			continue
+			if hasattr( msg, 'strerror' ):
+				# python2.5 does not have msg.strerror
+				print( config_interface + ': ' + msg.strerror )
+			else:
+				print( config_interface + ': ' + msg.message )
+			continue
 
 
 		cmd_attrs = { 'node': 'transport_admin', 
@@ -136,4 +135,9 @@ def adhoc_test( options, params, instances ):
 		iq = xmpp.Iq( typ='set', to=str(jid), xmlns=None )
 		cmd.addChild( node=x )
 		iq.addChild( node=cmd )
-		print( iq )
+		print( "Sending:\n" + iq )
+		s.send( str(pkg) )
+		data = s.recv( 10240 )
+		s.close()
+		print( "" )
+		print( "Received:\n" + data )
