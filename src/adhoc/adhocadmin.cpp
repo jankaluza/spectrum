@@ -20,6 +20,7 @@
 
 #include "adhocadmin.h"
 #include "gloox/stanza.h"
+#include "gloox/dataform.h"
 #include "abstractuser.h"
 #include "transport.h"
 #include "../log.h"
@@ -48,7 +49,6 @@ AdhocAdmin::AdhocAdmin(AbstractUser *user, const std::string &from, const std::s
 	
 	std::list <std::string> values;
 	values.push_back(tr(m_language.c_str(), _("User")));
-	values.push_back(tr(m_language.c_str(), _("Logging")));
 	adhocTag->addListSingle("Config area", "config_area", values);
 
 	response->addChild(adhocTag);
@@ -80,180 +80,91 @@ Tag *AdhocAdmin::handleTag(Tag *stanzaTag) {
 	}
 
 	Tag *x = tag->findChildWithAttrib("xmlns","jabber:x:data");
-	if (x) {
-		for (std::list<Tag*>::const_iterator it = x->children().begin(); it != x->children().end(); ++it) {
-			std::string key = (*it)->findAttribute("var");
-			if (key.empty()) continue;
+	if (x == NULL)
+		return NULL;
 
-			Tag *v =(*it)->findChild("value");
-			if (!v) continue;
-			
-			std::string data(v->cdata());
-			if (key == "adhoc_state") {
-				if (data == "ADHOC_ADMIN_INIT")
-					m_state = ADHOC_ADMIN_INIT;
-				else if (data == "ADHOC_ADMIN_LOGGING")
-					m_state = ADHOC_ADMIN_LOGGING;
-				else if (data == "ADHOC_ADMIN_USER2")
-					m_state = ADHOC_ADMIN_USER2;
-			}
-		}
+	DataForm form(x);
+	if (form.type() == TypeInvalid)
+		return NULL;
 
-		if (m_state == ADHOC_ADMIN_INIT) {
-			std::string result("");
-			for (std::list<Tag*>::const_iterator it = x->children().begin(); it != x->children().end(); ++it) {
-				if ((*it)->hasAttribute("var", "config_area")) {
-					result = (*it)->findChild("value")->cdata();
-					break;
-				}
-			}
-			
-			if (result == tr(m_language.c_str(), _("Logging"))) {
-				m_state = ADHOC_ADMIN_LOGGING;
-
-				IQ _response(IQ::Result, stanzaTag->findAttribute("from"), stanzaTag->findAttribute("id"));
-				Tag *response = _response.tag();
-				response->addAttribute("from", Transport::instance()->jid());
-
-				AdhocTag *adhocTag = new AdhocTag(tag->findAttribute("sessionid"), "transport_admin", "executing");
-				adhocTag->setAction("complete");
-				adhocTag->setTitle(tr(m_language.c_str(), _("Logging settings")));
-				adhocTag->setInstructions(tr(m_language.c_str(), _("Determine whether to log these types of messages:")));
-				adhocTag->addBoolean(tr(m_language.c_str(), _("Log transport in/out XML")), "log_xml", Transport::instance()->getConfiguration().logAreas & LOG_AREA_XML);
-				adhocTag->addBoolean(tr(m_language.c_str(), _("Log libpurple messages")), "log_purple", Transport::instance()->getConfiguration().logAreas & LOG_AREA_PURPLE);
-
-				response->addChild(adhocTag);
-				return response;
-			}
-			else if (result == tr(m_language.c_str(), _("User"))) {
-				m_state = ADHOC_ADMIN_USER;
-
-				IQ _response(IQ::Result, stanzaTag->findAttribute("from"), stanzaTag->findAttribute("id"));
-				Tag *response = _response.tag();
-				response->addAttribute("from", Transport::instance()->jid());
-
-				AdhocTag *adhocTag = new AdhocTag(tag->findAttribute("sessionid"), "transport_admin", "executing");
-				adhocTag->setAction("next");
-				adhocTag->setTitle(tr(m_language.c_str(), _("User information")));
-				adhocTag->setInstructions(tr(m_language.c_str(), _("Add bare JID of user you want to configure.")));
-				adhocTag->addTextSingle(tr(m_language.c_str(), _("Bare JID")), "user_jid");
-
-				response->addChild(adhocTag);
-				return response;
-			}
-		}
-		else if (m_state == ADHOC_ADMIN_LOGGING) {
-			for (std::list<Tag*>::const_iterator it = x->children().begin(); it != x->children().end(); ++it) {
-				std::string key = (*it)->findAttribute("var");
-				if (key.empty()) continue;
-
-				Tag *v =(*it)->findChild("value");
-				if (!v) continue;
-				
-				std::string data(v->cdata());
-				
-				if (key == "log_xml") {
-					if (data == "1")
-						Transport::instance()->getConfiguration().logAreas |= LOG_AREA_XML;
-					else {
-						Log("test", Transport::instance()->getConfiguration().logAreas);
-						Transport::instance()->getConfiguration().logAreas &= ~LOG_AREA_XML;
-						Log("test", Transport::instance()->getConfiguration().logAreas);
-					}
-				}
-				else if (key == "log_purple") {
-					if (data == "1") {
-						Transport::instance()->getConfiguration().logAreas |= LOG_AREA_PURPLE;
-						purple_debug_set_enabled(true);
-					}
-					else {
-						Transport::instance()->getConfiguration().logAreas &= ~(LOG_AREA_PURPLE);
-						purple_debug_set_enabled(false);
-					}
-				}
-			}
-			IQ _response(IQ::Result, stanzaTag->findAttribute("from"), stanzaTag->findAttribute("id"));
-			_response.setFrom(Transport::instance()->jid());
-			Tag *response = _response.tag();
-			response->addChild( new AdhocTag(tag->findAttribute("sessionid"), "transport_admin", "completed") );
-			return response;
-		}
-		else if (m_state == ADHOC_ADMIN_USER) {
+	if (form.hasField("adhoc_state")) {
+		const std::string &data = form.field("adhoc_state")->value();
+		if (data == "ADHOC_ADMIN_INIT")
+			m_state = ADHOC_ADMIN_INIT;
+		else if (data == "ADHOC_ADMIN_USER2")
 			m_state = ADHOC_ADMIN_USER2;
-			for (std::list<Tag*>::const_iterator it = x->children().begin(); it != x->children().end(); ++it) {
-				std::string key = (*it)->findAttribute("var");
-				if (key.empty()) continue;
+	}
 
-				Tag *v =(*it)->findChild("value");
-				if (!v) continue;
-				
-				std::string data(v->cdata());
-				
-				if (key == "user_jid") {
-					IQ _response(IQ::Result, stanzaTag->findAttribute("from"), stanzaTag->findAttribute("id"));
-					Tag *response = _response.tag();
-					response->addAttribute("from", Transport::instance()->jid());
+	if (m_state == ADHOC_ADMIN_INIT) {
+		if (!form.hasField("config_area"))
+			return NULL;
 
-					AdhocTag *adhocTag = new AdhocTag(tag->findAttribute("sessionid"), "transport_admin", "executing");
-					adhocTag->setAction("complete");
-					adhocTag->setTitle(tr(m_language.c_str(), _("User information")));
-					adhocTag->setInstructions(tr(m_language.c_str(), _("User information")));
-					adhocTag->addHidden("user_jid", data);
+		const std::string &result = form.field("config_area")->value();
+		if (result == tr(m_language.c_str(), _("User"))) {
+			m_state = ADHOC_ADMIN_USER;
 
-					UserRow u = Transport::instance()->sql()->getUserByJid(data);
-					if (u.id == -1) {
-						adhocTag->addFixedText(tr(m_language.c_str(), _("This user is not registered.")));
-					}
-					else {
-						adhocTag->addFixedText(tr(m_language.c_str(), Poco::format(_("JID: %s"), u.jid)));
-						adhocTag->addFixedText(tr(m_language.c_str(), Poco::format(_("Legacy network name: %s"), u.uin)));
-						adhocTag->addFixedText(tr(m_language.c_str(), Poco::format(_("Language: %s"), u.language)));
-						adhocTag->addFixedText(tr(m_language.c_str(), Poco::format(_("Encoding: %s"), u.encoding)));
-						adhocTag->addBoolean(tr(m_language.c_str(), _("VIP")), "user_vip", u.vip);
-					}
-					
-					response->addChild(adhocTag);
-					return response;
-				}
-			}
 			IQ _response(IQ::Result, stanzaTag->findAttribute("from"), stanzaTag->findAttribute("id"));
-			_response.setFrom(Transport::instance()->jid());
 			Tag *response = _response.tag();
-			response->addChild( new AdhocTag(tag->findAttribute("sessionid"), "transport_admin", "completed") );
+			response->addAttribute("from", Transport::instance()->jid());
+
+			AdhocTag *adhocTag = new AdhocTag(tag->findAttribute("sessionid"), "transport_admin", "executing");
+			adhocTag->setAction("next");
+			adhocTag->setTitle(tr(m_language.c_str(), _("User information")));
+			adhocTag->setInstructions(tr(m_language.c_str(), _("Add bare JID of user you want to configure.")));
+			adhocTag->addTextSingle(tr(m_language.c_str(), _("Bare JID")), "user_jid");
+
+			response->addChild(adhocTag);
 			return response;
 		}
-		else if (m_state == ADHOC_ADMIN_USER2) {
-			std::string user_jid;
-			std::string user_vip;
-			for (std::list<Tag*>::const_iterator it = x->children().begin(); it != x->children().end(); ++it) {
-				std::string key = (*it)->findAttribute("var");
-				if (key.empty()) continue;
+	}
+	else if (m_state == ADHOC_ADMIN_USER) {
+		m_state = ADHOC_ADMIN_USER2;
+		if (!form.hasField("user_jid"))
+			return NULL;
+		const std::string &user_jid = form.field("user_jid")->value();
+			
+		IQ _response(IQ::Result, stanzaTag->findAttribute("from"), stanzaTag->findAttribute("id"));
+		Tag *response = _response.tag();
+		response->addAttribute("from", Transport::instance()->jid());
 
-				Tag *v =(*it)->findChild("value");
-				if (!v) continue;
-				
-				std::string data(v->cdata());
-				
-				if (key == "user_jid") {
-					user_jid = data;
-				}
-				else if (key == "user_vip") {
-					user_vip = data;
-				}
-			}
-			if (!user_jid.empty() && !user_vip.empty()) {
-				UserRow u = Transport::instance()->sql()->getUserByJid(user_jid);
-				if (u.id != -1) {
-					u.vip = user_vip == "1";
-					Transport::instance()->sql()->updateUser(u);
-				}
-			}
-			IQ _response(IQ::Result, stanzaTag->findAttribute("from"), stanzaTag->findAttribute("id"));
-			_response.setFrom(Transport::instance()->jid());
-			Tag *response = _response.tag();
-			response->addChild( new AdhocTag(tag->findAttribute("sessionid"), "transport_admin", "completed") );
-			return response;
+		AdhocTag *adhocTag = new AdhocTag(tag->findAttribute("sessionid"), "transport_admin", "executing");
+		adhocTag->setAction("complete");
+		adhocTag->setTitle(tr(m_language.c_str(), _("User information")));
+		adhocTag->setInstructions(tr(m_language.c_str(), _("User information")));
+		adhocTag->addHidden("user_jid", user_jid);
+
+		UserRow u = Transport::instance()->sql()->getUserByJid(user_jid);
+		if (u.id == -1) {
+			adhocTag->addFixedText(tr(m_language.c_str(), _("This user is not registered.")));
 		}
+		else {
+			adhocTag->addFixedText(tr(m_language.c_str(), Poco::format(_("JID: %s"), u.jid)));
+			adhocTag->addFixedText(tr(m_language.c_str(), Poco::format(_("Legacy network name: %s"), u.uin)));
+			adhocTag->addFixedText(tr(m_language.c_str(), Poco::format(_("Language: %s"), u.language)));
+			adhocTag->addFixedText(tr(m_language.c_str(), Poco::format(_("Encoding: %s"), u.encoding)));
+			adhocTag->addBoolean(tr(m_language.c_str(), _("VIP")), "user_vip", u.vip);
+		}
+		
+		response->addChild(adhocTag);
+		return response;
+	}
+	else if (m_state == ADHOC_ADMIN_USER2) {
+		if (!form.hasField("user_jid") || !form.hasField("user_vip"))
+			return NULL;
+		const std::string &user_jid = form.field("user_jid")->value();
+		const std::string &user_vip = form.field("user_vip")->value();
+
+		UserRow u = Transport::instance()->sql()->getUserByJid(user_jid);
+		if (u.id != -1) {
+			u.vip = user_vip == "1";
+			Transport::instance()->sql()->updateUser(u);
+		}
+
+		IQ _response(IQ::Result, stanzaTag->findAttribute("from"), stanzaTag->findAttribute("id"));
+		_response.setFrom(Transport::instance()->jid());
+		Tag *response = _response.tag();
+		response->addChild( new AdhocTag(tag->findAttribute("sessionid"), "transport_admin", "completed") );
+		return response;
 	}
 	return NULL;
 }
