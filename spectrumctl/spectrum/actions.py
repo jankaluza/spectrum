@@ -135,7 +135,7 @@ def adhoc_test( options, params, instances ):
 		iq = xmpp.Iq( typ='set', to=str(jid), xmlns=None )
 		cmd.addChild( node=x )
 		iq.addChild( node=cmd )
-		print( "Sending:\n" + iq )
+		print( "Sending:\n" + str(iq) )
 		s.send( str(iq) )
 		data = s.recv( 10240 )
 		s.close()
