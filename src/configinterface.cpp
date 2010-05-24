@@ -25,6 +25,7 @@
 #include "errno.h"
 #include "transport.h"
 #include "abstractconfiginterfacehandler.h"
+#include "adhoc/adhocadmin.h"
 
 
 // because of ConnectionBase::socket()....
@@ -56,6 +57,9 @@ ConfigInterface::ConfigInterface(const std::string &sockfile, const LogSink &log
 	m_loaded = false;
 	m_socketId = 0;
 	
+	m_admin = new AdhocAdmin();
+	registerHandler(m_admin);
+	
 	if ((m_socket = getUnixSocket()) == -1)
 		Log("ConfigInterface", "Could not create UNIX socket: " << strerror(errno));
 	
@@ -84,6 +88,7 @@ ConfigInterface::ConfigInterface(const std::string &sockfile, const LogSink &log
 ConfigInterface::~ConfigInterface() {
 	if (m_socketId)
 		g_source_remove(m_socketId);
+	delete m_admin;
 }
 
 void ConfigInterface::handleIncomingConnection(ConnectionBase *server, ConnectionBase *connection) {

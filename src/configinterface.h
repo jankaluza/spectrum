@@ -36,6 +36,7 @@ extern LogClass Log_;
 using namespace gloox;
 
 class AbstractConfigInterfaceHandler;
+class AdhocAdmin;
 
 class ConfigInterface : public ConnectionTCPServer, public ConnectionHandler, public ConnectionDataHandler {
 	public:
@@ -61,6 +62,7 @@ class ConfigInterface : public ConnectionTCPServer, public ConnectionHandler, pu
 		ConnectionBase *m_connection;
 		std::list <AbstractConfigInterfaceHandler *> m_handlers;
 		bool m_loaded;
+		AdhocAdmin *m_admin;
 
 };
 

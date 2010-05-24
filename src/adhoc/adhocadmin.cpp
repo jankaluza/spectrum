@@ -55,24 +55,50 @@ AdhocAdmin::AdhocAdmin(AbstractUser *user, const std::string &from, const std::s
 	Transport::instance()->send(response);
 }
 
+AdhocAdmin::AdhocAdmin() {
+	setRequestType(CALLER_ADHOC);
+	m_state = ADHOC_ADMIN_INIT;
+	
+	m_language = Transport::instance()->getConfiguration().language;
+}
+
 AdhocAdmin::~AdhocAdmin() {}
 
-bool AdhocAdmin::handleIq(const IQ &stanza) {
-	Tag *stanzaTag = stanza.tag();
+bool AdhocAdmin::handleCondition(Tag *stanzaTag) {
+	Tag *tag = stanzaTag->findChild("command");
+	return (tag && tag->findAttribute("node") == "transport_admin");
+}
+
+Tag *AdhocAdmin::handleTag(Tag *stanzaTag) {
 	Tag *tag = stanzaTag->findChild("command");
 	if (tag->hasAttribute("action", "cancel")) {
-		IQ _response(IQ::Result, stanza.from().full(), stanza.id());
+		IQ _response(IQ::Result, stanzaTag->findAttribute("from"), stanzaTag->findAttribute("id"));
 		_response.setFrom(Transport::instance()->jid());
 		Tag *response = _response.tag();
 		response->addChild( new AdhocTag(tag->findAttribute("sessionid"), "transport_admin", "canceled") );
-		Transport::instance()->send(response);
-
-		delete stanzaTag;
-		return true;
+		return response;
 	}
 
 	Tag *x = tag->findChildWithAttrib("xmlns","jabber:x:data");
 	if (x) {
+		for (std::list<Tag*>::const_iterator it = x->children().begin(); it != x->children().end(); ++it) {
+			std::string key = (*it)->findAttribute("var");
+			if (key.empty()) continue;
+
+			Tag *v =(*it)->findChild("value");
+			if (!v) continue;
+			
+			std::string data(v->cdata());
+			if (key == "adhoc_state") {
+				if (data == "ADHOC_ADMIN_INIT")
+					m_state = ADHOC_ADMIN_INIT;
+				else if (data == "ADHOC_ADMIN_LOGGING")
+					m_state = ADHOC_ADMIN_LOGGING;
+				else if (data == "ADHOC_ADMIN_USER2")
+					m_state = ADHOC_ADMIN_USER2;
+			}
+		}
+
 		if (m_state == ADHOC_ADMIN_INIT) {
 			std::string result("");
 			for (std::list<Tag*>::const_iterator it = x->children().begin(); it != x->children().end(); ++it) {
@@ -85,7 +111,7 @@ bool AdhocAdmin::handleIq(const IQ &stanza) {
 			if (result == tr(m_language.c_str(), _("Logging"))) {
 				m_state = ADHOC_ADMIN_LOGGING;
 
-				IQ _response(IQ::Result, stanza.from().full(), stanza.id());
+				IQ _response(IQ::Result, stanzaTag->findAttribute("from"), stanzaTag->findAttribute("id"));
 				Tag *response = _response.tag();
 				response->addAttribute("from", Transport::instance()->jid());
 
@@ -97,14 +123,12 @@ bool AdhocAdmin::handleIq(const IQ &stanza) {
 				adhocTag->addBoolean(tr(m_language.c_str(), _("Log libpurple messages")), "log_purple", Transport::instance()->getConfiguration().logAreas & LOG_AREA_PURPLE);
 
 				response->addChild(adhocTag);
-				Transport::instance()->send(response);
-				delete stanzaTag;
-				return false;
+				return response;
 			}
 			else if (result == tr(m_language.c_str(), _("User"))) {
 				m_state = ADHOC_ADMIN_USER;
 
-				IQ _response(IQ::Result, stanza.from().full(), stanza.id());
+				IQ _response(IQ::Result, stanzaTag->findAttribute("from"), stanzaTag->findAttribute("id"));
 				Tag *response = _response.tag();
 				response->addAttribute("from", Transport::instance()->jid());
 
@@ -115,9 +139,7 @@ bool AdhocAdmin::handleIq(const IQ &stanza) {
 				adhocTag->addTextSingle(tr(m_language.c_str(), _("Bare JID")), "user_jid");
 
 				response->addChild(adhocTag);
-				Transport::instance()->send(response);
-				delete stanzaTag;
-				return false;
+				return response;
 			}
 		}
 		else if (m_state == ADHOC_ADMIN_LOGGING) {
@@ -150,11 +172,11 @@ bool AdhocAdmin::handleIq(const IQ &stanza) {
 					}
 				}
 			}
-			IQ _response(IQ::Result, stanza.from().full(), stanza.id());
+			IQ _response(IQ::Result, stanzaTag->findAttribute("from"), stanzaTag->findAttribute("id"));
 			_response.setFrom(Transport::instance()->jid());
 			Tag *response = _response.tag();
 			response->addChild( new AdhocTag(tag->findAttribute("sessionid"), "transport_admin", "completed") );
-			Transport::instance()->send(response);
+			return response;
 		}
 		else if (m_state == ADHOC_ADMIN_USER) {
 			m_state = ADHOC_ADMIN_USER2;
@@ -168,7 +190,7 @@ bool AdhocAdmin::handleIq(const IQ &stanza) {
 				std::string data(v->cdata());
 				
 				if (key == "user_jid") {
-					IQ _response(IQ::Result, stanza.from().full(), stanza.id());
+					IQ _response(IQ::Result, stanzaTag->findAttribute("from"), stanzaTag->findAttribute("id"));
 					Tag *response = _response.tag();
 					response->addAttribute("from", Transport::instance()->jid());
 
@@ -191,16 +213,14 @@ bool AdhocAdmin::handleIq(const IQ &stanza) {
 					}
 					
 					response->addChild(adhocTag);
-					Transport::instance()->send(response);
-					delete stanzaTag;
-					return false;
+					return response;
 				}
 			}
-			IQ _response(IQ::Result, stanza.from().full(), stanza.id());
+			IQ _response(IQ::Result, stanzaTag->findAttribute("from"), stanzaTag->findAttribute("id"));
 			_response.setFrom(Transport::instance()->jid());
 			Tag *response = _response.tag();
 			response->addChild( new AdhocTag(tag->findAttribute("sessionid"), "transport_admin", "completed") );
-			Transport::instance()->send(response);
+			return response;
 		}
 		else if (m_state == ADHOC_ADMIN_USER2) {
 			std::string user_jid;
@@ -228,15 +248,28 @@ bool AdhocAdmin::handleIq(const IQ &stanza) {
 					Transport::instance()->sql()->updateUser(u);
 				}
 			}
-			IQ _response(IQ::Result, stanza.from().full(), stanza.id());
+			IQ _response(IQ::Result, stanzaTag->findAttribute("from"), stanzaTag->findAttribute("id"));
 			_response.setFrom(Transport::instance()->jid());
 			Tag *response = _response.tag();
 			response->addChild( new AdhocTag(tag->findAttribute("sessionid"), "transport_admin", "completed") );
-			Transport::instance()->send(response);
+			return response;
 		}
 	}
+	return NULL;
+}
 
+bool AdhocAdmin::handleIq(const IQ &stanza) {
+	Tag *stanzaTag = stanza.tag();
+	Tag *query = handleTag(stanzaTag);
 	delete stanzaTag;
-	return true;
+
+	bool ret = true;
+	if (query) {
+		Tag *tag = query->findChild("command");
+		ret = (tag && tag->findAttribute("status") != "executing");
+		Transport::instance()->send(query);
+	}
+
+	return ret;
 }
 

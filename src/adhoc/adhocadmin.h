@@ -28,6 +28,7 @@
 #include "../log.h"
 #include "request.h"
 #include "adhoccommandhandler.h"
+#include "../abstractconfiginterfacehandler.h"
 
 class AbstractUser;
 
@@ -42,11 +43,14 @@ typedef enum {	ADHOC_ADMIN_INIT = 0,
 /*
  * AdhocCommandHandler for Administration node
  */
-class AdhocAdmin : public AdhocCommandHandler
+class AdhocAdmin : public AdhocCommandHandler, public AbstractConfigInterfaceHandler
 {
 	public:
 		AdhocAdmin(AbstractUser *user, const std::string &from, const std::string &id);
+		AdhocAdmin();
 		~AdhocAdmin();
+		bool handleCondition(Tag *stanzaTag);
+		Tag *handleTag(Tag *stanzaTag);
 		bool handleIq(const IQ &iq);
 		const std::string & getInitiator() { return m_from; }
 
