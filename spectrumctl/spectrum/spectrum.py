@@ -19,13 +19,11 @@
 import os, pwd, stat, time, signal, subprocess
 import env
 try:
-	from spectrum import spectrumconfigparser
+	from spectrum import spectrumconfigparser, ExistsError
 except ImportError:
-	import spectrumconfigparser
+	import spectrumconfigparser, ExistsError
 
-class ExistsError( RuntimeError ):
-	"""Thrown when a file or directory does not exist."""
-	pass
+ExistsError = ExistsError.ExistsError
 
 class spectrum:
 	def __init__( self, config_path ):
@@ -82,7 +80,7 @@ class spectrum:
 			# on some old (pre 0.1) installations config_interface does not exist
 			dir = os.path.dirname( config_interface )
 			try: 
-				env.check_exists( dir, 'dir' )
+				env.check_exists( dir, typ='dir' )
 				env.check_writable( dir )
 			except ExistsError:
 				env.create_dir( dir )
@@ -102,7 +100,7 @@ class spectrum:
 		pid_file = self.config.get( 'service', 'pid_file' )
 		pid_dir = os.path.dirname( pid_file )
 		try:
-			env.check_exists( pid_dir )
+			env.check_exists( pid_dir, typ='dir' )
 			env.check_writable( pid_dir )
 		except ExistsError:
 			env.create_dir( pid_dir )
@@ -118,7 +116,7 @@ class spectrum:
 		except ExistsError:
 			log_dir = os.path.dirname( log_file )
 			try:
-				env.check_exists( log_dir )
+				env.check_exists( log_dir, typ='dir' )
 			except ExistsError:
 				env.create_dir( log_dir )
 
@@ -134,7 +132,7 @@ class spectrum:
 			except ExistsError:
 				db_dir = os.path.dirname( db_file )
 				try:
-					env.check_exists( db_dir )
+					env.check_exists( db_dir, typ='dir' )
 					env.check_ownership( db_dir )
 					env.check_permissions( db_dir, # rwxr-x---
 						[ stat.S_IRUSR, stat.S_IWUSR, stat.S_IXUSR, 

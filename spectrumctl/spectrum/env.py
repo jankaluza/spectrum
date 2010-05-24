@@ -1,5 +1,11 @@
 import os, grp, pwd, stat
 
+try:
+        from spectrum import spectrumconfigparser, ExistsError
+except ImportError:
+        import spectrumconfigparser, ExistsError
+
+ExistsError = ExistsError.ExistsError
 options = None
 
 def get_uid():
