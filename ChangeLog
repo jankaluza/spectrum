@@ -8,6 +8,8 @@ version 0.3 (2010-??-??):
 	  with spectrumctl.
 	* Fixed timestamps for delayed messages from legacy network.
 	* Entity capabilities hash is now computed correctly.
+	* Users are correctly divided into 2 groups according to "vip" column in
+	  "users" database table.
 	* transport_features and vip_features config variables are deprecated now.
 	  Use [features] and [vip-features] sections instead of them. See default
 	  spectrum.cfg for more details and example.
@@ -20,6 +22,7 @@ version 0.3 (2010-??-??):
 	  network contanct list in some cases.
 	* Fixed crash when database is stopped while Spectrum is running. Spectrum tries
 	  to reconnect automatically.
+	* Fixed memory leak when conversations were not destroyed after logout.
 
 	Twitter:
 	* Added support for latest prpltwtr plugin (http://code.google.com/p/prpltwtr/).
@@ -42,6 +45,7 @@ version 0.3 (2010-??-??):
 	* Fixed bug when user stays connected to IRC even he is logged out from Jabber.
 	* Fixed sending first private message from XMPP to IRC.
 	* Working /me command. Other commands can be listed by /help command.
+	* Fixed memory leak in joining the room.
 
 version 0.2 (2010-04-08):
 	General:
