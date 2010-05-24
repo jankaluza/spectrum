@@ -96,9 +96,9 @@ def check_exists( node, typ='file' ):
 		raise ExistsError( node, 'Does not exist' )
 
 	if typ == 'file' and not os.path.isfile( node ):
-		raise RuntimeError( file, 'Not a file' )
+		raise RuntimeError( node, 'Not a file' )
 	if typ == 'dir' and not os.path.isdir( node ):
-		raise RuntimeError( file, 'Not a directory' )
+		raise RuntimeError( node, 'Not a directory' )
 
 	return True
 
