@@ -1,4 +1,4 @@
-import os, pwd
+import os, grp, pwd, stat
 
 options = None
 
