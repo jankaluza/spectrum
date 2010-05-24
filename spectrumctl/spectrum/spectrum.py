@@ -17,6 +17,7 @@
 # this program; if not, see <http://www.gnu.org/licenses/>.
 
 import os, grp, pwd, stat, time, signal, subprocess
+import env
 try:
 	from spectrum import spectrumconfigparser
 except ImportError:
@@ -27,8 +28,7 @@ class ExistsError( RuntimeError ):
 	pass
 
 class spectrum:
-	def __init__( self, options, config_path ):
-		self.options = options
+	def __init__( self, config_path ):
 		self.config_path = os.path.normpath( config_path )
 		
 		self.config = spectrumconfigparser.SpectrumConfigParser()
@@ -54,173 +54,13 @@ class spectrum:
 		except:
 			return -1
 
-	def check_exists( self, file, typ=file ):
-		if not os.path.exists( file ):
-			raise ExistsError( file, 'Does not exist' )
-
-		if typ == 'file' and not os.path.isfile( file ):
-			raise RuntimeError( file, 'Not a file' )
-		if typ == 'dir' and not os.path.isdir( file ):
-			raise RuntimeError( file, 'Not a directory' )
-
-		return True
-
-	def check_ownership( self, node, uid=None, gid=None ):
-		"""
-		Check the ownership and group ownership of the given filesystem
-		node. If uid or gid is None, the uid (and its respective primary
-		gid) is used. If you don't want to check uid or gid, just pass
-		-1.
-		"""
-
-		if uid == -1 and gid == -1:
-			print( "Warning: uid and gid are -1. That doesn't make sense." )
-
-		if not os.path.exists( node ):
-			raise RuntimeError( node, "Does not exist" )
-
-		if uid == None:
-			uid = self.get_uid()
-		if gid == None:
-			gid = self.get_gid()
-
-		stat = os.stat( node )
-		if uid != -1 and stat.st_uid != uid:
-			name = pwd.getpwuid( uid ).pw_name
-			raise RuntimeError( node, 'Unsafe ownership (fix with "chown %s %s")'%(name, node) )
-		if gid != -1 and stat.st_gid != gid:
-			name = grp.getgrgid( gid ).gr_name
-			raise RuntimeError( node, 'Unsafe ownership (fix with "chgrp %s %s")'%(name, node) )
-	
-	def perm_translate( self, perm ):
-		"""
-		Transforms one of the modes defined in the stats module into a
-		string tuple ('x', 'y') where 'x' is one of 'u', 'g' or 'o' and
-		'y' is either 'r', 'w' or 'x'. This method can be used transform
-		a permission into string that can be used with chmod.
-		"""
-		if perm == stat.S_IRUSR:
-			return ('u', 'r')
-		elif perm == stat.S_IWUSR:
-			return ('u', 'w')
-		elif perm == stat.S_IXUSR:
-			return ('u', 'x')
-		elif perm == stat.S_IRGRP:
-			return ('g', 'r')
-		elif perm == stat.S_IWGRP:
-			return ('g', 'w')
-		elif perm == stat.S_IXGRP:
-			return ('g', 'x')
-		elif perm == stat.S_IROTH:
-			return ('o', 'r')
-		elif perm == stat.S_IWOTH:
-			return ('o', 'w')
-		elif perm == stat.S_IXOTH:
-			return ('o', 'x')
-
-	def chmod_translate( self, add, rem ):
-		changes = []
-
-		for who, what in add.iteritems():
-			if what != []:
-				changes.append( who + '+' + ''.join( what ) )
-		for who, what in rem.iteritems():
-			if what != []:
-				changes.append( who + '-' + ''.join( what ) )
-
-		return ','.join( changes )
-	
-	def check_permissions( self, file, permissions, wildcards=[] ):
-		all = [ stat.S_IRUSR, stat.S_IWUSR, stat.S_IXUSR,
-			stat.S_IRGRP, stat.S_IWGRP, stat.S_IXGRP,
-			stat.S_IROTH, stat.S_IWOTH, stat.S_IXOTH ]
-		mode = os.stat( file )[stat.ST_MODE]
-		add = { 'u': [], 'g': [], 'o': [] }
-		rem = { 'u': [], 'g': [], 'o': [] }
-
-		for p in permissions:
-			if (mode & p) == 0:
-				who, what = self.perm_translate( p )
-				add[who].append( what )
-
-		for p in [ p for p in all if ( p not in permissions and p not in wildcards )]:
-			if (mode & p) != 0:
-				who, what = self.perm_translate( p )
-				rem[who].append( what )
-
-		mode_string = self.chmod_translate( add, rem )
-		if mode_string:
-			string = 'chmod ' + mode_string + ' ' + file
-			raise RuntimeError( file, 'Incorrect permissions (fix with "%s")' %(string) )
-
-	def get_uid( self ):
-		# if we explicitly name something on the CLI, we use that:
-		if self.options.su:
-			return pwd.getpwnam( self.options.su ).pw_uid
-			
-		try:
-			# if we have env-variable set, we use that:
-			username = os.environ['SPECTRUM_USER']
-		except KeyError:
-			# otherwise we default to spectrum:
-			username = 'spectrum'
-
-		return pwd.getpwnam( username ).pw_uid
-
-	def get_gid( self ):
-		return pwd.getpwuid( self.get_uid() ).pw_gid
-
-	def check_writable( self, node, uid=None ):
-		if uid == None:
-			user = pwd.getpwuid( self.get_uid() )
-		else:
-			user = pwd.getpwuid( uid )
-
-		s = os.stat( node )
-		groups = [g for g in grp.getgrall() if user.pw_name in g.gr_mem]
-		groups.append( user.pw_gid )
-		cmd = ''
-		if s.st_uid == user.pw_uid:
-			# user owns the file
-			if s.st_mode & stat.S_IWUSR == 0:
-				cmd = 'chmod u+w %s' %(node)
-			if os.path.isdir( node ) and s.st_mode & stat.S_IXUSR == 0:
-				cmd = 'chmod u+wx %s' %(node)
-		elif s.st_gid in groups:
-			if s.st_mode & stat.S_IWGRP == 0:
-				cmd = 'chmod g+w %s' %(node)
-			if os.path.isdir( node ) and s.st_mode & stat.S_IXGRP == 0:
-				cmd = 'chmod g+wx %s' %(node)
-		else: 
-			if s.st_mode & stat.S_IWOTH == 0:
-				cmd = 'chmod o+w %s' %(node)
-			if os.path.isdir( node ) and s.st_mode & stat.S_IXOTH == 0:
-				cmd = 'chmod o+wx %s' %(node)
-		
-		if cmd != '':
-			raise RuntimeError( node, 'Not writable (fix with %s)' %(cmd) )
-	
-	def su_cmd( self, cmd ):
-		user = pwd.getpwuid( self.get_uid() ).pw_name
-		return [ 'su', user, '-s', '/bin/sh', '-c', ' '.join( cmd ) ]
-
-	def create_dir( self, dir ):
-		if not dir: # this is the end of a recursion with a relative path
-			return
-		dirname = os.path.dirname( dir )
-		if not os.path.exists( dirname ):
-			self.create_dir( dirname )
-		os.mkdir( dir )
-		os.chown( dir, self.get_uid(), self.get_gid() )
-		os.chmod( dir, stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR | stat.S_IRGRP | stat.S_IXGRP )
-
 	def check_environment( self ):
 		# check if spectrum user exists:
 		if os.name == 'posix':
 			try:
-				user = pwd.getpwuid( self.get_uid() )
+				user = pwd.getpwuid( env.get_uid() )
 			except KeyError:
-				raise RuntimeError( self.get_uid(), 'UID does not exist' )
+				raise RuntimeError( env.get_uid(), 'UID does not exist' )
 		else:
 			# on windows, there is no real way to get the info that
 			# we need
@@ -231,9 +71,9 @@ class spectrum:
 			raise RuntimeError( "User", "Must be root to start spectrum" )
 		
 		# check permissions for config-file:
-		self.check_ownership( self.config_path, 0 )
+		env.check_ownership( self.config_path, 0 )
 		# we don't care about user permissions, group MUST be read-only
-		self.check_permissions( self.config_path, [ stat.S_IRGRP ],
+		env.check_permissions( self.config_path, [ stat.S_IRGRP ],
 			[ stat.S_IRUSR, stat.S_IWUSR, stat.S_IXUSR ] )
 
 		# config_interface:
@@ -242,76 +82,76 @@ class spectrum:
 			# on some old (pre 0.1) installations config_interface does not exist
 			dir = os.path.dirname( config_interface )
 			try: 
-				self.check_exists( dir, 'dir' )
-				self.check_writable( dir )
+				env.check_exists( dir, 'dir' )
+				env.check_writable( dir )
 			except ExistsError:
-				self.create_dir( dir )
+				env.create_dir( dir )
 
 		# filetransfer cache
 		filetransfer_cache = self.config.get( 'service', 'filetransfer_cache' )
 		try:
-			self.check_exists( filetransfer_cache, 'dir' )
-			self.check_ownership( filetransfer_cache )
-			self.check_permissions( filetransfer_cache, # rwxr-x---
+			env.check_exists( filetransfer_cache, 'dir' )
+			env.check_ownership( filetransfer_cache )
+			env.check_permissions( filetransfer_cache, # rwxr-x---
 				[ stat.S_IRUSR, stat.S_IWUSR, stat.S_IXUSR, 
 				  stat.S_IRGRP, stat.S_IXGRP ] )
 		except ExistsError:
-			self.create_dir( filetransfer_cache )
+			env.create_dir( filetransfer_cache )
 
 		# pid_file:
 		pid_file = self.config.get( 'service', 'pid_file' )
 		pid_dir = os.path.dirname( pid_file )
 		try:
-			self.check_exists( pid_dir )
-			self.check_writable( pid_dir )
+			env.check_exists( pid_dir )
+			env.check_writable( pid_dir )
 		except ExistsError:
-			self.create_dir( pid_dir )
+			env.create_dir( pid_dir )
 
 		# log file
 		log_file = self.config.get( 'logging', 'log_file' )
 		try:
 			# does not exist upon first startup:
-			self.check_exists( log_file )
-			self.check_ownership( log_file, gid=-1 )
-			self.check_permissions( log_file, # rw-r-----
+			env.check_exists( log_file )
+			env.check_ownership( log_file, gid=-1 )
+			env.check_permissions( log_file, # rw-r-----
 				[ stat.S_IRUSR, stat.S_IWUSR, stat.S_IRGRP ] )
 		except ExistsError:
 			log_dir = os.path.dirname( log_file )
 			try:
-				self.check_exists( log_dir )
+				env.check_exists( log_dir )
 			except ExistsError:
-				self.create_dir( log_dir )
+				env.create_dir( log_dir )
 
 		# sqlite database
 		if self.config.get( 'database', 'type' ) == 'sqlite':
 			db_file = self.config.get( 'database', 'database' )
 			try:
 				# might not exist upon first startup:
-				self.check_exists( db_file )
-				self.check_ownership( db_file )
-				self.check_permissions( db_file, # rw-r-----
+				env.check_exists( db_file )
+				env.check_ownership( db_file )
+				env.check_permissions( db_file, # rw-r-----
 					[ stat.S_IRUSR, stat.S_IWUSR, stat.S_IRGRP ] )
 			except ExistsError:
 				db_dir = os.path.dirname( db_file )
 				try:
-					self.check_exists( db_dir )
-					self.check_ownership( db_dir )
-					self.check_permissions( db_dir, # rwxr-x---
+					env.check_exists( db_dir )
+					env.check_ownership( db_dir )
+					env.check_permissions( db_dir, # rwxr-x---
 						[ stat.S_IRUSR, stat.S_IWUSR, stat.S_IXUSR, 
 						  stat.S_IRGRP, stat.S_IXGRP ] )
 				except ExistsError:
-					self.create_dir( os.path.dirname( db_file ) )
+					env.create_dir( os.path.dirname( db_file ) )
 		
 		# purple userdir
 		userdir = self.config.get( 'purple', 'userdir' )
 		try:
-			self.check_exists( userdir, 'dir' )
-			self.check_ownership( userdir )
-			self.check_permissions( userdir, # rwxr-x---
+			env.check_exists( userdir, 'dir' )
+			env.check_ownership( userdir )
+			env.check_permissions( userdir, # rwxr-x---
 				[ stat.S_IRUSR, stat.S_IWUSR, stat.S_IXUSR, 
 				  stat.S_IRGRP, stat.S_IXGRP ] )
 		except ExistsError:
-			self.create_dir( userdir )
+			env.create_dir( userdir )
 
 		return 0, 'ok'
 
@@ -392,17 +232,17 @@ class spectrum:
 		# get the absolute path of the config file, so we can change to
 		# spectrums homedir
 		path = os.path.abspath( self.config_path )
-		home = pwd.getpwuid( self.get_uid() )[5]
+		home = pwd.getpwuid( env.get_uid() )[5]
 		os.chdir( home )
 
-		if self.options.no_daemon:
+		if env.options.no_daemon:
 			cmd.append( '-n' )
-		if self.options.debug:
+		if env.options.debug:
 			os.environ['MALLOC_PERTURB_'] = '254'
 			os.environ['PURPLE_VERBOSE_DEBUG'] = '1'
 			cmd[0] = 'ulimit -c unlimited; ' + cmd[0]
 		cmd.append( path )
-		cmd = self.su_cmd( cmd )
+		cmd = env.su_cmd( cmd )
 		retVal = subprocess.call( cmd )
 		if retVal != 0:
 			return 1, "could not start spectrum instance."

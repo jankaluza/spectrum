@@ -59,6 +59,7 @@ list_group.add_option( '--machine-readable', action='store_true', default=False,
 parser.add_option_group( list_group )
 
 options, args = parser.parse_args()
+env.options = options
 
 init_actions = [ 'start', 'stop', 'restart', 'reload', 'status' ]
 complex_actions = [ 'list', 'stats', 'adhoc_test' ]
@@ -93,7 +94,7 @@ def act( instance ):
 	return exit
 
 if options.config:
-	instance = spectrum.spectrum( options, options.config )
+	instance = spectrum.spectrum( options.config )
 
 	if action in init_actions:
 		ret = act( instance )
@@ -112,7 +113,7 @@ else:
 	for file in config_list:
 		path = '%s/%s'%(options.config_dir, file)
 		if os.path.isfile( path ) and path.endswith( '.cfg' ):
-			instances.append( spectrum.spectrum( options, path ) )
+			instances.append( spectrum.spectrum( path ) )
 
 	if action in init_actions:
 		for instance in instances:
