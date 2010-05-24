@@ -62,7 +62,7 @@ options, args = parser.parse_args()
 env.options = options
 
 init_actions = [ 'start', 'stop', 'restart', 'reload', 'status' ]
-complex_actions = [ 'list', 'stats', 'adhoc_test' ]
+complex_actions = [ 'list', 'stats', 'adhoc_test', 'message_all' ]
 all_actions = init_actions + complex_actions
 
 action = args[0]

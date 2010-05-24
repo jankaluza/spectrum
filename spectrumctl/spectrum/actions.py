@@ -87,6 +87,17 @@ def stats( options, params, instances ):
 	print "\n\n".join( output )
 	return 0
 
+def send_message( config_interface, pkg ):
+	"""Just a small helper function for AdHoc Command tests."""
+	if config_interface == '':
+		raise RuntimeError( "Error: %s: No config_interface defined." %(instance.config_path) )
+
+	s = socket.socket( socket.AF_UNIX )
+	s.connect( config_interface )
+	s.send( str(iq) )
+	data = s.recv( 10240 )
+	s.close()
+	return data
 
 def adhoc_test( options, params, instances ):
 	try:
@@ -98,21 +109,6 @@ def adhoc_test( options, params, instances ):
 	for instance in instances:
 		jid = instance.config.get( 'service', 'jid' )
 		config_interface = instance.config.get( 'service', 'config_interface' )
-		if config_interface == '':
-			print( "Error: %s: No config_interface defined." %(instance.config_path) )
-#			continue 
-
-		try:
-			s = socket.socket( socket.AF_UNIX )
-			s.connect( config_interface )
-		except socket.error, msg:
-			if hasattr( msg, 'strerror' ):
-				# python2.5 does not have msg.strerror
-				print( config_interface + ': ' + msg.strerror )
-			else:
-				print( config_interface + ': ' + msg.message )
-			continue
-
 
 		cmd_attrs = { 'node': 'transport_admin', 
 			'sessionid': 'WHATEVER', 
@@ -136,8 +132,53 @@ def adhoc_test( options, params, instances ):
 		cmd.addChild( node=x )
 		iq.addChild( node=cmd )
 		print( "Sending:\n" + str(iq) )
-		s.send( str(iq) )
-		data = s.recv( 10240 )
-		s.close()
 		print( "" )
+		
+		try:
+			data = send_message( config_interface, str(iq) )
+			print( "Received:\n" + data )
+		except socket.error, msg:
+			if hasattr( msg, 'strerror' ):
+				# python2.5 does not have msg.strerror
+				print( config_interface + ': ' + msg.strerror )
+			else:
+				print( config_interface + ': ' + msg.message )
+			continue
+
+def message_all( options, params, instances ):
+	try:
+		import xmpp
+	except ImportError:
+		print( "Error: xmpppy library not found." )
+		return 1
+
+	for instance in instances:
+		jid = instance.config.get( 'service', 'jid' )
+		config_interface = instance.config.get( 'service', 'config_interface' )
+		
+		# first field stanza:
+		c_value = xmpp.simplexml.Node( tag='value', payload=['ADHOC_ADMIN_SEND_MESSAGE'] )
+		c_field = xmpp.simplexml.Node( tag='field', attrs={'type': 'hidden', 'var': 'adhoc_state'} )
+		c_field.addChild( node=c_value )
+
+		# x stanza with enclosed field:
+		x = xmpp.simplexml.Node( tag='x', attrs={ 'xmlns': xmpp.protocol.NS_DATA, 'type': 'submit' } )
+		x_field = xmpp.simplexml.Node( tag='field', attrs={'type':'text-multi', 'var': 'message' } )
+		x_value = xmpp.simplexml.Node( tag='value', payload=['Awesome message'] )
+		x_field.addChild( node=x_value )
+		x.addChild( node=x_field )
+
+		cmd_attrs = { 'node': 'transport_admin', 
+			'sessionid': 'WHATEVER', 
+			'xmlns': xmpp.protocol.NS_COMMANDS }
+		cmd = xmpp.simplexml.Node( tag='command', attrs=cmd_attrs )
+		cmd.addChild( node=c_field )
+		cmd.addChild( node=x )
+
+		iq = xmpp.Iq( typ='set', to=str(jid), xmlns=None )
+		iq.addChild( node=cmd )
+
+		print( "Sending:\n" + str(iq) )
+		print( "" )
+		data = send_message( config_interface, str(iq) )
 		print( "Received:\n" + data )
