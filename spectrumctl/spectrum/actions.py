@@ -1,6 +1,6 @@
 import socket
 
-def list( options, instances ):
+def list( options, params, instances ):
 	lines = [ ('PID', 'PROTOCOL', 'HOSTNAME', 'STATUS' ) ]
 
 	for instance in instances:
@@ -26,7 +26,7 @@ def list( options, instances ):
 		print
 	return 0
 
-def stats( options, instances ):
+def stats( options, params, instances ):
 	try:
 		import xmpp
 	except ImportError:
@@ -86,3 +86,54 @@ def stats( options, instances ):
 	
 	print "\n\n".join( output )
 	return 0
+
+
+def adhoc_test( options, params, instances ):
+	try:
+		import xmpp
+	except ImportError:
+		print( "Error: xmpppy library not found." )
+		return 1
+
+	for instance in instances:
+		jid = instance.config.get( 'service', 'jid' )
+		config_interface = instance.config.get( 'service', 'config_interface' )
+		if config_interface == '':
+			print( "Error: %s: No config_interface defined." %(instance.config_path) )
+#			continue 
+
+		try:
+			s = socket.socket( socket.AF_UNIX )
+			s.connect( config_interface )
+		except socket.error, msg:
+			pass
+#			if hasattr( msg, 'strerror' ):
+#				# python2.5 does not have msg.strerror
+#				print( config_interface + ': ' + msg.strerror )
+#			else:
+#				print( config_interface + ': ' + msg.message )
+#			continue
+
+
+		cmd_attrs = { 'node': 'transport_admin', 
+			'sessionid': 'WHATEVER', 
+			'xmlns': xmpp.protocol.NS_COMMANDS }
+		cmd = xmpp.simplexml.Node( tag='command', attrs=cmd_attrs )
+		x = xmpp.simplexml.Node( tag='x',
+			attrs={'xmlns': xmpp.protocol.NS_DATA, 'type':'submit'} )
+		
+		fields = [ 
+			('adhoc_state', 'ADHOC_ADMIN_USER2', 'hidden'),
+			('user_jid', params[0], 'hidden' ),
+			('user_vip', params[1], 'boolean' ) ]
+
+		for field in fields:
+			value = xmpp.simplexml.Node( tag='value', payload=[field[1]] )
+			field = xmpp.simplexml.Node( tag='field', payload=[value],
+				attrs={'type':field[2], 'var':field[0] } )
+			x.addChild( node=field )
+
+		iq = xmpp.Iq( typ='set', to=str(jid), xmlns=None )
+		cmd.addChild( node=x )
+		iq.addChild( node=cmd )
+		print( iq )

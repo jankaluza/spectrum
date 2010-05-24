@@ -61,14 +61,11 @@ parser.add_option_group( list_group )
 options, args = parser.parse_args()
 
 init_actions = [ 'start', 'stop', 'restart', 'reload', 'status' ]
-complex_actions = [ 'list', 'stats' ]
+complex_actions = [ 'list', 'stats', 'adhoc_test' ]
 all_actions = init_actions + complex_actions
 
-if len( args ) != 1:
-	print( "Error: Please give exactly one action." )
-	sys.exit(1)
-
 action = args[0]
+params = args[1:]
 if action == 'help':
 	parser.print_help()
 	sys.exit(0)
@@ -102,7 +99,7 @@ if options.config:
 		ret = act( instance )
 		sys.exit( ret )
 	else:
-		ret = getattr( actions, action )( options, [instance] )
+		ret = getattr( actions, action )( options, params, [instance], )
 		sys.exit( ret )
 else:
 	if not os.path.exists( options.config_dir ):
