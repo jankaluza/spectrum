@@ -136,7 +136,7 @@ def adhoc_test( options, params, instances ):
 		cmd.addChild( node=x )
 		iq.addChild( node=cmd )
 		print( "Sending:\n" + iq )
-		s.send( str(pkg) )
+		s.send( str(iq) )
 		data = s.recv( 10240 )
 		s.close()
 		print( "" )
