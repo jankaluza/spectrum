@@ -27,11 +27,6 @@
 #include <iostream>
 #include <fstream>
 
-#ifndef WIN32
-#include <gettext-po.h>
-#endif
-
-
 class MoFile {
 	public:
 		MoFile(const std::string &filename);

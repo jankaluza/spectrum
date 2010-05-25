@@ -22,22 +22,8 @@ find_package(libpoco REQUIRED)
 set(cppunit_DIR "${CMAKE_SOURCE_DIR}/cmake_modules")
 find_package(cppunit)
  
-FIND_LIBRARY(GETTEXTPO_LIBRARY NAMES gettextpo)
-find_path(GETTEXTPO_INCLUDE_DIR NAMES gettext-po.h
-	PATHS
-	/usr/include
-	/usr/local/include
-)
- 
 execute_process ( COMMAND python -c "from distutils.sysconfig import get_python_lib; print get_python_lib()" OUTPUT_VARIABLE PYTHON_SITE_PACKAGES OUTPUT_STRIP_TRAILING_WHITESPACE)
 message(STATUS "Python site-packages directory: " ${PYTHON_SITE_PACKAGES})
- 
-if(GETTEXTPO_LIBRARY AND GETTEXTPO_INCLUDE_DIR)
-	include_directories(${GETTEXTPO_INCLUDE_DIR})
-	message(STATUS "libgettextpo (gettext-devel) found: " ${GETTEXTPO_LIBRARY})
-else(GETTEXTPO_LIBRARY AND GETTEXTPO_INCLUDE_DIR)
-	message(FATAL_ERROR "no libgettextpo (gettext-devel)")
-endif(GETTEXTPO_LIBRARY AND GETTEXTPO_INCLUDE_DIR)
 
 include_directories(${GLOOX_INCLUDE_DIR})
 include_directories(${PURPLE_INCLUDE_DIR})
@@ -204,9 +190,9 @@ set(spectrum_MOC_HDRS
 add_executable(spectrum ${spectrum_SRCS} ${lrelease_outputs})
 
 if(DEFINED WITH_STATIC_GLOOX)
-	target_link_libraries(spectrum ${WITH_STATIC_GLOOX} -lgnutls ${PURPLE_LIBRARY} ${GLIB2_LIBRARIES} ${GETTEXTPO_LIBRARY} ${LIBPOCO_LIBRARIES} -export-dynamic)
+	target_link_libraries(spectrum ${WITH_STATIC_GLOOX} -lgnutls ${PURPLE_LIBRARY} ${GLIB2_LIBRARIES} ${LIBPOCO_LIBRARIES} -export-dynamic)
 else(DEFINED WITH_STATIC_GLOOX)
-	target_link_libraries(spectrum ${GLOOX_LIBRARIES} ${PURPLE_LIBRARY} ${GLIB2_LIBRARIES} ${GETTEXTPO_LIBRARY} ${LIBPOCO_LIBRARIES} -export-dynamic)
+	target_link_libraries(spectrum ${GLOOX_LIBRARIES} ${PURPLE_LIBRARY} ${GLIB2_LIBRARIES} ${LIBPOCO_LIBRARIES} -export-dynamic)
 endif(DEFINED WITH_STATIC_GLOOX)
 
 message(STATUS "Transport will be installed into: " ${CMAKE_INSTALL_PREFIX})
@@ -321,9 +307,9 @@ add_executable(spectrum_tests ${spectrum_tests_SRCS} ${lrelease_outputs})
 set_target_properties(spectrum_tests PROPERTIES COMPILE_FLAGS -DTESTS)
 
 if(DEFINED WITH_STATIC_GLOOX)
-	target_link_libraries(spectrum_tests ${WITH_STATIC_GLOOX} -lgnutls ${PURPLE_LIBRARY} ${CPPUNIT_LIBRARY} ${GLIB2_LIBRARIES} ${GETTEXTPO_LIBRARY} ${LIBPOCO_LIBRARIES} -export-dynamic)
+	target_link_libraries(spectrum_tests ${WITH_STATIC_GLOOX} -lgnutls ${PURPLE_LIBRARY} ${CPPUNIT_LIBRARY} ${GLIB2_LIBRARIES} ${LIBPOCO_LIBRARIES} -export-dynamic)
 else(DEFINED WITH_STATIC_GLOOX)
-	target_link_libraries(spectrum_tests ${GLOOX_LIBRARIES} ${PURPLE_LIBRARY} ${CPPUNIT_LIBRARY} ${GLIB2_LIBRARIES} ${GETTEXTPO_LIBRARY} ${LIBPOCO_LIBRARIES} -export-dynamic)
+	target_link_libraries(spectrum_tests ${GLOOX_LIBRARIES} ${PURPLE_LIBRARY} ${CPPUNIT_LIBRARY} ${GLIB2_LIBRARIES} ${LIBPOCO_LIBRARIES} -export-dynamic)
 endif(DEFINED WITH_STATIC_GLOOX)
 
 
