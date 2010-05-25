@@ -29,6 +29,10 @@ SpectrumMUCConversation::SpectrumMUCConversation(PurpleConversation *conv, const
 	m_conv = conv;
 	m_connected = false;
 	m_lastPresence = NULL;
+#ifndef TESTS
+	PurpleConvChat *chat = purple_conversation_get_chat_data(m_conv);
+	m_nickname = purple_conv_chat_get_nick(chat);
+#endif
 }
 
 SpectrumMUCConversation::~SpectrumMUCConversation() {
@@ -120,8 +124,15 @@ void SpectrumMUCConversation::addUsers(AbstractUser *user, GList *cbuddies) {
 			item->addAttribute("role", "participant");
 		}
 
+		if (name == m_nickname) {
+			Tag *status = new Tag("status");
+			status->addAttribute("code", "110");
+			item->addChild(status);
+		}
+
 		x->addChild(item);
 		tag->addChild(x);
+
 		if (name == m_nickname) {
 			if (m_lastPresence)
 				delete m_lastPresence;
