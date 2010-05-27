@@ -22,6 +22,7 @@
 #include "gloox/stanza.h"
 #include "gloox/dataform.h"
 #include "abstractuser.h"
+#include "../usermanager.h"
 #include "transport.h"
 #include "../log.h"
 #include "adhoctag.h"
@@ -49,6 +50,7 @@ AdhocAdmin::AdhocAdmin(AbstractUser *user, const std::string &from, const std::s
 	
 	std::list <std::string> values;
 	values.push_back(tr(m_language.c_str(), _("User")));
+	values.push_back(tr(m_language.c_str(), _("Send message to online users")));
 	adhocTag->addListSingle("Config area", "config_area", values);
 
 	response->addChild(adhocTag);
@@ -93,6 +95,8 @@ Tag *AdhocAdmin::handleTag(Tag *stanzaTag) {
 			m_state = ADHOC_ADMIN_INIT;
 		else if (data == "ADHOC_ADMIN_USER2")
 			m_state = ADHOC_ADMIN_USER2;
+		else if (data == "ADHOC_ADMIN_SEND_MESSAGE")
+			m_state = ADHOC_ADMIN_SEND_MESSAGE;
 	}
 
 	if (m_state == ADHOC_ADMIN_INIT) {
@@ -112,6 +116,22 @@ Tag *AdhocAdmin::handleTag(Tag *stanzaTag) {
 			adhocTag->setTitle(tr(m_language.c_str(), _("User information")));
 			adhocTag->setInstructions(tr(m_language.c_str(), _("Add bare JID of user you want to configure.")));
 			adhocTag->addTextSingle(tr(m_language.c_str(), _("Bare JID")), "user_jid");
+
+			response->addChild(adhocTag);
+			return response;
+		}
+		else if (result == tr(m_language.c_str(), _("Send message to online users"))) {
+			m_state = ADHOC_ADMIN_SEND_MESSAGE;
+
+			IQ _response(IQ::Result, stanzaTag->findAttribute("from"), stanzaTag->findAttribute("id"));
+			Tag *response = _response.tag();
+			response->addAttribute("from", Transport::instance()->jid());
+
+			AdhocTag *adhocTag = new AdhocTag(tag->findAttribute("sessionid"), "transport_admin", "executing");
+			adhocTag->setAction("complete");
+			adhocTag->setTitle(tr(m_language.c_str(), _("Send message to online users")));
+			adhocTag->setInstructions(tr(m_language.c_str(), _("Type message you want to send to all online users.")));
+			adhocTag->addTextMulti(tr(m_language.c_str(), _("Message")), "message");
 
 			response->addChild(adhocTag);
 			return response;
@@ -159,6 +179,24 @@ Tag *AdhocAdmin::handleTag(Tag *stanzaTag) {
 			u.vip = user_vip == "1";
 			Transport::instance()->sql()->updateUser(u);
 		}
+
+		IQ _response(IQ::Result, stanzaTag->findAttribute("from"), stanzaTag->findAttribute("id"));
+		_response.setFrom(Transport::instance()->jid());
+		Tag *response = _response.tag();
+		response->addChild( new AdhocTag(tag->findAttribute("sessionid"), "transport_admin", "completed") );
+		return response;
+	}
+	else if (m_state == ADHOC_ADMIN_SEND_MESSAGE) {
+		if (!form.hasField("message"))
+			return NULL;
+		
+		std::string message = "";
+		const StringList &values = form.field("message")->values();
+		for (StringList::const_iterator it = values.begin(); it != values.end(); it++) {
+			message+= (*it) + "\n";
+		}
+
+		Transport::instance()->userManager()->sendMessageToAll(message);
 
 		IQ _response(IQ::Result, stanzaTag->findAttribute("from"), stanzaTag->findAttribute("id"));
 		_response.setFrom(Transport::instance()->jid());

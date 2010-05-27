@@ -26,11 +26,12 @@
 #include "account.h"
 #include "abstractuser.h"
 #include "glib.h"
+#include "messagesender.h"
 
 class GlooxMessageHandler;
 
-// Class for managing XMPP users.
-class UserManager
+// Class for managing online XMPP users.
+class UserManager : MessageSender
 {
 	public:
 		UserManager();
@@ -65,6 +66,9 @@ class UserManager
 
 		// Returns count of online users;
 		int userCount();
+
+		// Sends message to all online users.
+		bool sendMessageToAll(const std::string &message);
 
 	private:
 		GHashTable *m_users;	// key = JID; value = User*

@@ -117,3 +117,16 @@ void UserManager::removeAllUsers() {
 	g_hash_table_foreach_remove(m_users, removeUserCallback, NULL);
 	m_cachedUser = NULL;
 }
+
+bool UserManager::sendMessageToAll(const std::string &message) {
+	if (isSending())
+		return false;
+
+	GList *users = g_hash_table_get_keys(m_users);
+	for (GList *l = users; l != NULL; l = l->next) {
+		addRecipient((const char *)l->data);
+	}
+	g_list_free(users);
+	return sendMessage(message);
+}
+

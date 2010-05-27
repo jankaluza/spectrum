@@ -61,6 +61,9 @@ class AdhocTag : public Tag {
 		// Adds single line password input.
 		void addTextPrivate(const std::string &label, const std::string &var, const std::string &value = "");
 
+		// Adds multi line text input.
+		void addTextMulti(const std::string &label, const std::string &var, const std::string &value = "");
+
 		// Adds fixed text.
 		void addFixedText(const std::string &text);
 

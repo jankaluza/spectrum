@@ -86,6 +86,7 @@ set(spectrum_SRCS
 	src/localization.cpp
 	src/log.cpp
 	src/main.cpp
+	src/messagesender.cpp
 	src/spectrummessagehandler.cpp
 # 	src/muchandler.cpp
 	src/parser.cpp
@@ -151,6 +152,7 @@ set(spectrum_MOC_HDRS
 	src/localization.h
 	src/log.h
 	src/main.h
+	src/messagesender.h
 	src/spectrummessagehandler.h
 	src/spectrumconversation.h
 # 	src/muchandler.h
@@ -253,6 +255,7 @@ set(spectrum_tests_SRCS
 	src/capabilitymanager.cpp
 	src/configfile.cpp
 # 	src/discoinfohandler.cpp
+	src/messagesender.cpp
 	src/parser.cpp
 	src/rostermanager.cpp
 	src/rosterstorage.cpp
@@ -291,6 +294,7 @@ set(spectrum_tests_MOC_HDRS
 	src/capabilitymanager.h
 	src/configfile.h
 	src/localization.h
+	src/messagesender.h
 # 	src/discoinfohandler.h
 	src/parser.h
 	src/registerhandler.h

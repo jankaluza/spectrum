@@ -129,6 +129,18 @@ void AdhocTag::addTextSingle(const std::string &label, const std::string &var, c
 	xdata->addChild(field);
 }
 
+void AdhocTag::addTextMulti(const std::string &label, const std::string &var, const std::string &value) {
+	if (xdata == NULL)
+		initXData();
+	Tag *field = new Tag("field");
+	field->addAttribute("type", "text-multi");
+	field->addAttribute("label", label);
+	field->addAttribute("var", var);
+	
+	field->addChild(new Tag("value", value));
+	xdata->addChild(field);
+}
+
 void AdhocTag::addTextPrivate(const std::string &label, const std::string &var, const std::string &value) {
 	if (xdata == NULL)
 		initXData();
