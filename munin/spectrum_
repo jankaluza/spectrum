@@ -99,7 +99,10 @@ def handle_field( string ):
 suffix = sys.argv[0].partition('_')[2]
 verbose = os.environ.get( 'verbose' )
 base = os.environ.get( 'base', '/etc/spectrum' )
-cfgs = os.environ.get( 'cfgs', ','.join( os.listdir( base ) ) )
+if 'cfgs' in os.environ.keys():
+	cfgs = os.environ.get( 'cfgs' ).split(',')
+else:
+	cfgs = [ f for f in os.listdir( base ) if f.endswith( '.cfg' ) ]
 
 # set variables based on wildcard 
 if suffix == 'uptime':
@@ -153,7 +156,7 @@ graph_scale no
 graph_vlabel %s
 graph_category transports
 graph_info %s""" %(title, vlabel, info) )
-	for cfg in cfgs.split( ',' ):
+	for cfg in cfgs:
 		path = cfg.strip()
 		if not os.path.isabs( path ):
 			path = os.path.normpath( base + '/' + path )
@@ -223,7 +226,7 @@ for name in stat.keys():
 	child = xmpp.simplexml.Node( 'stat', {'name': name} )
 	pkg.kids[0].addChild( node=child )
 
-for cfg in cfgs.split( ',' ):
+for cfg in cfgs:
 	path = cfg
 	if not os.path.isabs( path ):
 		path = base + '/' + path
