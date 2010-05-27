@@ -94,7 +94,7 @@ def send_message( config_interface, pkg ):
 
 	s = socket.socket( socket.AF_UNIX )
 	s.connect( config_interface )
-	s.send( str(iq) )
+	s.send( str(pkg) )
 	data = s.recv( 10240 )
 	s.close()
 	return data
