@@ -71,7 +71,7 @@ if action == 'help':
 	parser.print_help()
 	sys.exit(0)
 if action not in all_actions:
-	print( "Error: %s: Unknown action." )
+	print( "Error: %s: Unknown action." %(action) )
 	sys.exit(1)
 
 def log( msg, newline=True ):
