@@ -500,7 +500,7 @@ void SQLClass::initDb() {
 	if (m_check) {
 		m_loaded = false;
 		std::cout << "Current DB schema version: " << m_version << "\n";
-		if (m_version < m_dbversion)
+		if (m_version < m_dbversion && p->configuration().sqlType == "sqlite")
 			exit(2);
 		else
 			exit(0);
