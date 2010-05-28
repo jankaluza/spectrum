@@ -233,6 +233,18 @@ class spectrum:
 		home = pwd.getpwuid( env.get_uid() )[5]
 		os.chdir( home )
 
+		# check if database is at current version:
+		check_cmd = [ 'spectrum', '--check-db-version', path ]
+		check_cmd = env.su_cmd( check_cmd )
+		retVal = subprocess.call( check_cmd )
+		if retVal == 1:
+			return 1, "db_version table does not exist"
+		elif retVal == 2: 
+			return 1, "database not up to date, update with spectrum --upgrade-db"
+		elif retVal == 3:
+			return 1, "Error connecting to the database"
+
+		# finally start spectrum:
 		if env.options.no_daemon:
 			cmd.append( '-n' )
 		if env.options.debug:
