@@ -246,12 +246,13 @@ class spectrum:
 		# check if database is at current version:
 		check_cmd = [ 'spectrum', '--check-db-version', path ]
 		check_cmd = env.su_cmd( check_cmd )
-		retVal = subprocess.call( check_cmd )
-		if retVal == 1:
+		process = subprocess.Popen( check_cmd, stdout=subprocess.PIPE )
+		process.communicate()
+		if process.returncode == 1:
 			raise RuntimeError( "db_version table does not exist", 1)
-		elif retVal == 2: 
-			raise RuntimeError( "database not up to date, update with spectrum --upgrade-db", 1 )
-		elif retVal == 3:
+		elif process.returncode == 2: 
+			raise RuntimeError( "database not up to date, update with spectrum -c %s --upgrade-db"%(self.config_path), 1 )
+		elif process.returncode == 3:
 			raise RuntimeError( "Error connecting to the database", 1 )
 
 		# finally start spectrum:
@@ -296,9 +297,9 @@ class spectrum:
 					return 0
 				time.sleep( 1 )
 				os.kill( pid, signal.SIGTERM )
-			raise RuntimeError( "failed", 1 )
+			raise RuntimeError( "Spectrum did not die", 1 )
 		except:	
-			raise RuntimeError( "failed", 1 )
+			raise RuntimeError( "Unknown Error occured", 1 )
 
 	def restart( self ):
 		"""
@@ -324,7 +325,7 @@ class spectrum:
 		try:
 			os.kill( pid, signal.SIGHUP )
 		except:	
-			raise RuntimeError( "failed", 1 )
+			raise RuntimeError( "Unknown error occured", 1 )
 
 	def message_all( self ):
 		from xmpp.simplexml import Node
