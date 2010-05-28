@@ -28,8 +28,8 @@
 #include "transport.h"
 #include "usermanager.h"
 
-#define SQLITE_DB_VERSION 2
-#define MYSQL_DB_VERSION 1
+#define SQLITE_DB_VERSION 3
+#define MYSQL_DB_VERSION 2
 
 #if !defined(WITH_MYSQL) && !defined(WITH_SQLITE) && !defined(WITH_ODBC)
 #error There is no libPocoData storage backend installed. Spectrum will not work without one of them.
@@ -422,7 +422,8 @@ void SQLClass::initDb() {
 							"  uin varchar(255) NOT NULL,"
 							"  subscription varchar(20) NOT NULL,"
 							"  nickname varchar(255) NOT NULL,"
-							"  groups varchar(255) NOT NULL"
+							"  groups varchar(255) NOT NULL,"
+							"  flags int(4) NOT NULL DEFAULT '0'"
 							");", now;
 
 				*m_sess << "CREATE UNIQUE INDEX IF NOT EXISTS user_id ON " + p->configuration().sqlPrefix + "buddies (user_id, uin);", now;
@@ -511,6 +512,12 @@ void SQLClass::initDb() {
 			Log("SQL", "Starting DB upgrade.");
 			m_loaded = true;
 			upgradeDatabase();
+			if (m_upgrade)
+				exit(0);
+			return;
+		}
+		else if (m_version < m_dbversion) {
+			Log("SQL", "Maybe the database schema is not updated. Try to run \"spectrum <config_file.cfg> --upgrade-db\" to fix that.");
 			return;
 		}
 	}
@@ -540,6 +547,7 @@ void SQLClass::upgradeDatabase() {
 			}
 			else if (i == 1) {
 				if (p->configuration().sqlType == "sqlite") {
+					// Change 'vip' column type from tinyint to int(1)
 					*m_sess << "CREATE TABLE IF NOT EXISTS " + p->configuration().sqlPrefix + "users_new ("
 								"  id INTEGER PRIMARY KEY NOT NULL,"
 								"  jid varchar(255) NOT NULL,"
@@ -556,6 +564,18 @@ void SQLClass::upgradeDatabase() {
 					*m_sess << "ALTER TABLE " + p->configuration().sqlPrefix + "users_new RENAME TO " + p->configuration().sqlPrefix + "users;", now;
 					*m_sess << "CREATE UNIQUE INDEX IF NOT EXISTS jid1 ON " + p->configuration().sqlPrefix + "users (jid);", now;
 					*m_sess << "REPLACE INTO " + p->configuration().sqlPrefix + "db_version (ver) values(2)", now;
+				}
+				else {
+					// Add 'flags' column to buddies table.
+					*m_sess << "ALTER TABLE " + p->configuration().sqlPrefix + "buddies ADD flags smallint(4) NOT NULL DEFAULT '0';", now;
+					*m_sess << "REPLACE INTO " + p->configuration().sqlPrefix + "db_version (ver) values(2);", now;
+				}
+			}
+			else if (i == 2) {
+				if (p->configuration().sqlType == "sqlite") {
+					// Add 'flags' column to buddies table.
+					*m_sess << "ALTER TABLE " + p->configuration().sqlPrefix + "buddies ADD flags int(4) NOT NULL DEFAULT '0';", now;
+					*m_sess << "REPLACE INTO " + p->configuration().sqlPrefix + "db_version (ver) values(3);", now;
 				}
 			}
 		}
