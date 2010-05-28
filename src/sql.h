@@ -21,8 +21,6 @@
 #ifndef _HI_SQL_H
 #define _HI_SQL_H
 
-#define DB_VERSION 1
-
 #include <iostream>
 #include "transport_config.h"
 
@@ -260,7 +258,7 @@ struct getOnlineUsersStatement {
  */
 class SQLClass : public AbstractBackend {
 	public:
-		SQLClass(GlooxMessageHandler *parent, bool upgrade = false);
+		SQLClass(GlooxMessageHandler *parent, bool upgrade = false, bool check = false);
 		~SQLClass();
 
 		void addUser(const std::string &jid, const std::string &uin, const std::string &password, const std::string &language, const std::string &encoding);
@@ -330,6 +328,7 @@ class SQLClass : public AbstractBackend {
 		int m_error;
 		SpectrumTimer *m_reconnectTimer;
 		int m_dbversion;
+		bool m_check;
 };
 
 #endif

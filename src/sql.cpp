@@ -28,6 +28,8 @@
 #include "transport.h"
 #include "usermanager.h"
 
+#define SQLITE_DB_VERSION 2
+#define MYSQL_DB_VERSION 1
 
 #if !defined(WITH_MYSQL) && !defined(WITH_SQLITE) && !defined(WITH_ODBC)
 #error There is no libPocoData storage backend installed. Spectrum will not work without one of them.
@@ -42,10 +44,10 @@ static gboolean reconnectMe(gpointer data) {
 	return sql->reconnectCallback();
 }
 
-SQLClass::SQLClass(GlooxMessageHandler *parent, bool upgrade) {
+SQLClass::SQLClass(GlooxMessageHandler *parent, bool upgrade, bool check) {
 	p = parent;
-	m_dbversion = DB_VERSION;
 	m_loaded = false;
+	m_check = check;
 	m_upgrade = upgrade;
 	m_sess = NULL;
 	m_stmt_addUser.stmt = NULL;
@@ -77,13 +79,14 @@ SQLClass::SQLClass(GlooxMessageHandler *parent, bool upgrade) {
 	try {
 #ifdef WITH_MYSQL
 		if (p->configuration().sqlType == "mysql") {
-			MySQL::Connector::registerConnector(); 
+			m_dbversion = MYSQL_DB_VERSION;
+			MySQL::Connector::registerConnector();
 			m_sess = new Session("MySQL", "user=" + p->configuration().sqlUser + ";password=" + p->configuration().sqlPassword + ";host=" + p->configuration().sqlHost + ";db=" + p->configuration().sqlDb + ";auto-reconnect=true");
 		}
 #endif
 #ifdef WITH_SQLITE
 		if (p->configuration().sqlType == "sqlite") {
-			m_dbversion++;
+			m_dbversion = SQLITE_DB_VERSION;
 			SQLite::Connector::registerConnector(); 
 			m_sess = new Session("SQLite", p->configuration().sqlDb);
 			g_chmod(p->configuration().sqlDb.c_str(), 0640);
@@ -108,6 +111,10 @@ SQLClass::SQLClass(GlooxMessageHandler *parent, bool upgrade) {
 // 		Log().Get("SQL ERROR") << " - ODBC - use type=odbc for this backend in config file";
 // #endif
 		return;
+	}
+	
+	if (check) {
+		std::cout << "Required DB schema version: " << m_dbversion << "\n";
 	}
 	
 	createStatements();
@@ -471,24 +478,41 @@ void SQLClass::initDb() {
 	}
 	catch (Poco::Exception e) {
 		m_version = 0;
-		Log("SQL ERROR", e.displayText());
-		Log("SQL ERROR CODE", e.code());
-		if (p->configuration().sqlType != "sqlite" && !m_upgrade) {
-			Log("SQL", "Maybe the database schema is not updated. Try to run \"spectrum <config_file.cfg> --upgrade-db\" to fix that.");
-			return;
+		if (m_check) {
+			m_loaded = false;
+			std::cout << "Current DB schema version: " << m_version << "\n";
+			exit(1);
 		}
-		if (p->configuration().sqlType == "sqlite") {
+		else {
+			Log("SQL ERROR", e.displayText());
+			Log("SQL ERROR CODE", e.code());
+			if (p->configuration().sqlType != "sqlite" && !m_upgrade) {
+				Log("SQL", "Maybe the database schema is not updated. Try to run \"spectrum <config_file.cfg> --upgrade-db\" to fix that.");
+				return;
+			}
+			if (p->configuration().sqlType == "sqlite") {
+				m_loaded = true;
+				upgradeDatabase();
+				return;
+			}
+		}
+	}
+	if (m_check) {
+		m_loaded = false;
+		std::cout << "Current DB schema version: " << m_version << "\n";
+		if (m_version < m_dbversion)
+			exit(2);
+		else
+			exit(0);
+	}
+	else {
+		Log("SQL", "Current DB version: " << m_version);
+		if ((p->configuration().sqlType == "sqlite" || (p->configuration().sqlType != "sqlite" && m_upgrade)) && m_version < m_dbversion) {
+			Log("SQL", "Starting DB upgrade.");
 			m_loaded = true;
 			upgradeDatabase();
 			return;
 		}
-	}
-	Log("SQL", "Current DB version: " << m_version);
-	if ((p->configuration().sqlType == "sqlite" || (p->configuration().sqlType != "sqlite" && m_upgrade)) && m_version < m_dbversion) {
-		Log("SQL", "Starting DB upgrade.");
-		m_loaded = true;
-		upgradeDatabase();
-		return;
 	}
 	
 	m_loaded = true;

@@ -90,6 +90,7 @@ static gchar *logfile = NULL;
 static gchar *lock_file = NULL;
 static gboolean ver = FALSE;
 static gboolean upgrade_db = FALSE;
+static gboolean check_db_version = FALSE;
 static gboolean list_purple_settings = FALSE;
 
 static GOptionEntry options_entries[] = {
@@ -99,6 +100,7 @@ static GOptionEntry options_entries[] = {
 	{ "version", 'v', 0, G_OPTION_ARG_NONE, &ver, "Shows Spectrum version", NULL },
 	{ "list-purple-settings", 's', 0, G_OPTION_ARG_NONE, &list_purple_settings, "Lists purple settings which can be used in config file", NULL },
 	{ "upgrade-db", 'u', 0, G_OPTION_ARG_NONE, &upgrade_db, "Upgrades Spectrum database", NULL },
+	{ "check-db-version", 'c', 0, G_OPTION_ARG_NONE, &check_db_version, "Checks Spectrum database version", NULL },
 	{ NULL, 0, 0, G_OPTION_ARG_NONE, NULL, "", NULL }
 };
 
@@ -886,6 +888,13 @@ GlooxMessageHandler::GlooxMessageHandler(const std::string &config) : MessageHan
 	if (!loadConfigFile(config))
 		loaded = false;
 
+	g_thread_init(NULL);
+	if (check_db_version) {
+		m_sql = new SQLClass(this, upgrade_db, true);
+		if (!m_sql->loaded())
+			exit(3);
+	}
+	
 	if (!list_purple_settings) {
 		if (loaded && !nodaemon)
 			daemonize(configuration().userDir.c_str());
@@ -918,7 +927,6 @@ GlooxMessageHandler::GlooxMessageHandler(const std::string &config) : MessageHan
 		j->logInstance().registerLogHandler(LogLevelDebug, LogAreaXmlIncoming | LogAreaXmlOutgoing, &Log_);
 	
 	m_loop = g_main_loop_new(NULL, FALSE);
-	g_thread_init(NULL);
 
 	m_userManager = new UserManager();
 	m_adhoc = new GlooxAdhocHandler();
@@ -939,7 +947,7 @@ GlooxMessageHandler::GlooxMessageHandler(const std::string &config) : MessageHan
 	}
 
 	if (loaded) {
-		m_sql = new SQLClass(this, upgrade_db);	
+		m_sql = new SQLClass(this, upgrade_db);
 		if (!m_sql->loaded())
 			loaded = false;
 	}
