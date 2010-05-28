@@ -26,8 +26,9 @@ except ImportError:
 ExistsError = ExistsError.ExistsError
 
 class spectrum:
-	def __init__( self, config_path ):
+	def __init__( self, config_path, params ):
 		self.config_path = os.path.normpath( config_path )
+		self.params = params
 		
 		self.config = spectrumconfigparser.SpectrumConfigParser()
 		self.config.read( config_path )
@@ -159,8 +160,17 @@ class spectrum:
 			pid = '-'
 		proto = self.config.get( 'service', 'protocol' )
 		host = self.get_jid()
-		status = self.status()[1]
+		status = self.status_str()
 		return (pid, proto, host, status)
+
+	def status_str( self, pid=None ):
+		status = self.status( pid )
+		if status == 0:
+			return( "running" )
+		elif status == 1:
+			return( "dead but pid-file exists" )
+		elif status == 3:
+			return( "not running" )
 
 	def status( self, pid=None ):
 		"""
@@ -173,30 +183,30 @@ class spectrum:
 		@see:	http://refspecs.freestandards.org/LSB_3.1.0/LSB-Core-generic/LSB-Core-generic/iniscrptact.html
 		"""
 		if not os.path.exists( self.pid_file ):
-			return 3, "not running."
+			return 3 # "not running"
 
 		if pid == None:
 			pid = self.get_pid()
 			if pid <= 0:
-				return 4, "could not parse pid file."
+				raise RuntimeError( "could not parse pid file", 4 )
 		
 		if os.path.exists( '/proc' ):
 			if os.path.exists( '/proc/%i' %(pid) ):
-				return 0, "running."
+				return 0 # "running"
 			else:
-				return 1, "not running but pid file exists."
+				return 1 # "not running but pid file exists."
 		else: # no proc!
 			try:
 				os.kill( pid, 0 )
-				return 0, "running."
+				return 0 # "running."
 			except OSError, err:
 			# except OSError as err: #python3
 				if err.errno == errno.ESRCH:
-					return 1, "not running but pid file exists."
+					return 1 # "not running but pid file exists."
 				else:
-					return 4, "unknown."
+					raise RuntimeError( "unknown (OSError)", 4 )
 			except:
-				return 4, "unknown."
+				raise RuntimeError( "unknown (Error)", 4 )
 
 
 	def start( self ):
@@ -206,19 +216,19 @@ class spectrum:
 		@return: (int, string) where int is the exit-code and string is a status message.
 		@see:	http://refspecs.freestandards.org/LSB_3.1.0/LSB-Core-generic/LSB-Core-generic/iniscrptact.html
 		"""
-		status = self.status()[0]
+		status = self.status()
 		if status == 0:
-			return 0, "already running." # starting while we are already running is also success!
+			# starting while we are already running is also success!
+			return 
 		elif status == 1:
+			# not running but pid file exists
 			os.remove( self.pid_file )
-		elif status != 3:
-			return 1, "status unknown." # We cannot start if status != 3
 
 		# do rigorous permission-checking:
 		try:
 			self.check_environment()
 		except RuntimeError, e:
-			return 1, "%s: %s" % e.args
+			raise RuntimeError( "%s: %s" % e.args, 1 )
 
 		try:
 			binary = os.environ['SPECTRUM_PATH']
@@ -238,11 +248,11 @@ class spectrum:
 		check_cmd = env.su_cmd( check_cmd )
 		retVal = subprocess.call( check_cmd )
 		if retVal == 1:
-			return 1, "db_version table does not exist"
+			raise RuntimeError( "db_version table does not exist", 1)
 		elif retVal == 2: 
-			return 1, "database not up to date, update with spectrum --upgrade-db"
+			raise RuntimeError( "database not up to date, update with spectrum --upgrade-db", 1 )
 		elif retVal == 3:
-			return 1, "Error connecting to the database"
+			raise RuntimeError( "Error connecting to the database", 1 )
 
 		# finally start spectrum:
 		if env.options.no_daemon:
@@ -255,9 +265,9 @@ class spectrum:
 		cmd = env.su_cmd( cmd )
 		retVal = subprocess.call( cmd )
 		if retVal != 0:
-			return 1, "could not start spectrum instance."
+			raise RuntimeError( "Could not start spectrum instance", retVal )
 
-		return 0, "ok."
+		return
 
 	def stop( self ):
 		"""
@@ -266,16 +276,13 @@ class spectrum:
 		@return: (int, string) where int is the exit-code and string is a status message.
 		@see:	http://refspecs.freestandards.org/LSB_3.1.0/LSB-Core-generic/LSB-Core-generic/iniscrptact.html
 		"""
-		status = self.status()[0]
+		status = self.status()
 		if status == 3:
 			# stopping while not running is also success!
-			return 0, "already stopped."
+			return
 		elif status == 1:
 			os.remove( self.pid_file )
-			return 0, "pid file was still there"
-		elif status != 0: 
-			# we cannot stop if status != 0
-			return 1, "status unknown." 
+			return
 
 		pid = self.get_pid()
 		try:
@@ -286,12 +293,12 @@ class spectrum:
 				status = self.status()[0]
 				if status == 3 or status == 1:
 					os.remove( self.pid_file )
-					return 0, "ok."
+					return 0
 				time.sleep( 1 )
 				os.kill( pid, signal.SIGTERM )
-			return 1, "failed."
+			raise RuntimeError( "failed", 1 )
 		except:	
-			return 1, "failed."
+			raise RuntimeError( "failed", 1 )
 
 	def restart( self ):
 		"""
@@ -300,11 +307,9 @@ class spectrum:
 		@return: (int, string) where int is the exit-code and string is a status message.
 		@see:	http://refspecs.freestandards.org/LSB_3.1.0/LSB-Core-generic/LSB-Core-generic/iniscrptact.html
 		"""
-		if self.stop()[0] == 0:
-			return self.start()
-		else:
-			return 1, "could not stop spectrum instance."
-
+		self.stop()
+		self.start()
+	
 	def reload( self ): # send SIGHUP to process
 		"""
 		Reload instance (send SIGHUP) which causes spectrum to reopen
@@ -312,11 +317,83 @@ class spectrum:
 		
 		@return: (int, string) where int is the exit-code and string is a status message.
 		"""
-		if self.status()[0] != 0:
-			return 1, "not running."
+		if self.status() != 0:
+			raise RuntimeError( "not running", 1 )
+
 		pid = self.get_pid()
 		try:
 			os.kill( pid, signal.SIGHUP )
-			return 0, "ok."
 		except:	
-			return 1, "failed."
+			raise RuntimeError( "failed", 1 )
+
+	def message_all( self ):
+		from xmpp.simplexml import Node
+		from xmpp.protocol import NS_DATA
+		try:
+			from spectrum import config_interface
+		except ImportError:
+			import config_interface
+
+		interface = config_interface.config_interface( self )
+
+		# first field stanza:
+		field_value = Node( tag='value', 
+			payload=['ADHOC_ADMIN_SEND_MESSAGE'] )
+		field = Node( tag='field', payload=[field_value],
+			attrs={'type': 'hidden', 'var': 'adhoc_state'} )
+
+		# x stanza with enclosed field:
+		x_value = Node( tag='value', payload=['Awesome message'] )
+		x_field = Node( tag='field', payload=[x_value],
+			attrs={'type':'text-multi', 'var': 'message' } )
+		x = Node( tag='x', payload=[x_field],
+			attrs={ 'xmlns': NS_DATA, 'type': 'submit' } )
+	
+		response = interface.command( [field, x] )
+		print( response )
+		return 0
+
+	def set_vip_status( self ):
+		from xmpp.simplexml import Node
+		from xmpp.protocol import NS_DATA
+		try:
+			from spectrum import config_interface
+		except ImportError:
+			import config_interface
+		
+		interface = config_interface.config_interface( self )
+		
+		x = Node( tag='x', attrs={'xmlns': NS_DATA, 'type':'submit'} )
+
+		fields = [
+			('adhoc_state', 'ADHOC_ADMIN_USER2', 'hidden'),
+			('user_jid', self.params[0], 'hidden' ),
+			('user_vip', self.params[1], 'boolean' ) ]
+
+		for field in fields:
+			value = Node( tag='value', payload=[field[1]] )
+			field = Node( tag='field', payload=[value],
+				attrs={'type':field[2], 'var':field[0] } )
+			x.addChild( node=field )
+
+		response = interface.command( [x] )
+		print( response )
+		return 0
+
+	def get_stats( self ):
+		import xmpp
+		try:
+			from spectrum import config_interface
+		except ImportError:
+			import config_interface
+
+		interface = config_interface.config_interface( self )
+		ns = 'http://jabber.org/protocol/stats'
+		nodes = []
+		for name in [ 'uptime', 'users/registered', 'users/online', 
+				'contacts/online', 'contacts/total', 
+				'messages/in', 'messages/out', 'memory-usage' ]:
+			nodes.append( xmpp.simplexml.Node( 'stat', 
+				attrs={'name': name} ) )
+
+		return interface.query( nodes, ns )

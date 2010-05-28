@@ -61,9 +61,7 @@ parser.add_option_group( list_group )
 options, args = parser.parse_args()
 env.options = options
 
-init_actions = [ 'start', 'stop', 'restart', 'reload', 'status' ]
-complex_actions = [ 'list', 'stats', 'adhoc_test', 'message_all' ]
-all_actions = init_actions + complex_actions
+all_actions = dir( spectrum_group.spectrum_group )
 
 action = args[0]
 params = args[1:]
@@ -74,53 +72,20 @@ if action not in all_actions:
 	print( "Error: %s: Unknown action." %(action) )
 	sys.exit(1)
 
-def log( msg, newline=True ):
-	if not options.quiet or action == "list":
-		if newline:
-			print( msg )
-		else:
-			print( msg ),
-#			print( msg, end='' ) #python 3
-	
-def act( instance ):
-	if not instance.enabled():
-		if not options.quiet:
-			print( "%s is disabled in config-file." %(instance.get_jid()) )
-		return 0
-
-	log( "%s %s..."%(action.title(), instance.get_jid()), False )
-	exit, string = getattr( instance, action )()
-	log( string )
-	return exit
-
+configs = []
 if options.config:
-	instance = spectrum.spectrum( options.config )
-
-	if action in init_actions:
-		ret = act( instance )
-		sys.exit( ret )
-	else:
-		ret = getattr( actions, action )( options, params, [instance], )
-		sys.exit( ret )
+	configs = [ options.config ]
 else:
 	if not os.path.exists( options.config_dir ):
 		log( "Error: %s: No such directory"%(options.config_dir) )
 		sys.exit(1)
 
-	ret = 0
 	config_list = os.listdir( options.config_dir )
 	instances = []
 	for file in config_list:
 		path = '%s/%s'%(options.config_dir, file)
 		if os.path.isfile( path ) and path.endswith( '.cfg' ):
-			instances.append( spectrum.spectrum( path ) )
+			configs.append( path )
 
-	if action in init_actions:
-		for instance in instances:
-			ret += act( instance )
-	else:
-		ret = getattr( actions, action )( options, instances )
-
-	if ret != 0:
-		log( "Warning: Some actions failed." )
-		sys.exit( ret )
+group = spectrum_group.spectrum_group( options, params, configs )
+getattr( group, action )()
