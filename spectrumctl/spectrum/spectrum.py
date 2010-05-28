@@ -277,6 +277,7 @@ class spectrum:
 					return 0, "ok."
 				time.sleep( 1 )
 				os.kill( pid, signal.SIGTERM )
+			return 1, "failed."
 		except:	
 			return 1, "failed."
 
