@@ -291,7 +291,7 @@ class spectrum:
 			time.sleep( 0.1 )
 			
 			for i in range(1, 10):
-				status = self.status()[0]
+				status = self.status()
 				if status == 3 or status == 1:
 					os.remove( self.pid_file )
 					return 0
@@ -364,11 +364,11 @@ class spectrum:
 
 		if process.returncode == 2:
 			update_cmd = [ 'spectrum', '--upgrade-db', path ]
-			update_cmd = env.su_cmd( check_cmd )
+			update_cmd = env.su_cmd( update_cmd )
 			process = subprocess.Popen( update_cmd, stdout=subprocess.PIPE )
 			process.communicate()
 			if process.returncode != 0:
-				raise RuntimeError( "spectrum --update-db %s exited with status %s"%(path,process.returncode), 1)
+				raise RuntimeError( "%s exited with status %s"%(" ".join(update_cmd),process.returncode), 1)
 		elif process.returncode == 1:
 			raise RuntimeError( "db_version table does not exist", 1)
 		elif process.returncode == 3:
