@@ -58,6 +58,19 @@ class spectrum_group:
 
 	def reload( self ):
 		self.simple_action( 'reload' )
+
+	def stats( self ):
+		output = []
+		for instance in instances:
+			iq = instance.get_stats()
+			o = [ jid + ':' ]
+			for stat in iq.getQueryChildren():
+				value = stat.getAttr( 'value' )
+				unit = stat.getAttr( 'units' )
+				name = stat.getAttr( 'name' )
+				o.append( name + ': ' + value + ' ' + unit )
+			output.append( "\n".join( o ) )
+		print "\n\n".join( output )
 	
 	def upgrade_db( self ):
 		self.simple_action( 'upgrade_db', "Upgrading db for" )
