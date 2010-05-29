@@ -894,6 +894,11 @@ GlooxMessageHandler::GlooxMessageHandler(const std::string &config) : MessageHan
 		if (!m_sql->loaded())
 			exit(3);
 	}
+	if (upgrade_db) {
+		m_sql = new SQLClass(this, upgrade_db);
+		if (!m_sql->loaded())
+			loaded = false;
+	}
 	
 	if (!list_purple_settings) {
 		if (loaded && !nodaemon)
