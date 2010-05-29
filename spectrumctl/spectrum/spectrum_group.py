@@ -24,10 +24,11 @@ class spectrum_group:
 				print( msg ),
 #				print( msg, end='' ) #python 3
 
-	def simple_action( self, action ):
+	def simple_action( self, action, title=None ):
 		ret = 0
 		for instance in self.instances:
-			title = action.title()
+			if not title:
+				title = action.title()
 			jid = instance.get_jid()
 			self.log( "%s %s..."%(title, jid), False )
 			try:
@@ -57,6 +58,9 @@ class spectrum_group:
 
 	def reload( self ):
 		self.simple_action( 'reload' )
+	
+	def upgrade_db( self ):
+		self.simple_action( 'upgrade_db', "Upgrading db for" )
 
 	def message_all( self ):
 		self.simple_action( 'message_all' )

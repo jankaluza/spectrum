@@ -251,7 +251,7 @@ class spectrum:
 		if process.returncode == 1:
 			raise RuntimeError( "db_version table does not exist", 1)
 		elif process.returncode == 2: 
-			raise RuntimeError( "database not up to date, update with spectrum -c %s --upgrade-db"%(self.config_path), 1 )
+			raise RuntimeError( "database not up to date, update with spectrumctl upgrade-db"%(self.config_path), 1 )
 		elif process.returncode == 3:
 			raise RuntimeError( "Error connecting to the database", 1 )
 
@@ -353,6 +353,27 @@ class spectrum:
 		response = interface.command( [field, x] )
 		print( response )
 		return 0
+	
+	def upgrade_db( self ):
+		path = os.path.abspath( self.config_path )
+
+		check_cmd = [ 'spectrum', '--check-db-version', path ]
+		check_cmd = env.su_cmd( check_cmd )
+		process = subprocess.Popen( check_cmd, stdout=subprocess.PIPE )
+		process.communicate()
+
+		if process.returncode == 2:
+			update_cmd = [ 'spectrum', '--upgrade-db', path ]
+			update_cmd = env.su_cmd( check_cmd )
+			process = subprocess.Popen( update_cmd, stdout=subprocess.PIPE )
+			process.communicate()
+			if process.returncode != 0:
+				raise RuntimeError( "spectrum --update-db %s exited with status %s"%(path,process.returncode), 1)
+		elif process.returncode == 1:
+			raise RuntimeError( "db_version table does not exist", 1)
+		elif process.returncode == 3:
+			raise RuntimeError( "Error connecting to the database", 1 )
+
 
 	def set_vip_status( self ):
 		from xmpp.simplexml import Node
