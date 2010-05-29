@@ -61,9 +61,9 @@ class spectrum_group:
 
 	def stats( self ):
 		output = []
-		for instance in instances:
+		for instance in self.instances:
 			iq = instance.get_stats()
-			o = [ jid + ':' ]
+			o = [ instance.get_jid() + ':' ]
 			for stat in iq.getQueryChildren():
 				value = stat.getAttr( 'value' )
 				unit = stat.getAttr( 'units' )
