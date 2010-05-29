@@ -520,6 +520,10 @@ void SQLClass::initDb() {
 			Log("SQL", "Maybe the database schema is not updated. Try to run \"spectrum <config_file.cfg> --upgrade-db\" to fix that.");
 			return;
 		}
+		else if (m_upgrade) {
+			Log("SQL", "Database schema is up to date, you can run spectrum as usual.");
+			return;
+		}
 	}
 	
 	m_loaded = true;
