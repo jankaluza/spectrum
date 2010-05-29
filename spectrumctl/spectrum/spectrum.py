@@ -155,8 +155,8 @@ class spectrum:
 		return 0, 'ok'
 
 	def list( self ):
-		pid = self.get_pid()
-		if pid == -1:
+		pid = str( self.get_pid() )
+		if pid == "-1":
 			pid = '-'
 		proto = self.config.get( 'service', 'protocol' )
 		host = self.get_jid()
