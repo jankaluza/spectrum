@@ -116,7 +116,9 @@ std::string SpectrumBuddy::getSafeName() {
 		name = JID::escapeNode(name);
 	}
 	else {
-		std::for_each( name.begin(), name.end(), replaceBadJidCharacters() );
+		if (name.find_last_of("@") != std::string::npos) {
+			name.replace(name.find_last_of("@"), 1, "%");
+		}
 	}
 	if (name.empty()) {
 		Log("SpectrumBuddy::getSafeName", "Name is EMPTY! Previous was " << getName() << ".");

@@ -161,8 +161,12 @@ std::string purpleUsername(const std::string &username) {
 	std::string uname = username;
 	std::string unescapedUname = JID::unescapeNode(uname);
 	// Check if there was \40 (if JID uses escaping) and if not, replace % by @
-	if (unescapedUname == uname)
-		std::for_each( uname.begin(), uname.end(), replaceJidCharacters() );
+	if (unescapedUname == uname) {
+// 		std::for_each( uname.begin(), uname.end(), replaceJidCharacters() );
+		if (uname.find_last_of("%") != std::string::npos) {
+			uname.replace(uname.find_last_of("%"), 1, "@");
+		}
+	}
 	else
 		uname = unescapedUname;
 	return uname;
