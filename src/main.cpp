@@ -1455,9 +1455,28 @@ void GlooxMessageHandler::handleSubscription(const Subscription &stanza) {
 }
 
 void GlooxMessageHandler::handlePresence(const Presence &stanza){
-	if(stanza.subtype() == Presence::Error) {
+	if (stanza.subtype() == Presence::Error) {
 		return;
 	}
+
+	if (!isValidNode(stanza.from().username())) {
+		Tag *tag = new Tag("presence");
+		tag->addAttribute("to", stanza.from().full());
+		tag->addAttribute("from", stanza.to().full());
+		tag->addAttribute("type", "error");
+
+		Tag *error = new Tag("error");
+		error->addAttribute("type", "modify");
+
+		Tag *jid = new Tag("jid-malformed");
+		jid->addAttribute("xmlns", "urn:ietf:params:xml:ns:xmpp-stanzas");
+		
+		error->addChild(jid);
+		tag->addChild(error);
+		j->send(tag);
+		return;
+	}
+	
 	// get entity capabilities
 	Tag *c = NULL;
 	bool isMUC = stanza.findExtension(ExtMUC) != NULL;

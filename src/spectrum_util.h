@@ -44,6 +44,7 @@ std::vector<std::string> &split(const std::string &s, char delim, std::vector<st
 std::vector<std::string> split(const std::string &s, char delim);
 std::string purpleUsername(const std::string &username);
 bool usesJidEscaping(const std::string &name);
+bool isValidNode(const std::string &node);
 
 struct replaceBadJidCharacters {
 	void operator()(char& c) { if(c == '@') c = '%';}

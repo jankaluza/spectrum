@@ -176,3 +176,8 @@ bool usesJidEscaping(const std::string &name) {
 #undef CONTAINS
 	return usesEscaping;
 }
+
+bool isValidNode(const std::string &node) {
+	bool valid = node.find("\n") == std::string::npos;
+	return valid;
+}
