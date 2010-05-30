@@ -143,7 +143,11 @@ void User::purpleBuddyTypingStopped(const std::string &uin){
 		return;
 	Log(m_jid, uin << " stopped typing");
 	std::string username(uin);
-	std::for_each( username.begin(), username.end(), replaceBadJidCharacters() );
+	AbstractSpectrumBuddy *s_buddy = getRosterItem(uin);
+	if (s_buddy && s_buddy->getFlags() & SPECTRUM_BUDDY_JID_ESCAPING)
+		username = JID::escapeNode(username);
+	else
+		std::for_each( username.begin(), username.end(), replaceBadJidCharacters() ); // OK
 
 
 	Tag *s = new Tag("message");
@@ -169,7 +173,11 @@ void User::purpleBuddyTyping(const std::string &uin){
 		return;
 	Log(m_jid, uin << " is typing");
 	std::string username(uin);
-	std::for_each( username.begin(), username.end(), replaceBadJidCharacters() );
+	AbstractSpectrumBuddy *s_buddy = getRosterItem(uin);
+	if (s_buddy && s_buddy->getFlags() & SPECTRUM_BUDDY_JID_ESCAPING)
+		username = JID::escapeNode(username);
+	else
+		std::for_each( username.begin(), username.end(), replaceBadJidCharacters() ); // OK
 
 	Tag *s = new Tag("message");
 	s->addAttribute("to", m_jid);
@@ -194,7 +202,11 @@ void User::purpleBuddyTypingPaused(const std::string &uin){
 		return;
 	Log(m_jid, uin << " paused typing");
 	std::string username(uin);
-	std::for_each( username.begin(), username.end(), replaceBadJidCharacters() );
+	AbstractSpectrumBuddy *s_buddy = getRosterItem(uin);
+	if (s_buddy && s_buddy->getFlags() & SPECTRUM_BUDDY_JID_ESCAPING)
+		username = JID::escapeNode(username);
+	else
+		std::for_each( username.begin(), username.end(), replaceBadJidCharacters() ); // OK
 
 
 	Tag *s = new Tag("message");
@@ -372,8 +384,7 @@ void User::receivedPresence(const Presence &stanza) {
 	bool isMUC = stanza.findExtension(ExtMUC) != NULL;
 
 	if (stanza.to().username() != ""  && stanza.presence() == Presence::Unavailable) {
-		std::string k = stanza.to().username();
-		std::for_each( k.begin(), k.end(), replaceJidCharacters() );
+		std::string k = purpleUsername(stanza.to().username());
 		removeConversation(k);
 	}
 

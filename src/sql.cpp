@@ -177,27 +177,30 @@ void SQLClass::createStatements() {
 #ifdef WITH_SQLITE
 	if (p->configuration().sqlType == "sqlite") {
 		if (!m_stmt_addBuddy.stmt)
-			m_stmt_addBuddy.stmt = new Statement( ( STATEMENT("INSERT INTO " + p->configuration().sqlPrefix + "buddies (user_id, uin, subscription, groups, nickname) VALUES (?, ?, ?, ?, ?)"),
-												use(m_stmt_addBuddy.user_id),
-												use(m_stmt_addBuddy.uin),
-												use(m_stmt_addBuddy.subscription),
-												use(m_stmt_addBuddy.groups),
-												use(m_stmt_addBuddy.nickname) ) );
-		if (!m_stmt_updateBuddy.stmt)
-			m_stmt_updateBuddy.stmt = new Statement( ( STATEMENT("UPDATE " + p->configuration().sqlPrefix + "buddies SET groups=?, nickname=? WHERE user_id=? AND uin=?"),
-												use(m_stmt_updateBuddy.groups),
-												use(m_stmt_updateBuddy.nickname),
-												use(m_stmt_updateBuddy.user_id),
-												use(m_stmt_updateBuddy.uin) ) );
-	} else
-#endif
-		if (!m_stmt_addBuddy.stmt)
-			m_stmt_addBuddy.stmt = new Statement( ( STATEMENT("INSERT INTO " + p->configuration().sqlPrefix + "buddies (user_id, uin, subscription, groups, nickname) VALUES (?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE groups=?, nickname=?"),
+			m_stmt_addBuddy.stmt = new Statement( ( STATEMENT("INSERT INTO " + p->configuration().sqlPrefix + "buddies (user_id, uin, subscription, groups, nickname, flags) VALUES (?, ?, ?, ?, ?, ?)"),
 												use(m_stmt_addBuddy.user_id),
 												use(m_stmt_addBuddy.uin),
 												use(m_stmt_addBuddy.subscription),
 												use(m_stmt_addBuddy.groups),
 												use(m_stmt_addBuddy.nickname),
+												use(m_stmt_addBuddy.flags)) );
+		if (!m_stmt_updateBuddy.stmt)
+			m_stmt_updateBuddy.stmt = new Statement( ( STATEMENT("UPDATE " + p->configuration().sqlPrefix + "buddies SET groups=?, nickname=?, flags=? WHERE user_id=? AND uin=?"),
+												use(m_stmt_updateBuddy.groups),
+												use(m_stmt_updateBuddy.nickname),
+												use(m_stmt_updateBuddy.flags),
+												use(m_stmt_updateBuddy.user_id),
+												use(m_stmt_updateBuddy.uin) ) );
+	} else
+#endif
+		if (!m_stmt_addBuddy.stmt)
+			m_stmt_addBuddy.stmt = new Statement( ( STATEMENT("INSERT INTO " + p->configuration().sqlPrefix + "buddies (user_id, uin, subscription, groups, nickname, flags) VALUES (?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE groups=?, nickname=?"),
+												use(m_stmt_addBuddy.user_id),
+												use(m_stmt_addBuddy.uin),
+												use(m_stmt_addBuddy.subscription),
+												use(m_stmt_addBuddy.groups),
+												use(m_stmt_addBuddy.nickname),
+												use(m_stmt_addBuddy.flags),
 												use(m_stmt_addBuddy.groups),
 												use(m_stmt_addBuddy.nickname) ) );
 	if (!m_stmt_updateBuddySubscription.stmt)
@@ -218,7 +221,7 @@ void SQLClass::createStatements() {
 													limit(1),
 													range(0, 1) ) );
 	if (!m_stmt_getBuddies.stmt)
-		m_stmt_getBuddies.stmt = new Statement( ( STATEMENT("SELECT id, user_id, uin, subscription, nickname, groups FROM " + p->configuration().sqlPrefix + "buddies WHERE user_id=? ORDER BY id ASC"),
+		m_stmt_getBuddies.stmt = new Statement( ( STATEMENT("SELECT id, user_id, uin, subscription, nickname, groups, flags FROM " + p->configuration().sqlPrefix + "buddies WHERE user_id=? ORDER BY id ASC"),
 												use(m_stmt_getBuddies.user_id),
 												into(m_stmt_getBuddies.resId),
 												into(m_stmt_getBuddies.resUserId),
@@ -226,6 +229,7 @@ void SQLClass::createStatements() {
 												into(m_stmt_getBuddies.resSubscription),
 												into(m_stmt_getBuddies.resNickname),
 												into(m_stmt_getBuddies.resGroups),
+												into(m_stmt_getBuddies.resFlags),
 												range(0, 1) ) );
 	if (!m_stmt_addSetting.stmt)
 		m_stmt_addSetting.stmt = new Statement( ( STATEMENT("INSERT INTO " + p->configuration().sqlPrefix + "users_settings (user_id, var, type, value) VALUES (?,?,?,?)"),
@@ -646,13 +650,14 @@ void SQLClass::removeUserBuddies(long userId) {
 void SQLClass::addDownload(const std::string &filename, const std::string &vip) {
 }
 
-long SQLClass::addBuddy(long userId, const std::string &uin, const std::string &subscription, const std::string &group, const std::string &nickname) {
+long SQLClass::addBuddy(long userId, const std::string &uin, const std::string &subscription, const std::string &group, const std::string &nickname, int flags) {
 	m_stmt_addBuddy.user_id = userId;
 	m_stmt_addBuddy.uin.assign(uin);
 	p->protocol()->prepareUsername(m_stmt_addBuddy.uin);
 	m_stmt_addBuddy.subscription.assign(subscription);
 	m_stmt_addBuddy.groups.assign(group);
 	m_stmt_addBuddy.nickname.assign(nickname);
+	m_stmt_addBuddy.flags = flags;
 	try {
 		m_stmt_addBuddy.stmt->execute();
 	}
@@ -663,6 +668,7 @@ long SQLClass::addBuddy(long userId, const std::string &uin, const std::string &
 		m_stmt_updateBuddy.uin = uin;
 		m_stmt_updateBuddy.groups = group;
 		m_stmt_updateBuddy.nickname = nickname;
+		m_stmt_updateBuddy.flags = flags;
 		try {
 			m_stmt_updateBuddy.stmt->execute();
 		}
@@ -832,6 +838,7 @@ GHashTable *SQLClass::getBuddies(long userId, PurpleAccount *account){
 					buddy->node.ui_data = (void *) new SpectrumBuddy(user.id, buddy);
 					SpectrumBuddy *s_buddy = (SpectrumBuddy *) buddy->node.ui_data;
 					s_buddy->setSubscription(user.subscription);
+					s_buddy->setFlags(m_stmt_getBuddies.resFlags);
 				}
 				g_hash_table_replace(roster, g_strdup(m_stmt_getBuddies.resUin.c_str()), buddy->node.ui_data);
 				
@@ -845,6 +852,7 @@ GHashTable *SQLClass::getBuddies(long userId, PurpleAccount *account){
 						buddy->node.ui_data = (void *) new SpectrumBuddy(user.id, buddy);
 						SpectrumBuddy *s_buddy = (SpectrumBuddy *) buddy->node.ui_data;
 						s_buddy->setSubscription(user.subscription);
+						s_buddy->setFlags(m_stmt_getBuddies.resFlags);
 					}
 				}
 			}
@@ -874,7 +882,16 @@ std::list <std::string> SQLClass::getBuddies(long userId) {
 		do {
 			if (!m_stmt_getBuddies.stmt->execute())
 				break;
-			list.push_back(m_stmt_getBuddies.resUin);
+			// TODO: move this JID escaping stuff upstream
+			std::string uin = m_stmt_getBuddies.resUin;
+			std::cout << "FLAGS " << m_stmt_getBuddies.resFlags << "\n";
+			if (m_stmt_getBuddies.resFlags & SPECTRUM_BUDDY_JID_ESCAPING) {
+				list.push_back(JID::escapeNode(uin));
+			}
+			else {
+				std::for_each( uin.begin(), uin.end(), replaceBadJidCharacters() );
+				list.push_back(uin);
+			}
 		} while (!m_stmt_getBuddies.stmt->done());
 	STATEMENT_EXECUTE_END(m_stmt_getBuddies.stmt, getBuddies(userId));
 

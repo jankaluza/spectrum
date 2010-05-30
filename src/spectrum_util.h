@@ -28,6 +28,7 @@
 #include "glib.h"
 #include <vector>
 
+
 template <class T> std::string stringOf(T object) {
 	std::ostringstream os;
 	os << object;
@@ -41,6 +42,8 @@ const std::string generateUUID();
 
 std::vector<std::string> &split(const std::string &s, char delim, std::vector<std::string> &elems);
 std::vector<std::string> split(const std::string &s, char delim);
+std::string purpleUsername(const std::string &username);
+bool usesJidEscaping(const std::string &name);
 
 struct replaceBadJidCharacters {
 	void operator()(char& c) { if(c == '@') c = '%';}

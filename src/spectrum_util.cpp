@@ -23,6 +23,11 @@
 #include <cstring>
 #include <sstream>
 #include <fstream>
+#include "gloox/jid.h"
+#include <algorithm>
+
+
+using namespace gloox;
 
 int isValidEmail(const char *address) {
 	int        count = 0;
@@ -152,3 +157,22 @@ std::vector<std::string> split(const std::string &s, char delim) {
     return split(s, delim, elems);
 }
 
+std::string purpleUsername(const std::string &username) {
+	std::string uname = username;
+	std::string unescapedUname = JID::unescapeNode(uname);
+	// Check if there was \40 (if JID uses escaping) and if not, replace % by @
+	if (unescapedUname == uname)
+		std::for_each( uname.begin(), uname.end(), replaceJidCharacters() );
+	else
+		uname = unescapedUname;
+	return uname;
+}
+
+bool usesJidEscaping(const std::string &name) {
+#define CONTAINS(A) (name.find(A) != std::string::npos)
+	bool usesEscaping = !(!CONTAINS("\\20") && !CONTAINS("\\22") && !CONTAINS("\\26") && !CONTAINS("\\27")
+						&& !CONTAINS("\\2f") && !CONTAINS("\\3a") && !CONTAINS("\\3c") && !CONTAINS("\\3e")
+						&& !CONTAINS("\\40") && !CONTAINS("\\5c"));
+#undef CONTAINS
+	return usesEscaping;
+}

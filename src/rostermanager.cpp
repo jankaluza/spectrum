@@ -181,7 +181,7 @@ void SpectrumRosterManager::sendPresence(const std::string &name, const std::str
 	}
 	else {
 		std::string n(name);
-		std::for_each( n.begin(), n.end(), replaceBadJidCharacters() );
+		std::for_each( n.begin(), n.end(), replaceBadJidCharacters() ); // THIS ONE IS RIGHT
 		Log(m_user->jid(), "answering to probe presence with unavailable presence");
 		Tag *tag = new Tag("presence");
 		tag->addAttribute("to", m_user->jid() + std::string(resource.empty() ? "" : "/" + resource));
@@ -256,6 +256,7 @@ void SpectrumRosterManager::handleBuddyCreated(PurpleBuddy *buddy) {
 	buddy->node.ui_data = (void *) new SpectrumBuddy(-1, buddy);
 #endif
 	AbstractSpectrumBuddy *s_buddy = (AbstractSpectrumBuddy *) buddy->node.ui_data;
+	s_buddy->setFlags(SPECTRUM_BUDDY_JID_ESCAPING);
 	handleBuddyCreated(s_buddy);
 }
 
@@ -347,8 +348,8 @@ void SpectrumRosterManager::handlePresence(const Presence &stanza) {
 
 	// Probe presence
 	if (stanza.subtype() == Presence::Probe && stanza.to().username() != "") {
-		std::string name(stanza.to().username());
-		std::for_each( name.begin(), name.end(), replaceJidCharacters() );
+		std::string name = purpleUsername(stanza.to().username());
+// 		std::for_each( name.begin(), name.end(), replaceJidCharacters() );
 		sendPresence(name);
 	}
 	delete stanzaTag;
@@ -366,7 +367,8 @@ authRequest *SpectrumRosterManager::handleAuthorizationRequest(PurpleAccount *ac
 	m_authRequests[name] = req;
 
 	Log(m_user->jid(), "purpleAuthorizeReceived: " << name << "on_list:" << on_list);
-	std::for_each( name.begin(), name.end(), replaceBadJidCharacters() );
+// 	std::for_each( name.begin(), name.end(), replaceBadJidCharacters() );
+	name = JID::escapeNode(name);
 	// send subscribe presence to user
 	Tag *tag = new Tag("presence");
 	tag->addAttribute("type", "subscribe" );
@@ -394,8 +396,9 @@ bool SpectrumRosterManager::hasAuthRequest(const std::string &remote_user) {
 }
 
 void SpectrumRosterManager::handleSubscription(const Subscription &subscription) {
-	std::string remote_user(subscription.to().username());
-	std::for_each( remote_user.begin(), remote_user.end(), replaceJidCharacters() );
+	std::string remote_user = purpleUsername(subscription.to().username());
+// 	std::string remote_user(subscription.to().username());
+// 	std::for_each( remote_user.begin(), remote_user.end(), replaceJidCharacters() );
 	if (remote_user.empty()) {
 		Log(m_user->jid(), "handleSubscription: Remote user is EMPTY!");
 		return;
@@ -467,6 +470,8 @@ void SpectrumRosterManager::handleSubscription(const Subscription &subscription)
 				SpectrumBuddy *s_buddy = new SpectrumBuddy(-1, buddy);
 				buddy->node.ui_data = (void *) s_buddy;
 				s_buddy->setSubscription("to");
+				if (usesJidEscaping(subscription.to().username()))
+					s_buddy->setFlags(s_buddy->getFlags() | SPECTRUM_BUDDY_JID_ESCAPING);
 #endif
 				purple_blist_add_buddy(buddy, NULL, NULL ,NULL);
 				purple_account_add_buddy(m_user->account(), buddy);

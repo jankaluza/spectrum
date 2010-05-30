@@ -440,7 +440,7 @@ void RosterManagerTest::handlePresenceProbe() {
 
 void RosterManagerTest::handleAuthorizationRequest() {
 	std::string user1;
-	user1 =	"<presence type='subscribe' to='user@example.com' from='user3%example.com@icq.localhost'>"
+	user1 =	"<presence type='subscribe' to='user@example.com' from='user3\\40example.com@icq.localhost'>"
 			"<nick xmlns='http://jabber.org/protocol/nick'>Frank</nick>"
 		"</presence>";
 

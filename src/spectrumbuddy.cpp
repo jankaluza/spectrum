@@ -112,7 +112,12 @@ std::string SpectrumBuddy::getGroup() {
 std::string SpectrumBuddy::getSafeName() {
 	std::string name = getName();
 	Transport::instance()->protocol()->prepareUsername(name, purple_buddy_get_account(m_buddy));
-	std::for_each( name.begin(), name.end(), replaceBadJidCharacters() );
+	if (getFlags() & SPECTRUM_BUDDY_JID_ESCAPING) {
+		name = JID::escapeNode(name);
+	}
+	else {
+		std::for_each( name.begin(), name.end(), replaceBadJidCharacters() );
+	}
 	if (name.empty()) {
 		Log("SpectrumBuddy::getSafeName", "Name is EMPTY! Previous was " << getName() << ".");
 	}

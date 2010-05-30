@@ -106,14 +106,13 @@ bool GlooxVCardHandler::handleIq (const IQ &stanza){
 		return false;
 	}
 
-	std::string name(stanza.to().username());
-	std::for_each( name.begin(), name.end(), replaceJidCharacters() );
+	std::string name = purpleUsername(stanza.to().username());
 	Log("VCard", "asking for vcard" << name);
 	if (stanza.subtype() == IQ::Get) {
 		std::list<std::string> temp;
 		temp.push_back((std::string)stanza.id());
 		temp.push_back((std::string)stanza.from().full());
-		vcardRequests[stanza.to().username()]=temp;
+		vcardRequests[name]=temp;
 		serv_get_info(purple_account_get_connection(user->account()), name.c_str());
 	}
 
@@ -139,14 +138,12 @@ void GlooxVCardHandler::userInfoArrived(PurpleConnection *gc, const std::string 
 		if (!hasVCardRequest(who))
 			return;
 		std::string name(who);
-		std::for_each( name.begin(), name.end(), replaceJidCharacters() );
 
 		Log("VCard", "VCard received, making vcard IQ");
 		Tag *reply = new Tag( "iq" );
 		reply->addAttribute( "id", vcardRequests[who].front() );
 		reply->addAttribute( "type", "result" );
 		reply->addAttribute( "to", vcardRequests[who].back() );
-		reply->addAttribute( "from", who+"@"+p->jid() );
 
 		Tag *vcard = p->protocol()->getVCardTag(user, vcardEntries);
 		if (!vcard) {
@@ -166,6 +163,11 @@ void GlooxVCardHandler::userInfoArrived(PurpleConnection *gc, const std::string 
 			Log("VCard", "Trying to find out " << name);
 			PurpleBuddy *buddy = purple_find_buddy(purple_connection_get_account(gc), name.c_str());
 			if (buddy){
+				AbstractSpectrumBuddy *s_buddy = (AbstractSpectrumBuddy *) buddy->node.ui_data;
+				if (s_buddy)
+					reply->addAttribute( "from", s_buddy->getBareJid() );
+				else
+					reply->addAttribute( "from", JID::escapeNode(who) + "@" + p->jid() );
 				Log("VCard", "found buddy " << name);
 				gsize len;
 				PurpleBuddyIcon *icon = NULL;
@@ -183,6 +185,9 @@ void GlooxVCardHandler::userInfoArrived(PurpleConnection *gc, const std::string 
 	// 					std::cout << photo->xml() << "\n";
 					}
 				}
+			}
+			else {
+				reply->addAttribute( "from", JID::escapeNode(who) + "@" + p->jid() );
 			}
 
 			if(!photo->children().empty())

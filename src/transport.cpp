@@ -76,3 +76,7 @@ const std::string Transport::requestFT( const JID& to, const std::string& name, 
 void Transport::acceptFT( const JID& to, const std::string& sid, SIProfileFT::StreamType type, const JID& from ) {
 	GlooxMessageHandler::instance()->ft->acceptFT(to, sid, type, from);
 }
+
+AccountCollector *Transport::collector() {
+	return GlooxMessageHandler::instance()->collector();
+}

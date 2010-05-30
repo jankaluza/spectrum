@@ -117,8 +117,8 @@ Disco::ItemList GlooxAdhocHandler::handleDiscoNodeItems( const JID &_from, const
 
 				if(!prpl_info || !prpl_info->blist_node_menu)
 					return lst;
-				std::string name(JID(to).username());
-				std::for_each( name.begin(), name.end(), replaceJidCharacters() );
+				std::string name = purpleUsername(JID(to).username());
+// 				std::for_each( name.begin(), name.end(), replaceJidCharacters() );
 				PurpleBuddy *buddy = purple_find_buddy(user->account(), name.c_str());
 
 				for(l = ll = prpl_info->blist_node_menu((PurpleBlistNode*)buddy); l; l = l->next) {
@@ -225,8 +225,8 @@ bool GlooxAdhocHandler::handleIq( const IQ &stanza ) {
 
 				if(!prpl_info || !prpl_info->blist_node_menu)
 					return true;
-				std::string name(JID(to).username());
-				std::for_each( name.begin(), name.end(), replaceJidCharacters() );
+				std::string name = purpleUsername(JID(to).username());
+// 				std::for_each( name.begin(), name.end(), replaceJidCharacters() );
 				PurpleBuddy *buddy = purple_find_buddy(user->account(), name.c_str());
 
 				for(l = ll = prpl_info->blist_node_menu((PurpleBlistNode*)buddy); l; l = l->next) {

@@ -53,7 +53,7 @@ AutoConnectLoop::AutoConnectLoop() {
 			Tag *tag;
 			for(std::list<std::string>::iterator u = roster.begin(); u != roster.end() ; u++){
 				std::string name = *u;
-				std::for_each( name.begin(), name.end(), replaceBadJidCharacters() );
+// 				std::for_each( name.begin(), name.end(), replaceBadJidCharacters() );
 
 				tag = new Tag("presence");
 				tag->addAttribute( "to", *it );

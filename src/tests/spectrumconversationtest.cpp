@@ -16,7 +16,7 @@ void SpectrumConversationTest::down (void) {
 
 void SpectrumConversationTest::handleMessage() {
 	std::string r;
-	r = "<message to='user@example.com' from='user1%example.com@icq.localhost/bot' type='chat'>"
+	r = "<message to='user@example.com' from='user1\\40example.com@icq.localhost/bot' type='chat'>"
 			"<body>Hi, how are you? I'm fine.</body>"
 		"</message>";
 
@@ -28,14 +28,14 @@ void SpectrumConversationTest::handleMessage() {
 
 void SpectrumConversationTest::handleMessageDelay() {
 	std::string r;
-	r = "<message to='user@example.com' from='user1%example.com@icq.localhost/bot' type='chat'>"
+	r = "<message to='user@example.com' from='user1\\40example.com@icq.localhost/bot' type='chat'>"
 			"<body>Hi, how are you? I&apos;m fine.</body>"
 			"<html xmlns='http://jabber.org/protocol/xhtml-im'>"
 				"<body xmlns='http://www.w3.org/1999/xhtml'>"
 				"Hi, how are you? <span style='font-weight: bold;'>I&apos;m fine</span>."
 				"</body>"
 			"</html>"
-			"<delay xmlns='urn:xmpp:delay' from='user1%example.com@icq.localhost/bot' stamp='1970-01-02T10:17:36Z'>"
+			"<delay xmlns='urn:xmpp:delay' from='user1\\40example.com@icq.localhost/bot' stamp='1970-01-02T10:17:36Z'>"
 			"</delay>"
 		"</message>";
 

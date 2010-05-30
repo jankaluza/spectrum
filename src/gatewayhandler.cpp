@@ -102,7 +102,7 @@ bool GlooxGatewayHandler::handleIq (const IQ &stanza){
 		PurpleAccount *account = user ? user->account() : NULL;
 
 		Transport::instance()->protocol()->prepareUsername(uin, account);
-		std::for_each( uin.begin(), uin.end(), replaceBadJidCharacters() );
+		uin = JID::escapeNode(uin);
 
 		IQ _s(IQ::Result, stanza.from(), stanza.id());
 		_s.setFrom(p->jid());

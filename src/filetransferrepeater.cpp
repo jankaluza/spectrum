@@ -475,6 +475,7 @@ gssize FiletransferRepeater::handleLibpurpleData(const guchar *data, gssize size
 	guchar *c = m_buffer + m_buffer_size;
 	memcpy(c, data, data_size);
 	m_buffer_size += data_size;
+	std::cout << "m_buffer_size is " << m_buffer_size << "\n";
 
 	// Wake up resender thread and let it handle new data.
 	m_resender->wakeUp();

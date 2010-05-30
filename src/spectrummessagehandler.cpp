@@ -32,6 +32,7 @@
 #ifndef TESTS
 #include "spectrumconversation.h"
 #include "spectrummucconversation.h"
+#include "user.h"
 #endif
 
 SpectrumMessageHandler::SpectrumMessageHandler(AbstractUser *user) {
@@ -148,8 +149,8 @@ void SpectrumMessageHandler::handleMessage(const Message& msg) {
 	PurpleConversation * conv;
 	
 	std::string room = "";
-	std::string k = msg.to().username();
-	std::for_each( k.begin(), k.end(), replaceJidCharacters() );
+	std::string k = purpleUsername(msg.to().username());
+// 	std::for_each( k.begin(), k.end(), replaceJidCharacters() );
 	if (m_mucs_names.find(k) != m_mucs_names.end())
 		room = msg.to().username();
 	
@@ -261,9 +262,17 @@ std::string SpectrumMessageHandler::getConversationName(PurpleConversation *conv
 		size_t pos = name.find("/");
 		if (pos != std::string::npos)
 			name.erase((int) pos, name.length() - (int) pos);
-		
 
-		std::for_each( name.begin(), name.end(), replaceBadJidCharacters() );
+// 		std::for_each( name.begin(), name.end(), replaceBadJidCharacters() );
+		AbstractSpectrumBuddy *s_buddy = NULL;
+#ifndef TESTS
+		User *u = (User *) m_user;
+		s_buddy = u->getRosterItem(name);
+#endif
+		if (s_buddy && s_buddy->getFlags() & SPECTRUM_BUDDY_JID_ESCAPING)
+			name = JID::escapeNode(name);
+		else
+			std::for_each( name.begin(), name.end(), replaceBadJidCharacters() ); // OK
 		if (Transport::instance()->getConfiguration().protocol != "irc") {
 			std::transform(name.begin(), name.end(), name.begin(),(int(*)(int)) std::tolower);
 		}
@@ -281,7 +290,7 @@ std::string SpectrumMessageHandler::getSpectrumMUCConversation(PurpleConversatio
 		std::string resource = purple_conversation_get_name(conv);
 		std::transform(resource.begin(), resource.end(), resource.begin(),(int(*)(int)) std::tolower);
 		std::string name_safe = name;
-		std::for_each( name_safe.begin(), name_safe.end(), replaceBadJidCharacters() );
+		std::for_each( name_safe.begin(), name_safe.end(), replaceBadJidCharacters() ); // OK
 		std::string j = name_safe + "@" + Transport::instance()->jid();
 		SpectrumMUCConversation *conversation = new SpectrumMUCConversation(conv, j, m_user->getRoomResource(resource));
 		addConversation(conv, conversation);

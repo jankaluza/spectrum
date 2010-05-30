@@ -277,13 +277,7 @@ bool GlooxRegisterHandler::handleIq(const Tag *iqTag) {
 		if (remove) {
 			Log("GlooxRegisterHandler", "removing user from database and disconnecting from legacy network");
 			PurpleAccount *account = NULL;
-			if (user != NULL) {
-				if (user->isConnected()) {
-					account = user->account();
-					purple_account_disconnect(user->account());
-					user->disconnected();
-				}
-			}
+			
 			if (user && user->hasFeature(GLOOX_FEATURE_ROSTERX) && false) {
 				std::cout << "* sending rosterX\n";
 				Tag *tag = new Tag("message");
@@ -301,7 +295,7 @@ bool GlooxRegisterHandler::handleIq(const Tag *iqTag) {
 				Tag *item;
 				for(std::list<std::string>::iterator u = roster.begin(); u != roster.end() ; u++){
 					std::string name = *u;
-					std::for_each( name.begin(), name.end(), replaceBadJidCharacters() );
+// 					std::for_each( name.begin(), name.end(), replaceBadJidCharacters() );
 					item = new Tag("item");
 					item->addAttribute("action", "delete");
 					item->addAttribute("jid", name + "@" + Transport::instance()->jid());
@@ -320,7 +314,7 @@ bool GlooxRegisterHandler::handleIq(const Tag *iqTag) {
 				Tag *tag;
 				for(std::list<std::string>::iterator u = roster.begin(); u != roster.end() ; u++){
 					std::string name = *u;
-					std::for_each( name.begin(), name.end(), replaceBadJidCharacters() );
+// 					std::for_each( name.begin(), name.end(), replaceBadJidCharacters() );
 
 					tag = new Tag("presence");
 					tag->addAttribute( "to", from.bare() );
@@ -335,14 +329,24 @@ bool GlooxRegisterHandler::handleIq(const Tag *iqTag) {
 					Transport::instance()->send( tag );
 				}
 			}
+			
 
 			if (res.id != -1) {
 				Transport::instance()->sql()->removeUser(res.id);
 			}
 
 			if (user != NULL) {
-				Transport::instance()->userManager()->removeUser(user);
+				account = user->account();
+				Transport::instance()->userManager()->removeUser(user);	
 			}
+			
+			if (!account) {
+				account = purple_accounts_find(res.uin.c_str(), Transport::instance()->protocol()->protocol().c_str());
+			}
+#ifndef TESTS
+			if (account)
+				Transport::instance()->collector()->collectNow(account, true);
+#endif
 			Tag *reply = new Tag("iq");
 			reply->addAttribute( "type", "result" );
 			reply->addAttribute( "from", Transport::instance()->jid() );

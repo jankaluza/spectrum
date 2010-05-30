@@ -42,7 +42,7 @@ class TestingBackend : public AbstractBackend {
 		~TestingBackend() {}
 		static TestingBackend *instance() { return m_pInstance; }
 		void addBuddySetting(long userId, long buddyId, const std::string &key, const std::string &value, PurpleType type) {} 
-		long addBuddy(long userId, const std::string &uin, const std::string &subscription, const std::string &group = "Buddies", const std::string &nickname = "") {
+		long addBuddy(long userId, const std::string &uin, const std::string &subscription, const std::string &group = "Buddies", const std::string &nickname = "", int flags = 0) {
 			m_buddies[uin].id = 1;
 			m_buddies[uin].uin = uin;
 			m_buddies[uin].subscription = subscription;

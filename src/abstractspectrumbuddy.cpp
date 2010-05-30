@@ -23,7 +23,7 @@
 #include "transport.h"
 #include "usermanager.h"
 
-AbstractSpectrumBuddy::AbstractSpectrumBuddy(long id) : m_id(id), m_online(false), m_subscription("ask") {
+AbstractSpectrumBuddy::AbstractSpectrumBuddy(long id) : m_id(id), m_online(false), m_subscription("ask"), m_flags(0) {
 }
 
 AbstractSpectrumBuddy::~AbstractSpectrumBuddy() {
@@ -35,6 +35,14 @@ void AbstractSpectrumBuddy::setId(long id) {
 
 long AbstractSpectrumBuddy::getId() {
 	return m_id;
+}
+
+void AbstractSpectrumBuddy::setFlags(int flags) {
+	m_flags = flags;
+}
+
+int AbstractSpectrumBuddy::getFlags() {
+	return m_flags;
 }
 
 std::string AbstractSpectrumBuddy::getBareJid() {

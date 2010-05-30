@@ -144,6 +144,7 @@ struct addBuddyStatement {
 	std::string subscription;
 	std::string groups;
 	std::string nickname;
+	int flags;
 	Poco::Data::Statement *stmt;
 };
 
@@ -153,6 +154,7 @@ struct updateBuddyStatement {
 	std::string uin;
 	std::string groups;
 	std::string nickname;
+	int flags;
 	Poco::Data::Statement *stmt;
 };
 #endif
@@ -189,6 +191,7 @@ struct getBuddiesStatement {
 	std::string resSubscription;
 	std::string resNickname;
 	std::string resGroups;
+	int resFlags;
 };
 
 struct addSettingStatement {
@@ -266,7 +269,7 @@ class SQLClass : public AbstractBackend {
 		void removeUser(long userId);
 		void updateUser(const UserRow &user);
 		void removeUserBuddies(long userId);
-		long addBuddy(long userId, const std::string &uin, const std::string &subscription, const std::string &group = "Buddies", const std::string &nickname = "");
+		long addBuddy(long userId, const std::string &uin, const std::string &subscription, const std::string &group = "Buddies", const std::string &nickname = "", int flags = 0);
 		void updateBuddySubscription(long userId, const std::string &uin, const std::string &subscription);
 		void removeBuddy(long userId, const std::string &uin, long buddy_id);
 		long getRegisteredUsersCount();

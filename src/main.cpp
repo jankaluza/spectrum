@@ -467,7 +467,7 @@ static void accountRequestClose(void *data){
 static void * notify_user_info(PurpleConnection *gc, const char *who, PurpleNotifyUserInfo *user_info)
 {
 	std::string name(who);
-	std::for_each( name.begin(), name.end(), replaceBadJidCharacters() );
+// 	std::for_each( name.begin(), name.end(), replaceBadJidCharacters() );
 	GlooxMessageHandler::instance()->vcard()->userInfoArrived(gc, name, user_info);
 	return NULL;
 }
@@ -1186,8 +1186,11 @@ void GlooxMessageHandler::purpleBuddyCreated(PurpleBuddy *buddy) {
 	User *user = (User *) userManager()->getUserByAccount(a);
 	if (user != NULL)
 		user->handleBuddyCreated(buddy);
-	else
+	else {
 		buddy->node.ui_data = (void *) new SpectrumBuddy(-1, buddy);
+		SpectrumBuddy *s_buddy = (SpectrumBuddy *) buddy->node.ui_data;
+		s_buddy->setFlags(SPECTRUM_BUDDY_JID_ESCAPING);
+	}
 		
 }
 
@@ -1749,9 +1752,9 @@ void GlooxMessageHandler::handleMessage (const Message &msg, MessageSession *ses
 			if (!msgTag) return;
 			Tag *chatstates = msgTag->findChildWithAttrib("xmlns","http://jabber.org/protocol/chatstates");
 			if (chatstates != NULL) {
-				std::string username = msg.to().username();
-				std::for_each( username.begin(), username.end(), replaceJidCharacters() );
-				user->handleChatState(username, chatstates->name());
+// 				std::string username = msg.to().username();
+// 				std::for_each( username.begin(), username.end(), replaceJidCharacters() );
+				user->handleChatState(purpleUsername(msg.to().username()), chatstates->name());
 			}
 			if (msgTag->findChild("body") != NULL) {
 				m_stats->messageFromJabber();

@@ -26,6 +26,10 @@
 #include "transport.h"
 #include "usermanager.h"
 #include "spectrumtimer.h"
+#include "abstractspectrumbuddy.h"
+#ifndef TESTS
+#include "user.h"
+#endif
 
 static void sendXhtmlTag(Tag *body, void *data) {
 	Tag *stanzaTag = (Tag*) data;
@@ -74,8 +78,17 @@ void SpectrumConversation::handleMessage(AbstractUser *user, const char *who, co
 	size_t pos = name.find("/");
 	if (pos != std::string::npos)
 		name.erase((int) pos, name.length() - (int) pos);
-
-	std::for_each( name.begin(), name.end(), replaceBadJidCharacters() );
+	AbstractSpectrumBuddy *s_buddy = NULL;
+#ifndef TESTS
+	User *u = (User *) user;
+	s_buddy = u->getRosterItem(name);
+#endif
+	if (s_buddy && s_buddy->getFlags() & SPECTRUM_BUDDY_JID_ESCAPING)
+		name = JID::escapeNode(name);
+	else if (s_buddy)
+		std::for_each( name.begin(), name.end(), replaceBadJidCharacters() ); // OK
+	else if (m_room.empty())
+		name = JID::escapeNode(name);
 	
 	// Escape HTML characters.
 	char *newline = purple_strdup_withhtml(msg);

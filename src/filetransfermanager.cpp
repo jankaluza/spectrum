@@ -141,9 +141,8 @@ void FileTransferManager::setSIProfileFT(gloox::SIProfileFT *sipft) {
 
 void FileTransferManager::handleFTRequest (const JID &from, const JID &to, const std::string &sid, const std::string &name, long size, const std::string &hash, const std::string &date, const std::string &mimetype, const std::string &desc, int stypes) {
 	Log("Received file transfer request from ", from.full() << " " << to.full() << " " << sid << " " << name);
-
-	std::string uname = to.username();
-	std::for_each( uname.begin(), uname.end(), replaceJidCharacters() );
+	
+	std::string uname = purpleUsername(to.username());
 
 	AbstractUser *user = Transport::instance()->userManager()->getUserByJID(from.bare());
 	if (user && user->account() && user->isConnected()) {
@@ -152,9 +151,9 @@ void FileTransferManager::handleFTRequest (const JID &from, const JID &to, const
 		Log("filetransferWeb = ", Transport::instance()->getConfiguration().filetransferWeb);
 		setTransferInfo(sid, name, size, canSendFile);
 		
-		m_waitingForXfer[to.bare()].sid = sid;
-		m_waitingForXfer[to.bare()].from = from.full();
-		m_waitingForXfer[to.bare()].size = size;
+		m_waitingForXfer[uname].sid = sid;
+		m_waitingForXfer[uname].from = from.full();
+		m_waitingForXfer[uname].size = size;
 
 		// if we can't send file straightly, we just receive it and send link to buddy.
 		if (canSendFile)
@@ -199,13 +198,9 @@ void FileTransferManager::handleFTBytestream (Bytestream *bs) {
 }
 
 void FileTransferManager::handleXferCreated(PurpleXfer *xfer) {
-	std::string remote_user(purple_xfer_get_remote_user(xfer));
-	std::for_each( remote_user.begin(), remote_user.end(), replaceBadJidCharacters() );
-	Log("xfercreated", "get user " << remote_user);
-	
 	AbstractUser *user = (AbstractUser *) Transport::instance()->userManager()->getUserByAccount(purple_xfer_get_account(xfer));
 	if (!user) {
-		Log("xfercreated", "no user " << remote_user);
+		Log("xfercreated", "no user " << xfer->who);
 		return;
 	}
 
@@ -223,20 +218,21 @@ void FileTransferManager::handleXferCreated(PurpleXfer *xfer) {
 		to = buddy->getJid();
 	}
 	else {
-		std::string name(xfer->who);
-		std::for_each( name.begin(), name.end(), replaceBadJidCharacters() );
+		std::string name = std::string(xfer->who);
 		size_t pos = name.find("/");
 		if (pos != std::string::npos)
 			name.erase((int) pos, name.length() - (int) pos);
+		name = JID::escapeNode(name);
 		to = name + "@" + Transport::instance()->jid() + "/bot";
 	}
 
 	FiletransferRepeater *repeater;
 	if (purple_xfer_get_type(xfer) == PURPLE_XFER_SEND) {
-		std::string key = remote_user + "@" + Transport::instance()->jid();
+		std::string key(xfer->who);
 		if (m_waitingForXfer.find(key) == m_waitingForXfer.end()) {
 			// TODO: DO SOMETHING WITH THAT PURPLE_XFER. PROBABLY REJECT IT.
 			Log("xfercreated", "We're not waiting new PurpleXfer for key " << key);
+			return;
 		}
 		else {
 			WaitingXferData data = m_waitingForXfer[key];

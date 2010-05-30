@@ -38,6 +38,10 @@ typedef enum { 	SUBSCRIPTION_NONE = 0,
 				SUBSCRIPTION_ASK
 				} SpectrumSubscriptionType;
 
+typedef enum { 	SPECTRUM_BUDDY_NO_FLAG = 0,
+				SPECTRUM_BUDDY_JID_ESCAPING = 2
+			} SpectrumBuddyFlag;
+
 // Wrapper for PurpleBuddy.
 class AbstractSpectrumBuddy {
 	public:
@@ -62,7 +66,7 @@ class AbstractSpectrumBuddy {
 		// Sets online/offline state information.
 		void setOnline();
 		void setOffline();
-		
+
 		// Returns true if online.
 		bool isOnline();
 
@@ -70,6 +74,12 @@ class AbstractSpectrumBuddy {
 		// TODO: rewrite me to use SpectrumSubscriptionType!
 		void setSubscription(const std::string &subscription);
 		const std::string &getSubscription();
+
+		// Sets SpectrumBuddyFlags.
+		void setFlags(int flags);
+
+		// Returns flags.
+		int getFlags();
 
 		// Returns PurpleBuddy* connected with this SpectrumBuddy.
 		virtual PurpleBuddy *getBuddy() = 0;
@@ -99,6 +109,7 @@ class AbstractSpectrumBuddy {
 		bool m_online;
 		std::string m_subscription;
 		std::string m_lastPresence;
+		int m_flags;
 };
 
 #endif

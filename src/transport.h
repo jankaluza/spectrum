@@ -30,6 +30,7 @@
 #include "abstractbackend.h"
 #include "capabilitymanager.h"
 #include "configfile.h"
+#include "accountcollector.h"
 
 using namespace gloox;
 class UserManager;
@@ -65,6 +66,7 @@ class Transport : public CapabilityManager {
 		void disposeBytestream(Bytestream *stream);
 		const std::string requestFT( const JID& to, const std::string& name, long size, const std::string& hash = EmptyString, const std::string& desc = EmptyString, const std::string& date = EmptyString, const std::string& mimetype = EmptyString, int streamTypes = SIProfileFT::FTTypeAll, const JID& from = JID(), const std::string& sid = EmptyString );
 		void acceptFT( const JID& to, const std::string& sid, SIProfileFT::StreamType type = SIProfileFT::FTTypeS5B, const JID& from = JID() );
+		AccountCollector *collector();
 
 
 		

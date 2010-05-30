@@ -66,8 +66,8 @@ class AbstractProtocol
 		virtual std::string prepareRoomName(AbstractUser *user, const std::string &room) { return room; }
 		
 		virtual std::string prepareName(AbstractUser *user, const JID &jid) { 
-			std::string username = jid.username();
-			std::for_each( username.begin(), username.end(), replaceJidCharacters() );
+			std::string username = purpleUsername(jid.username());
+// 			std::for_each( username.begin(), username.end(), replaceJidCharacters() );
 			return username;
 		}
 
