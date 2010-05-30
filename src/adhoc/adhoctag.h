@@ -79,6 +79,9 @@ class AdhocTag : public Tag {
 		// Returns true if XMPP user canceled executing.
 		bool isCanceled();
 
+		// Adds note.
+		void addNote(const std::string &type, const std::string &message);
+
 
 	private:
 		void initXData();

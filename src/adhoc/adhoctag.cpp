@@ -214,3 +214,9 @@ void AdhocTag::initXData() {
 	xdata->addAttribute("type","form");
 	addChild(xdata);
 }
+
+void AdhocTag::addNote(const std::string &type, const std::string &message) {
+	Tag *note = new Tag("note", message);
+	note->addAttribute("type", type);
+	addChild(note);
+}

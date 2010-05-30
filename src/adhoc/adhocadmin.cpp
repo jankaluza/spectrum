@@ -174,16 +174,20 @@ Tag *AdhocAdmin::handleTag(Tag *stanzaTag) {
 		const std::string &user_jid = form.field("user_jid")->value();
 		const std::string &user_vip = form.field("user_vip")->value();
 
+		AdhocTag *adhocTag = new AdhocTag(tag->findAttribute("sessionid"), "transport_admin", "completed");
 		UserRow u = Transport::instance()->sql()->getUserByJid(user_jid);
 		if (u.id != -1) {
 			u.vip = user_vip == "1";
 			Transport::instance()->sql()->updateUser(u);
 		}
+		else {
+			adhocTag->addNote("error", tr(m_language.c_str(), "This user is not registered."));
+		}
 
 		IQ _response(IQ::Result, stanzaTag->findAttribute("from"), stanzaTag->findAttribute("id"));
 		_response.setFrom(Transport::instance()->jid());
 		Tag *response = _response.tag();
-		response->addChild( new AdhocTag(tag->findAttribute("sessionid"), "transport_admin", "completed") );
+		response->addChild( adhocTag );
 		return response;
 	}
 	else if (m_state == ADHOC_ADMIN_SEND_MESSAGE) {
