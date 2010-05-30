@@ -788,7 +788,7 @@ GHashTable *SQLClass::getBuddies(long userId, PurpleAccount *account){
 			user.online = false;
 			user.lastPresence = "";
 
-			if (!user.uin.empty()) {
+			if (!user.uin.empty() && std::count(user.uin.begin(), user.uin.end(), '@') == 1) {
 				// create group
 				std::string group = user.group.empty() ? "Buddies" : user.group;
 				PurpleGroup *g = purple_find_group(group.c_str());
