@@ -1517,7 +1517,7 @@ void GlooxMessageHandler::handlePresence(const Presence &stanza){
 			Log(stanza.from().full(), "Answering to probe presence with unavailable presence");
 			Tag *tag = new Tag("presence");
 			tag->addAttribute("to", stanza.from().full());
-			tag->addAttribute("from", stanza.to().bare() + "/bot");
+			tag->addAttribute("from", stanza.to().bare());
 			tag->addAttribute("type", "unavailable");
 			j->send(tag);
 		}
