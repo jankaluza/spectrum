@@ -35,6 +35,11 @@ extern LogClass Log_;
 class GlooxMessageHandler;
 class User;
 
+struct RequestActionItem {
+	std::string name;
+	GCallback callback;
+};
+
 /*
  * Handler for PURPLE_REQUESTs. It handles different requests and resends them as Ad-Hoc commands.
  */
@@ -62,7 +67,7 @@ class AdhocRepeater : public AdhocCommandHandler
 		GCallback m_cancel_cb;					// callback which is called when user rejects the dialog
 		PurpleRequestType m_type;				// type of request
 		std::string m_from;						// full jid from which initial IQ-get was sent
-		std::map<int, GCallback> m_actions;		// callbacks for PURPLE_REQUEST_ACTION
+		std::map<int, RequestActionItem> m_actions;	// callbacks for PURPLE_REQUEST_ACTION
 		PurpleRequestFields *m_fields;			// fields for PURPLE_REQUEST_FIELDS
 		std::string m_defaultString;			// default value of PURPLE_REQUEST_INPUT
 		std::string m_language;

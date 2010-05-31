@@ -23,6 +23,7 @@
 #include <sstream>
 #include <string>
 #include "main.h"
+#include "adhocrepeater.h"
 
 
 Tag * xdataFromRequestInput(const std::string &language, const std::string &title, const std::string &primaryString, const std::string &value, gboolean multiline) {
@@ -45,7 +46,7 @@ Tag * xdataFromRequestInput(const std::string &language, const std::string &titl
 	return xdata;
 }
 
-Tag * xdataFromRequestAction(const std::string &language, const std::string &title, const std::string &primaryString, size_t action_count, va_list acts) {
+Tag * xdataFromRequestAction(const std::string &language, const std::string &title, const std::string &primaryString, size_t action_count, const std::map<int, RequestActionItem> &actions) {
 	Tag *xdata = new Tag("x");
 	xdata->addAttribute("xmlns","jabber:x:data");
 	xdata->addAttribute("type","form");
@@ -56,15 +57,14 @@ Tag * xdataFromRequestAction(const std::string &language, const std::string &tit
 	field->addAttribute("type","list-single");
 	field->addAttribute("label",tr(language, _("Actions")));
 
-	for (unsigned int i = 0; i < action_count; i++) {
+	for (std::map<int, RequestActionItem>::const_iterator it = actions.begin(); it != actions.end(); it++) {
 		Tag *option;
 		std::ostringstream os;
-		os << i;
-		std::string name(va_arg(acts, char *));
-		if (i == 0)
+		os << (*it).first;
+		if ((*it).first == 0)
 			field->addChild(new Tag("value",os.str()));
 		option = new Tag("option");
-		option->addAttribute("label",name);
+		option->addAttribute("label", (*it).second.name);
 		option->addChild( new Tag("value",os.str()) );
 		field->addChild(option);
 	}

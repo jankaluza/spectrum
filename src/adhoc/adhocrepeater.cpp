@@ -108,11 +108,13 @@ AdhocRepeater::AdhocRepeater(GlooxMessageHandler *m, User *user, const std::stri
 	actions->addChild(new Tag("complete"));
 	c->addChild(actions);
 
-	// save action to m_actions; only keys will be saved
-	for (unsigned int i = 0; i < action_count; i++)
-		m_actions[i] = va_arg(acts, GCallback);
+	// save action to m_actions
+	for (unsigned int i = 0; i < action_count; i++) {
+		m_actions[i].name = tr(m_language,va_arg(acts, char *));
+		m_actions[i].callback = va_arg(acts, GCallback);
+	}
 
-	c->addChild( xdataFromRequestAction(m_language, tr(m_language,title.c_str()), tr(m_language,primaryString.c_str()), action_count, acts) );
+	c->addChild( xdataFromRequestAction(m_language, tr(m_language,title.c_str()), tr(m_language,primaryString.c_str()), action_count, m_actions) );
 	response->addChild(c);
 	main->j->send(response);
 
@@ -209,7 +211,7 @@ bool AdhocRepeater::handleIq(const IQ &stanza) {
 				int index;
 				i >> index;
 				if (m_actions.find(index) != m_actions.end()) {
-					PurpleRequestActionCb callback = (PurpleRequestActionCb) m_actions[index];
+					PurpleRequestActionCb callback = (PurpleRequestActionCb) m_actions[index].callback;
 					if (callback)
 						(callback)(m_requestData,index);
 				}
