@@ -192,6 +192,8 @@ const char * Translation::translate(const char *key) {
 
 Localization::Localization() {
 	m_locales = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, deleteTranslation);
+	// There is always English - source codes...
+	m_languages["en"] = "English";
 	char *l = g_build_filename(INSTALL_DIR, "share", "locale", NULL);
 	GDir *locale = g_dir_open(l, 0, NULL);
 	if (locale) {
