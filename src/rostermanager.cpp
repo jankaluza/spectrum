@@ -222,7 +222,7 @@ void SpectrumRosterManager::handleBuddyStatusChanged(PurpleBuddy *buddy, PurpleS
 }
 
 void SpectrumRosterManager::handleBuddyRemoved(AbstractSpectrumBuddy *s_buddy) {
-	if (s_buddy->getFlags() & SPECTRUM_IGNORE)
+	if (s_buddy->getFlags() & SPECTRUM_BUDDY_IGNORE)
 		return;
 	m_subscribeCache.erase(s_buddy->getName());
 	removeFromLocalRoster(s_buddy->getName());
