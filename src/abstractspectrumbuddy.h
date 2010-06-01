@@ -39,7 +39,8 @@ typedef enum { 	SUBSCRIPTION_NONE = 0,
 				} SpectrumSubscriptionType;
 
 typedef enum { 	SPECTRUM_BUDDY_NO_FLAG = 0,
-				SPECTRUM_BUDDY_JID_ESCAPING = 2
+				SPECTRUM_BUDDY_JID_ESCAPING = 2,
+				SPECTRUM_BUDDY_IGNORE = 4
 			} SpectrumBuddyFlag;
 
 // Wrapper for PurpleBuddy.

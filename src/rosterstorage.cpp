@@ -52,6 +52,8 @@ static void save_settings(gpointer k, gpointer v, gpointer data) {
 static gboolean storeAbstractSpectrumBuddy(gpointer key, gpointer v, gpointer data) {
 	AbstractUser *user = (AbstractUser *) data;
 	AbstractSpectrumBuddy *s_buddy = (AbstractSpectrumBuddy *) v;
+	if (s_buddy->getFlags() & SPECTRUM_BUDDY_IGNORE)
+		return TRUE;
 	
 	// save PurpleBuddy
 	std::string alias = s_buddy->getAlias();

@@ -222,6 +222,8 @@ void SpectrumRosterManager::handleBuddyStatusChanged(PurpleBuddy *buddy, PurpleS
 }
 
 void SpectrumRosterManager::handleBuddyRemoved(AbstractSpectrumBuddy *s_buddy) {
+	if (s_buddy->getFlags() & SPECTRUM_IGNORE)
+		return;
 	m_subscribeCache.erase(s_buddy->getName());
 	removeFromLocalRoster(s_buddy->getName());
 	removeBuddy(s_buddy);
@@ -256,8 +258,18 @@ void SpectrumRosterManager::handleBuddyCreated(PurpleBuddy *buddy) {
 	buddy->node.ui_data = (void *) new SpectrumBuddy(-1, buddy);
 #endif
 	AbstractSpectrumBuddy *s_buddy = (AbstractSpectrumBuddy *) buddy->node.ui_data;
-	s_buddy->setFlags(SPECTRUM_BUDDY_JID_ESCAPING);
-	handleBuddyCreated(s_buddy);
+	if (!isInRoster(s_buddy->getName())) {
+		s_buddy->setFlags(SPECTRUM_BUDDY_JID_ESCAPING);
+		handleBuddyCreated(s_buddy);
+	}
+	else {
+		// TODO: PurpleBuddy with this name is already in roster. That means this particular PurpleBuddy represents
+		// another group for that contact. We currently handles only one groups per PurpleBuddy, but we could handle
+		// that better in the future.
+		// SPECTRUM_BUDDY_IGNORE means that this buddy is ignored by RosterStorage class.
+		AbstractSpectrumBuddy *s_buddy_1 = getRosterItem(s_buddy->getName());
+		s_buddy->setFlags(s_buddy_1->getFlags() | SPECTRUM_BUDDY_IGNORE);
+	}
 }
 
 
