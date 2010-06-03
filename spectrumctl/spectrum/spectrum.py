@@ -34,6 +34,12 @@ class spectrum:
 		self.config.read( config_path )
 		self.pid_file = self.config.get( 'service', 'pid_file' )
 
+	def get_binary( self ):
+		try:
+			return os.environ['SPECTRUM_PATH']
+		except KeyError:
+			return 'spectrum'
+
 	def get_jid( self ):
 		"""
 		Get the jid of this service
@@ -230,13 +236,6 @@ class spectrum:
 		except RuntimeError, e:
 			raise RuntimeError( "%s: %s" % e.args, 1 )
 
-		try:
-			binary = os.environ['SPECTRUM_PATH']
-		except KeyError:
-			binary = 'spectrum'
-
-		cmd = [ binary ]
-
 		# get the absolute path of the config file, so we can change to
 		# spectrums homedir
 		path = os.path.abspath( self.config_path )
@@ -244,7 +243,7 @@ class spectrum:
 		os.chdir( home )
 
 		# check if database is at current version:
-		check_cmd = [ 'spectrum', '--check-db-version', path ]
+		check_cmd = [ self.get_binary(), '--check-db-version', path ]
 		check_cmd = env.su_cmd( check_cmd )
 		process = subprocess.Popen( check_cmd, stdout=subprocess.PIPE )
 		process.communicate()
@@ -256,6 +255,7 @@ class spectrum:
 			raise RuntimeError( "Error connecting to the database", 1 )
 
 		# finally start spectrum:
+		cmd = [ self.get_binary() ]
 		if env.options.no_daemon:
 			cmd.append( '-n' )
 		if env.options.debug:
@@ -298,7 +298,8 @@ class spectrum:
 				time.sleep( 1 )
 				os.kill( pid, signal.SIGTERM )
 			raise RuntimeError( "Spectrum did not die", 1 )
-		except:	
+		except Exception, e:
+			print( e )
 			raise RuntimeError( "Unknown Error occured", 1 )
 
 	def restart( self ):
@@ -357,7 +358,7 @@ class spectrum:
 	def upgrade_db( self ):
 		path = os.path.abspath( self.config_path )
 
-		check_cmd = [ 'spectrum', '--check-db-version', path ]
+		check_cmd = [ self.get_binary(), '--check-db-version', path ]
 		check_cmd = env.su_cmd( check_cmd )
 		process = subprocess.Popen( check_cmd, stdout=subprocess.PIPE )
 		process.communicate()
