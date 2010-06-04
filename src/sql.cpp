@@ -468,9 +468,9 @@ void SQLClass::initDb() {
 				*m_sess << "CREATE INDEX IF NOT EXISTS user_id03 ON " + p->configuration().sqlPrefix + "users_settings (user_id);", now;
 
 				*m_sess << "CREATE TABLE IF NOT EXISTS " + p->configuration().sqlPrefix + "db_version ("
-					"  ver INTEGER NOT NULL DEFAULT '2'"
+					"  ver INTEGER NOT NULL DEFAULT '3'"
 					");", now;
-				*m_sess << "REPLACE INTO " + p->configuration().sqlPrefix + "db_version (ver) values(2)", now;
+				*m_sess << "REPLACE INTO " + p->configuration().sqlPrefix + "db_version (ver) values(3)", now;
 			}
 			catch (Poco::Exception e) {
 				Log("SQL ERROR", e.displayText());
