@@ -325,7 +325,17 @@ void User::connect() {
 
 	if (valid && purple_value_get_boolean(getSetting("enable_transport"))) {
 		purple_account_set_enabled(m_account, PURPLE_UI, TRUE);
-		purple_account_connect(m_account);
+// 		purple_account_connect(m_account);
+		const PurpleStatusType *statusType = purple_account_get_status_type_with_primitive(m_account, (PurpleStatusPrimitive) m_presenceType);
+		if (statusType) {
+			Log(m_jid, "Setting up default status.");
+			if (!m_statusMessage.empty()) {
+				purple_account_set_status(m_account, purple_status_type_get_id(statusType), TRUE, "message", m_statusMessage.c_str(), NULL);
+			}
+			else {
+				purple_account_set_status(m_account, purple_status_type_get_id(statusType), TRUE, NULL);
+			}
+		}
 	}
 }
 
@@ -433,11 +443,39 @@ void User::receivedPresence(const Presence &stanza) {
 			else
 				setResource(stanza); // update this resource
 
+			int PurplePresenceType;
+			// mirror presence types
+			switch (stanza.presence()) {
+				case Presence::Available: {
+					PurplePresenceType = PURPLE_STATUS_AVAILABLE;
+					break;
+				}
+				case Presence::Chat: {
+					PurplePresenceType = PURPLE_STATUS_AVAILABLE;
+					break;
+				}
+				case Presence::Away: {
+					PurplePresenceType = PURPLE_STATUS_AWAY;
+					break;
+				}
+				case Presence::DND: {
+					PurplePresenceType = PURPLE_STATUS_UNAVAILABLE;
+					break;
+				}
+				case Presence::XA: {
+					PurplePresenceType = PURPLE_STATUS_EXTENDED_AWAY;
+					break;
+				}
+				default: break;
+			}
+
 			Log(m_jid, "resource: " << getResource().name);
 			if (!m_connected) {
 				// we are not connected to legacy network, so we should do it when disco#info arrive :)
 				Log(m_jid, "connecting: resource=" << getResource().name);
 				if (m_readyForConnect == false) {
+					m_presenceType = PurplePresenceType;
+					m_statusMessage = stanza.status();
 					m_readyForConnect = true;
 					if (getResource().caps == -1) {
 						// caps not arrived yet, so we can't connect just now and we have to wait for caps
@@ -450,36 +488,8 @@ void User::receivedPresence(const Presence &stanza) {
 			else {
 				Log(m_jid, "mirroring presence to legacy network");
 				// we are already connected so we have to change status
-				int PurplePresenceType;
-				const PurpleStatusType *status_type;
+				const PurpleStatusType *status_type = purple_account_get_status_type_with_primitive(m_account, (PurpleStatusPrimitive) PurplePresenceType);
 				std::string statusMessage;
-
-				// mirror presence types
-				switch (stanza.presence()) {
-					case Presence::Available: {
-						PurplePresenceType = PURPLE_STATUS_AVAILABLE;
-						break;
-					}
-					case Presence::Chat: {
-						PurplePresenceType = PURPLE_STATUS_AVAILABLE;
-						break;
-					}
-					case Presence::Away: {
-						PurplePresenceType = PURPLE_STATUS_AWAY;
-						break;
-					}
-					case Presence::DND: {
-						PurplePresenceType = PURPLE_STATUS_UNAVAILABLE;
-						break;
-					}
-					case Presence::XA: {
-						PurplePresenceType = PURPLE_STATUS_EXTENDED_AWAY;
-						break;
-					}
-					default: break;
-				}
-
-				status_type = purple_account_get_status_type_with_primitive(m_account, (PurpleStatusPrimitive) PurplePresenceType);
 				if (status_type != NULL) {
 					// send presence to legacy network
 					statusMessage.clear();

@@ -118,6 +118,8 @@ class User : public AbstractUser, public SpectrumRosterManager, public SpectrumM
 		GHashTable *m_settings;		// user settings
 		bool m_loadingBuddiesFromDB;
 		std::string m_photoHash;
+		int m_presenceType;
+		std::string m_statusMessage;
 };
 
 #endif
