@@ -92,17 +92,19 @@ void SpectrumConversation::handleMessage(AbstractUser *user, const char *who, co
 	
 	// Escape HTML characters.
 	char *newline = purple_strdup_withhtml(msg);
-	char *strip, *xhtml;
+	char *strip, *xhtml, *xhtml_linkified;
 	purple_markup_html_to_xhtml(newline, &xhtml, &strip);
+	xhtml_linkified = purple_markup_linkify(xhtml);
 	std::string message(strip);
 
-	std::string m(xhtml);
+	std::string m(xhtml_linkified);
 	if (m.find("<body>") == 0) {
 		m.erase(0,6);
 		m.erase(m.length() - 7, 7);
 	}
 	g_free(newline);
 	g_free(xhtml);
+	g_free(xhtml_linkified);
 	g_free(strip);
 
 	std::string to;

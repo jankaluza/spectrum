@@ -999,8 +999,8 @@ GlooxMessageHandler::GlooxMessageHandler(const std::string &config) : MessageHan
 		j->registerIqHandler(m_stats, ExtStats);
 		m_vcardManager = new VCardManager(j);
 #ifndef WIN32
-                if (m_configInterface)
-		m_configInterface->registerHandler(m_stats);
+		if (m_configInterface)
+			m_configInterface->registerHandler(m_stats);
 #endif
 		m_vcard = new GlooxVCardHandler(this);
 		j->registerIqHandler(m_vcard, ExtVCard);
@@ -1009,7 +1009,6 @@ GlooxMessageHandler::GlooxMessageHandler(const std::string &config) : MessageHan
 		Transport::instance()->registerStanzaExtension( new VCardUpdate );
 
 		transportConnect();
-
 		g_main_loop_run(m_loop);
 	}
 }
