@@ -371,12 +371,12 @@ INSTALL(TARGETS spectrum
     )
 
 
-if (NOT EXISTS /etc/spectrum)
-	INSTALL(FILES
-		${CMAKE_CURRENT_SOURCE_DIR}/spectrum.cfg
-		DESTINATION /etc/spectrum/
-		)
-endif (NOT EXISTS /etc/spectrum)
+
+INSTALL(FILES
+	${CMAKE_CURRENT_SOURCE_DIR}/spectrum.cfg
+	RENAME spectrum.cfg.example
+	DESTINATION share/doc/spectrum
+	)
 
 if (NOT WITHOUT_SPECTRUMCTL)
 

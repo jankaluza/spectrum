@@ -117,7 +117,7 @@ class SpectrumRosterManager : public RosterStorage {
 		void handleSubscription(const Subscription &subscription);
 
 		// Returns true if there is authorization request by this user.
-		inline bool hasAuthRequest(const std::string &remote_user);
+ 		bool hasAuthRequest(const std::string &remote_user);
 
 		// Handles authorization request from legacy network,
 		authRequest *handleAuthorizationRequest(PurpleAccount *account, const char *remote_user, const char *id, const char *alias, const char *message, gboolean on_list, PurpleAccountRequestAuthorizationCb authorize_cb, PurpleAccountRequestAuthorizationCb deny_cb, void *user_data);
