@@ -180,13 +180,15 @@ void SpectrumMessageHandler::handleMessage(const Message& msg) {
 	m_currentBody = msg.body();
 
 	if (m_currentBody.find("/") == 0) {
+		bool handled = true;
 		PurpleCmdStatus status;
 		char *error = NULL;
-		if (m_currentBody.find("/transport") == 0)
-			m_currentBody.erase(0, 11);
+		std::string command = m_currentBody;
+		if (command.find("/transport") == 0)
+			command.erase(0, 11);
 		else
-			m_currentBody.erase(0, 1);
-		status = purple_cmd_do_command(conv, m_currentBody.c_str(), m_currentBody.c_str(), &error);
+			command.erase(0, 1);
+		status = purple_cmd_do_command(conv, command.c_str(), command.c_str(), &error);
 
 		switch (status) {
 			case PURPLE_CMD_STATUS_OK:
@@ -209,13 +211,19 @@ void SpectrumMessageHandler::handleMessage(const Message& msg) {
 					purple_conversation_write(conv, "transport", tr(m_user->getLang(),_("That command only works in 1:1 conversations, not group chats.")), PURPLE_MESSAGE_RECV, time(NULL));
 				break;
 			case PURPLE_CMD_STATUS_WRONG_PRPL:
-				purple_conversation_write(conv, "transport", tr(m_user->getLang(),_("That command is not supported for this legacy network.")), PURPLE_MESSAGE_RECV, time(NULL));
+				if (m_currentBody.find("/me") == 0) {
+					handled = false;
+				}
+				else {
+					purple_conversation_write(conv, "transport", tr(m_user->getLang(),_("That command is not supported for this legacy network.")), PURPLE_MESSAGE_RECV, time(NULL));
+				}
 				break;
 		}
 
 		if (error)
 			g_free(error);
-		return;
+		if (handled)
+			return;
 	}
 
 	// send this message
