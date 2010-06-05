@@ -190,32 +190,33 @@ void SpectrumMessageHandler::handleMessage(const Message& msg) {
 			command.erase(0, 1);
 		status = purple_cmd_do_command(conv, command.c_str(), command.c_str(), &error);
 
+		std::string sender = purple_conversation_get_type(conv) == PURPLE_CONV_TYPE_IM ? purple_conversation_get_name(conv) : "transport";
 		switch (status) {
 			case PURPLE_CMD_STATUS_OK:
 				break;
 			case PURPLE_CMD_STATUS_NOT_FOUND:
 				{
-					purple_conversation_write(conv, "transport", tr(m_user->getLang(),_("Transport: Unknown command.")), PURPLE_MESSAGE_RECV, time(NULL));
+					purple_conversation_write(conv, sender.c_str(), tr(m_user->getLang(),_("Transport: Unknown command.")), PURPLE_MESSAGE_RECV, time(NULL));
 					break;
 				}
 			case PURPLE_CMD_STATUS_WRONG_ARGS:
-				purple_conversation_write(conv, "transport", tr(m_user->getLang(),_("Syntax Error: Wrong number of arguments.")), PURPLE_MESSAGE_RECV, time(NULL));
+				purple_conversation_write(conv, sender.c_str(), tr(m_user->getLang(),_("Syntax Error: Wrong number of arguments.")), PURPLE_MESSAGE_RECV, time(NULL));
 				break;
 			case PURPLE_CMD_STATUS_FAILED:
-				purple_conversation_write(conv, "transport", tr(m_user->getLang(),error ? error : _("The command failed for an unknown reason.")), PURPLE_MESSAGE_RECV, time(NULL));
+				purple_conversation_write(conv, sender.c_str(), tr(m_user->getLang(),error ? error : _("The command failed for an unknown reason.")), PURPLE_MESSAGE_RECV, time(NULL));
 				break;
 			case PURPLE_CMD_STATUS_WRONG_TYPE:
 				if(purple_conversation_get_type(conv) == PURPLE_CONV_TYPE_IM)
-					purple_conversation_write(conv, "transport", tr(m_user->getLang(),_("That command only works in group chats, not 1:1 conversations.")), PURPLE_MESSAGE_RECV, time(NULL));
+					purple_conversation_write(conv, sender.c_str(), tr(m_user->getLang(),_("That command only works in group chats, not 1:1 conversations.")), PURPLE_MESSAGE_RECV, time(NULL));
 				else
-					purple_conversation_write(conv, "transport", tr(m_user->getLang(),_("That command only works in 1:1 conversations, not group chats.")), PURPLE_MESSAGE_RECV, time(NULL));
+					purple_conversation_write(conv, sender.c_str(), tr(m_user->getLang(),_("That command only works in 1:1 conversations, not group chats.")), PURPLE_MESSAGE_RECV, time(NULL));
 				break;
 			case PURPLE_CMD_STATUS_WRONG_PRPL:
 				if (m_currentBody.find("/me") == 0) {
 					handled = false;
 				}
 				else {
-					purple_conversation_write(conv, "transport", tr(m_user->getLang(),_("That command is not supported for this legacy network.")), PURPLE_MESSAGE_RECV, time(NULL));
+					purple_conversation_write(conv, sender.c_str(), tr(m_user->getLang(),_("That command is not supported for this legacy network.")), PURPLE_MESSAGE_RECV, time(NULL));
 				}
 				break;
 		}
