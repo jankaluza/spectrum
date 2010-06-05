@@ -5,7 +5,7 @@ CREATE TABLE IF NOT EXISTS `buddies` (
   `subscription` enum('to','from','both','ask','none') collate utf8_bin NOT NULL,
   `nickname` varchar(255) collate utf8_bin NOT NULL,
   `groups` varchar(255) collate utf8_bin NOT NULL,
-  `flags` smallint(4) NOT NULL DEFAULT '0'
+  `flags` smallint(4) NOT NULL DEFAULT '0',
   PRIMARY KEY (`id`),
   UNIQUE KEY `user_id` (`user_id`,`uin`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
