@@ -28,6 +28,7 @@ service=spectrum
 configdir=/etc/spectrum
 configsuffix=cfg
 pidfiledir=/var/run/spectrum
+lockfile=/var/lock/subsys/spectrum
 
 status_one() {
 	name=$1
@@ -104,10 +105,16 @@ for_all_running() {
 start_all_configured() {
 	[ -x $exec ] || exit 5
 	for_all_configured start_one
+	RETVAL=$?
+	[ $RETVAL -eq 0 ] && touch $lockfile
+	return $RETVAL
 }
 
 stop_all_running() {
 	for_all_running stop_one
+	RETVAL=$?
+	[ $RETVAL -eq 0 ] && rm -f $lockfile
+	return $RETVAL
 }
 
 status_all_configured() {
