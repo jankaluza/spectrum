@@ -24,106 +24,68 @@
 . /etc/rc.d/init.d/functions
 
 exec=/usr/sbin/spectrum
+spectrumctl=/usr/bin/spectrumctl
 service=spectrum
-configdir=/etc/spectrum
-configsuffix=cfg
-pidfiledir=/var/run/spectrum
 lockfile=/var/lock/subsys/spectrum
 
-status_one() {
-	name=$1
-	pidfile=$pidfiledir/$name.pid
-	status -p $pidfile "$service-$name"
+status() {
+	# 0 if running
+	# 1 if dead but pid file exists
+	# 2 if dead but subsys locked
+	# 3 if stopped
+	STATUS=3
+	[ -f $lockfile ] && STATUS=2
+	OUTPUT=$($spectrumctl --machine-readable list)
+	OLDIFS="$IFS"
+	IFS=','
+	while read pid name jid status; do
+		case "$status" in
+			"dead but pid-file exists")
+				[ "$STATUS" -gt 1 ] && STATUS=1
+				;;
+			"running")
+				STATUS=0
+				;;
+			"not running")
+				;;
+			*)
+				echo "spectrumctl returned unknown status \"$status\""
+		esac
+	done <<< "$OUTPUT"
+	IFS="$OLDIFS"
+	case $STATUS in
+		0) echo "spectrum is running" ;;
+		1) echo "spectrum is dead but pid file exists" ;;
+		2) echo "spectrum is dead but subsys locked" ;;
+		3) echo "spectrum is stopped" ;;
+	esac
+	return $STATUS
 }
 
-status_one_quiet() {
-	status_one $1 > /dev/null 2>&1
-}
-
-start_one() {
-	name=$1
-	status_one_quiet $name && return 0
-	conf=$configdir/$name.$configsuffix
-	echo -n $"Starting spectrum transport ($name): "
-	pidfile=$pidfiledir/$name.pid
-	daemon --check $service --pidfile $pidfile \
-		$exec -p $pidfile $conf
-	RETVAL=$?
-	echo
-	return $RETVAL
-}
-
-stop_one() {
-	name=$1
-	status_one_quiet $name || return 0
-	pidfile=$pidfiledir/$name.pid
-	echo -n $"Stopping spectrum transport ($name): "
-	killproc -p $pidfile $service
-	RETVAL=$?
-	echo
-	return $RETVAL
-}
-
-restart_one() {
-	name=$1
-	stop_one $name
-	start_one $name
-}
-
-for_all_configured() {
-	do_action=$1
-	configured=
-	configs=`ls $configdir/*.$configsuffix 2>/dev/null`
-	for conf in $configs; do
-		configured=1
-		name=`basename $conf .$configsuffix`
-		$do_action $name
-		RETVAL=$?
-		[ $RETVAL -eq 0 ] || break
-	done
-	if [ -z "$configured" ]; then
-		echo -n $"No spectrum transports configured "
-		failure
-		echo
-		RETVAL=6
-	fi
-	return $RETVAL
-}
-
-for_all_running() {
-	do_action=$1
-	RETVAL=0
-	pidfiles=`ls $pidfiledir/*.pid 2>/dev/null`
-	for pidfile in $pidfiles; do
-		name=`basename $pidfile .pid`
-		$do_action $name
-		RETVAL=$?
-	done
-	return $RETVAL
-}
-
-start_all_configured() {
+start() {
 	[ -x $exec ] || exit 5
-	for_all_configured start_one
+	status > /dev/null && return 0
+	echo $"Starting spectrum transport: "
+	daemon $spectrumctl start
 	RETVAL=$?
-	[ $RETVAL -eq 0 ] && touch $lockfile
+	[ $RETVAL -eq 0 ] && touch $lockfile && success || failure
+	echo
 	return $RETVAL
 }
 
-stop_all_running() {
-	for_all_running stop_one
+stop() {
+	status > /dev/null || return 0
+	echo $"Stopping spectrum transport: "
+	$spectrumctl stop
 	RETVAL=$?
-	[ $RETVAL -eq 0 ] && rm -f $lockfile
+	[ $RETVAL -eq 0 ] && rm -f $lockfile && success || failure
+	echo
 	return $RETVAL
-}
-
-status_all_configured() {
-	for_all_configured status_one
 }
 
 restart() {
-	stop_all_running
-	start_all_configured
+	stop
+	start
 }
 
 reload() {
@@ -137,13 +99,13 @@ force_reload() {
 # See how we were called.
 case "$1" in
 	start)
-		start_all_configured
+		start
 		;;
 	stop)
-		stop_all_running
+		stop
 		;;
 	status)
-		status_all_configured
+		status
 		;;
 	restart)
 		restart
@@ -155,7 +117,7 @@ case "$1" in
 		force_reload
 		;;
 	condrestart|try-restart)
-		for_all_running restart_one
+		status > /dev/null && restart
 		;;
 	*)
 		echo $"Usage: $0 {start|stop|status|restart|try-restart|reload|force-reload}"
