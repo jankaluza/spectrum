@@ -400,8 +400,7 @@ class spectrum:
 			x.addChild( node=field )
 
 		response = interface.command( [x] )
-		print( response )
-		return 0
+		return response
 
 	def get_stats( self ):
 		import xmpp

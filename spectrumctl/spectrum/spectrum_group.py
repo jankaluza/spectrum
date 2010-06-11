@@ -10,6 +10,7 @@ class spectrum_group:
 
 	def __init__( self, options, params, configs ):
 		self.options = options
+		self.params = params
 		self.instances = []
 		for config in configs:
 			instance = spectrum( config, params )
@@ -79,7 +80,30 @@ class spectrum_group:
 		self.simple_action( 'message_all' )
 
 	def set_vip_status( self ):
-		self.simple_action( 'set_vip_status' )
+		if len( self.params ) != 2:
+			print( "Error: set_vip_status <jid> <status>: Wrong number of arguments" )
+
+		status_string = "Setting VIP-status for '%s' to "
+		if self.params[1] == "0":
+			status_string += "False:"
+		elif self.params[1] == "1":
+			status_string += "True:"
+		else:
+			print( "Error: status (third argument) must be either 0 or 1" )
+			return 1
+		print( status_string%(self.params[0]) )
+
+		for instance in self.instances:
+			print( instance.get_jid() + '...' ),
+			cmd = instance.set_vip_status().kids[0]
+			if len( cmd.kids ) == 0:
+				print( "Ok." )
+			else:
+				note = cmd.kids[0]
+				typ = note.getAttr( 'type' ).title()
+				msg = note.getPayload()[0]
+				print( "%s: %s" %(typ, msg) )
+
 
 	def list( self ):
 		lines = [ ('PID', 'PROTOCOL', 'HOSTNAME', 'STATUS' ) ]
