@@ -26,7 +26,7 @@ from spectrum import *
 from optparse import *
 
 description='''spectrumctl can be used to control your spectrum-instances.
-Valid actions are start, stop, restart, reload, upgrade-db, list and stats. By default, spectrumctl 
+Valid actions are start, stop, restart, reload, upgrade-db, set-vip-status, list and stats. By default, spectrumctl 
 acts on all transports defined in /etc/spectrum/'''
 
 parser = OptionParser( usage='Usage: %prog [options] action', version='0.2', description=description)

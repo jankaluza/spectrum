@@ -47,6 +47,12 @@ version 0.3 (2010-??-??):
 	* Working /me command. Other commands can be listed by /help command.
 	* Fixed memory leak in joining the room.
 
+	spectrumctl
+	* Heavy refactoring for advanced options
+	* New actions:
+	  * set_vip_status (enable/disable VIP status of a given user)
+	  * upgrade-db (upgrade database to most recent version)
+
 version 0.2 (2010-04-08):
 	General:
 	* Don't answer error IQ stanza on disco#info request.

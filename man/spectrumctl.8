@@ -7,12 +7,12 @@
 .\"
 .TH spectrumctl 8  "February 21, 2010" "Version 0.1\-git" "Spectrum Manual"
 .SH NAME
-spectrumctl \- util to control spectrum instances
+spectrumctl \- Utility to control one or more spectrum instances
 .SH SYNOPSIS
 .B spectrumctl
 [options] operation
 .SH DESCRIPTION
-spectrumctl is a small tool written in python which can be used to control instances of the spectrum XMPP transport.
+spectrumctl is a tool written in python which can be used to control instances of the spectrum XMPP transport.
 spectrum only handles one legacy network per instance, so you need more than one spectrum instance if you want support for more than one legacy network.
 By default, spectrumctl acts on all transports defined in \fI/etc/spectrum/\fR.
 .SH OPERATIONS
@@ -37,6 +37,12 @@ log-files, it does not change any runtime configuration.
 .RS 4
 Print current usage statistics. \fBNote:\fR This option requires the xmpppy library for
 python.
+.sp
+.RE
+\fBset-vip-status \fIuser\fR \fIstatus\fR
+.RS 4
+Set the VIP status of \fIuser\fR, \fIstatus\fR must be either \fB0\fR (disable
+VIP status) or \fB1\fR (enable VIP status).
 .sp
 .RE
 \fBhelp\fR
