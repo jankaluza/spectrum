@@ -23,7 +23,7 @@
 # Source function library.
 . /etc/rc.d/init.d/functions
 
-exec=/usr/bin/spectrum #XXX should belong to sbin?
+exec=/usr/sbin/spectrum
 service=spectrum
 configdir=/etc/spectrum
 configsuffix=cfg
