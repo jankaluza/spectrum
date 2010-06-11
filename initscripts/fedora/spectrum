@@ -27,7 +27,6 @@
 
 exec=/usr/sbin/spectrum
 spectrumctl=/usr/bin/spectrumctl
-service=spectrum
 lockfile=/var/lock/subsys/spectrum
 
 status() {
