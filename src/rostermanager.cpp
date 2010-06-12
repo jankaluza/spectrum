@@ -47,6 +47,7 @@ static void handleAskSubscriptionBuddies(gpointer key, gpointer v, gpointer data
 }
 
 static void sendUnavailablePresence(gpointer key, gpointer v, gpointer data) {
+	Log("sendUnavailablePresence", (char *) key);
 	AbstractSpectrumBuddy *s_buddy = (AbstractSpectrumBuddy *) v;
 	SendPresenceToAllData *d = (SendPresenceToAllData *) data;
 	std::string &to = d->to;
