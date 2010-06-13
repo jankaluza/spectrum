@@ -27,10 +27,10 @@ SpectrumMUCConversation::SpectrumMUCConversation(PurpleConversation *conv, const
 	m_jid = jid;
 	m_res = "/" + resource;
 	m_conv = conv;
-	m_conv->ui_data = this;
 	m_connected = false;
 	m_lastPresence = NULL;
 #ifndef TESTS
+	m_conv->ui_data = this;
 	PurpleConvChat *chat = purple_conversation_get_chat_data(m_conv);
 	m_nickname = purple_conv_chat_get_nick(chat);
 #endif
