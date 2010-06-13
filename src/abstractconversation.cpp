@@ -31,3 +31,11 @@ const std::string &AbstractConversation::getResource() {
 SpectrumConversationType &AbstractConversation::getType() {
 	return m_type;
 }
+
+void AbstractConversation::setKey(const std::string &key) {
+	m_key = key;
+}
+
+const std::string &AbstractConversation::getKey() {
+	return m_key;
+}

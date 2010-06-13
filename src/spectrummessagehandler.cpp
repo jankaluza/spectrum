@@ -59,9 +59,10 @@ void SpectrumMessageHandler::handlePurpleMessage(PurpleAccount* account, char * 
 	if (conv == NULL) {
 		conv = purple_conversation_new(PURPLE_CONV_TYPE_IM, account, name);
 #ifndef TESTS
-		if (Transport::instance()->getConfiguration().protocol == "irc")
-// 			addConversation(conv, new SpectrumConversation(conv, SPECTRUM_CONV_GROUPCHAT));
+		if (Transport::instance()->getConfiguration().protocol == "irc") {
 			m_conversations[getConversationName(conv)] = new SpectrumConversation(conv, SPECTRUM_CONV_GROUPCHAT);
+			m_conversations[getConversationName(conv)]->setKey(getConversationName(conv));
+		}
 		else
 			addConversation(conv, new SpectrumConversation(conv, SPECTRUM_CONV_CHAT));
 #endif
@@ -71,6 +72,7 @@ void SpectrumMessageHandler::handlePurpleMessage(PurpleAccount* account, char * 
 void SpectrumMessageHandler::addConversation(PurpleConversation *conv, AbstractConversation *s_conv, const std::string &key) {
 	std::string k = key.empty() ? getConversationName(conv) : key;
 	Log(m_user->jid()," Adding Conversation; name: " << k);
+	s_conv->setKey(k);
 	m_conversations[k] = s_conv;
 	if (s_conv->getType() == SPECTRUM_CONV_GROUPCHAT) {
 		m_mucs_names[k] = 1;
@@ -81,12 +83,8 @@ void SpectrumMessageHandler::addConversation(PurpleConversation *conv, AbstractC
 void SpectrumMessageHandler::removeConversation(const std::string &name) {
 	if (!isOpenedConversation(name))
 		return;
-	if (m_conversations[name]->getType() == SPECTRUM_CONV_GROUPCHAT)
-		m_mucs--;
 	PurpleConversation *conv = m_conversations[name]->getConv();
 	purple_conversation_destroy(conv);
-	delete m_conversations[name];
-	m_conversations.erase(name);
 }
 
 void SpectrumMessageHandler::handleWriteIM(PurpleConversation *conv, const char *who, const char *msg, PurpleMessageFlags flags, time_t mtime) {
@@ -140,6 +138,21 @@ void SpectrumMessageHandler::purpleChatRenameUser(PurpleConversation *conv, cons
 void SpectrumMessageHandler::purpleChatRemoveUsers(PurpleConversation *conv, GList *users) {
 	std::string name = getSpectrumMUCConversation(conv);
 	m_conversations[name]->removeUsers(m_user, users);
+}
+
+void SpectrumMessageHandler::purpleConversationDestroyed(PurpleConversation *conv) {
+	AbstractConversation *s_conv = (AbstractConversation *) conv->ui_data;
+	if (!s_conv)
+		return;
+	std::string name = s_conv->getKey();
+	if (!isOpenedConversation(name)) {
+		Log("WARNING", "purpleConversationDestroyed called for unregistered conversation with name " << name);
+		return;
+	}
+	if (m_conversations[name]->getType() == SPECTRUM_CONV_GROUPCHAT)
+		m_mucs--;
+	delete m_conversations[name];
+	m_conversations.erase(name);
 }
 
 /*

@@ -51,6 +51,7 @@ static gboolean resendMessage(gpointer data) {
 SpectrumConversation::SpectrumConversation(PurpleConversation *conv, SpectrumConversationType type, const std::string &room) : AbstractConversation(type),
 	m_conv(conv), m_room(room), m_resendNextRawMessage(false) {
 	m_timer = new SpectrumTimer(1000, &resendMessage, this);
+	m_conv->ui_data = this;
 }
 
 SpectrumConversation::~SpectrumConversation() {

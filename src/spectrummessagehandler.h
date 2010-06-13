@@ -87,6 +87,9 @@ class SpectrumMessageHandler {
 		// Called when topic is changed.
 		void purpleChatTopicChanged(PurpleConversation *conv, const char *who, const char *topic);
 
+		// Called when PurpleConversation is destroyed.
+		void purpleConversationDestroyed(PurpleConversation *conv);
+
 	private:
 		std::string getConversationName(PurpleConversation *conv);
 		std::string getSpectrumMUCConversation(PurpleConversation *conv);

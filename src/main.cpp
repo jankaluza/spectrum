@@ -221,6 +221,10 @@ static void conv_chat_rename_user(PurpleConversation *conv, const char *old_name
 	GlooxMessageHandler::instance()->purpleChatRenameUser(conv, old_name, new_name, new_alias);
 }
 
+static void conv_destroy(PurpleConversation *conv) {
+	GlooxMessageHandler::instance()->purpleConversationDestroyed(conv);
+}
+
 /*
  * Called when users are removed from chat
  */
@@ -642,7 +646,7 @@ static PurpleConnectionUiOps conn_ui_ops =
 static PurpleConversationUiOps conversation_ui_ops =
 {
 	NULL,//pidgin_conv_new,
-	NULL,//pidgin_conv_destroy,              /* destroy_conversation */
+	conv_destroy,
 	conv_write_chat,                              /* write_chat           */
 	conv_write_im,             /* write_im             */
 	conv_write_conv,           /* write_conv           */
@@ -1383,6 +1387,14 @@ void GlooxMessageHandler::purpleConversationWriteChat(PurpleConversation *conv, 
 	}
 	else {
 		Log("purple", "purpleConversationWriteIM called, but user does not exist!!!");
+	}
+}
+
+void GlooxMessageHandler::purpleConversationDestroyed(PurpleConversation *conv) {
+	PurpleAccount *account = purple_conversation_get_account(conv);
+	User *user = (User *) userManager()->getUserByAccount(account);
+	if (user) {
+		user->purpleConversationDestroyed(conv);
 	}
 }
 

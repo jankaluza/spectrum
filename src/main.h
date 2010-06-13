@@ -147,6 +147,7 @@ public:
 	void purpleChatAddUsers(PurpleConversation *conv, GList *cbuddies, gboolean new_arrivals);
 	void purpleChatRenameUser(PurpleConversation *conv, const char *old_name, const char *new_name, const char *new_alias);
 	void purpleChatRemoveUsers(PurpleConversation *conv, GList *users);
+	void purpleConversationDestroyed(PurpleConversation *conv);
 	void * purpleAuthorizeReceived(PurpleAccount *account, const char *remote_user, const char *id, const char *alias, const char *message, gboolean on_list, PurpleAccountRequestAuthorizationCb authorize_cb, PurpleAccountRequestAuthorizationCb deny_cb, void *user_data);
 	void purpleBuddyTyping(PurpleAccount *account, const char *who);
 	void purpleBuddyTypingPaused(PurpleAccount *account, const char *who);

@@ -39,7 +39,7 @@ using namespace gloox;
 // Wrapper for PurpleBuddy.
 class AbstractConversation {
 	public:
-		AbstractConversation(SpectrumConversationType type) { m_type = type; m_resource = ""; }
+		AbstractConversation(SpectrumConversationType type, const std::string &key = "") { m_type = type; m_resource = ""; m_key = key; }
 		AbstractConversation() {};
 		virtual ~AbstractConversation() {}
 
@@ -51,6 +51,10 @@ class AbstractConversation {
 
 		// Returns type of conversation.
 		SpectrumConversationType &getType();
+
+		// Sets/returns key which is used to determine this conversation.
+		void setKey(const std::string &key);
+		const std::string &getKey();
 
 		// Handles message which should be resend to XMPP user.
 		virtual void handleMessage(AbstractUser *user, const char *who, const char *msg, PurpleMessageFlags flags, time_t mtime, const std::string &currentBody = "") = 0;
@@ -73,6 +77,7 @@ class AbstractConversation {
 	private:
 		std::string m_resource;				// Current resource.
 		SpectrumConversationType m_type;	// Conversation type.
+		std::string m_key;					// Key used to determine this converastion.
 };
 
 #endif

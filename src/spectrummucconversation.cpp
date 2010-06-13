@@ -27,6 +27,7 @@ SpectrumMUCConversation::SpectrumMUCConversation(PurpleConversation *conv, const
 	m_jid = jid;
 	m_res = "/" + resource;
 	m_conv = conv;
+	m_conv->ui_data = this;
 	m_connected = false;
 	m_lastPresence = NULL;
 #ifndef TESTS
