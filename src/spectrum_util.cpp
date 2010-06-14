@@ -185,3 +185,17 @@ bool isValidNode(const std::string &node) {
 	bool valid = node.find("\n") == std::string::npos;
 	return valid;
 }
+
+
+#if !GLIB_CHECK_VERSION(2,14,0)
+static void get_key(void *key, void */*value*/, void *data) {
+	GList *l = (GList *) data;
+	l = g_list_prepend (l, key); 
+}
+
+GList *g_hash_table_get_keys(GHashTable *table) {
+	GList *l = NULL;
+	g_hash_table_foreach(table, get_key, l);
+	return l;
+}
+#endif

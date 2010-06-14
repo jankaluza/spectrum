@@ -54,6 +54,9 @@ struct replaceJidCharacters {
 	void operator()(char& c) { if(c == '%') c = '@'; }
 };
 
+#if !GLIB_CHECK_VERSION(2,14,0)
+GList *g_hash_table_get_keys(GHashTable *table);
+#endif
 
 #ifndef WIN32
 void process_mem_usage(double& vm_usage, double& resident_set);
