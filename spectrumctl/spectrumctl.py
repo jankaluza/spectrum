@@ -61,7 +61,10 @@ parser.add_option_group( list_group )
 options, args = parser.parse_args()
 env.options = options
 
-all_actions = dir( spectrum_group.spectrum_group )
+all_actions = [ x for x in dir( spectrum_group.spectrum_group ) if not x.startswith( '__' ) ]
+if len( args ) == 0:
+	print( "Please give an action (one of %s)" %(', '.join(all_actions) ) )
+	sys.exit(1)
 
 action = args[0].replace( '-', '_' )
 params = args[1:]

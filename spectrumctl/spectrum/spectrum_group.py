@@ -82,6 +82,7 @@ class spectrum_group:
 	def set_vip_status( self ):
 		if len( self.params ) != 2:
 			print( "Error: set_vip_status <jid> <status>: Wrong number of arguments" )
+			return 1
 
 		status_string = "Setting VIP-status for '%s' to "
 		if self.params[1] == "0":
