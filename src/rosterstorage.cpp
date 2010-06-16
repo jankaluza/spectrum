@@ -91,8 +91,10 @@ RosterStorage::~RosterStorage() {
 }
 
 void RosterStorage::storeBuddy(AbstractSpectrumBuddy *s_buddy) {
-	if (g_hash_table_lookup(m_storageCache, s_buddy->getName().c_str()) == NULL)
-		g_hash_table_replace(m_storageCache, g_strdup(s_buddy->getName().c_str()), s_buddy);
+	if (s_buddy->getFlags() & SPECTRUM_BUDDY_IGNORE)
+		return;
+	if (g_hash_table_lookup(m_storageCache, s_buddy->getSafeName().c_str()) == NULL)
+		g_hash_table_replace(m_storageCache, g_strdup(s_buddy->getSafeName().c_str()), s_buddy);
 	m_storageTimer->start();
 }
 
@@ -110,11 +112,11 @@ bool RosterStorage::storeBuddies() {
 }
 
 void RosterStorage::removeBuddy(AbstractSpectrumBuddy *s_buddy) {
-	if (g_hash_table_lookup(m_storageCache, s_buddy->getName().c_str()) != NULL)
-		g_hash_table_remove(m_storageCache, s_buddy->getName().c_str());
+	if (g_hash_table_lookup(m_storageCache, s_buddy->getSafeName().c_str()) != NULL)
+		g_hash_table_remove(m_storageCache, s_buddy->getSafeName().c_str());
 }
 
-void RosterStorage::removeBuddy(PurpleBuddy *buddy) {
+void RosterStorage::removeBuddy(PurpleBuddy *buddy) {	
 	AbstractSpectrumBuddy *s_buddy = (AbstractSpectrumBuddy *) buddy->node.ui_data;
 	removeBuddy(s_buddy);
 }

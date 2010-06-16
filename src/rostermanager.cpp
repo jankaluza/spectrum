@@ -98,7 +98,9 @@ SpectrumRosterManager::~SpectrumRosterManager() {
 }
 
 bool SpectrumRosterManager::isInRoster(const std::string &name, const std::string &subscription) {
-	AbstractSpectrumBuddy *s_buddy = (AbstractSpectrumBuddy *) g_hash_table_lookup(m_roster, name.c_str());
+	std::string preparedUin(name);
+	Transport::instance()->protocol()->prepareUsername(preparedUin, m_user->account());
+	AbstractSpectrumBuddy *s_buddy = (AbstractSpectrumBuddy *) g_hash_table_lookup(m_roster, preparedUin.c_str());
 
 	if (s_buddy) {
 		if (subscription.empty())
@@ -132,20 +134,26 @@ void SpectrumRosterManager::sendPresenceToAll(const std::string &to) {
 }
 
 void SpectrumRosterManager::removeFromLocalRoster(const std::string &uin) {
-	if (!g_hash_table_lookup(m_roster, uin.c_str()))
+	std::string preparedUin(uin);
+	Transport::instance()->protocol()->prepareUsername(preparedUin, m_user->account());
+	if (!g_hash_table_lookup(m_roster, preparedUin.c_str()))
 		return;
-	g_hash_table_remove(m_roster, uin.c_str());
+	g_hash_table_remove(m_roster, preparedUin.c_str());
 }
 
 AbstractSpectrumBuddy *SpectrumRosterManager::getRosterItem(const std::string &uin) {
-	AbstractSpectrumBuddy *s_buddy = (AbstractSpectrumBuddy *) g_hash_table_lookup(m_roster, uin.c_str());
+	std::string preparedUin(uin);
+	Transport::instance()->protocol()->prepareUsername(preparedUin, m_user->account());
+	AbstractSpectrumBuddy *s_buddy = (AbstractSpectrumBuddy *) g_hash_table_lookup(m_roster, preparedUin.c_str());
 	return s_buddy;
 }
 
 void SpectrumRosterManager::addRosterItem(AbstractSpectrumBuddy *s_buddy) {
 	if (isInRoster(s_buddy->getName()))
 		return;
-	g_hash_table_replace(m_roster, g_strdup(s_buddy->getName().c_str()), s_buddy);
+	std::string preparedUin(s_buddy->getName());
+	Transport::instance()->protocol()->prepareUsername(preparedUin, m_user->account());
+	g_hash_table_replace(m_roster, g_strdup(preparedUin.c_str()), s_buddy);
 }
 
 void SpectrumRosterManager::addRosterItem(PurpleBuddy *buddy) {
