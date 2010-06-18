@@ -833,14 +833,16 @@ GHashTable *SQLClass::getBuddies(long userId, PurpleAccount *account){
 				}
 				else
 					buddiesLoaded = true;
-				
+				SpectrumBuddy *s_buddy = (SpectrumBuddy *) buddy->node.ui_data;
 				if (!buddy->node.ui_data) {
 					buddy->node.ui_data = (void *) new SpectrumBuddy(user.id, buddy);
-					SpectrumBuddy *s_buddy = (SpectrumBuddy *) buddy->node.ui_data;
+					s_buddy = (SpectrumBuddy *) buddy->node.ui_data;
 					s_buddy->setSubscription(user.subscription);
 					s_buddy->setFlags(m_stmt_getBuddies.resFlags);
 				}
-				g_hash_table_replace(roster, g_strdup(m_stmt_getBuddies.resUin.c_str()), buddy->node.ui_data);
+				std::string preparedUin(s_buddy->getName());
+				Transport::instance()->protocol()->prepareUsername(preparedUin, account);
+				g_hash_table_replace(roster, g_strdup(preparedUin.c_str()), buddy->node.ui_data);
 				
 				GSList *buddies;
 
