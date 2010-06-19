@@ -788,7 +788,10 @@ GHashTable *SQLClass::getBuddies(long userId, PurpleAccount *account){
 			user.online = false;
 			user.lastPresence = "";
 
-			if (!user.uin.empty() && std::count(user.uin.begin(), user.uin.end(), '@') <= 1) {
+			std::string preparedUin(user.uin.c_str());
+			Transport::instance()->protocol()->prepareUsername(preparedUin, account);
+
+			if (!user.uin.empty() && std::count(user.uin.begin(), user.uin.end(), '@') <= 1 && g_hash_table_lookup(roster, preparedUin.c_str()) == NULL) {
 				// create group
 				std::string group = user.group.empty() ? "Buddies" : user.group;
 				PurpleGroup *g = purple_find_group(group.c_str());
@@ -840,8 +843,6 @@ GHashTable *SQLClass::getBuddies(long userId, PurpleAccount *account){
 					s_buddy->setSubscription(user.subscription);
 					s_buddy->setFlags(m_stmt_getBuddies.resFlags);
 				}
-				std::string preparedUin(s_buddy->getName());
-				Transport::instance()->protocol()->prepareUsername(preparedUin, account);
 				g_hash_table_replace(roster, g_strdup(preparedUin.c_str()), buddy->node.ui_data);
 				
 				GSList *buddies;
