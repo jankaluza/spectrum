@@ -298,7 +298,7 @@ void RegisterHandlerTest::handleIqRegisterXData() {
 	field->addAttribute("type", "list-single");
 	field->addAttribute("var", "language");
 	field->addAttribute("label", "Language");
-	field->addChild( new Tag("value", "cs") );
+	field->addChild( new Tag("value", "en") );
 	x->addChild(field);
 
 	field = new Tag("field");
