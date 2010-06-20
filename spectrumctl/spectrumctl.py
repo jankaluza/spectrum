@@ -80,7 +80,7 @@ if options.config:
 	configs = [ options.config ]
 else:
 	if not os.path.exists( options.config_dir ):
-		log( "Error: %s: No such directory"%(options.config_dir) )
+		print( "Error: %s: No such directory"%(options.config_dir) )
 		sys.exit(1)
 
 	config_list = os.listdir( options.config_dir )
