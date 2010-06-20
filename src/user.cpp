@@ -456,12 +456,19 @@ void User::receivedPresence(const Presence &stanza) {
 				}
 			}
 		} else {
+			std::string oldActiveResource = getResource().name;
 			if (!hasResource(stanza.from().resource())) {
 				setResource(stanza); // add this resource
 				sendPresenceToAll(stanza.from().full());
 			}
 			else
 				setResource(stanza); // update this resource
+
+			// Active resource has been changed, so we have to inform SpectrumMessageHandler to send
+			// next message from legacy network to bare jid.
+			if (getResource().name != oldActiveResource) {
+				removeConversationResource(oldActiveResource);
+			}
 
 			int PurplePresenceType;
 			// mirror presence types
@@ -525,7 +532,7 @@ void User::receivedPresence(const Presence &stanza) {
 				}
 			}
 		}
-		
+
 		if (purple_value_get_boolean(getSetting("enable_transport")) == false) {
 			Tag *tag = new Tag("presence");
 			tag->addAttribute("to", stanza.from().bare());
