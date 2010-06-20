@@ -155,8 +155,8 @@ bool GlooxRegisterHandler::handleIq(const Tag *iqTag) {
 		std::map <std::string, std::string> languages = localization.getLanguages();
 		for (std::map <std::string, std::string>::iterator it = languages.begin(); it != languages.end(); it++) {
 			Tag *option = new Tag("option");
-			option->addAttribute("label", (*it).first);
-			option->addChild( new Tag("value", (*it).second) );
+			option->addAttribute("label", (*it).second);
+			option->addChild( new Tag("value", (*it).first) );
 			field->addChild(option);
 		}
 
@@ -373,7 +373,7 @@ bool GlooxRegisterHandler::handleIq(const Tag *iqTag) {
 
 		std::string jid = from.bare();
 
-		if (username.empty() || password.empty()) {
+		if (username.empty() || password.empty() || localization.getLanguages().find(language) == localization.getLanguages().end()) {
 			sendError(406, "not-acceptable", iqTag);
 			return false;
 		}
@@ -386,7 +386,7 @@ bool GlooxRegisterHandler::handleIq(const Tag *iqTag) {
 		}
 
 		if (res.id == -1) {
-			Log("GlooxRegisterHandler", "adding new user: "<< jid << ", " << username << ", " << password << ", " << language);
+			Log("GlooxRegisterHandler", "adding new user: "<< jid << ", " << username <<  ", " << language);
 			Transport::instance()->sql()->addUser(jid,username,password,language,encoding);
 			sendsubscribe = true;
 		}

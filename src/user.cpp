@@ -59,7 +59,27 @@ User::User(GlooxMessageHandler *parent, JID jid, const std::string &username, co
 	m_username = username;
 	m_encoding = encoding;
 
-	m_lang = g_strdup(language.c_str());
+	// There is some garbage in language column before 0.3 (this bug is fixed in 0.3), so we're trying to set default
+	// values here.
+	// TODO: Remove me for 0.4
+	if (localization.getLanguages().find(language) == localization.getLanguages().end()) {
+		UserRow res;
+		res.jid = m_jid;
+		res.password = m_password;
+		if (language == "English") {
+			res.language = "en";
+			m_lang = g_strdup("en");
+		}
+		else {
+			res.language = Transport::instance()->getConfiguration().language;
+			m_lang = g_strdup(res.language.c_str());
+		}
+		res.encoding = m_encoding;
+		Transport::instance()->sql()->updateUser(res);
+	}
+	else
+		m_lang = g_strdup(language.c_str());
+
 	m_features = 0;
 	m_connectionStart = time(NULL);
 	m_settings = p->sql()->getSettings(m_userID);

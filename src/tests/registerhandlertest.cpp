@@ -62,7 +62,7 @@ void RegisterHandlerTest::handleIqGetNewUser() {
 						"<value>en</value>";
 	std::map <std::string, std::string> languages = localization.getLanguages();
 	for (std::map <std::string, std::string>::iterator it = languages.begin(); it != languages.end(); it++) {
-		r +=			"<option label='" + (*it).first + "'><value>" + (*it).second + "</value></option>";
+		r +=			"<option label='" + (*it).second + "'><value>" + (*it).first + "</value></option>";
 	}
 	r +=			"</field>"
 					"<field type='text-single' var='encoding' label='Encoding'>"
@@ -116,7 +116,7 @@ void RegisterHandlerTest::handleIqGetExistingUser() {
 						"<value>cs</value>";
 	std::map <std::string, std::string> languages = localization.getLanguages();
 	for (std::map <std::string, std::string>::iterator it = languages.begin(); it != languages.end(); it++) {
-		r +=			"<option label='" + (*it).first + "'><value>" + (*it).second + "</value></option>";
+		r +=			"<option label='" + (*it).second + "'><value>" + (*it).first + "</value></option>";
 	}
 	r +=			"</field>"
 					"<field type='text-single' var='encoding' label='Encoding'>"
@@ -320,4 +320,79 @@ void RegisterHandlerTest::handleIqRegisterXData() {
 	
 	row = m_backend->getUserByJid("user@spectrum.im");
 	CPPUNIT_ASSERT (row.id != -1);
+}
+
+
+void RegisterHandlerTest::handleIqRegisterXDataBadLanguage() {
+	std::string r;
+	r =	"<iq id='reg1' type='error' from='icq.localhost' to='user@spectrum.im/psi'>"
+			"<error code='406' type='modify'>"
+				"<not-acceptable xmlns='urn:ietf:params:xml:ns:xmpp-stanzas'/>"
+			"</error>"
+		"</iq>";
+
+	Configuration cfg;
+	cfg.onlyForVIP = true;
+	cfg.allowedServers.push_back("spectrum.im");
+	cfg.language = "en";
+	cfg.encoding = "windows-1250";
+	m_backend->setConfiguration(cfg);
+	
+	Tag *iq = new Tag("iq");
+	iq->addAttribute("from", "user@spectrum.im/psi");
+	iq->addAttribute("to", "icq.localhost");
+	iq->addAttribute("type", "set");
+	iq->addAttribute("id", "reg1");
+	Tag *query = new Tag("query");
+	query->addAttribute("xmlns", "jabber:iq:register");
+	Tag *x = new Tag("x");
+	x->addAttribute("xmlns", "jabber:x:data");
+	x->addAttribute("type", "submit");
+
+	Tag *field = new Tag("field");
+	field->addAttribute("type", "hidden");
+	field->addAttribute("var", "FORM_TYPE");
+	field->addChild( new Tag("value", "jabber:iq:register") );
+	x->addChild(field);
+
+	field = new Tag("field");
+	field->addAttribute("type", "text-single");
+	field->addAttribute("var", "username");
+	field->addAttribute("label", "Network username");
+	field->addChild( new Tag("required") );
+	field->addChild( new Tag("value", "someuin") );
+	x->addChild(field);
+
+	field = new Tag("field");
+	field->addAttribute("type", "text-private");
+	field->addAttribute("var", "password");
+	field->addAttribute("label", "Password");
+	field->addChild( new Tag("value", "secret") );
+	x->addChild(field);
+
+	field = new Tag("field");
+	field->addAttribute("type", "list-single");
+	field->addAttribute("var", "language");
+	field->addAttribute("label", "Language");
+	field->addChild( new Tag("value", "unknown_language") );
+	x->addChild(field);
+
+	field = new Tag("field");
+	field->addAttribute("type", "text-single");
+	field->addAttribute("var", "encoding");
+	field->addAttribute("label", "Encoding");
+	field->addChild( new Tag("value", "windows-1250") );
+	x->addChild(field);
+	query->addChild(x);
+	iq->addChild(query);
+
+	UserRow row = m_backend->getUserByJid("user@spectrum.im");
+	CPPUNIT_ASSERT (row.id == -1);
+	
+	m_handler->handleIq(iq);
+	testTagCount(1);
+	compare(r);
+	
+	row = m_backend->getUserByJid("user@spectrum.im");
+	CPPUNIT_ASSERT (row.id == -1);
 }

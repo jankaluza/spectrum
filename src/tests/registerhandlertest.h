@@ -22,6 +22,7 @@ class RegisterHandlerTest : public AbstractTest
 	CPPUNIT_TEST (handleIqRegisterLegacy);
 	CPPUNIT_TEST (handleIqRegisterLegacyNoPassword);
 	CPPUNIT_TEST (handleIqRegisterXData);
+	CPPUNIT_TEST (handleIqRegisterXDataBadLanguage);
 	CPPUNIT_TEST_SUITE_END ();
 
 	public:
@@ -36,6 +37,7 @@ class RegisterHandlerTest : public AbstractTest
 		void handleIqRegisterLegacyNoPassword();
 		void handleIqRegisterLegacyNoUsername();
 		void handleIqRegisterXData();
+		void handleIqRegisterXDataBadLanguage();
 
 	private:
 		GlooxRegisterHandler *m_handler;
