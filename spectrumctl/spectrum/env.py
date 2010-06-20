@@ -108,6 +108,12 @@ def check_exists( node, typ='file' ):
 
 	return True
 
+def is_named_pipe( node ):
+	if os.path.exists( node ):
+		if os.stat(node).S_ISFIFO:
+			return True
+	return False
+
 def check_permissions( file, permissions, wildcards=[] ):
 	all = [ stat.S_IRUSR, stat.S_IWUSR, stat.S_IXUSR,
 		stat.S_IRGRP, stat.S_IWGRP, stat.S_IXGRP,

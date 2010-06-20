@@ -116,7 +116,8 @@ class spectrum:
 		log_file = self.config.get( 'logging', 'log_file' )
 		try:
 			# does not exist upon first startup:
-			env.check_exists( log_file )
+			if not env.is_named_pipe( log_file ):
+				env.check_exists( log_file )
 			env.check_ownership( log_file, gid=-1 )
 			env.check_permissions( log_file, # rw-r-----
 				[ stat.S_IRUSR, stat.S_IWUSR, stat.S_IRGRP ] )
