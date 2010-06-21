@@ -34,7 +34,7 @@ class spectrum_group:
 		return( len( self.instances ) )
 		
 
-	def log( self, msg, newline=True ):
+	def _log( self, msg, newline=True ):
 		if not self.options.quiet:
 			if newline:
 				print( msg )
@@ -42,40 +42,40 @@ class spectrum_group:
 				print( msg ),
 #				print( msg, end='' ) #python 3
 
-	def simple_action( self, action, title=None ):
+	def _simple_action( self, action, title=None ):
 		ret = 0
 		for instance in self.instances:
 			if not title:
 				title = action.title()
 			jid = instance.get_jid()
-			self.log( "%s %s..."%(title, jid), False )
+			self._log( "%s %s..."%(title, jid), False )
 			try:
 				getattr( instance, action )()
-				self.log( "Ok." )
+				self._log( "Ok." )
 			except socket.error, e:
 				if hasattr( e, 'strerror' ):
 					# python2.5 does not have msg.strerror
 					err = e.strerror
 				else:
 					err = e.message
-				self.log( "Failed (config_interface: %s)"%(err) )
+				self._log( "Failed (config_interface: %s)"%(err) )
 			except RuntimeError, e:
-				self.log( "Failed (%s)"%e.args[0] )
+				self._log( "Failed (%s)"%e.args[0] )
 				ret += e.args[1]
 
 		sys.exit( ret )
 
 	def start( self ):
-		self.simple_action( 'start' )
+		self._simple_action( 'start' )
 
 	def stop( self ):
-		self.simple_action( 'stop' )
+		self._simple_action( 'stop' )
 
 	def restart( self ):
-		self.simple_action( 'restart' )
+		self._simple_action( 'restart' )
 
 	def reload( self ):
-		self.simple_action( 'reload' )
+		self._simple_action( 'reload' )
 
 	def stats( self ):
 		output = []
@@ -91,10 +91,10 @@ class spectrum_group:
 		print "\n\n".join( output )
 	
 	def upgrade_db( self ):
-		self.simple_action( 'upgrade_db', "Upgrading db for" )
+		self._simple_action( 'upgrade_db', "Upgrading db for" )
 
 	def message_all( self ):
-		self.simple_action( 'message_all' )
+		self._simple_action( 'message_all' )
 
 	def set_vip_status( self ):
 		if len( self.params ) != 2:
