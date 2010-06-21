@@ -262,6 +262,7 @@ class spectrum:
 		if env.options.debug:
 			os.environ['MALLOC_PERTURB_'] = '254'
 			os.environ['PURPLE_VERBOSE_DEBUG'] = '1'
+			os.environ['MALLOC_CHECK_'] = '2'
 			cmd[0] = 'ulimit -c unlimited; ' + cmd[0]
 		cmd.append( path )
 		cmd = env.su_cmd( cmd )
