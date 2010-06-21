@@ -109,8 +109,10 @@ def check_exists( node, typ='file' ):
 	return True
 
 def is_named_pipe( node ):
+	import stat
 	if os.path.exists( node ):
-		if os.stat(node).S_ISFIFO:
+		mode = os.stat( node )
+		if stat.S_ISFIFO( mode ):
 			return True
 	return False
 
