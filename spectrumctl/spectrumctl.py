@@ -61,7 +61,7 @@ parser.add_option_group( list_group )
 options, args = parser.parse_args()
 env.options = options
 
-all_actions = [ x for x in dir( spectrum_group.spectrum_group ) if not x.startswith( '__' ) ]
+all_actions = [ x for x in dir( spectrum_group.spectrum_group ) if not x.startswith( '_' ) ]
 if len( args ) == 0:
 	print( "Please give an action (one of %s)" %(', '.join(all_actions) ) )
 	sys.exit(1)
@@ -75,20 +75,5 @@ if action not in all_actions:
 	print( "Error: %s: Unknown action." %(action) )
 	sys.exit(1)
 
-configs = []
-if options.config:
-	configs = [ options.config ]
-else:
-	if not os.path.exists( options.config_dir ):
-		print( "Error: %s: No such directory"%(options.config_dir) )
-		sys.exit(1)
-
-	config_list = os.listdir( options.config_dir )
-	instances = []
-	for file in config_list:
-		path = '%s/%s'%(options.config_dir, file)
-		if os.path.isfile( path ) and path.endswith( '.cfg' ):
-			configs.append( path )
-
-group = spectrum_group.spectrum_group( options, params, configs )
+group = spectrum_group.spectrum_group( options, params )
 getattr( group, action )()

@@ -1,4 +1,4 @@
-import sys, socket
+import os, sys, socket
 
 try:
 	from spectrum import spectrum
@@ -8,14 +8,32 @@ except ImportError:
 class spectrum_group:
 	"""This class represents multiple spectrum instances"""
 
-	def __init__( self, options, params, configs ):
+	def __init__( self, options, params ):
 		self.options = options
 		self.params = params
+		if options.config:
+			self.instances = [ spectrum( options.config, params ) ]
+		else:
+			self._load_instances()
+
+	def _load_instances( self, jid=None ):
 		self.instances = []
-		for config in configs:
-			instance = spectrum( config, params )
-			if instance.enabled():
+		config_list = os.listdir( self.options.config_dir )
+		for config in config_list:
+			path = '%s/%s'%(self.options.config_dir, config)
+			print( path )
+			if not os.path.isfile( path ) or not path.endswith( '.cfg' ):
+				continue
+
+			instance = spectrum( config, self.params )
+			if jid and instance.get_jid() == jid:
+				# only load the specified JID
 				self.instances.append( instance )
+			elif not jid: 
+				# jid is None - load all instances
+				self.instances.append( instance )
+		return( len( self.instances ) )
+		
 
 	def log( self, msg, newline=True ):
 		if not self.options.quiet:
