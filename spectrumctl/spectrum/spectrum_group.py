@@ -21,7 +21,6 @@ class spectrum_group:
 		config_list = os.listdir( self.options.config_dir )
 		for config in config_list:
 			path = '%s/%s'%(self.options.config_dir, config)
-			print( path )
 			if not os.path.isfile( path ) or not path.endswith( '.cfg' ):
 				continue
 
@@ -149,3 +148,20 @@ class spectrum_group:
 				print val,
 			print
 		return 0
+
+	def shell( self ):
+		cmds = [ x for x in dir( self ) if not x.startswith( '_' ) and x != "shell" ]
+		if len(self.instances) == 1:
+			prompt = self.instances[0].get_jid()
+		else:
+			prompt = "<all transports>"
+		prompt += ": "
+
+		try:
+			while( True ):
+				str = raw_input( prompt )
+				if str in cmds:
+					getattr( self, str )()
+		except EOFError:
+			print
+			return
