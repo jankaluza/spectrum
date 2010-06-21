@@ -288,11 +288,14 @@ class spectrum:
 			return
 
 		pid = self.get_pid()
+		debug = 0
 		try:
 			os.kill( pid, signal.SIGTERM )
-			time.sleep( 0.1 )
+			debug += 1
+			time.sleep( 0.2 )
 			
 			for i in range(1, 10):
+				debug += 1
 				status = self.status()
 				if status == 3 or status == 1:
 					os.remove( self.pid_file )
@@ -300,6 +303,9 @@ class spectrum:
 				time.sleep( 1 )
 				os.kill( pid, signal.SIGTERM )
 			raise RuntimeError( "Spectrum did not die", 1 )
+		except OSError, e:
+			print( "pid file: '%s' (%s)"%(self.pid_file, debug) )
+			raise RuntimeError( "Failed to kill pid '%s'"%(pid), 1 )
 		except Exception, e:
 			print( e )
 			raise RuntimeError( "Unknown Error occured", 1 )
