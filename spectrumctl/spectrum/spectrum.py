@@ -300,8 +300,8 @@ class spectrum:
 				if status == 3 or status == 1:
 					os.remove( self.pid_file )
 					return 0
-				time.sleep( 1 )
 				os.kill( pid, signal.SIGTERM )
+				time.sleep( 1 )
 			raise RuntimeError( "Spectrum did not die", 1 )
 		except OSError, e:
 			print( "pid file: '%s' (%s)"%(self.pid_file, debug) )
