@@ -11,12 +11,15 @@ class config_interface:
 		
 		Returns the raw data received in response.
 		"""
-		s = socket.socket( socket.AF_UNIX )
-		s.connect( self.path )
-		s.send( str(data) )
-		response = s.recv( 10240 )
-		s.close()
-		return response
+		try:
+			s = socket.socket( socket.AF_UNIX )
+			s.connect( self.path )
+			s.send( str(data) )
+			response = s.recv( 10240 )
+			s.close()
+			return response
+		except socket.error, e:
+			raise RuntimeError( "Error accessing socket: %s."%(e.args[1]) )
 
 	def send_stanza( self, stanza ):
 		stanza.setFrom( 'spectrumctl@localhost' )
