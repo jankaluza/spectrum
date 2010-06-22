@@ -63,19 +63,19 @@ class spectrum_group:
 				self._log( "Failed (%s)"%e.args[0] )
 				ret += e.args[1]
 
-		sys.exit( ret )
+		return ret
 
 	def start( self ):
-		self._simple_action( 'start' )
+		return self._simple_action( 'start' )
 
 	def stop( self ):
-		self._simple_action( 'stop' )
+		return self._simple_action( 'stop' )
 
 	def restart( self ):
-		self._simple_action( 'restart' )
+		return self._simple_action( 'restart' )
 
 	def reload( self ):
-		self._simple_action( 'reload' )
+		return self._simple_action( 'reload' )
 
 	def stats( self ):
 		output = []
@@ -89,6 +89,7 @@ class spectrum_group:
 				o.append( name + ': ' + value + ' ' + unit )
 			output.append( "\n".join( o ) )
 		print "\n\n".join( output )
+		return 0
 	
 	def upgrade_db( self ):
 		self._simple_action( 'upgrade_db', "Upgrading db for" )
@@ -149,19 +150,64 @@ class spectrum_group:
 			print
 		return 0
 
-	def shell( self ):
-		cmds = [ x for x in dir( self ) if not x.startswith( '_' ) and x != "shell" ]
+	def _get_prompt( self ):
 		if len(self.instances) == 1:
 			prompt = self.instances[0].get_jid()
+		elif len( self.instances ) == 0:
+			prompt = "<none>"
 		else:
 			prompt = "<all transports>"
-		prompt += ": "
+		return prompt + " $ "
 
-		try:
-			while( True ):
-				str = raw_input( prompt )
-				if str in cmds:
-					getattr( self, str )()
-		except EOFError:
-			print
-			return
+	def shell( self ):
+		cmds = [ x for x in dir( self ) if not x.startswith( '_' ) and x != "shell" ]
+		cmds = [ x for x in cmds if type(getattr( self, x )) == type(self.shell) ]
+		cmds += ['exit', 'load', 'help' ]
+		jids = [ x.get_jid() for x in self.instances ]
+		import completer
+		compl = completer.completer(cmds, jids)
+
+		while( True ):
+			try:
+				cmd = raw_input( self._get_prompt() ).split()
+				cmd = [ x.strip() for x in cmd ]
+				if len( cmd ) == 0:
+					continue
+
+				if cmd[0] == "exit":
+					raise EOFError() # same as CTRL+D
+				elif cmd[0] == "load":
+					try:
+						if cmd[1] == "all":
+							ret = self._load_instances()
+						else:
+							ret = self._load_instances( cmd[1] )
+
+						if ret == 0:
+							print( "Error: no transports found." )
+						elif ret == 1:
+							print( "%s loaded."%(self.instances[0].get_jid() ) )
+						else:
+							print( "%s transports loaded."%(ret) )
+
+						compl.set_jids( [ x.get_jid() for x in self.instances ] )
+					except IndexError:
+						print( "Error: Give a JID to load or 'all' to load all (enabled) files" )
+				elif cmd[0] == "help":
+					print( "Help not implemented yet" )
+				elif cmd[0] in cmds:
+					getattr( self, cmd[0] )()
+				else:
+					print( "Unknown command, try 'help'." )
+					print( cmd[0] )
+			except KeyboardInterrupt:
+				print
+				continue
+			except RuntimeError, e:
+				print( e.message )
+			except EOFError:
+				print 
+				return
+			except Exception, e:
+				print( "Type: %s"%(type(e)) )
+				print( e )

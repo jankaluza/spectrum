@@ -425,5 +425,7 @@ class spectrum:
 				'messages/in', 'messages/out', 'memory-usage' ]:
 			nodes.append( xmpp.simplexml.Node( 'stat', 
 				attrs={'name': name} ) )
-
-		return interface.query( nodes, ns )
+		try:
+			return interface.query( nodes, ns )
+		except RuntimeError, e:
+			raise RuntimeError( "%s: %s"%(self.get_jid(), e.message ) )
