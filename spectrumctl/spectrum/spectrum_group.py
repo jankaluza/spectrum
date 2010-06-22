@@ -24,7 +24,7 @@ class spectrum_group:
 			if not os.path.isfile( path ) or not path.endswith( '.cfg' ):
 				continue
 
-			instance = spectrum( config, self.params )
+			instance = spectrum( path, self.params )
 			if jid and instance.get_jid() == jid:
 				# only load the specified JID
 				self.instances.append( instance )
