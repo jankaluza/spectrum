@@ -89,11 +89,11 @@ def check_ownership( node, uid=None, gid=None ):
 	if gid == None:
 		gid = get_gid()
 
-	stat = os.stat( node )
-	if uid != -1 and stat.st_uid != uid:
+	stat_result = os.stat( node )
+	if uid != -1 and stat_result.st_uid != uid:
 		name = pwd.getpwuid( uid ).pw_name
 		raise RuntimeError( node, 'Unsafe ownership (fix with "chown %s %s")'%(name, node) )
-	if gid != -1 and stat.st_gid != gid:
+	if gid != -1 and stat_result.st_gid != gid:
 		name = grp.getgrgid( gid ).gr_name
 		raise RuntimeError( node, 'Unsafe ownership (fix with "chgrp %s %s")'%(name, node) )
 
@@ -109,9 +109,8 @@ def check_exists( node, typ='file' ):
 	return True
 
 def is_named_pipe( node ):
-	import stat
 	if os.path.exists( node ):
-		mode = os.stat( node )
+		mode = os.stat( node )[stat.ST_MODE]
 		if stat.S_ISFIFO( mode ):
 			return True
 	return False
