@@ -78,6 +78,11 @@ bool GlooxRegisterHandler::handleIq(const Tag *iqTag) {
 
 	JID from(iqTag->findAttribute("from"));
 
+	if (CONFIG().protocol == "irc") {
+		sendError(400, "bad-request", iqTag);
+		return false;
+	}
+	
 	AbstractUser *user = Transport::instance()->userManager()->getUserByJID(from.bare());
 	if (!Transport::instance()->getConfiguration().enable_public_registration) {
 		std::list<std::string> const &x = Transport::instance()->getConfiguration().allowedServers;
