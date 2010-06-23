@@ -390,7 +390,13 @@ Configuration ConfigFile::getConfiguration() {
 		g_strfreev (bind);
 	}
 	else configuration.logAreas = LOG_AREA_XML | LOG_AREA_PURPLE;
-	
+
+
+	// Registration section
+	loadBoolean(configuration.enable_public_registration, "registration", "enable_public_registration", true);
+	loadString(configuration.username_mask, "registration", "username_mask", "");
+	loadString(configuration.reg_instructions, "registration", "instructions", "");
+
 	if (configuration.sqlType == "sqlite")
 		create_dir(configuration.sqlDb, 0750);
 	create_dir(configuration.filetransferCache, 0750);

@@ -35,6 +35,9 @@
 using namespace gloox;
 class UserManager;
 
+#define PROTOCOL() Transport::instance()->protocol()
+#define CONFIG() Transport::instance()->getConfiguration()
+
 /*
  * Transport features used to configure transport.
  */

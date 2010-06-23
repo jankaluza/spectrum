@@ -57,6 +57,12 @@ User::User(GlooxMessageHandler *parent, JID jid, const std::string &username, co
 
 	m_password = password;
 	m_username = username;
+	if (!CONFIG().username_mask.empty()) {
+		std::string newUsername(CONFIG().username_mask);
+		replace(newUsername, "$username", m_username.c_str());
+		m_username = newUsername;
+	}
+	
 	m_encoding = encoding;
 
 	// There is some garbage in language column before 0.3 (this bug is fixed in 0.3), so we're trying to set default

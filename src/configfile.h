@@ -63,7 +63,10 @@ struct Configuration {
 	int filetransfer_proxy_port;
 	std::string filetransfer_proxy_streamhost_ip;
 	int filetransfer_proxy_streamhost_port;
-	
+
+	bool enable_public_registration;
+	std::string username_mask;
+	std::string reg_instructions;
 
 	std::string userDir;			// Directory used to store avatars.
 	std::string filetransferCache;	// Directory where transfered files are stored.

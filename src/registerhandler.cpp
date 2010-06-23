@@ -79,14 +79,14 @@ bool GlooxRegisterHandler::handleIq(const Tag *iqTag) {
 	JID from(iqTag->findAttribute("from"));
 
 	AbstractUser *user = Transport::instance()->userManager()->getUserByJID(from.bare());
-// 	if (Transport::instance()->getConfiguration().onlyForVIP) {
-// 		std::list<std::string> const &x = Transport::instance()->getConfiguration().allowedServers;
-// 		if (std::find(x.begin(), x.end(), from.server()) == x.end()) {
-// 				Log("GlooxRegisterHandler", "This user has no permissions to register an account");
-// 				sendError(400, "bad-request", iqTag);
-// 				return false;
-// 		}
-// 	}
+	if (!Transport::instance()->getConfiguration().enable_public_registration) {
+		std::list<std::string> const &x = Transport::instance()->getConfiguration().allowedServers;
+		if (std::find(x.begin(), x.end(), from.server()) == x.end()) {
+			Log("GlooxRegisterHandler", "This user has no permissions to register an account");
+			sendError(400, "bad-request", iqTag);
+			return false;
+		}
+	}
 
 	const char *_language = user ? user->getLang() : Transport::instance()->getConfiguration().language.c_str();
 
@@ -101,15 +101,17 @@ bool GlooxRegisterHandler::handleIq(const Tag *iqTag) {
 		query->addAttribute( "xmlns", "jabber:iq:register" );
 		UserRow res = Transport::instance()->sql()->getUserByJid(from.bare());
 
+		std::string instructions = CONFIG().reg_instructions.empty() ? PROTOCOL()->text("instructions") : CONFIG().reg_instructions;
+
 		if (res.id == -1) {
 			Log("GlooxRegisterHandler", "* sending registration form; user is not registered");
-			query->addChild( new Tag("instructions", tr(_language, Transport::instance()->protocol()->text("instructions"))) );
+			query->addChild( new Tag("instructions", tr(_language, instructions)) );
 			query->addChild( new Tag("username") );
 			query->addChild( new Tag("password") );
 		}
 		else {
 			Log("GlooxRegisterHandler", "* sending registration form; user is registered");
-			query->addChild( new Tag("instructions", tr(_language, Transport::instance()->protocol()->text("instructions"))) );
+			query->addChild( new Tag("instructions", tr(_language, instructions)) );
 			query->addChild( new Tag("registered") );
 			query->addChild( new Tag("username", res.uin));
 			query->addChild( new Tag("password"));
@@ -119,7 +121,7 @@ bool GlooxRegisterHandler::handleIq(const Tag *iqTag) {
 		x->addAttribute("xmlns", "jabber:x:data");
 		x->addAttribute("type", "form");
 		x->addChild( new Tag("title", tr(_language, _("Registration"))));
-		x->addChild( new Tag("instructions", tr(_language, Transport::instance()->protocol()->text("instructions"))) );
+		x->addChild( new Tag("instructions", tr(_language, instructions)) );
 
 		Tag *field = new Tag("field");
 		field->addAttribute("type", "hidden");
