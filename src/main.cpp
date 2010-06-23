@@ -1450,6 +1450,10 @@ void GlooxMessageHandler::handleSubscription(const Subscription &stanza) {
 		return;
 	}
 
+	if (CONFIG().protocol == "irc") {
+		return;
+	}
+
 	User *user;
 	if (protocol()->tempAccountsAllowed()) {
 		std::string server = stanza.to().username().substr(stanza.to().username().find("%") + 1, stanza.to().username().length() - stanza.to().username().find("%"));
