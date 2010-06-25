@@ -135,7 +135,14 @@ void RegisterHandlerTest::handleIqGetExistingUser() {
 	cfg.language = "en";
 	cfg.encoding = "windows-1250";
 	m_backend->setConfiguration(cfg);
-	m_backend->addUser("user@spectrum.im", "someuin", "secret", "cs", "utf8");
+	
+	UserRow row;
+	row.jid = "user@spectrum.im";
+	row.uin = "someuin";
+	row.password = "secret";
+	row.language = "cs";
+	row.encoding = "utf8";
+	m_backend->addUser(row);
 	
 	Tag *iq = new Tag("iq");
 	iq->addAttribute("from", "user@spectrum.im/psi");

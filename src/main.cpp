@@ -1545,7 +1545,13 @@ void GlooxMessageHandler::handlePresence(const Presence &stanza){
 			}
 			else {
 				if(res.id==-1 && protocol()->tempAccountsAllowed()) {
-					sql()->addUser(userkey,stanza.from().username(),"","en",m_configuration.encoding);
+					res.jid = userkey;
+					res.uin = stanza.from().username();
+					res.password = "";
+					res.language = "en";
+					res.encoding = m_configuration.encoding;
+					res.vip = 0;
+					sql()->addUser(res);
 					res = sql()->getUserByJid(userkey);
 				}
 				bool isVip = res.vip;

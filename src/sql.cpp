@@ -142,21 +142,23 @@ void SQLClass::createStatements() {
 #ifdef WITH_SQLITE
 	if (p->configuration().sqlType == "sqlite") {
 		if (!m_stmt_addUser.stmt)
-			m_stmt_addUser.stmt = new Statement( ( STATEMENT("INSERT INTO " + p->configuration().sqlPrefix + "users (jid, uin, password, language, encoding, last_login) VALUES (?, ?, ?, ?, ?, DATETIME('NOW'))"),
+			m_stmt_addUser.stmt = new Statement( ( STATEMENT("INSERT INTO " + p->configuration().sqlPrefix + "users (jid, uin, password, language, encoding, last_login, vip) VALUES (?, ?, ?, ?, ?, DATETIME('NOW'), ?)"),
 												use(m_stmt_addUser.jid),
 												use(m_stmt_addUser.uin),
 												use(m_stmt_addUser.password),
 												use(m_stmt_addUser.language),
-												use(m_stmt_addUser.encoding) ) );
+												use(m_stmt_addUser.encoding),
+												use(m_stmt_addUser.vip) ) );
 	} else
 #endif
 		if (!m_stmt_addUser.stmt)
-			m_stmt_addUser.stmt = new Statement( ( STATEMENT("INSERT INTO " + p->configuration().sqlPrefix + "users (jid, uin, password, language, encoding, last_login) VALUES (?, ?, ?, ?, ?, NOW())"),
+			m_stmt_addUser.stmt = new Statement( ( STATEMENT("INSERT INTO " + p->configuration().sqlPrefix + "users (jid, uin, password, language, encoding, last_login, vip) VALUES (?, ?, ?, ?, ?, NOW(), ?)"),
 												use(m_stmt_addUser.jid),
 												use(m_stmt_addUser.uin),
 												use(m_stmt_addUser.password),
 												use(m_stmt_addUser.language),
-												use(m_stmt_addUser.encoding) ) );
+												use(m_stmt_addUser.encoding),
+												use(m_stmt_addUser.vip) ) );
 	if (!m_stmt_updateUserPassword.stmt)
 		m_stmt_updateUserPassword.stmt = new Statement( ( STATEMENT("UPDATE " + p->configuration().sqlPrefix + "users SET password=?, language=?, encoding=?, vip=? WHERE jid=?"),
 														use(m_stmt_updateUserPassword.password),
@@ -297,12 +299,13 @@ void SQLClass::createStatements() {
 															use(m_stmt_setUserOnline.user_id) ) );
 }
 
-void SQLClass::addUser(const std::string &jid,const std::string &uin,const std::string &password,const std::string &language, const std::string &encoding){
-	m_stmt_addUser.jid.assign(jid);
-	m_stmt_addUser.uin.assign(uin);
-	m_stmt_addUser.password.assign(password);
-	m_stmt_addUser.language.assign(language);
-	m_stmt_addUser.encoding.assign(encoding);
+void SQLClass::addUser(const UserRow &user) {
+	m_stmt_addUser.jid.assign(user.jid);
+	m_stmt_addUser.uin.assign(user.uin);
+	m_stmt_addUser.password.assign(user.password);
+	m_stmt_addUser.language.assign(user.language);
+	m_stmt_addUser.encoding.assign(user.encoding);
+	m_stmt_addUser.vip = user.vip;
 	try {
 		m_stmt_addUser.stmt->execute();
 	}

@@ -65,7 +65,7 @@ Disco::ItemList GlooxAdhocHandler::handleDiscoNodeItems( const JID &_from, const
 	Disco::ItemList lst;
 	std::string from = _from.bare();
 	std::string to = _to.bare();
-	Log("GlooxAdhocHandler", "seding items from " << from << " to " << to);
+	Log("GlooxAdhocHandler", "sending items from " << from << " to " << to);
 
 	AbstractUser *user = Transport::instance()->userManager()->getUserByJID(from);
 	std::string language;
@@ -79,7 +79,7 @@ Disco::ItemList GlooxAdhocHandler::handleDiscoNodeItems( const JID &_from, const
 
 		// add internal commands from m_handlers
 		for (std::map<std::string, adhocCommand>::iterator u = m_handlers.begin(); u != m_handlers.end() ; u++) {
-			Log("GlooxAdhocHandler", "seding item " << (*u).first << " " << (*u).second.name);
+			Log("GlooxAdhocHandler", "sending item " << (*u).first << " " << (*u).second.name);
 			if (((*u).second.admin && std::find(admins.begin(), admins.end(), from) != admins.end()) || (*u).second.admin == false)
 				lst.push_back( new Disco::Item( Transport::instance()->jid(), (*u).first, (std::string) tr(language, (*u).second.name)) );
 		}

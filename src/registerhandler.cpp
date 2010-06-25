@@ -30,6 +30,8 @@
 #include "transport.h"
 #include "main.h"
 
+GlooxRegisterHandler* GlooxRegisterHandler::m_pInstance = NULL;
+
 RegisterExtension::RegisterExtension() : StanzaExtension( ExtRegistration )
 {
     m_tag = NULL;
@@ -59,9 +61,29 @@ Tag* RegisterExtension::tag() const
 
 GlooxRegisterHandler::GlooxRegisterHandler() : IqHandler() {
 	Transport::instance()->registerStanzaExtension( new RegisterExtension );
+	m_pInstance = this;
 }
 
 GlooxRegisterHandler::~GlooxRegisterHandler(){
+}
+
+bool GlooxRegisterHandler::registerUser(const UserRow &row) {
+	// TODO: move this check to sql()->addUser(...) and let it return bool
+	UserRow res = Transport::instance()->sql()->getUserByJid(row.jid);
+	// This user is already registered
+	if (res.id != -1)
+		return false;
+
+	Log("GlooxRegisterHandler", "adding new user: "<< row.jid << ", " << row.uin <<  ", " << row.language);
+	Transport::instance()->sql()->addUser(row);
+
+	Tag *reply = new Tag("presence");
+	reply->addAttribute( "from", Transport::instance()->jid() );
+	reply->addAttribute( "to", row.jid );
+	reply->addAttribute( "type", "subscribe" );
+	Transport::instance()->send( reply );
+
+	return true;
 }
 
 bool GlooxRegisterHandler::handleIq(const IQ &iq) {
@@ -192,7 +214,6 @@ bool GlooxRegisterHandler::handleIq(const Tag *iqTag) {
 		return true;
 	}
 	else if (iqTag->findAttribute("type") == "set") {
-		bool sendsubscribe = false;
 		bool remove = false;
 		Tag *query;
 		Tag *usernametag;
@@ -393,9 +414,14 @@ bool GlooxRegisterHandler::handleIq(const Tag *iqTag) {
 		}
 
 		if (res.id == -1) {
-			Log("GlooxRegisterHandler", "adding new user: "<< jid << ", " << username <<  ", " << language);
-			Transport::instance()->sql()->addUser(jid,username,password,language,encoding);
-			sendsubscribe = true;
+			res.jid = from.bare();
+			res.uin = username;
+			res.password = password;
+			res.language = language;
+			res.encoding = encoding;
+			res.vip = 0;
+
+			registerUser(res);
 		}
 		else {
 			// change passwordhttp://soumar.jabbim.cz/phpmyadmin/index.php
@@ -414,13 +440,6 @@ bool GlooxRegisterHandler::handleIq(const Tag *iqTag) {
 		reply->addAttribute( "from", Transport::instance()->jid() );
 		Transport::instance()->send( reply );
 
-		if (sendsubscribe) {
-			reply = new Tag("presence");
-			reply->addAttribute( "from", Transport::instance()->jid() );
-			reply->addAttribute( "to", from.bare() );
-			reply->addAttribute( "type", "subscribe" );
-			Transport::instance()->send( reply );
-		}
 		return true;
 	}
 	return false;

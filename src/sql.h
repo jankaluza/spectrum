@@ -109,6 +109,7 @@ struct addUserStatement {
 	std::string password;
 	std::string language;
 	std::string encoding;
+	bool vip;
 	Poco::Data::Statement *stmt;
 };
 
@@ -264,7 +265,7 @@ class SQLClass : public AbstractBackend {
 		SQLClass(GlooxMessageHandler *parent, bool upgrade = false, bool check = false);
 		~SQLClass();
 
-		void addUser(const std::string &jid, const std::string &uin, const std::string &password, const std::string &language, const std::string &encoding);
+		void addUser(const UserRow &user);
 		void addDownload(const std::string &filename, const std::string &vip);
 		void removeUser(long userId);
 		void updateUser(const UserRow &user);
