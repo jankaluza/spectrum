@@ -99,6 +99,8 @@ Tag *AdhocAdmin::handleTag(Tag *stanzaTag) {
 			m_state = ADHOC_ADMIN_USER2;
 		else if (data == "ADHOC_ADMIN_SEND_MESSAGE")
 			m_state = ADHOC_ADMIN_SEND_MESSAGE;
+		else if (data == "ADHOC_ADMIN_REGISTER_USER")
+			m_state = ADHOC_ADMIN_REGISTER_USER;
 	}
 
 	if (m_state == ADHOC_ADMIN_INIT) {
