@@ -28,6 +28,7 @@
 #include "adhoctag.h"
 #include "main.h"
 #include "Poco/Format.h"
+#include "registerhandler.h"
 
 AdhocAdmin::AdhocAdmin(AbstractUser *user, const std::string &from, const std::string &id) {
 	setRequestType(CALLER_ADHOC);
@@ -51,6 +52,7 @@ AdhocAdmin::AdhocAdmin(AbstractUser *user, const std::string &from, const std::s
 	std::list <std::string> values;
 	values.push_back(tr(m_language.c_str(), _("User")));
 	values.push_back(tr(m_language.c_str(), _("Send message to online users")));
+	values.push_back(tr(m_language.c_str(), _("Register new user")));
 	adhocTag->addListSingle("Config area", "config_area", values);
 
 	response->addChild(adhocTag);
@@ -97,6 +99,8 @@ Tag *AdhocAdmin::handleTag(Tag *stanzaTag) {
 			m_state = ADHOC_ADMIN_USER2;
 		else if (data == "ADHOC_ADMIN_SEND_MESSAGE")
 			m_state = ADHOC_ADMIN_SEND_MESSAGE;
+		else if (data == "ADHOC_ADMIN_REGISTER_USER")
+			m_state = ADHOC_ADMIN_REGISTER_USER;
 	}
 
 	if (m_state == ADHOC_ADMIN_INIT) {
@@ -132,6 +136,28 @@ Tag *AdhocAdmin::handleTag(Tag *stanzaTag) {
 			adhocTag->setTitle(tr(m_language.c_str(), _("Send message to online users")));
 			adhocTag->setInstructions(tr(m_language.c_str(), _("Type message you want to send to all online users.")));
 			adhocTag->addTextMulti(tr(m_language.c_str(), _("Message")), "message");
+
+			response->addChild(adhocTag);
+			return response;
+		}
+		else if (result == tr(m_language.c_str(), _("Register new user"))) {
+			m_state = ADHOC_ADMIN_REGISTER_USER;
+
+			IQ _response(IQ::Result, stanzaTag->findAttribute("from"), stanzaTag->findAttribute("id"));
+			Tag *response = _response.tag();
+			response->addAttribute("from", Transport::instance()->jid());
+
+			AdhocTag *adhocTag = new AdhocTag(tag->findAttribute("sessionid"), "transport_admin", "executing");
+			adhocTag->setAction("complete");
+			adhocTag->setTitle(tr(m_language.c_str(), _("Register new user")));
+			adhocTag->setInstructions(tr(m_language.c_str(), _("enter informations about new user.")));
+			adhocTag->addTextSingle(tr(m_language.c_str(), _("Bare JID")), "user_jid");
+			adhocTag->addTextSingle(tr(m_language.c_str(), _("Legacy Network username")), "user_username", "");
+			adhocTag->addTextSingle(tr(m_language.c_str(), _("Password")), "user_password", "");
+			adhocTag->addTextSingle(tr(m_language.c_str(), _("Language")), "user_language", Transport::instance()->getConfiguration().language);
+			adhocTag->addTextSingle(tr(m_language.c_str(), _("Encoding")), "user_encoding", Transport::instance()->getConfiguration().encoding);
+			adhocTag->addBoolean(tr(m_language.c_str(), _("VIP")), "user_vip", false);
+			
 
 			response->addChild(adhocTag);
 			return response;
@@ -206,6 +232,31 @@ Tag *AdhocAdmin::handleTag(Tag *stanzaTag) {
 		_response.setFrom(Transport::instance()->jid());
 		Tag *response = _response.tag();
 		response->addChild( new AdhocTag(tag->findAttribute("sessionid"), "transport_admin", "completed") );
+		return response;
+	}
+	else if (m_state == ADHOC_ADMIN_REGISTER_USER) {
+		if (!form.hasField("user_jid") || !form.hasField("user_vip") || !form.hasField("user_password")
+			|| !form.hasField("user_encoding") || !form.hasField("user_language") || !form.hasField("user_username"))
+			return NULL;
+
+		UserRow user;
+		user.jid = form.field("user_jid")->value();
+		user.vip = form.field("user_vip")->value() == "1";
+		user.uin = form.field("user_username")->value();
+		user.password = form.field("user_password")->value();
+		user.encoding = form.field("user_encoding")->value();
+		user.language = form.field("user_language")->value();
+
+		AdhocTag *adhocTag = new AdhocTag(tag->findAttribute("sessionid"), "transport_admin", "completed");
+		
+		if (!GlooxRegisterHandler::instance()->registerUser(user)) {
+			adhocTag->addNote("error", tr(m_language.c_str(), "This user is already registered."));
+		}
+
+		IQ _response(IQ::Result, stanzaTag->findAttribute("from"), stanzaTag->findAttribute("id"));
+		_response.setFrom(Transport::instance()->jid());
+		Tag *response = _response.tag();
+		response->addChild( adhocTag );
 		return response;
 	}
 	return NULL;
