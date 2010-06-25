@@ -402,6 +402,37 @@ class spectrum:
 		response = interface.command( [x] )
 		return response
 
+	def register_user( self, params ):
+		from xmpp.simplexml import Node
+		from xmpp.protocol import NS_DATA
+		try:
+			from spectrum import config_interface
+		except ImportError:
+			import config_interface
+		
+		interface = config_interface.config_interface( self )
+		
+		x = Node( tag='x', attrs={'xmlns': NS_DATA, 'type':'submit'} )
+
+		fields = [
+			('adhoc_state', 'ADHOC_ADMIN_REGISTER_USER', 'hidden'),
+			('user_jid', params[0], 'text-single' ), # user@example.com
+			('user_username', params[1], 'text-single' ), # myname
+			('user_password', params[2], 'text-single' ), # password123
+			('user_language', params[3], 'text-single' ), # en
+			('user_encoding', params[4], 'text-single' ), # utf8
+			('user_vip', params[5], 'boolean' ), # 1|0
+			]
+
+		for field in fields:
+			value = Node( tag='value', payload=[field[1]] )
+			field = Node( tag='field', payload=[value],
+				attrs={'type':field[2], 'var':field[0] } )
+			x.addChild( node=field )
+		
+		response = interface.command( [x] )
+		return response
+
 	def get_stats( self ):
 		import xmpp
 		try:

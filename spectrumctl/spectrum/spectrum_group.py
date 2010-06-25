@@ -124,6 +124,39 @@ class spectrum_group:
 				msg = note.getPayload()[0]
 				print( "%s: %s" %(typ, msg) )
 
+	def register_user( self ):
+		if len( self.instances ) != 1:
+			print( "Error: This command can only be executed with a single instance" )
+			return 1
+
+		if len( self.params ) != 2:
+			print( "Error: register_user <jid> <username>: Wrong number of arguments" )
+			return 1
+
+		import getpass
+		pwd = getpass.getpass( "password to remote network: " )
+		pwd2 = getpass.getpass( "confirm: " )
+		if pwd2 != pwd:
+			print( "Error: Passwords do not match" )
+		else:
+			self.params.append( pwd )
+
+		lang = raw_input( 'Language (default: en): ' )
+		if lang == '':
+			lang = 'en'
+		self.params.append( lang )
+
+		enc = raw_input( 'Language (default: utf8): ' )
+		if enc == '':
+			enc = 'utf8'
+		self.params.append( enc )
+
+		self.params.append( 0 ) # we don't ask for VIP status
+
+		for instance in self.instances:
+			print( instance.get_jid() + '...' ),
+			answer = instance.register_user( self.params )
+			print( answer )
 
 	def list( self ):
 		lines = [ ('PID', 'PROTOCOL', 'HOSTNAME', 'STATUS' ) ]
