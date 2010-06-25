@@ -12,7 +12,7 @@ class spectrum_group:
 		self.options = options
 		self.params = params
 		if options.config:
-			self.instances = [ spectrum( options.config, params ) ]
+			self.instances = [ spectrum( options.config ) ]
 		else:
 			self._load_instances()
 
@@ -24,7 +24,7 @@ class spectrum_group:
 			if not os.path.isfile( path ) or not path.endswith( '.cfg' ):
 				continue
 
-			instance = spectrum( path, self.params )
+			instance = spectrum( path )
 			if jid and instance.get_jid() == jid:
 				# only load the specified JID
 				self.instances.append( instance )
@@ -92,10 +92,10 @@ class spectrum_group:
 		return 0
 	
 	def upgrade_db( self ):
-		self._simple_action( 'upgrade_db', "Upgrading db for" )
+		return self._simple_action( 'upgrade_db', "Upgrading db for" )
 
 	def message_all( self ):
-		self._simple_action( 'message_all' )
+		return self._simple_action( 'message_all' )
 
 	def set_vip_status( self ):
 		if len( self.params ) != 2:
@@ -114,7 +114,8 @@ class spectrum_group:
 
 		for instance in self.instances:
 			print( instance.get_jid() + '...' ),
-			cmd = instance.set_vip_status().kids[0]
+			answer = instance.set_vip_status( self.params )
+			cmd = answer.kids[0]
 			if len( cmd.kids ) == 0:
 				print( "Ok." )
 			else:
@@ -196,6 +197,7 @@ class spectrum_group:
 				elif cmd[0] == "help":
 					print( "Help not implemented yet" )
 				elif cmd[0] in cmds:
+					self.params = cmd[1:]
 					getattr( self, cmd[0] )()
 				else:
 					print( "Unknown command, try 'help'." )

@@ -26,9 +26,8 @@ except ImportError:
 ExistsError = ExistsError.ExistsError
 
 class spectrum:
-	def __init__( self, config_path, params ):
+	def __init__( self, config_path ):
 		self.config_path = os.path.normpath( config_path )
-		self.params = params
 		
 		self.config = spectrumconfigparser.SpectrumConfigParser()
 		self.config.read( config_path )
@@ -279,29 +278,22 @@ class spectrum:
 		@return: (int, string) where int is the exit-code and string is a status message.
 		@see:	http://refspecs.freestandards.org/LSB_3.1.0/LSB-Core-generic/LSB-Core-generic/iniscrptact.html
 		"""
-		status = self.status()
-		if status == 3:
-			# stopping while not running is also success!
-			return
-		elif status == 1:
-			os.remove( self.pid_file )
-			return
 
-		pid = self.get_pid()
-		debug = 0
 		try:
-			os.kill( pid, signal.SIGTERM )
-			debug += 1
-			time.sleep( 0.2 )
+			pid = self.get_pid()
 			
 			for i in range(1, 10):
-				debug += 1
 				status = self.status()
-				if status == 3 or status == 1:
+				if status == 3:
+					return
+				if status == 1:
 					os.remove( self.pid_file )
 					return 0
 				os.kill( pid, signal.SIGTERM )
-				time.sleep( 1 )
+				if i == 1:
+					time.sleep( 0.1 )
+				else:
+					time.sleep( 1 )
 			raise RuntimeError( "Spectrum did not die", 1 )
 		except OSError, e:
 			print( "pid file: '%s' (%s)"%(self.pid_file, debug) )
@@ -384,7 +376,7 @@ class spectrum:
 			raise RuntimeError( "Error connecting to the database", 1 )
 
 
-	def set_vip_status( self ):
+	def set_vip_status( self, params ):
 		from xmpp.simplexml import Node
 		from xmpp.protocol import NS_DATA
 		try:
@@ -398,8 +390,8 @@ class spectrum:
 
 		fields = [
 			('adhoc_state', 'ADHOC_ADMIN_USER2', 'hidden'),
-			('user_jid', self.params[0], 'hidden' ),
-			('user_vip', self.params[1], 'boolean' ) ]
+			('user_jid', params[0], 'hidden' ),
+			('user_vip', params[1], 'boolean' ) ]
 
 		for field in fields:
 			value = Node( tag='value', payload=[field[1]] )
