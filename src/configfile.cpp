@@ -80,6 +80,8 @@ void ConfigFile::loadFromFile(const std::string &config) {
 		m_transport = m_filename;
 	else
 		m_transport = m_filename.substr(m_filename.find_last_of(':') + 1, m_filename.size()).c_str();
+	std::transform(m_transport.begin(), m_transport.end(), m_transport.begin(), tolower);
+
 	m_filename = m_filename.substr(0, m_filename.find_last_of(':'));
 	g_free(basename);
 
@@ -309,6 +311,7 @@ Configuration ConfigFile::getConfiguration() {
 
 	// Service section
 	LOAD_REQUIRED_STRING(configuration.protocol, "service", "protocol");
+	std::transform(configuration.protocol.begin(), configuration.protocol.end(), configuration.protocol.begin(), tolower);
 	m_protocol = configuration.protocol;
 
 	LOAD_REQUIRED_STRING(configuration.jid, "service", "jid");
