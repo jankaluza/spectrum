@@ -186,6 +186,10 @@ bool isValidNode(const std::string &node) {
 	return valid;
 }
 
+bool endsWith(const std::string &str, const std::string &substr) {
+	size_t i = str.rfind(substr);
+	return (i != std::string::npos) && (i == (str.length() - substr.length()));
+}
 
 #if !GLIB_CHECK_VERSION(2,14,0)
 static void get_key(void *key, void */*value*/, void *data) {

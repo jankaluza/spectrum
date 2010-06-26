@@ -64,7 +64,12 @@ void ConfigFile::loadFromFile(const std::string &config) {
 	int flags = G_KEY_FILE_KEEP_COMMENTS | G_KEY_FILE_KEEP_TRANSLATIONS;
 	char *basename = g_path_get_basename(config.c_str());
 	std::string b(basename);
-	m_filename = b.substr(0, b.find_last_of('.'));
+
+	if (endsWith(b, ".cfg"))
+		m_filename = b.substr(0, b.find_last_of('.'));
+	else
+		m_filename = b;
+
 	if (b.find_last_of(':') == std::string::npos)
 		m_port = -1;
 	else
