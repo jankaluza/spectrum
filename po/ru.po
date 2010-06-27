@@ -324,7 +324,7 @@ msgstr "Пользователь не зарегистрирован"
 #: /home/hanzz/code/test/transport/src/adhoc/adhocadmin.cpp:206
 #, c-format
 msgid "JID: %s"
-msgstr "HID: %s"
+msgstr "JID: %s"
 
 #: /home/hanzz/code/test/transport/src/adhoc/adhocadmin.cpp:207
 #, c-format
