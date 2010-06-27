@@ -61,7 +61,7 @@ std::string MyspaceProtocol::text(const std::string &key) {
 	if (key == "instructions")
 		return _("Enter your Myspace name and password:");
 	else if (key == "username")
-		return _("Myspaec name");
+		return _("Myspace name");
 	return "not defined";
 }
 
