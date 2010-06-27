@@ -2,7 +2,7 @@
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the PACKAGE package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
-#
+# 
 msgid ""
 msgstr ""
 "Project-Id-Version: Spectrum\n"
@@ -48,12 +48,8 @@ msgstr "%s сейчас \"%s\"\n"
 
 #: /home/hanzz/code/test/transport/src/commands.cpp:79
 #, c-format
-msgid ""
-"The setting \"%s\" does not exist.  Try \"/transport settings list\" to get "
-"a list of available settings.\n"
-msgstr ""
-"Параметр \"%s\" не найден. Попробуйте \"/transport settings list\" для "
-"получения списка доступных параметров. \n"
+msgid "The setting \"%s\" does not exist.  Try \"/transport settings list\" to get a list of available settings.\n"
+msgstr "Параметр \"%s\" не найден. Попробуйте \"/transport settings list\" для получения списка доступных параметров. \n"
 
 #: /home/hanzz/code/test/transport/src/commands.cpp:115
 msgid "No such command (in this context)."
@@ -64,8 +60,7 @@ msgid ""
 "Use \"/transport help &lt;command&gt;\" for help on a specific command.\n"
 "The following commands are available in this context:\n"
 msgstr ""
-"Используйте \"/transport help &lt;команда&gt;\" для получения помощи по "
-"данной команде.\n"
+"Используйте \"/transport help &lt;команда&gt;\" для получения помощи по данной команде.\n"
 "Доступны следующие команды:\n"
 
 #: /home/hanzz/code/test/transport/src/commands.cpp:142
@@ -91,12 +86,8 @@ msgid "Contact ID"
 msgstr "ID контакта"
 
 #: /home/hanzz/code/test/transport/src/main.cpp:1816
-msgid ""
-"This message couldn't be sent, because you are not connected to legacy "
-"network. You will be automatically reconnected soon."
-msgstr ""
-"Сообщение не может быть отправлено по причине того, что вы не подключены к "
-"сети. Ожидайте попытку подключения."
+msgid "This message couldn't be sent, because you are not connected to legacy network. You will be automatically reconnected soon."
+msgstr "Сообщение не может быть отправлено по причине того, что вы не подключены к сети. Ожидайте попытку подключения."
 
 #: /home/hanzz/code/test/transport/src/registerhandler.cpp:246
 msgid "Registration"
@@ -176,7 +167,7 @@ msgstr "Введите Ваш UIN и пароль в сети ICQ:"
 
 #: /home/hanzz/code/test/transport/src/protocols/icq.cpp:61
 msgid "UIN"
-msgstr ""
+msgstr "UIN"
 
 #: /home/hanzz/code/test/transport/src/protocols/icq.cpp:161
 #: /home/hanzz/code/test/transport/src/protocols/msn.cpp:163
@@ -187,14 +178,13 @@ msgstr "Пожалуйста, добавьте меня."
 
 #: /home/hanzz/code/test/transport/src/protocols/msn.cpp:61
 #: /home/hanzz/code/test/transport/src/protocols/msn_pecan.cpp:61
-#, fuzzy
 msgid "Enter your Live ID and password:"
-msgstr "Введите Ваше имя пользователя и пароль в сети Jabber:"
+msgstr "Введите Ваш Live ID и пароль:"
 
 #: /home/hanzz/code/test/transport/src/protocols/msn.cpp:63
 #: /home/hanzz/code/test/transport/src/protocols/msn_pecan.cpp:63
 msgid "Live ID"
-msgstr ""
+msgstr "Live ID"
 
 #: /home/hanzz/code/test/transport/src/protocols/myspace.cpp:62
 msgid "Enter your Myspace name and password:"
@@ -242,16 +232,15 @@ msgstr "Введите Ваше имя пользователя и пароль 
 
 #: /home/hanzz/code/test/transport/src/protocols/xmpp.cpp:63
 msgid "Jabber ID"
-msgstr ""
+msgstr "JID"
 
 #: /home/hanzz/code/test/transport/src/protocols/yahoo.cpp:62
 msgid "Enter your Yahoo Messenger username and password:"
 msgstr "Введите Ваше имя пользователя и пароль в сети Yahoo:"
 
 #: /home/hanzz/code/test/transport/src/protocols/yahoo.cpp:64
-#, fuzzy
 msgid "Yahoo Messenger username"
-msgstr "Введите Ваше имя пользователя и пароль в сети Yahoo:"
+msgstr "Имя пользователя и пароль в сети Yahoo:"
 
 #: /home/hanzz/code/test/transport/src/adhoc/adhocadmin.cpp:49
 #: /home/hanzz/code/test/transport/src/adhoc/adhochandler.cpp:51
@@ -264,55 +253,54 @@ msgstr "Пожалуйста, выберите параметр для наст�
 
 #: /home/hanzz/code/test/transport/src/adhoc/adhocadmin.cpp:53
 msgid "User"
-msgstr ""
+msgstr "Пользователь"
 
 #: /home/hanzz/code/test/transport/src/adhoc/adhocadmin.cpp:54
 #: /home/hanzz/code/test/transport/src/adhoc/adhocadmin.cpp:139
 msgid "Send message to online users"
-msgstr ""
+msgstr "Отправить сообщение пользователям в сети"
 
 #: /home/hanzz/code/test/transport/src/adhoc/adhocadmin.cpp:55
 #: /home/hanzz/code/test/transport/src/adhoc/adhocadmin.cpp:155
 msgid "Register new user"
-msgstr ""
+msgstr "Зарегистрировать пользователя"
 
 #: /home/hanzz/code/test/transport/src/adhoc/adhocadmin.cpp:56
 #: /home/hanzz/code/test/transport/src/adhoc/adhocadmin.cpp:177
 msgid "Unregister user"
-msgstr ""
+msgstr "Снять регистрацию пользователя"
 
 #: /home/hanzz/code/test/transport/src/adhoc/adhocadmin.cpp:57
-#, fuzzy
 msgid "Command"
-msgstr "Ad-Hoc команды"
+msgstr "Команды"
 
 #: /home/hanzz/code/test/transport/src/adhoc/adhocadmin.cpp:123
 #: /home/hanzz/code/test/transport/src/adhoc/adhocadmin.cpp:197
 #: /home/hanzz/code/test/transport/src/adhoc/adhocadmin.cpp:198
 msgid "User information"
-msgstr ""
+msgstr "Информация о пользователе"
 
 #: /home/hanzz/code/test/transport/src/adhoc/adhocadmin.cpp:124
 msgid "Add bare JID of user you want to configure."
-msgstr ""
+msgstr "Добавьте JID пользователя для настройки"
 
 #: /home/hanzz/code/test/transport/src/adhoc/adhocadmin.cpp:125
 #: /home/hanzz/code/test/transport/src/adhoc/adhocadmin.cpp:157
 #: /home/hanzz/code/test/transport/src/adhoc/adhocadmin.cpp:179
 msgid "Bare JID"
-msgstr ""
+msgstr "Полный JID"
 
 #: /home/hanzz/code/test/transport/src/adhoc/adhocadmin.cpp:140
 msgid "Type message you want to send to all online users."
-msgstr ""
+msgstr "Напишите сообщение для пользователей в сети"
 
 #: /home/hanzz/code/test/transport/src/adhoc/adhocadmin.cpp:141
 msgid "Message"
-msgstr ""
+msgstr "Сообщение"
 
 #: /home/hanzz/code/test/transport/src/adhoc/adhocadmin.cpp:156
 msgid "enter informations about new user."
-msgstr ""
+msgstr "введите информацию о новом пользователе"
 
 #: /home/hanzz/code/test/transport/src/adhoc/adhocadmin.cpp:158
 msgid "Legacy Network username"
@@ -321,41 +309,41 @@ msgstr "Имя пользователя"
 #: /home/hanzz/code/test/transport/src/adhoc/adhocadmin.cpp:162
 #: /home/hanzz/code/test/transport/src/adhoc/adhocadmin.cpp:210
 msgid "VIP"
-msgstr ""
+msgstr "VIP"
 
 #: /home/hanzz/code/test/transport/src/adhoc/adhocadmin.cpp:178
 msgid "Enter bare JID of user to unregister."
-msgstr ""
+msgstr "Введите JID пользователя для снятия регистрации"
 
 #: /home/hanzz/code/test/transport/src/adhoc/adhocadmin.cpp:203
 #: /home/hanzz/code/test/transport/src/adhoc/adhocadmin.cpp:229
 #: /home/hanzz/code/test/transport/src/adhoc/adhocadmin.cpp:288
 msgid "This user is not registered."
-msgstr ""
+msgstr "Пользователь не зарегистрирован"
 
 #: /home/hanzz/code/test/transport/src/adhoc/adhocadmin.cpp:206
 #, c-format
 msgid "JID: %s"
-msgstr ""
+msgstr "HID: %s"
 
 #: /home/hanzz/code/test/transport/src/adhoc/adhocadmin.cpp:207
-#, fuzzy, c-format
+#, c-format
 msgid "Legacy network name: %s"
-msgstr "Имя пользователя"
+msgstr "Название сети: %s"
 
 #: /home/hanzz/code/test/transport/src/adhoc/adhocadmin.cpp:208
-#, fuzzy, c-format
+#, c-format
 msgid "Language: %s"
-msgstr "Язык"
+msgstr "Язык: %s"
 
 #: /home/hanzz/code/test/transport/src/adhoc/adhocadmin.cpp:209
-#, fuzzy, c-format
+#, c-format
 msgid "Encoding: %s"
-msgstr "Кодировка"
+msgstr "Кодировка: %s"
 
 #: /home/hanzz/code/test/transport/src/adhoc/adhocadmin.cpp:272
 msgid "This user is already registered."
-msgstr ""
+msgstr "Пользователь уже зарегистрирован"
 
 #: /home/hanzz/code/test/transport/src/adhoc/adhochandler.cpp:47
 #: /home/hanzz/code/test/transport/src/adhoc/adhocsettings.cpp:46
