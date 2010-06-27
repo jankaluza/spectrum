@@ -404,6 +404,7 @@ Configuration ConfigFile::getConfiguration() {
 	loadBoolean(configuration.enable_public_registration, "registration", "enable_public_registration", true);
 	loadString(configuration.username_mask, "registration", "username_mask", "");
 	loadString(configuration.reg_instructions, "registration", "instructions", "");
+	loadString(configuration.reg_username_field, "registration", "username_label", "");
 
 	if (configuration.sqlType == "sqlite")
 		create_dir(configuration.sqlDb, 0750);

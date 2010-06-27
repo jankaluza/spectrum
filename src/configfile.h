@@ -67,6 +67,7 @@ struct Configuration {
 	bool enable_public_registration;
 	std::string username_mask;
 	std::string reg_instructions;
+	std::string reg_username_field;
 
 	std::string userDir;			// Directory used to store avatars.
 	std::string filetransferCache;	// Directory where transfered files are stored.

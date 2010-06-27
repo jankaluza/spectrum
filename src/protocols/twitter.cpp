@@ -59,6 +59,8 @@ std::list<std::string> TwitterProtocol::buddyFeatures(){
 std::string TwitterProtocol::text(const std::string &key) {
 	if (key == "instructions")
 		return _("Enter your Twitter username and password:");
+	else if (key == "username")
+		return _("Twitter username");
 	return "not defined";
 }
 

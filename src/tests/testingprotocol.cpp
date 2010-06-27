@@ -63,6 +63,8 @@ std::list<std::string> TestingProtocol::buddyFeatures(){
 std::string TestingProtocol::text(const std::string &key) {
 	if (key == "instructions")
 		return "Enter your screenname and password:";
+	else if (key == "username")
+		return "UIN";
 	return "not defined";
 }
 

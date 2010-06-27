@@ -112,5 +112,7 @@ Tag *GGProtocol::getVCardTag(AbstractUser *user, GList *vcardEntries) {
 std::string GGProtocol::text(const std::string &key) {
 	if (key == "instructions")
 		return _("Enter your GG number and password:");
+	else if (key == "username")
+		return _("GG number");
 	return "not defined";
 }

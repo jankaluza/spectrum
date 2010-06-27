@@ -120,8 +120,6 @@ std::list<std::string> IRCProtocol::buddyFeatures(){
 }
 
 std::string IRCProtocol::text(const std::string &key) {
-	if (key == "instructions")
-		return "Enter your Facebook email and password:";
 	return "not defined";
 }
 

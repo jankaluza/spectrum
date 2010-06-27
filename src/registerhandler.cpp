@@ -224,6 +224,7 @@ bool GlooxRegisterHandler::handleIq(const Tag *iqTag) {
 		UserRow res = Transport::instance()->sql()->getUserByJid(from.bare());
 
 		std::string instructions = CONFIG().reg_instructions.empty() ? PROTOCOL()->text("instructions") : CONFIG().reg_instructions;
+		std::string usernameField = CONFIG().reg_username_field.empty() ? PROTOCOL()->text("username") : CONFIG().reg_username_field;
 
 		if (res.id == -1) {
 			Log("GlooxRegisterHandler", "* sending registration form; user is not registered");
@@ -254,7 +255,7 @@ bool GlooxRegisterHandler::handleIq(const Tag *iqTag) {
 		field = new Tag("field");
 		field->addAttribute("type", "text-single");
 		field->addAttribute("var", "username");
-		field->addAttribute("label", tr(_language, _("Legacy Network username")));
+		field->addAttribute("label", tr(_language, usernameField));
 		field->addChild( new Tag("required") );
 		if (res.id!=-1)
 			field->addChild( new Tag("value", res.uin) );
