@@ -53,14 +53,17 @@ class GlooxRegisterHandler : public IqHandler {
 	public:
 		GlooxRegisterHandler();
 		~GlooxRegisterHandler();
-
 		static GlooxRegisterHandler *instance() { return m_pInstance; }
+
+		// Registers new user, returns false if user was already registered.
+		bool registerUser(const UserRow &row);
+
+		// Unregisters user, returns true if user was successfully unregistered.
+		bool unregisterUser(const std::string &barejid);
 
 		bool handleIq (const IQ &iq);
 		bool handleIq (const Tag *iqTag);
 		void handleIqID (const IQ &iq, int context);
-
-		bool registerUser(const UserRow &row);
 
 	private:
 		void sendError(int code, const std::string &error, const Tag *iqTag);

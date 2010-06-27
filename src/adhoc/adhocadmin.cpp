@@ -49,10 +49,11 @@ AdhocAdmin::AdhocAdmin(AbstractUser *user, const std::string &from, const std::s
 	adhocTag->setTitle(tr(m_language.c_str(), _("Transport administration")));
 	adhocTag->setInstructions(tr(m_language.c_str(), _("Please select a configuration area.")));
 	
-	std::list <std::string> values;
-	values.push_back(tr(m_language.c_str(), _("User")));
-	values.push_back(tr(m_language.c_str(), _("Send message to online users")));
-	values.push_back(tr(m_language.c_str(), _("Register new user")));
+	std::map <std::string, std::string> values;
+	values[tr(m_language.c_str(), _("User"))] = "User";
+	values[tr(m_language.c_str(), _("Send message to online users"))] = "Send message to online users";
+	values[tr(m_language.c_str(), _("Register new user"))] = "Register new user";
+	values[tr(m_language.c_str(), _("Unregister user"))] = "Unregister user";
 	adhocTag->addListSingle("Config area", "config_area", values);
 
 	response->addChild(adhocTag);
@@ -101,6 +102,8 @@ Tag *AdhocAdmin::handleTag(Tag *stanzaTag) {
 			m_state = ADHOC_ADMIN_SEND_MESSAGE;
 		else if (data == "ADHOC_ADMIN_REGISTER_USER")
 			m_state = ADHOC_ADMIN_REGISTER_USER;
+		else if (data == "ADHOC_ADMIN_UNREGISTER_USER")
+			m_state = ADHOC_ADMIN_UNREGISTER_USER;
 	}
 
 	if (m_state == ADHOC_ADMIN_INIT) {
@@ -108,7 +111,7 @@ Tag *AdhocAdmin::handleTag(Tag *stanzaTag) {
 			return NULL;
 
 		const std::string &result = form.field("config_area")->value();
-		if (result == tr(m_language.c_str(), _("User"))) {
+		if (result == "User") {
 			m_state = ADHOC_ADMIN_USER;
 
 			IQ _response(IQ::Result, stanzaTag->findAttribute("from"), stanzaTag->findAttribute("id"));
@@ -124,7 +127,7 @@ Tag *AdhocAdmin::handleTag(Tag *stanzaTag) {
 			response->addChild(adhocTag);
 			return response;
 		}
-		else if (result == tr(m_language.c_str(), _("Send message to online users"))) {
+		else if (result == "Send message to online users") {
 			m_state = ADHOC_ADMIN_SEND_MESSAGE;
 
 			IQ _response(IQ::Result, stanzaTag->findAttribute("from"), stanzaTag->findAttribute("id"));
@@ -140,7 +143,7 @@ Tag *AdhocAdmin::handleTag(Tag *stanzaTag) {
 			response->addChild(adhocTag);
 			return response;
 		}
-		else if (result == tr(m_language.c_str(), _("Register new user"))) {
+		else if (result == "Register new user") {
 			m_state = ADHOC_ADMIN_REGISTER_USER;
 
 			IQ _response(IQ::Result, stanzaTag->findAttribute("from"), stanzaTag->findAttribute("id"));
@@ -158,6 +161,22 @@ Tag *AdhocAdmin::handleTag(Tag *stanzaTag) {
 			adhocTag->addTextSingle(tr(m_language.c_str(), _("Encoding")), "user_encoding", Transport::instance()->getConfiguration().encoding);
 			adhocTag->addBoolean(tr(m_language.c_str(), _("VIP")), "user_vip", false);
 			
+
+			response->addChild(adhocTag);
+			return response;
+		}
+		else if (result == "Unregister user") {
+			m_state = ADHOC_ADMIN_UNREGISTER_USER;
+
+			IQ _response(IQ::Result, stanzaTag->findAttribute("from"), stanzaTag->findAttribute("id"));
+			Tag *response = _response.tag();
+			response->addAttribute("from", Transport::instance()->jid());
+
+			AdhocTag *adhocTag = new AdhocTag(tag->findAttribute("sessionid"), "transport_admin", "executing");
+			adhocTag->setAction("complete");
+			adhocTag->setTitle(tr(m_language.c_str(), _("Unregister user")));
+			adhocTag->setInstructions(tr(m_language.c_str(), _("Enter bare JID of user to unregister.")));
+			adhocTag->addTextSingle(tr(m_language.c_str(), _("Bare JID")), "user_jid");
 
 			response->addChild(adhocTag);
 			return response;
@@ -251,6 +270,22 @@ Tag *AdhocAdmin::handleTag(Tag *stanzaTag) {
 		
 		if (!GlooxRegisterHandler::instance()->registerUser(user)) {
 			adhocTag->addNote("error", tr(m_language.c_str(), "This user is already registered."));
+		}
+
+		IQ _response(IQ::Result, stanzaTag->findAttribute("from"), stanzaTag->findAttribute("id"));
+		_response.setFrom(Transport::instance()->jid());
+		Tag *response = _response.tag();
+		response->addChild( adhocTag );
+		return response;
+	}
+	else if (m_state == ADHOC_ADMIN_UNREGISTER_USER) {
+		if (!form.hasField("user_jid"))
+			return NULL;
+
+		AdhocTag *adhocTag = new AdhocTag(tag->findAttribute("sessionid"), "transport_admin", "completed");
+
+		if (!GlooxRegisterHandler::instance()->unregisterUser(form.field("user_jid")->value())) {
+			adhocTag->addNote("error", tr(m_language.c_str(), "This user is not registered."));
 		}
 
 		IQ _response(IQ::Result, stanzaTag->findAttribute("from"), stanzaTag->findAttribute("id"));
