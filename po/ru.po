@@ -147,7 +147,7 @@ msgstr "Введите Ваше имя пользователя и пароль 
 
 #: /home/hanzz/code/test/transport/src/protocols/aim.cpp:63
 msgid "Screenname"
-msgstr ""
+msgstr "имя пользователя"
 
 #: /home/hanzz/code/test/transport/src/protocols/facebook.cpp:61
 msgid "Enter your Facebook email and password:"
@@ -159,7 +159,7 @@ msgstr "Введите Ваше имя пользователя и пароль 
 
 #: /home/hanzz/code/test/transport/src/protocols/gg.cpp:116
 msgid "GG number"
-msgstr ""
+msgstr "Имя пользователя GG"
 
 #: /home/hanzz/code/test/transport/src/protocols/icq.cpp:59
 msgid "Enter your UIN and password:"
@@ -192,7 +192,7 @@ msgstr "Введите Ваше имя пользователя и пароль 
 
 #: /home/hanzz/code/test/transport/src/protocols/myspace.cpp:64
 msgid "Myspaec name"
-msgstr ""
+msgstr "Имя пользователя MySpace"
 
 #: /home/hanzz/code/test/transport/src/protocols/qq.cpp:74
 msgid "Enter your QQ username and password:"
@@ -200,7 +200,7 @@ msgstr "Введите Ваше имя пользователя и пароль 
 
 #: /home/hanzz/code/test/transport/src/protocols/qq.cpp:76
 msgid "QQ username"
-msgstr ""
+msgstr "Имя пользователя QQ"
 
 #: /home/hanzz/code/test/transport/src/protocols/simple.cpp:62
 msgid "Enter your SIMPLE username and password:"
@@ -208,7 +208,7 @@ msgstr "Введите Ваше имя пользователя и пароль 
 
 #: /home/hanzz/code/test/transport/src/protocols/simple.cpp:64
 msgid "SIMPLE username"
-msgstr ""
+msgstr "Имя пользователя SIMPLE"
 
 #: /home/hanzz/code/test/transport/src/protocols/sipe.cpp:61
 msgid "Enter your SIPE username and password:"
@@ -216,7 +216,7 @@ msgstr "Введите Ваше имя пользователя и пароль 
 
 #: /home/hanzz/code/test/transport/src/protocols/sipe.cpp:63
 msgid "SIPE username"
-msgstr ""
+msgstr "Имя пользователя SIPE"
 
 #: /home/hanzz/code/test/transport/src/protocols/twitter.cpp:61
 msgid "Enter your Twitter username and password:"
@@ -224,7 +224,7 @@ msgstr "Введите Ваше имя пользователя и пароль 
 
 #: /home/hanzz/code/test/transport/src/protocols/twitter.cpp:63
 msgid "Twitter username"
-msgstr ""
+msgstr "Имя пользователя Twitter"
 
 #: /home/hanzz/code/test/transport/src/protocols/xmpp.cpp:61
 msgid "Enter your Jabber ID and password:"
