@@ -54,7 +54,7 @@ AdhocAdmin::AdhocAdmin(AbstractUser *user, const std::string &from, const std::s
 	values[tr(m_language.c_str(), _("Send message to online users"))] = "Send message to online users";
 	values[tr(m_language.c_str(), _("Register new user"))] = "Register new user";
 	values[tr(m_language.c_str(), _("Unregister user"))] = "Unregister user";
-	adhocTag->addListSingle("Config area", "config_area", values);
+	adhocTag->addListSingle(tr(m_language.c_str(), _("Command")), "config_area", values);
 
 	response->addChild(adhocTag);
 	Transport::instance()->send(response);
@@ -226,7 +226,7 @@ Tag *AdhocAdmin::handleTag(Tag *stanzaTag) {
 			Transport::instance()->sql()->updateUser(u);
 		}
 		else {
-			adhocTag->addNote("error", tr(m_language.c_str(), "This user is not registered."));
+			adhocTag->addNote("error", tr(m_language.c_str(), _("This user is not registered.")));
 		}
 
 		IQ _response(IQ::Result, stanzaTag->findAttribute("from"), stanzaTag->findAttribute("id"));
@@ -269,7 +269,7 @@ Tag *AdhocAdmin::handleTag(Tag *stanzaTag) {
 		AdhocTag *adhocTag = new AdhocTag(tag->findAttribute("sessionid"), "transport_admin", "completed");
 		
 		if (!GlooxRegisterHandler::instance()->registerUser(user)) {
-			adhocTag->addNote("error", tr(m_language.c_str(), "This user is already registered."));
+			adhocTag->addNote("error", tr(m_language.c_str(), _("This user is already registered.")));
 		}
 
 		IQ _response(IQ::Result, stanzaTag->findAttribute("from"), stanzaTag->findAttribute("id"));
@@ -285,7 +285,7 @@ Tag *AdhocAdmin::handleTag(Tag *stanzaTag) {
 		AdhocTag *adhocTag = new AdhocTag(tag->findAttribute("sessionid"), "transport_admin", "completed");
 
 		if (!GlooxRegisterHandler::instance()->unregisterUser(form.field("user_jid")->value())) {
-			adhocTag->addNote("error", tr(m_language.c_str(), "This user is not registered."));
+			adhocTag->addNote("error", tr(m_language.c_str(), _("This user is not registered.")));
 		}
 
 		IQ _response(IQ::Result, stanzaTag->findAttribute("from"), stanzaTag->findAttribute("id"));

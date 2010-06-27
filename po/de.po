@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Spectrum\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2010-05-13 22:42+0200\n"
+"POT-Creation-Date: 2010-06-27 12:06+0200\n"
 "PO-Revision-Date: 2010-05-11 01:17+0100\n"
 "Last-Translator: Christian Dröge <Christian@draugr.de>\n"
 "Language-Team: German\n"
@@ -79,7 +79,7 @@ msgid "settings set &lt;command&gt; settings list:  Configure transport."
 msgstr ""
 "settings set &lt;Einstellung&gt; settings list:  Transport konfigurieren."
 
-#: /home/hanzz/code/test/transport/src/filetransfermanager.cpp:310
+#: /home/hanzz/code/test/transport/src/filetransfermanager.cpp:306
 #, c-format
 msgid "Received file '%s'.  You can download it at: %s"
 msgstr ""
@@ -94,7 +94,7 @@ msgstr "Bitte die Adresse deines Kontaktes aus dem Fremdnetzwerk eingeben."
 msgid "Contact ID"
 msgstr "Kontakt Adresse"
 
-#: /home/hanzz/code/test/transport/src/main.cpp:1745
+#: /home/hanzz/code/test/transport/src/main.cpp:1816
 msgid ""
 "This message couldn't be sent, because you are not connected to legacy "
 "network. You will be automatically reconnected soon."
@@ -102,27 +102,26 @@ msgstr ""
 "Diese Nachricht konnte nicht gesendet werden, weil du noch nicht zum "
 "Fremdnetzwerk verbunden bist. Du wird bald automatisch damit neu verbunden."
 
-#: /home/hanzz/code/test/transport/src/registerhandler.cpp:121
+#: /home/hanzz/code/test/transport/src/registerhandler.cpp:246
 msgid "Registration"
 msgstr "Registrierung"
 
-#: /home/hanzz/code/test/transport/src/registerhandler.cpp:133
-msgid "Legacy Network username"
-msgstr "Benutzername im Fremdnetzwerk"
-
-#: /home/hanzz/code/test/transport/src/registerhandler.cpp:142
+#: /home/hanzz/code/test/transport/src/registerhandler.cpp:267
+#: /home/hanzz/code/test/transport/src/adhoc/adhocadmin.cpp:159
 msgid "Password"
 msgstr "Passwort"
 
-#: /home/hanzz/code/test/transport/src/registerhandler.cpp:148
+#: /home/hanzz/code/test/transport/src/registerhandler.cpp:273
+#: /home/hanzz/code/test/transport/src/adhoc/adhocadmin.cpp:160
 msgid "Language"
 msgstr "Sprache"
 
-#: /home/hanzz/code/test/transport/src/registerhandler.cpp:166
+#: /home/hanzz/code/test/transport/src/registerhandler.cpp:291
+#: /home/hanzz/code/test/transport/src/adhoc/adhocadmin.cpp:161
 msgid "Encoding"
 msgstr "Kodierung"
 
-#: /home/hanzz/code/test/transport/src/registerhandler.cpp:177
+#: /home/hanzz/code/test/transport/src/registerhandler.cpp:302
 msgid "Remove your registration"
 msgstr "Deine Registrierung entfernen"
 
@@ -132,31 +131,31 @@ msgstr ""
 "Die Suche benötigt einen Client, der die XMPP Erweiterung 'Data Forms' "
 "unterstützt (XEP-0004)."
 
-#: /home/hanzz/code/test/transport/src/spectrummessagehandler.cpp:192
+#: /home/hanzz/code/test/transport/src/spectrummessagehandler.cpp:225
 msgid "Transport: Unknown command."
 msgstr "Transport: Unbekannter Befehl."
 
-#: /home/hanzz/code/test/transport/src/spectrummessagehandler.cpp:196
+#: /home/hanzz/code/test/transport/src/spectrummessagehandler.cpp:229
 msgid "Syntax Error: Wrong number of arguments."
 msgstr "Syntax Fehler: Falsche Anzahl an Argumenten."
 
-#: /home/hanzz/code/test/transport/src/spectrummessagehandler.cpp:199
+#: /home/hanzz/code/test/transport/src/spectrummessagehandler.cpp:232
 msgid "The command failed for an unknown reason."
 msgstr "Der Befehl schlug aus unbekannten Gründen fehl."
 
-#: /home/hanzz/code/test/transport/src/spectrummessagehandler.cpp:203
+#: /home/hanzz/code/test/transport/src/spectrummessagehandler.cpp:236
 msgid "That command only works in group chats, not 1:1 conversations."
 msgstr ""
 "Dieser Befehl funktioniert nur in Mehrbenutzer-Chats und nicht in "
 "Unterhaltungen zwischen 2 Benutzern."
 
-#: /home/hanzz/code/test/transport/src/spectrummessagehandler.cpp:205
+#: /home/hanzz/code/test/transport/src/spectrummessagehandler.cpp:238
 msgid "That command only works in 1:1 conversations, not group chats."
 msgstr ""
 "Dieser Befehl funktioniert nur in Unterhaltungen zwischen 2 Benutzern und "
 "nicht in Mehrbenutzer-Chats"
 
-#: /home/hanzz/code/test/transport/src/spectrummessagehandler.cpp:208
+#: /home/hanzz/code/test/transport/src/spectrummessagehandler.cpp:245
 msgid "That command is not supported for this legacy network."
 msgstr "Dieser Befehl wird in diesem Fremdnetzwerk nicht unterstützt."
 
@@ -164,6 +163,10 @@ msgstr "Dieser Befehl wird in diesem Fremdnetzwerk nicht unterstützt."
 #: /home/hanzz/code/test/transport/src/protocols/stress.cpp:61
 msgid "Enter your screenname and password:"
 msgstr "Gebe deinen AIM Benutzernamen und Passwort ein:"
+
+#: /home/hanzz/code/test/transport/src/protocols/aim.cpp:63
+msgid "Screenname"
+msgstr ""
 
 #: /home/hanzz/code/test/transport/src/protocols/facebook.cpp:61
 msgid "Enter your Facebook email and password:"
@@ -173,13 +176,21 @@ msgstr "Gebe deine Facebook E-Mail Adresse und Passwort ein:"
 msgid "Enter your GG number and password:"
 msgstr "Gebe deine GG Nummer und Passwort ein:"
 
+#: /home/hanzz/code/test/transport/src/protocols/gg.cpp:116
+msgid "GG number"
+msgstr ""
+
 #: /home/hanzz/code/test/transport/src/protocols/icq.cpp:59
 msgid "Enter your UIN and password:"
 msgstr "Gebe deine ICQ Nummer und Passwort ein:"
 
-#: /home/hanzz/code/test/transport/src/protocols/icq.cpp:159
-#: /home/hanzz/code/test/transport/src/protocols/msn.cpp:161
-#: /home/hanzz/code/test/transport/src/protocols/msn_pecan.cpp:161
+#: /home/hanzz/code/test/transport/src/protocols/icq.cpp:61
+msgid "UIN"
+msgstr ""
+
+#: /home/hanzz/code/test/transport/src/protocols/icq.cpp:161
+#: /home/hanzz/code/test/transport/src/protocols/msn.cpp:163
+#: /home/hanzz/code/test/transport/src/protocols/msn_pecan.cpp:163
 #: /home/hanzz/code/test/transport/src/protocols/qq.cpp:53
 msgid "Please authorize me."
 msgstr "Bitte autorisiere mich."
@@ -187,66 +198,174 @@ msgstr "Bitte autorisiere mich."
 #: /home/hanzz/code/test/transport/src/protocols/msn.cpp:61
 #: /home/hanzz/code/test/transport/src/protocols/msn_pecan.cpp:61
 #, fuzzy
-msgid "Enter your Passport username and password:"
-msgstr "Gebe deinen Passport Benutzernamen und Passwort ein:"
+msgid "Enter your Live ID and password:"
+msgstr "Gebe deine Jabber Adresse und Passwort ein:"
+
+#: /home/hanzz/code/test/transport/src/protocols/msn.cpp:63
+#: /home/hanzz/code/test/transport/src/protocols/msn_pecan.cpp:63
+msgid "Live ID"
+msgstr ""
 
 #: /home/hanzz/code/test/transport/src/protocols/myspace.cpp:62
 msgid "Enter your Myspace name and password:"
 msgstr "Gebe deinen Myspace Namen und Passwort ein:"
 
+#: /home/hanzz/code/test/transport/src/protocols/myspace.cpp:64
+msgid "Myspaec name"
+msgstr ""
+
 #: /home/hanzz/code/test/transport/src/protocols/qq.cpp:74
 msgid "Enter your QQ username and password:"
 msgstr "Gebe deinen QQ Benutzernamen und Passwort ein:"
+
+#: /home/hanzz/code/test/transport/src/protocols/qq.cpp:76
+msgid "QQ username"
+msgstr ""
 
 #: /home/hanzz/code/test/transport/src/protocols/simple.cpp:62
 msgid "Enter your SIMPLE username and password:"
 msgstr "Gebe deinen SIMPLE Benutzernamen und Passwort ein:"
 
+#: /home/hanzz/code/test/transport/src/protocols/simple.cpp:64
+msgid "SIMPLE username"
+msgstr ""
+
 #: /home/hanzz/code/test/transport/src/protocols/sipe.cpp:61
 msgid "Enter your SIPE username and password:"
 msgstr "Gebe deinen SIPE Benutzernamen und Passwort ein:"
+
+#: /home/hanzz/code/test/transport/src/protocols/sipe.cpp:63
+msgid "SIPE username"
+msgstr ""
 
 #: /home/hanzz/code/test/transport/src/protocols/twitter.cpp:61
 msgid "Enter your Twitter username and password:"
 msgstr "Gebe deinen Twitter Benutzernamen und Passwort ein:"
 
+#: /home/hanzz/code/test/transport/src/protocols/twitter.cpp:63
+msgid "Twitter username"
+msgstr ""
+
 #: /home/hanzz/code/test/transport/src/protocols/xmpp.cpp:61
 msgid "Enter your Jabber ID and password:"
 msgstr "Gebe deine Jabber Adresse und Passwort ein:"
+
+#: /home/hanzz/code/test/transport/src/protocols/xmpp.cpp:63
+msgid "Jabber ID"
+msgstr ""
 
 #: /home/hanzz/code/test/transport/src/protocols/yahoo.cpp:62
 msgid "Enter your Yahoo Messenger username and password:"
 msgstr "Gebe deinen Yahoo Messenger Benutzernamen und Passwort ein:"
 
-#: /home/hanzz/code/test/transport/src/adhoc/adhocadmin.cpp:45
+#: /home/hanzz/code/test/transport/src/protocols/yahoo.cpp:64
+#, fuzzy
+msgid "Yahoo Messenger username"
+msgstr "Gebe deinen Yahoo Messenger Benutzernamen und Passwort ein:"
+
+#: /home/hanzz/code/test/transport/src/adhoc/adhocadmin.cpp:49
 #: /home/hanzz/code/test/transport/src/adhoc/adhochandler.cpp:51
 msgid "Transport administration"
 msgstr "Transport Verwaltung"
 
-#: /home/hanzz/code/test/transport/src/adhoc/adhocadmin.cpp:46
+#: /home/hanzz/code/test/transport/src/adhoc/adhocadmin.cpp:50
 msgid "Please select a configuration area."
 msgstr "Bitte einen Konfigurationsbereich auswählen."
 
-#: /home/hanzz/code/test/transport/src/adhoc/adhocadmin.cpp:49
-#: /home/hanzz/code/test/transport/src/adhoc/adhocadmin.cpp:83
-msgid "Logging"
-msgstr "Protokollierung"
+#: /home/hanzz/code/test/transport/src/adhoc/adhocadmin.cpp:53
+msgid "User"
+msgstr ""
 
-#: /home/hanzz/code/test/transport/src/adhoc/adhocadmin.cpp:92
-msgid "Logging settings"
-msgstr "Einstellung der Protokollierung"
+#: /home/hanzz/code/test/transport/src/adhoc/adhocadmin.cpp:54
+#: /home/hanzz/code/test/transport/src/adhoc/adhocadmin.cpp:139
+msgid "Send message to online users"
+msgstr ""
 
-#: /home/hanzz/code/test/transport/src/adhoc/adhocadmin.cpp:93
-msgid "Determine whether to log these types of messages:"
-msgstr "Bestimme welche Arten von Meldungen protokolliert werden sollen:"
+#: /home/hanzz/code/test/transport/src/adhoc/adhocadmin.cpp:55
+#: /home/hanzz/code/test/transport/src/adhoc/adhocadmin.cpp:155
+msgid "Register new user"
+msgstr ""
 
-#: /home/hanzz/code/test/transport/src/adhoc/adhocadmin.cpp:94
-msgid "Log transport in/out XML"
-msgstr "Gesendetes/Empfangenes XML mitschneiden"
+#: /home/hanzz/code/test/transport/src/adhoc/adhocadmin.cpp:56
+#: /home/hanzz/code/test/transport/src/adhoc/adhocadmin.cpp:177
+msgid "Unregister user"
+msgstr ""
 
-#: /home/hanzz/code/test/transport/src/adhoc/adhocadmin.cpp:95
-msgid "Log libpurple messages"
-msgstr "libpurple Meldungen mitschneiden"
+#: /home/hanzz/code/test/transport/src/adhoc/adhocadmin.cpp:57
+#, fuzzy
+msgid "Command"
+msgstr "Ad-Hoc Befehle:"
+
+#: /home/hanzz/code/test/transport/src/adhoc/adhocadmin.cpp:123
+#: /home/hanzz/code/test/transport/src/adhoc/adhocadmin.cpp:197
+#: /home/hanzz/code/test/transport/src/adhoc/adhocadmin.cpp:198
+msgid "User information"
+msgstr ""
+
+#: /home/hanzz/code/test/transport/src/adhoc/adhocadmin.cpp:124
+msgid "Add bare JID of user you want to configure."
+msgstr ""
+
+#: /home/hanzz/code/test/transport/src/adhoc/adhocadmin.cpp:125
+#: /home/hanzz/code/test/transport/src/adhoc/adhocadmin.cpp:157
+#: /home/hanzz/code/test/transport/src/adhoc/adhocadmin.cpp:179
+msgid "Bare JID"
+msgstr ""
+
+#: /home/hanzz/code/test/transport/src/adhoc/adhocadmin.cpp:140
+msgid "Type message you want to send to all online users."
+msgstr ""
+
+#: /home/hanzz/code/test/transport/src/adhoc/adhocadmin.cpp:141
+msgid "Message"
+msgstr ""
+
+#: /home/hanzz/code/test/transport/src/adhoc/adhocadmin.cpp:156
+msgid "enter informations about new user."
+msgstr ""
+
+#: /home/hanzz/code/test/transport/src/adhoc/adhocadmin.cpp:158
+msgid "Legacy Network username"
+msgstr "Benutzername im Fremdnetzwerk"
+
+#: /home/hanzz/code/test/transport/src/adhoc/adhocadmin.cpp:162
+#: /home/hanzz/code/test/transport/src/adhoc/adhocadmin.cpp:210
+msgid "VIP"
+msgstr ""
+
+#: /home/hanzz/code/test/transport/src/adhoc/adhocadmin.cpp:178
+msgid "Enter bare JID of user to unregister."
+msgstr ""
+
+#: /home/hanzz/code/test/transport/src/adhoc/adhocadmin.cpp:203
+#: /home/hanzz/code/test/transport/src/adhoc/adhocadmin.cpp:229
+#: /home/hanzz/code/test/transport/src/adhoc/adhocadmin.cpp:288
+msgid "This user is not registered."
+msgstr ""
+
+#: /home/hanzz/code/test/transport/src/adhoc/adhocadmin.cpp:206
+#, c-format
+msgid "JID: %s"
+msgstr ""
+
+#: /home/hanzz/code/test/transport/src/adhoc/adhocadmin.cpp:207
+#, fuzzy, c-format
+msgid "Legacy network name: %s"
+msgstr "Benutzername im Fremdnetzwerk"
+
+#: /home/hanzz/code/test/transport/src/adhoc/adhocadmin.cpp:208
+#, fuzzy, c-format
+msgid "Language: %s"
+msgstr "Sprache"
+
+#: /home/hanzz/code/test/transport/src/adhoc/adhocadmin.cpp:209
+#, fuzzy, c-format
+msgid "Encoding: %s"
+msgstr "Kodierung"
+
+#: /home/hanzz/code/test/transport/src/adhoc/adhocadmin.cpp:272
+msgid "This user is already registered."
+msgstr ""
 
 #: /home/hanzz/code/test/transport/src/adhoc/adhochandler.cpp:47
 #: /home/hanzz/code/test/transport/src/adhoc/adhocsettings.cpp:46
@@ -283,10 +402,10 @@ msgstr "Benachrichtigung über den Chatstatus aktivieren"
 msgid "You must be online to change transport settings."
 msgstr "Du musst online sein, um die Transport Einstellungen ändern zu können."
 
-#: /home/hanzz/code/test/transport/src/adhoc/dataforms.cpp:40
+#: /home/hanzz/code/test/transport/src/adhoc/dataforms.cpp:41
 msgid "Field:"
 msgstr "Feld:"
 
-#: /home/hanzz/code/test/transport/src/adhoc/dataforms.cpp:57
+#: /home/hanzz/code/test/transport/src/adhoc/dataforms.cpp:58
 msgid "Actions"
 msgstr "Aktionen"
