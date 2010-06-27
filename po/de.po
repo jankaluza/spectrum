@@ -2,12 +2,12 @@
 # Copyright (C) 2010
 # This file is distributed under the same license as the spectrum package.
 # Christian Dröge <christian@draugr.de>, 2010
-#
+# 
 msgid ""
 msgstr ""
 "Project-Id-Version: Spectrum\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2010-06-27 15:10+0200\n"
+"POT-Creation-Date: 2010-06-27 14:17+0200\n"
 "PO-Revision-Date: 2010-05-11 01:17+0100\n"
 "Last-Translator: Christian Dröge <Christian@draugr.de>\n"
 "Language-Team: German\n"
@@ -49,12 +49,8 @@ msgstr "%s wurde auf \"%s\" gesetzt\n"
 
 #: /home/hanzz/code/test/transport/src/commands.cpp:79
 #, c-format
-msgid ""
-"The setting \"%s\" does not exist.  Try \"/transport settings list\" to get "
-"a list of available settings.\n"
-msgstr ""
-"Die Einstellung \"%s\" existiert nicht.  Benutze die \"/transport settings "
-"list\" um eine Auflistung der verfügbaren Einstellungen zu erhalten.\n"
+msgid "The setting \"%s\" does not exist.  Try \"/transport settings list\" to get a list of available settings.\n"
+msgstr "Die Einstellung \"%s\" existiert nicht.  Benutze \"/transport settings list\" um eine Auflistung der verfügbaren Einstellungen zu erhalten.\n"
 
 #: /home/hanzz/code/test/transport/src/commands.cpp:115
 msgid "No such command (in this context)."
@@ -65,8 +61,7 @@ msgid ""
 "Use \"/transport help &lt;command&gt;\" for help on a specific command.\n"
 "The following commands are available in this context:\n"
 msgstr ""
-"Benutze \"/transport help &lt;Befehl&gt;\" um die Hilfe für den jeweiligen "
-"Befehl aufzurufen.\n"
+"Benutze \"/transport help &lt;Befehl&gt;\" um die Hilfe für den jeweiligen Befehl aufzurufen.\n"
 "Die folgenden Befehle existieren in diesem Zusammenhang:\n"
 
 #: /home/hanzz/code/test/transport/src/commands.cpp:142
@@ -76,15 +71,12 @@ msgstr "help &lt;Befehl&gt;:  Hilfe zu einem Befehl aufrufen."
 #: /home/hanzz/code/test/transport/src/commands.cpp:143
 #: /home/hanzz/code/test/transport/src/commands.cpp:144
 msgid "settings set &lt;command&gt; settings list:  Configure transport."
-msgstr ""
-"settings set &lt;Einstellung&gt; settings list:  Transport konfigurieren."
+msgstr "settings set &lt;Einstellung&gt; settings list:  Transport konfigurieren."
 
 #: /home/hanzz/code/test/transport/src/filetransfermanager.cpp:306
 #, c-format
 msgid "Received file '%s'.  You can download it at: %s"
-msgstr ""
-"Die Datei '%s' wurde empfangen. Du kannst es unter der folgenden Adresse "
-"herunterladen: %s"
+msgstr "Die Datei '%s' wurde empfangen. Du kannst es unter der folgenden Adresse herunterladen: %s"
 
 #: /home/hanzz/code/test/transport/src/gatewayhandler.cpp:83
 msgid "Please enter the legacy ID of your contact."
@@ -95,12 +87,8 @@ msgid "Contact ID"
 msgstr "Kontakt Adresse"
 
 #: /home/hanzz/code/test/transport/src/main.cpp:1816
-msgid ""
-"This message couldn't be sent, because you are not connected to legacy "
-"network. You will be automatically reconnected soon."
-msgstr ""
-"Diese Nachricht konnte nicht gesendet werden, weil du noch nicht zum "
-"Fremdnetzwerk verbunden bist. Du wird bald automatisch damit neu verbunden."
+msgid "This message couldn't be sent, because you are not connected to legacy network. You will be automatically reconnected soon."
+msgstr "Diese Nachricht konnte nicht gesendet werden, weil du noch nicht mit dem Fremdnetzwerk verbunden bist. Du wirst bald automatisch neu verbunden."
 
 #: /home/hanzz/code/test/transport/src/registerhandler.cpp:246
 msgid "Registration"
@@ -127,9 +115,7 @@ msgstr "Deine Registrierung entfernen"
 
 #: /home/hanzz/code/test/transport/src/searchrepeater.cpp:81
 msgid "Searching requires a client which supports Data Forms (XEP-0004)."
-msgstr ""
-"Die Suche benötigt einen Client, der die XMPP Erweiterung 'Data Forms' "
-"unterstützt (XEP-0004)."
+msgstr "Die Suche benötigt einen Client, der die XMPP Erweiterung 'Data Forms' unterstützt (XEP-0004)."
 
 #: /home/hanzz/code/test/transport/src/spectrummessagehandler.cpp:225
 msgid "Transport: Unknown command."
@@ -145,19 +131,15 @@ msgstr "Der Befehl schlug aus unbekannten Gründen fehl."
 
 #: /home/hanzz/code/test/transport/src/spectrummessagehandler.cpp:236
 msgid "That command only works in group chats, not 1:1 conversations."
-msgstr ""
-"Dieser Befehl funktioniert nur in Mehrbenutzer-Chats und nicht in "
-"Unterhaltungen zwischen 2 Benutzern."
+msgstr "Dieser Befehl funktioniert nur in Mehrbenutzer-Chats und nicht in Unterhaltungen zwischen 2 Benutzern."
 
 #: /home/hanzz/code/test/transport/src/spectrummessagehandler.cpp:238
 msgid "That command only works in 1:1 conversations, not group chats."
-msgstr ""
-"Dieser Befehl funktioniert nur in Unterhaltungen zwischen 2 Benutzern und "
-"nicht in Mehrbenutzer-Chats"
+msgstr "Dieser Befehl funktioniert nur in Unterhaltungen zwischen 2 Benutzern und nicht in Mehrbenutzer-Chats."
 
 #: /home/hanzz/code/test/transport/src/spectrummessagehandler.cpp:245
 msgid "That command is not supported for this legacy network."
-msgstr "Dieser Befehl wird in diesem Fremdnetzwerk nicht unterstützt."
+msgstr "Dieser Befehl wird für dieses Fremdnetzwerk nicht unterstützt."
 
 #: /home/hanzz/code/test/transport/src/protocols/aim.cpp:61
 #: /home/hanzz/code/test/transport/src/protocols/stress.cpp:61
@@ -247,7 +229,7 @@ msgstr "Twitter Benutzername"
 
 #: /home/hanzz/code/test/transport/src/protocols/xmpp.cpp:61
 msgid "Enter your Jabber ID and password:"
-msgstr "Gebe deine Jabber Adresse und Passwort ein:"
+msgstr "Gebe deine Jabber ID und Passwort ein:"
 
 #: /home/hanzz/code/test/transport/src/protocols/xmpp.cpp:63
 msgid "Jabber ID"
@@ -311,17 +293,14 @@ msgstr "JID"
 
 #: /home/hanzz/code/test/transport/src/adhoc/adhocadmin.cpp:140
 msgid "Type message you want to send to all online users."
-msgstr ""
-"Gebe die Nachricht ein, die du an alle angemeldeten Benutzer schicken "
-"möchtest."
+msgstr "Gebe eine Nachricht ein, die du an alle angemeldeten Benutzer schicken möchtest."
 
 #: /home/hanzz/code/test/transport/src/adhoc/adhocadmin.cpp:141
 msgid "Message"
 msgstr "Nachricht"
 
 #: /home/hanzz/code/test/transport/src/adhoc/adhocadmin.cpp:156
-#, fuzzy
-msgid "Enter information about new user."
+msgid "enter informations about new user."
 msgstr "Gebe die Informationen über den neuen Benutzer an."
 
 #: /home/hanzz/code/test/transport/src/adhoc/adhocadmin.cpp:158
@@ -335,8 +314,7 @@ msgstr "VIP"
 
 #: /home/hanzz/code/test/transport/src/adhoc/adhocadmin.cpp:178
 msgid "Enter bare JID of user to unregister."
-msgstr ""
-"Gebe die JID des Benutzers ein, dessen Registrierung entfernt werden soll."
+msgstr "Gebe die JID des Benutzers ein, dessen Registrierung entfernt werden soll."
 
 #: /home/hanzz/code/test/transport/src/adhoc/adhocadmin.cpp:203
 #: /home/hanzz/code/test/transport/src/adhoc/adhocadmin.cpp:229
@@ -375,7 +353,7 @@ msgstr "Transport Einstellungen"
 
 #: /home/hanzz/code/test/transport/src/adhoc/adhochandler.cpp:146
 msgid "Ad-Hoc Commands"
-msgstr "Ad-Hoc Befehle:"
+msgstr "Ad-Hoc Befehle"
 
 #: /home/hanzz/code/test/transport/src/adhoc/adhocsettings.cpp:48
 msgid "Change your transport settings here."
@@ -387,9 +365,7 @@ msgstr "Transport aktivieren"
 
 #: /home/hanzz/code/test/transport/src/adhoc/adhocsettings.cpp:54
 msgid "Enable notification of new email (if the legacy network supports it)"
-msgstr ""
-"Benachrichtigung über neue E-Mails aktivieren (wenn dies vom Fremdnetzwerk "
-"unterstützt wird)"
+msgstr "Benachrichtigung über neue E-Mails aktivieren (wenn dies vom Fremdnetzwerk unterstützt wird)"
 
 #: /home/hanzz/code/test/transport/src/adhoc/adhocsettings.cpp:57
 msgid "Enable avatars"
