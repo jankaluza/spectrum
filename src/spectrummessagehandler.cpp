@@ -274,6 +274,7 @@ void SpectrumMessageHandler::removeConversationResource(const std::string &resou
 }
 
 bool SpectrumMessageHandler::hasOpenedMUC() {
+	Log("hasOpenedMUC", m_mucs);
 	return m_mucs != 0;
 }
 
