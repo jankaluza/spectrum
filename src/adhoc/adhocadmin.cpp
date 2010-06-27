@@ -153,7 +153,7 @@ Tag *AdhocAdmin::handleTag(Tag *stanzaTag) {
 			AdhocTag *adhocTag = new AdhocTag(tag->findAttribute("sessionid"), "transport_admin", "executing");
 			adhocTag->setAction("complete");
 			adhocTag->setTitle(tr(m_language.c_str(), _("Register new user")));
-			adhocTag->setInstructions(tr(m_language.c_str(), _("enter informations about new user.")));
+			adhocTag->setInstructions(tr(m_language.c_str(), _("Enter information about new user.")));
 			adhocTag->addTextSingle(tr(m_language.c_str(), _("Bare JID")), "user_jid");
 			adhocTag->addTextSingle(tr(m_language.c_str(), _("Legacy Network username")), "user_username", "");
 			adhocTag->addTextSingle(tr(m_language.c_str(), _("Password")), "user_password", "");
