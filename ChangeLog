@@ -1,10 +1,22 @@
 version 0.3 (2010-??-??):
 	General:
 	* Added localization support.
+	* Added support for XEP-0106: JID Escaping. JID Escaping is used only for newly 
+	  added buddies. Old buddies don't use this XEP.
+	* Added option to disable new registrations.
+	* Added option to change user username  while registering. This allows
+	  to have for example Facebook where users have to register only their 
+	  facebook name (no the whole JID).
+	* Added --list-purple-settings (-s) command line option to list all settings
+	  which can be passed as key in [purple] section in config file.
+	* Added --check-db-version (-c) command line options to check current database
+	  version.
+	* New Ad-Hoc Commands for Spectrum administrators: Register new user,
+	  Unregister user, Set VIP status, Send message to all online users.
 	* Support for glib older than 2.14.
 	* Try to reconnect to Jabber server for all stream errors.
 	* Disconnect users from legacy network when Jabber server gets down.
-	* Send unavailable presences for all online buddies when restarting Spectrum
+	* Send unavailable presences from all online buddies when restarting Spectrum
 	  with spectrumctl.
 	* Fixed timestamps for delayed messages from legacy network.
 	* Entity capabilities hash is now computed correctly.
@@ -13,16 +25,21 @@ version 0.3 (2010-??-??):
 	* transport_features and vip_features config variables are deprecated now.
 	  Use [features] and [vip-features] sections instead of them. See default
 	  spectrum.cfg for more details and example.
-	* Added --list-purple-settings (-s) command line option to list all settings
-	  which can be passed as key in [purple] section in config file.
 	* Spectrum is not showed as available when it's disabled in Ad-Hoc commands.
 	* Don't send Roster Item Exchange to clients which don't answer disco#info
 	  request.
 	* Fixed bug in adding new buddies when buddy wasn't properly added to legacy
 	  network contanct list in some cases.
-	* Fixed crash when database is stopped while Spectrum is running. Spectrum tries
-	  to reconnect automatically.
+	* Fixed crash when MySQL database is stopped while Spectrum is running. Spectrum
+	  tries to reconnect automatically now.
 	* Fixed memory leak when conversations were not destroyed after logout.
+	* Linkify outgoing xhtml messages.
+	* Use proper show and status message when connecting to legacy network.
+	* Send /me to legacy networks properly.
+	* Fixed memory leak when old conversations were not removed from memory
+	  on logout.
+	* Fixed various crashes in RosterManager class.
+	* Send next message from legacy network to bare jid if active resource changed.
 
 	Twitter:
 	* Added support for latest prpltwtr plugin (http://code.google.com/p/prpltwtr/).
