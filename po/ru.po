@@ -2,7 +2,7 @@
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the PACKAGE package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
-#
+# 
 msgid ""
 msgstr ""
 "Project-Id-Version: Spectrum\n"
@@ -48,12 +48,8 @@ msgstr "%s сейчас \"%s\"\n"
 
 #: /home/hanzz/code/test/transport/src/commands.cpp:79
 #, c-format
-msgid ""
-"The setting \"%s\" does not exist.  Try \"/transport settings list\" to get "
-"a list of available settings.\n"
-msgstr ""
-"Параметр \"%s\" не найден. Попробуйте \"/transport settings list\" для "
-"получения списка доступных параметров. \n"
+msgid "The setting \"%s\" does not exist.  Try \"/transport settings list\" to get a list of available settings.\n"
+msgstr "Параметр \"%s\" не найден. Попробуйте \"/transport settings list\" для получения списка доступных параметров. \n"
 
 #: /home/hanzz/code/test/transport/src/commands.cpp:115
 msgid "No such command (in this context)."
@@ -64,8 +60,7 @@ msgid ""
 "Use \"/transport help &lt;command&gt;\" for help on a specific command.\n"
 "The following commands are available in this context:\n"
 msgstr ""
-"Используйте \"/transport help &lt;команда&gt;\" для получения помощи по "
-"данной команде.\n"
+"Используйте \"/transport help &lt;команда&gt;\" для получения помощи по данной команде.\n"
 "Доступны следующие команды:\n"
 
 #: /home/hanzz/code/test/transport/src/commands.cpp:142
@@ -91,12 +86,8 @@ msgid "Contact ID"
 msgstr "ID контакта"
 
 #: /home/hanzz/code/test/transport/src/main.cpp:1816
-msgid ""
-"This message couldn't be sent, because you are not connected to legacy "
-"network. You will be automatically reconnected soon."
-msgstr ""
-"Сообщение не может быть отправлено по причине того, что вы не подключены к "
-"сети. Ожидайте попытку подключения."
+msgid "This message couldn't be sent, because you are not connected to legacy network. You will be automatically reconnected soon."
+msgstr "Сообщение не может быть отправлено по причине того, что вы не подключены к сети. Ожидайте попытку подключения."
 
 #: /home/hanzz/code/test/transport/src/registerhandler.cpp:246
 msgid "Registration"
@@ -200,7 +191,6 @@ msgid "Enter your Myspace name and password:"
 msgstr "Введите Ваше имя пользователя и пароль в сети MySpace:"
 
 #: /home/hanzz/code/test/transport/src/protocols/myspace.cpp:64
-#, fuzzy
 msgid "Myspace name"
 msgstr "Имя пользователя MySpace"
 
@@ -309,9 +299,8 @@ msgid "Message"
 msgstr "Сообщение"
 
 #: /home/hanzz/code/test/transport/src/adhoc/adhocadmin.cpp:156
-#, fuzzy
 msgid "Enter information about new user."
-msgstr "введите информацию о новом пользователе"
+msgstr "Введите информацию о новом пользователе"
 
 #: /home/hanzz/code/test/transport/src/adhoc/adhocadmin.cpp:158
 msgid "Legacy Network username"
