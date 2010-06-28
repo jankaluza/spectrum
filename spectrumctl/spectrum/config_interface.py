@@ -16,6 +16,7 @@ class config_interface:
 		try:
 			s = socket.socket( socket.AF_UNIX )
 			s.connect( self.path )
+			print( "Send: " + str( data ) )
 			s.send( str(data) )
 			response = s.recv( 10240 )
 			s.close()
@@ -76,7 +77,6 @@ class config_interface:
 		# build IQ node
 		iq = xmpp.Iq( typ='set', xmlns=None )
 		iq.addChild( node=cmd )
-		print( "IQ: " + str(iq) )
 		answer = self.send_iq( iq )
 		print( "Answer: " + str(answer) )
 		cmd = answer.kids[0]
