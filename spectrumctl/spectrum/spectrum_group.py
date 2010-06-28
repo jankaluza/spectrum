@@ -95,36 +95,25 @@ class spectrum_group:
 		return self._simple_action( 'upgrade_db', "Upgrading db for" )
 
 	def message_all( self ):
-		return self._simple_action( 'message_all' )
-
-	def set_vip_status( self ):
-		if len( self.params ) != 2:
-			print( "Error: set_vip_status <jid> <status>: Wrong number of arguments" )
+		if len( self.params ) != 1:
+			print( "Error: message_all <message>: Wrong number of arguments" )
 			return 1
 
-		status_string = "Setting VIP-status for '%s' to "
-		if self.params[1] == "0":
-			status_string += "False:"
-		elif self.params[1] == "1":
-			status_string += "True:"
-		else:
-			print( "Error: status (third argument) must be either 0 or 1" )
-			return 1
-		print( status_string%(self.params[0]) )
+		if self.params[0].startswith( "file:" ):
+			filename = self.params[0][5:]
+			self.params[0] = open( filename ).read()
 
+		print( "Messaging all users:" )
+		
 		for instance in self.instances:
 			print( instance.get_jid() + '...' ),
-			answer = instance.set_vip_status( self.params )
-			cmd = answer.kids[0]
-			if len( cmd.kids ) == 0:
-				print( "Ok." )
-			else:
-				note = cmd.kids[0]
-				typ = note.getAttr( 'type' ).title()
-				msg = note.getPayload()[0]
-				print( "%s: %s" %(typ, msg) )
+			try:
+				instance.message_all( self.params )
+				print( "ok." )
+			except RuntimeError, e:
+				print( "Error: " + e.message )
 
-	def register_user( self ):
+	def register( self ):
 		if len( self.instances ) != 1:
 			print( "Error: This command can only be executed with a single instance" )
 			return 1
@@ -152,11 +141,49 @@ class spectrum_group:
 		self.params.append( enc )
 
 		self.params.append( 0 ) # we don't ask for VIP status
+ 
+		for instance in self.instances:
+			print( instance.get_jid() + '...' ),
+			answer = instance.register( self.params )
+			print( answer )
+
+	def unregister( self ):
+		if len( self.params ) != 1:
+			print( "Error: unregister <jid>: Wrong number of arguments" )
+			return 1
+
+		print( "Unregistering user %s" %(self.params[0]) )
+		for instance in self.instances:
+			print( instance.get_jid() + '...' ),
+			try:
+				instance.unregister( self.params )
+				print( "ok." )
+			except RuntimeError, e:
+				print( "Error: " + e.message )
+
+	def set_vip_status( self ):
+		if len( self.params ) != 2:
+			print( "Error: set_vip_status <jid> <status>: Wrong number of arguments" )
+			return 1
+
+		status_string = "Setting VIP-status for '%s' to "
+		if self.params[1] == "0":
+			status_string += "False:"
+		elif self.params[1] == "1":
+			status_string += "True:"
+		else:
+			print( "Error: status (third argument) must be either 0 or 1" )
+			return 1
+		print( status_string%(self.params[0]) )
 
 		for instance in self.instances:
 			print( instance.get_jid() + '...' ),
-			answer = instance.register_user( self.params )
-			print( answer )
+			try:
+				instance.set_vip_status( self.params )
+				print( "ok." )
+			except RuntimeError, e:
+				print( "Error: " + e.message )
+
 
 	def list( self ):
 		lines = [ ('PID', 'PROTOCOL', 'HOSTNAME', 'STATUS' ) ]

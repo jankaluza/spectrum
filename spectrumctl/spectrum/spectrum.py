@@ -19,9 +19,9 @@
 import os, pwd, stat, time, signal, subprocess
 import env
 try:
-	from spectrum import spectrumconfigparser, ExistsError
+	from spectrum import spectrumconfigparser, ExistsError, config_interface
 except ImportError:
-	import spectrumconfigparser, ExistsError
+	import spectrumconfigparser, ExistsError, config_interface
 
 ExistsError = ExistsError.ExistsError
 
@@ -278,22 +278,29 @@ class spectrum:
 		@return: (int, string) where int is the exit-code and string is a status message.
 		@see:	http://refspecs.freestandards.org/LSB_3.1.0/LSB-Core-generic/LSB-Core-generic/iniscrptact.html
 		"""
+		status = self.status()
+		if status == 3:
+			# stopping while not running is also success!
+			return
+		elif status == 1:
+			os.remove( self.pid_file )
+			return
 
+		pid = self.get_pid()
+		debug = 0
 		try:
-			pid = self.get_pid()
+			os.kill( pid, signal.SIGTERM )
+			debug += 1
+			time.sleep( 0.2 )
 			
 			for i in range(1, 10):
+				debug += 1
 				status = self.status()
-				if status == 3:
-					return
-				if status == 1:
+				if status == 3 or status == 1:
 					os.remove( self.pid_file )
 					return 0
 				os.kill( pid, signal.SIGTERM )
-				if i == 1:
-					time.sleep( 0.1 )
-				else:
-					time.sleep( 1 )
+				time.sleep( 1 )
 			raise RuntimeError( "Spectrum did not die", 1 )
 		except OSError, e:
 			print( "pid file: '%s' (%s)"%(self.pid_file, debug) )
@@ -328,33 +335,6 @@ class spectrum:
 		except:	
 			raise RuntimeError( "Unknown error occured", 1 )
 
-	def message_all( self ):
-		from xmpp.simplexml import Node
-		from xmpp.protocol import NS_DATA
-		try:
-			from spectrum import config_interface
-		except ImportError:
-			import config_interface
-
-		interface = config_interface.config_interface( self )
-
-		# first field stanza:
-		field_value = Node( tag='value', 
-			payload=['ADHOC_ADMIN_SEND_MESSAGE'] )
-		field = Node( tag='field', payload=[field_value],
-			attrs={'type': 'hidden', 'var': 'adhoc_state'} )
-
-		# x stanza with enclosed field:
-		x_value = Node( tag='value', payload=['Awesome message'] )
-		x_field = Node( tag='field', payload=[x_value],
-			attrs={'type':'text-multi', 'var': 'message' } )
-		x = Node( tag='x', payload=[x_field],
-			attrs={ 'xmlns': NS_DATA, 'type': 'submit' } )
-	
-		response = interface.command( [field, x] )
-		print( response )
-		return 0
-	
 	def upgrade_db( self ):
 		path = os.path.abspath( self.config_path )
 
@@ -375,70 +355,43 @@ class spectrum:
 		elif process.returncode == 3:
 			raise RuntimeError( "Error connecting to the database", 1 )
 
+	def message_all( self, params ):
+		interface = config_interface.config_interface( self )
+		state = 'ADHOC_ADMIN_SEND_MESSAGE'
+		fields = [('message', 'text-multi', params[0])]
+
+		interface.command( state, fields )
+		return 0
+	
+	def register( self, params ):
+		interface = config_interface.config_interface( self )
+		state = 'ADHOC_ADMIN_REGISTER_USER'
+		fields = [ ('user_jid', 'text-single', params[0] ),
+			('user_username', 'text-single', params[1] ),
+			('user_password', 'text-single', params[2] ),
+			('user_language', 'text-single', params[3] ),
+			('user_encoding', 'text-single', params[4] ),
+			('user_vip', 'text-single', params[5] ) ]
+		interface.command( state, fields )
+		return 0
+
+	def unregister( self, params ):
+		interface = config_interface.config_interface( self )
+		state = 'ADHOC_ADMIN_UNREGISTER_USER'
+		fields = [ ( 'user_jid', 'text-single', params[0] ) ]
+		interface.command( state, fields )
+		return 0
 
 	def set_vip_status( self, params ):
-		from xmpp.simplexml import Node
-		from xmpp.protocol import NS_DATA
-		try:
-			from spectrum import config_interface
-		except ImportError:
-			import config_interface
-		
 		interface = config_interface.config_interface( self )
-		
-		x = Node( tag='x', attrs={'xmlns': NS_DATA, 'type':'submit'} )
-
-		fields = [
-			('adhoc_state', 'ADHOC_ADMIN_USER2', 'hidden'),
-			('user_jid', params[0], 'hidden' ),
-			('user_vip', params[1], 'boolean' ) ]
-
-		for field in fields:
-			value = Node( tag='value', payload=[field[1]] )
-			field = Node( tag='field', payload=[value],
-				attrs={'type':field[2], 'var':field[0] } )
-			x.addChild( node=field )
-
-		response = interface.command( [x] )
-		return response
-
-	def register_user( self, params ):
-		from xmpp.simplexml import Node
-		from xmpp.protocol import NS_DATA
-		try:
-			from spectrum import config_interface
-		except ImportError:
-			import config_interface
-		
-		interface = config_interface.config_interface( self )
-		
-		x = Node( tag='x', attrs={'xmlns': NS_DATA, 'type':'submit'} )
-
-		fields = [
-			('adhoc_state', 'ADHOC_ADMIN_REGISTER_USER', 'hidden'),
-			('user_jid', params[0], 'text-single' ), # user@example.com
-			('user_username', params[1], 'text-single' ), # myname
-			('user_password', params[2], 'text-single' ), # password123
-			('user_language', params[3], 'text-single' ), # en
-			('user_encoding', params[4], 'text-single' ), # utf8
-			('user_vip', params[5], 'boolean' ), # 1|0
-			]
-
-		for field in fields:
-			value = Node( tag='value', payload=[field[1]] )
-			field = Node( tag='field', payload=[value],
-				attrs={'type':field[2], 'var':field[0] } )
-			x.addChild( node=field )
-		
-		response = interface.command( [x] )
-		return response
+		state = 'ADHOC_ADMIN_USER2'
+		fields = [('user_jid', 'hidden', params[0] ),
+			('user_vip', 'boolean', params[1] ) ]
+		interface.command( state, fields )
+		return 0
 
 	def get_stats( self ):
 		import xmpp
-		try:
-			from spectrum import config_interface
-		except ImportError:
-			import config_interface
 
 		interface = config_interface.config_interface( self )
 		ns = 'http://jabber.org/protocol/stats'
