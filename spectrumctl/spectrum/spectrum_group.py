@@ -95,7 +95,14 @@ class spectrum_group:
 		return self._simple_action( 'upgrade_db', "Upgrading db for" )
 
 	def message_all( self ):
-		if len( self.params ) != 1:
+		"""
+		Message all users that are currently online. If message starts
+		"file:" it will take the remaining part as path and sends its
+		contents instead.
+
+		@param message: The message to send. 
+		"""
+		if len( self.params ) == 0:
 			print( "Error: message_all <message>: Wrong number of arguments" )
 			return 1
 
@@ -114,6 +121,13 @@ class spectrum_group:
 				print( "Error: " + e.message )
 
 	def register( self ):
+		"""
+		Register the given user using the given legacy network account.
+		This command will interactively ask for more details!
+
+		@param jid: The JID that wants to register
+		@param username: The account name of the legacy network
+		"""
 		if len( self.instances ) != 1:
 			print( "Error: This command can only be executed with a single instance" )
 			return 1
@@ -148,6 +162,11 @@ class spectrum_group:
 			print( answer )
 
 	def unregister( self ):
+		"""
+		Unregister a given user.
+
+		@param jid: The JID to unregister
+		"""
 		if len( self.params ) != 1:
 			print( "Error: unregister <jid>: Wrong number of arguments" )
 			return 1
@@ -162,6 +181,12 @@ class spectrum_group:
 				print( "Error: " + e.message )
 
 	def set_vip_status( self ):
+		"""
+		Set the VIP status of the given user.
+
+		@param    jid: The jid whose status should be changed
+		@param status: 1 to enable VIP status, 0 to disable
+		"""
 		if len( self.params ) != 2:
 			print( "Error: set_vip_status <jid> <status>: Wrong number of arguments" )
 			return 1
@@ -186,6 +211,9 @@ class spectrum_group:
 
 
 	def list( self ):
+		"""
+		List all selected transports along with their pid, protocol and hostname.
+		"""
 		lines = [ ('PID', 'PROTOCOL', 'HOSTNAME', 'STATUS' ) ]
 
 		for instance in self.instances:
