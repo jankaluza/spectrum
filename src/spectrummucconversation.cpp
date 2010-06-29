@@ -37,6 +37,9 @@ SpectrumMUCConversation::SpectrumMUCConversation(PurpleConversation *conv, const
 }
 
 SpectrumMUCConversation::~SpectrumMUCConversation() {
+#ifndef TESTS
+	m_conv->ui_data = NULL;
+#endif
 }
 
 void SpectrumMUCConversation::handleMessage(AbstractUser *user, const char *who, const char *msg, PurpleMessageFlags flags, time_t mtime, const std::string &currentBody) {

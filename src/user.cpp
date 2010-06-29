@@ -440,7 +440,7 @@ void User::receivedPresence(const Presence &stanza) {
 				if (getResources().empty() || (p->protocol()->tempAccountsAllowed() && !hasOpenedMUC())){
 					Log(m_jid, "disconecting");
 					sendUnavailablePresenceToAll();
-					purple_account_disconnect(m_account);
+// 					purple_account_disconnect(m_account);
 					p->adhoc()->unregisterSession(stanza.from().full());
 					p->userManager()->removeUserTimer(this);
 				}
@@ -456,7 +456,7 @@ void User::receivedPresence(const Presence &stanza) {
 				else if (m_account) {
 					Log(m_jid, "disconecting2");
 					sendUnavailablePresenceToAll();
-					purple_account_disconnect(m_account);
+// 					purple_account_disconnect(m_account);
 				}
 			}
 		} else {
@@ -586,8 +586,6 @@ void User::handleVCard(const VCard* vcard) {
 
 User::~User(){
 	g_free(m_lang);
-	if (m_account)
-		purple_account_set_enabled(m_account, PURPLE_UI, FALSE);
 
 	sendUnavailablePresenceToAll();
 
@@ -605,6 +603,7 @@ User::~User(){
 	// 	std::cout << "* removing timer\n";
 	// 	purple_timeout_remove(this->save_timer);
 	if (m_account) {
+		purple_account_set_enabled(m_account, PURPLE_UI, FALSE);
 		m_account->ui_data = NULL;
 		p->collector()->collect(m_account);
 	}
@@ -613,7 +612,6 @@ User::~User(){
 		if (act) {
 			act->ui_data = NULL;
 			p->collector()->collect(act);
-			purple_account_disconnect(act);
 			purple_account_set_enabled(act, PURPLE_UI, FALSE);
 		}
 	}
