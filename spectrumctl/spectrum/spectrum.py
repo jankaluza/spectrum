@@ -15,6 +15,10 @@
 #
 # You should have received a copy of the GNU General Public License along with
 # this program; if not, see <http://www.gnu.org/licenses/>.
+"""
+Represents a single spectrum instance, see L{spectrum.spectrum}.
+"""
+
 
 import os, pwd, stat, time, signal, subprocess
 import env
@@ -26,7 +30,22 @@ except ImportError:
 ExistsError = ExistsError.ExistsError
 
 class spectrum:
+	"""
+	An instance of this class represents a single spectrum instance and can
+	be used to control the instance. 
+
+	@todo: Replace the params attribute with more convinient named
+		parameters (params is just here for historic reasons...)
+	"""
+
 	def __init__( self, config_path ):
+		"""
+		Constructor.
+
+		@param config_path: The full path to the configuration file that
+		configures the given instance.
+		@type  config_path: str
+		"""
 		self.config_path = os.path.normpath( config_path )
 		
 		self.config = spectrumconfigparser.SpectrumConfigParser()
@@ -34,6 +53,14 @@ class spectrum:
 		self.pid_file = self.config.get( 'service', 'pid_file' )
 
 	def get_binary( self ):
+		"""
+		Convenience function used to get the binary that will be used to
+		start the instance. This will return the value of environment
+		variable SPECTRUM_PATH or just 'spectrum' if it is not set.
+
+		@return: the binary that will be used to start spectrum
+		@rtype: str
+		"""
 		try:
 			return os.environ['SPECTRUM_PATH']
 		except KeyError:
@@ -41,17 +68,30 @@ class spectrum:
 
 	def get_jid( self ):
 		"""
-		Get the jid of this service
+		Convenience function to get the JID of this instance.
+
+		@return: The JID of this instance
+		@rtype: str
 		"""
 		return self.config.get( 'service', 'jid' )
 
 	def enabled( self ):
+		"""
+		Convenience function to get if this instance is currently
+		enabled in the config file.
+
+		@return: True if this instance is enabled, False otherwise.
+		@rtype: boolean
+		"""
 		return self.config.getboolean( 'service', 'enable' )
 
 	def get_pid( self ):
 		"""
-		Get the pid of the service, returns -1 if pid does not exist or
-		is unparsable.
+		Get the pid of the instance as noted in the pid file. 
+
+		@return: The PID of the process or -1 the instance is not
+			running
+		@rtype: int
 		"""
 		try:
 			return int( open( self.pid_file ).readlines()[0].strip() )
@@ -59,6 +99,19 @@ class spectrum:
 			return -1
 
 	def check_environment( self ):
+		"""
+		This function is used to do tight checks on the environment when
+		starting the spectrum instance.
+		
+		@return: A tuple of type (int, str) with the return value (0
+			means success, 1 indicates an error) and a
+			human-readable string of what happened.
+		@rtype: tuple
+		@todo: The return value of this method is actually not used
+			anymore.
+		@raise RuntimeError: If anything (file
+			permissions/ownership, ... ) is not as expected.
+		"""
 		# check if spectrum user exists:
 		if os.name == 'posix':
 			try:
@@ -161,6 +214,25 @@ class spectrum:
 		return 0, 'ok'
 
 	def list( self ):
+		"""
+		Get the current process characteristics of this instance. This
+		function is intended to be used to get machine-readable values
+		of the spectrumctl action "list" and is used by
+		L{spectrum_group<spectrum.spectrum_group.spectrum_group>}.
+
+		The tuple consists of four strings:
+		  
+		  - B{pid:} the PID of the current process or '-' if the
+		    instance is not running.
+		  - B{proto:} The protocol this instance serves.
+		  - B{host:} The JID this instance serves.
+		  - B{status:} A human-readable string describing the status of
+		    the instance.
+
+		@return: A tuple with status information, see above for more
+			information.
+		@rtype: tuple
+		"""
 		pid = str( self.get_pid() )
 		if pid == "-1":
 			pid = '-'
@@ -170,6 +242,14 @@ class spectrum:
 		return (pid, proto, host, status)
 
 	def status_str( self, pid=None ):
+		"""
+		Translates the int returned by L{status} into a
+		human-readable string.
+
+		@return: A human readable string of the current status of this
+			instance.
+		@rtype: str
+		"""
 		status = self.status( pid )
 		if status == 0:
 			return( "running" )
@@ -183,10 +263,15 @@ class spectrum:
 		Determines if the instance is running.
 
 		This method uses the /proc filesystem if it exists and tries
-		to send signal 0 if not.
+		to send signal 0 (which should be doing nothing) if not.
 
-		@return: (int, string) where int is the exit-code and string is a status message.
-		@see:	http://refspecs.freestandards.org/LSB_3.1.0/LSB-Core-generic/LSB-Core-generic/iniscrptact.html
+		@raise RuntimeError: If the pid file cannot be parsed or an
+			unknown error occurs.
+		@return: The int representing the current status, conforming to
+			the LSB standards for init script actions..
+		@rtype: int
+		@see:	U{LSB standard for init script actions
+			<http://refspecs.freestandards.org/LSB_3.1.0/LSB-Core-generic/LSB-Core-generic/iniscrptact.html>}
 		"""
 		if not os.path.exists( self.pid_file ):
 			return 3 # "not running"
@@ -217,10 +302,12 @@ class spectrum:
 
 	def start( self ):
 		"""
-		Starts the instance.
+		Starts the instance. This method will silently return if the
+		instance is already started.
 
-		@return: (int, string) where int is the exit-code and string is a status message.
-		@see:	http://refspecs.freestandards.org/LSB_3.1.0/LSB-Core-generic/LSB-Core-generic/iniscrptact.html
+		@raise RuntimeError: If starting the instance fails.
+		@see:	U{LSB standard for init script actions
+			<http://refspecs.freestandards.org/LSB_3.1.0/LSB-Core-generic/LSB-Core-generic/iniscrptact.html>}
 		"""
 		status = self.status()
 		if status == 0:
@@ -273,10 +360,13 @@ class spectrum:
 
 	def stop( self ):
 		"""
-		Stops the instance (sends SIGTERM).
+		Stops the instance (sends SIGTERM). If the instance is not
+		running, the method will silently return. The method will also
+		return the pid-file, if it still exists.
 
-		@return: (int, string) where int is the exit-code and string is a status message.
-		@see:	http://refspecs.freestandards.org/LSB_3.1.0/LSB-Core-generic/LSB-Core-generic/iniscrptact.html
+		@raise RuntimeError: If stopping the instance fails.
+		@see:	U{LSB standard for init script actions
+			<http://refspecs.freestandards.org/LSB_3.1.0/LSB-Core-generic/LSB-Core-generic/iniscrptact.html>}
 		"""
 		status = self.status()
 		if status == 3:
@@ -312,9 +402,11 @@ class spectrum:
 	def restart( self ):
 		"""
 		Restarts the instance (kills the process and starts it again).
+		This method just calles L{stop} and L{start}.
 		
-		@return: (int, string) where int is the exit-code and string is a status message.
-		@see:	http://refspecs.freestandards.org/LSB_3.1.0/LSB-Core-generic/LSB-Core-generic/iniscrptact.html
+		@raise RuntimeError: If stopping/starting the instance fails.
+		@see:	U{LSB standard for init script actions
+			<http://refspecs.freestandards.org/LSB_3.1.0/LSB-Core-generic/LSB-Core-generic/iniscrptact.html>}
 		"""
 		self.stop()
 		self.start()
@@ -324,7 +416,10 @@ class spectrum:
 		Reload instance (send SIGHUP) which causes spectrum to reopen
 		log-files etc.
 		
-		@return: (int, string) where int is the exit-code and string is a status message.
+		@raise RuntimeError: If reloading the instance fails (i.e. the
+			instance is not running)
+		@see:	U{LSB standard for init script actions
+			<http://refspecs.freestandards.org/LSB_3.1.0/LSB-Core-generic/LSB-Core-generic/iniscrptact.html>}
 		"""
 		if self.status() != 0:
 			raise RuntimeError( "not running", 1 )
@@ -336,6 +431,13 @@ class spectrum:
 			raise RuntimeError( "Unknown error occured", 1 )
 
 	def upgrade_db( self ):
+		"""
+		Call C{specturm --check-db-version} to see if the schema version
+		of the database is up to date. If not, call C{spectrum
+		--upgrade-db} and try to upgrade the schema.
+
+		@raise RuntimeError: If any of the launched commands fail.
+		"""
 		path = os.path.abspath( self.config_path )
 
 		check_cmd = [ self.get_binary(), '--check-db-version', path ]
@@ -356,6 +458,14 @@ class spectrum:
 			raise RuntimeError( "Error connecting to the database", 1 )
 
 	def message_all( self, params ):
+		"""
+		Send a message to all users currently online.
+		
+		@param params: The first and only element of the list should
+			be a string representing the message to be send.
+		@type  params: list
+		@raise RuntimeError: In case the command fails.
+		"""
 		interface = config_interface.config_interface( self )
 		state = 'ADHOC_ADMIN_SEND_MESSAGE'
 		fields = [('message', 'text-multi', params[0])]
@@ -364,6 +474,22 @@ class spectrum:
 		return 0
 	
 	def register( self, params ):
+		"""
+		Register a user to the transport. The elements of params should
+		be as follows:
+
+		  0. The JID of the user to be registered
+		  1. The username the user in the legacy network
+		  2. The password for the legacy network
+		  3. The language code used by the user (e.g. 'en')
+		  4. The default character encoding (e.g. 'utf8')
+		  5. The VIP status of the user: 1 if true, 0 if not
+
+		@param params: The parameters passed to this request. See above
+			for more information.
+		@type  params: list
+		@raise RuntimeError: In case the command fails.
+		"""
 		interface = config_interface.config_interface( self )
 		state = 'ADHOC_ADMIN_REGISTER_USER'
 		fields = [ ('user_jid', 'text-single', params[0] ),
@@ -376,6 +502,15 @@ class spectrum:
 		return 0
 
 	def unregister( self, params ):
+		"""
+		Unregister a user from the transport. The only element of params
+		should be the JID that should be unregistered.
+		
+		@param params: The parameters passed to this request. See above
+			for more information.
+		@type  params: list
+		@raise RuntimeError: In case the command fails.
+		"""
 		interface = config_interface.config_interface( self )
 		state = 'ADHOC_ADMIN_UNREGISTER_USER'
 		fields = [ ( 'user_jid', 'text-single', params[0] ) ]
@@ -383,6 +518,17 @@ class spectrum:
 		return 0
 
 	def set_vip_status( self, params ):
+		"""
+		Set the VIP status of a user. The first element of params should
+		be the JID to act upon while the second element should be either
+		"1" if the user is to become VIP or "0" if the user should no
+		longer be VIP. Note that still all elements have to be a string.
+
+		@param params: The parameters passed to this request. See above
+			for more information.
+		@type  params: list
+		@raise RuntimeError: In case the command fails.
+		"""
 		interface = config_interface.config_interface( self )
 		state = 'ADHOC_ADMIN_USER2'
 		fields = [('user_jid', 'hidden', params[0] ),
@@ -391,6 +537,14 @@ class spectrum:
 		return 0
 
 	def get_stats( self ):
+		"""
+		Get statistics of the current transport. Note that this method
+		requires the xmpp library to be installed.
+
+		@return: The IQ packet send back by the client
+		@rtype:
+			U{xmpp.protocol.Iq<http://xmpppy.sourceforge.net/apidocs/xmpp.protocol.Iq-class.html>}
+		"""
 		import xmpp
 
 		interface = config_interface.config_interface( self )

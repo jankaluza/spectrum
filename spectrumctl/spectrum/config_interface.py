@@ -36,6 +36,7 @@ class config_interface:
 			returns a raw string)
 		@return: The data received in response
 		@rtype: str
+		@raises RuntimeError: In case communicating with the socket fails.
 		"""
 		try:
 			s = socket.socket( socket.AF_UNIX )
@@ -50,14 +51,15 @@ class config_interface:
 	def send_stanza( self, stanza ):
 		"""
 		Send an xmpp stanza to the spectrum instance. This method
-		automatically adds the "from" and "to" attributes.
+		automatically adds the "from" and "to" attributes and calls L{send}.
 
-		@param data: The XML node to send
-		@type  data:
+		@param stanza: The XML node to send
+		@type  stanza:
 			U{xmpp.simplexml.Node<http://xmpppy.sourceforge.net/apidocs/index.html>}
 		@return: The data received in response
 		@rtype: 
 			U{xmpp.simplexml.Node<http://xmpppy.sourceforge.net/apidocs/index.html>}
+		@raises RuntimeError: In case communicating with the socket fails.
 		"""
 		stanza.setFrom( 'spectrumctl@localhost' )
 		stanza.setTo( self.instance.get_jid() )
@@ -65,7 +67,7 @@ class config_interface:
 
 	def send_iq( self, iq ):
 		"""
-		Convenience shortcut that wraps I{send_stanza} and casts the
+		Convenience function that calls L{send_stanza} and casts the
 		response to an
 		U{IQ
 		node<http://xmpppy.sourceforge.net/apidocs/xmpp.protocol.Iq-class.html>}.
@@ -82,6 +84,7 @@ class config_interface:
 		@return: The response cast to an IQ node.
 		@rtype:
 			U{xmpp.protocol.Iq<http://xmpppy.sourceforge.net/apidocs/xmpp.protocol.Iq-class.html>}
+		@raises RuntimeError: In case communicating with the socket fails.
 		"""
 		return Iq( node=self.send_stanza( iq ) )
 
@@ -110,8 +113,10 @@ class config_interface:
 
 		@todo: return str instead of None with the payload of the note
 			stanza in case of a non-error note.
+		@todo: use send_iq instead of doing our own wrapping/casting.
 
-		@raises RuntimeError: in case the command fails
+		@raises RuntimeError: If communicating with the socket fails or the command
+			itself fails.
 		"""
 		
 
@@ -177,6 +182,7 @@ class config_interface:
 		@return: the IQ stanza returned.
 		@rtype:
 			U{xmpp.protocol.Iq<http://xmpppy.sourceforge.net/apidocs/xmpp.protocol.Iq-class.html>}
+		@raises RuntimeError: In case communicating with the socket fails.
 		"""
 		iq = Iq( typ=typ, queryNS=ns, payload=children )
 
