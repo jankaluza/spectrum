@@ -1,3 +1,6 @@
+"""
+This class represents multiple spectrum instances, see L{spectrum_group}.
+"""
 import os, sys, socket
 
 try:
@@ -6,9 +9,37 @@ except ImportError:
 	import spectrum
 
 class spectrum_group:
-	"""This class represents multiple spectrum instances"""
+	"""
+	An object of this class represents one or more spectrum instances. The
+	instances it represents are defined upon instantiation (see the
+	L{constructor<__init__>}) or via the "load" command when in interactive
+	mode (see L{shell}).
+	"""
 
 	def __init__( self, options, params ):
+		"""
+		Constructor. The "params" parameter refers to the list of
+		arguments given to the action. On the command-line, this means
+		that::
+			spectrumctl message_all foo bar whatever
+		would cause params to be::
+			['foo', 'bar', 'whatever']
+
+		Upon instantiation, this object will either represent a single
+		instance, if C{options.config} refers to a path (and is not None).
+		This is equivalent to the C{--config} option on the command-line.
+		
+		If options.config is None, the object will represent all
+		config-files found in the path referred to by
+		C{options.config_dir} (which can be configured with
+		C{--config-dir} on the command-line).
+
+		@param options: The options returned by the config parser. This
+			is the first return-value of
+			U{OptionParser.parse_args<http://docs.python.org/library/optparse.html>}.
+		@param params: The list of parameters to the action.
+		@type  params: list
+		"""
 		self.options = options
 		self.params = params
 		if options.config:
@@ -17,6 +48,16 @@ class spectrum_group:
 			self._load_instances()
 
 	def _load_instances( self, jid=None ):
+		"""
+		Load spectrum instances. This method is called by the
+		constructor and the "load" command.
+
+		@param jid: The JID to load. If None, it will load all
+			parameters in options.config_dir.
+		@type jid: str
+		@return: The number of transports loaded.
+		@rtype: int
+		"""
 		self.instances = []
 		config_list = os.listdir( self.options.config_dir )
 		for config in config_list:
@@ -66,18 +107,53 @@ class spectrum_group:
 		return ret
 
 	def start( self ):
+		"""
+		Start all instances represented by this object. Any error will
+		be logged.
+
+		@return: 0 upon success, an int >1 otherwise. 
+		@rtype: int
+		"""
 		return self._simple_action( 'start' )
 
 	def stop( self ):
+		"""
+		Stop all instances represented by this object. Any error will
+		be logged.
+
+		@return: 0 upon success, an int >1 otherwise. 
+		@rtype: int
+		"""
 		return self._simple_action( 'stop' )
 
 	def restart( self ):
+		"""
+		Restart all instances represented by this object. Any error will
+		be logged.
+
+		@return: 0 upon success, an int >1 otherwise. 
+		"""
 		return self._simple_action( 'restart' )
 
 	def reload( self ):
+		"""
+		Reload all instances represented by this object. Any error will
+		be logged.
+
+		@return: 0 upon success, an int >1 otherwise.
+		@rtype: int
+		"""
 		return self._simple_action( 'reload' )
 
 	def stats( self ):
+		"""
+		Get runtime statistics of all instances represented by this
+		object. Any error will be logged. This will query the
+		config_interface of each instance this object represents.
+
+		@return: 0
+		@rtype: int
+		"""
 		output = []
 		for instance in self.instances:
 			iq = instance.get_stats()
@@ -88,10 +164,13 @@ class spectrum_group:
 				name = stat.getAttr( 'name' )
 				o.append( name + ': ' + value + ' ' + unit )
 			output.append( "\n".join( o ) )
-		print "\n\n".join( output )
+		print( "\n\n".join( output ) )
 		return 0
 	
 	def upgrade_db( self ):
+		"""
+		Try to upgrade the database of every instance.
+		"""
 		return self._simple_action( 'upgrade_db', "Upgrading db for" )
 
 	def message_all( self ):
@@ -99,8 +178,6 @@ class spectrum_group:
 		Message all users that are currently online. If message starts
 		"file:" it will take the remaining part as path and sends its
 		contents instead.
-
-		@param message: The message to send. 
 		"""
 		if len( self.params ) == 0:
 			print( "Error: message_all <message>: Wrong number of arguments" )
@@ -124,9 +201,6 @@ class spectrum_group:
 		"""
 		Register the given user using the given legacy network account.
 		This command will interactively ask for more details!
-
-		@param jid: The JID that wants to register
-		@param username: The account name of the legacy network
 		"""
 		if len( self.instances ) != 1:
 			print( "Error: This command can only be executed with a single instance" )
@@ -164,8 +238,6 @@ class spectrum_group:
 	def unregister( self ):
 		"""
 		Unregister a given user.
-
-		@param jid: The JID to unregister
 		"""
 		if len( self.params ) != 1:
 			print( "Error: unregister <jid>: Wrong number of arguments" )
@@ -183,9 +255,6 @@ class spectrum_group:
 	def set_vip_status( self ):
 		"""
 		Set the VIP status of the given user.
-
-		@param    jid: The jid whose status should be changed
-		@param status: 1 to enable VIP status, 0 to disable
 		"""
 		if len( self.params ) != 2:
 			print( "Error: set_vip_status <jid> <status>: Wrong number of arguments" )
@@ -249,6 +318,9 @@ class spectrum_group:
 		return prompt + " $ "
 
 	def shell( self ):
+		"""
+		Launch an interactive shell.
+		"""
 		cmds = [ x for x in dir( self ) if not x.startswith( '_' ) and x != "shell" ]
 		cmds = [ x for x in cmds if type(getattr( self, x )) == type(self.shell) ]
 		cmds += ['exit', 'load', 'help' ]
