@@ -3,6 +3,7 @@
 
 # temporary files from vim
 *.swp
+*.pyc
 
 # Temporary build files
 CMakeCache.txt
