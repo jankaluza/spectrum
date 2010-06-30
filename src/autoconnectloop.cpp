@@ -65,7 +65,7 @@ AutoConnectLoop::AutoConnectLoop() {
 		}
 	}
 
-	m_timer = new SpectrumTimer(1000, iter, this);
+	m_timer = new SpectrumTimer(600, iter, this);
 	m_timer->start();
 
 	if (m_users.size() == 0)
@@ -78,8 +78,10 @@ AutoConnectLoop::~AutoConnectLoop() {
 }
 
 bool AutoConnectLoop::restoreNextConnection() {
-	if (m_users.size() == 0)
+	if (m_users.size() == 0) {
+		Log("connection restorer", "There is no other account to be checked => stopping Restorer");
 		return false;
+	}
 	std::string jid = m_users.back();
 	m_users.pop_back();
 
@@ -92,8 +94,6 @@ bool AutoConnectLoop::restoreNextConnection() {
 		stanza->addAttribute( "type", "probe");
 		stanza->addAttribute( "from", Transport::instance()->jid());
 		Transport::instance()->send(stanza);
-		return true;
 	}
-	Log("connection restorer", "There is no other account to be checked => stopping Restorer");
-	return false;
+	return true;
 }

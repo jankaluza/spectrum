@@ -44,6 +44,9 @@ SpectrumMessageHandler::SpectrumMessageHandler(AbstractUser *user) {
 SpectrumMessageHandler::~SpectrumMessageHandler() {
 	for (std::map<std::string, AbstractConversation *>::iterator i = m_conversations.begin(); i != m_conversations.end(); i++) {
 		AbstractConversation *s_conv = (*i).second;
+		if (s_conv->getType() == SPECTRUM_CONV_GROUPCHAT) {
+			
+		}
 		delete s_conv;
 	}
 	m_conversations.clear(); 
