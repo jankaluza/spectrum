@@ -12,9 +12,16 @@ spectrumctl \- Utility to control one or more spectrum instances
 .B spectrumctl
 [options] operation
 .SH DESCRIPTION
-spectrumctl is a tool written in python which can be used to control instances of the spectrum XMPP transport.
-spectrum only handles one legacy network per instance, so you need more than one spectrum instance if you want support for more than one legacy network.
-By default, spectrumctl acts on all transports defined in \fI/etc/spectrum/\fR.
+spectrumctl is a tool that can be used to control instances of the spectrum XMPP
+transport. spectrum only handles one legacy network per instance, so you need
+more than one spectrum instance if you want support for more than one legacy
+network. By default, spectrumctl acts on all transports defined in 
+\fI/etc/spectrum/\fR. The tool offers standard tasks usually performed by
+initscripts but also enables some runtime configuration of spectrum instances.
+.sp
+An interactive shell with comfortable tab-completion is also supported to help
+with more complex administration tasks. See the \fBSHELL\fR for a detailed
+explanation.
 .SH OPERATIONS
 .PP
 \fBstart\fR, \fBstop\fR, \fBrestart\fR
@@ -43,6 +50,22 @@ python.
 .RS 4
 Set the VIP status of \fIuser\fR, \fIstatus\fR must be either \fB0\fR (disable
 VIP status) or \fB1\fR (enable VIP status).
+.sp
+.RE
+\fBregister \fIjid\fR \fIusername\fR
+.RS 4
+Register the \fIjid\fR using \fIusername\fR. The former is the real JID of the
+user, the latter his/her username in the legacy network. Unlike all other
+commands, this command is interactive: It will ask you for the password of the
+users legacy network account. Of course this command only makes sense if you specify a single
+transport using \fI--config\fR.
+.sp
+.RE
+\fBunregister \fIjid\fR
+.RS 4
+Unregister the user with JID \fIjid\fR. Unlike the \fBregister\fR command, it
+makes sense to use this command with multiple transports, because this will
+unregister a user on all transports he uses.
 .sp
 .RE
 \fBhelp\fR
