@@ -77,7 +77,6 @@ static void newXfer(PurpleXfer *xfer) {
 static void XferReceiveComplete(PurpleXfer *xfer) {
 	Log("purple filetransfer", "filetransfer receive complete");
 	FiletransferRepeater *repeater = (FiletransferRepeater *) xfer->ui_data;
-	GlooxMessageHandler::instance()->ftManager->removeSID(repeater->getSID());
 	repeater->_tryToDeleteMe();
 	GlooxMessageHandler::instance()->ftManager->handleXferFileReceiveComplete(xfer);
 	
@@ -86,7 +85,6 @@ static void XferReceiveComplete(PurpleXfer *xfer) {
 static void XferSendComplete(PurpleXfer *xfer) {
 	Log("purple filetransfer", "filetransfer send complete");
 	FiletransferRepeater *repeater = (FiletransferRepeater *) xfer->ui_data;
-	GlooxMessageHandler::instance()->ftManager->removeSID(repeater->getSID());
 	repeater->_tryToDeleteMe();
 }
 

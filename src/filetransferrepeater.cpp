@@ -579,7 +579,12 @@ void FiletransferRepeater::tryToDeleteMe() {
 }
 
 void FiletransferRepeater::_tryToDeleteMe() {
-	if (m_xfer == NULL && m_buffer_size == 0) {
+	// TODO: There should be timer which deletes this filetransfer after some time (3 minutes for example)
+	// if will still be NULL, because it means we were not able to connect XMPP user, so this class can die
+	if (m_resender == NULL) {
+		Log("xfer-tryToDeleteMe", "can't delete, m_resender has not been created yet");
+	}
+	else if (m_xfer == NULL && m_buffer_size == 0) {
 		Log("xfer-tryToDeleteMe", "there's not xfer, buffer_size = 0 => finishing it and removing repeater");
 		delete this;
 	}
