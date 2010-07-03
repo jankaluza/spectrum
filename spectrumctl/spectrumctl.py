@@ -40,6 +40,8 @@ parser.add_option( '-q', '--quiet', action='store_true', default=False,
 list_group = OptionGroup( parser, 'Options for action "list"' )
 list_group.add_option( '--status', choices=['running', 'stopped', 'unknown'],
 	help='Only show transports with given status. Valid values are "running", "stopped" and "unknown"' )
+list_group.add_option( '--machine-readable', action='store_true', default=False,
+	help= 'Output data as comma-seperated values' )
 parser.add_option_group( list_group )
 
 start_group = OptionGroup( parser, 'Options for action "start"' )
@@ -52,11 +54,6 @@ start_group.add_option( '--no-daemon', action='store_true', default=False,
 start_group.add_option( '--debug', action='store_true', default=False,
 	help = 'Start spectrum in debug mode.' )
 parser.add_option_group( start_group )
-
-list_group = OptionGroup( parser, 'Options for action "list"' )
-list_group.add_option( '--machine-readable', action='store_true', default=False,
-	help= 'Output data as comma-seperated values' )
-parser.add_option_group( list_group )
 
 options, args = parser.parse_args()
 env.options = options
