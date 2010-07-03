@@ -12,26 +12,26 @@ spectrumctl \- Utility to control one or more spectrum instances
 .B spectrumctl
 [options] operation
 .SH DESCRIPTION
-spectrumctl is a tool that can be used to control instances of the spectrum XMPP
-transport. spectrum only handles one legacy network per instance, so you need
+The purpose of the \fIspectrumctl\fR utility is to control one or more Spectrum
+instances. Spectrum only handles one legacy network per instance, so you need
 more than one spectrum instance if you want support for more than one legacy
-network. By default, spectrumctl acts on all transports defined in 
-\fI/etc/spectrum/\fR. The tool offers standard tasks usually performed by
+network. The tool offers standard tasks usually performed by
 initscripts but also enables some runtime configuration of spectrum instances.
 .sp
 An interactive shell with comfortable tab-completion is also supported to help
 with more complex administration tasks. See the \fBSHELL\fR for a detailed
 explanation.
 .SH OPERATIONS
-.PP
+.sp
+By default, spectrumctl acts on all transports defined in \fI/etc/spectrum/\fR.
+You can use a different directory with the \fB--config-dir\fR option. If you
+just want to act on a single file, you can use the \fB--config\fR option. Unless
+you use \fI--config\fR, spectrumctl will silently ignore files where the
+filename does not end with \fB.cfg\fR.
+.sp
 \fBstart\fR, \fBstop\fR, \fBrestart\fR
 .RS 4
-Start, stop or restart given spectrum instances (all of them per default).
-.sp
-.RE
-\fBlist\fR
-.RS 4
-Show a list of spectrum configurations (and their corresponding instances with PID if running)
+Start, stop or restart the given spectrum instances.
 .sp
 .RE
 \fBreload\fR
@@ -40,10 +40,22 @@ Reload given spectrum configurations. This just causes spectrum to reopen its
 log-files, it does not change any runtime configuration.
 .sp
 .RE
+\fBshell\fR
+.RS 4
+Start spectrumctl with an interactive shell. See \fBSHELL\fR for more
+information.
+.sp
+.RE
+\fBlist\fR
+.RS 4
+List all configured instances along with their JID, served protocol and current
+runtime status.
+.sp
+.RE
 \fBstats\fR
 .RS 4
-Print current usage statistics. \fBNote:\fR This option requires the xmpppy library for
-python.
+Print the current usage statistics. This option is very verbose if used with
+many transports.
 .sp
 .RE
 \fBset-vip-status \fIuser\fR \fIstatus\fR
@@ -57,15 +69,27 @@ VIP status) or \fB1\fR (enable VIP status).
 Register the \fIjid\fR using \fIusername\fR. The former is the real JID of the
 user, the latter his/her username in the legacy network. Unlike all other
 commands, this command is interactive: It will ask you for the password of the
-users legacy network account. Of course this command only makes sense if you specify a single
-transport using \fI--config\fR.
+users legacy network account. Of course this command only makes sense if you
+specify a single transport using \fI--config\fR.
 .sp
 .RE
 \fBunregister \fIjid\fR
 .RS 4
 Unregister the user with JID \fIjid\fR. Unlike the \fBregister\fR command, it
 makes sense to use this command with multiple transports, because this will
-unregister a user on all transports he uses.
+simply unregister a user on all transports he uses.
+.sp
+.RE
+\fBupgrade-db\fR
+.RS 4
+Update the database schema to the most recent version.
+.sp
+.RE
+\fBmessage-all \fBmessage\fR
+.RS 4
+Send \fBmessage\fR to all currently online users. If \fBmessage\fR starts with
+"file:", it will interpret the remainder as filename and read and send the
+contents of this file instead.
 .sp
 .RE
 \fBhelp\fR
@@ -132,6 +156,27 @@ Do not start spectrum as daemon.
 .RS 4
 Start spectrum in debug mode. Currently this just sets the maximum size of the
 core files to unlimited.
+.RE
+.SH SHELL
+This tool also sports a fancy interactive shell that you can use to perform
+multiple administration tasks at once. You can launch the shell with the
+\fBshell\fR action. The shell features tab-completion for commands and a few
+commands only available within the shell. 
+.sp
+The prompt of the spectrumctl shell represents the transports that commands will
+act upon. If the shell acts upon all config-files defined in \fI/etc/spectrum\fR,
+the prompt will show \fB<all transports>\fR and the JID of the current transport
+otherwise.
+.sp
+In addition to the actions defined above, spectrumctl also supports the
+following commands:
+.sp
+\fBload \fIjid\fR
+.RS 4
+Only act upon the transport that offers the JID \fBjid\fR. The prompt will be
+updated to reflect the change. If you use the special value \fBall\fR, all
+transports will be loaded again. Note that you cannot currently load
+config-files where the filename does not end with \fB.cfg\fR.
 .RE
 .SH ENVIRONMENT
 The behaviour of spectrumctl can be influenced by the following environment variables:
