@@ -21,7 +21,7 @@ initscripts but also enables some runtime configuration of spectrum instances.
 An interactive shell with comfortable tab-completion is also supported to help
 with more complex administration tasks. See the \fBSHELL\fR for a detailed
 explanation.
-.SH OPERATIONS
+.SH ACTIONS
 .sp
 By default, spectrumctl acts on all transports defined in \fI/etc/spectrum/\fR.
 You can use a different directory with the \fB--config-dir\fR option. If you
@@ -174,7 +174,7 @@ following commands:
 \fBload \fIjid\fR
 .RS 4
 Only act upon the transport that offers the JID \fBjid\fR. The prompt will be
-updated to reflect the change. If you use the special value \fBall\fR, all
+updated to reflect the change. If you use the special value "\fIall\fR", all
 transports will be loaded again. Note that you cannot currently load
 config-files where the filename does not end with \fB.cfg\fR.
 .RE
