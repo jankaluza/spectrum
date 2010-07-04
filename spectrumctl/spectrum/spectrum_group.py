@@ -13,7 +13,8 @@ class spectrum_group:
 	An object of this class represents one or more spectrum instances. The
 	instances it represents are defined upon instantiation (see the
 	L{constructor<__init__>}) or via the "load" command when in interactive
-	mode (see L{shell}).
+	mode (see L{shell}). Any function of this class will act upon all
+	instances that this group currently represents.
 
 	All public functions of this class represent possible actions that
 	spectrumctl supports either via command-line or in interactive mode.
@@ -103,7 +104,7 @@ class spectrum_group:
 
 	def start( self ):
 		"""
-		Start all instances that this group currently acts upon.
+		Start instances.
 
 		@return: 0 upon success, an int >1 otherwise. 
 		@rtype: int
@@ -112,7 +113,7 @@ class spectrum_group:
 
 	def stop( self ):
 		"""
-		Stop all instances that this group currently acts upon. 
+		Stop instances. 
 
 		@return: 0 upon success, an int >1 otherwise. 
 		@rtype: int
@@ -121,10 +122,9 @@ class spectrum_group:
 
 	def restart( self ):
 		"""
-		Restart all instances that this group currently acts upon. This
-		is essentially an alias for first calling L{stop} and then
-		L{start}, so users will be disconnected when invoking this
-		method.
+		Restart instances. This is essentially an alias for first calling
+		L{stop} and then L{start}, so users will be disconnected when
+		invoking this method.
 
 		@return: 0 upon success, an int >1 otherwise. 
 		"""
@@ -132,11 +132,10 @@ class spectrum_group:
 
 	def reload( self ):
 		"""
-		Reload all instances that this group currently acts upon. This
-		just causes spectrum instances to reopen their log-files, it does
-		not change any runtime configuration. Unlike L{restart}, this
-		method does not stop the transport, hence users will not notice
-		anything.
+		Reload instances. This just causes spectrum instances to reopen
+		their log-files, it does not change any runtime configuration.
+		Unlike L{restart}, this method does not stop the transport,
+		hence users will not notice anything.
 		
 		@return: 0 upon success, an int >1 otherwise.
 		@rtype: int
@@ -145,8 +144,7 @@ class spectrum_group:
 
 	def stats( self ):
 		"""
-		Get runtime statistics for all instances that this group
-		currently acts upon. 
+		Get runtime statistics.
 
 		@return: 0
 		@rtype: int
@@ -166,8 +164,7 @@ class spectrum_group:
 	
 	def upgrade_db( self ):
 		"""
-		Try to upgrade the database schema of every instance that this
-		group currently acts upon.
+		Try to upgrade the database schema.
 		
 		@return: 0
 		@rtype: int
@@ -208,7 +205,7 @@ class spectrum_group:
 		network. 
 		
 		B{Note:} If one of the optional arguments is not given, this
-		command will interactively ask for more details!
+		function will interactively ask for more details!
 		
 		@param jid: The JID of the user to be registered.
 		@type  jid: str
