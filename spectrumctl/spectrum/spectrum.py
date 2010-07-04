@@ -473,66 +473,66 @@ class spectrum:
 		interface.command( state, fields )
 		return 0
 	
-	def register( self, params ):
+	def register( self, jid, username, passwd, lang, enc, status ):
 		"""
-		Register a user to the transport. The elements of params should
-		be as follows:
+		Register a user to the transport. 
 
-		  0. The JID of the user to be registered
-		  1. The username the user in the legacy network
-		  2. The password for the legacy network
-		  3. The language code used by the user (e.g. 'en')
-		  4. The default character encoding (e.g. 'utf8')
-		  5. The VIP status of the user: 1 if true, 0 if not
+		@param jid: The JID of the user to be registered.
+		@type  jid: str
+		@param username: The username of the user in the legacy network.
+		@type  username: str
+		@param passwd: The password for the legacy network.
+		@type  passwd: str
+		@param lang: The language code used by the user (e.g. 'en').
+		@type  lang: str
+		@param enc: The default character encoding (e.g. 'utf8').
+		@type  enc: str
+		@param status: The VIP status of the user: 1 if true, 0 if not
+		@type  status: str
 
-		@param params: The parameters passed to this request. See above
-			for more information.
-		@type  params: list
 		@raise RuntimeError: In case the command fails.
 		"""
 		interface = config_interface.config_interface( self )
 		state = 'ADHOC_ADMIN_REGISTER_USER'
-		fields = [ ('user_jid', 'text-single', params[0] ),
-			('user_username', 'text-single', params[1] ),
-			('user_password', 'text-single', params[2] ),
-			('user_language', 'text-single', params[3] ),
-			('user_encoding', 'text-single', params[4] ),
-			('user_vip', 'text-single', params[5] ) ]
+		fields = [ ('user_jid', 'text-single', jid ),
+			('user_username', 'text-single', username ),
+			('user_password', 'text-single', passwd ),
+			('user_language', 'text-single', lang ),
+			('user_encoding', 'text-single', enc ),
+			('user_vip', 'text-single', status ) ]
 		interface.command( state, fields )
 		return 0
 
-	def unregister( self, params ):
+	def unregister( self, jid ):
 		"""
-		Unregister a user from the transport. The only element of params
-		should be the JID that should be unregistered.
+		Unregister a user from the transport.
 		
-		@param params: The parameters passed to this request. See above
-			for more information.
-		@type  params: list
+		@param jid: The JID to unregister
+		@type  jid: string
 		@raise RuntimeError: In case the command fails.
 		"""
 		interface = config_interface.config_interface( self )
 		state = 'ADHOC_ADMIN_UNREGISTER_USER'
-		fields = [ ( 'user_jid', 'text-single', params[0] ) ]
+		fields = [ ( 'user_jid', 'text-single', jid ) ]
 		interface.command( state, fields )
 		return 0
 
-	def set_vip_status( self, params ):
+	def set_vip_status( self, jid, state ):
 		"""
-		Set the VIP status of a user. The first element of params should
-		be the JID to act upon while the second element should be either
-		"1" if the user is to become VIP or "0" if the user should no
-		longer be VIP. Note that still all elements have to be a string.
+		Set the VIP status of a user.
 
-		@param params: The parameters passed to this request. See above
-			for more information.
-		@type  params: list
+		@param jid: The JID that should have its status set
+		@type  jid: str
+		@param state: The state you want to set. This should be "0" for
+			disabling VIP status and "1" for enabling it. Note that
+			this argument really I{is} a string.
+		@type  state: str
 		@raise RuntimeError: In case the command fails.
 		"""
 		interface = config_interface.config_interface( self )
 		state = 'ADHOC_ADMIN_USER2'
-		fields = [('user_jid', 'hidden', params[0] ),
-			('user_vip', 'boolean', params[1] ) ]
+		fields = [('user_jid', 'hidden', jid ),
+			('user_vip', 'boolean', state ) ]
 		interface.command( state, fields )
 		return 0
 

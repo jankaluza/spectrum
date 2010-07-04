@@ -72,5 +72,5 @@ if action not in all_actions:
 	print( "Error: %s: Unknown action." %(action) )
 	sys.exit(1)
 
-group = spectrum_group.spectrum_group( options, params )
-getattr( group, action )()
+group = spectrum_group.spectrum_group( options )
+getattr( group, action )( *params )

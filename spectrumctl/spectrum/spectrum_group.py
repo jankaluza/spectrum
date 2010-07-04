@@ -14,16 +14,14 @@ class spectrum_group:
 	instances it represents are defined upon instantiation (see the
 	L{constructor<__init__>}) or via the "load" command when in interactive
 	mode (see L{shell}).
+
+	All public functions of this class represent possible actions that
+	spectrumctl supports either via command-line or in interactive mode.
 	"""
 
-	def __init__( self, options, params ):
+	def __init__( self, options ):
 		"""
-		Constructor. The "params" parameter refers to the list of
-		arguments given to the action. On the command-line, this means
-		that::
-			spectrumctl message_all foo bar whatever
-		would cause params to be::
-			['foo', 'bar', 'whatever']
+		Constructor. 
 
 		Upon instantiation, this object will either represent a single
 		instance, if C{options.config} refers to a path (and is not None).
@@ -37,11 +35,8 @@ class spectrum_group:
 		@param options: The options returned by the config parser. This
 			is the first return-value of
 			U{OptionParser.parse_args<http://docs.python.org/library/optparse.html>}.
-		@param params: The list of parameters to the action.
-		@type  params: list
 		"""
 		self.options = options
-		self.params = params
 		if options.config:
 			self.instances = [ spectrum( options.config ) ]
 		else:
@@ -108,8 +103,7 @@ class spectrum_group:
 
 	def start( self ):
 		"""
-		Start all instances represented by this object. Any error will
-		be logged.
+		Start all instances that this group currently acts upon.
 
 		@return: 0 upon success, an int >1 otherwise. 
 		@rtype: int
@@ -118,8 +112,7 @@ class spectrum_group:
 
 	def stop( self ):
 		"""
-		Stop all instances represented by this object. Any error will
-		be logged.
+		Stop all instances that this group currently acts upon. 
 
 		@return: 0 upon success, an int >1 otherwise. 
 		@rtype: int
@@ -128,8 +121,10 @@ class spectrum_group:
 
 	def restart( self ):
 		"""
-		Restart all instances represented by this object. Any error will
-		be logged.
+		Restart all instances that this group currently acts upon. This
+		is essentially an alias for first calling L{stop} and then
+		L{start}, so users will be disconnected when invoking this
+		method.
 
 		@return: 0 upon success, an int >1 otherwise. 
 		"""
@@ -137,9 +132,12 @@ class spectrum_group:
 
 	def reload( self ):
 		"""
-		Reload all instances represented by this object. Any error will
-		be logged.
-
+		Reload all instances that this group currently acts upon. This
+		just causes spectrum instances to reopen their log-files, it does
+		not change any runtime configuration. Unlike L{restart}, this
+		method does not stop the transport, hence users will not notice
+		anything.
+		
 		@return: 0 upon success, an int >1 otherwise.
 		@rtype: int
 		"""
@@ -147,9 +145,8 @@ class spectrum_group:
 
 	def stats( self ):
 		"""
-		Get runtime statistics of all instances represented by this
-		object. Any error will be logged. This will query the
-		config_interface of each instance this object represents.
+		Get runtime statistics for all instances that this group
+		currently acts upon. 
 
 		@return: 0
 		@rtype: int
@@ -169,111 +166,133 @@ class spectrum_group:
 	
 	def upgrade_db( self ):
 		"""
-		Try to upgrade the database of every instance.
+		Try to upgrade the database schema of every instance that this
+		group currently acts upon.
+		
+		@return: 0
+		@rtype: int
 		"""
 		return self._simple_action( 'upgrade_db', "Upgrading db for" )
 
-	def message_all( self ):
+	def message_all( self, *args ):
 		"""
 		Message all users that are currently online. If message starts
 		"file:" it will take the remaining part as path and sends its
 		contents instead.
+		
+		@param args: List with the words to send.
 		"""
-		if len( self.params ) == 0:
+		if len( args ) == 0:
 			print( "Error: message_all <message>: Wrong number of arguments" )
 			return 1
 
-		if self.params[0].startswith( "file:" ):
-			filename = self.params[0][5:]
-			self.params[0] = open( filename ).read()
+		if args[0].startswith( "file:" ):
+			filename = self.args[0][5:]
+			self.args[0] = open( filename ).read()
 
 		print( "Messaging all users:" )
 		
 		for instance in self.instances:
 			print( instance.get_jid() + '...' ),
 			try:
-				instance.message_all( self.params )
+				instance.message_all( args )
 				print( "ok." )
 			except RuntimeError, e:
 				print( "Error: " + e.message )
 
-	def register( self ):
+	def register( self, jid, username, passwd=None, lang=None, enc=None ):
 		"""
 		Register the given user using the given legacy network account.
-		This command will interactively ask for more details!
+		The first argument is the JID of the user that wants to register
+		and the second argument is his/her username on the legacy
+		network. 
+		
+		B{Note:} If one of the optional arguments is not given, this
+		command will interactively ask for more details!
+		
+		@param jid: The JID of the user to be registered.
+		@type  jid: str
+		@param username: The username of the user in the legacy network.
+		@type  username: str
+		@param passwd: The password for the legacy network.
+		@type  passwd: str
+		@param lang: The language code used by the user (e.g. 'en').
+		@type  lang: str
+		@param enc: The default character encoding (e.g. 'utf8').
+		@type  enc: str
 		"""
 		if len( self.instances ) != 1:
 			print( "Error: This command can only be executed with a single instance" )
 			return 1
 
-		if len( self.params ) != 2:
-			print( "Error: register_user <jid> <username>: Wrong number of arguments" )
-			return 1
+		if not passwd:
+			import getpass
+			pwd_in = getpass.getpass( "password to remote network: " )
+			pwd2_in = getpass.getpass( "confirm: " )
+			if pwd2_in != pwd_in:
+				print( "Error: Passwords do not match" )
+			else:
+				passwd = pwd_in
 
-		import getpass
-		pwd = getpass.getpass( "password to remote network: " )
-		pwd2 = getpass.getpass( "confirm: " )
-		if pwd2 != pwd:
-			print( "Error: Passwords do not match" )
-		else:
-			self.params.append( pwd )
+		if not lang:
+			lang = raw_input( 'Language (default: en): ' )
+			if lang == '':
+				lang = 'en'
 
-		lang = raw_input( 'Language (default: en): ' )
-		if lang == '':
-			lang = 'en'
-		self.params.append( lang )
+		if not enc:
+			enc = raw_input( 'Encoding (default: utf8): ' )
+			if enc == '':
+				enc = 'utf8'
 
-		enc = raw_input( 'Language (default: utf8): ' )
-		if enc == '':
-			enc = 'utf8'
-		self.params.append( enc )
-
-		self.params.append( 0 ) # we don't ask for VIP status
+		status = "0" # we don't ask for VIP status
  
 		for instance in self.instances:
 			print( instance.get_jid() + '...' ),
-			answer = instance.register( self.params )
+			answer = instance.register( jid, username, passwd, lang, enc, status)
 			print( answer )
 
-	def unregister( self ):
+	def unregister( self, jid ):
 		"""
-		Unregister a given user.
+		Unregister a user.
+		
+		@param jid: The JID to unregister
+		@type  jid: string
 		"""
-		if len( self.params ) != 1:
-			print( "Error: unregister <jid>: Wrong number of arguments" )
-			return 1
-
-		print( "Unregistering user %s" %(self.params[0]) )
+		print( "Unregistering user %s" %(jid) )
 		for instance in self.instances:
 			print( instance.get_jid() + '...' ),
 			try:
-				instance.unregister( self.params )
+				instance.unregister( jid )
 				print( "ok." )
 			except RuntimeError, e:
 				print( "Error: " + e.message )
 
-	def set_vip_status( self ):
+	def set_vip_status( self, jid, state ):
 		"""
-		Set the VIP status of the given user.
+		Set the VIP status of a user.
+		
+		@param jid: The JID that should have its status set
+		@type  jid: str
+		@param state: The state you want to set. This should be "0" for
+			disabling VIP status and "1" for enabling it. Note that
+			this argument really I{is} a string.
+		@type  state: str
 		"""
-		if len( self.params ) != 2:
-			print( "Error: set_vip_status <jid> <status>: Wrong number of arguments" )
-			return 1
 
 		status_string = "Setting VIP-status for '%s' to "
-		if self.params[1] == "0":
+		if state == "0":
 			status_string += "False:"
-		elif self.params[1] == "1":
+		elif state == "1":
 			status_string += "True:"
 		else:
 			print( "Error: status (third argument) must be either 0 or 1" )
 			return 1
-		print( status_string%(self.params[0]) )
+		print( status_string%(jid) )
 
 		for instance in self.instances:
 			print( instance.get_jid() + '...' ),
 			try:
-				instance.set_vip_status( self.params )
+				instance.set_vip_status( jid, state )
 				print( "ok." )
 			except RuntimeError, e:
 				print( "Error: " + e.message )
@@ -327,22 +346,25 @@ class spectrum_group:
 		jids = [ x.get_jid() for x in self.instances ]
 		import completer
 		compl = completer.completer(cmds, jids)
+		cmd = ""
 
 		while( True ):
 			try:
-				cmd = raw_input( self._get_prompt() ).split()
-				cmd = [ x.strip() for x in cmd ]
-				if len( cmd ) == 0:
+				words = raw_input( self._get_prompt() ).split()
+				words = [ x.strip() for x in words ]
+				if len( words ) == 0:
 					continue
 
-				if cmd[0] == "exit":
+				cmd = words[0]
+
+				if cmd == "exit":
 					raise EOFError() # same as CTRL+D
-				elif cmd[0] == "load":
+				elif cmd == "load":
 					try:
-						if cmd[1] == "all":
+						if words[1] == "all":
 							ret = self._load_instances()
 						else:
-							ret = self._load_instances( cmd[1] )
+							ret = self._load_instances( words[1])
 
 						if ret == 0:
 							print( "Error: no transports found." )
@@ -354,14 +376,15 @@ class spectrum_group:
 						compl.set_jids( [ x.get_jid() for x in self.instances ] )
 					except IndexError:
 						print( "Error: Give a JID to load or 'all' to load all (enabled) files" )
-				elif cmd[0] == "help":
+				elif cmd == "help":
 					print( "Help not implemented yet" )
-				elif cmd[0] in cmds:
-					self.params = cmd[1:]
-					getattr( self, cmd[0] )()
+				elif cmd in cmds:
+					getattr( self, cmd )( *words[1:] )
 				else:
 					print( "Unknown command, try 'help'." )
-					print( cmd[0] )
+					print( cmd )
+			except TypeError, e:
+				print( "Wrong number of arguments, try 'help <cmd>' for help." )
 			except KeyboardInterrupt:
 				print
 				continue
