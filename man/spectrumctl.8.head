@@ -1,0 +1,30 @@
+.\"
+.\"     Title: spectrumctl
+.\"    Author: Moritz Wilhelmy <crap@wzff.de>
+.\"  Language: English
+.\"      Date: 2010-02-21
+.\" This document is the result of painful hand work. I still like writing manpages more than html :)
+.\"
+.TH spectrumctl 8  "February 21, 2010" "Version 0.1\-git" "Spectrum Manual"
+.SH NAME
+spectrumctl \- Utility to control one or more spectrum instances
+.SH SYNOPSIS
+.B spectrumctl
+[options] operation
+.SH DESCRIPTION
+The purpose of the \fIspectrumctl\fR utility is to control one or more Spectrum
+instances. Spectrum only handles one legacy network per instance, so you need
+more than one spectrum instance if you want support for more than one legacy
+network. The tool offers standard tasks usually performed by
+initscripts but also enables some runtime configuration of spectrum instances.
+.sp
+An interactive shell with comfortable tab-completion is also supported to help
+with more complex administration tasks. See the \fBSHELL\fR for a detailed
+explanation.
+.SH ACTIONS
+.sp
+By default, spectrumctl acts on all transports defined in \fI/etc/spectrum/\fR.
+You can use a different directory with the \fB--config-dir\fR option. If you
+just want to act on a single file, you can use the \fB--config\fR option. Unless
+you use \fI--config\fR, spectrumctl will silently ignore files where the
+filename does not end with \fB.cfg\fR.

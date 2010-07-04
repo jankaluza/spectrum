@@ -4,6 +4,7 @@ This class represents multiple spectrum instances, see L{spectrum_group}.
 import os, sys, socket
 
 try:
+	import dochelp
 	from spectrum import spectrum
 except ImportError:
 	import spectrum
@@ -20,7 +21,7 @@ class spectrum_group:
 	spectrumctl supports either via command-line or in interactive mode.
 	"""
 
-	def __init__( self, options ):
+	def __init__( self, options, load=False ):
 		"""
 		Constructor. 
 
@@ -38,10 +39,11 @@ class spectrum_group:
 			U{OptionParser.parse_args<http://docs.python.org/library/optparse.html>}.
 		"""
 		self.options = options
-		if options.config:
-			self.instances = [ spectrum( options.config ) ]
-		else:
-			self._load_instances()
+		if load:
+			if options.config:
+				self.instances = [ spectrum( options.config ) ]
+			else:
+				self._load_instances()
 
 	def _load_instances( self, jid=None ):
 		"""
@@ -104,7 +106,8 @@ class spectrum_group:
 
 	def start( self ):
 		"""
-		Start instances.
+		Start all instances. This method honours the I{enabled} variable
+		in the configuration file.
 
 		@return: 0 upon success, an int >1 otherwise. 
 		@rtype: int
@@ -113,7 +116,8 @@ class spectrum_group:
 
 	def stop( self ):
 		"""
-		Stop instances. 
+		Stop all instances. If an instance is already stopped but the
+		pid-file exists, it is removed.
 
 		@return: 0 upon success, an int >1 otherwise. 
 		@rtype: int
@@ -144,10 +148,12 @@ class spectrum_group:
 
 	def stats( self ):
 		"""
-		Get runtime statistics.
+		Print runtime statistics.
 
 		@return: 0
 		@rtype: int
+		@todo: the doc-string should mention --machine-readable, but
+			this is currently impossible with interactive help.
 		"""
 		output = []
 		for instance in self.instances:
@@ -174,8 +180,8 @@ class spectrum_group:
 	def message_all( self, *args ):
 		"""
 		Message all users that are currently online. If message starts
-		"file:" it will take the remaining part as path and sends its
-		contents instead.
+		with "file:" it will take the remaining part as path and sends
+		its contents instead.
 		
 		@param args: List with the words to send.
 		"""
@@ -197,60 +203,64 @@ class spectrum_group:
 			except RuntimeError, e:
 				print( "Error: " + e.message )
 
-	def register( self, jid, username, passwd=None, lang=None, enc=None ):
+	def register( self, jid, username, password=None, language=None, encoding=None ):
 		"""
-		Register the given user using the given legacy network account.
-		The first argument is the JID of the user that wants to register
-		and the second argument is his/her username on the legacy
-		network. 
-		
-		B{Note:} If one of the optional arguments is not given, this
-		function will interactively ask for more details!
+		Register the user with JID I{jid} and the legacy network account
+		I{username}. If the users default I{password}, I{language} and
+		I{encoding} are not given, this method will ask for these details
+		interactivly.
+
+		B{Note:} It does not make sense to register a user across more
+		than one transport, since a I{username} is typically only valid
+		within a single legacy network. This method will return an error
+		if this group currently represents more then one transport.
 		
 		@param jid: The JID of the user to be registered.
 		@type  jid: str
 		@param username: The username of the user in the legacy network.
 		@type  username: str
-		@param passwd: The password for the legacy network.
-		@type  passwd: str
-		@param lang: The language code used by the user (e.g. 'en').
-		@type  lang: str
-		@param enc: The default character encoding (e.g. 'utf8').
-		@type  enc: str
+		@param password: The password for the legacy network.
+		@type  password: str
+		@param language: The language code used by the user (e.g. 'en').
+		@type  language: str
+		@param encoding: The default character encoding (e.g. 'utf8').
+		@type  encoding: str
 		"""
 		if len( self.instances ) != 1:
 			print( "Error: This command can only be executed with a single instance" )
 			return 1
 
-		if not passwd:
+		if not password:
 			import getpass
 			pwd_in = getpass.getpass( "password to remote network: " )
 			pwd2_in = getpass.getpass( "confirm: " )
 			if pwd2_in != pwd_in:
 				print( "Error: Passwords do not match" )
 			else:
-				passwd = pwd_in
+				password = pwd_in
 
-		if not lang:
-			lang = raw_input( 'Language (default: en): ' )
-			if lang == '':
-				lang = 'en'
+		if not language:
+			language = raw_input( 'Language (default: en): ' )
+			if language == '':
+				language = 'en'
 
-		if not enc:
-			enc = raw_input( 'Encoding (default: utf8): ' )
-			if enc == '':
-				enc = 'utf8'
+		if not encoding:
+			encoding = raw_input( 'Encoding (default: utf8): ' )
+			if encoding == '':
+				encoding = 'utf8'
 
 		status = "0" # we don't ask for VIP status
  
 		for instance in self.instances:
 			print( instance.get_jid() + '...' ),
-			answer = instance.register( jid, username, passwd, lang, enc, status)
+			answer = instance.register( jid, username, password, language, encoding, status)
 			print( answer )
 
 	def unregister( self, jid ):
 		"""
-		Unregister a user.
+		Unregister the user with JID I{jid}. Note that unlike the
+		L{register} command, it makes sense to use this command accross
+		many transports.
 		
 		@param jid: The JID to unregister
 		@type  jid: string
@@ -266,13 +276,13 @@ class spectrum_group:
 
 	def set_vip_status( self, jid, state ):
 		"""
-		Set the VIP status of a user.
+		Set the VIP status of the user L{jid}. The I{status} should be
+		"0" to disable VIP status and "1" to enable it.
 		
 		@param jid: The JID that should have its status set
 		@type  jid: str
-		@param state: The state you want to set. This should be "0" for
-			disabling VIP status and "1" for enabling it. Note that
-			this argument really I{is} a string.
+		@param state: The state you want to set. See above for more
+			information.
 		@type  state: str
 		"""
 
@@ -361,7 +371,7 @@ class spectrum_group:
 						if words[1] == "all":
 							ret = self._load_instances()
 						else:
-							ret = self._load_instances( words[1])
+							ret = self._load_instances( words[1] )
 
 						if ret == 0:
 							print( "Error: no transports found." )
@@ -374,7 +384,9 @@ class spectrum_group:
 					except IndexError:
 						print( "Error: Give a JID to load or 'all' to load all (enabled) files" )
 				elif cmd == "help":
-					print( "Help not implemented yet" )
+					# todo: help without arguments
+#					dochelp.interactive_help( words[1] )
+					self._interactive_help( words[1:] )
 				elif cmd in cmds:
 					getattr( self, cmd )( *words[1:] )
 				else:
@@ -393,3 +405,28 @@ class spectrum_group:
 			except Exception, e:
 				print( "Type: %s"%(type(e)) )
 				print( e )
+
+	def _manpage_help( self, cmd ):
+		func = getattr( self, cmd.name.replace( '-', '_' ) )
+		doc = func.__doc__.strip()
+		cmd.create_man_doc( doc )
+
+	def _interactive_help( self, cmd=None ):
+		if not cmd:
+			commands = [ x.name for x in dochelp.cmds ]
+			dochelp.print_terminal( "Help is available on the following commands: %s:" %(', '.join( commands ) ) )
+			return
+
+		cmd = cmd[0]
+		action_list= [ x for x in dochelp.cmds + dochelp.shell_cmds if x.name == cmd ]
+		if not action_list:
+			dochelp.print_terminal( "No help available on '%s', try 'help' without arguments for a list of available topics."%(cmd) )
+			return
+
+		cmd_help = action_list[0]
+		if cmd_help.text:
+			cmd_help.interactive_help()
+		else:
+			func = getattr( self, cmd.replace( '-', '_' ) )
+			doc = func.__doc__.strip()
+			cmd_help.interactive_help( text=doc )

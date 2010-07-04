@@ -4,7 +4,10 @@ HTML_DIR="epydoc/html"
 HTML=${HTML_DIR}/index.html
 PDF_DIR="epydoc/pdf"
 
-doc: epydoc
+doc: epydoc man
+
+man: 
+	./make_man_page.py > ../man/spectrumctl.8
 
 epydoc: ${PDF_DIR} ${HTML}
 	mkdir -p epydoc
