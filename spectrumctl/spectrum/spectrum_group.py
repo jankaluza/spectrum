@@ -21,7 +21,7 @@ class spectrum_group:
 	spectrumctl supports either via command-line or in interactive mode.
 	"""
 
-	def __init__( self, options, load=False ):
+	def __init__( self, options, load=True ):
 		"""
 		Constructor. 
 
@@ -347,11 +347,12 @@ class spectrum_group:
 		"""
 		Launch an interactive shell.
 		"""
+		import completer
+
 		cmds = [ x for x in dir( self ) if not x.startswith( '_' ) and x != "shell" ]
 		cmds = [ x for x in cmds if type(getattr( self, x )) == type(self.shell) ]
 		cmds += ['exit', 'load', 'help' ]
 		jids = [ x.get_jid() for x in self.instances ]
-		import completer
 		compl = completer.completer(cmds, jids)
 		cmd = ""
 
@@ -407,13 +408,16 @@ class spectrum_group:
 				print( e )
 
 	def _manpage_help( self, cmd ):
-		func = getattr( self, cmd.name.replace( '-', '_' ) )
-		doc = func.__doc__.strip()
-		cmd.create_man_doc( doc )
+		try:
+			func = getattr( self, cmd.name.replace( '-', '_' ) )
+			doc = func.__doc__.strip()
+			cmd.create_man_doc( doc )
+		except AttributeError:
+			cmd.create_man_doc()
 
 	def _interactive_help( self, cmd=None ):
 		if not cmd:
-			commands = [ x.name for x in dochelp.cmds ]
+			commands = [ x.name for x in dochelp.cmds + dochelp.shell_cmds ]
 			dochelp.print_terminal( "Help is available on the following commands: %s:" %(', '.join( commands ) ) )
 			return
 
