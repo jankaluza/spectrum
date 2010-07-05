@@ -81,7 +81,7 @@ class spectrum_group:
 				print( msg ),
 #				print( msg, end='' ) #python 3
 
-	def _simple_action( self, action, title=None ):
+	def _simple_action( self, action, title=None, args=[] ):
 		ret = 0
 		for instance in self.instances:
 			if not title:
@@ -89,7 +89,7 @@ class spectrum_group:
 			jid = instance.get_jid()
 			self._log( "%s %s..."%(title, jid), False )
 			try:
-				getattr( instance, action )()
+				getattr( instance, action )( *args )
 				self._log( "Ok." )
 			except socket.error, e:
 				if hasattr( e, 'strerror' ):
@@ -112,7 +112,8 @@ class spectrum_group:
 		@return: 0 upon success, an int >1 otherwise. 
 		@rtype: int
 		"""
-		return self._simple_action( 'start' )
+		args = [ self.options.no_daemon, self.options.debug]
+		return self._simple_action( 'start', args )
 
 	def stop( self ):
 		"""

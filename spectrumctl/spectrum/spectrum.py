@@ -300,7 +300,7 @@ class spectrum:
 				raise RuntimeError( "unknown (Error)", 4 )
 
 
-	def start( self ):
+	def start( self, no_daemon=False, debug=True ):
 		"""
 		Starts the instance. This method will silently return if the
 		instance is already started.
@@ -343,9 +343,9 @@ class spectrum:
 
 		# finally start spectrum:
 		cmd = [ self.get_binary() ]
-		if env.options.no_daemon:
+		if no_daemon:
 			cmd.append( '-n' )
-		if env.options.debug:
+		if debug:
 			os.environ['MALLOC_PERTURB_'] = '254'
 			os.environ['PURPLE_VERBOSE_DEBUG'] = '1'
 			os.environ['MALLOC_CHECK_'] = '2'
