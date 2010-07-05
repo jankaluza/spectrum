@@ -10,7 +10,7 @@ options = None
 
 def get_uid():
 	# if we explicitly name something on the CLI, we use that:
-	if options.su:
+	if options and options.su:
 		return pwd.getpwnam( options.su ).pw_uid
 
 	try:
@@ -19,8 +19,10 @@ def get_uid():
 	except KeyError:
 		# otherwise we default to spectrum:
 		username = 'spectrum'
-
-	return pwd.getpwnam( username ).pw_uid
+	try:
+		return pwd.getpwnam( username ).pw_uid
+	except KeyError:
+		raise RuntimeError( username, "Username does not exist" )
 
 def get_gid():
 	return pwd.getpwuid( get_uid() ).pw_gid
