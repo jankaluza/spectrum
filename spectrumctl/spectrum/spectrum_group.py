@@ -113,7 +113,7 @@ class spectrum_group:
 		@rtype: int
 		"""
 		args = [ self.options.no_daemon, self.options.debug]
-		return self._simple_action( 'start', args )
+		return self._simple_action( 'start', args=args )
 
 	def stop( self ):
 		"""
@@ -133,7 +133,8 @@ class spectrum_group:
 
 		@return: 0 upon success, an int >1 otherwise. 
 		"""
-		return self._simple_action( 'restart' )
+		args = [ self.options.no_daemon, self.options.debug]
+		return self._simple_action( 'restart', args=args )
 
 	def reload( self ):
 		"""

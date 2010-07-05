@@ -300,11 +300,15 @@ class spectrum:
 				raise RuntimeError( "unknown (Error)", 4 )
 
 
-	def start( self, no_daemon=False, debug=True ):
+	def start( self, no_daemon=False, debug=False ):
 		"""
 		Starts the instance. This method will silently return if the
 		instance is already started.
 
+		@param no_daemon: Do not start spectrum as daemon if True.
+		@type  no_daemon: boolean
+		@param debug: Start spectrum in debug mode if True.
+		@type  no_daemon: boolean
 		@raise RuntimeError: If starting the instance fails.
 		@see:	U{LSB standard for init script actions
 			<http://refspecs.freestandards.org/LSB_3.1.0/LSB-Core-generic/LSB-Core-generic/iniscrptact.html>}
@@ -399,17 +403,21 @@ class spectrum:
 			print( e )
 			raise RuntimeError( "Unknown Error occured", 1 )
 
-	def restart( self ):
+	def restart( self, no_daemon=False, debug=False ):
 		"""
 		Restarts the instance (kills the process and starts it again).
 		This method just calles L{stop} and L{start}.
 		
+		@param no_daemon: Passed to L{start}.
+		@type  no_daemon: boolean
+		@param debug: Passed to L{start}.
+		@type  no_daemon: boolean
 		@raise RuntimeError: If stopping/starting the instance fails.
 		@see:	U{LSB standard for init script actions
 			<http://refspecs.freestandards.org/LSB_3.1.0/LSB-Core-generic/LSB-Core-generic/iniscrptact.html>}
 		"""
 		self.stop()
-		self.start()
+		self.start( no_daemon, debug )
 	
 	def reload( self ): # send SIGHUP to process
 		"""
