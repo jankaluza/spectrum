@@ -1,7 +1,12 @@
 #!/usr/bin/python
 
-from spectrum import *
+import sys, os
 
+pathname = os.path.dirname(sys.argv[0])
+abspath = os.path.abspath( pathname )
+sys.path.append( abspath )
+
+from spectrum import *
 
 group = spectrum_group.spectrum_group( None, False )
 
