@@ -64,6 +64,7 @@ class AbstractUser : public ResourceManager
 		virtual void connect() = 0;
 		virtual void disconnected() = 0;
 		virtual void updateSetting(const std::string &key, PurpleValue *value) {}
+		virtual void setConnected(bool connected) {}
 		AdhocData & adhocData() { return m_adhocData; }
 		void setAdhocData(AdhocData data) { m_adhocData = data; }
 		

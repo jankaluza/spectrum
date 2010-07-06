@@ -398,17 +398,17 @@ void User::receivedPresence(const Presence &stanza) {
 // 		localization.loadLocale(getLang());
 // 	}
 	
-	if (stanza.to().username() == "" && isConnected()) {
-		Tag *x_vcard = stanzaTag->findChild("x");
-		if (x_vcard) {
-			Tag *photo = x_vcard->findChild("photo");
-			if (photo && !photo->cdata().empty()) {
-				if (photo->cdata() != m_photoHash) {
-					p->fetchVCard(jid());
-				}
-			}
-		}
-	}
+// 	if (stanza.to().username() == "" && isConnected() && stanza.presence() != Presence::Unavailable) {
+// 		Tag *x_vcard = stanzaTag->findChild("x");
+// 		if (x_vcard) {
+// 			Tag *photo = x_vcard->findChild("photo");
+// 			if (photo && !photo->cdata().empty()) {
+// 				if (photo->cdata() != m_photoHash) {
+// 					p->fetchVCard(jid());
+// 				}
+// 			}
+// 		}
+// 	}
 	
 	handlePresence(stanza);
 
@@ -439,7 +439,7 @@ void User::receivedPresence(const Presence &stanza) {
 			if (m_connected) {
 				if (getResources().empty() || (p->protocol()->tempAccountsAllowed() && !hasOpenedMUC())){
 					Log(m_jid, "disconecting");
-					sendUnavailablePresenceToAll();
+// 					sendUnavailablePresenceToAll();
 // 					purple_account_disconnect(m_account);
 					p->adhoc()->unregisterSession(stanza.from().full());
 					p->userManager()->removeUserTimer(this);

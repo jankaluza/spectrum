@@ -93,6 +93,8 @@ void UserManager::removeUserTimer(AbstractUser *user){
 	if (m_cachedUser && user->userKey() == m_cachedUser->userKey()) {
 		m_cachedUser = NULL;
 	}
+	user->setConnected(false);
+	
 	// this will be called by gloop after all
 	if (user->removeTimer == 0)
 		user->removeTimer = purple_timeout_add_seconds(1,&deleteUser,user);
