@@ -585,17 +585,10 @@ void User::handleVCard(const VCard* vcard) {
 }
 
 User::~User(){
+	Log("User Destructor", m_jid << " " << m_account << " " << (m_account ? purple_account_get_username(m_account) : "") );
 	g_free(m_lang);
 
 	sendUnavailablePresenceToAll();
-
-	GList *iter;
-	for (iter = purple_get_conversations(); iter; ) {
-		PurpleConversation *conv = (PurpleConversation*) iter->data;
-		iter = iter->next;
-		if (purple_conversation_get_account(conv) == m_account)
-			purple_conversation_destroy(conv);
-	}
 
 	// purple_account_destroy(m_account);
 	// delete(m_account);
@@ -614,6 +607,14 @@ User::~User(){
 			p->collector()->collect(act);
 			purple_account_set_enabled(act, PURPLE_UI, FALSE);
 		}
+	}
+
+	GList *iter;
+	for (iter = purple_get_conversations(); iter; ) {
+		PurpleConversation *conv = (PurpleConversation*) iter->data;
+		iter = iter->next;
+		if (purple_conversation_get_account(conv) == m_account)
+			purple_conversation_destroy(conv);
 	}
 
 	if (m_syncTimer != 0) {

@@ -196,6 +196,12 @@ void SpectrumMessageHandler::handleMessage(const Message& msg) {
 	Log("SpectrumMessageHandler::handleMessage", "username " << username);
 	// open new conversation or get the opened one
 	if (!isOpenedConversation(username)) {
+		// if normalized username is empty, it's broken username...
+		std::string normalized(purple_normalize(m_user->account(), username.c_str()));
+		if (normalized.empty()) {
+			Log("SpectrumMessageHandler::handleMessage", "WARNING username is empty after normalization:" << username);
+			return;
+		}
 		conv = purple_conversation_new(PURPLE_CONV_TYPE_IM, m_user->account() , username.c_str());
 #ifndef TESTS
 		addConversation(conv, new SpectrumConversation(conv, SPECTRUM_CONV_CHAT, room), username);
