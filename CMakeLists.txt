@@ -323,7 +323,6 @@ endif (CPPUNIT_FOUND)
 
 ADD_CUSTOM_TARGET (xgettext xgettext ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp ${CMAKE_CURRENT_SOURCE_DIR}/src/protocols/*.cpp ${CMAKE_CURRENT_SOURCE_DIR}/src/adhoc/*.cpp --output-dir=${CMAKE_CURRENT_SOURCE_DIR}/po --from-code="UTF-8" -C --keyword="_" && sed -e 's/charset=CHARSET/charset=UTF-8/g' ${CMAKE_CURRENT_SOURCE_DIR}/po/messages.po > ${CMAKE_CURRENT_SOURCE_DIR}/po/messages.po.new && mv ${CMAKE_CURRENT_SOURCE_DIR}/po/messages.po.new ${CMAKE_CURRENT_SOURCE_DIR}/po/messages.po)
 
-
 FIND_PROGRAM(GETTEXT_MSGFMT_EXECUTABLE msgfmt)
  
 IF(NOT GETTEXT_MSGFMT_EXECUTABLE)
@@ -363,7 +362,7 @@ ELSE(NOT GETTEXT_MSGFMT_EXECUTABLE)
  
 ENDIF(NOT GETTEXT_MSGFMT_EXECUTABLE)
 
-
+ADD_CUSTOM_TARGET (man ALL python ${CMAKE_CURRENT_SOURCE_DIR}/spectrumctl/make_man_page.py > ${CMAKE_CURRENT_SOURCE_DIR}/man/spectrumctl.8)
 
 
 INSTALL(TARGETS spectrum
