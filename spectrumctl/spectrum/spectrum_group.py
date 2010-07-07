@@ -123,7 +123,8 @@ class spectrum_group:
 		@return: 0 upon success, an int >1 otherwise. 
 		@rtype: int
 		"""
-		return self._simple_action( 'stop' )
+		args = [ self.options.debug]
+		return self._simple_action( 'stop', args=args )
 
 	def restart( self ):
 		"""

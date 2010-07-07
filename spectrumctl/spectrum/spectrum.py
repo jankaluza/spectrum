@@ -308,7 +308,7 @@ class spectrum:
 		@param no_daemon: Do not start spectrum as daemon if True.
 		@type  no_daemon: boolean
 		@param debug: Start spectrum in debug mode if True.
-		@type  no_daemon: boolean
+		@type  debug: boolean
 		@raise RuntimeError: If starting the instance fails.
 		@see:	U{LSB standard for init script actions
 			<http://refspecs.freestandards.org/LSB_3.1.0/LSB-Core-generic/LSB-Core-generic/iniscrptact.html>}
@@ -362,40 +362,63 @@ class spectrum:
 
 		return
 
-	def stop( self ):
+	def stop( self, debug=False ):
 		"""
 		Stops the instance (sends SIGTERM). If the instance is not
 		running, the method will silently return. The method will also
 		return the pid-file, if it still exists.
 
 		@raise RuntimeError: If stopping the instance fails.
+		@param debug: Print loads of debug-output if True.
+		@type  debug: boolean
 		@see:	U{LSB standard for init script actions
 			<http://refspecs.freestandards.org/LSB_3.1.0/LSB-Core-generic/LSB-Core-generic/iniscrptact.html>}
 		"""
 		status = self.status()
 		if status == 3:
 			# stopping while not running is also success!
+			if debug:
+				print( 'Transport already stopped' )
 			return
 		elif status == 1:
+			if debug:
+				print( 'Transport already stopped, but PID file stil existed' )
 			os.remove( self.pid_file )
 			return
 
 		pid = self.get_pid()
-		debug = 0
 		try:
+			if debug:
+				print( 'Attempting to kill PID: %s'%(pid) )
+
 			os.kill( pid, signal.SIGTERM )
-			debug += 1
 			time.sleep( 0.2 )
 			
 			for i in range(1, 10):
-				debug += 1
+				if debug:
+					print( 'Try again...' )
 				status = self.status()
 				if status == 3 or status == 1:
 					os.remove( self.pid_file )
 					return 0
 				os.kill( pid, signal.SIGTERM )
 				time.sleep( 1 )
-			raise RuntimeError( "Spectrum did not die", 1 )
+
+			status = self.status()
+			if status == 3 or status == 1:
+				return 0
+			else:
+				if debug:
+					print( 'Attempting to kill with SIGKILL' )
+				os.kill( pid, signal.SIGKILL )
+				time.sleep( 0.2 )
+				status = self.status()
+				if status == 3 or status == 1:
+					if debug:
+						print( 'ok' )
+					return 0
+				else:
+					raise RuntimeError( "Spectrum did not die", 1 )
 		except OSError, e:
 			print( "pid file: '%s' (%s)"%(self.pid_file, debug) )
 			raise RuntimeError( "Failed to kill pid '%s'"%(pid), 1 )
@@ -416,7 +439,7 @@ class spectrum:
 		@see:	U{LSB standard for init script actions
 			<http://refspecs.freestandards.org/LSB_3.1.0/LSB-Core-generic/LSB-Core-generic/iniscrptact.html>}
 		"""
-		self.stop()
+		self.stop( debug )
 		self.start( no_daemon, debug )
 	
 	def reload( self ): # send SIGHUP to process
