@@ -409,8 +409,11 @@ class spectrum:
 				return 0
 			else:
 				if debug:
+					print( 'Attempting to kill with SIGABRT' )
+					os.kill( pid, signal.SIGABRT )
+				else:
 					print( 'Attempting to kill with SIGKILL' )
-				os.kill( pid, signal.SIGKILL )
+					os.kill( pid, signal.SIGKILL )
 				time.sleep( 0.2 )
 				status = self.status()
 				if status == 3 or status == 1:
