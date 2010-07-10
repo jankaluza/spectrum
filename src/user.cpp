@@ -497,7 +497,9 @@ void User::receivedPresence(const Presence &stanza) {
 					PurplePresenceType = PURPLE_STATUS_EXTENDED_AWAY;
 					break;
 				}
-				default: break;
+				default:
+					PurplePresenceType = PURPLE_STATUS_AVAILABLE;
+					break;
 			}
 
 			Log(m_jid, "resource: " << getResource().name);
