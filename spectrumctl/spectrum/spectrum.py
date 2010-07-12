@@ -434,7 +434,7 @@ class spectrum:
 		@param no_daemon: Passed to L{start}.
 		@type  no_daemon: boolean
 		@param debug: Passed to L{start}.
-		@type  no_daemon: boolean
+		@type  debug: boolean
 		@raise RuntimeError: If stopping/starting the instance fails.
 		@see:	U{LSB standard for init script actions
 			<http://refspecs.freestandards.org/LSB_3.1.0/LSB-Core-generic/LSB-Core-generic/iniscrptact.html>}

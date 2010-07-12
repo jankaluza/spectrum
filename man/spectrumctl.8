@@ -59,16 +59,16 @@ Print runtime statistics.
 Try to upgrade the database schema.
 .RE
 .sp
-\fBmessage_all\fR
+\fBmessage-all\fR [\fIpath\fR]
 .RS 4
-Message all users that are currently online. If message starts with "file:" it will take the remaining part as path and sends its contents instead.
+Message all users that are currently online. The contents of the message come from the file located at \fIpath\fR. If \fIpath\fR is omitted or \fB-\fR, this command will read the message from standard input.
 .RE
 .sp
 \fBregister\fR \fIjid\fR \fIusername\fR [\fIpassword\fR] [\fIlanguage\fR] [\fIencoding\fR]
 .RS 4
 Register the user with JID \fIjid\fR and the legacy network account \fIusername\fR. If the users default \fIpassword\fR, \fIlanguage\fR and \fIencoding\fR are not given, this command will ask for these details interactivly. 
 
-\fBNote:\fR It does not make sense to register a user across more than one transport, since a \fIusername\fR is typically only valid within a single legacy network. This command will return an error if you don't specify a single config-file using the \fB--config\fR option.
+\fBNote:\fR It does not make sense to register a user across more than one transport, since a \fIusername\fR is typically only valid within a single legacy network. This command will return an error if this shell currently represents more then one transport.
 .RE
 .sp
 \fBunregister\fR \fIjid\fR
@@ -84,6 +84,11 @@ Set the VIP status of the user \fBjid\fR. The \fIstatus\fR should be "0" to disa
 \fBlist\fR
 .RS 4
 List all selected transports along with their pid, protocol and hostname.
+.RE
+.sp
+\fBhelp\fR [\fIcmd\fR]
+.RS 4
+Give help about the command \fIcmd\fR. If \fIcmd\fR is omitted, print a list of available commands.
 .RE
 .SH OPTIONS
 .RE
@@ -164,6 +169,11 @@ following commands:
 \fBload\fR \fIjid\fR
 .RS 4
 Only act upon the transport that serves \fIjid\fR. The prompt will be updated to reflect the change. If you use the special value \fBall\fR, all transports will be loaded again. Note that you cannot currently load config-files where the filename does not end with .cfg.
+.RE
+.sp
+\fBexit\fR
+.RS 4
+Exit this shell
 .RE
 .RE
 .SH ENVIRONMENT
