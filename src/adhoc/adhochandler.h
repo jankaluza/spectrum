@@ -68,6 +68,7 @@ class GlooxAdhocHandler : public DiscoNodeHandler, public DiscoHandler, public I
 		std::map<std::string, AdhocCommandHandler *> m_sessions;	// sessions (m_sessions[full_jid] = handler)
 		std::map<std::string, adhocCommand> m_handlers;				// handlers (m_handlers[node] = handler)
 		static GlooxAdhocHandler *m_pInstance;
+		std::map <std::string, int> m_nodes;
 
 };
 

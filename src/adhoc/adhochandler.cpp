@@ -58,6 +58,7 @@ GlooxAdhocHandler::~GlooxAdhocHandler() { }
 StringList GlooxAdhocHandler::handleDiscoNodeFeatures (const JID &from, const std::string &node) {
 	StringList features;
 	features.push_back( XMLNS_ADHOC_COMMANDS );
+	features.push_back("jabber:x:data");
 	return features;
 }
 
@@ -82,6 +83,11 @@ Disco::ItemList GlooxAdhocHandler::handleDiscoNodeItems( const JID &_from, const
 			Log("GlooxAdhocHandler", "sending item " << (*u).first << " " << (*u).second.name);
 			if (((*u).second.admin && std::find(admins.begin(), admins.end(), from) != admins.end()) || (*u).second.admin == false)
 				lst.push_back( new Disco::Item( Transport::instance()->jid(), (*u).first, (std::string) tr(language, (*u).second.name)) );
+				if (m_nodes.find((*u).first) == m_nodes.end()) {
+					m_nodes[(*u).first] = 1;
+					GlooxMessageHandler::instance()->j->disco()->registerNodeHandler(this, (*u).first);
+				}
+
 		}
 
 		if (user) {
@@ -100,6 +106,10 @@ Disco::ItemList GlooxAdhocHandler::handleDiscoNodeItems( const JID &_from, const
 							action = (PurplePluginAction *) l->data;
 							// we are using "transport_" prefix here to identify command in disco#info handler
 							lst.push_back( new Disco::Item( Transport::instance()->jid(), "transport_" + (std::string) action->label,(std::string) tr(user->getLang(), action->label) ) );
+							if (m_nodes.find("transport_" + (std::string) action->label) == m_nodes.end()) {
+								m_nodes["transport_" + (std::string) action->label] = 1;
+								GlooxMessageHandler::instance()->j->disco()->registerNodeHandler(this, "transport_" + (std::string) action->label);
+							}
 							purple_plugin_action_free(action);
 						}
 					}
@@ -124,6 +134,10 @@ Disco::ItemList GlooxAdhocHandler::handleDiscoNodeItems( const JID &_from, const
 				for(l = ll = prpl_info->blist_node_menu((PurpleBlistNode*)buddy); l; l = l->next) {
 					PurpleMenuAction *action = (PurpleMenuAction *) l->data;
 					lst.push_back( new Disco::Item( _to.bare(), "transport_" + (std::string) action->label, (std::string) tr(user->getLang(), action->label) ) );
+					if (m_nodes.find("transport_" + (std::string) action->label) == m_nodes.end()) {
+						m_nodes["transport_" + (std::string) action->label] = 1;
+						GlooxMessageHandler::instance()->j->disco()->registerNodeHandler(this, "transport_" + (std::string) action->label);
+					}
 					purple_menu_action_free(action);
 				}
 			}
