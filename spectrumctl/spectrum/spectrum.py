@@ -33,9 +33,6 @@ class spectrum:
 	"""
 	An instance of this class represents a single spectrum instance and can
 	be used to control the instance. 
-
-	@todo: Replace the params attribute with more convinient named
-		parameters (params is just here for historic reasons...)
 	"""
 
 	def __init__( self, config_path ):
@@ -491,18 +488,17 @@ class spectrum:
 		elif process.returncode == 3:
 			raise RuntimeError( "Error connecting to the database", 1 )
 
-	def message_all( self, params ):
+	def message_all( self, message ):
 		"""
 		Send a message to all users currently online.
 		
-		@param params: The first and only element of the list should
-			be a string representing the message to be send.
-		@type  params: list
+		@param message: The message to send
+		@type  message: str
 		@raise RuntimeError: In case the command fails.
 		"""
 		interface = config_interface.config_interface( self )
 		state = 'ADHOC_ADMIN_SEND_MESSAGE'
-		fields = [('message', 'text-multi', params[0])]
+		fields = [('message', 'text-multi', message)]
 
 		interface.command( state, fields )
 		return 0

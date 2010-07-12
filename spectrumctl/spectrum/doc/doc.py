@@ -49,7 +49,7 @@ cmds = [
 	action( 'reload' ),
 	action( 'stats' ),
 	action( 'upgrade-db' ),
-	action( 'message-all' ),
+	action( 'message-all', args=[ arg('path', True) ] ),
 	action( 'register',
 		args=[ arg('jid'), arg('username'), arg('password', True ),
 			arg('language', True), arg( 'encoding', True ) ] ),
@@ -67,6 +67,7 @@ cli_cmds = [
 
 shell_cmds = [
 	action( 'load', """Only act upon the transport that serves I{jid}. The prompt will be updated to reflect the change. If you use the special value B{all}, all transports will be loaded again. Note that you cannot currently load config-files where the filename does not end with .cfg.""",
-		[ arg( 'jid' ) ] )
+		[ arg( 'jid' ) ] ),
+	action( 'exit', """Exit this shell""" )
 ]
 
