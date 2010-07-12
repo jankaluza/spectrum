@@ -374,7 +374,7 @@ INSTALL(TARGETS spectrum
 INSTALL(FILES
 	${CMAKE_CURRENT_SOURCE_DIR}/spectrum.cfg
 	RENAME spectrum.cfg.example
-	DESTINATION etc/spectrum
+	DESTINATION /etc/spectrum
 	)
 
 if (NOT WITHOUT_SPECTRUMCTL)
