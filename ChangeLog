@@ -69,6 +69,16 @@ version 0.3 (2010-??-??):
 	* New actions:
 	  * set_vip_status (enable/disable VIP status of a given user)
 	  * upgrade-db (upgrade database to most recent version)
+	  * shell (launch interactive shell)
+	  * help (give help on any command)
+	  * message-all (message all users currently online)
+	  * set-vip-status (set VIP status of user)
+	  * register (register a user)
+	  * unregister (delete a user)
+	  All commands are now also documented on the homepage:
+	    http://spectrum.im/projects/spectrum/wiki/Managing_Spectrum_instances
+	* Framework to use the epydoc documentation for generating runtime
+	  help, the man-page and the documentation on the homepage.
 
 version 0.2 (2010-04-08):
 	General:
