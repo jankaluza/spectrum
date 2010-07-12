@@ -38,6 +38,7 @@ class spectrum_group:
 			U{OptionParser.parse_args<http://docs.python.org/library/optparse.html>}.
 		"""
 		self.options = options
+		self.shell_mode = False
 		if load:
 			if options.config:
 				self.instances = [ spectrum( options.config ) ]
@@ -336,6 +337,38 @@ class spectrum_group:
 			print
 		return 0
 
+	def help( self, cmd=None ):
+		"""
+		Give help about the method I{cmd}. If I{cmd} is omitted, print
+		a list of available commands.
+
+		@param cmd: The command we want help for.
+		@type  cmd: str
+		"""
+		from doc import doc, interactive
+		backend = interactive.doc( spectrum_group )
+		if self.shell_mode:
+			all_cmds = doc.cmds + doc.shell_cmds
+		else:
+			all_cmds = doc.cmds + doc.cli_cmds
+
+		if not cmd:
+			commands = [ x.name for x in all_cmds ]
+			backend.print_terminal( "Help is available on the following commands: %s." %(', '.join( commands ) ), indent='' )
+			return
+
+		action_list= [ x for x in all_cmds if x.name == cmd ]
+		if not action_list:
+			backend.print_terminal( "No help available on '%s', try 'help' without arguments for a list of available topics."%(cmd), indent='' )
+			return
+		
+		try:
+			action = action_list[0]
+			doctext = backend.create_documentation( action )
+			backend.print_terminal( doctext )
+		except Exception, e:
+			print e
+
 	def _get_prompt( self ):
 		if len(self.instances) == 1:
 			prompt = self.instances[0].get_jid()
@@ -350,6 +383,7 @@ class spectrum_group:
 		Launch an interactive shell.
 		"""
 		import completer
+		self.shell_mode = True
 
 		cmds = [ x for x in dir( self ) if not x.startswith( '_' ) and x != "shell" ]
 		cmds = [ x for x in cmds if type(getattr( self, x )) == type(self.shell) ]
@@ -386,8 +420,8 @@ class spectrum_group:
 						compl.set_jids( [ x.get_jid() for x in self.instances ] )
 					except IndexError:
 						print( "Error: Give a JID to load or 'all' to load all (enabled) files" )
-				elif cmd == "help":
-					self._interactive_help( words[1:] )
+#				elif cmd == "help":
+#					self._interactive_help( words[1:] )
 				elif cmd in cmds:
 					getattr( self, cmd )( *words[1:] )
 				else:
@@ -406,24 +440,3 @@ class spectrum_group:
 			except Exception, e:
 				print( "Type: %s"%(type(e)) )
 				print( e )
-
-	def _interactive_help( self, cmd=None ):
-		from doc import doc, interactive
-		backend = interactive.doc( spectrum_group )
-
-		if not cmd:
-			commands = [ x.name for x in doc.cmds + doc.shell_cmds ]
-			backend.print_terminal( "Help is available on the following commands: %s:" %(', '.join( commands ) ), indent='' )
-			return
-
-		action_list= [ x for x in doc.cmds + doc.shell_cmds if x.name == cmd[0] ]
-		if not action_list:
-			backend.print_terminal( "No help available on '%s', try 'help' without arguments for a list of available topics."%(cmd[0]), indent='' )
-			return
-		
-		try:
-			action = action_list[0]
-			doctext = backend.create_documentation( action )
-			backend.print_terminal( doctext )
-		except Exception, e:
-			print e

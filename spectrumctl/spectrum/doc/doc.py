@@ -57,7 +57,12 @@ cmds = [
 	action( 'set-vip-status',
 		args=[ arg( 'jid' ), arg( 'status' ) ] ),
 	action( 'list' ),
+	action( 'help', args=[ arg('cmd', True) ] ),
 
+]
+
+cli_cmds = [
+	action( 'shell' ),
 ]
 
 shell_cmds = [
