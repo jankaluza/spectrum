@@ -349,7 +349,7 @@ ELSE(NOT GETTEXT_MSGFMT_EXECUTABLE)
                         SET(_gmoFile ${CMAKE_CURRENT_SOURCE_DIR}/po/${_lang}.mo)
  
                         ADD_CUSTOM_COMMAND(TARGET translations
-                                COMMAND ${GETTEXT_MSGFMT_EXECUTABLE} --check -o ${_gmoFile} ${_poFile}
+                                COMMAND ${GETTEXT_MSGFMT_EXECUTABLE} -o ${_gmoFile} ${_poFile}
                                 DEPENDS ${_poFile})
 
                         ADD_CUSTOM_COMMAND(TARGET xgettext
@@ -374,7 +374,7 @@ INSTALL(TARGETS spectrum
 INSTALL(FILES
 	${CMAKE_CURRENT_SOURCE_DIR}/spectrum.cfg
 	RENAME spectrum.cfg.example
-	DESTINATION /etc/spectrum
+	DESTINATION share/doc/spectrum
 	)
 
 if (NOT WITHOUT_SPECTRUMCTL)
