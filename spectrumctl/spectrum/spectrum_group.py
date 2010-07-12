@@ -4,7 +4,6 @@ This class represents multiple spectrum instances, see L{spectrum_group}.
 import os, sys, socket
 
 try:
-	import dochelp
 	from spectrum import spectrum
 except ImportError:
 	import spectrum
@@ -388,8 +387,6 @@ class spectrum_group:
 					except IndexError:
 						print( "Error: Give a JID to load or 'all' to load all (enabled) files" )
 				elif cmd == "help":
-					# todo: help without arguments
-#					dochelp.interactive_help( words[1] )
 					self._interactive_help( words[1:] )
 				elif cmd in cmds:
 					getattr( self, cmd )( *words[1:] )
@@ -410,30 +407,23 @@ class spectrum_group:
 				print( "Type: %s"%(type(e)) )
 				print( e )
 
-	def _manpage_help( self, cmd ):
-		try:
-			func = getattr( self, cmd.name.replace( '-', '_' ) )
-			doc = func.__doc__.strip()
-			cmd.create_man_doc( doc )
-		except AttributeError:
-			cmd.create_man_doc()
-
 	def _interactive_help( self, cmd=None ):
+		from doc import doc, interactive
+		backend = interactive.doc( spectrum_group )
+
 		if not cmd:
-			commands = [ x.name for x in dochelp.cmds + dochelp.shell_cmds ]
-			dochelp.print_terminal( "Help is available on the following commands: %s:" %(', '.join( commands ) ) )
+			commands = [ x.name for x in doc.cmds + doc.shell_cmds ]
+			backend.print_terminal( "Help is available on the following commands: %s:" %(', '.join( commands ) ), indent='' )
 			return
 
-		cmd = cmd[0]
-		action_list= [ x for x in dochelp.cmds + dochelp.shell_cmds if x.name == cmd ]
+		action_list= [ x for x in doc.cmds + doc.shell_cmds if x.name == cmd[0] ]
 		if not action_list:
-			dochelp.print_terminal( "No help available on '%s', try 'help' without arguments for a list of available topics."%(cmd) )
+			backend.print_terminal( "No help available on '%s', try 'help' without arguments for a list of available topics."%(cmd[0]), indent='' )
 			return
-
-		cmd_help = action_list[0]
-		if cmd_help.text:
-			cmd_help.interactive_help()
-		else:
-			func = getattr( self, cmd.replace( '-', '_' ) )
-			doc = func.__doc__.strip()
-			cmd_help.interactive_help( text=doc )
+		
+		try:
+			action = action_list[0]
+			doctext = backend.create_documentation( action )
+			backend.print_terminal( doctext )
+		except Exception, e:
+			print e
