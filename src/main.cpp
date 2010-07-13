@@ -1938,13 +1938,6 @@ static void spectrum_sighup_handler(int sig) {
 #endif
 
 int main( int argc, char* argv[] ) {
-	
-	SHA sha;
-	std::string t = std::string("97f6f100-ed1c-4138-9759-99f7bc2e2fd4") + "testtest123testtest";
-	sha.feed(t);
-	sha.finalize();
-	std::cout << t << " = " << sha.hex() << "\n";
-
 	GError *error = NULL;
 	GOptionContext *context;
 	context = g_option_context_new("config_file_name or profile name");

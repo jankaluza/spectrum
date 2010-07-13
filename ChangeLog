@@ -1,11 +1,11 @@
-version 0.3 (2010-??-??):
+version 0.3 (2010-07-13):
 	General:
 	* Added localization support.
 	* Added support for XEP-0106: JID Escaping. JID Escaping is used only for newly 
 	  added buddies. Old buddies don't use this XEP.
 	* Added option to disable new registrations.
-	* Added option to change user username  while registering. This allows
-	  to have for example Facebook where users have to register only their 
+	* Added option to change user username while registering. This allows
+	  to have for example Facebook transport where users can register only their 
 	  facebook name (no the whole JID).
 	* Added --list-purple-settings (-s) command line option to list all settings
 	  which can be passed as key in [purple] section in config file.
@@ -36,8 +36,6 @@ version 0.3 (2010-??-??):
 	* Linkify outgoing xhtml messages.
 	* Use proper show and status message when connecting to legacy network.
 	* Send /me to legacy networks properly.
-	* Fixed memory leak when old conversations were not removed from memory
-	  on logout.
 	* Fixed various crashes in RosterManager class.
 	* Send next message from legacy network to bare jid if active resource changed.
 

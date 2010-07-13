@@ -208,9 +208,9 @@ else (SPECTRUM_VERSION)
 						OUTPUT_VARIABLE GIT_REVISION
 						OUTPUT_STRIP_TRAILING_WHITESPACE
 		)
-		file(APPEND src/transport_config.h "#define VERSION \"0.3-git-" ${GIT_REVISION} "\"\n")
+		file(APPEND src/transport_config.h "#define VERSION \"0.4-git-" ${GIT_REVISION} "\"\n")
 	else (EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/.git)
-		file(APPEND src/transport_config.h "#define VERSION \"0.2\"\n")
+		file(APPEND src/transport_config.h "#define VERSION \"0.3\"\n")
 	endif (EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/.git)
 endif (SPECTRUM_VERSION)
 
