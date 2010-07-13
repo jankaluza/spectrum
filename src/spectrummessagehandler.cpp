@@ -263,7 +263,7 @@ void SpectrumMessageHandler::handleMessage(const Message& msg) {
 	}
 
 	// send this message
-	gchar *_markup = g_markup_escape_text(m_currentBody.c_str(), -1);
+	gchar *_markup = purple_markup_escape_text(m_currentBody.c_str(), -1);
 
 	if (purple_conversation_get_type(conv) == PURPLE_CONV_TYPE_IM) {
 		PurpleConvIm *im = purple_conversation_get_im_data(conv);
