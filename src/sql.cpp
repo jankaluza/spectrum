@@ -942,6 +942,7 @@ GHashTable * SQLClass::getSettings(long userId) {
 
 	for (i = 0; i < (int) m_stmt_getSettings.resId.size(); i++) {
 		type = (PurpleType) m_stmt_getSettings.resType[i];
+		value = NULL;
 		if (type == PURPLE_TYPE_BOOLEAN) {
 			value = purple_value_new(PURPLE_TYPE_BOOLEAN);
 			purple_value_set_boolean(value, atoi(m_stmt_getSettings.resValue[i].c_str()));
@@ -950,7 +951,8 @@ GHashTable * SQLClass::getSettings(long userId) {
 			value = purple_value_new(PURPLE_TYPE_STRING);
 			purple_value_set_string(value, m_stmt_getSettings.resValue[i].c_str());
 		}
-		g_hash_table_replace(settings, g_strdup(m_stmt_getSettings.resVar[i].c_str()), value);
+		if (value)
+			g_hash_table_replace(settings, g_strdup(m_stmt_getSettings.resVar[i].c_str()), value);
 	}
 
 	m_stmt_getSettings.resId.clear();
