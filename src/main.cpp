@@ -147,14 +147,20 @@ static void daemonize(const char *cwd) {
     /* write our pid into it & close the file. */
 	lock_file_f = fopen(lock_file, "w+");
 	if (lock_file_f == NULL) {
-		std::cout << "EE cannot write to lock file " << lock_file << ". Exiting\n";
+		std::cout << "EE cannot create lock file " << lock_file << ". Exiting\n";
 		exit(1);
     }
 	sprintf(process_pid,"%d\n",getpid());
-	fwrite(process_pid,1,strlen(process_pid),lock_file_f);
+	if (fwrite(process_pid,1,strlen(process_pid),lock_file_f) < strlen(process_pid)) {
+		std::cout << "EE cannot write to lock file " << lock_file << ". Exiting\n";
+		exit(1);
+	}
 	fclose(lock_file_f);
 	
-	freopen( "/dev/null", "r", stdin);
+	if (freopen( "/dev/null", "r", stdin) == NULL) {
+		std::cout << "EE cannot open /dev/null. Exiting\n";
+		exit(1);
+	}
 #endif
 }
 
