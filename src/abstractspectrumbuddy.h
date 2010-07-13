@@ -47,7 +47,7 @@ typedef enum { 	SPECTRUM_BUDDY_NO_FLAG = 0,
 class AbstractSpectrumBuddy {
 	public:
 		AbstractSpectrumBuddy(long id);
-		~AbstractSpectrumBuddy();
+		virtual ~AbstractSpectrumBuddy();
 		
 		// Sets/gets ID used to identify this buddy for example by storage backend.
 		void setId(long id);

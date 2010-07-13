@@ -35,7 +35,7 @@ using namespace gloox;
 class SpectrumBuddy : public AbstractSpectrumBuddy {
 	public:
 		SpectrumBuddy(long id, PurpleBuddy *buddy);
-		~SpectrumBuddy();
+		virtual ~SpectrumBuddy();
 
 		std::string getAlias();
 		std::string getName();
