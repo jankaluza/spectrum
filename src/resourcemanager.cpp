@@ -32,8 +32,10 @@ ResourceManager::~ResourceManager() {
 void ResourceManager::setResource(const std::string &resource, int priority, int caps) {
 	if (resource.empty())
 		return;
-	if (!hasResource(resource))
+	if (!hasResource(resource)) {
 		m_resources[resource].caps = 0;
+		m_resources[resource].priority = 0;
+	}
 	if (priority != -256)
 		m_resources[resource].priority = priority;
 	if (caps != -1)

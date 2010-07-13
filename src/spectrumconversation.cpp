@@ -59,9 +59,6 @@ SpectrumConversation::SpectrumConversation(PurpleConversation *conv, SpectrumCon
 SpectrumConversation::~SpectrumConversation() {
 	Log("SpectrumConversation", "destructor");
 	delete m_timer;
-#ifndef TESTS
-	m_conv->ui_data = NULL;
-#endif
 }
 
 bool SpectrumConversation::resendRawMessage() {

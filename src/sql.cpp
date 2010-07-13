@@ -818,7 +818,7 @@ GHashTable *SQLClass::getBuddies(long userId, PurpleAccount *account){
 						if (m_stmt_getBuddiesSettings.resId[i] == user.id) {
 							Log("ADDING SETTING ", m_stmt_getBuddiesSettings.resVar[i]);
 							PurpleType type = (PurpleType) m_stmt_getBuddiesSettings.resType[i];
-							PurpleValue *value;
+							PurpleValue *value = NULL;
 							if (type == PURPLE_TYPE_BOOLEAN) {
 								value = purple_value_new(PURPLE_TYPE_BOOLEAN);
 								purple_value_set_boolean(value, atoi(m_stmt_getBuddiesSettings.resValue[i].c_str()));
@@ -827,7 +827,8 @@ GHashTable *SQLClass::getBuddies(long userId, PurpleAccount *account){
 								value = purple_value_new(PURPLE_TYPE_STRING);
 								purple_value_set_string(value, m_stmt_getBuddiesSettings.resValue[i].c_str());
 							}
-							g_hash_table_replace(settings, g_strdup(m_stmt_getBuddiesSettings.resVar[i].c_str()), value);
+							if (value)
+								g_hash_table_replace(settings, g_strdup(m_stmt_getBuddiesSettings.resVar[i].c_str()), value);
 							i++;
 						}
 						else

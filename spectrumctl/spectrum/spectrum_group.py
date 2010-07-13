@@ -4,7 +4,6 @@ This class represents multiple spectrum instances, see L{spectrum_group}.
 import os, sys, socket
 
 try:
-	import dochelp
 	from spectrum import spectrum
 except ImportError:
 	import spectrum
@@ -39,6 +38,7 @@ class spectrum_group:
 			U{OptionParser.parse_args<http://docs.python.org/library/optparse.html>}.
 		"""
 		self.options = options
+		self.shell_mode = False
 		if load:
 			if options.config:
 				self.instances = [ spectrum( options.config ) ]
@@ -180,31 +180,46 @@ class spectrum_group:
 		"""
 		return self._simple_action( 'upgrade_db', "Upgrading db for" )
 
-	def message_all( self, *args ):
+	def message_all( self, path=None ):
 		"""
-		Message all users that are currently online. If message starts
-		with "file:" it will take the remaining part as path and sends
-		its contents instead.
+		Message all users that are currently online. The contents of the
+		message come from the file located at I{path}. If I{path} is
+		omitted or B{-}, this method will read the message from standard
+		input. 
 		
-		@param args: List with the words to send.
+		@param path: Path to a file that contains the message to send.
+		@type  path: str
 		"""
-		if len( args ) == 0:
-			print( "Error: message_all <message>: Wrong number of arguments" )
-			return 1
+		if not path:
+			print( "Please type your message. When finished, press CTRL+D or CTRL+C to cancel." )
 
-		if args[0].startswith( "file:" ):
-			filename = self.args[0][5:]
-			self.args[0] = open( filename ).read()
+		if path == '-' or path == None:
+			message = ''
+			while True:
+				try:
+					message += raw_input( ) + "\n"
+				except KeyboardInterrupt:
+					return 0
+				except EOFError, e:
+					message = message.strip()
+					break
+		else:
+			try:
+				message = open( path ).read().strip()
+			except IOError, e:
+				print( "Error: %s: %s"%(path, e.args[1]) )
+				return
 
 		print( "Messaging all users:" )
-		
 		for instance in self.instances:
 			print( instance.get_jid() + '...' ),
 			try:
-				instance.message_all( args )
+				instance.message_all( message )
 				print( "ok." )
 			except RuntimeError, e:
 				print( "Error: " + e.message )
+				
+		return
 
 	def register( self, jid, username, password=None, language=None, encoding=None ):
 		"""
@@ -337,6 +352,38 @@ class spectrum_group:
 			print
 		return 0
 
+	def help( self, cmd=None ):
+		"""
+		Give help about the method I{cmd}. If I{cmd} is omitted, print
+		a list of available commands.
+
+		@param cmd: The command we want help for.
+		@type  cmd: str
+		"""
+		from doc import doc, interactive
+		backend = interactive.doc( spectrum_group )
+		if self.shell_mode:
+			all_cmds = doc.cmds + doc.shell_cmds
+		else:
+			all_cmds = doc.cmds + doc.cli_cmds
+
+		if not cmd:
+			commands = [ x.name for x in all_cmds ]
+			backend.print_terminal( "Help is available on the following commands: %s." %(', '.join( commands ) ), indent='' )
+			return
+
+		action_list= [ x for x in all_cmds if x.name == cmd ]
+		if not action_list:
+			backend.print_terminal( "No help available on '%s', try 'help' without arguments for a list of available topics."%(cmd), indent='' )
+			return
+		
+		try:
+			action = action_list[0]
+			doctext = backend.create_documentation( action )
+			backend.print_terminal( doctext )
+		except Exception, e:
+			print e
+
 	def _get_prompt( self ):
 		if len(self.instances) == 1:
 			prompt = self.instances[0].get_jid()
@@ -351,13 +398,17 @@ class spectrum_group:
 		Launch an interactive shell.
 		"""
 		import completer
+		from doc import doc
+		self.shell_mode = True
 
+		# everything that does not start with '_':
 		cmds = [ x for x in dir( self ) if not x.startswith( '_' ) and x != "shell" ]
-		cmds = [ x for x in cmds if type(getattr( self, x )) == type(self.shell) ]
-		cmds += ['exit', 'load', 'help' ]
+		# only functions:
+		cmds = [ x.replace('_', '-') for x in cmds if type(getattr( self, x )) == type(self.shell) ]
+		# add shell_cmds from doc:
+		cmds += [ x.name for x in doc.shell_cmds ]
 		jids = [ x.get_jid() for x in self.instances ]
 		compl = completer.completer(cmds, jids)
-		cmd = ""
 
 		while( True ):
 			try:
@@ -387,12 +438,8 @@ class spectrum_group:
 						compl.set_jids( [ x.get_jid() for x in self.instances ] )
 					except IndexError:
 						print( "Error: Give a JID to load or 'all' to load all (enabled) files" )
-				elif cmd == "help":
-					# todo: help without arguments
-#					dochelp.interactive_help( words[1] )
-					self._interactive_help( words[1:] )
 				elif cmd in cmds:
-					getattr( self, cmd )( *words[1:] )
+					getattr( self, cmd.replace('-','_') )( *words[1:] )
 				else:
 					print( "Unknown command, try 'help'." )
 					print( cmd )
@@ -409,31 +456,3 @@ class spectrum_group:
 			except Exception, e:
 				print( "Type: %s"%(type(e)) )
 				print( e )
-
-	def _manpage_help( self, cmd ):
-		try:
-			func = getattr( self, cmd.name.replace( '-', '_' ) )
-			doc = func.__doc__.strip()
-			cmd.create_man_doc( doc )
-		except AttributeError:
-			cmd.create_man_doc()
-
-	def _interactive_help( self, cmd=None ):
-		if not cmd:
-			commands = [ x.name for x in dochelp.cmds + dochelp.shell_cmds ]
-			dochelp.print_terminal( "Help is available on the following commands: %s:" %(', '.join( commands ) ) )
-			return
-
-		cmd = cmd[0]
-		action_list= [ x for x in dochelp.cmds + dochelp.shell_cmds if x.name == cmd ]
-		if not action_list:
-			dochelp.print_terminal( "No help available on '%s', try 'help' without arguments for a list of available topics."%(cmd) )
-			return
-
-		cmd_help = action_list[0]
-		if cmd_help.text:
-			cmd_help.interactive_help()
-		else:
-			func = getattr( self, cmd.replace( '-', '_' ) )
-			doc = func.__doc__.strip()
-			cmd_help.interactive_help( text=doc )

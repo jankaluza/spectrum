@@ -23,11 +23,13 @@
 
 import os, sys
 from spectrum import *
+from spectrum.doc import doc
 from optparse import *
 
+cmds = [ x.name for x in doc.cmds ]
 description='''spectrumctl can be used to control your spectrum-instances.
-Valid actions are start, stop, restart, reload, upgrade-db, set-vip-status, list and stats. By default, spectrumctl 
-acts on all transports defined in /etc/spectrum/'''
+Valid actions are %s and %s. By default, spectrumctl acts on all transports
+defined in /etc/spectrum/.'''%( ', '.join( cmds[:-1] ), cmds[-1]  )
 
 parser = OptionParser( usage='Usage: %prog [options] action', version='0.2', description=description)
 parser.add_option( '-c', '--config', metavar='FILE',
@@ -65,9 +67,6 @@ if len( args ) == 0:
 
 action = args[0].replace( '-', '_' )
 params = args[1:]
-if action == 'help':
-	parser.print_help()
-	sys.exit(0)
 if action not in all_actions:
 	print( "Error: %s: Unknown action." %(action) )
 	sys.exit(1)

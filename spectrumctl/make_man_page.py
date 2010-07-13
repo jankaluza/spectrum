@@ -6,9 +6,11 @@ pathname = os.path.dirname(sys.argv[0])
 abspath = os.path.abspath( pathname )
 sys.path.append( abspath )
 
-from spectrum import *
+from spectrum import spectrum_group
+from spectrum.doc import man, doc
 
-group = spectrum_group.spectrum_group( None, False )
+cl = spectrum_group.spectrum_group
+backend = man.doc( cl )
 
 print( """.\"
 .\"     Title: spectrumctl
@@ -41,8 +43,9 @@ just want to act on a single file, you can use the \\fI--config\\fR option. Unle
 you use \\fI--config\\fR, spectrumctl will silently ignore files where the
 filename does not end with \\fB.cfg\\fR.""" )
 
-for cmd in dochelp.cmds:
-	group._manpage_help( cmd )
+for cmd in doc.cmds:
+	doctext = backend.create_documentation( cmd )
+	print( doctext )
 
 print( """.SH OPTIONS
 .RE
@@ -120,8 +123,9 @@ otherwise.
 In addition to the actions defined above, spectrumctl also supports the
 following commands:""" )
 
-for cmd in dochelp.shell_cmds:
-	group._manpage_help( cmd )
+for cmd in doc.shell_cmds:
+	doctext = backend.create_documentation( cmd )
+	print( doctext )
 
 print( """.RE
 .SH ENVIRONMENT

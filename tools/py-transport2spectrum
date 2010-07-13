@@ -12,6 +12,8 @@ except:
 
 from twisted.web import microdom as dom
 from twisted.web.domhelpers import *
+import shelve
+import cPickle
 
 
 def dirEntries(dir_name, subdir, *args):
@@ -44,11 +46,10 @@ def dirEntries(dir_name, subdir, *args):
 
 def start():
 	if len(sys.argv) != 6 and len(sys.argv) != 7 and len(sys.argv) != 3 and len(sys.argv) != 4:
-		print "Usage for MySQL: " + sys.argv[0] + " transport_path database username password host [mysql_prefix]"
-		print "Usage for SQLite: " + sys.argv[0] + " transport_path database [prefix]"
+		print "Usage for MySQL: " + sys.argv[0] + " transport_path_or_database_file database username password host [mysql_prefix]"
+		print "Usage for SQLite: " + sys.argv[0] + " transport_path_or_database_file database [prefix]"
 		return
 	maindir = sys.argv[1]
-	files = dirEntries(maindir, True, "xml")
 
 	prefix = ""
 	if len(sys.argv) == 7:
@@ -64,45 +65,68 @@ def start():
 		db = MySQLdb.connect(host=sys.argv[5], user=sys.argv[3], passwd=sys.argv[4], db=sys.argv[2])
 	cursor = db.cursor()
 	c = 0
-	size = len(files)
-	for f in files:
-		if os.path.isfile(f) and not f in ['pubsub', 'avatars']:
-			c += 1
-			print "[" + str(c) + "/" + str(size) + "] " + f
-			fp = open(f, 'r')
-			
-			buff = fp.read()
-			fp.close()
-			try:
-				x = dom.parseXMLString(buff)
-			except:
-				print "Can't parse", f, ". Skipping..."
-				continue
-			jid = os.path.basename(f).replace('%','@')[:-4]
-			p = x.getElementsByTagName('password')
-			if len(p) != 1:
-				print "No password for jid", jid, ". Skipping..."
-				continue
-			password =  gatherTextNodes(p[0])
-			u = x.getElementsByTagName('username')
-			uin = gatherTextNodes(u[0])
 
-			if len(sys.argv) == 3 or len(sys.argv) == 4:
-				cursor.execute('insert or ignore into ' + prefix + 'users (jid, uin, password, language) values (?, ?, ?, "en")', (jid, uin, password))
-			else:
-				cursor.execute('insert ignore into ' + prefix + 'users (jid, uin, password, language) values (%s, %s, %s, "en")', (jid, uin, password))
-			if len(sys.argv) == 3 or len(sys.argv) == 4:
-				cursor.execute('select id from ' + prefix + 'users WHERE jid = "'+jid+'"')
-			else:
-				cursor.execute('select id from ' + prefix + 'users WHERE jid = %s', (jid))
-			row = cursor.fetchone()
-			user_id = int(row[0])
-			items = x.getElementsByTagName('item')
-			for j in items:
+	if os.path.isdir(maindir):
+		files = dirEntries(maindir, True, "xml")
+		size = len(files)
+		for f in files:
+			if os.path.isfile(f) and not f in ['pubsub', 'avatars']:
+				c += 1
+				print "[" + str(c) + "/" + str(size) + "] " + f
+				fp = open(f, 'r')
+				
+				buff = fp.read()
+				fp.close()
+				try:
+					x = dom.parseXMLString(buff)
+				except:
+					print "Can't parse", f, ". Skipping..."
+					continue
+				jid = os.path.basename(f).replace('%','@')[:-4]
+				p = x.getElementsByTagName('password')
+				if len(p) != 1:
+					print "No password for jid", jid, ". Skipping..."
+					continue
+				password =  gatherTextNodes(p[0])
+				u = x.getElementsByTagName('username')
+				uin = gatherTextNodes(u[0])
+	
 				if len(sys.argv) == 3 or len(sys.argv) == 4:
-					cursor.execute('insert or ignore into ' + prefix + 'buddies (uin, user_id, nickname, groups, subscription) values (?, ?, ?,"Buddies", "both")',(j.getAttribute('jid'), str(user_id), j.getAttribute('jid')))
+					cursor.execute('insert or ignore into ' + prefix + 'users (jid, uin, password, language) values (?, ?, ?, "en")', (jid, uin, password))
 				else:
-					cursor.execute('insert ignore into ' + prefix + 'buddies (uin, user_id, nickname, groups, subscription) values (%s, %s, %s,"Buddies", "both")',(j.getAttribute('jid'), str(user_id), j.getAttribute('jid')))
+					cursor.execute('insert ignore into ' + prefix + 'users (jid, uin, password, language) values (%s, %s, %s, "en")', (jid, uin, password))
+				if len(sys.argv) == 3 or len(sys.argv) == 4:
+					cursor.execute('select id from ' + prefix + 'users WHERE jid = "'+jid+'"')
+				else:
+					cursor.execute('select id from ' + prefix + 'users WHERE jid = %s', (jid))
+				row = cursor.fetchone()
+				user_id = int(row[0])
+				items = x.getElementsByTagName('item')
+				for j in items:
+					if len(sys.argv) == 3 or len(sys.argv) == 4:
+						cursor.execute('insert or ignore into ' + prefix + 'buddies (uin, user_id, nickname, groups, subscription) values (?, ?, ?,"Buddies", "both")',(j.getAttribute('jid'), str(user_id), j.getAttribute('jid')))
+					else:
+						cursor.execute('insert ignore into ' + prefix + 'buddies (uin, user_id, nickname, groups, subscription) values (%s, %s, %s,"Buddies", "both")',(j.getAttribute('jid'), str(user_id), j.getAttribute('jid')))
+	else:
+		yahoodb = shelve.open(maindir,flag="r") 
+		size = len(yahoodb.keys())
+		for jid in yahoodb.keys():                                                                                                                     
+			c += 1
+			print "[" + str(c) + "/" + str(size) + "] " + jid                                 
+			try:                                                                                                                                   
+				password = yahoodb[jid]['password']                                                                                                                                     
+				uin = yahoodb[jid]['username']                                                                                                                                          
+			except (cPickle.UnpicklingError, exceptions.ValueError):                                                                                                                    
+				print "Error: Could not add %s, maybe a part of the pyyimt database is corrupt" % jid                                                                                   
+				import_error = True                                                                                                                                                     
+			else:
+				if len(sys.argv) == 3 or len(sys.argv) == 4:
+					cursor.execute('insert or ignore into ' + prefix + 'users (jid, uin, password, language) values (?, ?, ?, "en")', (jid, uin, password))
+				else:
+					try:
+						cursor.execute('insert ignore into ' + prefix + 'users (jid, uin, password, language) values (%s, %s, %s, "en")', (jid, uin, password))
+					except UnicodeEncodeError:
+						print "not unicode JID/password. Skipping..."
 	db.commit()
 	cursor.close()
 	db.close()
