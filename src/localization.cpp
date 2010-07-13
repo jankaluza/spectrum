@@ -184,6 +184,8 @@ Translation::~Translation() {
 }
 
 const char * Translation::translate(const char *key) {
+	if (*key == '\0')
+		return "";
 	const char *ret = m_spectrum->lookup(key);
 	if (strcmp(ret, key) == 0)
 		return m_pidgin->lookup(key);
