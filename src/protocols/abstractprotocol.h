@@ -37,62 +37,77 @@ extern Localization localization;
 
 using namespace gloox;
 
+// Abstract class for wrapping libpurple protocols
 class AbstractProtocol
 {
 	public:
 		virtual ~AbstractProtocol() {}
-		/*
-		 * Returns gateway identity (http://xmpp.org/registrar/disco-categories.html)
-		 */
-		/* TODO: Make these static and return a reference */
+
+		// Returns gateway identity (http://xmpp.org/registrar/disco-categories.html).
 		virtual const std::string gatewayIdentity() = 0;
-		/*
-		 * Returns purple protocol name (for example "prpl-icq" for ICQ protocol)
-		 */
-		/* TODO: Make these static and return a reference */
+
+		// Returns purple protocol id (for example "prpl-icq" for ICQ protocol).
+		// This id has to be obtained from prpl source code from PurplePluginProtocolInfo structure.
 		virtual const std::string protocol() = 0;
-		/*
-		 * Returns true if the username is valid username for this protocol
-		 */
+
+		// Returns true if username is valid username for this protocol.
 		virtual bool isValidUsername(const std::string &username) = 0;
-		/*
-		 * Returns revised username (for example for ICQ where username = "123- 456-789"; return "123456789";)
-		 */
+
+		// Returns revised username (for example for ICQ where username = "123- 456-789"; return "123456789";)
 		virtual void prepareUsername(std::string &username, PurpleAccount *account = NULL) {
 			username.assign(purple_normalize(account, username.c_str()));
 			std::transform(username.begin(), username.end(), username.begin(), (int(*)(int)) std::tolower);
 		};
-		
-		virtual std::string prepareRoomName(AbstractUser *user, const std::string &room) { return room; }
-		
-		virtual std::string prepareName(AbstractUser *user, const JID &jid) { 
-			std::string username = purpleUsername(jid.username());
-// 			std::for_each( username.begin(), username.end(), replaceJidCharacters() );
-			return username;
-		}
-		
-		virtual void makeRoomJID(AbstractUser *user, std::string &name) { }
+
+		// This function should create bare JID from any purpleConversationName. The name is obtained
+		// by purple_conversation_get_name(conv) function where conv is PurpleConversation of 
+		// PURPLE_CONV_TYPE_CHAT type.
+		// Examples:
+		// For IRC: #pidgin" -> "#pidgin%irc.freenode.net@irc.spectrum.im"
+		// For XMPP: spectrum@conference.spectrum.im/something" -> "spectrum%conference.spectrum.im@irc.spectrum.im"
+		// Note: You can ignore this function if your prpl doesn't support MUC (Groupchat).
+		virtual void makeRoomJID(AbstractUser *user, std::string &purpleConversationName) { }
+
+		// This function should create purple username from JID defined in 'to' attribute in incoming message.
+		// Purple username created by this function is then used to create new PurpleConversation. This function
+		// is called for PMs (Private Messages) in MUC.
+		// Examples:
+		// For IRC: "#pidgin%irc.freenode.org@irc.spectrum.im/HanzZ" -> "HanzZ"
+		// For IRC "#pidgin%irc.freenode.org@irc.spectrum.im" -> #pidgin
+		// For XMPP: "spectrum%conference.spectrum.im@irc.spectrum.im/HanzZ" -> "spectrum@conference.spectrum.im/HanzZ"
+		// For XMPP: "spectrum%conference.spectrum.im@irc.spectrum.im" -> "spectrum@conference.spectrum.im"
+		// Note: You can ignore this function if your prpl doesn't support MUC (Groupchat).
 		virtual void makePurpleUsernameRoom(AbstractUser *user, const JID &jid, std::string &name) { }
+
+		// This function should create username of room ocupant from libpurple's "who" argument
+		// of purple_conversation_im_write function. New username is then used as resource for JID created by makeRoomJID.
+		// Examples:
+		// For XMPP: "spectrum@conference.spectrum.im/HanzZ" -> "HanzZ"
+		// Note: You can ignore this function if your prpl doesn't support MUC (Groupchat).
+		virtual void makeUsernameRoom(AbstractUser *user, std::string &name) { }
+
+		// This function should create purple username from JID defined in 'to' attribute in incoming message.
+		// Purple username created by this function is then used to create new PurpleConversation. This function
+		// is called for type="chat" messages. By default, it tries to JID:escapeNode() and changes % to @. For normal
+		// prpls you don't have to change it.
+		// Examples:
+		// Default: "hanzz%test.im@xmpp.spectrum.im/bot" -> "hanzz@test.im"
+		// Default: "hanzz\40test.im@xmpp.spectrum.im/bot" -> "hanzz@test.im"
+		// For IRC: "hanzz%irc.freenode.org@irc.spectrum.im/bot" -> "hanzz"
 		virtual void makePurpleUsernameIM(AbstractUser *user, const JID &jid, std::string &name) {
 			name.assign(purpleUsername(jid.username()));
 		}
-		virtual void makeUsernameRoom(AbstractUser *user, std::string &name) { }
 
-		/*
-		 * Returns disco features user by transport jid
-		 */
+		// Returns disco features used by transport jid.
 		virtual std::list<std::string> transportFeatures() = 0;
-		/*
-		 * Returns disco features used by contacts
-		 */
+
+		// Returns disco features used by transport jid.
 		virtual std::list<std::string> buddyFeatures() = 0;
-		/*
-		 * Returns pregenerated text according to key
-		 */
+		
+		// Returns pregenerated text according to key.
 		virtual std::string text(const std::string &key) = 0;
-		/*
-		 * Returns VCard Tag*
-		 */
+
+		// Parses VCard and returns VCard Tag*.
 		virtual Tag *getVCardTag(AbstractUser *user, GList *vcardEntries) = 0;
 		/*
 		 * Returns true if this jid is jid of MUC
