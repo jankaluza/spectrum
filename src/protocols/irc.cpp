@@ -237,7 +237,7 @@ void IRCProtocol::onPurpleAccountCreated(PurpleAccount *account) {
 		purple_account_set_string(account, IRCHELPER_ID "_nickpassword", n);
 	}
 }
-
+/*
 std::string IRCProtocol::prepareRoomName(AbstractUser *user, const std::string &room) {
 	std::string name(room);
 	if (name.find("%") == std::string::npos) {
@@ -245,20 +245,55 @@ std::string IRCProtocol::prepareRoomName(AbstractUser *user, const std::string &
 		name = name + "@" + JID(user->username()).server();
 	}
 	return name;
-}
+}*/
 
-std::string IRCProtocol::prepareName(AbstractUser *user, const JID &to) {
+// std::string IRCProtocol::prepareName(AbstractUser *user, const JID &to) {
+// 	std::string username = to.username();
+// 	// "#pidgin%irc.freenode.org/HanzZ"
+// 	if (!to.resource().empty() && to.resource() != "bot") {
+// 		username = to.resource();
+// 	}
+// 	// "hanzz%irc.freenode.org/bot"
+// 	else if (to.resource() == "bot") {
+// 		size_t pos = username.find("%");
+// 		if (pos != std::string::npos)
+// 			username.erase((int) pos, username.length() - (int) pos);
+// 	}
+// 	std::for_each( username.begin(), username.end(), replaceJidCharacters() );
+// 	return username;
+// }
+
+void IRCProtocol::makePurpleUsernameRoom(AbstractUser *user, const JID &to, std::string &name) {
 	std::string username = to.username();
-	// "#pidgin%irc.freenode.org/HanzZ"
+	// "#pidgin%irc.freenode.org@irc.spectrum.im/HanzZ" -> "HanzZ"
 	if (!to.resource().empty() && to.resource() != "bot") {
 		username = to.resource();
 	}
-	// "hanzz%irc.freenode.org/bot"
+	// "hanzz%irc.freenode.org@irc.spectrum.im/bot" -> "hanzz"
 	else if (to.resource() == "bot") {
 		size_t pos = username.find("%");
 		if (pos != std::string::npos)
 			username.erase((int) pos, username.length() - (int) pos);
 	}
+	// "#pidgin%irc.freenode.org@irc.spectrum.im" -> #pidgin
+	else {
+		size_t pos = username.find("%");
+		if (pos != std::string::npos)
+			username.erase((int) pos, username.length() - (int) pos);
+	}
 	std::for_each( username.begin(), username.end(), replaceJidCharacters() );
-	return username;
+	name.assign(username);
+}
+
+void IRCProtocol::makePurpleUsernameIM(AbstractUser *user, const JID &to, std::string &name) {
+	makePurpleUsernameRoom(user, to, name);
+}
+
+void IRCProtocol::makeRoomJID(AbstractUser *user, std::string &name) {
+	// #pidgin" -> "#pidgin%irc.freenode.net@irc.spectrum.im"
+	std::transform(name.begin(), name.end(), name.begin(),(int(*)(int)) std::tolower);
+	std::string name_safe = name;
+	std::for_each( name_safe.begin(), name_safe.end(), replaceBadJidCharacters() ); // OK
+	name.assign(name_safe + "%" + JID(user->username()).server() + "@" + Transport::instance()->jid());
+	std::cout << "ROOMJID: " << name << "\n";
 }

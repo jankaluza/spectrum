@@ -66,6 +66,18 @@ void SpectrumMessageHandler::handlePurpleMessage(PurpleAccount* account, char * 
 			m_conversations[getConversationName(conv)] = new SpectrumConversation(conv, SPECTRUM_CONV_GROUPCHAT);
 			m_conversations[getConversationName(conv)]->setKey(getConversationName(conv));
 		}
+		else if (Transport::instance()->getConfiguration().protocol == "xmpp") {
+			std::string jid = purple_conversation_get_name(conv);
+			Transport::instance()->protocol()->makeRoomJID(m_user, jid);
+			if (m_mucs_names.find(jid) != m_mucs_names.end()) {
+				std::string key = jid + "/" + JID(std::string(name)).resource();
+				m_conversations[key] = new SpectrumConversation(conv, SPECTRUM_CONV_GROUPCHAT, jid);
+				m_conversations[key]->setKey(key);
+			}
+			else {
+				addConversation(conv, new SpectrumConversation(conv, SPECTRUM_CONV_CHAT));
+			}
+		}
 		else
 			addConversation(conv, new SpectrumConversation(conv, SPECTRUM_CONV_CHAT));
 #endif
@@ -83,8 +95,10 @@ void SpectrumMessageHandler::addConversation(PurpleConversation *conv, AbstractC
 	}
 }
 
-void SpectrumMessageHandler::removeConversation(const std::string &name) {
+void SpectrumMessageHandler::removeConversation(const std::string &name, bool only_muc) {
 	if (!isOpenedConversation(name))
+		return;
+	if (only_muc && m_conversations[name]->getType() != SPECTRUM_CONV_GROUPCHAT)
 		return;
 	PurpleConversation *conv = m_conversations[name]->getConv();
 	purple_conversation_destroy(conv);
@@ -107,50 +121,53 @@ void SpectrumMessageHandler::handleWriteIM(PurpleConversation *conv, const char 
 	// Don't resend our own messages.
 	if (flags & PURPLE_MESSAGE_SEND || flags & PURPLE_MESSAGE_SYSTEM)
 		return;
-	
-	std::string name = getConversationName(conv);
-	std::cout << "NAME1 " << name << "\n";
-	if (!isOpenedConversation(name)) {
-#ifndef TESTS
-		addConversation(conv, new SpectrumConversation(conv, SPECTRUM_CONV_CHAT));
-#endif
-	}
 
-// 	if (Transport::instance()->getConfiguration().protocol == "irc") {
-// 		char *who_final = g_strdup_printf("%s%%%s", who, JID(m_user->username()).server().c_str());
-// 		m_conversations[name]->handleMessage(m_user, who_final, msg, flags, mtime, m_currentBody);
-// 		g_free(who_final);
-// 	}
-// 	else
-	m_conversations[name]->handleMessage(m_user, who, msg, flags, mtime, m_currentBody);
+	AbstractConversation *s_conv = (AbstractConversation *) conv->ui_data;
+	if (s_conv) {
+		std::string name(who);
+		if (s_conv->getType() == SPECTRUM_CONV_GROUPCHAT) {
+			Transport::instance()->protocol()->makeUsernameRoom(m_user, name);
+		}
+		s_conv->handleMessage(m_user, name.c_str(), msg, flags, mtime, m_currentBody);
+	}
+	else {
+		std::string name = getConversationName(conv);
+		std::cout << "NAME1 " << name << "\n";
+		if (!isOpenedConversation(name)) {
+#ifndef TESTS
+			addConversation(conv, new SpectrumConversation(conv, SPECTRUM_CONV_CHAT));
+#endif
+		}
+		m_conversations[name]->handleMessage(m_user, who, msg, flags, mtime, m_currentBody);
+	}
 }
 
 void SpectrumMessageHandler::handleWriteChat(PurpleConversation *conv, const char *who, const char *msg, PurpleMessageFlags flags, time_t mtime) {
 	if (who == NULL || flags & PURPLE_MESSAGE_SYSTEM)
 		return;
 
-	std::string name = getSpectrumMUCConversation(conv);
-	m_conversations[name]->handleMessage(m_user, who, msg, flags, mtime, m_currentBody);
+	AbstractConversation *s_conv = getSpectrumMUCConversation(conv);
+	s_conv->handleMessage(m_user, who, msg, flags, mtime, m_currentBody);
 }
 
 void SpectrumMessageHandler::purpleChatAddUsers(PurpleConversation *conv, GList *cbuddies, gboolean new_arrivals) {
-	std::string name = getSpectrumMUCConversation(conv);
-	m_conversations[name]->addUsers(m_user, cbuddies);
+	AbstractConversation *s_conv = getSpectrumMUCConversation(conv);
+	s_conv->addUsers(m_user, cbuddies);
 }
 
 void SpectrumMessageHandler::purpleChatTopicChanged(PurpleConversation *conv, const char *who, const char *topic) {
-	std::string name = getSpectrumMUCConversation(conv);
-	m_conversations[name]->changeTopic(m_user, who, topic);
+	AbstractConversation *s_conv = getSpectrumMUCConversation(conv);
+	s_conv->changeTopic(m_user, who, topic);
 }
 
 void SpectrumMessageHandler::purpleChatRenameUser(PurpleConversation *conv, const char *old_name, const char *new_name, const char *new_alias) {
-	std::string name = getSpectrumMUCConversation(conv);
-	m_conversations[name]->renameUser(m_user, old_name, new_name, new_alias);
+	AbstractConversation *s_conv = getSpectrumMUCConversation(conv);
+	s_conv->renameUser(m_user, old_name, new_name, new_alias);
 }
 
 void SpectrumMessageHandler::purpleChatRemoveUsers(PurpleConversation *conv, GList *users) {
-	std::string name = getSpectrumMUCConversation(conv);
-	m_conversations[name]->removeUsers(m_user, users);
+	AbstractConversation *s_conv = getSpectrumMUCConversation(conv);
+	s_conv->removeUsers(m_user, users);
 }
 
 void SpectrumMessageHandler::purpleConversationDestroyed(PurpleConversation *conv) {
@@ -177,14 +194,20 @@ void SpectrumMessageHandler::purpleConversationDestroyed(PurpleConversation *con
 void SpectrumMessageHandler::handleMessage(const Message& msg) {
 	PurpleConversation * conv;
 	
+
+	std::string key = msg.to().full();
 	std::string room = "";
-	std::string k = purpleUsername(msg.to().username());
-// 	std::for_each( k.begin(), k.end(), replaceJidCharacters() );
-	if (m_mucs_names.find(k) != m_mucs_names.end())
-		room = msg.to().username();
+	std::string username = msg.to().full();
+	if (m_mucs_names.find(msg.to().bare()) != m_mucs_names.end()) {
+		room = msg.to().bare();
+		Transport::instance()->protocol()->makePurpleUsernameRoom(m_user, msg.to(), username);
+	}
+	else {
+		Transport::instance()->protocol()->makePurpleUsernameIM(m_user, msg.to(), username);
+	}
 	
-	std::string username = Transport::instance()->protocol()->prepareName(m_user, msg.to());
-	std::cout << "MESSAGE USERNAME " << username << "\n";
+// 	std::string username = Transport::instance()->protocol()->prepareName(m_user, msg.to());
+	std::cout << "MESSAGE USERNAME " << username << " " << key << "\n";
 // 	std::transform(convName.begin(), convName.end(), convName.begin(),(int(*)(int)) std::tolower);
 	
 // 	if (Transport::instance()->getConfiguration().protocol == "irc") {
@@ -195,7 +218,7 @@ void SpectrumMessageHandler::handleMessage(const Message& msg) {
 	
 	Log("SpectrumMessageHandler::handleMessage", "username " << username);
 	// open new conversation or get the opened one
-	if (!isOpenedConversation(username)) {
+	if (!isOpenedConversation(key)) {
 		// if normalized username is empty, it's broken username...
 		std::string normalized(purple_normalize(m_user->account(), username.c_str()));
 		if (normalized.empty()) {
@@ -204,13 +227,13 @@ void SpectrumMessageHandler::handleMessage(const Message& msg) {
 		}
 		conv = purple_conversation_new(PURPLE_CONV_TYPE_IM, m_user->account() , username.c_str());
 #ifndef TESTS
-		addConversation(conv, new SpectrumConversation(conv, SPECTRUM_CONV_CHAT, room), username);
+		addConversation(conv, new SpectrumConversation(conv, SPECTRUM_CONV_CHAT, room), key);
 #endif
-		m_conversations[username]->setResource(msg.from().resource());
+		m_conversations[key]->setResource(msg.from().resource());
 	}
 	else {
-		conv = m_conversations[username]->getConv();
-		m_conversations[username]->setResource(msg.from().resource());
+		conv = m_conversations[key]->getConv();
+		m_conversations[key]->setResource(msg.from().resource());
 	}
 	m_currentBody = msg.body();
 
@@ -323,23 +346,22 @@ std::string SpectrumMessageHandler::getConversationName(PurpleConversation *conv
 		}
 	}
 	else
-		name = Transport::instance()->protocol()->prepareRoomName(m_user, name);
+		Transport::instance()->protocol()->makeRoomJID(m_user, name);
 	return name;
 }
 
-std::string SpectrumMessageHandler::getSpectrumMUCConversation(PurpleConversation *conv) {
-	std::string name = getConversationName(conv);
-
-	if (!isOpenedConversation(name)) {
+AbstractConversation *SpectrumMessageHandler::getSpectrumMUCConversation(PurpleConversation *conv) {
+	AbstractConversation *s_conv = (AbstractConversation *) conv->ui_data;
+	if (s_conv) {
+		return s_conv;
+	}
+	else {
 #ifndef TESTS
-		std::string resource = purple_conversation_get_name(conv);
-		std::transform(resource.begin(), resource.end(), resource.begin(),(int(*)(int)) std::tolower);
-		std::string name_safe = name;
-		std::for_each( name_safe.begin(), name_safe.end(), replaceBadJidCharacters() ); // OK
-		std::string j = name_safe + "@" + Transport::instance()->jid();
-		SpectrumMUCConversation *conversation = new SpectrumMUCConversation(conv, j, m_user->getRoomResource(resource));
-		addConversation(conv, conversation);
+		std::string jid = purple_conversation_get_name(conv);
+		Transport::instance()->protocol()->makeRoomJID(m_user, jid);
+		s_conv = (AbstractConversation *) new SpectrumMUCConversation(conv, jid, m_user->getRoomResource(purple_conversation_get_name(conv)));
+		addConversation(conv, s_conv);
 #endif
 	}
-	return name;
+	return s_conv;
 }

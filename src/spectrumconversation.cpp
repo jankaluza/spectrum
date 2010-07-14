@@ -138,7 +138,7 @@ void SpectrumConversation::handleMessage(AbstractUser *user, const char *who, co
 // 		} else {
 			Message s(Message::Error, to, currentBody);
 			if (!m_room.empty())
-				s.setFrom(m_room + "%" + JID(user->username()).server() + "@" + Transport::instance()->jid() + "/" + name);
+				s.setFrom(m_room + "/" + name);
 			else {
 				std::transform(name.begin(), name.end(), name.begin(),(int(*)(int)) std::tolower);
 				s.setFrom(name + std::string(getType() == SPECTRUM_CONV_CHAT ? "" : ("%" + JID(user->username()).server())) + "@" + Transport::instance()->jid() + "/bot");
@@ -153,7 +153,7 @@ void SpectrumConversation::handleMessage(AbstractUser *user, const char *who, co
 	
 	Message s(Message::Chat, to, message);
 	if (!m_room.empty())
-		s.setFrom(m_room + "@" + Transport::instance()->jid() + "/" + name);
+		s.setFrom(m_room + "/" + name);
 	else {
 		std::transform(name.begin(), name.end(), name.begin(),(int(*)(int)) std::tolower);
 		s.setFrom(name + std::string(getType() == SPECTRUM_CONV_CHAT ? "" : ("%" + JID(user->username()).server())) + "@" + Transport::instance()->jid() + "/bot");

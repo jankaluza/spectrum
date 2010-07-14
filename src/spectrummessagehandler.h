@@ -49,7 +49,7 @@ class SpectrumMessageHandler {
 		void addConversation(PurpleConversation *conv, AbstractConversation *s_conv, const std::string &key = "");
 
 		// Removes and destroyes conversation.
-		void removeConversation(const std::string &name);
+		void removeConversation(const std::string &name, bool only_muc = false);
 
 		// Returns true if the conversation with name exists.
 		bool isOpenedConversation(const std::string &name);
@@ -92,9 +92,11 @@ class SpectrumMessageHandler {
 
 	private:
 		std::string getConversationName(PurpleConversation *conv);
-		std::string getSpectrumMUCConversation(PurpleConversation *conv);
+		AbstractConversation *getSpectrumMUCConversation(PurpleConversation *conv);
 
-		// Contains AbstractConversations. Key is 
+		// Contains AbstractConversations. Key is full JID of legacy network user as received
+		// by Spectrum from XMPP, so for example:
+		// spectrum%conference.spectrum.im@xmpp.spectrum.im/HanzZ
 		std::map <std::string, AbstractConversation *> m_conversations;
 		std::map <std::string, int> m_mucs_names;
 		std::string m_currentBody;

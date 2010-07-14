@@ -70,6 +70,13 @@ class AbstractProtocol
 // 			std::for_each( username.begin(), username.end(), replaceJidCharacters() );
 			return username;
 		}
+		
+		virtual void makeRoomJID(AbstractUser *user, std::string &name) { }
+		virtual void makePurpleUsernameRoom(AbstractUser *user, const JID &jid, std::string &name) { }
+		virtual void makePurpleUsernameIM(AbstractUser *user, const JID &jid, std::string &name) {
+			name.assign(purpleUsername(jid.username()));
+		}
+		virtual void makeUsernameRoom(AbstractUser *user, std::string &name) { }
 
 		/*
 		 * Returns disco features user by transport jid

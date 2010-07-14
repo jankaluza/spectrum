@@ -20,6 +20,7 @@
 
 #include "xmpp.h"
 #include "../main.h"
+#include "transport.h"
 
 XMPPProtocol::XMPPProtocol(GlooxMessageHandler *main){
 	m_main = main;
@@ -99,16 +100,39 @@ bool XMPPProtocol::onPresenceReceived(AbstractUser *user, const Presence &stanza
 	return false;
 }
 
-std::string XMPPProtocol::prepareRoomName(AbstractUser *user, const std::string &room) {
-// 	std::string r = room;
-// 	replace(r, "@", "%", 1);
-	return room;
+void XMPPProtocol::makePurpleUsernameRoom(AbstractUser *user, const JID &to, std::string &name) {
+	std::string username = to.username();
+	// "spectrum%conference.spectrum.im@irc.spectrum.im/HanzZ" -> "spectrum@conference.spectrum.im/HanzZ"
+	if (!to.resource().empty()) {
+		std::for_each( username.begin(), username.end(), replaceJidCharacters() );
+		name.assign(username + "/" + to.resource());
+	}
+	// "spectrum%conference.spectrum.im@irc.spectrum.im" -> "spectrum@conference.spectrum.im"
+	else {
+		std::for_each( username.begin(), username.end(), replaceJidCharacters() );
+		name.assign(username);
+	}
 }
 
-// std::string XMPPProtocol::prepareName(AbstractUser *user, const JID &to) {
-// 	std::string username = to.username();
-// 	return username;
-// }
+void XMPPProtocol::makeRoomJID(AbstractUser *user, std::string &name) {
+	JID j(name);
+	name = j.bare();
+	// spectrum@conference.spectrum.im/something" -> "spectrum%conference.spectrum.im@irc.spectrum.im"
+	std::transform(name.begin(), name.end(), name.begin(),(int(*)(int)) std::tolower);
+	std::string name_safe = name;
+	std::for_each( name_safe.begin(), name_safe.end(), replaceBadJidCharacters() ); // OK
+	name.assign(name_safe + "@" + Transport::instance()->jid());
+// 	if (!j.resource().empty()) {
+// 		name += "/" + j.resource();
+// 	}
+	std::cout << "ROOMJID: " << name << "\n";
+}
+
+void XMPPProtocol::makeUsernameRoom(AbstractUser *user, std::string &name) {
+	// "spectrum@conferece.spectrum.im/HanzZ" -> "HanzZ"
+	name = JID(name).resource();
+}
+
 
 void XMPPProtocol::onPurpleAccountCreated(PurpleAccount *account) {
 	std::string jid(purple_account_get_username(account));

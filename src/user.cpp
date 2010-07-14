@@ -418,9 +418,9 @@ void User::receivedPresence(const Presence &stanza) {
 		return;
 	}
 
-	if (stanza.to().username() != ""  && stanza.presence() == Presence::Unavailable && PROTOCOL()->tempAccountsAllowed()) {
-		std::string k = purpleUsername(stanza.to().username());
-		removeConversation(k);
+	if (stanza.to().username() != ""  && stanza.presence() == Presence::Unavailable) {
+		std::string k = stanza.to().bare();
+		removeConversation(k, true);
 	}
 
 	// this presence is for the transport

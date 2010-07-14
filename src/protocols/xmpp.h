@@ -43,9 +43,10 @@ class XMPPProtocol : AbstractProtocol
 		const std::string userSearchAction() { return "Search for Users..."; }
 		const std::string userSearchColumn() { return "Jabber ID"; }
 		bool onPresenceReceived(AbstractUser *user, const Presence &stanza);
-		std::string prepareRoomName(AbstractUser *user, const std::string &room);
 		void onPurpleAccountCreated(PurpleAccount *account);
-// 		std::string prepareName(AbstractUser *user, const JID &to);
+		void makeRoomJID(AbstractUser *user, std::string &name);
+		void makePurpleUsernameRoom(AbstractUser *user, const JID &jid, std::string &name);
+		void makeUsernameRoom(AbstractUser *user, std::string &name);
 
 	private:
 		GlooxMessageHandler *m_main;
