@@ -24,7 +24,7 @@ class SpectrumConversationTest : public AbstractTest {
 	protected:
 		void handleMessage();
 		void handleMessageDelay();
-		void handleMessageMSNTimeoutError();
+// 		void handleMessageMSNTimeoutError();
 		
 	private:
 		SpectrumConversation *m_conv;

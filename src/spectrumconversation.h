@@ -36,7 +36,9 @@ class SpectrumTimer;
 // Class representing IM Conversation
 class SpectrumConversation : public AbstractConversation {
 	public:
-		SpectrumConversation(PurpleConversation *conv, SpectrumConversationType type, const std::string &roomt = "");
+		// Creates new SpectrumConversation based on 'conv'. Type is SPECTRUM_CONV_GROUPCHAT in case of PM in MUC.
+		// If room is specified and type is SPECTRUM_CONV_GROUPCHAT, messages are sent from room + "/" + who.
+		SpectrumConversation(PurpleConversation *conv, SpectrumConversationType type, const std::string &room = "");
 		virtual ~SpectrumConversation();
 
 		// Handles message which should be resend to XMPP user.
@@ -44,17 +46,13 @@ class SpectrumConversation : public AbstractConversation {
 
 		// Returns pointer to PurpleConversation associated with this conversation.
 		PurpleConversation *getConv() { return m_conv; }
-		
-		bool resendRawMessage();
+
 	private:
 #ifdef TESTS
 	public:
 #endif
 		PurpleConversation *m_conv;		// Conversation associated with this class.
 		std::string m_room;
-		bool m_resendNextRawMessage;
-		SpectrumTimer *m_timer;
-		std::map<std::string, int> m_rawMessages;
 };
 
 #endif

@@ -45,7 +45,7 @@ SpectrumMessageHandler::~SpectrumMessageHandler() {
 	for (std::map<std::string, AbstractConversation *>::iterator i = m_conversations.begin(); i != m_conversations.end(); i++) {
 		AbstractConversation *s_conv = (*i).second;
 		if (s_conv->getType() == SPECTRUM_CONV_GROUPCHAT) {
-			
+			// TODO: send unavailable presences for MUCs here
 		}
 		delete s_conv;
 	}
@@ -53,9 +53,11 @@ SpectrumMessageHandler::~SpectrumMessageHandler() {
 }
 
 bool SpectrumMessageHandler::isOpenedConversation(const std::string &name) {
-	std::map<std::string, AbstractConversation *>::iterator iter = m_conversations.begin();
-	iter = m_conversations.find(name);
-	return iter != m_conversations.end();
+	return m_conversations.find(name) != m_conversations.end();
+}
+
+bool SpectrumMessageHandler::isMUC(const std::string &key) {
+	return m_mucs_names.find(key) != m_mucs_names.end();
 }
 
 void SpectrumMessageHandler::handlePurpleMessage(PurpleAccount* account, char * name, char *msg, PurpleConversation *conv, PurpleMessageFlags flags) {
@@ -86,7 +88,7 @@ void SpectrumMessageHandler::handlePurpleMessage(PurpleAccount* account, char * 
 
 void SpectrumMessageHandler::addConversation(PurpleConversation *conv, AbstractConversation *s_conv, const std::string &key) {
 	std::string k = key.empty() ? getConversationName(conv) : key;
-	Log(m_user->jid()," Adding Conversation; name: " << k);
+	Log(m_user->jid()," Adding Conversation; key: " << k);
 	s_conv->setKey(k);
 	m_conversations[k] = s_conv;
 	if (s_conv->getType() == SPECTRUM_CONV_GROUPCHAT) {
@@ -103,7 +105,7 @@ void SpectrumMessageHandler::removeConversation(const std::string &name, bool on
 	PurpleConversation *conv = m_conversations[name]->getConv();
 	purple_conversation_destroy(conv);
 
-	// conversation should be remove in purpleConversationDestroyed, but just to be sure...
+	// conversation should be removed/destroyed in purpleConversationDestroyed, but just to be sure...
 	if (!isOpenedConversation(name))
 		return;
 	Log("WARNING", "Conversation is not removed after purple_conversation_destroy (removing now): " << name);
@@ -118,27 +120,22 @@ void SpectrumMessageHandler::handleWriteIM(PurpleConversation *conv, const char 
 	if (who == NULL)
 		return;
 
-	// Don't resend our own messages.
+	// Don't forwards our own messages.
 	if (flags & PURPLE_MESSAGE_SEND || flags & PURPLE_MESSAGE_SYSTEM)
 		return;
 
 	AbstractConversation *s_conv = (AbstractConversation *) conv->ui_data;
 	if (s_conv) {
 		std::string name(who);
+		// If it's IM for GROUPCHAT conversation, it has to be PM, so we have to let protocol to generate proper username for us.
+		// This covers situations where who="spectrum@conferece.spectrum.im/HanzZ", but we need name="HanzZ"
 		if (s_conv->getType() == SPECTRUM_CONV_GROUPCHAT) {
 			Transport::instance()->protocol()->makeUsernameRoom(m_user, name);
 		}
 		s_conv->handleMessage(m_user, name.c_str(), msg, flags, mtime, m_currentBody);
 	}
 	else {
-		std::string name = getConversationName(conv);
-		std::cout << "NAME1 " << name << "\n";
-		if (!isOpenedConversation(name)) {
-#ifndef TESTS
-			addConversation(conv, new SpectrumConversation(conv, SPECTRUM_CONV_CHAT));
-#endif
-		}
-		m_conversations[name]->handleMessage(m_user, who, msg, flags, mtime, m_currentBody);
+		Log("WARNING", "handleWriteIM: No AbstractConversation set for given 'conv':" << who);
 	}
 }
 
@@ -188,17 +185,16 @@ void SpectrumMessageHandler::purpleConversationDestroyed(PurpleConversation *con
 	m_conversations.erase(name);
 }
 
-/*
- * Received new message from jabber user.
- */
 void SpectrumMessageHandler::handleMessage(const Message& msg) {
 	PurpleConversation * conv;
-	
 
-	std::string key = msg.to().full();
-	std::string room = "";
+	std::string key = msg.to().full();	// key for m_conversations
 	std::string username = msg.to().full();
-	if (m_mucs_names.find(msg.to().bare()) != m_mucs_names.end()) {
+	std::string room = "";
+	// Translates JID to Purple username
+	// This code covers for example situations where username = "#pidgin%irc.freenode.org@irc.spectrum.im",
+	// but we need username = "#pidgin".
+	if (isMUC(msg.to().bare())) {
 		room = msg.to().bare();
 		Transport::instance()->protocol()->makePurpleUsernameRoom(m_user, msg.to(), username);
 	}
@@ -206,17 +202,7 @@ void SpectrumMessageHandler::handleMessage(const Message& msg) {
 		Transport::instance()->protocol()->makePurpleUsernameIM(m_user, msg.to(), username);
 	}
 	
-// 	std::string username = Transport::instance()->protocol()->prepareName(m_user, msg.to());
-	std::cout << "MESSAGE USERNAME " << username << " " << key << "\n";
-// 	std::transform(convName.begin(), convName.end(), convName.begin(),(int(*)(int)) std::tolower);
-	
-// 	if (Transport::instance()->getConfiguration().protocol == "irc") {
-// 		if (!isOpenedConversation(username)) {
-// 			username += "%" + JID(m_user->username()).server();
-// 		}
-// 	}
-	
-	Log("SpectrumMessageHandler::handleMessage", "username " << username);
+	Log("SpectrumMessageHandler::handleMessage", "username " << username << " key " << key);
 	// open new conversation or get the opened one
 	if (!isOpenedConversation(key)) {
 		// if normalized username is empty, it's broken username...
@@ -237,6 +223,7 @@ void SpectrumMessageHandler::handleMessage(const Message& msg) {
 	}
 	m_currentBody = msg.body();
 
+	// Handles commands (TODO: move me to commands.cpp)
 	if (m_currentBody.find("/") == 0) {
 		bool handled = true;
 		PurpleCmdStatus status;
@@ -285,12 +272,10 @@ void SpectrumMessageHandler::handleMessage(const Message& msg) {
 			return;
 	}
 
-	// send this message
+	// escape and send
 	gchar *_markup = purple_markup_escape_text(m_currentBody.c_str(), -1);
-
 	if (purple_conversation_get_type(conv) == PURPLE_CONV_TYPE_IM) {
-		PurpleConvIm *im = purple_conversation_get_im_data(conv);
-		purple_conv_im_send(im, _markup);
+		purple_conv_im_send(PURPLE_CONV_IM(conv), _markup);
 	}
 	else if (purple_conversation_get_type(conv) == PURPLE_CONV_TYPE_CHAT) {
 		purple_conv_chat_send(PURPLE_CONV_CHAT(conv), _markup);

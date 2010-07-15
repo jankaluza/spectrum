@@ -39,16 +39,17 @@ struct Conversation {
 	std::string resource;
 };
 
-// Handles messages.
+// Handles messages and conversations.
 class SpectrumMessageHandler {
 	public:
 		SpectrumMessageHandler(AbstractUser *user);
 		virtual ~SpectrumMessageHandler();
 
-		// Adds new conversation to database.
+		// Adds new conversation to internal database.
 		void addConversation(PurpleConversation *conv, AbstractConversation *s_conv, const std::string &key = "");
 
-		// Removes and destroyes conversation.
+		// Removes and destroyes conversation. If only_muc is true, only conversations of SPECTRUM_CONV_GROUPCHAT
+		// are removed.
 		void removeConversation(const std::string &name, bool only_muc = false);
 
 		// Returns true if the conversation with name exists.
@@ -57,7 +58,7 @@ class SpectrumMessageHandler {
 		// Removes resource from conversations. New messages will not be sent to this resource anymore.
 		void removeConversationResource(const std::string &resource);
 
-		// Returns true if there is some groupchat conversation opened.
+		// Returns true if there is any groupchat conversation opened.
 		bool hasOpenedMUC();
 
 		// Called by libpurple when new message for non-existing Conversation has been received.
@@ -66,7 +67,7 @@ class SpectrumMessageHandler {
 		// Handles messages from Jabber side.
 		void handleMessage(const Message& msg);
 
-		// Handles chatstate notification from Jabber side.
+		// Handles chatstate notifications from Jabber side.
 		void handleChatState(const std::string &uin, const std::string &chatstate);
 
 		// Called by libpurple when there is new IM message to be written to Conversation.
@@ -75,24 +76,25 @@ class SpectrumMessageHandler {
 		// Called by libpurple when there is new groupchat message to be written to Conversation.
 		void handleWriteChat(PurpleConversation *conv, const char *who, const char *msg, PurpleMessageFlags flags, time_t mtime);
 
-		// Called when buddy in room is renamed.
+		// Called by libpurple when buddy in room is renamed.
 		void purpleChatRenameUser(PurpleConversation *conv, const char *old_name, const char *new_name, const char *new_alias);
 
-		// Called when buddy leaves the room.
+		// Called by libpurple when buddy leaves the room.
 		void purpleChatRemoveUsers(PurpleConversation *conv, GList *users);
 
-		// Called when new buddies comes to room.
+		// Called by libpurple when new buddies comes to room.
 		void purpleChatAddUsers(PurpleConversation *conv, GList *cbuddies, gboolean new_arrivals);
 
-		// Called when topic is changed.
+		// Called by libpurple when topic is changed.
 		void purpleChatTopicChanged(PurpleConversation *conv, const char *who, const char *topic);
 
-		// Called when PurpleConversation is destroyed.
+		// Called by libpurple when PurpleConversation is destroyed.
 		void purpleConversationDestroyed(PurpleConversation *conv);
 
 	private:
 		std::string getConversationName(PurpleConversation *conv);
 		AbstractConversation *getSpectrumMUCConversation(PurpleConversation *conv);
+		bool isMUC(const std::string &key);
 
 		// Contains AbstractConversations. Key is full JID of legacy network user as received
 		// by Spectrum from XMPP, so for example:
