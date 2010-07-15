@@ -121,6 +121,7 @@ class User : public AbstractUser, public SpectrumRosterManager, public SpectrumM
 		std::string m_photoHash;
 		int m_presenceType;
 		std::string m_statusMessage;
+		std::list <Tag *> m_autoConnectRooms;
 };
 
 #endif

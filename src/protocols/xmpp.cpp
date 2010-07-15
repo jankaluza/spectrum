@@ -65,41 +65,6 @@ std::string XMPPProtocol::text(const std::string &key) {
 	return "not defined";
 }
 
-bool XMPPProtocol::onPresenceReceived(AbstractUser *user, const Presence &stanza) {
-	bool isMUC = stanza.findExtension(ExtMUC) != NULL;
-	Tag *stanzaTag = stanza.tag();
-	if (stanza.to().username() != "") {
-		if (user->isConnectedInRoom(stanza.to().username().c_str())) {
-		}
-		else if (isMUC && stanza.presence() != Presence::Unavailable) {
-			if (user->isConnected()) {
-				GHashTable *comps = NULL;
-				std::string name = JID(stanzaTag->findAttribute("to")).username();
-				std::string nickname = JID(stanzaTag->findAttribute("to")).resource();
-
-				PurpleConnection *gc = purple_account_get_connection(user->account());
-				std::string name2;
-				if (PURPLE_PLUGIN_PROTOCOL_INFO(gc->prpl)->chat_info_defaults != NULL) {
-					replace(name, "%", "@");
-					replace(name, "#", "");
-					name2 = name;
-					name += "/" + nickname;
-					comps = PURPLE_PLUGIN_PROTOCOL_INFO(gc->prpl)->chat_info_defaults(gc, name.c_str());
-				}
-				if (comps) {
-					std::cout << "USERNAME: " << name2 << "\n";
-					user->setRoomResource(name2, JID(stanzaTag->findAttribute("from")).resource());
-					serv_join_chat(gc, comps);
-				}
-				
-				
-			}
-		}
-	}
-	delete stanzaTag;
-	return false;
-}
-
 void XMPPProtocol::makePurpleUsernameRoom(AbstractUser *user, const JID &to, std::string &name) {
 	std::string username = to.username();
 	// "spectrum%conference.spectrum.im@irc.spectrum.im/HanzZ" -> "spectrum@conference.spectrum.im/HanzZ"

@@ -148,12 +148,9 @@ void IRCProtocol::onUserCreated(AbstractUser *user) {
 		purple_value_set_string(value, "");
 		g_hash_table_replace(user->settings(), g_strdup("nickserv"), value);
 	}
-	user->setProtocolData(new IRCProtocolData());
 }
 
 void IRCProtocol::onConnected(AbstractUser *user) {
-	IRCProtocolData *data = (IRCProtocolData *) user->protocolData();
-
 	// IRC helper is not loaded, so we have to authenticate by ourself
 	if (m_irchelper == NULL) {
 		const char *n = purple_value_get_string(user->getSetting("nickserv"));
@@ -165,70 +162,8 @@ void IRCProtocol::onConnected(AbstractUser *user) {
 			purple_conversation_destroy(conv);
 		}
 	}
-
-	for (std::list <Tag*>::iterator it = data->autoConnectRooms.begin(); it != data->autoConnectRooms.end() ; it++ ) {
-		Tag *stanza = (*it);
-		GHashTable *comps = NULL;
-		std::string name = JID(stanza->findAttribute("to")).username();
-		std::string nickname = JID(stanza->findAttribute("to")).resource();
-
-		PurpleConnection *gc = purple_account_get_connection(user->account());
-		if (PURPLE_PLUGIN_PROTOCOL_INFO(gc->prpl)->chat_info_defaults != NULL) {
-			if (name.find("%") != std::string::npos)
-				name = name.substr(0, name.find("%"));
-			comps = PURPLE_PLUGIN_PROTOCOL_INFO(gc->prpl)->chat_info_defaults(gc, name.c_str());
-		}
-		if (comps) {
-			user->setRoomResource(name, JID(stanza->findAttribute("from")).resource());
-			serv_join_chat(gc, comps);
-			g_hash_table_destroy(comps);
-		}
-		delete (*it);
-	};
-
-	data->autoConnectRooms.clear();
 }
 
-bool IRCProtocol::onPresenceReceived(AbstractUser *user, const Presence &stanza) {
-	bool isMUC = stanza.findExtension(ExtMUC) != NULL;
-	Tag *stanzaTag = stanza.tag();
-	if (stanza.to().username() != "") {
-		IRCProtocolData *data = (IRCProtocolData *) user->protocolData();
-		if (user->isConnectedInRoom(stanza.to().username().c_str())) {
-		}
-		else if (isMUC && stanza.presence() != Presence::Unavailable) {
-			if (user->isConnected()) {
-				GHashTable *comps = NULL;
-				std::string name = JID(stanzaTag->findAttribute("to")).username();
-				std::string nickname = JID(stanzaTag->findAttribute("to")).resource();
-
-				PurpleConnection *gc = purple_account_get_connection(user->account());
-				if (PURPLE_PLUGIN_PROTOCOL_INFO(gc->prpl)->chat_info_defaults != NULL) {
-					if (name.find("%") != std::string::npos)
-						name = name.substr(0, name.find("%"));
-					comps = PURPLE_PLUGIN_PROTOCOL_INFO(gc->prpl)->chat_info_defaults(gc, name.c_str());
-				}
-				if (comps) {
-					user->setRoomResource(name, JID(stanzaTag->findAttribute("from")).resource());
-					serv_join_chat(gc, comps);
-				}
-				
-				
-			}
-			else {
-				data->autoConnectRooms.push_back(stanza.tag());
-			}
-		}
-	}
-	delete stanzaTag;
-	return false;
-}
-
-
-void IRCProtocol::onDestroy(AbstractUser *user) {
-	IRCProtocolData *data = (IRCProtocolData *) user->protocolData();
-	delete data;
-}
 
 void IRCProtocol::onPurpleAccountCreated(PurpleAccount *account) {
 	User *user = (User *) account->ui_data;
@@ -237,31 +172,6 @@ void IRCProtocol::onPurpleAccountCreated(PurpleAccount *account) {
 		purple_account_set_string(account, IRCHELPER_ID "_nickpassword", n);
 	}
 }
-/*
-std::string IRCProtocol::prepareRoomName(AbstractUser *user, const std::string &room) {
-	std::string name(room);
-	if (name.find("%") == std::string::npos) {
-		std::transform(name.begin(), name.end(), name.begin(),(int(*)(int)) std::tolower);
-		name = name + "@" + JID(user->username()).server();
-	}
-	return name;
-}*/
-
-// std::string IRCProtocol::prepareName(AbstractUser *user, const JID &to) {
-// 	std::string username = to.username();
-// 	// "#pidgin%irc.freenode.org/HanzZ"
-// 	if (!to.resource().empty() && to.resource() != "bot") {
-// 		username = to.resource();
-// 	}
-// 	// "hanzz%irc.freenode.org/bot"
-// 	else if (to.resource() == "bot") {
-// 		size_t pos = username.find("%");
-// 		if (pos != std::string::npos)
-// 			username.erase((int) pos, username.length() - (int) pos);
-// 	}
-// 	std::for_each( username.begin(), username.end(), replaceJidCharacters() );
-// 	return username;
-// }
 
 void IRCProtocol::makePurpleUsernameRoom(AbstractUser *user, const JID &to, std::string &name) {
 	std::string username = to.username();

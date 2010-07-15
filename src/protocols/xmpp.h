@@ -42,7 +42,6 @@ class XMPPProtocol : AbstractProtocol
 		bool isMUC(AbstractUser *user, const std::string &jid) { return jid.find("#") == 0; }
 		const std::string userSearchAction() { return "Search for Users..."; }
 		const std::string userSearchColumn() { return "Jabber ID"; }
-		bool onPresenceReceived(AbstractUser *user, const Presence &stanza);
 		void onPurpleAccountCreated(PurpleAccount *account);
 		void makeRoomJID(AbstractUser *user, std::string &name);
 		void makePurpleUsernameRoom(AbstractUser *user, const JID &jid, std::string &name);

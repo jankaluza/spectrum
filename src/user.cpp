@@ -383,6 +383,31 @@ void User::connected() {
 	m_connected = true;
 	m_reconnectCount = 0;
 	p->protocol()->onConnected(this);
+
+
+	std::cout << "CONNECTED\n";
+	for (std::list <Tag*>::iterator it = m_autoConnectRooms.begin(); it != m_autoConnectRooms.end() ; it++ ) {
+		Tag *stanza = (*it);
+		GHashTable *comps = NULL;
+		std::string name = "";
+		std::string nickname = JID(stanza->findAttribute("to")).resource();
+
+		PurpleConnection *gc = purple_account_get_connection(m_account);
+		if (PURPLE_PLUGIN_PROTOCOL_INFO(gc->prpl)->chat_info_defaults != NULL) {
+			Transport::instance()->protocol()->makePurpleUsernameRoom(this, JID(stanza->findAttribute("to")).bare(), name);
+			comps = PURPLE_PLUGIN_PROTOCOL_INFO(gc->prpl)->chat_info_defaults(gc, name.c_str());
+		}
+		std::cout << name << " JOINING\n";
+		if (comps) {
+			setRoomResource(name, JID(stanza->findAttribute("from")).resource());
+			serv_join_chat(gc, comps);
+			g_hash_table_destroy(comps);
+		}
+		delete (*it);
+	};
+
+	m_autoConnectRooms.clear();
+	
 }
 
 /*
@@ -413,9 +438,30 @@ void User::receivedPresence(const Presence &stanza) {
 	
 	handlePresence(stanza);
 
-	if (p->protocol()->onPresenceReceived(this, stanza)) {
-		delete stanzaTag;
-		return;
+
+	// Handle join-the-room presence
+	bool isMUC = stanza.findExtension(ExtMUC) != NULL;
+	if (isMUC && stanza.to().username() != "" && !isOpenedConversation(stanza.to().bare())) {
+		if (stanza.presence() != Presence::Unavailable) {
+			if (m_connected) {
+				GHashTable *comps = NULL;
+				std::string name = "";
+				std::string nickname = stanza.to().resource();
+
+				PurpleConnection *gc = purple_account_get_connection(m_account);
+				if (PURPLE_PLUGIN_PROTOCOL_INFO(gc->prpl)->chat_info_defaults != NULL) {
+					Transport::instance()->protocol()->makePurpleUsernameRoom(this, stanza.to().bare(), name);
+					comps = PURPLE_PLUGIN_PROTOCOL_INFO(gc->prpl)->chat_info_defaults(gc, name.c_str());
+				}
+				if (comps) {
+					setRoomResource(name, stanza.from().resource());
+					serv_join_chat(gc, comps);
+				}
+			}
+			else {
+				m_autoConnectRooms.push_back(stanza.tag());
+			}
+		}
 	}
 
 	if (stanza.to().username() != ""  && stanza.presence() == Presence::Unavailable) {
