@@ -338,7 +338,7 @@ class spectrum:
 		if process.returncode == 1:
 			raise RuntimeError( "db_version table does not exist", 1)
 		elif process.returncode == 2: 
-			raise RuntimeError( "database not up to date, update with spectrumctl upgrade-db"%(self.config_path), 1 )
+			raise RuntimeError( "database not up to date, update with spectrumctl upgrade-db", 1 )
 		elif process.returncode == 3:
 			raise RuntimeError( "Error connecting to the database", 1 )
 
