@@ -63,6 +63,7 @@
 #include "protocols/aim.h"
 #include "protocols/facebook.h"
 #include "protocols/gg.h"
+#include "protocols/hon.h"
 #include "protocols/icq.h"
 #include "protocols/irc.h"
 #include "protocols/msn.h"
@@ -1088,6 +1089,8 @@ bool GlooxMessageHandler::loadProtocol(){
 		m_protocol = (AbstractProtocol*) new SimpleProtocol(this);
 	else if (configuration().protocol == "xmpp")
 		m_protocol = (AbstractProtocol*) new XMPPProtocol(this);
+	else if (configuration().protocol == "hon")
+		m_protocol = (AbstractProtocol*) new HoNProtocol(this);
 	else if (configuration().protocol == "yahoo")
 		m_protocol = (AbstractProtocol*) new YahooProtocol(this);
 	else if (configuration().protocol == "sipe")
