@@ -8,6 +8,9 @@ try:
 except ImportError:
 	import spectrum
 
+class NotRunningError( Exception ):
+	pass
+
 class spectrum_group:
 	"""
 	An object of this class represents one or more spectrum instances. The
@@ -104,6 +107,24 @@ class spectrum_group:
 
 		return ret
 
+	def _single_action( self, instance, action, args=[] ):
+		if not instance.enabled():
+			return
+
+		print( instance.get_jid() + '...' ),
+		if not instance.running():
+			print( "Not running" )
+			return
+
+		# exceptions should be handled by the caller!
+		try:
+			retVal = getattr( instance, action )( *args )
+			print( 'ok.' )
+			return retVal
+		except RuntimeError, e:
+			print( e.message )
+				
+
 	def start( self ):
 		"""
 		Start all instances. This method honours the I{enabled} variable
@@ -160,15 +181,22 @@ class spectrum_group:
 		"""
 		output = []
 		for instance in self.instances:
-			iq = instance.get_stats()
-			o = [ instance.get_jid() + ':' ]
-			for stat in iq.getQueryChildren():
-				value = stat.getAttr( 'value' )
-				unit = stat.getAttr( 'units' )
-				name = stat.getAttr( 'name' )
-				o.append( name + ': ' + value + ' ' + unit )
-			output.append( "\n".join( o ) )
-		print( "\n\n".join( output ) )
+			if not instance.running():
+				continue
+			
+			try:
+				iq = instance.get_stats()
+				o = [ instance.get_jid() + ':' ]
+				for stat in iq.getQueryChildren():
+					value = stat.getAttr( 'value' )
+					unit = stat.getAttr( 'units' )
+					name = stat.getAttr( 'name' )
+					o.append( name + ': ' + value + ' ' + unit )
+				output.append( "\n".join( o ) )
+			except RuntimeError, e:
+				print( "%s: %s"%(instance.get_jid(), e.message) )
+		if output:
+			print( "\n\n".join( output ) )
 		return 0
 	
 	def upgrade_db( self ):
@@ -212,12 +240,7 @@ class spectrum_group:
 
 		print( "Messaging all users:" )
 		for instance in self.instances:
-			print( instance.get_jid() + '...' ),
-			try:
-				instance.message_all( message )
-				print( "ok." )
-			except RuntimeError, e:
-				print( "Error: " + e.message )
+			self._single_action( instance, 'message_all', [ message ] )
 				
 		return
 
@@ -270,9 +293,8 @@ class spectrum_group:
 		status = "0" # we don't ask for VIP status
  
 		for instance in self.instances:
-			print( instance.get_jid() + '...' ),
-			answer = instance.register( jid, username, password, language, encoding, status)
-			print( answer )
+			args = [ jid, username, password, language, encoding, status ]
+			self.single_action( instance, 'register', args )
 
 	def unregister( self, jid ):
 		"""
@@ -285,12 +307,7 @@ class spectrum_group:
 		"""
 		print( "Unregistering user %s" %(jid) )
 		for instance in self.instances:
-			print( instance.get_jid() + '...' ),
-			try:
-				instance.unregister( jid )
-				print( "ok." )
-			except RuntimeError, e:
-				print( "Error: " + e.message )
+			self._single_action( instance, 'unregister', [ jid ] )
 
 	def set_vip_status( self, jid, state ):
 		"""
@@ -315,13 +332,7 @@ class spectrum_group:
 		print( status_string%(jid) )
 
 		for instance in self.instances:
-			print( instance.get_jid() + '...' ),
-			try:
-				instance.set_vip_status( jid, state )
-				print( "ok." )
-			except RuntimeError, e:
-				print( "Error: " + e.message )
-
+			self._single_action( instance, 'set_vip_status', [jid,state] )
 
 	def list( self ):
 		"""
