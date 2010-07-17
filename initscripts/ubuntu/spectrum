@@ -31,11 +31,13 @@ check_user() {
 
 . /lib/lsb/init-functions
 
-start() {
-	if [ "$SPECTRUM_DEBUG" = "yes" ]; then
-		ctl_args="--debug"
-	fi
+ctl_args="-q"
+if [ "$SPECTRUM_DEBUG" = "yes" ]; then
+	ctl_args="$ctl_args --debug"
+fi
 
+
+start() {
 	for i in $SPECTRUM_CONFIG_DIR/*.cfg ; do
 		CONF=`basename $i`
 		log_daemon_msg "Starting spectrum instance:" "$CONF"
@@ -51,7 +53,7 @@ stop() {
 	for i in $SPECTRUM_CONFIG_DIR/*.cfg ; do
 		CONF=`basename $i`
 		log_daemon_msg "Stopping spectrum instance:" "$CONF"
-		spectrumctl -q -c $i stop
+		spectrumctl $ctl_args -c $i stop
 		log_end_msg $?
 	done
 }
@@ -60,7 +62,7 @@ reload() {
 	for i in $SPECTRUM_CONFIG_DIR/*.cfg ; do
 		CONF=`basename $i`
 		log_daemon_msg "Reloading spectrum instance:" "$CONF"
-		spectrumctl -q -c $i reload
+		spectrumctl $ctl_args -c $i reload
 		log_end_msg $?
 	done
 }
