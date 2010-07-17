@@ -67,6 +67,9 @@ class spectrum_group:
 				continue
 
 			instance = spectrum( path )
+			if not instance.enabled():
+				continue
+
 			if jid and instance.get_jid() == jid:
 				# only load the specified JID
 				self.instances.append( instance )
