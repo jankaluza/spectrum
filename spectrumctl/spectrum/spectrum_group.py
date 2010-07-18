@@ -3,10 +3,7 @@ This class represents multiple spectrum instances, see L{spectrum_group}.
 """
 import os, sys, socket
 
-try:
-	from spectrum import spectrum
-except ImportError:
-	import spectrum
+from spectrum import spectrum
 
 class NotRunningError( Exception ):
 	pass

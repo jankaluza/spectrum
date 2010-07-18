@@ -19,15 +19,9 @@
 Represents a single spectrum instance, see L{spectrum.spectrum}.
 """
 
-
 import os, sys, pwd, stat, time, signal, subprocess, resource
-import env
-try:
-	from spectrum import spectrumconfigparser, ExistsError, config_interface
-except ImportError:
-	import spectrumconfigparser, ExistsError, config_interface
-
-ExistsError = ExistsError.ExistsError
+import spectrumconfigparser, config_interface, env
+from ExistsError import ExistsError
 
 class spectrum:
 	"""
