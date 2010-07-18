@@ -20,7 +20,10 @@ def drop_privs( uid, gid ):
 def get_uid():
 	# if we explicitly name something on the CLI, we use that:
 	if options and options.su:
-		return pwd.getpwnam( options.su ).pw_uid
+		try:
+			return pwd.getpwnam( options.su ).pw_uid
+		except KeyError:
+			raise RuntimeError( options.su, "Username does not exist" )
 
 	try:
 		# if we have env-variable set, we use that:
