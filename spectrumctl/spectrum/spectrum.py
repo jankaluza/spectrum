@@ -47,7 +47,7 @@ class spectrum:
 		
 		self.config = spectrumconfigparser.SpectrumConfigParser()
 		self.config.read( config_path )
-		self.pid_file = self.config.get( 'service', 'pid_file' )
+		self.pid_file = self.config.get( 'service', 'pid_file' ).lower()
 
 	def get_binary( self ):
 		"""
@@ -70,7 +70,7 @@ class spectrum:
 		@return: The JID of this instance
 		@rtype: str
 		"""
-		return self.config.get( 'service', 'jid' )
+		return self.config.get( 'service', 'jid' ).lower()
 
 	def enabled( self ):
 		"""
