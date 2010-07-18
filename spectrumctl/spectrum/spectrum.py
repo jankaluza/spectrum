@@ -82,6 +82,18 @@ class spectrum:
 		"""
 		return self.config.getboolean( 'service', 'enable' )
 
+	def running( self ):
+		"""
+		Shortcut for L{status}, returns True if the instance is running,
+		False otherwise.
+
+		@rtype: boolean
+		"""
+		if self.status() == 0:
+			return True
+		else:
+			return False
+
 	def get_pid( self ):
 		"""
 		Get the pid of the instance as noted in the pid file. 
@@ -588,4 +600,4 @@ class spectrum:
 		try:
 			return interface.query( nodes, ns )
 		except RuntimeError, e:
-			raise RuntimeError( "%s: %s"%(self.get_jid(), e.message ) )
+			raise RuntimeError( "%s"%(e.message ) )
