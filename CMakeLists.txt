@@ -21,8 +21,11 @@ set(libpoco_DIR "${CMAKE_SOURCE_DIR}/cmake_modules")
 find_package(libpoco REQUIRED)
 set(cppunit_DIR "${CMAKE_SOURCE_DIR}/cmake_modules")
 find_package(cppunit)
+
+# correctly find the python interpreter
+include(FindPythonInterp)
  
-execute_process ( COMMAND python -c "from distutils.sysconfig import get_python_lib; print get_python_lib()" OUTPUT_VARIABLE PYTHON_SITE_PACKAGES OUTPUT_STRIP_TRAILING_WHITESPACE)
+execute_process ( COMMAND ${PYTHON_EXECUTABLE} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()" OUTPUT_VARIABLE PYTHON_SITE_PACKAGES OUTPUT_STRIP_TRAILING_WHITESPACE)
 message(STATUS "Python site-packages directory: " ${PYTHON_SITE_PACKAGES})
 
 include_directories(${GLOOX_INCLUDE_DIR})
@@ -364,7 +367,7 @@ ELSE(NOT GETTEXT_MSGFMT_EXECUTABLE)
  
 ENDIF(NOT GETTEXT_MSGFMT_EXECUTABLE)
 
-ADD_CUSTOM_TARGET (man ALL python ${CMAKE_CURRENT_SOURCE_DIR}/spectrumctl/make_man_page.py > ${CMAKE_CURRENT_SOURCE_DIR}/man/spectrumctl.8)
+ADD_CUSTOM_TARGET (man ALL ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/spectrumctl/make_man_page.py > ${CMAKE_CURRENT_SOURCE_DIR}/man/spectrumctl.8)
 
 
 INSTALL(TARGETS spectrum
