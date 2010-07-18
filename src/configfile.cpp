@@ -205,10 +205,13 @@ bool ConfigFile::loadHostPort(std::string &host, int &port, const std::string &s
 	}
 	loadString(str, section, key);
 	
-	if (str.find_last_of(':') == std::string::npos)
+	if (str.find_first_of(':') == std::string::npos)
 		port = 0;
-	else
-		port = atoi(str.substr(str.find_last_of(':') + 1, str.size()).c_str());
+	else {
+		std::string p = str.substr(str.find_first_of(':') + 1, str.size()).c_str();
+		replace(p, "$filename:port", stringOf(m_port).c_str());
+		port = atoi(p.c_str());
+	}
 	host = str.substr(0, str.find_last_of(':'));
 	return true;
 }
