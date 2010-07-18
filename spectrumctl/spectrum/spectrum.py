@@ -70,7 +70,7 @@ class spectrum:
 		@return: The JID of this instance
 		@rtype: str
 		"""
-		return self.config.get( 'service', 'jid' ).lower()
+		return self.config.get( 'service', 'jid' )
 
 	def enabled( self ):
 		"""
