@@ -24,8 +24,8 @@
 
 SpectrumNodeHandler::SpectrumNodeHandler() {
 	m_features = Transport::instance()->protocol()->buddyFeatures();
-	// These features are added there by gloox, so we have to remove them to don't have 
-	// duplicities there.
+	// These features are added by gloox automatically, so we have to remove them to don't have 
+	// duplicities.
 	m_features.remove("http://jabber.org/protocol/disco#items");
 	m_features.remove("http://jabber.org/protocol/disco#info");
 }
@@ -40,7 +40,7 @@ StringList SpectrumNodeHandler::handleDiscoNodeFeatures (const JID &from, const 
 
 Disco::IdentityList SpectrumNodeHandler::handleDiscoNodeIdentities (const JID &from, const std::string &node) {
 	Disco::IdentityList l;
-	l.push_back( new Disco::Identity("gateway", Transport::instance()->protocol()->gatewayIdentity(), "Spectrum") );
+	l.push_back( new Disco::Identity("client", "pc", "Spectrum") );
 	return l;
 }
 
