@@ -319,7 +319,9 @@ static void * requestInput(const char *title, const char *primary,const char *se
 	User *user = (User *) GlooxMessageHandler::instance()->userManager()->getUserByAccount(account);
 	if (!user) {
 		Log("requestInput", "WARNING: purple_request_input not handled. No user for account =" << purple_account_get_username(account));
-		return NULL;
+		AbstractPurpleRequest *handle = new AbstractPurpleRequest;
+		handle->setRequestType((AdhocDataCallerType) CALLER_DUMMY);
+		return handle;
 	}
 
 	if (primary) {
@@ -346,11 +348,16 @@ static void * requestInput(const char *title, const char *primary,const char *se
 		}
 		// emit protocol signal
 		bool handled = GlooxMessageHandler::instance()->protocol()->onPurpleRequestInput(user, title, primary, secondary, default_value, multiline, masked, hint, ok_text, ok_cb, cancel_text, cancel_cb, account, who, conv, user_data);
-		if (handled)
-			return NULL;
+		if (handled) {
+			AbstractPurpleRequest *handle = new AbstractPurpleRequest;
+			handle->setRequestType((AdhocDataCallerType) CALLER_DUMMY);
+			return handle;
+		}
 	}
 	Log(user->jid(), "WARNING: purple_request_input not handled. primary == NULL, title ==" << t << ", secondary ==" << s);
-	return NULL;
+	AbstractPurpleRequest *handle = new AbstractPurpleRequest;
+	handle->setRequestType((AdhocDataCallerType) CALLER_DUMMY);
+	return handle;
 }
 
 static void * notifySearchResults(PurpleConnection *gc, const char *title, const char *primary, const char *secondary, PurpleNotifySearchResults *results, gpointer user_data) {
@@ -364,7 +371,9 @@ static void * notifySearchResults(PurpleConnection *gc, const char *title, const
 			user->setAdhocData(data);
 		}
 	}
-	return NULL;
+	AbstractPurpleRequest *handle = new AbstractPurpleRequest;
+	handle->setRequestType((AdhocDataCallerType) CALLER_DUMMY);
+	return handle;
 }
 
 static void *requestFields(const char *title, const char *primary, const char *secondary, PurpleRequestFields *fields, const char *ok_text, GCallback ok_cb, const char *cancel_text, GCallback cancel_cb, PurpleAccount *account, const char *who, PurpleConversation *conv, void *user_data) {
@@ -384,8 +393,13 @@ static void *requestFields(const char *title, const char *primary, const char *s
 			return repeater;
 		}
 	}
-
-	return NULL;
+	std::string t(title ? title : "NULL");
+	std::string p(primary ? primary : "NULL");
+	std::string s(secondary ? secondary : "NULL");
+	Log("requestFields", "WARNING:requestFields not handled. " << (user ? user->jid() : "NULL") << " " << t << " " << p << " " << s);
+	AbstractPurpleRequest *handle = new AbstractPurpleRequest;
+	handle->setRequestType((AdhocDataCallerType) CALLER_DUMMY);
+	return handle;
 }
 
 static void * requestAction(const char *title, const char *primary,const char *secondary, int default_action,PurpleAccount *account, const char *who,PurpleConversation *conv, void *user_data,size_t action_count, va_list actions){
