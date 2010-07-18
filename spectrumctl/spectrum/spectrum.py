@@ -20,7 +20,7 @@ Represents a single spectrum instance, see L{spectrum.spectrum}.
 """
 
 
-import os, pwd, stat, time, signal, subprocess, resource
+import os, sys, pwd, stat, time, signal, subprocess, resource
 import env
 try:
 	from spectrum import spectrumconfigparser, ExistsError, config_interface
@@ -336,42 +336,72 @@ class spectrum:
 		except RuntimeError, e:
 			raise RuntimeError( "%s: %s" % e.args, 1 )
 
-		# drop privileges:
-		env.drop_privs( env.get_uid(), env.get_gid() )
+		# fork and drop privileges:
+		r, w = os.pipe()
+		pid = os.fork()
+		if pid:
+			# we are the parent!
+			os.close( w )
+			r = os.fdopen( r )
+			output = r.read()
+			pid, status = os.waitpid( pid, 0 )
+			print( status )
+			if status != 0:
+				raise RuntimeError( output, status )
+			r.close()
+			return
+		else:
+			try:
+				# we are the child
+				exit_code = 0 
+				os.close( r )
+				w = os.fdopen( w, 'w' )
+				env.drop_privs( env.get_uid(), env.get_gid() )
 
-		# get the absolute path of the config file, so we can change to
-		# spectrums homedir
-		path = os.path.abspath( self.config_path )
-		home = pwd.getpwuid( os.getuid() )[5]
-		os.chdir( home )
+				# get the absolute path of the config file, so we can change to
+				# spectrums homedir
+				path = os.path.abspath( self.config_path )
+				home = pwd.getpwuid( os.getuid() )[5]
+				os.chdir( home )
 
-		# check if database is at current version:
-		check_cmd = [ self.get_binary(), '--check-db-version', path ]
-		process = subprocess.Popen( check_cmd, stdout=subprocess.PIPE )
-		process.communicate()
-		if process.returncode == 1:
-			raise RuntimeError( "db_version table does not exist", 1)
-		elif process.returncode == 2: 
-			raise RuntimeError( "database not up to date, update with spectrumctl upgrade-db", 1 )
-		elif process.returncode == 3:
-			raise RuntimeError( "Error connecting to the database", 1 )
+				# check if database is at current version:
+				check_cmd = [ self.get_binary(), '--check-db-version', path ]
+				process = subprocess.Popen( check_cmd, stdout=subprocess.PIPE )
+				process.communicate()
+				exit_code = process.returncode
+				if exit_code == 1:
+					w.write( "db_version table does not exist" )
+					return
+				elif exit_code == 2: 
+					w.write( "database not up to date, update with spectrumctl upgrade-db" )
+					return
+				elif exit_code == 3:
+					w.write( "Error connecting to the database" )
+					return
 
-		# finally start spectrum:
-		cmd = [ self.get_binary() ]
-		if no_daemon:
-			cmd.append( '-n' )
-		if debug:
-			os.environ['MALLOC_PERTURB_'] = '254'
-			os.environ['PURPLE_VERBOSE_DEBUG'] = '1'
-			os.environ['MALLOC_CHECK_'] = '2'
-			resource.setrlimit( resource.RLIMIT_CORE, (-1,-1) )
+				# finally start spectrum:
+				cmd = [ self.get_binary() ]
+				if no_daemon:
+					cmd.append( '-n' )
+				if debug:
+					os.environ['MALLOC_PERTURB_'] = '254'
+					os.environ['PURPLE_VERBOSE_DEBUG'] = '1'
+					os.environ['MALLOC_CHECK_'] = '2'
+					resource.setrlimit( resource.RLIMIT_CORE, (-1,-1) )
 
-		cmd.append( path )
-		retVal = subprocess.call( cmd )
-		if retVal != 0:
-			raise RuntimeError( "Could not start spectrum instance", retVal )
-
-		return
+				cmd.append( path )
+				exit_code = subprocess.call( cmd )
+				if exit_code != 0:
+					w.write( "spectrum exited with non-zero exit-status: %s"%(retVal) )
+			except OSError, e:
+				w.write( '%s (errno: %s)'%( e.strerror, e.errno ) )
+				exit_code = 99
+			except Exception, e:
+				w.write( '%s: %s'%(type(e), e.message) )
+				exit_code = 99
+			finally:
+				w.close()
+				os._exit( exit_code )
 
 	def stop( self, debug=False ):
 		"""
