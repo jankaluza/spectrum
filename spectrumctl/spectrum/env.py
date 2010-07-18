@@ -8,6 +8,15 @@ except ImportError:
 ExistsError = ExistsError.ExistsError
 options = None
 
+def drop_privs( uid, gid ):
+	"""
+	Set the process real and effictive userid
+	"""
+	os.setgid( gid )
+	os.setuid( uid )
+	os.setegid( gid )
+	os.seteuid( uid )
+
 def get_uid():
 	# if we explicitly name something on the CLI, we use that:
 	if options and options.su:

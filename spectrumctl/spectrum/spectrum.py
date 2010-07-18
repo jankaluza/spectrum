@@ -20,7 +20,7 @@ Represents a single spectrum instance, see L{spectrum.spectrum}.
 """
 
 
-import os, pwd, stat, time, signal, subprocess
+import os, pwd, stat, time, signal, subprocess, resource
 import env
 try:
 	from spectrum import spectrumconfigparser, ExistsError, config_interface
@@ -336,15 +336,17 @@ class spectrum:
 		except RuntimeError, e:
 			raise RuntimeError( "%s: %s" % e.args, 1 )
 
+		# drop privileges:
+		env.drop_privs( env.get_uid(), env.get_gid() )
+
 		# get the absolute path of the config file, so we can change to
 		# spectrums homedir
 		path = os.path.abspath( self.config_path )
-		home = pwd.getpwuid( env.get_uid() )[5]
+		home = pwd.getpwuid( os.getuid() )[5]
 		os.chdir( home )
 
 		# check if database is at current version:
 		check_cmd = [ self.get_binary(), '--check-db-version', path ]
-		check_cmd = env.su_cmd( check_cmd )
 		process = subprocess.Popen( check_cmd, stdout=subprocess.PIPE )
 		process.communicate()
 		if process.returncode == 1:
@@ -362,9 +364,9 @@ class spectrum:
 			os.environ['MALLOC_PERTURB_'] = '254'
 			os.environ['PURPLE_VERBOSE_DEBUG'] = '1'
 			os.environ['MALLOC_CHECK_'] = '2'
-			cmd[0] = 'ulimit -c unlimited; ' + cmd[0]
+			resource.setrlimit( resource.RLIMIT_CORE, (-1,-1) )
+
 		cmd.append( path )
-		cmd = env.su_cmd( cmd )
 		retVal = subprocess.call( cmd )
 		if retVal != 0:
 			raise RuntimeError( "Could not start spectrum instance", retVal )
@@ -483,8 +485,10 @@ class spectrum:
 		"""
 		path = os.path.abspath( self.config_path )
 
+		# drop privileges:
+		env.drop_privs( env.get_uid(), env.get_gid() )
+
 		check_cmd = [ self.get_binary(), '--check-db-version', path ]
-		check_cmd = env.su_cmd( check_cmd )
 		process = subprocess.Popen( check_cmd, stdout=subprocess.PIPE )
 		process.communicate()
 
