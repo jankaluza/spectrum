@@ -83,7 +83,7 @@ extern Localization localization;
 extern LogClass Log_;
 
 class CapabilityHandler;
-class GlooxDiscoInfoHandler;
+class SpectrumDiscoHandler;
 class GlooxRegisterHandler;
 class GlooxXPingHandler;
 class GlooxStatsHandler;
@@ -215,8 +215,8 @@ private:
 	SQLClass *m_sql;							// storage class
 	AccountCollector *m_collector;
 
-	CapabilityHandler *m_discoHandler;			// disco stanza handler
-	GlooxDiscoInfoHandler *m_discoInfoHandler;	// disco#info handler
+	CapabilityHandler *m_capabilityHandler;
+	SpectrumDiscoHandler *m_discoHandler;		// disco#info handler
  	GlooxRegisterHandler *m_reg;				// jabber:iq:register handler
 	GlooxStatsHandler *m_stats;					// Statistic Gathering handler (xep-0039)
 	GlooxVCardHandler *m_vcard;					// VCard handler

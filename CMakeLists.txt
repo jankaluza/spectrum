@@ -99,6 +99,7 @@ set(spectrum_SRCS
 	src/spectrum_util.cpp
 	src/spectrumbuddy.cpp
 	src/spectrumconversation.cpp
+	src/spectrumdiscohandler.cpp
 	src/spectrummucconversation.cpp
 	src/spectrumnodehandler.cpp
 	src/spectrumtimer.cpp
@@ -166,6 +167,7 @@ set(spectrum_MOC_HDRS
 	src/searchrepeater.h
 	src/spectrum_util.h
 	src/spectrumbuddy.h
+	src/spectrumdiscohandler.h
 	src/spectrumtimer.h
 	src/statshandler.h
 	src/sql.h
