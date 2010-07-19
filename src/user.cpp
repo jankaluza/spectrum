@@ -393,8 +393,13 @@ void User::connected() {
 		std::string nickname = JID(stanza->findAttribute("to")).resource();
 
 		PurpleConnection *gc = purple_account_get_connection(m_account);
-		if (PURPLE_PLUGIN_PROTOCOL_INFO(gc->prpl)->chat_info_defaults != NULL) {
-			Transport::instance()->protocol()->makePurpleUsernameRoom(this, JID(stanza->findAttribute("to")).bare(), name);
+
+		Transport::instance()->protocol()->makePurpleUsernameRoom(this, JID(stanza->findAttribute("to")).bare(), name);
+		PurpleChat *chat = Transport::instance()->protocol()->getPurpleChat(this, name);
+		if (chat) {
+			comps = purple_chat_get_components(chat);
+		}
+		else if (PURPLE_PLUGIN_PROTOCOL_INFO(gc->prpl)->chat_info_defaults != NULL) {
 			comps = PURPLE_PLUGIN_PROTOCOL_INFO(gc->prpl)->chat_info_defaults(gc, name.c_str());
 		}
 		std::cout << name << " JOINING\n";
@@ -449,8 +454,12 @@ void User::receivedPresence(const Presence &stanza) {
 				std::string nickname = stanza.to().resource();
 
 				PurpleConnection *gc = purple_account_get_connection(m_account);
-				if (PURPLE_PLUGIN_PROTOCOL_INFO(gc->prpl)->chat_info_defaults != NULL) {
-					Transport::instance()->protocol()->makePurpleUsernameRoom(this, stanza.to().bare(), name);
+				Transport::instance()->protocol()->makePurpleUsernameRoom(this, stanza.to().bare(), name);
+				PurpleChat *chat = Transport::instance()->protocol()->getPurpleChat(this, name);
+				if (chat) {
+					comps = purple_chat_get_components(chat);
+				}
+				else if (PURPLE_PLUGIN_PROTOCOL_INFO(gc->prpl)->chat_info_defaults != NULL) {
 					comps = PURPLE_PLUGIN_PROTOCOL_INFO(gc->prpl)->chat_info_defaults(gc, name.c_str());
 				}
 				if (comps) {

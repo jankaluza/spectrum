@@ -20,6 +20,7 @@
 
 #include "twitter.h"
 #include "../main.h"
+#include "../transport.h"
 
 TwitterProtocol::TwitterProtocol(GlooxMessageHandler *main){
 	m_main = main;
@@ -62,6 +63,18 @@ std::string TwitterProtocol::text(const std::string &key) {
 	else if (key == "username")
 		return _("Twitter username");
 	return "not defined";
+}
+
+void TwitterProtocol::makePurpleUsernameRoom(AbstractUser *user, const JID &to, std::string &name) {
+	name = "Timeline: Home";
+}
+
+void TwitterProtocol::makeRoomJID(AbstractUser *user, std::string &name) {
+	name.assign("#home@" + Transport::instance()->jid());
+}
+
+PurpleChat *TwitterProtocol::getPurpleChat(AbstractUser *user, const std::string &purpleUsername) {
+	return purple_blist_find_chat(user->account(), "Timeline: my");
 }
 
 bool TwitterProtocol::onPresenceReceived(AbstractUser *user, const Presence &stanza) {

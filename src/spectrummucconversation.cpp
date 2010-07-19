@@ -55,7 +55,8 @@ void SpectrumMUCConversation::handleMessage(AbstractUser *user, const char *who,
 	purple_markup_html_to_xhtml(newline, &xhtml, &strip);
 	std::string message(strip);
 
-	std::string to = user->jid() + m_res;	
+	std::string to = user->jid() + m_res;
+	std::cout << user->jid() << " " << m_res << "\n";
 	
 	Message s(Message::Groupchat, to, message);
 	s.setFrom(m_jid + "/" + name);

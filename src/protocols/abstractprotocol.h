@@ -84,7 +84,15 @@ class AbstractProtocol
 		// Examples:
 		// For XMPP: "spectrum@conference.spectrum.im/HanzZ" -> "HanzZ"
 		// Note: You can ignore this function if your prpl doesn't support MUC (Groupchat).
-		virtual void makeUsernameRoom(AbstractUser *user, std::string &name) { }
+		virtual void makeUsernameRoom(AbstractUser *user, std::string &name) {
+			name = JID(name).resource();
+		}
+
+		// Tries to find PurpleChat. This function is called before joining the room to check if the room is not stored
+		// in buddy list.
+		virtual PurpleChat *getPurpleChat(AbstractUser *user, const std::string &purpleUsername) {
+			return purple_blist_find_chat(user->account(), purpleUsername.c_str());
+		}
 
 		// This function should create purple username from JID defined in 'to' attribute in incoming message.
 		// Purple username created by this function is then used to create new PurpleConversation. This function
