@@ -392,7 +392,10 @@ static void * requestAction(const char *title, const char *primary,const char *s
 	User *user = (User *) GlooxMessageHandler::instance()->userManager()->getUserByAccount(account);
 	bool handled = false;
 	if (!user) {
-		Log("requestAction", "WARNING: purple_request_action not handled. No user for account =" << purple_account_get_username(account));
+		std::string t(title ? title : "NULL");
+		std::string p(primary ? primary : "NULL");
+		std::string s(secondary ? secondary : "NULL");
+		Log("requestAction", "WARNING: purple_request_action not handled. No user for account =" << (account ? purple_account_get_username(account) : "NULL") << " " << "title =" << t << ", primary =" << p << ", secondary =" << s);
 	}
 	else {
 		if (!user->adhocData().id.empty()) {
