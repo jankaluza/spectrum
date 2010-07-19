@@ -22,7 +22,7 @@
 # this program; if not, see <http://www.gnu.org/licenses/>.
 
 import os, sys
-from spectrum import *
+from spectrum import env, spectrum_group
 from spectrum.doc import doc
 from optparse import *
 

@@ -42,7 +42,7 @@
 #include "searchrepeater.h"
 #include "filetransferrepeater.h"
 #include "registerhandler.h"
-// #include "discoinfohandler.h"
+#include "spectrumdiscohandler.h"
 #include "statshandler.h"
 #include "vcardhandler.h"
 #include "gatewayhandler.h"
@@ -319,7 +319,9 @@ static void * requestInput(const char *title, const char *primary,const char *se
 	User *user = (User *) GlooxMessageHandler::instance()->userManager()->getUserByAccount(account);
 	if (!user) {
 		Log("requestInput", "WARNING: purple_request_input not handled. No user for account =" << purple_account_get_username(account));
-		return NULL;
+		AbstractPurpleRequest *handle = new AbstractPurpleRequest;
+		handle->setRequestType((AdhocDataCallerType) CALLER_DUMMY);
+		return handle;
 	}
 
 	if (primary) {
@@ -346,11 +348,16 @@ static void * requestInput(const char *title, const char *primary,const char *se
 		}
 		// emit protocol signal
 		bool handled = GlooxMessageHandler::instance()->protocol()->onPurpleRequestInput(user, title, primary, secondary, default_value, multiline, masked, hint, ok_text, ok_cb, cancel_text, cancel_cb, account, who, conv, user_data);
-		if (handled)
-			return NULL;
+		if (handled) {
+			AbstractPurpleRequest *handle = new AbstractPurpleRequest;
+			handle->setRequestType((AdhocDataCallerType) CALLER_DUMMY);
+			return handle;
+		}
 	}
 	Log(user->jid(), "WARNING: purple_request_input not handled. primary == NULL, title ==" << t << ", secondary ==" << s);
-	return NULL;
+	AbstractPurpleRequest *handle = new AbstractPurpleRequest;
+	handle->setRequestType((AdhocDataCallerType) CALLER_DUMMY);
+	return handle;
 }
 
 static void * notifySearchResults(PurpleConnection *gc, const char *title, const char *primary, const char *secondary, PurpleNotifySearchResults *results, gpointer user_data) {
@@ -364,7 +371,9 @@ static void * notifySearchResults(PurpleConnection *gc, const char *title, const
 			user->setAdhocData(data);
 		}
 	}
-	return NULL;
+	AbstractPurpleRequest *handle = new AbstractPurpleRequest;
+	handle->setRequestType((AdhocDataCallerType) CALLER_DUMMY);
+	return handle;
 }
 
 static void *requestFields(const char *title, const char *primary, const char *secondary, PurpleRequestFields *fields, const char *ok_text, GCallback ok_cb, const char *cancel_text, GCallback cancel_cb, PurpleAccount *account, const char *who, PurpleConversation *conv, void *user_data) {
@@ -384,8 +393,13 @@ static void *requestFields(const char *title, const char *primary, const char *s
 			return repeater;
 		}
 	}
-
-	return NULL;
+	std::string t(title ? title : "NULL");
+	std::string p(primary ? primary : "NULL");
+	std::string s(secondary ? secondary : "NULL");
+	Log("requestFields", "WARNING:requestFields not handled. " << (user ? user->jid() : "NULL") << " " << t << " " << p << " " << s);
+	AbstractPurpleRequest *handle = new AbstractPurpleRequest;
+	handle->setRequestType((AdhocDataCallerType) CALLER_DUMMY);
+	return handle;
 }
 
 static void * requestAction(const char *title, const char *primary,const char *secondary, int default_action,PurpleAccount *account, const char *who,PurpleConversation *conv, void *user_data,size_t action_count, va_list actions){
@@ -975,19 +989,21 @@ GlooxMessageHandler::GlooxMessageHandler(const std::string &config) : MessageHan
 		if (!m_configuration.config_interface.empty())
 			m_configInterface = new ConfigInterface(m_configuration.config_interface, j->logInstance());
 #endif
-		m_discoHandler = new CapabilityHandler();
+		m_capabilityHandler = new CapabilityHandler();
 		m_spectrumNodeHandler = new SpectrumNodeHandler();
 
-// 		m_discoInfoHandler = new GlooxDiscoInfoHandler();
-// 		j->registerIqHandler(m_discoInfoHandler,ExtDiscoInfo);
-		
 		j->registerIqHandler(m_adhoc, ExtAdhocCommand);
 		j->registerStanzaExtension( new Adhoc::Command() );
 		j->registerStanzaExtension( new MUCRoom::MUC() );
 		j->disco()->addFeature( XMLNS_ADHOC_COMMANDS );
 		j->disco()->registerNodeHandler( m_adhoc, XMLNS_ADHOC_COMMANDS );
 		j->disco()->registerNodeHandler( m_adhoc, std::string() );
-		
+		j->removeIqHandler( j->disco(), ExtDiscoInfo );
+		j->removeIqHandler( j->disco(), ExtDiscoItems );
+		m_discoHandler = new SpectrumDiscoHandler(this);
+		j->registerIqHandler(m_discoHandler, ExtDiscoInfo);
+		j->registerIqHandler(m_discoHandler, ExtDiscoItems);
+
 		m_parser = new GlooxParser();
 		m_collector = new AccountCollector();
 
@@ -1514,13 +1530,13 @@ void GlooxMessageHandler::handlePresence(const Presence &stanza){
 		Log(stanza.from().full(), "asking for caps/disco#info");
 		// Presence has caps and caps are not cached.
 		if (c != NULL && !Transport::instance()->hasClientCapabilities(c->findAttribute("ver"))) {
-			int context = m_discoHandler->waitForCapabilities(c->findAttribute("ver"), stanza.to().full());
+			int context = m_capabilityHandler->waitForCapabilities(c->findAttribute("ver"), stanza.to().full());
 			std::string node = c->findAttribute("node") + std::string("#") + c->findAttribute("ver");;
-			j->disco()->getDiscoInfo(stanza.from(), node, m_discoHandler, context, j->getID());
+			j->disco()->getDiscoInfo(stanza.from(), node, m_capabilityHandler, context, j->getID());
 		}
 		else {
-			int context = m_discoHandler->waitForCapabilities(stanza.from().full(), stanza.to().full());
-			j->disco()->getDiscoInfo(stanza.from(), "", m_discoHandler, context, j->getID());
+			int context = m_capabilityHandler->waitForCapabilities(stanza.from().full(), stanza.to().full());
+			j->disco()->getDiscoInfo(stanza.from(), "", m_capabilityHandler, context, j->getID());
 		}
 		delete stanzaTag;
 	}
@@ -1640,6 +1656,7 @@ void GlooxMessageHandler::onConnect() {
 
 	if (m_firstConnection) {
 		j->disco()->setIdentity("gateway", protocol()->gatewayIdentity(), configuration().discoName);
+		m_discoHandler->setIdentity("client", "pc", "Spectrum");
 		j->disco()->setVersion(configuration().discoName, VERSION, "");
 
 		std::string id = "gateway";
@@ -1665,12 +1682,14 @@ void GlooxMessageHandler::onConnect() {
 		for (std::list<std::string>::iterator it = f.begin(); it != f.end(); it++) {
 			id += (*it);
 			id += '<';
+			m_discoHandler->addFeature(*it);
 		}
 
 		SHA sha;
 		sha.feed( id );
 		m_configuration.hash = Base64::encode64( sha.binary() );
 		j->disco()->registerNodeHandler( m_spectrumNodeHandler, "http://spectrum.im/transport#" + m_configuration.hash );
+		m_discoHandler->registerNodeHandler( m_spectrumNodeHandler, "http://spectrum.im/transport#" + m_configuration.hash );
 
 		if (m_configuration.protocol != "irc")
 			new AutoConnectLoop();

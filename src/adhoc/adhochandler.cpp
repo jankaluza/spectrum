@@ -64,6 +64,8 @@ StringList GlooxAdhocHandler::handleDiscoNodeFeatures (const JID &from, const st
 
 Disco::ItemList GlooxAdhocHandler::handleDiscoNodeItems( const JID &_from, const JID &_to, const std::string& node ) {
 	Disco::ItemList lst;
+	if (node != "http://jabber.org/protocol/commands")
+		return lst;
 	std::string from = _from.bare();
 	std::string to = _to.bare();
 	Log("GlooxAdhocHandler", "sending items from " << from << " to " << to);

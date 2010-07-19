@@ -19,15 +19,9 @@
 Represents a single spectrum instance, see L{spectrum.spectrum}.
 """
 
-
-import os, pwd, stat, time, signal, subprocess
-import env
-try:
-	from spectrum import spectrumconfigparser, ExistsError, config_interface
-except ImportError:
-	import spectrumconfigparser, ExistsError, config_interface
-
-ExistsError = ExistsError.ExistsError
+import os, sys, pwd, stat, time, signal, subprocess, resource
+import spectrumconfigparser, config_interface, env
+from ExistsError import ExistsError
 
 class spectrum:
 	"""
@@ -47,7 +41,7 @@ class spectrum:
 		
 		self.config = spectrumconfigparser.SpectrumConfigParser()
 		self.config.read( config_path )
-		self.pid_file = self.config.get( 'service', 'pid_file' )
+		self.pid_file = self.config.get( 'service', 'pid_file' ).lower()
 
 	def get_binary( self ):
 		"""
@@ -81,6 +75,18 @@ class spectrum:
 		@rtype: boolean
 		"""
 		return self.config.getboolean( 'service', 'enable' )
+
+	def running( self ):
+		"""
+		Shortcut for L{status}, returns True if the instance is running,
+		False otherwise.
+
+		@rtype: boolean
+		"""
+		if self.status() == 0:
+			return True
+		else:
+			return False
 
 	def get_pid( self ):
 		"""
@@ -324,40 +330,67 @@ class spectrum:
 		except RuntimeError, e:
 			raise RuntimeError( "%s: %s" % e.args, 1 )
 
-		# get the absolute path of the config file, so we can change to
-		# spectrums homedir
-		path = os.path.abspath( self.config_path )
-		home = pwd.getpwuid( env.get_uid() )[5]
-		os.chdir( home )
+		# fork and drop privileges:
+		pid = os.fork()
+		if pid:
+			# we are the parent!
+			pid, status = os.waitpid( pid, 0 )
+			status = (status & 0xff00) >> 8
+			if status == 0:
+				return
+			elif status == 1:
+				raise RuntimeError( "db_version table does not exist", 1 )
+			elif status == 2:
+				raise RuntimeError( "database not up to date, update with spectrumctl upgrade-db", 1 )
+			elif status == 3:
+				raise RuntimeError( "Error connecting to the database", 1 )
+			elif status == 100:
+				raise RuntimeError( "Could not find spectrum binary", 1 )
+			elif status == 101:
+				raise RuntimeError( "Exception thrown, please contact the maintainers", 1 )
+			elif status == 102:
+				raise RuntimeError( "Username does not exist", 1 )
+			else:
+				raise RuntimeError( "Child exited with unknown exit status", 1 )
+		else:
+			exit_code = 0 
+			try:
+				# we are the child
+				try:
+					env.drop_privs( env.get_uid(), env.get_gid() )
+				except RuntimeError, e:
+					os._exit( 102 )
 
-		# check if database is at current version:
-		check_cmd = [ self.get_binary(), '--check-db-version', path ]
-		check_cmd = env.su_cmd( check_cmd )
-		process = subprocess.Popen( check_cmd, stdout=subprocess.PIPE )
-		process.communicate()
-		if process.returncode == 1:
-			raise RuntimeError( "db_version table does not exist", 1)
-		elif process.returncode == 2: 
-			raise RuntimeError( "database not up to date, update with spectrumctl upgrade-db", 1 )
-		elif process.returncode == 3:
-			raise RuntimeError( "Error connecting to the database", 1 )
+				# get the absolute path of the config file, so we can change to
+				# spectrums homedir
+				path = os.path.abspath( self.config_path )
+				home = pwd.getpwuid( os.getuid() )[5]
+				os.chdir( home )
 
-		# finally start spectrum:
-		cmd = [ self.get_binary() ]
-		if no_daemon:
-			cmd.append( '-n' )
-		if debug:
-			os.environ['MALLOC_PERTURB_'] = '254'
-			os.environ['PURPLE_VERBOSE_DEBUG'] = '1'
-			os.environ['MALLOC_CHECK_'] = '2'
-			cmd[0] = 'ulimit -c unlimited; ' + cmd[0]
-		cmd.append( path )
-		cmd = env.su_cmd( cmd )
-		retVal = subprocess.call( cmd )
-		if retVal != 0:
-			raise RuntimeError( "Could not start spectrum instance", retVal )
+				# check if database is at current version:
+				check_cmd = [ self.get_binary(), '--check-db-version', path ]
+				process = subprocess.Popen( check_cmd, stdout=subprocess.PIPE )
+				process.communicate()
+				if process.returncode != 0:
+					os._exit( process.returncode )
 
-		return
+				# finally start spectrum:
+				cmd = [ self.get_binary() ]
+				if no_daemon:
+					cmd.append( '-n' )
+				if debug:
+					os.environ['MALLOC_PERTURB_'] = '254'
+					os.environ['PURPLE_VERBOSE_DEBUG'] = '1'
+					os.environ['MALLOC_CHECK_'] = '2'
+					resource.setrlimit( resource.RLIMIT_CORE, (-1,-1) )
+
+				cmd.append( path )
+				os._exit( subprocess.call( cmd ) )
+			except OSError, e:
+				os._exit( 100 ) # spectrum wasn't found
+			except Exception, e:
+				print( "%s: %s"%( type(e), e.message ) )
+				os._exit( 101 )
 
 	def stop( self, debug=False ):
 		"""
@@ -471,23 +504,54 @@ class spectrum:
 		"""
 		path = os.path.abspath( self.config_path )
 
-		check_cmd = [ self.get_binary(), '--check-db-version', path ]
-		check_cmd = env.su_cmd( check_cmd )
-		process = subprocess.Popen( check_cmd, stdout=subprocess.PIPE )
-		process.communicate()
+		# fork and drop privileges:
+		pid = os.fork()
+		if pid:
+			# we are the parent!
+			pid, status = os.waitpid( pid, 0 )
+			status = (status & 0xff00) >> 8
+			if status == 0:
+				return
+			elif status == 1:
+				raise RuntimeError( "db_version table does not exist", 1 )
+			elif status == 3:
+				raise RuntimeError( "Error connecting to the database", 1 )
+			elif status == 100:
+				raise RuntimeError( "Could not find spectrum binary", 1 )
+			elif status == 101:
+				raise RuntimeError( "Exception thrown, please contact the maintainers", 1 )
+			elif status == 102:
+				raise RuntimeError( "Username does not exist", 1 )
+			else:
+				raise RuntimeError( "Child exited with unknown exit status", 1 )
+		else:
+			exit_code = 0
+			try:
+				# drop privileges:
+				try:
+					env.drop_privs( env.get_uid(), env.get_gid() )
+				except RuntimeError, e:
+					os._exit( 102 )
 
-		if process.returncode == 2:
-			update_cmd = [ 'spectrum', '--upgrade-db', path ]
-			update_cmd = env.su_cmd( update_cmd )
-			process = subprocess.Popen( update_cmd, stdout=subprocess.PIPE )
-			process.communicate()
-			if process.returncode != 0:
-				raise RuntimeError( "%s exited with status %s"%(" ".join(update_cmd),process.returncode), 1)
-		elif process.returncode == 1:
-			raise RuntimeError( "db_version table does not exist", 1)
-		elif process.returncode == 3:
-			raise RuntimeError( "Error connecting to the database", 1 )
+				check_cmd = [ self.get_binary(), '--check-db-version', path ]
+				process = subprocess.Popen( check_cmd, stdout=subprocess.PIPE )
+				process.communicate()
 
+				if process.returncode == 2:
+					update_cmd = [ 'spectrum', '--upgrade-db', path ]
+					update_cmd = env.su_cmd( update_cmd )
+					process = subprocess.Popen( update_cmd, stdout=subprocess.PIPE )
+					process.communicate()
+					os._exit( process.returncode )
+
+				else:
+					os._exit( process.returncode )
+			except OSError, e:
+				os._exit( 100 ) # spectrum wasn't found
+			except Exception, e:
+				print( "%s: %s"%( type(e), e.message ) )
+				os._exit( 101 )
+	
 	def message_all( self, message ):
 		"""
 		Send a message to all users currently online.
@@ -588,4 +652,4 @@ class spectrum:
 		try:
 			return interface.query( nodes, ns )
 		except RuntimeError, e:
-			raise RuntimeError( "%s: %s"%(self.get_jid(), e.message ) )
+			raise RuntimeError( "%s"%(e.message ) )
