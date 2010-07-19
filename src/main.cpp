@@ -405,7 +405,15 @@ static void *requestFields(const char *title, const char *primary, const char *s
 static void * requestAction(const char *title, const char *primary,const char *secondary, int default_action,PurpleAccount *account, const char *who,PurpleConversation *conv, void *user_data,size_t action_count, va_list actions){
 	User *user = (User *) GlooxMessageHandler::instance()->userManager()->getUserByAccount(account);
 	bool handled = false;
-	if (!user) {
+	
+	std::string t(title ? title : "NULL");
+	if (t == "SSL Certificate Verification") {
+		Log("purple", "accepting SSL certificate");
+		va_arg(actions, char *);
+		((PurpleRequestActionCb) va_arg(actions, GCallback)) (user_data, 2);
+		handled = true;
+	}
+	else if (!user || !account) {
 		std::string t(title ? title : "NULL");
 		std::string p(primary ? primary : "NULL");
 		std::string s(secondary ? secondary : "NULL");
