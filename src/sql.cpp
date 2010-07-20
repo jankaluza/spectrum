@@ -44,6 +44,11 @@ static gboolean reconnectMe(gpointer data) {
 	return sql->reconnectCallback();
 }
 
+static gboolean pingSQL(gpointer data) {
+	SQLClass *sql = (SQLClass *) data;
+	return sql->ping();
+}
+
 SQLClass::SQLClass(GlooxMessageHandler *parent, bool upgrade, bool check) {
 	p = parent;
 	m_loaded = false;
@@ -74,6 +79,7 @@ SQLClass::SQLClass(GlooxMessageHandler *parent, bool upgrade, bool check) {
 	
 	m_error = 0;
 	m_reconnectTimer = new SpectrumTimer(1000, reconnectMe, this);
+	m_pingTimer = new SpectrumTimer(30000, pingSQL, this);
 	
 	
 	try {
@@ -82,6 +88,7 @@ SQLClass::SQLClass(GlooxMessageHandler *parent, bool upgrade, bool check) {
 			m_dbversion = MYSQL_DB_VERSION;
 			MySQL::Connector::registerConnector();
 			m_sess = new Session("MySQL", "user=" + p->configuration().sqlUser + ";password=" + p->configuration().sqlPassword + ";host=" + p->configuration().sqlHost + ";db=" + p->configuration().sqlDb + ";auto-reconnect=true");
+			m_pingTimer->start();
 		}
 #endif
 #ifdef WITH_SQLITE
@@ -126,6 +133,7 @@ SQLClass::SQLClass(GlooxMessageHandler *parent, bool upgrade, bool check) {
 
 SQLClass::~SQLClass() {
 	delete m_reconnectTimer;
+	delete m_pingTimer;
 	if (m_loaded) {
 		m_sess->close();
 		delete m_sess;
@@ -414,6 +422,14 @@ bool SQLClass::reconnectCallback() {
 	}
 
 	return false;
+}
+
+bool SQLClass::ping() {
+#ifdef WITH_MYSQL
+	//TODO: better use mysql_ping() but thats not supported by libpoco
+	*m_sess <<  "SELECT 1", now;
+#endif
+	return true;
 }
 
 void SQLClass::initDb() {

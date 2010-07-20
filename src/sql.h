@@ -278,6 +278,7 @@ class SQLClass : public AbstractBackend {
 		void createStatements();
 		void removeStatements();
 		bool reconnect();
+		bool ping();
 		bool reconnectCallback();
 		void upgradeDatabase();
 
@@ -331,6 +332,7 @@ class SQLClass : public AbstractBackend {
 		bool m_loaded;
 		int m_error;
 		SpectrumTimer *m_reconnectTimer;
+		SpectrumTimer *m_pingTimer;
 		int m_dbversion;
 		bool m_check;
 };
