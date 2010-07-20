@@ -539,7 +539,6 @@ class spectrum:
 
 				if process.returncode == 2:
 					update_cmd = [ 'spectrum', '--upgrade-db', path ]
-					update_cmd = env.su_cmd( update_cmd )
 					process = subprocess.Popen( update_cmd, stdout=subprocess.PIPE )
 					process.communicate()
 					os._exit( process.returncode )
