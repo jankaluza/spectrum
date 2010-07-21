@@ -1,3 +1,10 @@
+version 0.3.1 (2010-07-??):
+	spectrumctl:
+	* fixed crash when updating database from old version
+	* support for spaces in config-file names
+	* cleaned up imports
+	* drop privileges using fork()->setuid()->exec() and not with su
+
 version 0.3 (2010-07-13):
 	General:
 	* Added localization support.
