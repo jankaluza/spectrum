@@ -215,7 +215,7 @@ else (SPECTRUM_VERSION)
 		)
 		file(APPEND src/transport_config.h "#define VERSION \"0.4-git-" ${GIT_REVISION} "\"\n")
 	else (EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/.git)
-		file(APPEND src/transport_config.h "#define VERSION \"0.3\"\n")
+		file(APPEND src/transport_config.h "#define VERSION \"0.3.1\"\n")
 	endif (EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/.git)
 endif (SPECTRUM_VERSION)
 

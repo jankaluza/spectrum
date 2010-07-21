@@ -1,4 +1,4 @@
-version 0.3.1 (2010-07-??):
+version 0.3.1 (2010-07-21):
 	General:
 	* Fixed bug in localization of empty strings.
 	* Handle disco#info for buddies properly.
