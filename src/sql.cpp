@@ -88,7 +88,8 @@ SQLClass::SQLClass(GlooxMessageHandler *parent, bool upgrade, bool check) {
 			m_dbversion = MYSQL_DB_VERSION;
 			MySQL::Connector::registerConnector();
 			m_sess = new Session("MySQL", "user=" + p->configuration().sqlUser + ";password=" + p->configuration().sqlPassword + ";host=" + p->configuration().sqlHost + ";db=" + p->configuration().sqlDb + ";auto-reconnect=true");
-			m_pingTimer->start();
+			if (!check && !upgrade)
+				m_pingTimer->start();
 		}
 #endif
 #ifdef WITH_SQLITE
