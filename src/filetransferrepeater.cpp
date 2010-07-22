@@ -387,8 +387,8 @@ FiletransferRepeater::~FiletransferRepeater() {
 		purple_xfer_unref(m_xfer);
 		m_xfer = NULL;
 	}
-	delete m_deleteMeTimer;
-	delete m_readyTimer;
+	m_deleteMeTimer->deleteLater();
+	m_readyTimer->deleteLater();
 }
 
 void FiletransferRepeater::registerXfer(PurpleXfer *xfer) {

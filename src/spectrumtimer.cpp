@@ -35,6 +35,8 @@ SpectrumTimer::SpectrumTimer (int time, SpectrumTimerCallback callback, void *da
 	m_timeout = time;
 	m_mutex = g_mutex_new();
 	m_id = 0;
+	m_deleteLater = false;
+	m_inCallback = false;
 }
 
 SpectrumTimer::~SpectrumTimer() {
@@ -70,9 +72,25 @@ void SpectrumTimer::stop() {
 	g_mutex_unlock(m_mutex);
 }
 
+void SpectrumTimer::deleteLater() {
+	// This function has been called from callback
+	if (m_inCallback)
+		m_deleteLater = true;
+	else
+		delete this;
+}
+
 // this is always in main thread.
 gboolean SpectrumTimer::timeout() {
+	m_inCallback = true;
 	gboolean ret = m_callback(m_data);
+	m_inCallback = false;
+	if (m_deleteLater) {
+		m_id = 0;
+		delete this;
+		return FALSE;
+	}
+	
 	if (!ret)
 		m_id = 0;
 	return ret;
