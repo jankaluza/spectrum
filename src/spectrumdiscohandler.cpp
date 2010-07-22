@@ -58,6 +58,7 @@ bool SpectrumDiscoHandler::handleIq (const IQ &stanza) {
 
 			t->addChild(query);
 			m_parent->j->send(t);
+			return true;
 		}
 		else {
 			return m_parent->j->disco()->handleIq(stanza);
