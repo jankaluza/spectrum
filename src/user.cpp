@@ -498,7 +498,6 @@ void User::receivedPresence(const Presence &stanza) {
 // 					sendUnavailablePresenceToAll();
 // 					purple_account_disconnect(m_account);
 					p->adhoc()->unregisterSession(stanza.from().full());
-					p->userManager()->removeUserTimer(this);
 				}
 				else {
 					setActiveResource();

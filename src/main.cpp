@@ -1642,11 +1642,11 @@ void GlooxMessageHandler::handlePresence(const Presence &stanza){
 	if (stanza.to().username() == "" && user != NULL) {
 		if(stanza.presence() == Presence::Unavailable && user->isConnected() == true && user->getResources().empty()) {
 			Log(stanza.from().full(), "Logging out");
-			m_userManager->removeUserTimer(user);
+			m_userManager->removeUser(user);
 		}
 		else if (stanza.presence() == Presence::Unavailable && user->isConnected() == false && user->getResources().empty()) {
 			Log(stanza.from().full(), "Logging out, but he's not connected...");
-			m_userManager->removeUserTimer(user);
+			m_userManager->removeUser(user);
 		}
 // 		else if (stanza.presence() == Presence::Unavailable && user->isConnected() == false) {
 // 			Log(stanza.from().full(), "Can't logout because we're connecting now...");
