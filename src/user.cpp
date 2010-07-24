@@ -574,7 +574,8 @@ void User::receivedPresence(const Presence &stanza) {
 					}
 				}
 			}
-			else {
+			// Forward status message to legacy network, but only if it's sent from active resource
+			else if (getResource().name == stanza.to().resource()) {
 				Log(m_jid, "mirroring presence to legacy network");
 				// we are already connected so we have to change status
 				const PurpleStatusType *status_type = purple_account_get_status_type_with_primitive(m_account, (PurpleStatusPrimitive) PurplePresenceType);
