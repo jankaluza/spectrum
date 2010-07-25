@@ -39,6 +39,7 @@ SpectrumMessageHandler::SpectrumMessageHandler(AbstractUser *user) {
 	m_user = user;
 	m_mucs = 0;
 	m_currentBody = "";
+	m_receiptTag = NULL;
 }
 
 SpectrumMessageHandler::~SpectrumMessageHandler() {
@@ -275,12 +276,26 @@ void SpectrumMessageHandler::handleMessage(const Message& msg) {
 	// escape and send
 	gchar *_markup = purple_markup_escape_text(m_currentBody.c_str(), -1);
 	if (purple_conversation_get_type(conv) == PURPLE_CONV_TYPE_IM) {
+
+		Message s(Message::Chat, msg.from(), "");
+		s.setFrom(msg.to());
+		Tag *tag = s.tag();
+		Tag *receipts = new Tag("received");
+		receipts->addAttribute("xmlns", "urn:xmpp:receipts");
+		receipts->addAttribute("id", msg.id());
+		tag->addChild(receipts);
+		m_receiptTag = tag;
+
 		purple_conv_im_send(PURPLE_CONV_IM(conv), _markup);
 	}
 	else if (purple_conversation_get_type(conv) == PURPLE_CONV_TYPE_CHAT) {
 		purple_conv_chat_send(PURPLE_CONV_CHAT(conv), _markup);
 	}
 	g_free(_markup);
+
+	if (m_receiptTag)
+		delete m_receiptTag;
+
 }
 void SpectrumMessageHandler::removeConversationResource(const std::string &resource) {
 	for (std::map<std::string, AbstractConversation *>::iterator u = m_conversations.begin(); u != m_conversations.end() ; u++) {
@@ -333,6 +348,26 @@ std::string SpectrumMessageHandler::getConversationName(PurpleConversation *conv
 	else
 		Transport::instance()->protocol()->makeRoomJID(m_user, name);
 	return name;
+}
+
+
+		
+void SpectrumMessageHandler::waitingImAck(char *who, char *message, char *id) {
+	if (m_receiptTag) {
+		std::cout << "Receipt Tag for id " << id << "\n";
+		m_receipts[id] = m_receiptTag;
+		m_receiptTag = NULL;
+	}
+	else
+		std::cout << "NOOOOO Receipt Tag for id " << id << "\n";
+}
+
+void SpectrumMessageHandler::receivedImAck(char *who, char *id) {
+	std::cout << id << "\n";
+	if (m_receipts.find(id) != m_receipts.end() && m_receipts[id]) {
+		Transport::instance()->send(m_receipts[id]);
+		m_receipts.erase(id);
+	}
 }
 
 AbstractConversation *SpectrumMessageHandler::getSpectrumMUCConversation(PurpleConversation *conv) {

@@ -582,6 +582,18 @@ static void printDebug(PurpleDebugLevel level, const char *category, const char 
 	LogMessage(Log_.fileStream(), false).Get(c) << arg_s;
 }
 
+static void waitingImAck(PurpleAccount *account, char *who, char *message, char *id) {
+	User *user = (User *) GlooxMessageHandler::instance()->userManager()->getUserByAccount(account);
+	if (!user) return;
+	user->waitingImAck(who, message, id);
+}
+
+static void receivedImAck(PurpleAccount *account, char *who, char *id) {
+	User *user = (User *) GlooxMessageHandler::instance()->userManager()->getUserByAccount(account);
+	if (!user) return;
+	user->receivedImAck(who, id);
+}
+
 /*
  * Ops....
  */
@@ -1923,6 +1935,10 @@ bool GlooxMessageHandler::initPurple(){
 		purple_signal_connect(purple_conversations_get_handle(), "buddy-typing", &conversation_handle, PURPLE_CALLBACK(buddyTyping), NULL);
 		purple_signal_connect(purple_conversations_get_handle(), "buddy-typed", &conversation_handle, PURPLE_CALLBACK(buddyTyped), NULL);
 		purple_signal_connect(purple_conversations_get_handle(), "buddy-typing-stopped", &conversation_handle, PURPLE_CALLBACK(buddyTypingStopped), NULL);
+
+		purple_signal_connect(purple_conversations_get_handle(), "waiting-im-ack", &conversation_handle, PURPLE_CALLBACK(waitingImAck), NULL);
+		purple_signal_connect(purple_conversations_get_handle(), "received-im-ack", &conversation_handle, PURPLE_CALLBACK(receivedImAck), NULL);
+
 		purple_signal_connect(purple_connections_get_handle(), "signed-on", &conn_handle,PURPLE_CALLBACK(signed_on), NULL);
 		purple_signal_connect(purple_blist_get_handle(), "buddy-removed", &blist_handle,PURPLE_CALLBACK(buddyRemoved), NULL);
 		purple_signal_connect(purple_blist_get_handle(), "buddy-signed-on", &blist_handle,PURPLE_CALLBACK(buddySignedOn), NULL);

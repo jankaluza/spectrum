@@ -91,6 +91,12 @@ class SpectrumMessageHandler {
 		// Called by libpurple when PurpleConversation is destroyed.
 		void purpleConversationDestroyed(PurpleConversation *conv);
 
+		
+		void waitingImAck(char *who, char *message, char *id);
+
+		
+		void receivedImAck(char *who, char *id);
+
 	private:
 		std::string getConversationName(PurpleConversation *conv);
 		AbstractConversation *getSpectrumMUCConversation(PurpleConversation *conv);
@@ -101,6 +107,8 @@ class SpectrumMessageHandler {
 		// spectrum%conference.spectrum.im@xmpp.spectrum.im/HanzZ
 		std::map <std::string, AbstractConversation *> m_conversations;
 		std::map <std::string, int> m_mucs_names;
+		Tag *m_receiptTag;
+		std::map <std::string, Tag *> m_receipts;
 		std::string m_currentBody;
 		AbstractUser *m_user;
 		int m_mucs;
