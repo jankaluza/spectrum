@@ -33,6 +33,8 @@ struct Resource {
 	int priority;
 	int caps;
 	std::string name;
+	int show;
+	std::string status;
 	operator bool() const {
 		return !name.empty();
 	}
@@ -46,7 +48,7 @@ class ResourceManager {
 
 		// Sets resource priority and capabilities. If resource doesn't exist,
 		// it's created.
-		void setResource(const std::string &resource, int priority = -256, int caps = -1);
+		void setResource(const std::string &resource, int priority = -256, int caps = -1, int show = -1, const std::string &status = "");
 
 		// Sets resource from Presence stanza.
 		void setResource(const Presence &stanza);
