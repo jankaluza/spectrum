@@ -57,6 +57,7 @@ class User : public AbstractUser, public SpectrumRosterManager, public SpectrumM
 
 		// Handles received presence.
 		void receivedPresence(const Presence &presence);
+		void forwardStatus(int presence, const std::string &stanzaStatus);
 
 		void purpleBuddyTypingStopped(const std::string &uin);
 		void purpleBuddyTyping(const std::string &uin);
