@@ -257,6 +257,27 @@ struct getOnlineUsersStatement {
 	std::vector<std::string> resUsers;
 };
 
+class SpectrumSQLStatement {
+	public:
+		SpectrumSQLStatement(Poco::Data::Session *m_sess, const std::string &format, const std::string &statement);
+		~SpectrumSQLStatement();
+
+		void push(const std::string &str);
+		int execute();
+		Poco::Int32 &pullInt();
+		const std::string &pullString();
+		bool &pullBool();
+
+	private:
+		Poco::Data::Statement *m_statement;
+		std::vector <void *> m_params;
+		std::string m_format;
+		int m_resultOffset;
+		int m_offset;
+		Poco::Int32 *m_test;
+		Poco::Int32 m_test2;
+};
+
 /*
  * SQL storage backend. Uses libdbi for communication with SQL servers.
  */
@@ -313,7 +334,7 @@ class SQLClass : public AbstractBackend {
 		updateBuddyStatement m_stmt_updateBuddy;
 #endif
 		updateBuddySubscriptionStatement m_stmt_updateBuddySubscription;
-		getUserByJidStatement m_stmt_getUserByJid;
+		SpectrumSQLStatement *m_stmt_getUserByJid;
 		getBuddiesStatement m_stmt_getBuddies;
 		addSettingStatement m_stmt_addSetting;
 		updateSettingStatement m_stmt_updateSetting;

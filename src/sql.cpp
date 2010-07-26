@@ -49,6 +49,86 @@ static gboolean pingSQL(gpointer data) {
 	return sql->ping();
 }
 
+SpectrumSQLStatement::SpectrumSQLStatement(Poco::Data::Session *m_sess, const std::string &format, const std::string &statement) {
+	m_format = format;
+	m_resultOffset = -1;
+	m_offset = 0;
+	m_statement = new Statement(*m_sess << statement);
+
+#define BIND(VARIABLE) m_params.push_back(data); \
+if (selectPart) *m_statement = (*m_statement), use(*VARIABLE); else *m_statement = (*m_statement), into(*VARIABLE);
+
+	bool selectPart = true;
+	void *data;
+	for (int i = 0; i < format.length(); i++) {
+		switch (format.at(i)) {
+			case 's':
+				data = new std::string;
+				BIND((std::string *) data);
+				break;
+			case 'i':
+				data = new Poco::Int32;
+				BIND((Poco::Int32 *) data);
+				break;
+			case 'b':
+				data = new bool;
+				BIND((bool *) data);
+				break;
+			case '|':
+				selectPart = false;
+				m_resultOffset = i;
+				break;
+		}
+	}
+	if (m_resultOffset < 0)
+		m_resultOffset = format.size();
+
+#undef BIND
+}
+
+SpectrumSQLStatement::~SpectrumSQLStatement() {
+	if (m_statement)
+		delete m_statement;
+}
+
+void SpectrumSQLStatement::push(const std::string &str) {
+	if (m_offset >= m_resultOffset)
+		return;
+
+	std::string *data = (std::string *) m_params[m_offset];
+	data->assign(str);
+	m_offset++;
+}
+
+int SpectrumSQLStatement::execute() {
+	if (m_offset != m_resultOffset) {
+		Log("SpectrumSQLStatement::execute()", "ERROR: there are some unpushed variables");
+		return 0;
+	}
+	return m_statement->execute();
+}
+
+Poco::Int32 &SpectrumSQLStatement::pullInt() {
+	Poco::Int32 *data = (Poco::Int32 *) m_params[m_offset];
+	if (++m_offset == m_params.size())
+		m_offset = 0;
+	return *data;
+}
+
+const std::string &SpectrumSQLStatement::pullString() {
+	std::string *data = (std::string *) m_params[m_offset];
+	if (++m_offset == m_params.size())
+		m_offset = 0;
+	return *data;
+}
+
+bool &SpectrumSQLStatement::pullBool() {
+	bool *data = (bool *) m_params[m_offset];
+	if (++m_offset == m_params.size())
+		m_offset = 0;
+	return *data;
+}
+
 SQLClass::SQLClass(GlooxMessageHandler *parent, bool upgrade, bool check) {
 	p = parent;
 	m_loaded = false;
@@ -66,7 +146,6 @@ SQLClass::SQLClass(GlooxMessageHandler *parent, bool upgrade, bool check) {
 	m_stmt_updateBuddy.stmt = NULL;
 #endif
 	m_stmt_updateBuddySubscription.stmt = NULL;
-	m_stmt_getUserByJid.stmt = NULL;
 	m_stmt_getBuddies.stmt = NULL;
 	m_stmt_addSetting.stmt = NULL;
 	m_stmt_updateSetting.stmt = NULL;
@@ -219,18 +298,8 @@ void SQLClass::createStatements() {
 															use(m_stmt_updateBuddySubscription.subscription),
 															use(m_stmt_updateBuddySubscription.user_id),
 															use(m_stmt_updateBuddySubscription.uin) ) );
-	if (!m_stmt_getUserByJid.stmt)
-		m_stmt_getUserByJid.stmt = new Statement( ( STATEMENT("SELECT id, jid, uin, password, encoding, language, vip FROM " + p->configuration().sqlPrefix + "users WHERE jid=?"),
-													use(m_stmt_getUserByJid.jid),
-													into(m_stmt_getUserByJid.resId, -1),
-													into(m_stmt_getUserByJid.resJid),
-													into(m_stmt_getUserByJid.resUin),
-													into(m_stmt_getUserByJid.resPassword),
-													into(m_stmt_getUserByJid.resEncoding),
-													into(m_stmt_getUserByJid.resLanguage),
-													into(m_stmt_getUserByJid.resVIP),
-													limit(1),
-													range(0, 1) ) );
+	m_stmt_getUserByJid = new SpectrumSQLStatement(m_sess, "s|isssssb", "SELECT id, jid, uin, password, encoding, language, vip FROM " + p->configuration().sqlPrefix + "users WHERE jid=?");
+
 	if (!m_stmt_getBuddies.stmt)
 		m_stmt_getBuddies.stmt = new Statement( ( STATEMENT("SELECT id, user_id, uin, subscription, nickname, groups, flags FROM " + p->configuration().sqlPrefix + "buddies WHERE user_id=? ORDER BY id ASC"),
 												use(m_stmt_getBuddies.user_id),
@@ -339,7 +408,7 @@ void SQLClass::removeStatements() {
 	delete m_stmt_getBuddies.stmt;
 	delete m_stmt_addSetting.stmt;
 	delete m_stmt_updateSetting.stmt;
-	delete m_stmt_getUserByJid.stmt;
+	delete m_stmt_getUserByJid;
 	delete m_stmt_getBuddiesSettings.stmt;
 	delete m_stmt_addBuddySetting.stmt;
 	delete m_stmt_getSettings.stmt;
@@ -357,7 +426,6 @@ void SQLClass::removeStatements() {
 	m_stmt_updateBuddy.stmt = NULL;
 #endif
 	m_stmt_updateBuddySubscription.stmt = NULL;
-	m_stmt_getUserByJid.stmt = NULL;
 	m_stmt_getBuddies.stmt = NULL;
 	m_stmt_addSetting.stmt = NULL;
 	m_stmt_updateSetting.stmt = NULL;
@@ -730,22 +798,19 @@ UserRow SQLClass::getUserByJid(const std::string &jid){
 	UserRow user;
 	user.id = -1;
 	user.vip = 0;
-	m_stmt_getUserByJid.jid.assign(jid);
+	m_stmt_getUserByJid->push(jid);
 
 	STATEMENT_EXECUTE_BEGIN();
-		if (m_stmt_getUserByJid.stmt->execute()) {
-			do {
-				user.id = m_stmt_getUserByJid.resId;
-				user.jid = m_stmt_getUserByJid.resJid;
-				user.uin = m_stmt_getUserByJid.resUin;
-				user.password = m_stmt_getUserByJid.resPassword;
-				user.encoding = m_stmt_getUserByJid.resEncoding;
-				user.language = m_stmt_getUserByJid.resLanguage;
-				user.vip = m_stmt_getUserByJid.resVIP;
-				m_stmt_getUserByJid.stmt->execute();
-			} while (!m_stmt_getUserByJid.stmt->done());
+		if (m_stmt_getUserByJid->execute()) {
+			user.id = m_stmt_getUserByJid->pullInt();
+			user.jid = m_stmt_getUserByJid->pullString();
+			user.uin = m_stmt_getUserByJid->pullString();
+			user.password = m_stmt_getUserByJid->pullString();
+			user.encoding = m_stmt_getUserByJid->pullString();
+			user.language = m_stmt_getUserByJid->pullString();
+			user.vip = m_stmt_getUserByJid->pullBool();
 		}
-	STATEMENT_EXECUTE_END(m_stmt_getUserByJid.stmt, getUserByJid(jid));
+	STATEMENT_EXECUTE_END(m_stmt_getUserByJid, getUserByJid(jid));
 
 	return user;
 }
