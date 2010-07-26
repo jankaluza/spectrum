@@ -61,19 +61,17 @@ using namespace gloox;
 	catch (Poco::Exception e) { \
 		m_error++;\
 		LogMessage(Log_.fileStream()).Get("SQL ERROR") << e.code() << " " << e.displayText(); \
-		if (m_error != 3 && p->configuration().sqlType != "sqlite") { \
+		if (m_error != 3 && Transport::instance()->getConfiguration().sqlType != "sqlite") { \
 			if (e.code() == 1243) { \
-				delete STATEMENT; \
-				STATEMENT = NULL; \
-				createStatements(); \
+				createStatement(); \
 				return FUNC; \
 			} \
 			else if (e.code() == 2013 || e.code() == 2003) { \
-				if (reconnect()) \
+				if (Transport::instance()->sql()->reconnect()) \
 					return FUNC; \
 			} \
 			else if (e.code() == 0) { \
-				if (reconnect()) \
+				if (Transport::instance()->sql()->reconnect()) \
 					return FUNC; \
 			} \
 		} \
@@ -257,16 +255,46 @@ struct getOnlineUsersStatement {
 	std::vector<std::string> resUsers;
 };
 
+// Prepared SQL Statement representation
 class SpectrumSQLStatement {
 	public:
+		// Creates new SpectrumSQLStatement using m_sess Session.
+		// Format is string where each character represents the type of variables used/returned by prepared
+		// statement:
+		// 'i' - Poco::Int32 (integer)
+		// 's' - std::string
+		// 'b' - boolean
+		// '|' - delimiter used to separate input variables from output variables
+		// Example statement: "SELECT id, jid FROM table WHERE user_jid = ?;"
+		// Format: "s|is" (input: string; output: integer, string)
 		SpectrumSQLStatement(Poco::Data::Session *m_sess, const std::string &format, const std::string &statement);
 		~SpectrumSQLStatement();
 
-		void push(const std::string &str);
+		void createStatement(const std::string &statement = "");
+		void removeStatement();
+
+		template <typename T>
+		SpectrumSQLStatement& operator << (const T& t) {
+			if (m_offset >= m_resultOffset)
+				return *this;
+
+			T *data = (T *) m_params[m_offset];
+			*data = t;
+			m_offset++;
+			return *this;
+		}
+
+		template <typename T>
+		SpectrumSQLStatement& operator >> (T& t) {
+			t = *(T *) m_params[m_offset];
+			if (++m_offset == m_params.size())
+				m_offset = 0;
+			return *this;
+		}
+
+		// Executes the statement. All input variables has to have their values pushed before calling
+		// execute();
 		int execute();
-		Poco::Int32 &pullInt();
-		const std::string &pullString();
-		bool &pullBool();
 
 	private:
 		Poco::Data::Statement *m_statement;
@@ -274,8 +302,8 @@ class SpectrumSQLStatement {
 		std::string m_format;
 		int m_resultOffset;
 		int m_offset;
-		Poco::Int32 *m_test;
-		Poco::Int32 m_test2;
+		int m_error;
+		Poco::Data::Session *m_sess;
 };
 
 /*
@@ -302,6 +330,7 @@ class SQLClass : public AbstractBackend {
 		bool ping();
 		bool reconnectCallback();
 		void upgradeDatabase();
+		void createStatement();
 
 		// settings
 		void addSetting(long userId, const std::string &key, const std::string &value, PurpleType type);
@@ -333,7 +362,7 @@ class SQLClass : public AbstractBackend {
 #ifdef WITH_SQLITE
 		updateBuddyStatement m_stmt_updateBuddy;
 #endif
-		updateBuddySubscriptionStatement m_stmt_updateBuddySubscription;
+		SpectrumSQLStatement *m_stmt_updateBuddySubscription;
 		SpectrumSQLStatement *m_stmt_getUserByJid;
 		getBuddiesStatement m_stmt_getBuddies;
 		addSettingStatement m_stmt_addSetting;
