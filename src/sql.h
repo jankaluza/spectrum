@@ -56,30 +56,6 @@ using namespace gloox;
 
 #define STATEMENT(STRING) *m_sess << std::string(STRING)
 
-#define STATEMENT_EXECUTE_BEGIN() try {
-
-#define STATEMENT_EXECUTE_END(STATEMENT,FUNC)	} \
-	catch (Poco::Exception e) { \
-		m_error++;\
-		LogMessage(Log_.fileStream()).Get("SQL ERROR") << e.code() << " " << e.displayText(); \
-		if (m_error != 3 && Transport::instance()->getConfiguration().sqlType != "sqlite") { \
-			if (e.code() == 1243) { \
-				createStatement(); \
-				return FUNC; \
-			} \
-			else if (e.code() == 2013 || e.code() == 2003) { \
-				if (Transport::instance()->sql()->reconnect()) \
-					return FUNC; \
-			} \
-			else if (e.code() == 0) { \
-				if (Transport::instance()->sql()->reconnect()) \
-					return FUNC; \
-			} \
-		} \
-		LogMessage(Log_.fileStream()).Get("SQL ERROR") << e.displayText(); \
-	} \
-	m_error = 0;
-
 /*
  * Structure which represents one buddy in roster (one roster row)
  */
@@ -110,150 +86,6 @@ struct addUserStatement {
 	std::string encoding;
 	bool vip;
 	Poco::Data::Statement *stmt;
-};
-
-struct updateUserPasswordStatement {
-	std::string jid;
-	std::string uin;
-	std::string password;
-	std::string language;
-	std::string encoding;
-	bool vip;
-	Poco::Data::Statement *stmt;
-};
-
-struct removeBuddyStatement {
-	Poco::Int32 user_id;
-	std::string uin;
-	Poco::Data::Statement *stmt;
-};
-
-struct removeUserStatement {
-	Poco::Int32 userId;
-	Poco::Data::Statement *stmt;
-};
-
-struct removeUserBuddiesStatement {
-	Poco::Int32 user_id;
-	Poco::Data::Statement *stmt;
-};
-
-struct addBuddyStatement {
-	Poco::Int32 user_id;
-	std::string uin;
-	std::string subscription;
-	std::string groups;
-	std::string nickname;
-	int flags;
-	Poco::Data::Statement *stmt;
-};
-
-#ifdef WITH_SQLITE
-struct updateBuddyStatement {
-	Poco::Int32 user_id;
-	std::string uin;
-	std::string groups;
-	std::string nickname;
-	int flags;
-	Poco::Data::Statement *stmt;
-};
-#endif
-
-struct updateBuddySubscriptionStatement {
-	Poco::Int32 user_id;
-	std::string uin;
-	std::string subscription;
-	std::string groups;
-	std::string nickname;
-	Poco::Data::Statement *stmt;
-};
-
-struct getUserByJidStatement {
-	std::string jid;
-	Poco::Data::Statement *stmt;
-	
-	Poco::Int32 resId;
-	std::string resJid;
-	std::string resUin;
-	std::string resPassword;
-	std::string resEncoding;
-	std::string resLanguage;
-	bool resVIP;
-};
-
-struct getBuddiesStatement {
-	Poco::Int32 user_id;
-	Poco::Data::Statement *stmt;
-	
-	Poco::Int32 resId;
-	Poco::Int32 resUserId;
-	std::string resUin;
-	std::string resSubscription;
-	std::string resNickname;
-	std::string resGroups;
-	int resFlags;
-};
-
-struct addSettingStatement {
-	Poco::Int32 user_id;
-	std::string var;
-	std::string value;
-	int type;
-
-	Poco::Data::Statement *stmt;
-};
-
-struct updateSettingStatement {
-	Poco::Int32 user_id;
-	std::string var;
-	std::string value;
-	Poco::Data::Statement *stmt;
-};
-
-struct getBuddiesSettingsStatement {
-	Poco::Int32 user_id;
-	Poco::Data::Statement *stmt;
-	
-	std::vector<Poco::Int32> resId; 
-	std::vector<int> resType;
-	std::vector<std::string> resVar;
-	std::vector<std::string> resValue;
-};
-
-struct getSettingsStatement {
-	Poco::Int32 user_id;
-	Poco::Data::Statement *stmt;
-	
-	std::vector<Poco::Int32> resId; 
-	std::vector<int> resType;
-	std::vector<std::string> resVar;
-	std::vector<std::string> resValue;
-};
-
-struct addBuddySettingStatement {
-	Poco::Int32 user_id;
-	Poco::Int32 buddy_id;
-	std::string var;
-	int type;
-	std::string value;
-	Poco::Data::Statement *stmt;
-};
-
-struct removeBuddySettingsStatement {
-	Poco::Int32 buddy_id;
-	Poco::Data::Statement *stmt;
-};
-
-struct setUserOnlineStatement {
-	Poco::Int32 user_id;
-	bool online;
-	Poco::Data::Statement *stmt;
-};
-
-struct getOnlineUsersStatement {
-	Poco::Data::Statement *stmt;
-	
-	std::vector<std::string> resUsers;
 };
 
 // Prepared SQL Statement representation
@@ -288,11 +120,13 @@ class SpectrumSQLStatement {
 		// Executes the statement. All input variables has to have their values pushed before calling
 		// execute();
 		int execute();
+		
+		int executeNoCheck();
 
-	private:
-		void createStatement(const std::string &statement = "");
+		void createStatement(Poco::Data::Session *m_sess, const std::string &statement = "");
 		void removeStatement();
 
+	private:
 		Poco::Data::Statement *m_statement;
 		std::vector <void *> m_params;
 		std::string m_format;
@@ -326,12 +160,12 @@ class SQLClass : public AbstractBackend {
 		bool ping();
 		bool reconnectCallback();
 		void upgradeDatabase();
-		void createStatement();
 
 		// settings
 		void addSetting(long userId, const std::string &key, const std::string &value, PurpleType type);
 		void updateSetting(long userId, const std::string &key, const std::string &value);
 		GHashTable * getSettings(long userId);
+		void createStatement(SpectrumSQLStatement **statement, const std::string &format, const std::string &sql);
 		
 		// buddy settings
 		void addBuddySetting(long userId, long buddyId, const std::string &key, const std::string &value, PurpleType type);
@@ -351,15 +185,13 @@ class SQLClass : public AbstractBackend {
 		 * Creates tables for sqlite3 DB.
 		 */
 		void initDb();
-		addUserStatement m_stmt_addUser;
-		updateUserPasswordStatement m_stmt_updateUserPassword;
+		SpectrumSQLStatement *m_stmt_addUser;
+		SpectrumSQLStatement *m_stmt_updateUserPassword;
 		SpectrumSQLStatement *m_stmt_removeBuddy;
 		SpectrumSQLStatement *m_stmt_removeUser;
 		SpectrumSQLStatement *m_stmt_removeUserBuddies;
-		addBuddyStatement m_stmt_addBuddy;
-#ifdef WITH_SQLITE
-		updateBuddyStatement m_stmt_updateBuddy;
-#endif
+		SpectrumSQLStatement *m_stmt_addBuddy;
+		SpectrumSQLStatement *m_stmt_updateBuddy;
 		SpectrumSQLStatement *m_stmt_updateBuddySubscription;
 		SpectrumSQLStatement *m_stmt_getUserByJid;
 		SpectrumSQLStatement *m_stmt_addSetting;

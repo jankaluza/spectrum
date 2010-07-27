@@ -54,53 +54,57 @@ SpectrumSQLStatement::SpectrumSQLStatement(Poco::Data::Session *sess, const std:
 	m_format = format;
 	m_statement = NULL;
 	m_sess = sess;
-	createStatement(statement);
+	createStatement(m_sess, statement);
 }
 
 SpectrumSQLStatement::~SpectrumSQLStatement() {
 	removeStatement();
 }
 
-void SpectrumSQLStatement::createStatement(const std::string &stmt) {
+void SpectrumSQLStatement::createStatement(Poco::Data::Session *sess, const std::string &stmt) {
+	m_sess = sess;
 	std::string statement;
 	if (stmt.empty() && m_statement)
 		statement = m_statement->toString();
 	else
 		statement = stmt;
 	if (m_statement) {
-		removeStatement();
+		delete m_statement;
+	}
+	else {
+		m_offset = 0;
+		m_error = 0;
 	}
 	m_resultOffset = -1;
-	m_offset = 0;
-	m_error = 0;
 	m_statement = new Statement(*m_sess << statement);
 
-#define BIND(VARIABLE) m_params.push_back(data); \
-if (selectPart) *m_statement = (*m_statement), use(*VARIABLE); else *m_statement = (*m_statement), into(*VARIABLE);
-
+#define BIND(VARIABLE) if (!stmt.empty()) { data = new VARIABLE; \
+m_params.push_back(data); } else {data = m_params[i - selectPart ? 0 : 1]; } \
+if (selectPart) *m_statement = (*m_statement), use(*(VARIABLE *) data); else *m_statement = (*m_statement), into(*(VARIABLE *) data);
 	bool selectPart = true;
 	void *data;
 	for (int i = 0; i < m_format.length(); i++) {
+		std::cout << i << "\n";
 		switch (m_format.at(i)) {
 			case 's':
 				data = new std::string;
-				BIND((std::string *) data);
+				BIND(std::string);
 				break;
 			case 'S':
 				data = new std::vector<std::string>;
-				BIND((std::vector<std::string> *) data);
+				BIND(std::vector<std::string>);
 				break;
 			case 'i':
 				data = new Poco::Int32;
-				BIND((Poco::Int32 *) data);
+				BIND(Poco::Int32);
 				break;
 			case 'I':
 				data = new std::vector<Poco::Int32>;
-				BIND((std::vector<Poco::Int32> *) data);
+				BIND(std::vector<Poco::Int32>);
 				break;
 			case 'b':
 				data = new bool;
-				BIND((bool *) data);
+				BIND(bool);
 				break;
 			case '|':
 				selectPart = false;
@@ -151,18 +155,54 @@ int SpectrumSQLStatement::execute() {
 		Log("SpectrumSQLStatement::execute()", "ERROR: there are some unpushed variables");
 		return 0;
 	}
-
+	std::cout << "execute\n";
 	int ret = 0;
-	STATEMENT_EXECUTE_BEGIN();
-	ret = m_statement->execute();
-	STATEMENT_EXECUTE_END("",execute());
+	try {
+		ret = m_statement->execute();
+	}
+	catch (Poco::Exception e) {
+		m_error++;
+		LogMessage(Log_.fileStream()).Get("SQL ERROR") << m_error << " " << e.code() << " " << e.displayText();
+		if (m_error != 3 && Transport::instance()->getConfiguration().sqlType != "sqlite") {
+			if (e.code() == 1243) {
+				createStatement(m_sess);
+				return execute();
+			}
+			else if (e.code() == 2013 || e.code() == 2003 || e.code() == 2002) {
+				if (Transport::instance()->sql()->reconnect())
+					return execute();
+			}
+			else if (e.code() == 0) {
+				if (Transport::instance()->sql()->reconnect())
+					return execute();
+			}
+		}
+		LogMessage(Log_.fileStream()).Get("SQL ERROR") << e.displayText();
+	}
+	m_error = 0;
 	
 	// If statement has some input and doesn't have any output, we have
 	// to clear the offset now, because operator>> will not be called.
 	if (m_resultOffset != 0 && m_offset + 1 == m_params.size()) {
 		m_offset = 0;
 	}
+	std::cout << "ret:" << ret << "\n";
 	return ret;
+}
+
+int SpectrumSQLStatement::executeNoCheck() {
+	if (m_offset != m_resultOffset) {
+		Log("SpectrumSQLStatement::execute()", "ERROR: there are some unpushed variables");
+		return 0;
+	}
+
+	// If statement has some input and doesn't have any output, we have
+	// to clear the offset now, because operator>> will not be called.
+	if (m_resultOffset != 0 && m_offset + 1 == m_params.size()) {
+		m_offset = 0;
+	}
+
+	return m_statement->execute();
 }
 
 template <typename T>
@@ -190,25 +230,28 @@ SQLClass::SQLClass(GlooxMessageHandler *parent, bool upgrade, bool check) {
 	m_check = check;
 	m_upgrade = upgrade;
 	m_sess = NULL;
-	m_stmt_addUser.stmt = NULL;
+
+	m_stmt_addUser = NULL;
 	m_version_stmt = NULL;
-	m_stmt_updateUserPassword.stmt = NULL;
-	m_stmt_addBuddy.stmt = NULL;
-#ifdef WITH_SQLITE
-	m_stmt_updateBuddy.stmt = NULL;
-#endif
-// 	m_stmt_updateBuddySubscription.stmt = NULL;
-// 	m_stmt_getBuddies.stmt = NULL;
-// 	m_stmt_addSetting.stmt = NULL;
-// 	m_stmt_updateSetting.stmt = NULL;
-// 	m_stmt_getBuddiesSettings.stmt = NULL;
-// 	m_stmt_addBuddySetting.stmt = NULL;
-// 	m_stmt_getSettings.stmt = NULL;
-// 	m_stmt_getOnlineUsers.stmt = NULL;
-// 	m_stmt_setUserOnline.stmt = NULL;
-// 	m_stmt_removeBuddySettings.stmt = NULL;
-	
+	m_stmt_updateUserPassword = NULL;
+	m_stmt_removeBuddy = NULL;
+	m_stmt_removeUser = NULL;
+	m_stmt_removeUserBuddies = NULL;
+	m_stmt_addBuddy = NULL;
+	m_stmt_removeBuddySettings = NULL;
+	m_stmt_updateBuddy = NULL;
+	m_stmt_updateBuddySubscription = NULL;
+	m_stmt_getBuddies = NULL;
+	m_stmt_addSetting = NULL;
+	m_stmt_updateSetting = NULL;
+	m_stmt_getUserByJid = NULL;
+	m_stmt_getBuddiesSettings = NULL;
+	m_stmt_addBuddySetting = NULL;
+	m_stmt_getSettings = NULL;
+	m_stmt_getOnlineUsers = NULL;
+	m_stmt_setUserOnline = NULL;
 	m_error = 0;
+	
 	m_reconnectTimer = new SpectrumTimer(1000, reconnectMe, this);
 	m_pingTimer = new SpectrumTimer(30000, pingSQL, this);
 	
@@ -273,129 +316,72 @@ SQLClass::~SQLClass() {
 	}
 }
 
-void SQLClass::createStatement() {
-	createStatements();
+void SQLClass::createStatement(SpectrumSQLStatement **statement, const std::string &format, const std::string &sql) {
+	if (*statement)
+		(*statement)->createStatement(m_sess);
+	else
+		*statement = new SpectrumSQLStatement(m_sess, format, sql);
 }
 
 void SQLClass::createStatements() {
-	if (!m_version_stmt) {
-		m_version_stmt = new Statement( ( STATEMENT("SELECT ver FROM " + p->configuration().sqlPrefix + "db_version ORDER BY ver DESC LIMIT 1"), into(m_version) ) );
-	}
-	
-	// Prepared statements
-#ifdef WITH_SQLITE
-	if (p->configuration().sqlType == "sqlite") {
-		if (!m_stmt_addUser.stmt)
-			m_stmt_addUser.stmt = new Statement( ( STATEMENT("INSERT INTO " + p->configuration().sqlPrefix + "users (jid, uin, password, language, encoding, last_login, vip) VALUES (?, ?, ?, ?, ?, DATETIME('NOW'), ?)"),
-												use(m_stmt_addUser.jid),
-												use(m_stmt_addUser.uin),
-												use(m_stmt_addUser.password),
-												use(m_stmt_addUser.language),
-												use(m_stmt_addUser.encoding),
-												use(m_stmt_addUser.vip) ) );
-	} else
-#endif
-		if (!m_stmt_addUser.stmt)
-			m_stmt_addUser.stmt = new Statement( ( STATEMENT("INSERT INTO " + p->configuration().sqlPrefix + "users (jid, uin, password, language, encoding, last_login, vip) VALUES (?, ?, ?, ?, ?, NOW(), ?)"),
-												use(m_stmt_addUser.jid),
-												use(m_stmt_addUser.uin),
-												use(m_stmt_addUser.password),
-												use(m_stmt_addUser.language),
-												use(m_stmt_addUser.encoding),
-												use(m_stmt_addUser.vip) ) );
-	if (!m_stmt_updateUserPassword.stmt)
-		m_stmt_updateUserPassword.stmt = new Statement( ( STATEMENT("UPDATE " + p->configuration().sqlPrefix + "users SET password=?, language=?, encoding=?, vip=? WHERE jid=?"),
-														use(m_stmt_updateUserPassword.password),
-														use(m_stmt_updateUserPassword.language),
-														use(m_stmt_updateUserPassword.encoding),
-														use(m_stmt_updateUserPassword.vip),
-														use(m_stmt_updateUserPassword.jid) ) );
-	m_stmt_removeBuddy = new SpectrumSQLStatement(m_sess, "is", "DELETE FROM " + p->configuration().sqlPrefix + "buddies WHERE user_id=? AND uin=?");
-	m_stmt_removeUser = new SpectrumSQLStatement(m_sess, "s","DELETE FROM " + p->configuration().sqlPrefix + "users WHERE id=?");
-	m_stmt_removeUserBuddies = new SpectrumSQLStatement(m_sess, "s", "DELETE FROM " + p->configuration().sqlPrefix + "buddies WHERE user_id=?");
-	
-#ifdef WITH_SQLITE
-	if (p->configuration().sqlType == "sqlite") {
-		if (!m_stmt_addBuddy.stmt)
-			m_stmt_addBuddy.stmt = new Statement( ( STATEMENT("INSERT INTO " + p->configuration().sqlPrefix + "buddies (user_id, uin, subscription, groups, nickname, flags) VALUES (?, ?, ?, ?, ?, ?)"),
-												use(m_stmt_addBuddy.user_id),
-												use(m_stmt_addBuddy.uin),
-												use(m_stmt_addBuddy.subscription),
-												use(m_stmt_addBuddy.groups),
-												use(m_stmt_addBuddy.nickname),
-												use(m_stmt_addBuddy.flags)) );
-		if (!m_stmt_updateBuddy.stmt)
-			m_stmt_updateBuddy.stmt = new Statement( ( STATEMENT("UPDATE " + p->configuration().sqlPrefix + "buddies SET groups=?, nickname=?, flags=? WHERE user_id=? AND uin=?"),
-												use(m_stmt_updateBuddy.groups),
-												use(m_stmt_updateBuddy.nickname),
-												use(m_stmt_updateBuddy.flags),
-												use(m_stmt_updateBuddy.user_id),
-												use(m_stmt_updateBuddy.uin) ) );
-	} else
-#endif
-		if (!m_stmt_addBuddy.stmt)
-			m_stmt_addBuddy.stmt = new Statement( ( STATEMENT("INSERT INTO " + p->configuration().sqlPrefix + "buddies (user_id, uin, subscription, groups, nickname, flags) VALUES (?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE groups=?, nickname=?"),
-												use(m_stmt_addBuddy.user_id),
-												use(m_stmt_addBuddy.uin),
-												use(m_stmt_addBuddy.subscription),
-												use(m_stmt_addBuddy.groups),
-												use(m_stmt_addBuddy.nickname),
-												use(m_stmt_addBuddy.flags),
-												use(m_stmt_addBuddy.groups),
-												use(m_stmt_addBuddy.nickname) ) );
+	m_version_stmt = new Statement( ( STATEMENT("SELECT ver FROM " + p->configuration().sqlPrefix + "db_version ORDER BY ver DESC LIMIT 1"), into(m_version) ) );
 
-	m_stmt_updateBuddySubscription = new SpectrumSQLStatement(m_sess, "sis", "UPDATE " + p->configuration().sqlPrefix + "buddies SET subscription=? WHERE user_id=? AND uin=?");
-	m_stmt_getUserByJid = new SpectrumSQLStatement(m_sess, "s|isssssb", "SELECT id, jid, uin, password, encoding, language, vip FROM " + p->configuration().sqlPrefix + "users WHERE jid=?");
-
-	m_stmt_getBuddies = new SpectrumSQLStatement(m_sess, "i|IISSSSI", "SELECT id, user_id, uin, subscription, nickname, groups, flags FROM " + p->configuration().sqlPrefix + "buddies WHERE user_id=? ORDER BY id ASC");
-
-	m_stmt_addSetting = new SpectrumSQLStatement(m_sess, "isis", "INSERT INTO " + p->configuration().sqlPrefix + "users_settings (user_id, var, type, value) VALUES (?,?,?,?)");
-	m_stmt_updateSetting = new SpectrumSQLStatement(m_sess, "sis", "UPDATE " + p->configuration().sqlPrefix + "users_settings SET value=? WHERE user_id=? AND var=?");
-	m_stmt_getBuddiesSettings = new SpectrumSQLStatement(m_sess, "i|IISS", "SELECT buddy_id, type, var, value FROM " + p->configuration().sqlPrefix + "buddies_settings WHERE user_id=? ORDER BY buddy_id ASC");
 	if (p->configuration().sqlType == "sqlite")
-		m_stmt_addBuddySetting = new SpectrumSQLStatement(m_sess, "iisis", "INSERT OR REPLACE INTO " + p->configuration().sqlPrefix + "buddies_settings (user_id, buddy_id, var, type, value) VALUES (?, ?, ?, ?, ?)");
+		createStatement(&m_stmt_addUser, "sssssb", "INSERT INTO " + p->configuration().sqlPrefix + "users (jid, uin, password, language, encoding, last_login, vip) VALUES (?, ?, ?, ?, ?, DATETIME('NOW'), ?)");
 	else
-		m_stmt_addBuddySetting = new SpectrumSQLStatement(m_sess, "iisiss", "INSERT INTO " + p->configuration().sqlPrefix + "buddies_settings (user_id, buddy_id, var, type, value) VALUES (?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE value=?");
+		createStatement(&m_stmt_addUser, "sssssb", "INSERT INTO " + p->configuration().sqlPrefix + "users (jid, uin, password, language, encoding, last_login, vip) VALUES (?, ?, ?, ?, ?, NOW(), ?)");
 
-	m_stmt_removeBuddySettings = new SpectrumSQLStatement(m_sess, "i", "DELETE FROM " + p->configuration().sqlPrefix + "buddies_settings WHERE buddy_id=?");
-	m_stmt_getSettings = new SpectrumSQLStatement(m_sess, "i|IISS", "SELECT user_id, type, var, value FROM " + p->configuration().sqlPrefix + "users_settings WHERE user_id=?");
+	createStatement(&m_stmt_updateUserPassword, "sssbs", "UPDATE " + p->configuration().sqlPrefix + "users SET password=?, language=?, encoding=?, vip=? WHERE jid=?");
+	createStatement(&m_stmt_removeBuddy, "is", "DELETE FROM " + p->configuration().sqlPrefix + "buddies WHERE user_id=? AND uin=?");
+	createStatement(&m_stmt_removeUser, "s","DELETE FROM " + p->configuration().sqlPrefix + "users WHERE id=?");
+	createStatement(&m_stmt_removeUserBuddies, "s", "DELETE FROM " + p->configuration().sqlPrefix + "buddies WHERE user_id=?");
 	
-	m_stmt_getOnlineUsers= new SpectrumSQLStatement(m_sess, "|S","SELECT jid FROM " + p->configuration().sqlPrefix + "users WHERE online=1");
-
 	if (p->configuration().sqlType == "sqlite") {
-		m_stmt_setUserOnline = new SpectrumSQLStatement(m_sess, "bi", "UPDATE " + p->configuration().sqlPrefix + "users SET online=?, last_login=DATETIME('NOW')  WHERE id=?");
-	}
+		createStatement(&m_stmt_addBuddy, "issssi", "INSERT INTO " + p->configuration().sqlPrefix + "buddies (user_id, uin, subscription, groups, nickname, flags) VALUES (?, ?, ?, ?, ?, ?)");
+		createStatement(&m_stmt_updateBuddy, "ssiis", "UPDATE " + p->configuration().sqlPrefix + "buddies SET groups=?, nickname=?, flags=? WHERE user_id=? AND uin=?");
+	} else
+		createStatement(&m_stmt_addBuddy, "issssiss", "INSERT INTO " + p->configuration().sqlPrefix + "buddies (user_id, uin, subscription, groups, nickname, flags) VALUES (?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE groups=?, nickname=?");
+
+	createStatement(&m_stmt_updateBuddySubscription, "sis", "UPDATE " + p->configuration().sqlPrefix + "buddies SET subscription=? WHERE user_id=? AND uin=?");
+	createStatement(&m_stmt_getUserByJid, "s|isssssb", "SELECT id, jid, uin, password, encoding, language, vip FROM " + p->configuration().sqlPrefix + "users WHERE jid=?");
+
+	createStatement(&m_stmt_getBuddies, "i|IISSSSI", "SELECT id, user_id, uin, subscription, nickname, groups, flags FROM " + p->configuration().sqlPrefix + "buddies WHERE user_id=? ORDER BY id ASC");
+
+	createStatement(&m_stmt_addSetting, "isis", "INSERT INTO " + p->configuration().sqlPrefix + "users_settings (user_id, var, type, value) VALUES (?,?,?,?)");
+	createStatement(&m_stmt_updateSetting, "sis", "UPDATE " + p->configuration().sqlPrefix + "users_settings SET value=? WHERE user_id=? AND var=?");
+	createStatement(&m_stmt_getBuddiesSettings, "i|IISS", "SELECT buddy_id, type, var, value FROM " + p->configuration().sqlPrefix + "buddies_settings WHERE user_id=? ORDER BY buddy_id ASC");
+
+	if (p->configuration().sqlType == "sqlite")
+		createStatement(&m_stmt_addBuddySetting, "iisis", "INSERT OR REPLACE INTO " + p->configuration().sqlPrefix + "buddies_settings (user_id, buddy_id, var, type, value) VALUES (?, ?, ?, ?, ?)");
 	else
-		m_stmt_setUserOnline = new SpectrumSQLStatement(m_sess, "bi", "UPDATE " + p->configuration().sqlPrefix + "users SET online=?, last_login=NOW()  WHERE id=?");
+		createStatement(&m_stmt_addBuddySetting, "iisiss", "INSERT INTO " + p->configuration().sqlPrefix + "buddies_settings (user_id, buddy_id, var, type, value) VALUES (?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE value=?");
+
+	createStatement(&m_stmt_removeBuddySettings, "i", "DELETE FROM " + p->configuration().sqlPrefix + "buddies_settings WHERE buddy_id=?");
+	createStatement(&m_stmt_getSettings, "i|IISS", "SELECT user_id, type, var, value FROM " + p->configuration().sqlPrefix + "users_settings WHERE user_id=?");
+	
+	createStatement(&m_stmt_getOnlineUsers, "|S","SELECT jid FROM " + p->configuration().sqlPrefix + "users WHERE online=1");
+
+	if (p->configuration().sqlType == "sqlite")
+		createStatement(&m_stmt_setUserOnline, "bi", "UPDATE " + p->configuration().sqlPrefix + "users SET online=?, last_login=DATETIME('NOW')  WHERE id=?");
+	else
+		createStatement(&m_stmt_setUserOnline, "bi", "UPDATE " + p->configuration().sqlPrefix + "users SET online=?, last_login=NOW()  WHERE id=?");
 }
 
 void SQLClass::addUser(const UserRow &user) {
-	m_stmt_addUser.jid.assign(user.jid);
-	m_stmt_addUser.uin.assign(user.uin);
-	m_stmt_addUser.password.assign(user.password);
-	m_stmt_addUser.language.assign(user.language);
-	m_stmt_addUser.encoding.assign(user.encoding);
-	m_stmt_addUser.vip = user.vip;
-	try {
-		m_stmt_addUser.stmt->execute();
-	}
-	catch (Poco::Exception e) {
-		Log("SQL ERROR", e.displayText());
-	}
+	*m_stmt_addUser << user.jid << user.uin << user.password << user.language << user.encoding << user.vip;
+	m_stmt_addUser->execute();
 }
 
 void SQLClass::removeStatements() {
-	delete m_stmt_addUser.stmt;
+	delete m_stmt_addUser;
 	delete m_version_stmt;
-	delete m_stmt_updateUserPassword.stmt;
+	delete m_stmt_updateUserPassword;
 	delete m_stmt_removeBuddy;
 	delete m_stmt_removeUser;
 	delete m_stmt_removeUserBuddies;
-	delete m_stmt_addBuddy.stmt;
+	delete m_stmt_addBuddy;
 	delete m_stmt_removeBuddySettings;
-#ifdef WITH_SQLITE
-	delete m_stmt_updateBuddy.stmt;
-#endif
+	delete m_stmt_updateBuddy;
 	delete m_stmt_updateBuddySubscription;
 	delete m_stmt_getBuddies;
 	delete m_stmt_addSetting;
@@ -431,8 +417,9 @@ void SQLClass::removeStatements() {
 
 bool SQLClass::reconnect() {
 	int i = 20;
+	m_pingTimer->stop();
 	if (m_loaded) {
-		removeStatements();
+// 		removeStatements();
 		m_sess->close();
 		delete m_sess;
 
@@ -465,6 +452,7 @@ bool SQLClass::reconnect() {
 		createStatements();
 		m_version_stmt->execute();
 		m_loaded = true;
+		m_pingTimer->start();
 	}
 	return true;
 }
@@ -475,11 +463,13 @@ bool SQLClass::reconnectCallback() {
 		createStatements();
 		m_version_stmt->execute();
 		m_loaded = true;
+		m_pingTimer->start();
 	}
 	catch (Poco::Exception e) {
 		Log("SQL ERROR", "Can't reconnect to db. Will try it again after 1 second.");
 		m_loaded = false;
 		return true;
+		m_pingTimer->stop();
 	}
 
 	return false;
@@ -689,29 +679,23 @@ long SQLClass::getRegisteredUsersRosterCount(){
 }
 
 void SQLClass::updateUser(const UserRow &user) {
-	m_stmt_updateUserPassword.jid.assign(user.jid);
-	m_stmt_updateUserPassword.password.assign(user.password);
-	m_stmt_updateUserPassword.language.assign(user.language);
-	m_stmt_updateUserPassword.encoding.assign(user.encoding);
-	m_stmt_updateUserPassword.vip = user.vip;
-	STATEMENT_EXECUTE_BEGIN();
-		m_stmt_updateUserPassword.stmt->execute();
-	STATEMENT_EXECUTE_END(m_stmt_updateUserPassword.stmt, updateUser(user));
+	*m_stmt_updateUserPassword << user.password << user.language << user.encoding << user.vip << user.jid;
+	m_stmt_updateUserPassword->execute();
 }
 
 void SQLClass::removeBuddy(long userId, const std::string &uin, long buddy_id) {
 	*m_stmt_removeBuddy << userId << uin;
 	*m_stmt_removeBuddySettings << buddy_id;
-	m_stmt_removeBuddy.stmt->execute();
+	m_stmt_removeBuddy->execute();
 	m_stmt_removeBuddySettings->execute();
 }
 
 void SQLClass::removeUser(long userId) {
 	*m_stmt_removeUser << userId;
-	m_stmt_removeUser.stmt->execute();
-	*m_sess << "DELETE FROM " + p->configuration().sqlPrefix + "buddies WHERE user_id=?", use(m_stmt_removeUser.userId), now;
-	*m_sess << "DELETE FROM " + p->configuration().sqlPrefix + "buddies_settings WHERE user_id=?", use(m_stmt_removeUser.userId), now;
-	*m_sess << "DELETE FROM " + p->configuration().sqlPrefix + "users_settings WHERE user_id=?", use(m_stmt_removeUser.userId), now;
+	m_stmt_removeUser->execute();
+	*m_sess << "DELETE FROM " + p->configuration().sqlPrefix + "buddies WHERE user_id=?", use(userId), now;
+	*m_sess << "DELETE FROM " + p->configuration().sqlPrefix + "buddies_settings WHERE user_id=?", use(userId), now;
+	*m_sess << "DELETE FROM " + p->configuration().sqlPrefix + "users_settings WHERE user_id=?", use(userId), now;
 }
 
 void SQLClass::removeUserBuddies(long userId) {
@@ -723,26 +707,22 @@ void SQLClass::addDownload(const std::string &filename, const std::string &vip) 
 }
 
 long SQLClass::addBuddy(long userId, const std::string &uin, const std::string &subscription, const std::string &group, const std::string &nickname, int flags) {
-	m_stmt_addBuddy.user_id = userId;
-	m_stmt_addBuddy.uin.assign(uin);
-	p->protocol()->prepareUsername(m_stmt_addBuddy.uin);
-	m_stmt_addBuddy.subscription.assign(subscription);
-	m_stmt_addBuddy.groups.assign(group);
-	m_stmt_addBuddy.nickname.assign(nickname);
-	m_stmt_addBuddy.flags = flags;
+	std::string u(uin);
+	p->protocol()->prepareUsername(u);
+	*m_stmt_addBuddy << userId << u << subscription << group << nickname << flags;
+	if (p->configuration().sqlType == "mysql") {
+		*m_stmt_addBuddy << group << nickname;
+	}
+
 	try {
-		m_stmt_addBuddy.stmt->execute();
+		m_stmt_addBuddy->executeNoCheck();
 	}
 #ifdef WITH_SQLITE
 	/* SQLite doesn't support "ON DUPLICATE UPDATE". */
 	catch (Poco::Data::SQLite::ConstraintViolationException e) {
-		m_stmt_updateBuddy.user_id = userId;
-		m_stmt_updateBuddy.uin = uin;
-		m_stmt_updateBuddy.groups = group;
-		m_stmt_updateBuddy.nickname = nickname;
-		m_stmt_updateBuddy.flags = flags;
+		*m_stmt_updateBuddy << group << nickname << flags << userId << uin;
 		try {
-			m_stmt_updateBuddy.stmt->execute();
+			m_stmt_updateBuddy->executeNoCheck();
 		}
 		catch (Poco::Exception e) {
 			Log("SQL ERROR", e.displayText());
@@ -755,9 +735,7 @@ long SQLClass::addBuddy(long userId, const std::string &uin, const std::string &
 	// It would be much more better to find out the way how to get last_inserted_rowid from Poco.
 	if (p->configuration().sqlType == "sqlite") {
 		Poco::UInt64 id = -1;
-		STATEMENT_EXECUTE_BEGIN();
 		*m_sess << "SELECT last_insert_rowid();", into(id), now;
-		STATEMENT_EXECUTE_END(m_stmt_addBuddy.stmt, addBuddy(userId, uin, subscription, group, nickname));
 		return id;
 	}
 	else
@@ -770,9 +748,7 @@ long SQLClass::addBuddy(long userId, const std::string &uin, const std::string &
 void SQLClass::updateBuddySubscription(long userId, const std::string &uin, const std::string &subscription) {
 	*m_stmt_updateBuddySubscription << subscription << userId << uin;
 	
-	STATEMENT_EXECUTE_BEGIN();
-		m_stmt_updateBuddySubscription->execute();
-	STATEMENT_EXECUTE_END(m_stmt_updateBuddySubscription.stmt, updateBuddySubscription(userId, uin, subscription));
+	m_stmt_updateBuddySubscription->execute();
 }
 
 UserRow SQLClass::getUserByJid(const std::string &jid){
