@@ -122,6 +122,8 @@ class SpectrumSQLStatement {
 		int execute();
 		
 		int executeNoCheck();
+		void createData();
+		void removeData();
 
 		void createStatement(Poco::Data::Session *m_sess, const std::string &statement = "");
 		void removeStatement();
@@ -133,6 +135,7 @@ class SpectrumSQLStatement {
 		int m_resultOffset;
 		int m_offset;
 		int m_error;
+		std::string m_stmt;
 		Poco::Data::Session *m_sess;
 };
 

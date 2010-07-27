@@ -54,99 +54,75 @@ SpectrumSQLStatement::SpectrumSQLStatement(Poco::Data::Session *sess, const std:
 	m_format = format;
 	m_statement = NULL;
 	m_sess = sess;
+	m_stmt = statement;
+	m_offset = 0;
+	m_error = 0;
+	createData();
 	createStatement(m_sess, statement);
 }
 
 SpectrumSQLStatement::~SpectrumSQLStatement() {
 	removeStatement();
+	removeData();
 }
 
-void SpectrumSQLStatement::createStatement(Poco::Data::Session *sess, const std::string &stmt) {
-	
-#define BIND(VARIABLE) m_params.push_back(data); \
-if (selectPart) *m_statement = (*m_statement), use(*VARIABLE); else *m_statement = (*m_statement), into(*VARIABLE);
-	m_sess = sess;
-	std::string statement;
-	if (stmt.empty() && m_statement)
-		statement = m_statement->toString();
-	else
-		statement = stmt;
-	if (m_statement) {
-		delete m_statement;	m_statement = new Statement(*m_sess << statement);
-		bool selectPart = true;
-		int x=0;
-		for (int i = 0; i < m_format.length(); i++) {
-			switch (m_format.at(i)) {
-				case 's':
-// 					data = new std::string;
-// 					BIND((std::string *) data);
-					if (selectPart) *m_statement = (*m_statement), use(*(std::string *) m_params[x]); else *m_statement = (*m_statement), into(*(std::string *) m_params[x]);
-					x++;
-					break;
-				case 'S':
-// 					data = new std::vector<std::string>;
-					if (selectPart) *m_statement = (*m_statement), use(*(std::vector<std::string> *) m_params[x]); else *m_statement = (*m_statement), into(*(std::vector<std::string> *) m_params[x]);
-// 					BIND((std::vector<std::string> *) data);
-x++;
-					break;
-				case 'i':
-// 					data = new Poco::Int32;
-					if (selectPart) *m_statement = (*m_statement), use(*(Poco::Int32 *) m_params[x]); else *m_statement = (*m_statement), into(*(Poco::Int32 *) m_params[x]);
-// 					BIND((Poco::Int32 *) data);
-x++;
-					break;
-				case 'I':
-// 					data = new std::vector<Poco::Int32>;
-					if (selectPart) *m_statement = (*m_statement), use(*(std::vector<Poco::Int32> *) m_params[x]); else *m_statement = (*m_statement), into(*(std::vector<Poco::Int32> *) m_params[x]);
-					x++;
-					break;
-				case 'b':
-// 					data = new bool;
-// 					BIND((bool *) data);
-					if (selectPart) *m_statement = (*m_statement), use(*(bool *) m_params[x]); else *m_statement = (*m_statement), into(*(bool *) m_params[x]);
-					x++;
-					break;
-				case '|':
-					selectPart = false;
-					m_resultOffset = i;
-					break;
-			}
-		}
-	}
-	else {
-		m_offset = 0;
-		m_error = 0;
-m_resultOffset = -1;	m_statement = new Statement(*m_sess << statement);
-	bool selectPart = true;
-	void *data;
+void SpectrumSQLStatement::createData() {
 	for (int i = 0; i < m_format.length(); i++) {
 		switch (m_format.at(i)) {
 			case 's':
-				data = new std::string;
-				BIND((std::string *) data);
+				m_params.push_back(new std::string);
 				break;
 			case 'S':
-				data = new std::vector<std::string>;
-				BIND((std::vector<std::string> *) data);
+				m_params.push_back(new std::vector<std::string>);
 				break;
 			case 'i':
-				data = new Poco::Int32;
-				BIND((Poco::Int32 *) data);
+				m_params.push_back(new Poco::Int32);
 				break;
 			case 'I':
-				data = new std::vector<Poco::Int32>;
-				BIND((std::vector<Poco::Int32> *) data);
+				m_params.push_back(new std::vector<Poco::Int32>);
 				break;
 			case 'b':
-				data = new bool;
-				BIND((bool *) data);
+				m_params.push_back(new bool);
+				break;
+			case '|':
+				break;
+		}
+	}
+}
+
+void SpectrumSQLStatement::createStatement(Poco::Data::Session *sess, const std::string &stmt) {
+	if (m_statement)
+		return;
+	m_sess = sess;
+	std::string statement = m_stmt;
+	m_statement = new Statement(*m_sess << statement);
+
+#define BIND(VARIABLE) if (selectPart) *m_statement = (*m_statement), use(*VARIABLE); else *m_statement = (*m_statement), into(*VARIABLE);
+	m_resultOffset = -1;
+	bool selectPart = true;
+	int id = 0;
+	for (int i = 0; i < m_format.length(); i++) {
+		switch (m_format.at(i)) {
+			case 's':
+				BIND((std::string *) m_params[id++]);
+				break;
+			case 'S':
+				BIND((std::vector<std::string> *) m_params[id++]);
+				break;
+			case 'i':
+				BIND((Poco::Int32 *) m_params[id++]);
+				break;
+			case 'I':
+				BIND((std::vector<Poco::Int32> *) m_params[id++]);
+				break;
+			case 'b':
+				BIND((bool *) m_params[id++]);
 				break;
 			case '|':
 				selectPart = false;
 				m_resultOffset = i;
 				break;
 		}
-	}
 	}
 
 
@@ -159,31 +135,35 @@ m_resultOffset = -1;	m_statement = new Statement(*m_sess << statement);
 void SpectrumSQLStatement::removeStatement() {
 	if (m_statement) {
 		delete m_statement;
-		for (int i = 0; i < m_format.length(); i++) {
-			switch (m_format.at(i)) {
-				case 's':
-					delete (std::string *) m_params.front();
-					m_params.erase(m_params.begin());
-					break;
-				case 'S':
-					delete (std::vector <std::string> *) m_params.front();
-					m_params.erase(m_params.begin());
-					break;
-				case 'i':
-					delete (Poco::Int32 *) m_params.front();
-					m_params.erase(m_params.begin());
-					break;
-				case 'I':
-					delete (std::vector <Poco::Int32> *) m_params.front();
-					m_params.erase(m_params.begin());
-					break;
-				case 'b':
-					delete (bool *) m_params.front();
-					m_params.erase(m_params.begin());
-					break;
-				case '|':
-					break;
-			}
+		m_statement = NULL;
+	}
+}
+
+void SpectrumSQLStatement::removeData() {
+	for (int i = 0; i < m_format.length(); i++) {
+		switch (m_format.at(i)) {
+			case 's':
+				delete (std::string *) m_params.front();
+				m_params.erase(m_params.begin());
+				break;
+			case 'S':
+				delete (std::vector <std::string> *) m_params.front();
+				m_params.erase(m_params.begin());
+				break;
+			case 'i':
+				delete (Poco::Int32 *) m_params.front();
+				m_params.erase(m_params.begin());
+				break;
+			case 'I':
+				delete (std::vector <Poco::Int32> *) m_params.front();
+				m_params.erase(m_params.begin());
+				break;
+			case 'b':
+				delete (bool *) m_params.front();
+				m_params.erase(m_params.begin());
+				break;
+			case '|':
+				break;
 		}
 	}
 }
@@ -204,6 +184,8 @@ int SpectrumSQLStatement::execute() {
 		LogMessage(Log_.fileStream()).Get("SQL ERROR") << m_error << " " << e.code() << " " << e.displayText();
 		if (m_error != 3 && Transport::instance()->getConfiguration().sqlType != "sqlite") {
 			if (e.code() == 1243) {
+				if (m_statement) delete m_statement;
+				m_statement = NULL;
 				createStatement(m_sess);
 				return execute();
 			}
@@ -225,6 +207,10 @@ int SpectrumSQLStatement::execute() {
 	if (m_resultOffset != 0 && m_offset + 1 == m_params.size()) {
 		m_offset = 0;
 	}
+
+	// No row returned, so operator>> can't be called and offset = 0
+	if (ret == 0)
+		m_offset = 0;
 	return ret;
 }
 
@@ -240,7 +226,13 @@ int SpectrumSQLStatement::executeNoCheck() {
 		m_offset = 0;
 	}
 
-	return m_statement->execute();
+	int ret = m_statement->execute();
+
+	// No row returned, so operator>> can't be called and offset = 0
+	if (ret == 0)
+		m_offset = 0;
+
+	return ret;
 }
 
 template <typename T>
@@ -350,7 +342,25 @@ SQLClass::~SQLClass() {
 	if (m_loaded) {
 		m_sess->close();
 		delete m_sess;
-		removeStatements();
+		delete m_stmt_addUser;
+		delete m_version_stmt;
+		delete m_stmt_updateUserPassword;
+		delete m_stmt_removeBuddy;
+		delete m_stmt_removeUser;
+		delete m_stmt_removeUserBuddies;
+		delete m_stmt_addBuddy;
+		delete m_stmt_removeBuddySettings;
+		delete m_stmt_updateBuddy;
+		delete m_stmt_updateBuddySubscription;
+		delete m_stmt_getBuddies;
+		delete m_stmt_addSetting;
+		delete m_stmt_updateSetting;
+		delete m_stmt_getUserByJid;
+		delete m_stmt_getBuddiesSettings;
+		delete m_stmt_addBuddySetting;
+		delete m_stmt_getSettings;
+		delete m_stmt_getOnlineUsers;
+		delete m_stmt_setUserOnline;
 	}
 }
 
@@ -411,53 +421,34 @@ void SQLClass::addUser(const UserRow &user) {
 }
 
 void SQLClass::removeStatements() {
-	delete m_stmt_addUser;
+	m_stmt_addUser->removeStatement();
 	delete m_version_stmt;
-	delete m_stmt_updateUserPassword;
-	delete m_stmt_removeBuddy;
-	delete m_stmt_removeUser;
-	delete m_stmt_removeUserBuddies;
-	delete m_stmt_addBuddy;
-	delete m_stmt_removeBuddySettings;
-	delete m_stmt_updateBuddy;
-	delete m_stmt_updateBuddySubscription;
-	delete m_stmt_getBuddies;
-	delete m_stmt_addSetting;
-	delete m_stmt_updateSetting;
-	delete m_stmt_getUserByJid;
-	delete m_stmt_getBuddiesSettings;
-	delete m_stmt_addBuddySetting;
-	delete m_stmt_getSettings;
-	delete m_stmt_getOnlineUsers;
-	delete m_stmt_setUserOnline;
-	/*
-	m_stmt_addUser.stmt = NULL;
-	m_version_stmt = NULL;
-	m_stmt_updateUserPassword.stmt = NULL;
-	m_stmt_removeBuddy.stmt = NULL;
-	m_stmt_removeUser.stmt = NULL;
-	m_stmt_removeUserBuddies.stmt = NULL;
-	m_stmt_addBuddy.stmt = NULL;
-#ifdef WITH_SQLITE
-	m_stmt_updateBuddy.stmt = NULL;
-#endif
-	m_stmt_updateBuddySubscription.stmt = NULL;
-	m_stmt_getBuddies.stmt = NULL;
-	m_stmt_addSetting.stmt = NULL;
-	m_stmt_updateSetting.stmt = NULL;
-	m_stmt_getBuddiesSettings.stmt = NULL;
-	m_stmt_addBuddySetting.stmt = NULL;
-	m_stmt_getSettings.stmt = NULL;
-	m_stmt_getOnlineUsers.stmt = NULL;
-	m_stmt_setUserOnline.stmt = NULL;
-	m_stmt_removeBuddySettings.stmt = NULL;*/
+	m_stmt_updateUserPassword->removeStatement();
+	m_stmt_removeBuddy->removeStatement();
+	m_stmt_removeUser->removeStatement();
+	m_stmt_removeUserBuddies->removeStatement();
+	m_stmt_addBuddy->removeStatement();
+	m_stmt_removeBuddySettings->removeStatement();
+	if (m_stmt_updateBuddy)
+		m_stmt_updateBuddy->removeStatement();
+	m_stmt_updateBuddySubscription->removeStatement();
+	m_stmt_getBuddies->removeStatement();
+	m_stmt_addSetting->removeStatement();
+	m_stmt_updateSetting->removeStatement();
+	m_stmt_getUserByJid->removeStatement();
+	m_stmt_getBuddiesSettings->removeStatement();
+	m_stmt_addBuddySetting->removeStatement();
+	m_stmt_getSettings->removeStatement();
+	m_stmt_getOnlineUsers->removeStatement();
+	m_stmt_setUserOnline->removeStatement();
 }
 
 bool SQLClass::reconnect() {
 	int i = 20;
 	m_pingTimer->stop();
 	if (m_loaded) {
-// 		removeStatements();
+		
+		removeStatements();
 		m_sess->close();
 		delete m_sess;
 
@@ -731,9 +722,10 @@ void SQLClass::removeBuddy(long userId, const std::string &uin, long buddy_id) {
 void SQLClass::removeUser(long userId) {
 	*m_stmt_removeUser << userId;
 	m_stmt_removeUser->execute();
-	*m_sess << "DELETE FROM " + p->configuration().sqlPrefix + "buddies WHERE user_id=?", use(userId), now;
-	*m_sess << "DELETE FROM " + p->configuration().sqlPrefix + "buddies_settings WHERE user_id=?", use(userId), now;
-	*m_sess << "DELETE FROM " + p->configuration().sqlPrefix + "users_settings WHERE user_id=?", use(userId), now;
+	Poco::Int32 id = userId;
+	*m_sess << "DELETE FROM " + p->configuration().sqlPrefix + "buddies WHERE user_id=?", use(id), now;
+	*m_sess << "DELETE FROM " + p->configuration().sqlPrefix + "buddies_settings WHERE user_id=?", use(id), now;
+	*m_sess << "DELETE FROM " + p->configuration().sqlPrefix + "users_settings WHERE user_id=?", use(id), now;
 }
 
 void SQLClass::removeUserBuddies(long userId) {
@@ -793,7 +785,6 @@ UserRow SQLClass::getUserByJid(const std::string &jid){
 	UserRow user;
 	user.id = -1;
 	user.vip = 0;
-
 	*m_stmt_getUserByJid << jid;
 	if (m_stmt_getUserByJid->execute()) {
 		*m_stmt_getUserByJid >> user.id >> user.jid >> user.uin >> user.password >> user.encoding >> user.language >> user.vip;
