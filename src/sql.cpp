@@ -62,6 +62,9 @@ SpectrumSQLStatement::~SpectrumSQLStatement() {
 }
 
 void SpectrumSQLStatement::createStatement(Poco::Data::Session *sess, const std::string &stmt) {
+	
+#define BIND(VARIABLE) m_params.push_back(data); \
+if (selectPart) *m_statement = (*m_statement), use(*VARIABLE); else *m_statement = (*m_statement), into(*VARIABLE);
 	m_sess = sess;
 	std::string statement;
 	if (stmt.empty() && m_statement)
@@ -69,42 +72,74 @@ void SpectrumSQLStatement::createStatement(Poco::Data::Session *sess, const std:
 	else
 		statement = stmt;
 	if (m_statement) {
-		delete m_statement;
+		delete m_statement;	m_statement = new Statement(*m_sess << statement);
+		bool selectPart = true;
+		int x=0;
+		for (int i = 0; i < m_format.length(); i++) {
+			switch (m_format.at(i)) {
+				case 's':
+// 					data = new std::string;
+// 					BIND((std::string *) data);
+					if (selectPart) *m_statement = (*m_statement), use(*(std::string *) m_params[x]); else *m_statement = (*m_statement), into(*(std::string *) m_params[x]);
+					x++;
+					break;
+				case 'S':
+// 					data = new std::vector<std::string>;
+					if (selectPart) *m_statement = (*m_statement), use(*(std::vector<std::string> *) m_params[x]); else *m_statement = (*m_statement), into(*(std::vector<std::string> *) m_params[x]);
+// 					BIND((std::vector<std::string> *) data);
+x++;
+					break;
+				case 'i':
+// 					data = new Poco::Int32;
+					if (selectPart) *m_statement = (*m_statement), use(*(Poco::Int32 *) m_params[x]); else *m_statement = (*m_statement), into(*(Poco::Int32 *) m_params[x]);
+// 					BIND((Poco::Int32 *) data);
+x++;
+					break;
+				case 'I':
+// 					data = new std::vector<Poco::Int32>;
+					if (selectPart) *m_statement = (*m_statement), use(*(std::vector<Poco::Int32> *) m_params[x]); else *m_statement = (*m_statement), into(*(std::vector<Poco::Int32> *) m_params[x]);
+					x++;
+					break;
+				case 'b':
+// 					data = new bool;
+// 					BIND((bool *) data);
+					if (selectPart) *m_statement = (*m_statement), use(*(bool *) m_params[x]); else *m_statement = (*m_statement), into(*(bool *) m_params[x]);
+					x++;
+					break;
+				case '|':
+					selectPart = false;
+					m_resultOffset = i;
+					break;
+			}
+		}
 	}
 	else {
 		m_offset = 0;
 		m_error = 0;
-	}
-	m_resultOffset = -1;
-	m_statement = new Statement(*m_sess << statement);
-
-#define BIND(VARIABLE) if (!stmt.empty()) { data = new VARIABLE; \
-m_params.push_back(data); } else {data = m_params[i - selectPart ? 0 : 1]; } \
-if (selectPart) *m_statement = (*m_statement), use(*(VARIABLE *) data); else *m_statement = (*m_statement), into(*(VARIABLE *) data);
+m_resultOffset = -1;	m_statement = new Statement(*m_sess << statement);
 	bool selectPart = true;
 	void *data;
 	for (int i = 0; i < m_format.length(); i++) {
-		std::cout << i << "\n";
 		switch (m_format.at(i)) {
 			case 's':
 				data = new std::string;
-				BIND(std::string);
+				BIND((std::string *) data);
 				break;
 			case 'S':
 				data = new std::vector<std::string>;
-				BIND(std::vector<std::string>);
+				BIND((std::vector<std::string> *) data);
 				break;
 			case 'i':
 				data = new Poco::Int32;
-				BIND(Poco::Int32);
+				BIND((Poco::Int32 *) data);
 				break;
 			case 'I':
 				data = new std::vector<Poco::Int32>;
-				BIND(std::vector<Poco::Int32>);
+				BIND((std::vector<Poco::Int32> *) data);
 				break;
 			case 'b':
 				data = new bool;
-				BIND(bool);
+				BIND((bool *) data);
 				break;
 			case '|':
 				selectPart = false;
@@ -112,6 +147,9 @@ if (selectPart) *m_statement = (*m_statement), use(*(VARIABLE *) data); else *m_
 				break;
 		}
 	}
+	}
+
+
 	if (m_resultOffset < 0)
 		m_resultOffset =  m_format.size();
 
@@ -155,8 +193,9 @@ int SpectrumSQLStatement::execute() {
 		Log("SpectrumSQLStatement::execute()", "ERROR: there are some unpushed variables");
 		return 0;
 	}
-	std::cout << "execute\n";
+
 	int ret = 0;
+
 	try {
 		ret = m_statement->execute();
 	}
@@ -186,7 +225,6 @@ int SpectrumSQLStatement::execute() {
 	if (m_resultOffset != 0 && m_offset + 1 == m_params.size()) {
 		m_offset = 0;
 	}
-	std::cout << "ret:" << ret << "\n";
 	return ret;
 }
 
