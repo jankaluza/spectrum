@@ -353,9 +353,9 @@ class SQLClass : public AbstractBackend {
 		void initDb();
 		addUserStatement m_stmt_addUser;
 		updateUserPasswordStatement m_stmt_updateUserPassword;
-		removeBuddyStatement m_stmt_removeBuddy;
-		removeUserStatement m_stmt_removeUser;
-		removeUserBuddiesStatement m_stmt_removeUserBuddies;
+		SpectrumSQLStatement *m_stmt_removeBuddy;
+		SpectrumSQLStatement *m_stmt_removeUser;
+		SpectrumSQLStatement *m_stmt_removeUserBuddies;
 		addBuddyStatement m_stmt_addBuddy;
 #ifdef WITH_SQLITE
 		updateBuddyStatement m_stmt_updateBuddy;

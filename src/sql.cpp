@@ -193,9 +193,6 @@ SQLClass::SQLClass(GlooxMessageHandler *parent, bool upgrade, bool check) {
 	m_stmt_addUser.stmt = NULL;
 	m_version_stmt = NULL;
 	m_stmt_updateUserPassword.stmt = NULL;
-	m_stmt_removeBuddy.stmt = NULL;
-	m_stmt_removeUser.stmt = NULL;
-	m_stmt_removeUserBuddies.stmt = NULL;
 	m_stmt_addBuddy.stmt = NULL;
 #ifdef WITH_SQLITE
 	m_stmt_updateBuddy.stmt = NULL;
@@ -313,16 +310,10 @@ void SQLClass::createStatements() {
 														use(m_stmt_updateUserPassword.encoding),
 														use(m_stmt_updateUserPassword.vip),
 														use(m_stmt_updateUserPassword.jid) ) );
-	if (!m_stmt_removeBuddy.stmt)
-		m_stmt_removeBuddy.stmt = new Statement( ( STATEMENT("DELETE FROM " + p->configuration().sqlPrefix + "buddies WHERE user_id=? AND uin=?"),
-												use(m_stmt_removeBuddy.user_id),
-												use(m_stmt_removeBuddy.uin) ) );
-	if (!m_stmt_removeUser.stmt)
-		m_stmt_removeUser.stmt = new Statement( ( STATEMENT("DELETE FROM " + p->configuration().sqlPrefix + "users WHERE id=?"),
-												use(m_stmt_removeUser.userId) ) );
-	if (!m_stmt_removeUserBuddies.stmt)
-		m_stmt_removeUserBuddies.stmt = new Statement( ( STATEMENT("DELETE FROM " + p->configuration().sqlPrefix + "buddies WHERE user_id=?"),
-														use(m_stmt_removeUserBuddies.user_id) ) );
+	m_stmt_removeBuddy = new SpectrumSQLStatement(m_sess, "is", "DELETE FROM " + p->configuration().sqlPrefix + "buddies WHERE user_id=? AND uin=?");
+	m_stmt_removeUser = new SpectrumSQLStatement(m_sess, "s","DELETE FROM " + p->configuration().sqlPrefix + "users WHERE id=?");
+	m_stmt_removeUserBuddies = new SpectrumSQLStatement(m_sess, "s", "DELETE FROM " + p->configuration().sqlPrefix + "buddies WHERE user_id=?");
+	
 #ifdef WITH_SQLITE
 	if (p->configuration().sqlType == "sqlite") {
 		if (!m_stmt_addBuddy.stmt)
@@ -397,9 +388,9 @@ void SQLClass::removeStatements() {
 	delete m_stmt_addUser.stmt;
 	delete m_version_stmt;
 	delete m_stmt_updateUserPassword.stmt;
-	delete m_stmt_removeBuddy.stmt;
-	delete m_stmt_removeUser.stmt;
-	delete m_stmt_removeUserBuddies.stmt;
+	delete m_stmt_removeBuddy;
+	delete m_stmt_removeUser;
+	delete m_stmt_removeUserBuddies;
 	delete m_stmt_addBuddy.stmt;
 	delete m_stmt_removeBuddySettings;
 #ifdef WITH_SQLITE
@@ -709,29 +700,23 @@ void SQLClass::updateUser(const UserRow &user) {
 }
 
 void SQLClass::removeBuddy(long userId, const std::string &uin, long buddy_id) {
-	m_stmt_removeBuddy.user_id = userId;
-	m_stmt_removeBuddy.uin.assign(uin);
+	*m_stmt_removeBuddy << userId << uin;
 	*m_stmt_removeBuddySettings << buddy_id;
 	m_stmt_removeBuddy.stmt->execute();
 	m_stmt_removeBuddySettings->execute();
 }
 
 void SQLClass::removeUser(long userId) {
-	m_stmt_removeUser.userId = userId;
-	STATEMENT_EXECUTE_BEGIN();
-		m_stmt_removeUser.stmt->execute();
-		*m_sess << "DELETE FROM " + p->configuration().sqlPrefix + "buddies WHERE user_id=?", use(m_stmt_removeUser.userId), now;
-		*m_sess << "DELETE FROM " + p->configuration().sqlPrefix + "buddies_settings WHERE user_id=?", use(m_stmt_removeUser.userId), now;
-		*m_sess << "DELETE FROM " + p->configuration().sqlPrefix + "users_settings WHERE user_id=?", use(m_stmt_removeUser.userId), now;
-	STATEMENT_EXECUTE_END(m_stmt_removeUser.stmt, removeUser(userId));
-
+	*m_stmt_removeUser << userId;
+	m_stmt_removeUser.stmt->execute();
+	*m_sess << "DELETE FROM " + p->configuration().sqlPrefix + "buddies WHERE user_id=?", use(m_stmt_removeUser.userId), now;
+	*m_sess << "DELETE FROM " + p->configuration().sqlPrefix + "buddies_settings WHERE user_id=?", use(m_stmt_removeUser.userId), now;
+	*m_sess << "DELETE FROM " + p->configuration().sqlPrefix + "users_settings WHERE user_id=?", use(m_stmt_removeUser.userId), now;
 }
 
 void SQLClass::removeUserBuddies(long userId) {
-	m_stmt_removeUserBuddies.user_id = userId;
-	STATEMENT_EXECUTE_BEGIN();
-		m_stmt_removeUserBuddies.stmt->execute();
-	STATEMENT_EXECUTE_END(m_stmt_removeUserBuddies.stmt, removeUserBuddies(userId));
+	*m_stmt_removeUserBuddies << userId;
+	m_stmt_removeUserBuddies->execute();
 }
 
 void SQLClass::addDownload(const std::string &filename, const std::string &vip) {
