@@ -770,10 +770,8 @@ long SQLClass::addBuddy(long userId, const std::string &uin, const std::string &
 	// It would be much more better to find out the way how to get last_inserted_rowid from Poco.
 	if (p->configuration().sqlType == "sqlite") {
 		Poco::UInt64 id = -1;
-		Log("addBuddy","");
-		Log("addBuddy","Trying to get " << m_stmt_addBuddy.user_id << " " << m_stmt_addBuddy.uin);
 		STATEMENT_EXECUTE_BEGIN();
-		*m_sess << "SELECT id FROM " + p->configuration().sqlPrefix + "buddies WHERE user_id=? AND uin=?", use(m_stmt_addBuddy.user_id), use(m_stmt_addBuddy.uin), into(id), now;
+		*m_sess << "SELECT last_insert_rowid();", into(id), now;
 		STATEMENT_EXECUTE_END(m_stmt_addBuddy.stmt, addBuddy(userId, uin, subscription, group, nickname));
 		return id;
 	}
@@ -830,10 +828,6 @@ std::map<std::string, UserRow> SQLClass::getUsersByJid(const std::string &jid) {
 }
 
 GHashTable *SQLClass::getBuddies(long userId, PurpleAccount *account) {
-	struct timeval td_start,td_end;
-	float elapsed = 0;
-	gettimeofday(&td_start, NULL);
-	
 	GHashTable *roster = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
 	std::vector <Poco::Int32> settingIds;
 	std::vector <Poco::Int32> settingTypes;
@@ -864,19 +858,6 @@ GHashTable *SQLClass::getBuddies(long userId, PurpleAccount *account) {
 
 	int i = 0;
 	for (int k = 0; k < buddyIds.size(); k++) {
-// 		// TODO: REMOVE ME AND REPlACE ALL MY OCCURS IN THIS FUNCTION
-// 		RosterRow user;
-// 		user.id = m_stmt_getBuddies.resId;
-// // 			user.jid = m_stmt_getBuddies.resJid;
-// 		user.uin = m_stmt_getBuddies.resUin;
-// 		user.subscription = m_stmt_getBuddies.resSubscription;
-// 		user.nickname = m_stmt_getBuddies.resNickname;
-// 		user.group = m_stmt_getBuddies.resGroups;
-// 		if (user.subscription.empty())
-// 			user.subscription = "ask";
-// 		user.online = false;
-// 		user.lastPresence = "";
-
 		std::string preparedUin(buddyUins[k]);
 		Transport::instance()->protocol()->prepareUsername(preparedUin, account);
 
@@ -961,13 +942,6 @@ GHashTable *SQLClass::getBuddies(long userId, PurpleAccount *account) {
 	process_mem_usage(vm, rss);
 	Log("MEMORY USAGE AFTER ADDING BUDDY", rss);
 #endif
-	gettimeofday(&td_end, NULL);
-	elapsed = 1000000.0 * (td_end.tv_sec -td_start.tv_sec);
-	elapsed += (td_end.tv_usec - td_start.tv_usec);
-	elapsed = elapsed / 1000 / 1000;
-	std::cout << "elapsed: " << elapsed << "\n";
-	exit(0);
-
 	return roster;
 }
 
@@ -1073,4 +1047,13 @@ void SQLClass::setUserOnline(long userId, bool online) {
 	*m_stmt_setUserOnline << online << userId;
 	m_stmt_setUserOnline->execute();
 }
+
+void SQLClass::beginTransaction() {
+	m_sess->begin();
+}
+
+void SQLClass::commitTransaction() {
+	m_sess->commit();
+}
+
 

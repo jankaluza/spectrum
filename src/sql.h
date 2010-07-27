@@ -343,6 +343,8 @@ class SQLClass : public AbstractBackend {
 		bool loaded() { return m_loaded; }
 		std::vector<std::string> getOnlineUsers();
 		void setUserOnline(long userId, bool online);
+		void beginTransaction();
+		void commitTransaction();
 		
 	private:
 		/*
