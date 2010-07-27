@@ -23,6 +23,7 @@
 
 #include <iostream>
 #include "transport_config.h"
+#include <algorithm>
 
 #include <gloox/clientbase.h>
 #include <gloox/tag.h>
@@ -256,13 +257,21 @@ struct getOnlineUsersStatement {
 };
 
 // Prepared SQL Statement representation
+// Usage:
+// SpectrumSQLStatement *statement = new SpectrumSQLStatement(session, "s|is", "SELECT id, jid FROM table WHERE user_jid = ?;");
+// *statement << "test@domain.tld";
+// if (statement->execute()) {
+//    *statement >> id_variable >> jid_variable;
+// }
 class SpectrumSQLStatement {
 	public:
 		// Creates new SpectrumSQLStatement using m_sess Session.
 		// Format is string where each character represents the type of variables used/returned by prepared
 		// statement:
 		// 'i' - Poco::Int32 (integer)
+		// 'I' - std::vector<Poco::Int32>
 		// 's' - std::string
+		// 'S' - std::vector<std::string>
 		// 'b' - boolean
 		// '|' - delimiter used to separate input variables from output variables
 		// Example statement: "SELECT id, jid FROM table WHERE user_jid = ?;"
@@ -270,33 +279,20 @@ class SpectrumSQLStatement {
 		SpectrumSQLStatement(Poco::Data::Session *m_sess, const std::string &format, const std::string &statement);
 		~SpectrumSQLStatement();
 
-		void createStatement(const std::string &statement = "");
-		void removeStatement();
+		template <typename T>
+		SpectrumSQLStatement& operator << (const T& t);
 
 		template <typename T>
-		SpectrumSQLStatement& operator << (const T& t) {
-			if (m_offset >= m_resultOffset)
-				return *this;
-
-			T *data = (T *) m_params[m_offset];
-			*data = t;
-			m_offset++;
-			return *this;
-		}
-
-		template <typename T>
-		SpectrumSQLStatement& operator >> (T& t) {
-			t = *(T *) m_params[m_offset];
-			if (++m_offset == m_params.size())
-				m_offset = 0;
-			return *this;
-		}
+		SpectrumSQLStatement& operator >> (T& t);
 
 		// Executes the statement. All input variables has to have their values pushed before calling
 		// execute();
 		int execute();
 
 	private:
+		void createStatement(const std::string &statement = "");
+		void removeStatement();
+
 		Poco::Data::Statement *m_statement;
 		std::vector <void *> m_params;
 		std::string m_format;
@@ -364,15 +360,15 @@ class SQLClass : public AbstractBackend {
 #endif
 		SpectrumSQLStatement *m_stmt_updateBuddySubscription;
 		SpectrumSQLStatement *m_stmt_getUserByJid;
-		getBuddiesStatement m_stmt_getBuddies;
-		addSettingStatement m_stmt_addSetting;
-		updateSettingStatement m_stmt_updateSetting;
-		getBuddiesSettingsStatement m_stmt_getBuddiesSettings;
-		getSettingsStatement m_stmt_getSettings;
-		addBuddySettingStatement m_stmt_addBuddySetting;
-		removeBuddySettingsStatement m_stmt_removeBuddySettings;
-		setUserOnlineStatement m_stmt_setUserOnline;
-		getOnlineUsersStatement m_stmt_getOnlineUsers;
+		SpectrumSQLStatement *m_stmt_addSetting;
+		SpectrumSQLStatement *m_stmt_getBuddies;
+		SpectrumSQLStatement *m_stmt_updateSetting;
+		SpectrumSQLStatement *m_stmt_getBuddiesSettings;
+		SpectrumSQLStatement *m_stmt_getSettings;
+		SpectrumSQLStatement *m_stmt_addBuddySetting;
+		SpectrumSQLStatement *m_stmt_removeBuddySettings;
+		SpectrumSQLStatement *m_stmt_setUserOnline;
+		SpectrumSQLStatement *m_stmt_getOnlineUsers;
 		Poco::Data::Statement *m_version_stmt;
 
 		Poco::Data::Session *m_sess;
