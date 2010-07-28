@@ -107,7 +107,11 @@ bool RosterStorage::storeBuddies() {
 	if (g_hash_table_size(m_storageCache) == 0) {
 		return false;
 	}
+	
+	Transport::instance()->sql()->beginTransaction();
 	g_hash_table_foreach_remove(m_storageCache, storeAbstractSpectrumBuddy, m_user);
+	Transport::instance()->sql()->commitTransaction();
+	
 	return true;
 }
 
