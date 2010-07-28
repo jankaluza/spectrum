@@ -833,12 +833,12 @@ GHashTable *SQLClass::getBuddies(long userId, PurpleAccount *account) {
 	std::vector <Poco::Int32> buddyFlags;
 
 	*m_stmt_getBuddiesSettings << userId;
-	m_stmt_getBuddiesSettings->execute();
-	*m_stmt_getBuddiesSettings >> settingIds >> settingTypes >> settingKeys >> settingValues;
+	if (m_stmt_getBuddiesSettings->execute())
+		*m_stmt_getBuddiesSettings >> settingIds >> settingTypes >> settingKeys >> settingValues;
 
 	*m_stmt_getBuddies << userId;
-	m_stmt_getBuddies->execute();
-	*m_stmt_getBuddies >> buddyIds >> buddyUserIds >> buddyUins >> buddySubscriptions >> buddyNicknames >> buddyGroups >> buddyFlags;
+	if (m_stmt_getBuddies->execute())
+		*m_stmt_getBuddies >> buddyIds >> buddyUserIds >> buddyUins >> buddySubscriptions >> buddyNicknames >> buddyGroups >> buddyFlags;
 
 #ifndef WIN32
 	double vm, rss;
@@ -947,8 +947,8 @@ std::list <std::string> SQLClass::getBuddies(long userId) {
 	std::vector <Poco::Int32> buddyFlags;
 
 	*m_stmt_getBuddies << userId;
-	m_stmt_getBuddies->execute();
-	*m_stmt_getBuddies >> buddyIds >> buddyUserIds >> buddyUins >> buddySubscriptions >> buddyNicknames >> buddyGroups >> buddyFlags;
+	if (m_stmt_getBuddies->execute())
+		*m_stmt_getBuddies >> buddyIds >> buddyUserIds >> buddyUins >> buddySubscriptions >> buddyNicknames >> buddyGroups >> buddyFlags;
 	
 	for (int k = 0; k < buddyIds.size(); k++) {
 		// TODO: move this JID escaping stuff upstream
@@ -993,8 +993,8 @@ GHashTable * SQLClass::getSettings(long userId) {
 	std::vector<Poco::Int32> types;
 
 	*m_stmt_getSettings << userId;
-	m_stmt_getSettings->execute();
-	*m_stmt_getSettings >> ids >> types >> variables >> values;
+	if (m_stmt_getSettings->execute())
+		*m_stmt_getSettings >> ids >> types >> variables >> values;
 
 	for (int i = 0; i < (int) ids.size(); i++) {
 		type = (PurpleType) types[i];
@@ -1028,8 +1028,8 @@ void SQLClass::addBuddySetting(long userId, long buddyId, const std::string &key
 
 std::vector<std::string> SQLClass::getOnlineUsers() {
 	std::vector<std::string> users;
-	m_stmt_getOnlineUsers->execute();
-	*m_stmt_getOnlineUsers >> users;
+	if (m_stmt_getOnlineUsers->execute())
+		*m_stmt_getOnlineUsers >> users;
 	return users;
 }
 
