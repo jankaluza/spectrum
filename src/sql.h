@@ -70,24 +70,6 @@ struct RosterRow {
 	std::string lastPresence;
 };
 
-struct GlooxVCard {
-	Tag *vcard;
-	time_t created;
-};
-
-/*
- * Prepared statements
- */
-struct addUserStatement {
-	std::string jid;
-	std::string uin;
-	std::string password;
-	std::string language;
-	std::string encoding;
-	bool vip;
-	Poco::Data::Statement *stmt;
-};
-
 // Prepared SQL Statement representation
 // Usage:
 // SpectrumSQLStatement *statement = new SpectrumSQLStatement(session, "s|is", "SELECT id, jid FROM table WHERE user_jid = ?;");
