@@ -93,24 +93,28 @@ class SpectrumSQLStatement {
 		SpectrumSQLStatement(Poco::Data::Session *m_sess, const std::string &format, const std::string &statement);
 		~SpectrumSQLStatement();
 
+		// Pushes new data used as input for the statement.
 		template <typename T>
 		SpectrumSQLStatement& operator << (const T& t);
 
+		// Pulls fetched data by previous execute(); call.
 		template <typename T>
 		SpectrumSQLStatement& operator >> (T& t);
 
 		// Executes the statement. All input variables has to have their values pushed before calling
 		// execute();
 		int execute();
-		
-		int executeNoCheck();
-		void createData();
-		void removeData();
 
-		void createStatement(Poco::Data::Session *m_sess, const std::string &statement = "");
+		// Executes the statement, but doesn't try to catch any Poco errors.
+		int executeNoCheck();
+
+		void createStatement(Poco::Data::Session *m_sess);
 		void removeStatement();
 
 	private:
+		void createData();
+		void removeData();
+
 		Poco::Data::Statement *m_statement;
 		std::vector <void *> m_params;
 		std::string m_format;

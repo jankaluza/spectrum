@@ -58,7 +58,7 @@ SpectrumSQLStatement::SpectrumSQLStatement(Poco::Data::Session *sess, const std:
 	m_offset = 0;
 	m_error = 0;
 	createData();
-	createStatement(m_sess, statement);
+	createStatement(m_sess);
 }
 
 SpectrumSQLStatement::~SpectrumSQLStatement() {
@@ -90,12 +90,11 @@ void SpectrumSQLStatement::createData() {
 	}
 }
 
-void SpectrumSQLStatement::createStatement(Poco::Data::Session *sess, const std::string &stmt) {
+void SpectrumSQLStatement::createStatement(Poco::Data::Session *sess) {
 	if (m_statement)
 		return;
 	m_sess = sess;
-	std::string statement = m_stmt;
-	m_statement = new Statement(*m_sess << statement);
+	m_statement = new Statement(*m_sess << m_stmt);
 
 #define BIND(VARIABLE) if (selectPart) *m_statement = (*m_statement), use(*VARIABLE); else *m_statement = (*m_statement), into(*VARIABLE);
 	m_resultOffset = -1;
@@ -124,7 +123,6 @@ void SpectrumSQLStatement::createStatement(Poco::Data::Session *sess, const std:
 				break;
 		}
 	}
-
 
 	if (m_resultOffset < 0)
 		m_resultOffset =  m_format.size();
@@ -181,7 +179,7 @@ int SpectrumSQLStatement::execute() {
 	}
 	catch (Poco::Exception e) {
 		m_error++;
-		LogMessage(Log_.fileStream()).Get("SQL ERROR") << m_error << " " << e.code() << " " << e.displayText();
+		LogMessage(Log_.fileStream()).Get("SQL ERROR") << m_error << " " << e.code() << " " << e.displayText() << " " << m_stmt;
 		if (m_error != 3 && Transport::instance()->getConfiguration().sqlType != "sqlite") {
 			if (e.code() == 1243) {
 				if (m_statement) delete m_statement;
@@ -198,7 +196,7 @@ int SpectrumSQLStatement::execute() {
 					return execute();
 			}
 		}
-		LogMessage(Log_.fileStream()).Get("SQL ERROR") << e.displayText();
+		LogMessage(Log_.fileStream()).Get("SQL ERROR") << e.displayText() << " " << m_stmt;
 	}
 	m_error = 0;
 	
@@ -248,6 +246,9 @@ SpectrumSQLStatement& SpectrumSQLStatement::operator << (const T& t) {
 
 template <typename T>
 SpectrumSQLStatement& SpectrumSQLStatement::operator >> (T& t) {
+	if (m_offset < m_resultOffset)
+		return *this;
+
 	std::swap(t, *(T *) m_params[m_offset]);
 	if (++m_offset == m_params.size())
 		m_offset = 0;
