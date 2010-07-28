@@ -207,3 +207,6 @@ void IRCProtocol::makeRoomJID(AbstractUser *user, std::string &name) {
 	name.assign(name_safe + "%" + JID(user->username()).server() + "@" + Transport::instance()->jid());
 	std::cout << "ROOMJID: " << name << "\n";
 }
+
+void IRCProtocol::makeUsernameRoom(AbstractUser *user, std::string &name) {
+}
