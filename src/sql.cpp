@@ -382,8 +382,8 @@ void SQLClass::createStatements() {
 
 	createStatement(&m_stmt_updateUserPassword, "sssbs", "UPDATE " + p->configuration().sqlPrefix + "users SET password=?, language=?, encoding=?, vip=? WHERE jid=?");
 	createStatement(&m_stmt_removeBuddy, "is", "DELETE FROM " + p->configuration().sqlPrefix + "buddies WHERE user_id=? AND uin=?");
-	createStatement(&m_stmt_removeUser, "s","DELETE FROM " + p->configuration().sqlPrefix + "users WHERE id=?");
-	createStatement(&m_stmt_removeUserBuddies, "s", "DELETE FROM " + p->configuration().sqlPrefix + "buddies WHERE user_id=?");
+	createStatement(&m_stmt_removeUser, "i","DELETE FROM " + p->configuration().sqlPrefix + "users WHERE id=?");
+	createStatement(&m_stmt_removeUserBuddies, "i", "DELETE FROM " + p->configuration().sqlPrefix + "buddies WHERE user_id=?");
 	
 	if (p->configuration().sqlType == "sqlite") {
 		createStatement(&m_stmt_addBuddy, "issssi", "INSERT INTO " + p->configuration().sqlPrefix + "buddies (user_id, uin, subscription, groups, nickname, flags) VALUES (?, ?, ?, ?, ?, ?)");
