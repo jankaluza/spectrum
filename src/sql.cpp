@@ -1021,7 +1021,7 @@ GHashTable * SQLClass::getSettings(long userId) {
 
 void SQLClass::addBuddySetting(long userId, long buddyId, const std::string &key, const std::string &value, PurpleType type) {
 	*m_stmt_addBuddySetting << userId << buddyId << key << type << value;
-	if (p->configuration().sqlType == "sqlite")
+	if (p->configuration().sqlType != "sqlite")
 		*m_stmt_addBuddySetting << value;
 	m_stmt_addBuddySetting->execute();
 
