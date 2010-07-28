@@ -294,7 +294,7 @@ class spectrum_group:
  
 		for instance in self.instances:
 			args = [ jid, username, password, language, encoding, status ]
-			self.single_action( instance, 'register', args )
+			self._single_action( instance, 'register', args )
 
 	def unregister( self, jid ):
 		"""

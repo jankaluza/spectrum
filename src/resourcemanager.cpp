@@ -29,17 +29,19 @@ ResourceManager::ResourceManager() {
 ResourceManager::~ResourceManager() {
 }
 
-void ResourceManager::setResource(const std::string &resource, int priority, int caps) {
+void ResourceManager::setResource(const std::string &resource, int priority, int caps, int show, const std::string &status) {
 	if (resource.empty())
 		return;
 	if (!hasResource(resource)) {
 		m_resources[resource].caps = 0;
 		m_resources[resource].priority = 0;
+		m_resources[resource].show = -1;
 	}
 	if (priority != -256)
 		m_resources[resource].priority = priority;
 	if (caps != -1)
 		m_resources[resource].caps = caps;
+	m_resources[resource].status = status;
 	m_resources[resource].name = resource;
 
 	setActiveResource();
@@ -56,7 +58,7 @@ void ResourceManager::setResource(const Presence &stanza) {
 	if (c != NULL) {
 		caps = Transport::instance()->getCapabilities(c->findAttribute("ver"));
 	}
-	setResource(resource, stanza.priority(), caps);
+	setResource(resource, stanza.priority(), caps, (int) stanza.presence(), stanza.status());
 	delete stanzaTag;
 }
 
