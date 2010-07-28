@@ -58,6 +58,7 @@ struct Configuration {
 	int VIPFeatures;				// Transport features for VIP users.
 	std::string language;			// Default language.
 	bool useProxy;					// True if transport has to use proxy to connect legacy network.
+	bool jid_escaping;				// True if jid escaping is enabled by default.
 	bool require_tls;
 	std::string filetransfer_proxy_ip;
 	int filetransfer_proxy_port;

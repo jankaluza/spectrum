@@ -27,8 +27,13 @@
 #include "usermanager.h"
 #include "log.h"
 #include "spectrum_util.h"
+<<<<<<< HEAD
 
 #include "sql.h"
+=======
+#include "transport.h"
+
+>>>>>>> master
 #include <sstream>
 #include <fstream>
 
@@ -41,7 +46,28 @@ SpectrumDiscoHandler::~SpectrumDiscoHandler() {
 
 bool SpectrumDiscoHandler::handleIq (const IQ &stanza) {
 	if (stanza.to().username() == "" || stanza.subtype() == IQ::Set) {
-		return m_parent->j->disco()->handleIq(stanza);
+		const Disco::Items *items = stanza.findExtension<Disco::Items>( ExtDiscoItems );
+		if (items && items->node().empty()) {
+			IQ re( IQ::Result, stanza.from(), stanza.id() );
+			re.setFrom( stanza.to() );
+			Tag *t = re.tag();
+
+			Tag *query = new Tag("query");
+			query->addAttribute("xmlns", "http://jabber.org/protocol/disco#items");
+			Tag *item = new Tag("item");
+			item->addAttribute("jid", Transport::instance()->jid());
+			item->addAttribute("node", "http://jabber.org/protocol/commands");
+			const char *_language = Transport::instance()->getConfiguration().language.c_str();
+			item->addAttribute("name", tr(_language, _("Ad-Hoc Commands")));
+			query->addChild(item);
+
+			t->addChild(query);
+			m_parent->j->send(t);
+			return true;
+		}
+		else {
+			return m_parent->j->disco()->handleIq(stanza);
+		}
 	}
 	else {
 		Tag *re = NULL;
@@ -115,8 +141,6 @@ Tag *SpectrumDiscoHandler::generateDiscoInfoResponse(const IQ &stanza, const Dis
 	}
 	
 	t->addChild(query);
-	
-// <iq to='123@localhost/hanzz-laptop' from='icq.localhost' id='aac2a' type='result' xmlns='jabber:component:accept'><query xmlns='http://jabber.org/protocol/disco#info'><identity category='gateway' type='msn' name='Muj Transport'/><feature var='http://jabber.org/protocol/caps'/><feature var='http://jabber.org/protocol/chatstates'/><feature var='http://jabber.org/protocol/commands'/><feature var='http://jabber.org/protocol/commands'/><feature var='http://jabber.org/protocol/disco#info'/><feature var='http://jabber.org/protocol/disco#info'/><feature var='http://jabber.org/protocol/disco#items'/><feature var='http://jabber.org/protocol/si'/><feature var='http://jabber.org/protocol/si/profile/file-transfer'/><feature var='jabber:iq:gateway'/><feature var='jabber:iq:register'/><feature var='jabber:iq:version'/><feature var='urn:xmpp:ping'/><feature var='vcard-temp'/></query></iq>
 	
 	return t;
 }

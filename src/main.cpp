@@ -320,7 +320,9 @@ static void * requestInput(const char *title, const char *primary,const char *se
 	User *user = (User *) GlooxMessageHandler::instance()->userManager()->getUserByAccount(account);
 	if (!user) {
 		Log("requestInput", "WARNING: purple_request_input not handled. No user for account =" << purple_account_get_username(account));
-		return NULL;
+		AbstractPurpleRequest *handle = new AbstractPurpleRequest;
+		handle->setRequestType((AdhocDataCallerType) CALLER_DUMMY);
+		return handle;
 	}
 
 	if (primary) {
@@ -347,11 +349,16 @@ static void * requestInput(const char *title, const char *primary,const char *se
 		}
 		// emit protocol signal
 		bool handled = GlooxMessageHandler::instance()->protocol()->onPurpleRequestInput(user, title, primary, secondary, default_value, multiline, masked, hint, ok_text, ok_cb, cancel_text, cancel_cb, account, who, conv, user_data);
-		if (handled)
-			return NULL;
+		if (handled) {
+			AbstractPurpleRequest *handle = new AbstractPurpleRequest;
+			handle->setRequestType((AdhocDataCallerType) CALLER_DUMMY);
+			return handle;
+		}
 	}
 	Log(user->jid(), "WARNING: purple_request_input not handled. primary == NULL, title ==" << t << ", secondary ==" << s);
-	return NULL;
+	AbstractPurpleRequest *handle = new AbstractPurpleRequest;
+	handle->setRequestType((AdhocDataCallerType) CALLER_DUMMY);
+	return handle;
 }
 
 static void * notifySearchResults(PurpleConnection *gc, const char *title, const char *primary, const char *secondary, PurpleNotifySearchResults *results, gpointer user_data) {
@@ -365,7 +372,9 @@ static void * notifySearchResults(PurpleConnection *gc, const char *title, const
 			user->setAdhocData(data);
 		}
 	}
-	return NULL;
+	AbstractPurpleRequest *handle = new AbstractPurpleRequest;
+	handle->setRequestType((AdhocDataCallerType) CALLER_DUMMY);
+	return handle;
 }
 
 static void *requestFields(const char *title, const char *primary, const char *secondary, PurpleRequestFields *fields, const char *ok_text, GCallback ok_cb, const char *cancel_text, GCallback cancel_cb, PurpleAccount *account, const char *who, PurpleConversation *conv, void *user_data) {
@@ -385,15 +394,31 @@ static void *requestFields(const char *title, const char *primary, const char *s
 			return repeater;
 		}
 	}
-
-	return NULL;
+	std::string t(title ? title : "NULL");
+	std::string p(primary ? primary : "NULL");
+	std::string s(secondary ? secondary : "NULL");
+	Log("requestFields", "WARNING:requestFields not handled. " << (user ? user->jid() : "NULL") << " " << t << " " << p << " " << s);
+	AbstractPurpleRequest *handle = new AbstractPurpleRequest;
+	handle->setRequestType((AdhocDataCallerType) CALLER_DUMMY);
+	return handle;
 }
 
 static void * requestAction(const char *title, const char *primary,const char *secondary, int default_action,PurpleAccount *account, const char *who,PurpleConversation *conv, void *user_data,size_t action_count, va_list actions){
 	User *user = (User *) GlooxMessageHandler::instance()->userManager()->getUserByAccount(account);
 	bool handled = false;
-	if (!user) {
-		Log("requestAction", "WARNING: purple_request_action not handled. No user for account =" << purple_account_get_username(account));
+	
+	std::string t(title ? title : "NULL");
+	if (t == "SSL Certificate Verification") {
+		Log("purple", "accepting SSL certificate");
+		va_arg(actions, char *);
+		((PurpleRequestActionCb) va_arg(actions, GCallback)) (user_data, 2);
+		handled = true;
+	}
+	else if (!user || !account) {
+		std::string t(title ? title : "NULL");
+		std::string p(primary ? primary : "NULL");
+		std::string s(secondary ? secondary : "NULL");
+		Log("requestAction", "WARNING: purple_request_action not handled. No user for account =" << (account ? purple_account_get_username(account) : "NULL") << " " << "title =" << t << ", primary =" << p << ", secondary =" << s);
 	}
 	else {
 		if (!user->adhocData().id.empty()) {
@@ -937,7 +962,7 @@ GlooxMessageHandler::GlooxMessageHandler(const std::string &config) : MessageHan
 
 	m_transport = new Transport(m_configuration.jid);
 
-	j = new HiComponent("jabber:component:accept",m_configuration.server,m_configuration.jid,m_configuration.password,m_configuration.port);
+	j = new HiComponent("jabber:component:accept", m_configuration.server, m_configuration.jid, m_configuration.password, m_configuration.port);
 
 	if (m_configuration.logAreas & LOG_AREA_PURPLE)
 		j->logInstance().registerLogHandler(LogLevelDebug, LogAreaXmlIncoming | LogAreaXmlOutgoing, &Log_);
@@ -1203,7 +1228,8 @@ void GlooxMessageHandler::purpleBuddyCreated(PurpleBuddy *buddy) {
 	else {
 		buddy->node.ui_data = (void *) new SpectrumBuddy(-1, buddy);
 		SpectrumBuddy *s_buddy = (SpectrumBuddy *) buddy->node.ui_data;
-		s_buddy->setFlags(SPECTRUM_BUDDY_JID_ESCAPING);
+		if (GlooxMessageHandler::instance()->configuration().jid_escaping)
+			s_buddy->setFlags(SPECTRUM_BUDDY_JID_ESCAPING);
 	}
 		
 }
@@ -1507,25 +1533,7 @@ void GlooxMessageHandler::handlePresence(const Presence &stanza){
 	Tag *c = NULL;
 	bool isMUC = stanza.findExtension(ExtMUC) != NULL;
 	Log(stanza.from().full(), "Presence received (" << (int)stanza.subtype() << ") for: " << stanza.to().full() << "isMUC" << isMUC);
-	
 
-	if (stanza.presence() != Presence::Unavailable && ((stanza.to().username() == "" && !protocol()->tempAccountsAllowed()) || (isMUC && protocol()->tempAccountsAllowed()))) {
-		Tag *stanzaTag = stanza.tag();
-		if (!stanzaTag) return;
-		Tag *c = stanzaTag->findChildWithAttrib("xmlns","http://jabber.org/protocol/caps");
-		Log(stanza.from().full(), "asking for caps/disco#info");
-		// Presence has caps and caps are not cached.
-		if (c != NULL && !Transport::instance()->hasClientCapabilities(c->findAttribute("ver"))) {
-			int context = m_capabilityHandler->waitForCapabilities(c->findAttribute("ver"), stanza.to().full());
-			std::string node = c->findAttribute("node") + std::string("#") + c->findAttribute("ver");;
-			j->disco()->getDiscoInfo(stanza.from(), node, m_capabilityHandler, context, j->getID());
-		}
-		else {
-			int context = m_capabilityHandler->waitForCapabilities(stanza.from().full(), stanza.to().full());
-			j->disco()->getDiscoInfo(stanza.from(), "", m_capabilityHandler, context, j->getID());
-		}
-		delete stanzaTag;
-	}
 	User *user;
 	std::string userkey;
 	if (protocol()->tempAccountsAllowed()) {
@@ -1538,6 +1546,25 @@ void GlooxMessageHandler::handlePresence(const Presence &stanza){
 		userkey = stanza.from().bare();
 	}
 	if (user == NULL) {
+
+		if (stanza.presence() != Presence::Unavailable && ((stanza.to().username() == "" && !protocol()->tempAccountsAllowed()) || (isMUC && protocol()->tempAccountsAllowed()))) {
+			Tag *stanzaTag = stanza.tag();
+			if (!stanzaTag) return;
+			Tag *c = stanzaTag->findChildWithAttrib("xmlns","http://jabber.org/protocol/caps");
+			Log(stanza.from().full(), "asking for caps/disco#info");
+			// Presence has caps and caps are not cached.
+			if (c != NULL && !Transport::instance()->hasClientCapabilities(c->findAttribute("ver"))) {
+				int context = m_capabilityHandler->waitForCapabilities(c->findAttribute("ver"), stanza.to().full());
+				std::string node = c->findAttribute("node") + std::string("#") + c->findAttribute("ver");;
+				j->disco()->getDiscoInfo(stanza.from(), node, m_capabilityHandler, context, j->getID());
+			}
+			else {
+				int context = m_capabilityHandler->waitForCapabilities(stanza.from().full(), stanza.to().full());
+				j->disco()->getDiscoInfo(stanza.from(), "", m_capabilityHandler, context, j->getID());
+			}
+			delete stanzaTag;
+		}
+
 		// we are not connected and probe arrived => answer with unavailable
 		if (stanza.subtype() == Presence::Probe) {
 			Log(stanza.from().full(), "Answering to probe presence with unavailable presence");
@@ -1618,11 +1645,11 @@ void GlooxMessageHandler::handlePresence(const Presence &stanza){
 	if (stanza.to().username() == "" && user != NULL) {
 		if(stanza.presence() == Presence::Unavailable && user->isConnected() == true && user->getResources().empty()) {
 			Log(stanza.from().full(), "Logging out");
-			m_userManager->removeUserTimer(user);
+			m_userManager->removeUser(user);
 		}
 		else if (stanza.presence() == Presence::Unavailable && user->isConnected() == false && user->getResources().empty()) {
 			Log(stanza.from().full(), "Logging out, but he's not connected...");
-			m_userManager->removeUserTimer(user);
+			m_userManager->removeUser(user);
 		}
 // 		else if (stanza.presence() == Presence::Unavailable && user->isConnected() == false) {
 // 			Log(stanza.from().full(), "Can't logout because we're connecting now...");

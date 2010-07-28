@@ -1,3 +1,25 @@
+version 0.3.1 (2010-07-21):
+	General:
+	* Fixed bug in localization of empty strings.
+	* Handle disco#info for buddies properly.
+	* Added 'Ad-Hoc Commands' node into default disco#items list.
+	* Use FindPythonInterp to find Python in CMake.
+	* Added [service] jid_escaping variable to disable use of JID Escaping by default 
+	  for newly registered users.
+	* Ping MySQL database to avoid session timeout.
+
+	XMPP:
+	* Fixed private messages in MUC.
+
+	AIM:
+	* Fixed sending apostrophes.
+
+	spectrumctl:
+	* fixed crash when updating database from old version
+	* support for spaces in config-file names
+	* cleaned up imports
+	* drop privileges using fork()->setuid()->exec() and not with su
+
 version 0.3 (2010-07-13):
 	General:
 	* Added localization support.

@@ -393,8 +393,13 @@ void User::connected() {
 		std::string nickname = JID(stanza->findAttribute("to")).resource();
 
 		PurpleConnection *gc = purple_account_get_connection(m_account);
-		if (PURPLE_PLUGIN_PROTOCOL_INFO(gc->prpl)->chat_info_defaults != NULL) {
-			Transport::instance()->protocol()->makePurpleUsernameRoom(this, JID(stanza->findAttribute("to")).bare(), name);
+
+		Transport::instance()->protocol()->makePurpleUsernameRoom(this, JID(stanza->findAttribute("to")).bare(), name);
+		PurpleChat *chat = Transport::instance()->protocol()->getPurpleChat(this, name);
+		if (chat) {
+			comps = purple_chat_get_components(chat);
+		}
+		else if (PURPLE_PLUGIN_PROTOCOL_INFO(gc->prpl)->chat_info_defaults != NULL) {
 			comps = PURPLE_PLUGIN_PROTOCOL_INFO(gc->prpl)->chat_info_defaults(gc, name.c_str());
 		}
 		std::cout << name << " JOINING\n";
@@ -417,6 +422,7 @@ void User::receivedPresence(const Presence &stanza) {
 	Tag *stanzaTag = stanza.tag();
 	if (!stanzaTag)
 		return;
+	bool statusChanged = false;
 
 // 	std::string lang = stanzaTag->findAttribute("xml:lang");
 // 	if (lang != "") {
@@ -449,8 +455,12 @@ void User::receivedPresence(const Presence &stanza) {
 				std::string nickname = stanza.to().resource();
 
 				PurpleConnection *gc = purple_account_get_connection(m_account);
-				if (PURPLE_PLUGIN_PROTOCOL_INFO(gc->prpl)->chat_info_defaults != NULL) {
-					Transport::instance()->protocol()->makePurpleUsernameRoom(this, stanza.to().bare(), name);
+				Transport::instance()->protocol()->makePurpleUsernameRoom(this, stanza.to().bare(), name);
+				PurpleChat *chat = Transport::instance()->protocol()->getPurpleChat(this, name);
+				if (chat) {
+					comps = purple_chat_get_components(chat);
+				}
+				else if (PURPLE_PLUGIN_PROTOCOL_INFO(gc->prpl)->chat_info_defaults != NULL) {
 					comps = PURPLE_PLUGIN_PROTOCOL_INFO(gc->prpl)->chat_info_defaults(gc, name.c_str());
 				}
 				if (comps) {
@@ -489,10 +499,11 @@ void User::receivedPresence(const Presence &stanza) {
 // 					sendUnavailablePresenceToAll();
 // 					purple_account_disconnect(m_account);
 					p->adhoc()->unregisterSession(stanza.from().full());
-					p->userManager()->removeUserTimer(this);
 				}
 				else {
 					setActiveResource();
+					// Active resource changed, so we probably want to update status message/show.
+					forwardStatus(getResource().show, getResource().status);
 				}
 // 				m_connected=false;
 			}
@@ -515,48 +526,25 @@ void User::receivedPresence(const Presence &stanza) {
 			else
 				setResource(stanza); // update this resource
 
+			int presence = stanza.presence();
+			std::string stanzaStatus = stanza.status();
+				
 			// Active resource has been changed, so we have to inform SpectrumMessageHandler to send
 			// next message from legacy network to bare jid.
 			if (getResource().name != oldActiveResource) {
 				removeConversationResource(oldActiveResource);
+				presence = getResource().show;
+				stanzaStatus = getResource().status;
 			}
 
-			int PurplePresenceType;
-			// mirror presence types
-			switch (stanza.presence()) {
-				case Presence::Available: {
-					PurplePresenceType = PURPLE_STATUS_AVAILABLE;
-					break;
-				}
-				case Presence::Chat: {
-					PurplePresenceType = PURPLE_STATUS_AVAILABLE;
-					break;
-				}
-				case Presence::Away: {
-					PurplePresenceType = PURPLE_STATUS_AWAY;
-					break;
-				}
-				case Presence::DND: {
-					PurplePresenceType = PURPLE_STATUS_UNAVAILABLE;
-					break;
-				}
-				case Presence::XA: {
-					PurplePresenceType = PURPLE_STATUS_EXTENDED_AWAY;
-					break;
-				}
-				default:
-					PurplePresenceType = PURPLE_STATUS_AVAILABLE;
-					break;
-			}
-
-			Log(m_jid, "resource: " << getResource().name);
+			Log(m_jid, "RESOURCE" << getResource().name << " " << stanza.from().resource());
 			if (!m_connected) {
+				statusChanged = true;
 				// we are not connected to legacy network, so we should do it when disco#info arrive :)
 				Log(m_jid, "connecting: resource=" << getResource().name);
 				if (m_readyForConnect == false) {
-					m_presenceType = PurplePresenceType;
-					m_statusMessage = stanza.status();
 					m_readyForConnect = true;
+					forwardStatus(presence, stanzaStatus);
 					if (getResource().caps == -1) {
 						// caps not arrived yet, so we can't connect just now and we have to wait for caps
 					}
@@ -565,24 +553,11 @@ void User::receivedPresence(const Presence &stanza) {
 					}
 				}
 			}
-			else {
+			// Forward status message to legacy network, but only if it's sent from active resource
+			else if (getResource().name == stanza.from().resource()) {
 				Log(m_jid, "mirroring presence to legacy network");
-				// we are already connected so we have to change status
-				const PurpleStatusType *status_type = purple_account_get_status_type_with_primitive(m_account, (PurpleStatusPrimitive) PurplePresenceType);
-				std::string statusMessage;
-				if (status_type != NULL) {
-					// send presence to legacy network
-					statusMessage.clear();
-
-					statusMessage.append(stanza.status());
-
-					if (!statusMessage.empty()) {
-						purple_account_set_status(m_account, purple_status_type_get_id(status_type), TRUE, "message", statusMessage.c_str(), NULL);
-					}
-					else {
-						purple_account_set_status(m_account, purple_status_type_get_id(status_type), TRUE, NULL);
-					}
-				}
+				statusChanged = true;
+				forwardStatus(presence, stanzaStatus);
 			}
 		}
 
@@ -606,7 +581,7 @@ void User::receivedPresence(const Presence &stanza) {
 			tag.setFrom(p->jid());
 			p->j->send(tag);
 		}
-		else {
+		else if (statusChanged) {
 			Presence tag(stanza.presence(), m_jid, stanza.status());
 			tag.setFrom(p->jid());
 			p->j->send(tag);
@@ -614,6 +589,59 @@ void User::receivedPresence(const Presence &stanza) {
 
 	}
 	delete stanzaTag;
+}
+
+void User::forwardStatus(int presence, const std::string &stanzaStatus) {
+	int PurplePresenceType;
+	// mirror presence types
+	switch (presence) {
+		case Presence::Available: {
+			PurplePresenceType = PURPLE_STATUS_AVAILABLE;
+			break;
+		}
+		case Presence::Chat: {
+			PurplePresenceType = PURPLE_STATUS_AVAILABLE;
+			break;
+		}
+		case Presence::Away: {
+			PurplePresenceType = PURPLE_STATUS_AWAY;
+			break;
+		}
+		case Presence::DND: {
+			PurplePresenceType = PURPLE_STATUS_UNAVAILABLE;
+			break;
+		}
+		case Presence::XA: {
+			PurplePresenceType = PURPLE_STATUS_EXTENDED_AWAY;
+			break;
+		}
+		default:
+			PurplePresenceType = PURPLE_STATUS_AVAILABLE;
+			break;
+	}
+
+	if (!m_connected) {
+		m_presenceType = PurplePresenceType;
+		m_statusMessage = stanzaStatus;
+	}
+	else {
+		// we are already connected so we have to change status
+		const PurpleStatusType *status_type = purple_account_get_status_type_with_primitive(m_account, (PurpleStatusPrimitive) PurplePresenceType);
+		std::string statusMessage;
+		if (status_type != NULL) {
+			// send presence to legacy network
+			statusMessage.clear();
+
+			statusMessage.append(stanzaStatus);
+
+			if (!statusMessage.empty()) {
+				purple_account_set_status(m_account, purple_status_type_get_id(status_type), TRUE, "message", statusMessage.c_str(), NULL);
+			}
+			else {
+				purple_account_set_status(m_account, purple_status_type_get_id(status_type), TRUE, NULL);
+			}
+		}
+	}
 }
 
 /* XXX: This needs to handle conversion to the right size and format,

@@ -46,6 +46,10 @@ class SpectrumTimer {
 		// Stops timer.  If it's already stopped, nothing whill happen.
 		void stop();
 
+		// Deletes the timer later. Call this function if you want to delete this
+		// SpectrumTimer in its own callback.
+		void deleteLater();
+
 		// Don't call this function by hand. It should be private, but it can't be,
 		// because purple_timout_add calls static function which has to call public
 		// SpectrumTimer::timeout().
@@ -59,6 +63,8 @@ class SpectrumTimer {
 		int m_timeout;						// Miliseconds.
 		guint m_id;							// Timer ID.
 		GMutex *m_mutex;					// Mutex.
+		bool m_deleteLater;					// True if SpectrumTimer should be remove after callback.
+		bool m_inCallback;					// True if deleteLater has been called in callback.
 };
 
 #endif

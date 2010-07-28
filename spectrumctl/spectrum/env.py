@@ -1,17 +1,24 @@
 import os, grp, pwd, stat
 
-try:
-        from spectrum import spectrumconfigparser, ExistsError
-except ImportError:
-        import spectrumconfigparser, ExistsError
-
-ExistsError = ExistsError.ExistsError
+from ExistsError import ExistsError
 options = None
+
+def drop_privs( uid, gid ):
+	"""
+	Set the process real and effictive userid
+	"""
+	os.setgid( gid )
+	os.setuid( uid )
+	os.setegid( gid )
+	os.seteuid( uid )
 
 def get_uid():
 	# if we explicitly name something on the CLI, we use that:
 	if options and options.su:
-		return pwd.getpwnam( options.su ).pw_uid
+		try:
+			return pwd.getpwnam( options.su ).pw_uid
+		except KeyError:
+			raise RuntimeError( options.su, "Username does not exist" )
 
 	try:
 		# if we have env-variable set, we use that:

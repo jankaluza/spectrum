@@ -69,6 +69,7 @@ class IRCProtocol : AbstractProtocol
 		void makeRoomJID(AbstractUser *user, std::string &name);
 		void makePurpleUsernameRoom(AbstractUser *user, const JID &jid, std::string &name);
 		void makePurpleUsernameIM(AbstractUser *user, const JID &jid, std::string &name);
+		void makeUsernameRoom(AbstractUser *user, std::string &name);
 
 		// SIGNALS
 

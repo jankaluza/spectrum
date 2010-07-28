@@ -3,17 +3,12 @@ Interface for accessing the local socket opened by spectrum instances. The class
 is designed to ease access to it and abstract common behaviour.
 """
 
-import socket
-from xmpp.simplexml import Node, XML2Node
-from xmpp.protocol import NS_DATA, NS_COMMANDS, Iq
 
 class config_interface:
 	"""
 	An instance of this class represents the config_interface opened by a
 	spectrum instance.
 	"""
-
-
 	def __init__( self, instance ):
 		"""
 		Constructor.
@@ -38,6 +33,8 @@ class config_interface:
 		@rtype: str
 		@raises RuntimeError: In case communicating with the socket fails.
 		"""
+		import socket
+
 		try:
 			s = socket.socket( socket.AF_UNIX )
 			s.connect( self.path )
@@ -61,6 +58,8 @@ class config_interface:
 			U{xmpp.simplexml.Node<http://xmpppy.sourceforge.net/apidocs/index.html>}
 		@raises RuntimeError: In case communicating with the socket fails.
 		"""
+		from xmpp.simplexml import XML2Node
+
 		stanza.setFrom( 'spectrumctl@localhost' )
 		stanza.setTo( self.instance.get_jid() )
 		return XML2Node( self.send( stanza ) )
@@ -86,6 +85,7 @@ class config_interface:
 			U{xmpp.protocol.Iq<http://xmpppy.sourceforge.net/apidocs/xmpp.protocol.Iq-class.html>}
 		@raises RuntimeError: In case communicating with the socket fails.
 		"""
+		from xmpp.protocol import Iq
 		return Iq( node=self.send_stanza( iq ) )
 
 	def command( self, adhoc_state, vars ):
@@ -118,7 +118,8 @@ class config_interface:
 		@raises RuntimeError: If communicating with the socket fails or the command
 			itself fails.
 		"""
-		
+		from xmpp.simplexml import Node
+		from xmpp.protocol import Iq, NS_DATA, NS_COMMANDS
 
 		# build adhoc_state field:
 		state_value = Node( tag='value', payload=[adhoc_state] )
@@ -184,6 +185,7 @@ class config_interface:
 			U{xmpp.protocol.Iq<http://xmpppy.sourceforge.net/apidocs/xmpp.protocol.Iq-class.html>}
 		@raises RuntimeError: In case communicating with the socket fails.
 		"""
+		from xmpp.protocol import Iq
+		
 		iq = Iq( typ=typ, queryNS=ns, payload=children )
-
 		return self.send_iq( iq )

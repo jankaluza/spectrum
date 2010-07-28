@@ -28,6 +28,18 @@
 #include "glib.h"
 #include <vector>
 
+#define ELAPSED_TIME_START() struct timeval td_start,td_end;\
+	float elapsed = 0; \
+	gettimeofday(&td_start, NULL);
+	
+#define ELAPSED_TIME_FINISH() 	gettimeofday(&td_end, NULL); \
+	elapsed = 1000000.0 * (td_end.tv_sec -td_start.tv_sec); \
+	elapsed += (td_end.tv_usec - td_start.tv_usec); \
+	elapsed = elapsed / 1000 / 1000; \
+	std::cout << "elapsed: " << elapsed << "\n"; \
+	exit(0);
+
+
 
 template <class T> std::string stringOf(T object) {
 	std::ostringstream os;

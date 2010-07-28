@@ -268,7 +268,8 @@ void SpectrumRosterManager::handleBuddyCreated(PurpleBuddy *buddy) {
 #endif
 	AbstractSpectrumBuddy *s_buddy = (AbstractSpectrumBuddy *) buddy->node.ui_data;
 	if (!isInRoster(s_buddy->getName())) {
-		s_buddy->setFlags(SPECTRUM_BUDDY_JID_ESCAPING);
+		if (Transport::instance()->getConfiguration().jid_escaping)
+			s_buddy->setFlags(SPECTRUM_BUDDY_JID_ESCAPING);
 		handleBuddyCreated(s_buddy);
 	}
 	else {

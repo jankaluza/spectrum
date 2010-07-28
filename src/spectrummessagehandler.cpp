@@ -311,6 +311,7 @@ void SpectrumMessageHandler::handleChatState(const std::string &uin, const std::
 std::string SpectrumMessageHandler::getConversationName(PurpleConversation *conv) {
 	std::string name(purple_conversation_get_name(conv));
 	if (purple_conversation_get_type(conv) == PURPLE_CONV_TYPE_IM) {
+		std::cout << "getconversationName: " << name << "\n";
 		// Remove resource if it's XMPP JID
 		size_t pos = name.find("/");
 		if (pos != std::string::npos)
@@ -344,6 +345,7 @@ AbstractConversation *SpectrumMessageHandler::getSpectrumMUCConversation(PurpleC
 #ifndef TESTS
 		std::string jid = purple_conversation_get_name(conv);
 		Transport::instance()->protocol()->makeRoomJID(m_user, jid);
+		std::cout << "CONVNAME:" << purple_conversation_get_name(conv) << "\n";
 		s_conv = (AbstractConversation *) new SpectrumMUCConversation(conv, jid, m_user->getRoomResource(purple_conversation_get_name(conv)));
 		addConversation(conv, s_conv);
 #endif

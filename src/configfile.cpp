@@ -205,10 +205,13 @@ bool ConfigFile::loadHostPort(std::string &host, int &port, const std::string &s
 	}
 	loadString(str, section, key);
 	
-	if (str.find_last_of(':') == std::string::npos)
+	if (str.find_first_of(':') == std::string::npos)
 		port = 0;
-	else
-		port = atoi(str.substr(str.find_last_of(':') + 1, str.size()).c_str());
+	else {
+		std::string p = str.substr(str.find_first_of(':') + 1, str.size()).c_str();
+		replace(p, "$filename:port", stringOf(m_port).c_str());
+		port = atoi(p.c_str());
+	}
 	host = str.substr(0, str.find_last_of(':'));
 	return true;
 }
@@ -327,6 +330,7 @@ Configuration ConfigFile::getConfiguration() {
 	loadString(configuration.pid_f, "service", "pid_file", "/var/run/spectrum/" + configuration.jid);
 	loadString(configuration.language, "service", "language", "en");
 	loadString(configuration.encoding, "service", "encoding", "");
+	loadBoolean(configuration.jid_escaping, "service", "jid_escaping", true);
 	loadBoolean(configuration.onlyForVIP, "service", "only_for_vip", false);
 	loadBoolean(configuration.VIPEnabled, "service", "vip_mode", false);
 	loadBoolean(configuration.useProxy, "service", "use_proxy", false);
