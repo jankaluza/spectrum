@@ -27,13 +27,7 @@
 #include "usermanager.h"
 #include "log.h"
 #include "spectrum_util.h"
-<<<<<<< HEAD
-
-#include "sql.h"
-=======
 #include "transport.h"
-
->>>>>>> master
 #include <sstream>
 #include <fstream>
 

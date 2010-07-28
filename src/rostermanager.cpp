@@ -434,6 +434,11 @@ void SpectrumRosterManager::handleSubscription(const Subscription &subscription)
 				removeAuthRequest(remote_user);
 			}
 			PurpleBuddy *buddy = purple_find_buddy(m_user->account(), remote_user.c_str());
+			if (!buddy) {
+				AbstractSpectrumBuddy *b = getRosterItem(remote_user);
+				if (b)
+					buddy = b->getBuddy();
+			}
 			if (!isInRoster(remote_user, "both")) {
 				if (buddy) {
 					Log(m_user->jid(), "adding this user to local roster and sending presence");
@@ -502,6 +507,11 @@ void SpectrumRosterManager::handleSubscription(const Subscription &subscription)
 			return;
 		} else if (subscription.subtype() == Subscription::Unsubscribe || subscription.subtype() == Subscription::Unsubscribed) {
 			PurpleBuddy *buddy = purple_find_buddy(m_user->account(), remote_user.c_str());
+			if (!buddy) {
+				AbstractSpectrumBuddy *b = getRosterItem(remote_user);
+				if (b)
+					buddy = b->getBuddy();
+			}
 			if (subscription.subtype() == Subscription::Unsubscribed) {
 				// user responds to auth request from legacy network and deny it
 				if (hasAuthRequest(remote_user)) {

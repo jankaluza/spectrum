@@ -527,6 +527,7 @@ static void * notifyMessage(PurpleNotifyMsgType type, const char *title, const c
 	// 	user->setAdhocData(data);
 	// 	return repeater;
 	// }
+	Log("notifyMessage", std::string(title ? title : "") << " " << std::string(primary ? primary : "") << " " << std::string(secondary ? secondary : ""));
 	return NULL;
 }
 
