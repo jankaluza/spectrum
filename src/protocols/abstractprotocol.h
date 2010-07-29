@@ -120,7 +120,7 @@ class AbstractProtocol
 		/*
 		 * Returns true if this jid is jid of MUC
 		 */
-		virtual bool isMUC(AbstractUser *user, const std::string &jid) = 0 ;
+		virtual bool isMUC(AbstractUser *user, const std::string &jid) { return false; }
 		/*
 		 * Returns the username of contact from which notifications will be sent
 		 */

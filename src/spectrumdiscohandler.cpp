@@ -28,7 +28,6 @@
 #include "log.h"
 #include "spectrum_util.h"
 #include "transport.h"
-
 #include <sstream>
 #include <fstream>
 

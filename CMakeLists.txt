@@ -118,6 +118,7 @@ set(spectrum_SRCS
 	src/protocols/gg.cpp
 	src/protocols/icq.cpp
 	src/protocols/irc.cpp
+	src/protocols/hon.cpp
 	src/protocols/msn.cpp
 	src/protocols/msn_pecan.cpp
 	src/protocols/myspace.cpp
@@ -182,6 +183,7 @@ set(spectrum_MOC_HDRS
 	src/protocols/aim.h
 	src/protocols/facebook.h
 	src/protocols/gg.h
+	src/protocols/hon.h
 	src/protocols/icq.h
 	src/protocols/irc.h
 	src/protocols/msn.h

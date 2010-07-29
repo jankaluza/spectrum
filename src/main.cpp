@@ -63,6 +63,7 @@
 #include "protocols/aim.h"
 #include "protocols/facebook.h"
 #include "protocols/gg.h"
+#include "protocols/hon.h"
 #include "protocols/icq.h"
 #include "protocols/irc.h"
 #include "protocols/msn.h"
@@ -526,6 +527,7 @@ static void * notifyMessage(PurpleNotifyMsgType type, const char *title, const c
 	// 	user->setAdhocData(data);
 	// 	return repeater;
 	// }
+	Log("notifyMessage", std::string(title ? title : "") << " " << std::string(primary ? primary : "") << " " << std::string(secondary ? secondary : ""));
 	return NULL;
 }
 
@@ -1115,6 +1117,8 @@ bool GlooxMessageHandler::loadProtocol(){
 		m_protocol = (AbstractProtocol*) new SimpleProtocol(this);
 	else if (configuration().protocol == "xmpp")
 		m_protocol = (AbstractProtocol*) new XMPPProtocol(this);
+	else if (configuration().protocol == "hon")
+		m_protocol = (AbstractProtocol*) new HoNProtocol(this);
 	else if (configuration().protocol == "yahoo")
 		m_protocol = (AbstractProtocol*) new YahooProtocol(this);
 	else if (configuration().protocol == "sipe")
@@ -1530,7 +1534,7 @@ void GlooxMessageHandler::handlePresence(const Presence &stanza){
 	Tag *c = NULL;
 	bool isMUC = stanza.findExtension(ExtMUC) != NULL;
 	Log(stanza.from().full(), "Presence received (" << (int)stanza.subtype() << ") for: " << stanza.to().full() << "isMUC" << isMUC);
-	
+
 	User *user;
 	std::string userkey;
 	if (protocol()->tempAccountsAllowed()) {
