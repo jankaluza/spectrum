@@ -311,7 +311,6 @@ void SpectrumMessageHandler::handleChatState(const std::string &uin, const std::
 std::string SpectrumMessageHandler::getConversationName(PurpleConversation *conv) {
 	std::string name(purple_conversation_get_name(conv));
 	if (purple_conversation_get_type(conv) == PURPLE_CONV_TYPE_IM) {
-		std::cout << "getconversationName: " << name << "\n";
 		// Remove resource if it's XMPP JID
 		size_t pos = name.find("/");
 		if (pos != std::string::npos)
@@ -327,8 +326,9 @@ std::string SpectrumMessageHandler::getConversationName(PurpleConversation *conv
 			name = JID::escapeNode(name);
 		else
 			std::for_each( name.begin(), name.end(), replaceBadJidCharacters() ); // OK
-		if (Transport::instance()->getConfiguration().protocol != "irc") {
-			std::transform(name.begin(), name.end(), name.begin(),(int(*)(int)) std::tolower);
+		std::transform(name.begin(), name.end(), name.begin(),(int(*)(int)) std::tolower);
+		if (Transport::instance()->getConfiguration().protocol == "irc") {
+			name += "%" + JID(m_user->username()).server() + "@" + Transport::instance()->jid() + "/bot";
 		}
 	}
 	else
