@@ -44,11 +44,14 @@ std::ostringstream &LogMessage::Get(const std::string &user) {
 }
 
 LogClass::LogClass() {
+	g_thread_init(NULL);
+	m_mutex = g_mutex_new();
 }
 
 LogClass::~LogClass() {
 	if (m_file.is_open())
 		m_file.close();
+	g_mutex_free(m_mutex);
 }
 
 void LogClass::setLogFile(const std::string &file) {
@@ -64,9 +67,36 @@ std::ofstream &LogClass::fileStream() {
 
 void LogClass::handleLog(LogLevel level, LogArea area, const std::string &message) {
 	if (area == LogAreaXmlIncoming)
-		LogMessage(m_file).Get("XML IN") << message;
+		log(get("XML IN") << message);
 	else
-		LogMessage(m_file).Get("XML OUT") << message;
+		log(get("XML OUT") << message);
 }
+
+std::ostringstream &LogClass::get(const std::string &user, bool newline) {
+	g_mutex_lock(m_mutex);
+	os.clear();
+	os.str("");
+	m_newline = newline;
+	time_t now = time(0);
+	char timestamp_buf[25] = "";
+	strftime (timestamp_buf, 25, "%x %H:%M:%S", localtime(&now));
+	std::string timestamp = std::string(timestamp_buf);
+	os << "[" << timestamp << "] <" << user << "> ";
+	return os;
+}
+
+void LogClass::log(void *data) {
+	if (m_newline)
+		os << std::endl;
+	fprintf(stdout, "%s", os.str().c_str());
+	fflush(stdout);
+	if (m_file.is_open()) {
+		m_file << os.str();
+		m_file.flush();
+	}
+	os.clear();
+	g_mutex_unlock(m_mutex);
+}
+
 
 LogClass Log_;

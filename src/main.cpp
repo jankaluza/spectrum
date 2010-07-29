@@ -19,6 +19,7 @@
  */
 
 #include "main.h"
+#include <sys/time.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #ifndef WIN32
@@ -580,8 +581,7 @@ static void printDebug(PurpleDebugLevel level, const char *category, const char 
 		c.push_back('/');
 		c.append(category);
 	}
-
-	LogMessage(Log_.fileStream(), false).Get(c) << arg_s;
+	Log_.log(Log_.get(c, false) << arg_s);
 }
 
 /*
@@ -925,7 +925,6 @@ GlooxMessageHandler::GlooxMessageHandler(const std::string &config) : MessageHan
 	if (!loadConfigFile(config))
 		loaded = false;
 
-	g_thread_init(NULL);
 	if (check_db_version) {
 		m_sql = new SQLClass(this, upgrade_db, true);
 		if (!m_sql->loaded())
@@ -1988,6 +1987,12 @@ int main( int argc, char* argv[] ) {
 		g_option_context_free(context);
 		return 0;
 	}
+
+	ELAPSED_TIME_START();
+	for (int x = 0; x < 30000; x++) {
+		Log("test", 1 << "ahoj" << 2);
+	}
+	ELAPSED_TIME_FINISH();
 
 	if (argc != 2) {
 #ifdef WIN32

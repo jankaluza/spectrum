@@ -40,14 +40,20 @@ class LogClass : public LogHandler {
 		void setLogFile(const std::string &file);
 		std::ofstream &fileStream();
 		void handleLog(LogLevel level, LogArea area, const std::string &message);
+		std::ostringstream& get(const std::string &user, bool newline = true);
+		void log(void *data);
 
 	private:
 		std::ofstream m_file;
+		GMutex *m_mutex;	// Mutex.
+		std::ostringstream os;
+		bool m_newline;
 };
+
 #ifdef TESTS
 	#define Log(HEAD,STRING) 
 #else
-	#define Log(HEAD,STRING) LogMessage(Log_.fileStream()).Get(HEAD) << STRING;
+	#define Log(HEAD,STRING) Log_.log(Log_.get(HEAD) << STRING);
 #endif
 
 #endif
