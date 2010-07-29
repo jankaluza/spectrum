@@ -419,37 +419,44 @@ bool SpectrumRosterManager::hasAuthRequest(const std::string &remote_user) {
 
 void SpectrumRosterManager::handleSubscription(const Subscription &subscription) {
 	std::string remote_user = purpleUsername(subscription.to().username());
-// 	std::string remote_user(subscription.to().username());
-// 	std::for_each( remote_user.begin(), remote_user.end(), replaceJidCharacters() );
 	if (remote_user.empty()) {
 		Log(m_user->jid(), "handleSubscription: Remote user is EMPTY!");
 		return;
 	}
 
 	if (m_user->isConnected()) {
+		PurpleBuddy *buddy = NULL;
+
+		// Try to get PurpleBuddy from SpectrumBuddy at first, because SpectrumBuddy
+		// uses normalized username (buddy->name could be "User", but remote_user is normalized
+		// so it's "user" for example).
+		AbstractSpectrumBuddy *s_buddy = getRosterItem(remote_user);
+		if (s_buddy)
+			buddy = s_buddy->getBuddy();
+		else
+			buddy = purple_find_buddy(m_user->account(), remote_user.c_str());
+
 		if (subscription.subtype() == Subscription::Subscribed) {
+			// Accept authorize request.
 			if (hasAuthRequest(remote_user)) {
 				Log(m_user->jid(), "subscribed presence for authRequest arrived => accepting the request");
 				m_authRequests[remote_user]->authorize_cb(m_authRequests[remote_user]->user_data);
 				removeAuthRequest(remote_user);
 			}
-			PurpleBuddy *buddy = purple_find_buddy(m_user->account(), remote_user.c_str());
-			if (!buddy) {
-				AbstractSpectrumBuddy *b = getRosterItem(remote_user);
-				if (b)
-					buddy = b->getBuddy();
-			}
+
 			if (!isInRoster(remote_user, "both")) {
 				if (buddy) {
 					Log(m_user->jid(), "adding this user to local roster and sending presence");
-					if (!isInRoster(remote_user)) {
-						// add user to mysql database and to local cache
+					if (s_buddy == NULL) {
+						// There is PurpleBuddy, but not SpectrumBuddy (that should not happen, but this
+						// code doesn't break anything).
 						addRosterItem(buddy);
 						Transport::instance()->sql()->addBuddy(m_user->storageId(), remote_user, "both");
 						storeBuddy(buddy);
 					}
 					else {
-						getRosterItem(remote_user)->setSubscription("both");
+						// Update subscription.
+						s_buddy->setSubscription("both");
 						Transport::instance()->sql()->updateBuddySubscription(m_user->storageId(), remote_user, "both");
 						storeBuddy(buddy);
 					}
@@ -457,40 +464,42 @@ void SpectrumRosterManager::handleSubscription(const Subscription &subscription)
 					Log(m_user->jid(), "user is not in legacy network contact lists => nothing to be subscribed");
 				}
 			}
-			if (buddy) {
-				// inform user about status
-				AbstractSpectrumBuddy *s_buddy = (AbstractSpectrumBuddy *) buddy->node.ui_data;
+
+			// XMPP user is able to get the first status presence just after "subscribed" presence.
+			if (s_buddy) {
 				sendPresence(s_buddy);
 			}
 			return;
 		}
 		else if (subscription.subtype() == Subscription::Subscribe) {
-			if (isInRoster(remote_user)) {
-// 				SpectrumBuddy *s_buddy = (SpectrumBuddy *) getRosterItem(remote_user);
+			// User is in roster, so that's probably response for RIE.
+			if (s_buddy) {
+				Log(m_user->jid(), "subscribe presence; user is already in roster => sending subscribed");
+
 				Tag *reply = new Tag("presence");
 				reply->addAttribute( "to", subscription.from().bare() );
 				reply->addAttribute( "from", subscription.to().bare() );
 				reply->addAttribute( "type", "subscribe" );
 				Transport::instance()->send( reply );
 
-				Log(m_user->jid(), "subscribe presence; user is already in roster => sending subscribed");
-				// username is in local roster (he/her is in ICQ roster too),
-				// so we should send subscribed presence
 				reply = new Tag("presence");
 				reply->addAttribute( "to", subscription.from().bare() );
 				reply->addAttribute( "from", subscription.to().bare() );
 				reply->addAttribute( "type", "subscribed" );
 				Transport::instance()->send( reply );
-				PurpleBuddy *buddy = purple_find_buddy(m_user->account(), remote_user.c_str());
+
+				// Sometimes there is "subscribed" request for new user received before "subscribe",
+				// so s_buddy could be already there, but purple_account_add_buddy has not been called.
 				if (buddy) {
 					Log(m_user->jid(), "Trying to purple_account_add_buddy just to be sure.");
 					purple_account_add_buddy(m_user->account(), buddy);
 				}
 			}
+			// User is not in roster, so that's probably new subscribe request.
 			else {
 				Log(m_user->jid(), "subscribe presence; user is not in roster => adding to legacy network");
-				// this user is not in local roster, so we have to send add_buddy request
-				// to our legacy network and wait for response
+				// Disable handling new-buddy event, because we're going to create new buddy by Spectrum, not
+				// by libpurple.
 				m_loadingFromDB = true;
 				PurpleBuddy *buddy = purple_buddy_new(m_user->account(), remote_user.c_str(), remote_user.c_str());
 #ifndef TESTS
@@ -500,20 +509,15 @@ void SpectrumRosterManager::handleSubscription(const Subscription &subscription)
 				if (usesJidEscaping(subscription.to().username()))
 					s_buddy->setFlags(s_buddy->getFlags() | SPECTRUM_BUDDY_JID_ESCAPING);
 #endif
+				// Add newly created buddy to legacy network roster.
 				purple_blist_add_buddy(buddy, NULL, NULL ,NULL);
 				purple_account_add_buddy(m_user->account(), buddy);
 				m_loadingFromDB = false;
 			}
 			return;
 		} else if (subscription.subtype() == Subscription::Unsubscribe || subscription.subtype() == Subscription::Unsubscribed) {
-			PurpleBuddy *buddy = purple_find_buddy(m_user->account(), remote_user.c_str());
-			if (!buddy) {
-				AbstractSpectrumBuddy *b = getRosterItem(remote_user);
-				if (b)
-					buddy = b->getBuddy();
-			}
 			if (subscription.subtype() == Subscription::Unsubscribed) {
-				// user responds to auth request from legacy network and deny it
+				// Reject authorize request.
 				if (hasAuthRequest(remote_user)) {
 					Log(m_user->jid(), "unsubscribed presence for authRequest arrived => rejecting the request");
 					m_authRequests[remote_user]->deny_cb(m_authRequests[remote_user]->user_data);
@@ -521,23 +525,26 @@ void SpectrumRosterManager::handleSubscription(const Subscription &subscription)
 					return;
 				}
 			}
+
+			// Buddy is in legacy network roster, so we can remove it.
 			if (buddy) {
 				Log(m_user->jid(), "unsubscribed presence => removing this contact from legacy network");
-				long id = 0;
-				if (buddy->node.ui_data) {
-					AbstractSpectrumBuddy *s_buddy = (AbstractSpectrumBuddy *) buddy->node.ui_data;
-					id = s_buddy->getId();
+				// Remove buddy from database, if he's already there.
+				if (s_buddy) {
+					long id = s_buddy->getId();
+					Transport::instance()->sql()->removeBuddy(m_user->storageId(), remote_user, id);
 				}
-				Transport::instance()->sql()->removeBuddy(m_user->storageId(), remote_user, id);
 
+				// Remove buddy from legacy network roster.
 				purple_account_remove_buddy(m_user->account(), buddy, purple_buddy_get_group(buddy));
 				purple_blist_remove_buddy(buddy);
 			} else {
-				// this contact is not in legacy network buddy list, so there is nothing to remove...
+				// this buddy is not in legacy network roster, so there is nothing to remove...
 			}
+
 			removeFromLocalRoster(remote_user);
 
-			// inform user about removing this contact
+			// inform user about removing this buddy
 			Tag *tag = new Tag("presence");
 			tag->addAttribute("to", subscription.from().bare());
 			tag->addAttribute("from", subscription.to().username() + "@" + Transport::instance()->jid() + "/bot");
