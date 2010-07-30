@@ -61,7 +61,7 @@ Act on all transports configured in DIR (default: \\fI/etc/spectrum\\fR)
 .RE
 \\fB\-q\\fR, \\fB\-\-quiet\\fR
 .RS 4
-Do not print any output (ignored for list)
+Do not print any output.
 .sp
 .RE
 \\fB\-h\\fR, \\fB\-\-help\\fR
@@ -95,7 +95,7 @@ Options for action "\\fBstart\\fR":
 \\fB\-\-su\\fR=\\fISU\\fR
 .RS 4
 Start spectrum as this user (default: \\fIspectrum\\fR). Overrides the SPECTRUM_USER environment variable.
-If neither --su nor SPECTRUM_USER is specified, the user defaults to 
+If neither \\fI\\-\\-su\\fR nor the environment variable \\fBSPECTRUM_USER\\fR is specified, the user defaults to 
 \\fIspectrum\\fR.
 .RE
 .sp

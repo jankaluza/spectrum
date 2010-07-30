@@ -336,7 +336,10 @@ class spectrum_group:
 
 	def list( self ):
 		"""
-		List all selected transports along with their pid, protocol and hostname.
+		List all selected transports along with their pid, protocol and hostname. If
+		invoked with I{--quiet}, this action does not print a header line and only
+		prints the status for transports that are not currently up. This makes this
+		option suitable for periodic uptime checking via cron.
 		"""
 		lines = []
 

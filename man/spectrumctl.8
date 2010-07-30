@@ -83,10 +83,7 @@ Set the VIP status of the user \fBjid\fR. The \fIstatus\fR should be "0" to disa
 .sp
 \fBlist\fR
 .RS 4
-List all selected transports along with their pid, protocol and hostname. If
-invoked with \fI\-\-quiet\fR, this action does not print a header line and only
-prints the status for transports that are not currently up. This makes this
-option suitable for periodic uptime checking via cron.
+List all selected transports along with their pid, protocol and hostname. If invoked with \fI--quiet\fR, this action does not print a header line and only prints the status for transports that are not currently up. This makes this option suitable for periodic uptime checking via cron.
 .RE
 .sp
 \fBhelp\fR [\fIcmd\fR]
@@ -141,7 +138,7 @@ Options for action "\fBstart\fR":
 \fB\-\-su\fR=\fISU\fR
 .RS 4
 Start spectrum as this user (default: \fIspectrum\fR). Overrides the SPECTRUM_USER environment variable.
-If neither \fI--su\fR nor the environment variable \fBSPECTRUM_USER\fR is specified, the user defaults to 
+If neither \fI\-\-su\fR nor the environment variable \fBSPECTRUM_USER\fR is specified, the user defaults to 
 \fIspectrum\fR.
 .RE
 .sp
