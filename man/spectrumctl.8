@@ -83,7 +83,10 @@ Set the VIP status of the user \fBjid\fR. The \fIstatus\fR should be "0" to disa
 .sp
 \fBlist\fR
 .RS 4
-List all selected transports along with their pid, protocol and hostname.
+List all selected transports along with their pid, protocol and hostname. If
+invoked with \fI\-\-quiet\fR, this action does not print a header line and only
+prints the status for transports that are not currently up. This makes this
+option suitable for periodic uptime checking via cron.
 .RE
 .sp
 \fBhelp\fR [\fIcmd\fR]
@@ -104,7 +107,7 @@ Act on all transports configured in DIR (default: \fI/etc/spectrum\fR)
 .RE
 \fB\-q\fR, \fB\-\-quiet\fR
 .RS 4
-Do not print any output (ignored for list)
+Do not print any output.
 .sp
 .RE
 \fB\-h\fR, \fB\-\-help\fR

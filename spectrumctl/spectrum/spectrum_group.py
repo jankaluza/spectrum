@@ -338,7 +338,7 @@ class spectrum_group:
 		"""
 		List all selected transports along with their pid, protocol and hostname.
 		"""
-		lines = [ ('PID', 'PROTOCOL', 'HOSTNAME', 'STATUS' ) ]
+		lines = []
 
 		for instance in self.instances:
 			lines.append( instance.list() )
@@ -347,6 +347,11 @@ class spectrum_group:
 			for line in lines[1:]:
 				print( ','.join( line ) )
 			return 0
+
+		if not self.options.quiet:
+			lines.insert( 0, ('PID', 'PROTOCOL', 'HOSTNAME', 'STATUS' ) )
+		else:
+			lines = [ x for x in lines if x[3] != 'running' ]
 
 		widths = [0,0,0,0]
 		for item in lines:

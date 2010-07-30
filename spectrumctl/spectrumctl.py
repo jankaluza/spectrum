@@ -37,7 +37,7 @@ parser.add_option( '-c', '--config', metavar='FILE',
 parser.add_option( '-d', '--config-dir', metavar='DIR', default='/etc/spectrum',
 	help = 'Act on all transports configured in DIR (default: %default)' )
 parser.add_option( '-q', '--quiet', action='store_true', default=False,
-	help = 'Do not print any output (ignored for list)' )
+	help = 'Do not print any output' )
 
 list_group = OptionGroup( parser, 'Options for action "list"' )
 list_group.add_option( '--status', choices=['running', 'stopped', 'unknown'],
