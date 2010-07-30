@@ -341,20 +341,25 @@ class spectrum_group:
 		prints the status for transports that are not currently up. This makes this
 		option suitable for periodic uptime checking via cron.
 		"""
-		lines = []
+		if self.options.quiet:
+			lines = []
+		else:
+			lines = [ ('PID', 'PROTOCOL', 'HOSTNAME', 'STATUS' ) ]
 
 		for instance in self.instances:
-			lines.append( instance.list() )
+			line = instance.list()
+			if self.options.cleanup and line[3] == "dead but pid-file exists":
+				os.remove( instance.pid_file )
+
+			if line[3] == 'running' and self.options.quiet:
+				continue
+			
+			lines.append( line )
 
 		if self.options.machine_readable:
 			for line in lines[1:]:
 				print( ','.join( line ) )
 			return 0
-
-		if not self.options.quiet:
-			lines.insert( 0, ('PID', 'PROTOCOL', 'HOSTNAME', 'STATUS' ) )
-		else:
-			lines = [ x for x in lines if x[3] != 'running' ]
 
 		widths = [0,0,0,0]
 		for item in lines:

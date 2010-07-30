@@ -43,7 +43,9 @@ list_group = OptionGroup( parser, 'Options for action "list"' )
 list_group.add_option( '--status', choices=['running', 'stopped', 'unknown'],
 	help='Only show transports with given status. Valid values are "running", "stopped" and "unknown"' )
 list_group.add_option( '--machine-readable', action='store_true', default=False,
-	help= 'Output data as comma-seperated values' )
+	help='Output data as comma-seperated values' )
+list_group.add_option( '--cleanup', action='store_true', default=False,
+	help='Remove stray pid files if the process appears to be dead' )
 parser.add_option_group( list_group )
 
 start_group = OptionGroup( parser, 'Options for action "start"' )
