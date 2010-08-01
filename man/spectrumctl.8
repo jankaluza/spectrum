@@ -83,7 +83,9 @@ Set the VIP status of the user \fBjid\fR. The \fIstatus\fR should be "0" to disa
 .sp
 \fBlist\fR
 .RS 4
-List all selected transports along with their pid, protocol and hostname. If invoked with \fI--quiet\fR, this action does not print a header line and only prints the status for transports that are not currently up. This makes this option suitable for periodic uptime checking via cron.
+List all selected transports along with their pid, protocol and hostname. If invoked with \fI--quiet\fR, this action does not print a header line and only prints the status for transports that are not currently runnning. 
+
+If invoked with the \fI--cron\fR option, this command only prints transports that are not running but where their pid file still exists. The pid files for those transports are removed. This allows you to run this command as a cron-job for watchdog purposes.
 .RE
 .sp
 \fBhelp\fR [\fIcmd\fR]
@@ -104,7 +106,8 @@ Act on all transports configured in DIR (default: \fI/etc/spectrum\fR)
 .RE
 \fB\-q\fR, \fB\-\-quiet\fR
 .RS 4
-Do not print any output.
+Do not print any output. For the \fBlist\fR action, only print transports
+currently not running and do not print a header line.
 .sp
 .RE
 \fB\-h\fR, \fB\-\-help\fR
@@ -131,7 +134,13 @@ Only show transports with given status. Valid values are "\fIrunning\fR", "\fIst
 Output data as comma-seperated values.
 .sp
 .RE
+\fB\-\-cron\fR
+.RS 4
+This option is designed to make the \fBlist\fR action suitable for periodic
+cron-runs. See the \fBlist\fR action for more information.
 .RE
+.RE
+.sp
 Options for action "\fBstart\fR":
 .sp
 .RS 4

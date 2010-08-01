@@ -1,3 +1,11 @@
+version X.X.X (???):
+	spectrumctl:
+	* --quiet is no longer ignored by list action:
+	  Only print not running transports and no header-line
+	* --cron allows you to run spectrumctl --cron list for periodic
+	  cron jobs: Only print crashed transports ("Dead but pid-file
+	  exists") and remove the pid file afterwards.
+
 version 0.3.1 (2010-07-21):
 	General:
 	* Fixed bug in localization of empty strings.

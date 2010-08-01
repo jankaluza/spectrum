@@ -61,7 +61,8 @@ Act on all transports configured in DIR (default: \\fI/etc/spectrum\\fR)
 .RE
 \\fB\-q\\fR, \\fB\-\-quiet\\fR
 .RS 4
-Do not print any output.
+Do not print any output. For the \\fBlist\\fR action, only print transports
+currently not running and do not print a header line.
 .sp
 .RE
 \\fB\-h\\fR, \\fB\-\-help\\fR
@@ -88,7 +89,13 @@ Only show transports with given status. Valid values are "\\fIrunning\\fR", "\\f
 Output data as comma-seperated values.
 .sp
 .RE
+\\fB\-\-cron\\fR
+.RS 4
+This option is designed to make the \\fBlist\\fR action suitable for periodic
+cron-runs. See the \\fBlist\\fR action for more information.
 .RE
+.RE
+.sp
 Options for action "\\fBstart\\fR":
 .sp
 .RS 4
