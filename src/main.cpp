@@ -1656,6 +1656,9 @@ void GlooxMessageHandler::handlePresence(const Presence &stanza){
 // 			Log(stanza.from().full(), "Can't logout because we're connecting now...");
 // 		}
 	}
+	else if (user != NULL && stanza.presence() == Presence::Unavailable && m_protocol->tempAccountsAllowed() && !user->hasOpenedMUC()) {
+		m_userManager->removeUser(user);
+	}
 	else if (user == NULL && stanza.to().username() == "" && stanza.presence() == Presence::Unavailable) {
 		UserRow res = sql()->getUserByJid(userkey);
 		if (res.id != -1) {

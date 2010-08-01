@@ -474,6 +474,7 @@ void User::receivedPresence(const Presence &stanza) {
 		}
 	}
 
+	std::cout << "Unavailable" << stanza.to().username() << "\n";
 	if (stanza.to().username() != ""  && stanza.presence() == Presence::Unavailable) {
 		std::string k = stanza.to().bare();
 		removeConversation(k, true);
