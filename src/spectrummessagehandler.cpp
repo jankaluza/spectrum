@@ -346,7 +346,13 @@ AbstractConversation *SpectrumMessageHandler::getSpectrumMUCConversation(PurpleC
 		std::string jid = purple_conversation_get_name(conv);
 		Transport::instance()->protocol()->makeRoomJID(m_user, jid);
 		std::cout << "CONVNAME:" << purple_conversation_get_name(conv) << "\n";
-		s_conv = (AbstractConversation *) new SpectrumMUCConversation(conv, jid, m_user->getRoomResource(purple_conversation_get_name(conv)));
+		std::string res = m_user->getRoomResource(purple_conversation_get_name(conv));
+		if (res.empty()) {
+			std::string name = purple_conversation_get_name(conv);
+			std::transform(name.begin(), name.end(), name.begin(),(int(*)(int)) std::tolower);
+			res = m_user->getRoomResource(name);
+		}
+		s_conv = (AbstractConversation *) new SpectrumMUCConversation(conv, jid, res);
 		addConversation(conv, s_conv);
 #endif
 	}

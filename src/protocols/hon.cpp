@@ -68,26 +68,23 @@ std::string HoNProtocol::text(const std::string &key) {
 
 void HoNProtocol::makePurpleUsernameRoom(AbstractUser *user, const JID &to, std::string &name) {
 	std::string username = to.username();
-	// "spectrum%conference.spectrum.im@irc.spectrum.im/HanzZ" -> "spectrum@conference.spectrum.im/HanzZ"
-	if (!to.resource().empty()) {
-		std::for_each( username.begin(), username.end(), replaceJidCharacters() );
-		name.assign(username + "/" + to.resource());
-	}
+// 	// "spectrum%conference.spectrum.im@irc.spectrum.im/HanzZ" -> "spectrum@conference.spectrum.im/HanzZ"
+// 	if (!to.resource().empty()) {
+// 		std::for_each( username.begin(), username.end(), replaceJidCharacters() );
+// 		name.assign(username + "/" + to.resource());
+// 	}
 	// "spectrum%conference.spectrum.im@irc.spectrum.im" -> "spectrum@conference.spectrum.im"
-	else {
-		std::for_each( username.begin(), username.end(), replaceJidCharacters() );
-		name.assign(username);
-	}
+// 	else {
+		// Hon\2030@conference.spectrum.im/something" -> "Hon 30"
+		name.assign(JID::unescapeNode(to.username()));
+// 	}
 }
 
 void HoNProtocol::makeRoomJID(AbstractUser *user, std::string &name) {
-	JID j(name);
-	name = j.bare();
-	// spectrum@conference.spectrum.im/something" -> "spectrum%conference.spectrum.im@irc.spectrum.im"
-	std::transform(name.begin(), name.end(), name.begin(),(int(*)(int)) std::tolower);
-	std::string name_safe = name;
-	std::for_each( name_safe.begin(), name_safe.end(), replaceBadJidCharacters() ); // OK
+	// Hon 30" -> "Hon\2030@hon.domain.tld"
+	std::string name_safe = JID::escapeNode(name);
 	name.assign(name_safe + "@" + Transport::instance()->jid());
+	std::transform(name.begin(), name.end(), name.begin(),(int(*)(int)) std::tolower);
 // 	if (!j.resource().empty()) {
 // 		name += "/" + j.resource();
 // 	}
