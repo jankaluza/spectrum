@@ -64,6 +64,7 @@
 #include "protocols/facebook.h"
 #include "protocols/gg.h"
 #include "protocols/hon.h"
+#include "protocols/identica.h"
 #include "protocols/icq.h"
 #include "protocols/irc.h"
 #include "protocols/msn.h"
@@ -1101,6 +1102,8 @@ bool GlooxMessageHandler::loadProtocol(){
 		m_protocol = (AbstractProtocol*) new TwitterProtocol(this);
 	else if (configuration().protocol == "gg")
 		m_protocol = (AbstractProtocol*) new GGProtocol(this);
+	else if (configuration().protocol == "identica")
+		m_protocol = (AbstractProtocol*) new IdenticaProtocol(this);
 	else if (configuration().protocol == "icq")
 		m_protocol = (AbstractProtocol*) new ICQProtocol(this);
 	else if (configuration().protocol == "irc")
