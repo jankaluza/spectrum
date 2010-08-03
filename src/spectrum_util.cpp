@@ -25,9 +25,21 @@
 #include <fstream>
 #include "gloox/jid.h"
 #include <algorithm>
+#include "protocols/abstractprotocol.h"
 
 
 using namespace gloox;
+
+
+static GList *supportedProtocols = NULL;
+
+GList *getSupportedProtocols() {
+	return supportedProtocols;
+}
+void addSupportedProtocol(void *data) {
+	supportedProtocols = g_list_append(supportedProtocols, data);
+	std::cout << "append " << getSupportedProtocols() << "\n";
+}
 
 int isValidEmail(const char *address) {
 	int        count = 0;

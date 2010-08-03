@@ -19,10 +19,8 @@
  */
 
 #include "icq.h"
-#include "../main.h"
 
-ICQProtocol::ICQProtocol(GlooxMessageHandler *main){
-	m_main = main;
+ICQProtocol::ICQProtocol() {
 	m_transportFeatures.push_back("jabber:iq:register");
 	m_transportFeatures.push_back("jabber:iq:gateway");
 	m_transportFeatures.push_back("http://jabber.org/protocol/disco#info");
@@ -42,8 +40,7 @@ ICQProtocol::~ICQProtocol() {}
 
 bool ICQProtocol::isValidUsername(const std::string &str) {
 	static std::string const digits("0123456789");
-	bool allDigits( str.find_first_not_of(digits)==std::string::npos );
-	return allDigits;
+	return str.find_first_not_of(digits) == std::string::npos;
 }
 
 std::list<std::string> ICQProtocol::transportFeatures(){
@@ -164,3 +161,5 @@ bool ICQProtocol::onPurpleRequestInput(AbstractUser *user, const char *title, co
 	}
 	return false;
 }
+
+SPECTRUM_PROTOCOL(icq, ICQProtocol)

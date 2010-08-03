@@ -51,7 +51,7 @@ class AbstractProtocol
 		virtual const std::string protocol() = 0;
 
 		// Returns true if username is valid username for this protocol.
-		virtual bool isValidUsername(const std::string &username) = 0;
+		virtual bool isValidUsername(const std::string &username) { return true; };
 
 		// Returns revised username (for example for ICQ where username = "123- 456-789"; return "123456789";)
 		virtual void prepareUsername(std::string &username, PurpleAccount *account = NULL) {
