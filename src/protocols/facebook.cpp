@@ -19,10 +19,8 @@
  */
 
 #include "facebook.h"
-#include "../main.h"
 
-FacebookProtocol::FacebookProtocol(GlooxMessageHandler *main){
-	m_main = main;
+FacebookProtocol::FacebookProtocol() {
 	m_transportFeatures.push_back("jabber:iq:register");
 	m_transportFeatures.push_back("jabber:iq:gateway");
 	m_transportFeatures.push_back("http://jabber.org/protocol/disco#info");
@@ -131,3 +129,4 @@ Tag *FacebookProtocol::getVCardTag(AbstractUser *user, GList *vcardEntries) {
 	return vcard;
 }
 
+SPECTRUM_PROTOCOL(facebook, FacebookProtocol)
