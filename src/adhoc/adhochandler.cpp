@@ -106,6 +106,10 @@ Disco::ItemList GlooxAdhocHandler::handleDiscoNodeItems( const JID &_from, const
 					for (l = actions; l != NULL; l = l->next) {
 						if (l->data) {
 							action = (PurplePluginAction *) l->data;
+							if (action->label == NULL) {
+								purple_plugin_action_free(action);
+								continue;
+							}
 							// we are using "transport_" prefix here to identify command in disco#info handler
 							lst.push_back( new Disco::Item( Transport::instance()->jid(), "transport_" + (std::string) action->label,(std::string) tr(user->getLang(), action->label) ) );
 							if (m_nodes.find("transport_" + (std::string) action->label) == m_nodes.end()) {
@@ -135,6 +139,10 @@ Disco::ItemList GlooxAdhocHandler::handleDiscoNodeItems( const JID &_from, const
 
 				for(l = ll = prpl_info->blist_node_menu((PurpleBlistNode*)buddy); l; l = l->next) {
 					PurpleMenuAction *action = (PurpleMenuAction *) l->data;
+					if (action->label == NULL) {
+						purple_menu_action_free(action);
+						continue;
+					}
 					lst.push_back( new Disco::Item( _to.bare(), "transport_" + (std::string) action->label, (std::string) tr(user->getLang(), action->label) ) );
 					if (m_nodes.find("transport_" + (std::string) action->label) == m_nodes.end()) {
 						m_nodes["transport_" + (std::string) action->label] = 1;
@@ -217,6 +225,10 @@ bool GlooxAdhocHandler::handleIq( const IQ &stanza ) {
 					for (l = actions; l != NULL; l = l->next) {
 						if (l->data) {
 							action = (PurplePluginAction *) l->data;
+							if (action->label == NULL) {
+								purple_plugin_action_free(action);
+								continue;
+							}
 							if (node == "transport_" + (std::string) action->label) {
 								AdhocData data;
 								data.id = stanza.id();
@@ -247,6 +259,10 @@ bool GlooxAdhocHandler::handleIq( const IQ &stanza ) {
 
 				for(l = ll = prpl_info->blist_node_menu((PurpleBlistNode*)buddy); l; l = l->next) {
 					PurpleMenuAction *action = (PurpleMenuAction *) l->data;
+					if (action->label == NULL) {
+						purple_menu_action_free(action);
+						continue;
+					}
 					if (node == "transport_" + (std::string) action->label) {
 						void (*callback)(PurpleBlistNode *, gpointer);
 						callback = (void (*)(PurpleBlistNode *, gpointer))action->callback;
