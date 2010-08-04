@@ -23,23 +23,17 @@
 
 #include "abstractprotocol.h"
 
-class GlooxMessageHandler;
-
 class AIMProtocol : AbstractProtocol
 {
 	public:
-		AIMProtocol(GlooxMessageHandler *main);
+		AIMProtocol();
 		~AIMProtocol();
 		const std::string gatewayIdentity() { return "aim"; }
 		const std::string protocol() { return "prpl-aim"; }
-		bool isValidUsername(const std::string &username);
 		std::list<std::string> transportFeatures();
 		std::list<std::string> buddyFeatures();
 		std::string text(const std::string &key);
-		Tag *getVCardTag(AbstractUser *user, GList *vcardEntries) { return NULL; }
-		bool isMUC(AbstractUser *user, const std::string &jid) { return false; }
 	private:
-		GlooxMessageHandler *m_main;
 		std::list<std::string> m_transportFeatures;
 		std::list<std::string> m_buddyFeatures;
 

@@ -19,10 +19,8 @@
  */
 
 #include "aim.h"
-#include "../main.h"
 
-AIMProtocol::AIMProtocol(GlooxMessageHandler *main){
-	m_main = main;
+AIMProtocol::AIMProtocol() {
 	m_transportFeatures.push_back("jabber:iq:register");
 	m_transportFeatures.push_back("jabber:iq:gateway");
 	m_transportFeatures.push_back("http://jabber.org/protocol/disco#info");
@@ -43,11 +41,6 @@ AIMProtocol::AIMProtocol(GlooxMessageHandler *main){
 
 AIMProtocol::~AIMProtocol() {}
 
-bool AIMProtocol::isValidUsername(const std::string &str){
-	// TODO: check valid email address
-	return true;
-}
-
 std::list<std::string> AIMProtocol::transportFeatures(){
 	return m_transportFeatures;
 }
@@ -63,3 +56,5 @@ std::string AIMProtocol::text(const std::string &key) {
 		return _("Screenname");
 	return "not defined";
 }
+
+SPECTRUM_PROTOCOL(aim, AIMProtocol)

@@ -19,10 +19,8 @@
  */
 
 #include "qq.h"
-#include "../main.h"
 
-QQProtocol::QQProtocol(GlooxMessageHandler *main){
-	m_main = main;
+QQProtocol::QQProtocol() {
 	m_transportFeatures.push_back("jabber:iq:register");
 	m_transportFeatures.push_back("jabber:iq:gateway");
 	m_transportFeatures.push_back("http://jabber.org/protocol/disco#info");
@@ -56,11 +54,6 @@ bool QQProtocol::onPurpleRequestInput(AbstractUser *user, const char *title, con
 	return false;
 }
 
-bool QQProtocol::isValidUsername(const std::string &str){
-	// TODO: check valid email address
-	return true;
-}
-
 std::list<std::string> QQProtocol::transportFeatures(){
 	return m_transportFeatures;
 }
@@ -76,3 +69,5 @@ std::string QQProtocol::text(const std::string &key) {
 		return _("QQ username");
 	return "not defined";
 }
+
+SPECTRUM_PROTOCOL(qq, QQProtocol)

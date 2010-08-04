@@ -19,11 +19,9 @@
  */
 
 #include "twitter.h"
-#include "../main.h"
 #include "../transport.h"
 
-TwitterProtocol::TwitterProtocol(GlooxMessageHandler *main){
-	m_main = main;
+TwitterProtocol::TwitterProtocol() {
 	m_transportFeatures.push_back("jabber:iq:register");
 	m_transportFeatures.push_back("jabber:iq:gateway");
 	m_transportFeatures.push_back("http://jabber.org/protocol/disco#info");
@@ -43,11 +41,6 @@ TwitterProtocol::TwitterProtocol(GlooxMessageHandler *main){
 }
 
 TwitterProtocol::~TwitterProtocol() {}
-
-bool TwitterProtocol::isValidUsername(const std::string &str){
-	// TODO: check valid email address
-	return true;
-}
 
 std::list<std::string> TwitterProtocol::transportFeatures(){
 	return m_transportFeatures;
@@ -106,3 +99,5 @@ bool TwitterProtocol::onPresenceReceived(AbstractUser *user, const Presence &sta
 	delete stanzaTag;
 	return false;
 }
+
+SPECTRUM_PROTOCOL(twitter, TwitterProtocol)

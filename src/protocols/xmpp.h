@@ -24,22 +24,18 @@
 #include "abstractprotocol.h"
 #include "gloox/jid.h"
 
-class GlooxMessageHandler;
 using namespace gloox;
 
 class XMPPProtocol : AbstractProtocol
 {
 	public:
-		XMPPProtocol(GlooxMessageHandler *main);
+		XMPPProtocol();
 		~XMPPProtocol();
 		const std::string gatewayIdentity() { return "xmpp"; }
 		const std::string protocol() { return "prpl-jabber"; }
-		bool isValidUsername(const std::string &username);
 		std::list<std::string> transportFeatures();
 		std::list<std::string> buddyFeatures();
 		std::string text(const std::string &key);
-		Tag *getVCardTag(AbstractUser *user, GList *vcardEntries) { return NULL; }
-		bool isMUC(AbstractUser *user, const std::string &jid) { return jid.find("#") == 0; }
 		const std::string userSearchAction() { return "Search for Users..."; }
 		const std::string userSearchColumn() { return "Jabber ID"; }
 		void onPurpleAccountCreated(PurpleAccount *account);
@@ -48,7 +44,6 @@ class XMPPProtocol : AbstractProtocol
 		void makeUsernameRoom(AbstractUser *user, std::string &name);
 
 	private:
-		GlooxMessageHandler *m_main;
 		std::list<std::string> m_transportFeatures;
 		std::list<std::string> m_buddyFeatures;
 

@@ -23,24 +23,19 @@
 
 #include "abstractprotocol.h"
 
-class GlooxMessageHandler;
-
 class GGProtocol : AbstractProtocol
 {
 	public:
-		GGProtocol(GlooxMessageHandler *main);
+		GGProtocol();
 		~GGProtocol();
 		const std::string gatewayIdentity() { return "gadu-gadu"; }
 		const std::string protocol() { return "prpl-gg"; }
-		bool isValidUsername(const std::string &username);
 		std::list<std::string> transportFeatures();
 		std::list<std::string> buddyFeatures();
 		std::string text(const std::string &key);
 		Tag *getVCardTag(AbstractUser *user, GList *vcardEntries);
-		bool isMUC(AbstractUser *user, const std::string &jid) { return false; }
 
 	private:
-		GlooxMessageHandler *m_main;
 		std::list<std::string> m_transportFeatures;
 		std::list<std::string> m_buddyFeatures;
 

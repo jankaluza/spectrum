@@ -19,10 +19,8 @@
  */
 
 #include "yahoo.h"
-#include "../main.h"
 
-YahooProtocol::YahooProtocol(GlooxMessageHandler *main){
-	m_main = main;
+YahooProtocol::YahooProtocol() {
 	m_transportFeatures.push_back("jabber:iq:register");
 	m_transportFeatures.push_back("jabber:iq:gateway");
 	m_transportFeatures.push_back("http://jabber.org/protocol/disco#info");
@@ -44,11 +42,6 @@ YahooProtocol::YahooProtocol(GlooxMessageHandler *main){
 
 YahooProtocol::~YahooProtocol() {}
 
-bool YahooProtocol::isValidUsername(const std::string &str){
-	// TODO: check valid email address
-	return true;
-}
-
 std::list<std::string> YahooProtocol::transportFeatures(){
 	return m_transportFeatures;
 }
@@ -64,3 +57,5 @@ std::string YahooProtocol::text(const std::string &key) {
 		return _("Yahoo Messenger username");
 	return "not defined";
 }
+
+SPECTRUM_PROTOCOL(yahoo, YahooProtocol)

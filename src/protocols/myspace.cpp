@@ -19,10 +19,8 @@
  */
 
 #include "myspace.h"
-#include "../main.h"
 
-MyspaceProtocol::MyspaceProtocol(GlooxMessageHandler *main){
-	m_main = main;
+MyspaceProtocol::MyspaceProtocol() {
 	m_transportFeatures.push_back("jabber:iq:register");
 	m_transportFeatures.push_back("jabber:iq:gateway");
 	m_transportFeatures.push_back("http://jabber.org/protocol/disco#info");
@@ -43,11 +41,6 @@ MyspaceProtocol::MyspaceProtocol(GlooxMessageHandler *main){
 }
 
 MyspaceProtocol::~MyspaceProtocol() {}
-
-bool MyspaceProtocol::isValidUsername(const std::string &str){
-	// TODO: check valid email address
-	return true;
-}
 
 std::list<std::string> MyspaceProtocol::transportFeatures(){
 	return m_transportFeatures;
@@ -89,3 +82,5 @@ void MyspaceProtocol::onConnected(AbstractUser *user) {
 		}
 	}
 }
+
+SPECTRUM_PROTOCOL(myspace, MyspaceProtocol)

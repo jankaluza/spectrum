@@ -24,7 +24,6 @@
 #include "abstractprotocol.h"
 #include "../adhoc/adhoccommandhandler.h"
 
-class GlooxMessageHandler;
 class AbstractUser;
 
 extern Localization localization;
@@ -54,7 +53,7 @@ class ConfigHandler : public AdhocCommandHandler {
 class IRCProtocol : AbstractProtocol
 {
 	public:
-		IRCProtocol(GlooxMessageHandler *main);
+		IRCProtocol();
 		~IRCProtocol();
 		const std::string gatewayIdentity() { return "irc"; }
 		const std::string protocol() { return "prpl-irc"; }
@@ -78,7 +77,6 @@ class IRCProtocol : AbstractProtocol
 		void onPurpleAccountCreated(PurpleAccount *account);
 
 	private:
-		GlooxMessageHandler *m_main;
 		std::list<std::string> m_transportFeatures;
 		std::list<std::string> m_buddyFeatures;
 		PurplePlugin *m_irchelper;

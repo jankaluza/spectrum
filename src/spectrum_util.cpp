@@ -37,8 +37,7 @@ GList *getSupportedProtocols() {
 	return supportedProtocols;
 }
 void addSupportedProtocol(void *data) {
-	supportedProtocols = g_list_append(supportedProtocols, data);
-	std::cout << "append " << getSupportedProtocols() << "\n";
+	supportedProtocols = g_list_prepend(supportedProtocols, data);
 }
 
 int isValidEmail(const char *address) {

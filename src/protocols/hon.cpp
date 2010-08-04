@@ -22,8 +22,7 @@
 #include "../main.h"
 #include "transport.h"
 
-HoNProtocol::HoNProtocol(GlooxMessageHandler *main){
-	m_main = main;
+HoNProtocol::HoNProtocol() {
 	m_transportFeatures.push_back("jabber:iq:register");
 	m_transportFeatures.push_back("jabber:iq:gateway");
 	m_transportFeatures.push_back("http://jabber.org/protocol/disco#info");
@@ -45,10 +44,6 @@ HoNProtocol::HoNProtocol(GlooxMessageHandler *main){
 
 HoNProtocol::~HoNProtocol() {}
 
-bool HoNProtocol::isValidUsername(const std::string &str){
-	// almost everything is OK
-	return true;
-}
 
 std::list<std::string> HoNProtocol::transportFeatures(){
 	return m_transportFeatures;
@@ -99,3 +94,5 @@ void HoNProtocol::makeUsernameRoom(AbstractUser *user, std::string &name) {
 
 void HoNProtocol::onPurpleAccountCreated(PurpleAccount *account) {
 }
+
+SPECTRUM_PROTOCOL(hon, HoNProtocol)

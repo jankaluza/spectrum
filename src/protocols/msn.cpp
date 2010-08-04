@@ -19,10 +19,8 @@
  */
 
 #include "msn.h"
-#include "../main.h"
 
-MSNProtocol::MSNProtocol(GlooxMessageHandler *main){
-	m_main = main;
+MSNProtocol::MSNProtocol() {
 	m_transportFeatures.push_back("jabber:iq:register");
 	m_transportFeatures.push_back("jabber:iq:gateway");
 	m_transportFeatures.push_back("http://jabber.org/protocol/disco#info");
@@ -42,11 +40,6 @@ MSNProtocol::MSNProtocol(GlooxMessageHandler *main){
 }
 
 MSNProtocol::~MSNProtocol() {}
-
-bool MSNProtocol::isValidUsername(const std::string &str){
-	// TODO: check valid email address
-	return true;
-}
 
 std::list<std::string> MSNProtocol::transportFeatures(){
 	return m_transportFeatures;
@@ -167,3 +160,4 @@ bool MSNProtocol::onPurpleRequestInput(AbstractUser *user, const char *title, co
 	return false;
 }
 
+SPECTRUM_PROTOCOL(msn, MSNProtocol)
