@@ -36,7 +36,7 @@ static gboolean collectorTimeout(gpointer data){
 
 AccountCollector::AccountCollector() {
 	m_accounts = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
-	purple_timeout_add_seconds(5*60, &collectorTimeout, this);
+	//purple_timeout_add_seconds(5*60, &collectorTimeout, this);
 	
 }
 
@@ -45,17 +45,20 @@ AccountCollector::~AccountCollector() {
 }
 
 void AccountCollector::stopCollecting(PurpleAccount *account) {
+	return;
 	if (g_hash_table_lookup(m_accounts, purple_account_get_username(account)) != NULL)
 		g_hash_table_remove(m_accounts, purple_account_get_username(account));
 }
 
 
 void AccountCollector::collect(PurpleAccount *account) {
+	return;
 	if (g_hash_table_lookup(m_accounts, purple_account_get_username(account)) == NULL)
 		g_hash_table_replace(m_accounts, g_strdup(purple_account_get_username(account)), account);
 }
 
 void AccountCollector::collectNow(PurpleAccount *account, bool remove) {
+	return;
 	if (account->ui_data == NULL) {
 		Log("AccountCollector","freeing account " << purple_account_get_username(account));
 		
