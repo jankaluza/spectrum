@@ -32,6 +32,7 @@
 #include "../spectrum_util.h"
 #include "../log.h"
 #include "../localization.h"
+#include "../protocolmanager.h"
 
 extern Localization localization;
 

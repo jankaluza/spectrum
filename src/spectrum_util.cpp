@@ -30,16 +30,6 @@
 
 using namespace gloox;
 
-
-static GList *supportedProtocols = NULL;
-
-GList *getSupportedProtocols() {
-	return supportedProtocols;
-}
-void addSupportedProtocol(void *data) {
-	supportedProtocols = g_list_prepend(supportedProtocols, data);
-}
-
 int isValidEmail(const char *address) {
 	int        count = 0;
 	const char *c, *domain;

@@ -51,6 +51,7 @@
 #include "spectrum_util.h"
 #include "sql.h"
 #include "user.h"
+#include "protocolmanager.h"
 #include "filetransfermanager.h"
 #include "localization.h"
 #include "spectrumbuddy.h"

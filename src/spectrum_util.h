@@ -42,26 +42,6 @@
 
 class AbstractProtocol;
 
-GList *getSupportedProtocols();
-void addSupportedProtocol(void *data);
-
-class _spectrum_protocol {
-	public:
-		_spectrum_protocol(const std::string &name, AbstractProtocol *(*fnc)()) {
-			addSupportedProtocol(this);
-			prpl_id = name;
-			create_protocol = fnc;
-		}
-		std::string prpl_id;
-		AbstractProtocol *(*create_protocol)();
-};
-
-#define SPECTRUM_PROTOCOL(NAME, CLASS) static AbstractProtocol *create_##NAME() { \
-		return (AbstractProtocol *) new CLASS(); \
-	} \
-	_spectrum_protocol _spectrum_protocol_##NAME(#NAME, &create_##NAME);
-	
-
 template <class T> std::string stringOf(T object) {
 	std::ostringstream os;
 	os << object;
