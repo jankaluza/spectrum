@@ -19,10 +19,8 @@
  */
 
 #include "sipe.h"
-#include "../main.h"
 
-SIPEProtocol::SIPEProtocol(GlooxMessageHandler *main){
-	m_main = main;
+SIPEProtocol::SIPEProtocol() {
 	m_transportFeatures.push_back("jabber:iq:register");
 	m_transportFeatures.push_back("jabber:iq:gateway");
 	m_transportFeatures.push_back("http://jabber.org/protocol/disco#info");
@@ -43,10 +41,6 @@ SIPEProtocol::SIPEProtocol(GlooxMessageHandler *main){
 
 SIPEProtocol::~SIPEProtocol() {}
 
-bool SIPEProtocol::isValidUsername(const std::string &str){
-	// TODO: check valid email address
-	return true;
-}
 
 std::list<std::string> SIPEProtocol::transportFeatures(){
 	return m_transportFeatures;
@@ -63,3 +57,5 @@ std::string SIPEProtocol::text(const std::string &key) {
 		return _("SIPE username");
 	return "not defined";
 }
+
+SPECTRUM_PROTOCOL(sipe, SIPEProtocol)

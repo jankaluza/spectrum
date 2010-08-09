@@ -19,10 +19,8 @@
  */
 
 #include "gg.h"
-#include "../main.h"
 
-GGProtocol::GGProtocol(GlooxMessageHandler *main){
-	m_main = main;
+GGProtocol::GGProtocol() {
 	m_transportFeatures.push_back("jabber:iq:register");
 	m_transportFeatures.push_back("http://jabber.org/protocol/disco#info");
 	m_transportFeatures.push_back("http://jabber.org/protocol/caps");
@@ -41,11 +39,6 @@ GGProtocol::GGProtocol(GlooxMessageHandler *main){
 }
 
 GGProtocol::~GGProtocol() {}
-
-bool GGProtocol::isValidUsername(const std::string &str){
-	// TODO: check valid email address
-	return true;
-}
 
 std::list<std::string> GGProtocol::transportFeatures(){
 	return m_transportFeatures;
@@ -116,3 +109,5 @@ std::string GGProtocol::text(const std::string &key) {
 		return _("GG number");
 	return "not defined";
 }
+
+SPECTRUM_PROTOCOL(gg, GGProtocol)

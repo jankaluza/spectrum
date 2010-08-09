@@ -23,16 +23,13 @@
 
 #include "abstractprotocol.h"
 
-class GlooxMessageHandler;
-
 class MSNProtocol : AbstractProtocol
 {
 	public:
-		MSNProtocol(GlooxMessageHandler *main);
+		MSNProtocol();
 		~MSNProtocol();
 		const std::string gatewayIdentity() { return "msn"; }
 		const std::string protocol() { return "prpl-msn"; }
-		bool isValidUsername(const std::string &username);
 		std::list<std::string> transportFeatures();
 		std::list<std::string> buddyFeatures();
 		std::string text(const std::string &key);
@@ -42,7 +39,6 @@ class MSNProtocol : AbstractProtocol
 		
 
 	private:
-		GlooxMessageHandler *m_main;
 		std::list<std::string> m_transportFeatures;
 		std::list<std::string> m_buddyFeatures;
 

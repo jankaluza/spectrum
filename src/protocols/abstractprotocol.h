@@ -32,6 +32,7 @@
 #include "../spectrum_util.h"
 #include "../log.h"
 #include "../localization.h"
+#include "../protocolmanager.h"
 
 extern Localization localization;
 
@@ -51,7 +52,7 @@ class AbstractProtocol
 		virtual const std::string protocol() = 0;
 
 		// Returns true if username is valid username for this protocol.
-		virtual bool isValidUsername(const std::string &username) = 0;
+		virtual bool isValidUsername(const std::string &username) { return true; };
 
 		// Returns revised username (for example for ICQ where username = "123- 456-789"; return "123456789";)
 		virtual void prepareUsername(std::string &username, PurpleAccount *account = NULL) {
@@ -116,7 +117,7 @@ class AbstractProtocol
 		virtual std::string text(const std::string &key) = 0;
 
 		// Parses VCard and returns VCard Tag*.
-		virtual Tag *getVCardTag(AbstractUser *user, GList *vcardEntries) = 0;
+		virtual Tag *getVCardTag(AbstractUser *user, GList *vcardEntries) { return NULL; }
 		/*
 		 * Returns true if this jid is jid of MUC
 		 */

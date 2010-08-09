@@ -23,13 +23,12 @@
 
 #include "abstractprotocol.h"
 
-class GlooxMessageHandler;
 extern Localization localization;
 
 class FacebookProtocol : AbstractProtocol
 {
 	public:
-		FacebookProtocol(GlooxMessageHandler *main);
+		FacebookProtocol();
 		~FacebookProtocol();
 		const std::string gatewayIdentity() { return "facebook"; }
 		const std::string protocol() { return "prpl-bigbrownchunx-facebookim"; }
@@ -45,7 +44,6 @@ class FacebookProtocol : AbstractProtocol
 		const std::string userSearchColumn() { return "ID"; }
 
 	private:
-		GlooxMessageHandler *m_main;
 		std::list<std::string> m_transportFeatures;
 		std::list<std::string> m_buddyFeatures;
 

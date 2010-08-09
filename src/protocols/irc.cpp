@@ -21,12 +21,12 @@
 #include "irc.h"
 #include "../main.h"
 #include "../usermanager.h"
-#include "../sql.h"
 #include "../user.h"
 #include "../adhoc/adhochandler.h"
 #include "../adhoc/adhoctag.h"
 #include "../transport.h"
 #include "../spectrum_util.h"
+#include "../abstractbackend.h"
 #include "cmds.h"
 
 #define IRCHELPER_ID "core-rlaager-irchelper"
@@ -85,8 +85,7 @@ static AdhocCommandHandler * createConfigHandler(AbstractUser *user, const std::
 	return handler;
 }
 
-IRCProtocol::IRCProtocol(GlooxMessageHandler *main){
-	m_main = main;
+IRCProtocol::IRCProtocol() {
 // 	m_transportFeatures.push_back("jabber:iq:register");
 	m_transportFeatures.push_back("http://jabber.org/protocol/disco#info");
 	m_transportFeatures.push_back("http://jabber.org/protocol/caps");
@@ -143,7 +142,7 @@ bool IRCProtocol::changeNickname(const std::string &nick, PurpleConversation *co
 void IRCProtocol::onUserCreated(AbstractUser *user) {
 	PurpleValue *value;
 	if ( (value = user->getSetting("nickserv")) == NULL ) {
-		m_main->sql()->addSetting(user->storageId(), "nickserv", "", PURPLE_TYPE_STRING);
+		Transport::instance()->sql()->addSetting(user->storageId(), "nickserv", "", PURPLE_TYPE_STRING);
 		value = purple_value_new(PURPLE_TYPE_STRING);
 		purple_value_set_string(value, "");
 		g_hash_table_replace(user->settings(), g_strdup("nickserv"), value);
@@ -210,3 +209,5 @@ void IRCProtocol::makeRoomJID(AbstractUser *user, std::string &name) {
 
 void IRCProtocol::makeUsernameRoom(AbstractUser *user, std::string &name) {
 }
+
+SPECTRUM_PROTOCOL(irc, IRCProtocol)

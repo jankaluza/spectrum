@@ -90,6 +90,7 @@ set(spectrum_SRCS
 	src/log.cpp
 	src/main.cpp
 	src/messagesender.cpp
+	src/protocolmanager.cpp
 	src/spectrummessagehandler.cpp
 # 	src/muchandler.cpp
 	src/parser.cpp
@@ -159,6 +160,7 @@ set(spectrum_MOC_HDRS
 	src/log.h
 	src/main.h
 	src/messagesender.h
+	src/protocolmanager.h
 	src/spectrummessagehandler.h
 	src/spectrumconversation.h
 # 	src/muchandler.h

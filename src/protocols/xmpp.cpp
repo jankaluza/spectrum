@@ -19,11 +19,9 @@
  */
 
 #include "xmpp.h"
-#include "../main.h"
 #include "transport.h"
 
-XMPPProtocol::XMPPProtocol(GlooxMessageHandler *main){
-	m_main = main;
+XMPPProtocol::XMPPProtocol() {
 	m_transportFeatures.push_back("jabber:iq:register");
 	m_transportFeatures.push_back("jabber:iq:gateway");
 	m_transportFeatures.push_back("http://jabber.org/protocol/disco#info");
@@ -43,11 +41,6 @@ XMPPProtocol::XMPPProtocol(GlooxMessageHandler *main){
 }
 
 XMPPProtocol::~XMPPProtocol() {}
-
-bool XMPPProtocol::isValidUsername(const std::string &str){
-	// TODO: check valid email address
-	return true;
-}
 
 std::list<std::string> XMPPProtocol::transportFeatures(){
 	return m_transportFeatures;
@@ -104,3 +97,5 @@ void XMPPProtocol::onPurpleAccountCreated(PurpleAccount *account) {
 	if (JID(jid).server() == "chat.facebook.com")
 		purple_account_set_bool(account, "require_tls", false);
 }
+
+SPECTRUM_PROTOCOL(xmpp, XMPPProtocol)

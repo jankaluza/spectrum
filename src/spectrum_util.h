@@ -40,6 +40,7 @@
 	exit(0);
 
 
+class AbstractProtocol;
 
 template <class T> std::string stringOf(T object) {
 	std::ostringstream os;

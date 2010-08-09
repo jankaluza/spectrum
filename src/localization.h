@@ -77,4 +77,10 @@ class Localization {
 		std::map<std::string, std::string> m_languages;
 };
 
+#define tr(lang,STRING)    localization.translate((lang),(STRING))
+#define _(STRING)    (STRING)
+
+extern Localization localization;
+extern LogClass Log_;
+
 #endif

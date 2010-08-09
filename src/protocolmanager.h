@@ -18,26 +18,28 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02111-1301  USA
  */
 
-#ifndef _HI_AIM_PROTOCOL_H
-#define _HI_AIM_PROTOCOL_H
+#ifndef _PROTOCOL_MANAGER_H
+#define _PROTOCOL_MANAGER_H
 
-#include "abstractprotocol.h"
+#include <string>
+#include "glib.h"
+#include "protocols/abstractprotocol.h"
 
-class AIMProtocol : AbstractProtocol
-{
+GList *getSupportedProtocols();
+
+void addSupportedProtocol(void *data);
+
+class _spectrum_protocol {
 	public:
-		AIMProtocol();
-		~AIMProtocol();
-		const std::string gatewayIdentity() { return "aim"; }
-		const std::string protocol() { return "prpl-aim"; }
-		std::list<std::string> transportFeatures();
-		std::list<std::string> buddyFeatures();
-		std::string text(const std::string &key);
-	private:
-		std::list<std::string> m_transportFeatures;
-		std::list<std::string> m_buddyFeatures;
-
+		_spectrum_protocol(const std::string &name, AbstractProtocol *(*fnc)());
+		std::string prpl_id;
+		AbstractProtocol *(*create_protocol)();
 };
 
-#endif
+#define SPECTRUM_PROTOCOL(NAME, CLASS) static AbstractProtocol *create_##NAME() { \
+		return (AbstractProtocol *) new CLASS(); \
+	} \
+	_spectrum_protocol _spectrum_protocol_##NAME(#NAME, &create_##NAME);
+	
 
+#endif

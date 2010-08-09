@@ -19,10 +19,8 @@
  */
 
 #include "simple.h"
-#include "../main.h"
 
-SimpleProtocol::SimpleProtocol(GlooxMessageHandler *main){
-	m_main = main;
+SimpleProtocol::SimpleProtocol() {
 	m_transportFeatures.push_back("jabber:iq:register");
 	m_transportFeatures.push_back("jabber:iq:gateway");
 	m_transportFeatures.push_back("http://jabber.org/protocol/disco#info");
@@ -44,11 +42,6 @@ SimpleProtocol::SimpleProtocol(GlooxMessageHandler *main){
 
 SimpleProtocol::~SimpleProtocol() {}
 
-bool SimpleProtocol::isValidUsername(const std::string &str){
-	// TODO: check valid email address
-	return true;
-}
-
 std::list<std::string> SimpleProtocol::transportFeatures(){
 	return m_transportFeatures;
 }
@@ -64,3 +57,5 @@ std::string SimpleProtocol::text(const std::string &key) {
 		return _("SIMPLE username");
 	return "not defined";
 }
+
+SPECTRUM_PROTOCOL(simple, SimpleProtocol)

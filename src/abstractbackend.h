@@ -58,6 +58,7 @@ class AbstractBackend {
 		virtual bool reconnect() { return false; }
 		virtual void beginTransaction() { }
 		virtual void commitTransaction() { }
+		virtual void addSetting(long userId, const std::string &key, const std::string &value, PurpleType type) {}
 
 };
 

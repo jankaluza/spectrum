@@ -19,10 +19,8 @@
  */
 
 #include "msn_pecan.h"
-#include "../main.h"
 
-MSNPecanProtocol::MSNPecanProtocol(GlooxMessageHandler *main){
-	m_main = main;
+MSNPecanProtocol::MSNPecanProtocol() {
 	m_transportFeatures.push_back("jabber:iq:register");
 	m_transportFeatures.push_back("jabber:iq:gateway");
 	m_transportFeatures.push_back("http://jabber.org/protocol/disco#info");
@@ -42,11 +40,6 @@ MSNPecanProtocol::MSNPecanProtocol(GlooxMessageHandler *main){
 }
 
 MSNPecanProtocol::~MSNPecanProtocol() {}
-
-bool MSNPecanProtocol::isValidUsername(const std::string &str){
-	// TODO: check valid email address
-	return true;
-}
 
 std::list<std::string> MSNPecanProtocol::transportFeatures(){
 	return m_transportFeatures;
@@ -166,4 +159,6 @@ bool MSNPecanProtocol::onPurpleRequestInput(AbstractUser *user, const char *titl
 	}
 	return false;
 }
+
+SPECTRUM_PROTOCOL(msn_pecan, MSNPecanProtocol)
 

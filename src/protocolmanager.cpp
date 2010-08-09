@@ -18,26 +18,20 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02111-1301  USA
  */
 
-#ifndef _HI_AIM_PROTOCOL_H
-#define _HI_AIM_PROTOCOL_H
+#include "protocolmanager.h"
 
-#include "abstractprotocol.h"
+static GList *supportedProtocols = NULL;
 
-class AIMProtocol : AbstractProtocol
-{
-	public:
-		AIMProtocol();
-		~AIMProtocol();
-		const std::string gatewayIdentity() { return "aim"; }
-		const std::string protocol() { return "prpl-aim"; }
-		std::list<std::string> transportFeatures();
-		std::list<std::string> buddyFeatures();
-		std::string text(const std::string &key);
-	private:
-		std::list<std::string> m_transportFeatures;
-		std::list<std::string> m_buddyFeatures;
+GList *getSupportedProtocols() {
+	return supportedProtocols;
+}
 
-};
+void addSupportedProtocol(void *data) {
+	supportedProtocols = g_list_prepend(supportedProtocols, data);
+}
 
-#endif
-
+_spectrum_protocol::_spectrum_protocol(const std::string &name, AbstractProtocol *(*fnc)()) {
+	addSupportedProtocol(this);
+	prpl_id = name;
+	create_protocol = fnc;
+}

@@ -23,16 +23,13 @@
 
 #include "abstractprotocol.h"
 
-class GlooxMessageHandler;
-
 class MSNPecanProtocol : AbstractProtocol
 {
 	public:
-		MSNPecanProtocol(GlooxMessageHandler *main);
+		MSNPecanProtocol();
 		~MSNPecanProtocol();
 		const std::string gatewayIdentity() { return "msn"; }
 		const std::string protocol() { return "prpl-msn-pecan"; }
-		bool isValidUsername(const std::string &username);
 		std::list<std::string> transportFeatures();
 		std::list<std::string> buddyFeatures();
 		std::string text(const std::string &key);
@@ -42,7 +39,6 @@ class MSNPecanProtocol : AbstractProtocol
 		
 
 	private:
-		GlooxMessageHandler *m_main;
 		std::list<std::string> m_transportFeatures;
 		std::list<std::string> m_buddyFeatures;
 

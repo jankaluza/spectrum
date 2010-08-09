@@ -23,23 +23,18 @@
 
 #include "abstractprotocol.h"
 
-class GlooxMessageHandler;
-
 class SIPEProtocol : AbstractProtocol
 {
 	public:
-		SIPEProtocol(GlooxMessageHandler *main);
+		SIPEProtocol();
 		~SIPEProtocol();
 		const std::string gatewayIdentity() { return "sipe"; }
 		const std::string protocol() { return "prpl-sipe"; }
-		bool isValidUsername(const std::string &username);
 		std::list<std::string> transportFeatures();
 		std::list<std::string> buddyFeatures();
 		std::string text(const std::string &key);
-		Tag *getVCardTag(AbstractUser *user, GList *vcardEntries) { return NULL; }
-		bool isMUC(AbstractUser *user, const std::string &jid) { return false; }
+
 	private:
-		GlooxMessageHandler *m_main;
 		std::list<std::string> m_transportFeatures;
 		std::list<std::string> m_buddyFeatures;
 

@@ -25,6 +25,7 @@
 #include <fstream>
 #include "gloox/jid.h"
 #include <algorithm>
+#include "protocols/abstractprotocol.h"
 
 
 using namespace gloox;

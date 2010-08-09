@@ -51,6 +51,7 @@
 #include "spectrum_util.h"
 #include "sql.h"
 #include "user.h"
+#include "protocolmanager.h"
 #include "filetransfermanager.h"
 #include "localization.h"
 #include "spectrumbuddy.h"
@@ -60,22 +61,6 @@
 #include "parser.h"
 #include "commands.h"
 #include "protocols/abstractprotocol.h"
-#include "protocols/aim.h"
-#include "protocols/facebook.h"
-#include "protocols/gg.h"
-#include "protocols/hon.h"
-#include "protocols/identica.h"
-#include "protocols/icq.h"
-#include "protocols/irc.h"
-#include "protocols/msn.h"
-#include "protocols/msn_pecan.h"
-#include "protocols/myspace.h"
-#include "protocols/qq.h"
-#include "protocols/simple.h"
-#include "protocols/twitter.h"
-#include "protocols/xmpp.h"
-#include "protocols/yahoo.h"
-#include "protocols/sipe.h"
 #include "cmds.h"
 
 #include "gloox/adhoc.h"
@@ -1094,41 +1079,24 @@ GlooxMessageHandler::~GlooxMessageHandler(){
 }
 
 bool GlooxMessageHandler::loadProtocol(){
-	if (configuration().protocol == "aim")
-		m_protocol = (AbstractProtocol*) new AIMProtocol(this);
-	else if (configuration().protocol == "facebook")
-		m_protocol = (AbstractProtocol*) new FacebookProtocol(this);
-	else if (configuration().protocol == "twitter")
-		m_protocol = (AbstractProtocol*) new TwitterProtocol(this);
-	else if (configuration().protocol == "gg")
-		m_protocol = (AbstractProtocol*) new GGProtocol(this);
-	else if (configuration().protocol == "identica")
-		m_protocol = (AbstractProtocol*) new IdenticaProtocol(this);
-	else if (configuration().protocol == "icq")
-		m_protocol = (AbstractProtocol*) new ICQProtocol(this);
-	else if (configuration().protocol == "irc")
-		m_protocol = (AbstractProtocol*) new IRCProtocol(this);
-	else if (configuration().protocol == "msn")
-		m_protocol = (AbstractProtocol*) new MSNProtocol(this);
-	else if (configuration().protocol == "msn_pecan")
-		m_protocol = (AbstractProtocol*) new MSNPecanProtocol(this);
-	else if (configuration().protocol == "myspace")
-		m_protocol = (AbstractProtocol*) new MyspaceProtocol(this);
-	else if (configuration().protocol == "qq")
-		m_protocol = (AbstractProtocol*) new QQProtocol(this);
-	else if (configuration().protocol == "simple")
-		m_protocol = (AbstractProtocol*) new SimpleProtocol(this);
-	else if (configuration().protocol == "xmpp")
-		m_protocol = (AbstractProtocol*) new XMPPProtocol(this);
-	else if (configuration().protocol == "hon")
-		m_protocol = (AbstractProtocol*) new HoNProtocol(this);
-	else if (configuration().protocol == "yahoo")
-		m_protocol = (AbstractProtocol*) new YahooProtocol(this);
-	else if (configuration().protocol == "sipe")
-		m_protocol = (AbstractProtocol*) new SIPEProtocol(this);
-	else {
-		Log("loadProtocol", "Protocol \"" << configuration().protocol << "\" does not exist.");
-		Log("loadProtocol", "Protocol has to be one of: facebook, gg, msn, irc, xmpp, myspace, qq, simple, aim, yahoo.");
+	m_protocol = NULL;
+	for (GList *l = getSupportedProtocols(); l != NULL; l = l->next) {
+		_spectrum_protocol *protocol = (_spectrum_protocol *) l->data;
+		if (configuration().protocol == protocol->prpl_id) {
+			m_protocol = protocol->create_protocol();
+			break;
+		}
+	}
+	if (m_protocol == NULL) {
+		Log("loadProtocol", "Protocol \"" << configuration().protocol << "\" is not supported.");
+		std::string protocols = "";
+		for (GList *l = getSupportedProtocols(); l != NULL; l = l->next) {
+			_spectrum_protocol *protocol = (_spectrum_protocol *) l->data;
+			protocols += protocol->prpl_id;
+			if (l->next)
+				protocols += ", ";
+		}
+		Log("loadProtocol", "Protocol has to be one of: " << protocols << ".");
 		return false;
 	}
 

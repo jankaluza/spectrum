@@ -23,28 +23,22 @@
 
 #include "abstractprotocol.h"
 
-class GlooxMessageHandler;
-
 class TwitterProtocol : AbstractProtocol
 {
 	public:
-		TwitterProtocol(GlooxMessageHandler *main);
+		TwitterProtocol();
 		~TwitterProtocol();
 		const std::string gatewayIdentity() { return "twitter"; }
 		const std::string protocol() { return "prpl-twitter"; }
-		bool isValidUsername(const std::string &username);
 		std::list<std::string> transportFeatures();
 		std::list<std::string> buddyFeatures();
 		std::string text(const std::string &key);
-		Tag *getVCardTag(AbstractUser *user, GList *vcardEntries) { return NULL; }
-		bool isMUC(AbstractUser *user, const std::string &jid) { return jid.find("#") == 0; }
 		bool onPresenceReceived(AbstractUser *user, const Presence &stanza);
 		void makePurpleUsernameRoom(AbstractUser *user, const JID &to, std::string &name);
 		PurpleChat *getPurpleChat(AbstractUser *user, const std::string &purpleUsername);
 		void onPurpleAccountCreated(PurpleAccount *account) { purple_account_set_string(account, "twitter_last_home_timeline_id", ""); }
 		void makeRoomJID(AbstractUser *user, std::string &name);
 	private:
-		GlooxMessageHandler *m_main;
 		std::list<std::string> m_transportFeatures;
 		std::list<std::string> m_buddyFeatures;
 
