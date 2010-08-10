@@ -230,14 +230,16 @@ bool GlooxRegisterHandler::handleIq(const Tag *iqTag) {
 			Log("GlooxRegisterHandler", "* sending registration form; user is not registered");
 			query->addChild( new Tag("instructions", tr(_language, instructions)) );
 			query->addChild( new Tag("username") );
-			query->addChild( new Tag("password") );
+			if (CONFIG().protocol != "twitter")
+				query->addChild( new Tag("password") );
 		}
 		else {
 			Log("GlooxRegisterHandler", "* sending registration form; user is registered");
 			query->addChild( new Tag("instructions", tr(_language, instructions)) );
 			query->addChild( new Tag("registered") );
 			query->addChild( new Tag("username", res.uin));
-			query->addChild( new Tag("password"));
+			if (CONFIG().protocol != "twitter")
+				query->addChild( new Tag("password"));
 		}
 
 		Tag *x = new Tag("x");
@@ -261,11 +263,13 @@ bool GlooxRegisterHandler::handleIq(const Tag *iqTag) {
 			field->addChild( new Tag("value", res.uin) );
 		x->addChild(field);
 
-		field = new Tag("field");
-		field->addAttribute("type", "text-private");
-		field->addAttribute("var", "password");
-		field->addAttribute("label", tr(_language, _("Password")));
-		x->addChild(field);
+		if (CONFIG().protocol != "twitter") {
+			field = new Tag("field");
+			field->addAttribute("type", "text-private");
+			field->addAttribute("var", "password");
+			field->addAttribute("label", tr(_language, _("Password")));
+			x->addChild(field);
+		}
 
 		field = new Tag("field");
 		field->addAttribute("type", "list-single");
@@ -368,14 +372,15 @@ bool GlooxRegisterHandler::handleIq(const Tag *iqTag) {
 				else
 					encoding = Transport::instance()->getConfiguration().encoding;
 
-				if (usernametag==NULL || passwordtag==NULL) {
+				if (usernametag==NULL || (passwordtag==NULL && CONFIG().protocol != "twitter")) {
 					sendError(406, "not-acceptable", iqTag);
 					return false;
 				}
 				else {
 					username = usernametag->cdata();
-					password = passwordtag->cdata();
-					if (username.empty() || password.empty()) {
+					if (passwordtag)
+						password = passwordtag->cdata();
+					if (username.empty() || (password.empty() && CONFIG().protocol != "twitter")) {
 						sendError(406, "not-acceptable", iqTag);
 						return false;
 					}
@@ -415,7 +420,7 @@ bool GlooxRegisterHandler::handleIq(const Tag *iqTag) {
 
 		std::string jid = from.bare();
 
-		if (username.empty() || password.empty() || localization.getLanguages().find(language) == localization.getLanguages().end()) {
+		if (username.empty() || (password.empty() && CONFIG().protocol != "twitter") || localization.getLanguages().find(language) == localization.getLanguages().end()) {
 			sendError(406, "not-acceptable", iqTag);
 			return false;
 		}
