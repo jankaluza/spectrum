@@ -334,11 +334,14 @@ static void * requestInput(const char *title, const char *primary,const char *se
 			}
 		}
 		// emit protocol signal
-		bool handled = GlooxMessageHandler::instance()->protocol()->onPurpleRequestInput(user, title, primary, secondary, default_value, multiline, masked, hint, ok_text, ok_cb, cancel_text, cancel_cb, account, who, conv, user_data);
+		AbstractPurpleRequest *handle = new AbstractPurpleRequest;
+		handle->setRequestType((AdhocDataCallerType) CALLER_DUMMY);
+		bool handled = GlooxMessageHandler::instance()->protocol()->onPurpleRequestInput(handle, user, title, primary, secondary, default_value, multiline, masked, hint, ok_text, ok_cb, cancel_text, cancel_cb, account, who, conv, user_data);
 		if (handled) {
-			AbstractPurpleRequest *handle = new AbstractPurpleRequest;
-			handle->setRequestType((AdhocDataCallerType) CALLER_DUMMY);
 			return handle;
+		}
+		else {
+			delete handle;
 		}
 	}
 	Log(user->jid(), "WARNING: purple_request_input not handled. primary == NULL, title ==" << t << ", secondary ==" << s);
@@ -358,6 +361,14 @@ static void * notifySearchResults(PurpleConnection *gc, const char *title, const
 			user->setAdhocData(data);
 		}
 	}
+	AbstractPurpleRequest *handle = new AbstractPurpleRequest;
+	handle->setRequestType((AdhocDataCallerType) CALLER_DUMMY);
+	return handle;
+}
+
+static void *notifyUri(const char *uri) {
+	if (Transport::instance()->protocol()->onNotifyUri(uri) == false)
+		Log("notifyUri", "WARNING:notifyUri not handled. " << uri);
 	AbstractPurpleRequest *handle = new AbstractPurpleRequest;
 	handle->setRequestType((AdhocDataCallerType) CALLER_DUMMY);
 	return handle;
@@ -593,7 +604,7 @@ static PurpleNotifyUiOps notifyUiOps =
 		notifySearchResults,
 		NULL,
 		notify_user_info,
-		NULL,
+		notifyUri,
 		NULL,
 		NULL,
 		NULL,
@@ -1793,6 +1804,7 @@ void GlooxMessageHandler::handleMessage (const Message &msg, MessageSession *ses
 		return;
 	if (msg.subtype() == Message::Error || msg.subtype() == Message::Invalid)
 		return;
+	
 	User *user;
 	// TODO; move it to IRCProtocol
 	if (m_configuration.protocol == "irc") {
@@ -1817,6 +1829,9 @@ void GlooxMessageHandler::handleMessage (const Message &msg, MessageSession *ses
 				user->handleMessage(msg);
 			}
 			delete msgTag;
+		}
+		else if (msg.to().username() == "") {
+			Transport::instance()->protocol()->onXMPPMessageReceived(user, msg);
 		}
 		else{
 			Log(msg.from().bare(), "New message received, but we're not connected yet");

@@ -20,6 +20,7 @@
 
 #include "twitter.h"
 #include "../transport.h"
+#include "Poco/Format.h"
 
 TwitterProtocol::TwitterProtocol() {
 	m_transportFeatures.push_back("jabber:iq:register");
@@ -38,6 +39,7 @@ TwitterProtocol::TwitterProtocol() {
 // 	m_buddyFeatures.push_back("http://jabber.org/protocol/si/profile/file-transfer");
 // 	m_buddyFeatures.push_back("http://jabber.org/protocol/bytestreams");
 // 	m_buddyFeatures.push_back("http://jabber.org/protocol/si");
+	Transport::instance()->getConfiguration().username_mask = "$username@api.twitter.com";
 }
 
 TwitterProtocol::~TwitterProtocol() {}
@@ -58,46 +60,38 @@ std::string TwitterProtocol::text(const std::string &key) {
 	return "not defined";
 }
 
-void TwitterProtocol::makePurpleUsernameRoom(AbstractUser *user, const JID &to, std::string &name) {
-	name = "Timeline: Home";
+bool TwitterProtocol::onNotifyUri(const char *uri) {
+	m_lastUri = uri;
+	return true;
 }
 
-void TwitterProtocol::makeRoomJID(AbstractUser *user, std::string &name) {
-	name.assign("#home@" + Transport::instance()->jid());
-}
-
-PurpleChat *TwitterProtocol::getPurpleChat(AbstractUser *user, const std::string &purpleUsername) {
-	return purple_blist_find_chat(user->account(), "Timeline: my");
-}
-
-bool TwitterProtocol::onPresenceReceived(AbstractUser *user, const Presence &stanza) {
-	bool isMUC = stanza.findExtension(ExtMUC) != NULL;
-	Tag *stanzaTag = stanza.tag();
-	if (stanza.to().username() != "") {
-		if (user->isConnectedInRoom(stanza.to().username().c_str())) {
-		}
-		else if (isMUC && stanza.presence() != Presence::Unavailable) {
-			if (user->isConnected()) {
-				std::string name = JID(stanzaTag->findAttribute("to")).username();
-				std::string nickname = JID(stanzaTag->findAttribute("to")).resource();
-				PurpleChat *chat = purple_blist_find_chat(user->account(), "Timeline: my");
-				if (chat == NULL) {
-					delete stanzaTag;
-					return false;
-				}
-
-				PurpleConnection *gc = purple_account_get_connection(user->account());
-				user->setRoomResource(name, JID(stanzaTag->findAttribute("from")).resource());
-				user->setRoomResource("timeline: home", JID(stanzaTag->findAttribute("from")).resource());
-				std::cout << "joinchat " << purple_chat_get_components(chat) << "\n";
-				serv_join_chat(gc, purple_chat_get_components(chat));
-				
-				
-			}
-		}
+bool TwitterProtocol::onPurpleRequestInput(void *handle, AbstractUser *user, const char *title, const char *primary,const char *secondary, const char *default_value,gboolean multiline, gboolean masked, gchar *hint,const char *ok_text, GCallback ok_cb,const char *cancel_text, GCallback cancel_cb, PurpleAccount *account, const char *who,PurpleConversation *conv, void *user_data) {
+	if (title == NULL)
+		return false;
+	std::string t(title);
+	if (t == "Input your PIN") {
+		std::string text = Poco::format(_("Please allow Spectrum access to your Twitter account. Open following url and send the PIN number from the web page back to Spectrum.\n%s"), m_lastUri);
+		Message s(Message::Chat, user->jid(), tr(user->getLang(), text));
+		s.setFrom(Transport::instance()->jid());
+		Transport::instance()->send(s.tag());
+		m_callbacks[handle].ok_cb = ok_cb;
+		m_callbacks[handle].user_data = user_data;
+		user->setProtocolData(handle);
+		return true;
 	}
-	delete stanzaTag;
 	return false;
 }
+
+void TwitterProtocol::onRequestClose(void *handle) {
+	m_callbacks.erase(handle);
+}
+
+void TwitterProtocol::onXMPPMessageReceived(AbstractUser *user, const Message &msg) {
+	void *handle = user->protocolData();
+	if (m_callbacks.find(handle) == m_callbacks.end())
+		return;
+	((PurpleRequestInputCb) m_callbacks[handle].ok_cb)(m_callbacks[handle].user_data, msg.body().c_str());
+}
+
 
 SPECTRUM_PROTOCOL(twitter, TwitterProtocol)

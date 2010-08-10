@@ -23,24 +23,30 @@
 
 #include "abstractprotocol.h"
 
+struct TwitterData {
+	GCallback ok_cb;
+	void *user_data;
+};
+
 class TwitterProtocol : AbstractProtocol
 {
 	public:
 		TwitterProtocol();
 		~TwitterProtocol();
 		const std::string gatewayIdentity() { return "twitter"; }
-		const std::string protocol() { return "prpl-twitter"; }
+		const std::string protocol() { return "prpl-mbpurple-twitter"; }
 		std::list<std::string> transportFeatures();
 		std::list<std::string> buddyFeatures();
 		std::string text(const std::string &key);
-		bool onPresenceReceived(AbstractUser *user, const Presence &stanza);
-		void makePurpleUsernameRoom(AbstractUser *user, const JID &to, std::string &name);
-		PurpleChat *getPurpleChat(AbstractUser *user, const std::string &purpleUsername);
-		void onPurpleAccountCreated(PurpleAccount *account) { purple_account_set_string(account, "twitter_last_home_timeline_id", ""); }
-		void makeRoomJID(AbstractUser *user, std::string &name);
+		bool onPurpleRequestInput(void *handle, AbstractUser *user, const char *title, const char *primary,const char *secondary, const char *default_value,gboolean multiline, gboolean masked, gchar *hint,const char *ok_text, GCallback ok_cb,const char *cancel_text, GCallback cancel_cb, PurpleAccount *account, const char *who,PurpleConversation *conv, void *user_data);
+		bool onNotifyUri(const char *uri);
+		void onRequestClose(void *handle);
+		void onXMPPMessageReceived(AbstractUser *user, const Message &msg);
 	private:
 		std::list<std::string> m_transportFeatures;
 		std::list<std::string> m_buddyFeatures;
+		std::string m_lastUri;
+		std::map <void *, TwitterData> m_callbacks;
 
 };
 

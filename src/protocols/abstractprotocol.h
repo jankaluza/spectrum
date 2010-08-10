@@ -28,6 +28,7 @@
 #include "purple.h"
 #include "glib.h"
 #include "gloox/tag.h"
+#include "gloox/message.h"
 #include "../abstractuser.h"
 #include "../spectrum_util.h"
 #include "../log.h"
@@ -166,8 +167,11 @@ class AbstractProtocol
 		/*
 		 * Called on purple_request_input.
 		 */
-		virtual bool onPurpleRequestInput(AbstractUser *user, const char *title, const char *primary,const char *secondary, const char *default_value,gboolean multiline, gboolean masked, gchar *hint,const char *ok_text, GCallback ok_cb,const char *cancel_text, GCallback cancel_cb, PurpleAccount *account, const char *who,PurpleConversation *conv, void *user_data) { return false; }
+		virtual bool onPurpleRequestInput(void *handle, AbstractUser *user, const char *title, const char *primary,const char *secondary, const char *default_value,gboolean multiline, gboolean masked, gchar *hint,const char *ok_text, GCallback ok_cb,const char *cancel_text, GCallback cancel_cb, PurpleAccount *account, const char *who,PurpleConversation *conv, void *user_data) { return false; }
 		virtual void onPurpleAccountCreated(PurpleAccount *account) {}
+		virtual bool onNotifyUri(const char *uri) { return false; }
+		virtual void onRequestClose(void *handle) { }
+		virtual void onXMPPMessageReceived(AbstractUser *user, const Message &msg) {}
 };
 
 #endif

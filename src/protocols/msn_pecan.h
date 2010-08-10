@@ -35,7 +35,7 @@ class MSNPecanProtocol : AbstractProtocol
 		std::string text(const std::string &key);
 		Tag *getVCardTag(AbstractUser *user, GList *vcardEntries);
 		bool isMUC(AbstractUser *user, const std::string &jid) { return false; }
-		bool onPurpleRequestInput(AbstractUser *user, const char *title, const char *primary,const char *secondary, const char *default_value,gboolean multiline, gboolean masked, gchar *hint,const char *ok_text, GCallback ok_cb,const char *cancel_text, GCallback cancel_cb, PurpleAccount *account, const char *who,PurpleConversation *conv, void *user_data);
+		bool onPurpleRequestInput(void *handle, AbstractUser *user, const char *title, const char *primary,const char *secondary, const char *default_value,gboolean multiline, gboolean masked, gchar *hint,const char *ok_text, GCallback ok_cb,const char *cancel_text, GCallback cancel_cb, PurpleAccount *account, const char *who,PurpleConversation *conv, void *user_data);
 		
 
 	private:
