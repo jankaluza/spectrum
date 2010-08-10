@@ -79,10 +79,6 @@ void SpectrumConversation::handleMessage(AbstractUser *user, const char *who, co
 	std::string message(strip);
 
 	std::string m(xhtml_linkified);
-	if (m.find("<body>") == 0) {
-		m.erase(0,6);
-		m.erase(m.length() - 7, 7);
-	}
 	g_free(newline);
 	g_free(xhtml);
 	g_free(xhtml_linkified);
@@ -138,7 +134,10 @@ void SpectrumConversation::handleMessage(AbstractUser *user, const char *who, co
 
 	std::string res = getResource();
 	if (user->hasFeature(GLOOX_FEATURE_XHTML_IM, res) && m != message) {
-		Transport::instance()->parser()->getTag("<body>" + m + "</body>", sendXhtmlTag, stanzaTag);
+		if (m.find("<body") != 0) {
+			m = "<body>" + m + "</body>";
+		}
+		Transport::instance()->parser()->getTag(m, sendXhtmlTag, stanzaTag);
 		return;
 	}
 	Transport::instance()->send(stanzaTag);
