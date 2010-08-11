@@ -1,4 +1,36 @@
-version X.X.X (???):
+version 1.4.0 (???):
+	General:
+	* Don't answer twice to disco#items stanzas.
+	* Fixed memory corruption in SpectrumTimer.
+	* Use transactions for storing buddies into database (storing buddies is
+	  much more faster especially with SQLite).
+	* Better subscriptions handling. Fixes the bug when accepting buddies with
+	  capital letters or spaces.
+	* Fixed disconnecting the rooms.
+
+	Twitter:
+	* Twitter is going to stop basic authentication support. Old Prpltwtr
+	  plugin doesn't support new OAuth authentication, therefore Spectrum
+	  needs microblog-purple <http://code.google.com/p/microblog-purple/>
+	  since this release. Read Upgrade Notes:
+	  <http://spectrum.im/projects/spectrum/wiki/UpgradeNotes>.
+	* Before first connection, Spectrum asks user to allow it access to his
+	  Twitter account. User has to open the link in web-browser and send
+	  the PIN back to Spectrum.
+	* Passwords are not stored on the server now.
+	* #home MUC room doesn't work.
+
+	XMPP:
+	* Fixed crash in AdHoc commands.
+
+	Identica:
+	* Added support for Identica - needs microblog-purple
+	  <http://code.google.com/p/microblog-purple/>.
+
+	Heroes of Newerth:
+	* Added support for HoN network - needs honpurpl
+	  <http://code.google.com/p/honpurple/>.
+
 	spectrumctl:
 	* --quiet is no longer ignored by list action:
 	  Only print not running transports and no header-line
