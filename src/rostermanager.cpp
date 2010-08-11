@@ -476,6 +476,7 @@ void SpectrumRosterManager::handleSubscription(const Subscription &subscription)
 			if (s_buddy) {
 				Log(m_user->jid(), "subscribe presence; user is already in roster => sending subscribed");
 
+				s_buddy->setSubscription("to");
 				Tag *reply = new Tag("presence");
 				reply->addAttribute( "to", subscription.from().bare() );
 				reply->addAttribute( "from", subscription.to().bare() );
