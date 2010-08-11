@@ -139,13 +139,13 @@ Tag *AbstractSpectrumBuddy::generatePresenceStanza(int features, bool only_new) 
 		}
 	}
 
-	if (only_new) {
-		if (m_lastPresence == tag->xml()) {
-			delete tag;
-			return NULL;
-		}
-		m_lastPresence = tag->xml();
-	}
+// 	if (only_new) {
+// 		if (m_lastPresence == tag->xml()) {
+// 			delete tag;
+// 			return NULL;
+// 		}
+// 		m_lastPresence = tag->xml();
+// 	}
 
 	return tag;
 }
