@@ -2,386 +2,424 @@
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the PACKAGE package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
-# 
+#
 msgid ""
 msgstr ""
 "Project-Id-Version: Spectrum\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2010-06-27 15:10+0200\n"
+"POT-Creation-Date: 2010-08-11 14:49+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n != 1\n"
 
-#: /home/hanzz/code/test/transport/src/commands.cpp:35
+#: /home/hanzz/code/spectrum/src/commands.cpp:35
 #, c-format
 msgid "%s = True \n"
 msgstr "%s = True \n"
 
-#: /home/hanzz/code/test/transport/src/commands.cpp:37
+#: /home/hanzz/code/spectrum/src/commands.cpp:37
 #, c-format
 msgid "%s = False \n"
 msgstr "%s = False \n"
 
-#: /home/hanzz/code/test/transport/src/commands.cpp:40
+#: /home/hanzz/code/spectrum/src/commands.cpp:40
 #, c-format
 msgid "%s = %s \n"
 msgstr "%s = %s \n"
 
-#: /home/hanzz/code/test/transport/src/commands.cpp:67
+#: /home/hanzz/code/spectrum/src/commands.cpp:67
 #, c-format
 msgid "%s is now True\n"
 msgstr "%s is now True\n"
 
-#: /home/hanzz/code/test/transport/src/commands.cpp:69
+#: /home/hanzz/code/spectrum/src/commands.cpp:69
 #, c-format
 msgid "%s is now False\n"
 msgstr "%s is now False\n"
 
-#: /home/hanzz/code/test/transport/src/commands.cpp:75
+#: /home/hanzz/code/spectrum/src/commands.cpp:75
 #, c-format
 msgid "%s is now \"%s\"\n"
 msgstr "%s сейчас \"%s\"\n"
 
-#: /home/hanzz/code/test/transport/src/commands.cpp:79
+#: /home/hanzz/code/spectrum/src/commands.cpp:79
 #, c-format
-msgid "The setting \"%s\" does not exist.  Try \"/transport settings list\" to get a list of available settings.\n"
-msgstr "Параметр \"%s\" не найден. Попробуйте \"/transport settings list\" для получения списка доступных параметров. \n"
+msgid ""
+"The setting \"%s\" does not exist.  Try \"/transport settings list\" to get "
+"a list of available settings.\n"
+msgstr ""
+"Параметр \"%s\" не найден. Попробуйте \"/transport settings list\" для "
+"получения списка доступных параметров. \n"
 
-#: /home/hanzz/code/test/transport/src/commands.cpp:115
+#: /home/hanzz/code/spectrum/src/commands.cpp:115
 msgid "No such command (in this context)."
 msgstr "Нет такой команды (в данном контексте)"
 
-#: /home/hanzz/code/test/transport/src/commands.cpp:118
+#: /home/hanzz/code/spectrum/src/commands.cpp:118
 msgid ""
 "Use \"/transport help &lt;command&gt;\" for help on a specific command.\n"
 "The following commands are available in this context:\n"
 msgstr ""
-"Используйте \"/transport help &lt;команда&gt;\" для получения помощи по данной команде.\n"
+"Используйте \"/transport help &lt;команда&gt;\" для получения помощи по "
+"данной команде.\n"
 "Доступны следующие команды:\n"
 
-#: /home/hanzz/code/test/transport/src/commands.cpp:142
+#: /home/hanzz/code/spectrum/src/commands.cpp:142
 msgid "help &lt;command&gt;:  Help on a specific command."
 msgstr "help &lt;команда&gt;: помощь по выбранной команде."
 
-#: /home/hanzz/code/test/transport/src/commands.cpp:143
-#: /home/hanzz/code/test/transport/src/commands.cpp:144
+#: /home/hanzz/code/spectrum/src/commands.cpp:143
+#: /home/hanzz/code/spectrum/src/commands.cpp:144
 msgid "settings set &lt;command&gt; settings list:  Configure transport."
 msgstr "settings set &lt;команда&gt; settings list: Изменить настройки."
 
-#: /home/hanzz/code/test/transport/src/filetransfermanager.cpp:306
+#: /home/hanzz/code/spectrum/src/filetransfermanager.cpp:307
 #, c-format
 msgid "Received file '%s'.  You can download it at: %s"
 msgstr "Получен файл '%s'. Вы можете скачать его по адресу: %s"
 
-#: /home/hanzz/code/test/transport/src/gatewayhandler.cpp:83
+#: /home/hanzz/code/spectrum/src/gatewayhandler.cpp:83
 msgid "Please enter the legacy ID of your contact."
 msgstr "Введите ID Вашего контакта"
 
-#: /home/hanzz/code/test/transport/src/gatewayhandler.cpp:84
+#: /home/hanzz/code/spectrum/src/gatewayhandler.cpp:84
 msgid "Contact ID"
 msgstr "ID контакта"
 
-#: /home/hanzz/code/test/transport/src/main.cpp:1816
-msgid "This message couldn't be sent, because you are not connected to legacy network. You will be automatically reconnected soon."
-msgstr "Сообщение не может быть отправлено по причине того, что вы не подключены к сети. Ожидайте попытку подключения."
+#: /home/hanzz/code/spectrum/src/main.cpp:1847
+msgid ""
+"This message couldn't be sent, because you are not connected to legacy "
+"network. You will be automatically reconnected soon."
+msgstr ""
+"Сообщение не может быть отправлено по причине того, что вы не подключены к "
+"сети. Ожидайте попытку подключения."
 
-#: /home/hanzz/code/test/transport/src/registerhandler.cpp:246
+#: /home/hanzz/code/spectrum/src/registerhandler.cpp:248
 msgid "Registration"
 msgstr "Регистрация"
 
-#: /home/hanzz/code/test/transport/src/registerhandler.cpp:267
-#: /home/hanzz/code/test/transport/src/adhoc/adhocadmin.cpp:159
+#: /home/hanzz/code/spectrum/src/registerhandler.cpp:270
+#: /home/hanzz/code/spectrum/src/adhoc/adhocadmin.cpp:159
 msgid "Password"
 msgstr "Пароль"
 
-#: /home/hanzz/code/test/transport/src/registerhandler.cpp:273
-#: /home/hanzz/code/test/transport/src/adhoc/adhocadmin.cpp:160
+#: /home/hanzz/code/spectrum/src/registerhandler.cpp:277
+#: /home/hanzz/code/spectrum/src/adhoc/adhocadmin.cpp:160
 msgid "Language"
 msgstr "Язык"
 
-#: /home/hanzz/code/test/transport/src/registerhandler.cpp:291
-#: /home/hanzz/code/test/transport/src/adhoc/adhocadmin.cpp:161
+#: /home/hanzz/code/spectrum/src/registerhandler.cpp:295
+#: /home/hanzz/code/spectrum/src/adhoc/adhocadmin.cpp:161
 msgid "Encoding"
 msgstr "Кодировка"
 
-#: /home/hanzz/code/test/transport/src/registerhandler.cpp:302
+#: /home/hanzz/code/spectrum/src/registerhandler.cpp:306
 msgid "Remove your registration"
 msgstr "Удалить регистрацию"
 
-#: /home/hanzz/code/test/transport/src/searchrepeater.cpp:81
+#: /home/hanzz/code/spectrum/src/searchrepeater.cpp:81
 msgid "Searching requires a client which supports Data Forms (XEP-0004)."
 msgstr "Для поиска Вам необходим клиент, поддерживающий XEP-0004"
 
-#: /home/hanzz/code/test/transport/src/spectrummessagehandler.cpp:225
+#: /home/hanzz/code/spectrum/src/spectrumdiscohandler.cpp:55
+#: /home/hanzz/code/spectrum/src/adhoc/adhochandler.cpp:170
+msgid "Ad-Hoc Commands"
+msgstr "Ad-Hoc команды"
+
+#: /home/hanzz/code/spectrum/src/spectrummessagehandler.cpp:244
 msgid "Transport: Unknown command."
 msgstr "транспорт: неизвестная команда."
 
-#: /home/hanzz/code/test/transport/src/spectrummessagehandler.cpp:229
+#: /home/hanzz/code/spectrum/src/spectrummessagehandler.cpp:248
 msgid "Syntax Error: Wrong number of arguments."
 msgstr "Ошибка синтаксиса: неправильное число аргументов"
 
-#: /home/hanzz/code/test/transport/src/spectrummessagehandler.cpp:232
+#: /home/hanzz/code/spectrum/src/spectrummessagehandler.cpp:251
 msgid "The command failed for an unknown reason."
 msgstr "Неизвестная ошибка"
 
-#: /home/hanzz/code/test/transport/src/spectrummessagehandler.cpp:236
+#: /home/hanzz/code/spectrum/src/spectrummessagehandler.cpp:255
 msgid "That command only works in group chats, not 1:1 conversations."
 msgstr "Эта команда работает только в конференциях, не в одиночных чатах."
 
-#: /home/hanzz/code/test/transport/src/spectrummessagehandler.cpp:238
+#: /home/hanzz/code/spectrum/src/spectrummessagehandler.cpp:257
 msgid "That command only works in 1:1 conversations, not group chats."
 msgstr "Эта команда работает только в одиночных чатах, не в конференциях"
 
-#: /home/hanzz/code/test/transport/src/spectrummessagehandler.cpp:245
+#: /home/hanzz/code/spectrum/src/spectrummessagehandler.cpp:264
 msgid "That command is not supported for this legacy network."
 msgstr "Команда не поддерживается для этой сети"
 
-#: /home/hanzz/code/test/transport/src/protocols/aim.cpp:61
-#: /home/hanzz/code/test/transport/src/protocols/stress.cpp:61
+#: /home/hanzz/code/spectrum/src/protocols/aim.cpp:54
 msgid "Enter your screenname and password:"
 msgstr "Введите Ваше имя пользователя и пароль в сети AIM:"
 
-#: /home/hanzz/code/test/transport/src/protocols/aim.cpp:63
+#: /home/hanzz/code/spectrum/src/protocols/aim.cpp:56
 msgid "Screenname"
 msgstr "имя пользователя"
 
-#: /home/hanzz/code/test/transport/src/protocols/facebook.cpp:61
+#: /home/hanzz/code/spectrum/src/protocols/facebook.cpp:59
 msgid "Enter your Facebook email and password:"
 msgstr "Введите Ваше имя пользователя и пароль в сети Facebook:"
 
-#: /home/hanzz/code/test/transport/src/protocols/gg.cpp:114
+#: /home/hanzz/code/spectrum/src/protocols/gg.cpp:107
 msgid "Enter your GG number and password:"
 msgstr "Введите Ваше имя пользователя и пароль в сети GG:"
 
-#: /home/hanzz/code/test/transport/src/protocols/gg.cpp:116
+#: /home/hanzz/code/spectrum/src/protocols/gg.cpp:109
 msgid "GG number"
 msgstr "Имя пользователя GG"
 
-#: /home/hanzz/code/test/transport/src/protocols/icq.cpp:59
+#: /home/hanzz/code/spectrum/src/protocols/hon.cpp:58
+#, fuzzy
+msgid "Enter your HoN username and password:"
+msgstr "Введите Ваше имя пользователя и пароль в сети QQ:"
+
+#: /home/hanzz/code/spectrum/src/protocols/hon.cpp:60
+#, fuzzy
+msgid "HoN Username:"
+msgstr "Имя пользователя QQ"
+
+#: /home/hanzz/code/spectrum/src/protocols/icq.cpp:56
 msgid "Enter your UIN and password:"
 msgstr "Введите Ваш UIN и пароль в сети ICQ:"
 
-#: /home/hanzz/code/test/transport/src/protocols/icq.cpp:61
+#: /home/hanzz/code/spectrum/src/protocols/icq.cpp:58
 msgid "UIN"
 msgstr "UIN"
 
-#: /home/hanzz/code/test/transport/src/protocols/icq.cpp:161
-#: /home/hanzz/code/test/transport/src/protocols/msn.cpp:163
-#: /home/hanzz/code/test/transport/src/protocols/msn_pecan.cpp:163
-#: /home/hanzz/code/test/transport/src/protocols/qq.cpp:53
+#: /home/hanzz/code/spectrum/src/protocols/icq.cpp:158
+#: /home/hanzz/code/spectrum/src/protocols/msn.cpp:156
+#: /home/hanzz/code/spectrum/src/protocols/msn_pecan.cpp:156
+#: /home/hanzz/code/spectrum/src/protocols/qq.cpp:51
 msgid "Please authorize me."
 msgstr "Пожалуйста, добавьте меня."
 
-#: /home/hanzz/code/test/transport/src/protocols/msn.cpp:61
-#: /home/hanzz/code/test/transport/src/protocols/msn_pecan.cpp:61
+#: /home/hanzz/code/spectrum/src/protocols/identica.cpp:61
+#, fuzzy
+msgid "Enter your Identica username and password:"
+msgstr "Введите Ваше имя пользователя и пароль в сети SIPE:"
+
+#: /home/hanzz/code/spectrum/src/protocols/identica.cpp:63
+#, fuzzy
+msgid "Identica username"
+msgstr "Имя пользователя SIPE"
+
+#: /home/hanzz/code/spectrum/src/protocols/msn.cpp:54
+#: /home/hanzz/code/spectrum/src/protocols/msn_pecan.cpp:54
 msgid "Enter your Live ID and password:"
 msgstr "Введите Ваш Live ID и пароль:"
 
-#: /home/hanzz/code/test/transport/src/protocols/msn.cpp:63
-#: /home/hanzz/code/test/transport/src/protocols/msn_pecan.cpp:63
+#: /home/hanzz/code/spectrum/src/protocols/msn.cpp:56
+#: /home/hanzz/code/spectrum/src/protocols/msn_pecan.cpp:56
 msgid "Live ID"
 msgstr "Live ID"
 
-#: /home/hanzz/code/test/transport/src/protocols/myspace.cpp:62
+#: /home/hanzz/code/spectrum/src/protocols/myspace.cpp:55
 msgid "Enter your Myspace name and password:"
 msgstr "Введите Ваше имя пользователя и пароль в сети MySpace:"
 
-#: /home/hanzz/code/test/transport/src/protocols/myspace.cpp:64
+#: /home/hanzz/code/spectrum/src/protocols/myspace.cpp:57
 msgid "Myspace name"
 msgstr "Имя пользователя MySpace"
 
-#: /home/hanzz/code/test/transport/src/protocols/qq.cpp:74
+#: /home/hanzz/code/spectrum/src/protocols/qq.cpp:67
 msgid "Enter your QQ username and password:"
 msgstr "Введите Ваше имя пользователя и пароль в сети QQ:"
 
-#: /home/hanzz/code/test/transport/src/protocols/qq.cpp:76
+#: /home/hanzz/code/spectrum/src/protocols/qq.cpp:69
 msgid "QQ username"
 msgstr "Имя пользователя QQ"
 
-#: /home/hanzz/code/test/transport/src/protocols/simple.cpp:62
+#: /home/hanzz/code/spectrum/src/protocols/simple.cpp:55
 msgid "Enter your SIMPLE username and password:"
 msgstr "Введите Ваше имя пользователя и пароль в сети SIMPLE:"
 
-#: /home/hanzz/code/test/transport/src/protocols/simple.cpp:64
+#: /home/hanzz/code/spectrum/src/protocols/simple.cpp:57
 msgid "SIMPLE username"
 msgstr "Имя пользователя SIMPLE"
 
-#: /home/hanzz/code/test/transport/src/protocols/sipe.cpp:61
+#: /home/hanzz/code/spectrum/src/protocols/sipe.cpp:55
 msgid "Enter your SIPE username and password:"
 msgstr "Введите Ваше имя пользователя и пароль в сети SIPE:"
 
-#: /home/hanzz/code/test/transport/src/protocols/sipe.cpp:63
+#: /home/hanzz/code/spectrum/src/protocols/sipe.cpp:57
 msgid "SIPE username"
 msgstr "Имя пользователя SIPE"
 
-#: /home/hanzz/code/test/transport/src/protocols/twitter.cpp:61
+#: /home/hanzz/code/spectrum/src/protocols/twitter.cpp:57
 msgid "Enter your Twitter username and password:"
 msgstr "Введите Ваше имя пользователя и пароль в сети Twitter:"
 
-#: /home/hanzz/code/test/transport/src/protocols/twitter.cpp:63
+#: /home/hanzz/code/spectrum/src/protocols/twitter.cpp:59
 msgid "Twitter username"
 msgstr "Имя пользователя Twitter"
 
-#: /home/hanzz/code/test/transport/src/protocols/xmpp.cpp:61
+#: /home/hanzz/code/spectrum/src/protocols/twitter.cpp:73
+#, c-format
+msgid ""
+"Please allow Spectrum access to your Twitter account. Open following url and "
+"send the PIN number from the web page back to Spectrum.\n"
+"%s"
+msgstr ""
+
+#: /home/hanzz/code/spectrum/src/protocols/xmpp.cpp:55
 msgid "Enter your Jabber ID and password:"
 msgstr "Введите Ваше имя пользователя и пароль в сети Jabber:"
 
-#: /home/hanzz/code/test/transport/src/protocols/xmpp.cpp:63
+#: /home/hanzz/code/spectrum/src/protocols/xmpp.cpp:57
 msgid "Jabber ID"
 msgstr "JID"
 
-#: /home/hanzz/code/test/transport/src/protocols/yahoo.cpp:62
+#: /home/hanzz/code/spectrum/src/protocols/yahoo.cpp:55
 msgid "Enter your Yahoo Messenger username and password:"
 msgstr "Введите Ваше имя пользователя и пароль в сети Yahoo:"
 
-#: /home/hanzz/code/test/transport/src/protocols/yahoo.cpp:64
+#: /home/hanzz/code/spectrum/src/protocols/yahoo.cpp:57
 msgid "Yahoo Messenger username"
 msgstr "Имя пользователя и пароль в сети Yahoo:"
 
-#: /home/hanzz/code/test/transport/src/adhoc/adhocadmin.cpp:49
-#: /home/hanzz/code/test/transport/src/adhoc/adhochandler.cpp:51
+#: /home/hanzz/code/spectrum/src/adhoc/adhocadmin.cpp:49
+#: /home/hanzz/code/spectrum/src/adhoc/adhochandler.cpp:51
 msgid "Transport administration"
 msgstr "Администрирование транспорта"
 
-#: /home/hanzz/code/test/transport/src/adhoc/adhocadmin.cpp:50
+#: /home/hanzz/code/spectrum/src/adhoc/adhocadmin.cpp:50
 msgid "Please select a configuration area."
 msgstr "Пожалуйста, выберите параметр для настройки."
 
-#: /home/hanzz/code/test/transport/src/adhoc/adhocadmin.cpp:53
+#: /home/hanzz/code/spectrum/src/adhoc/adhocadmin.cpp:53
 msgid "User"
 msgstr "Пользователь"
 
-#: /home/hanzz/code/test/transport/src/adhoc/adhocadmin.cpp:54
-#: /home/hanzz/code/test/transport/src/adhoc/adhocadmin.cpp:139
+#: /home/hanzz/code/spectrum/src/adhoc/adhocadmin.cpp:54
+#: /home/hanzz/code/spectrum/src/adhoc/adhocadmin.cpp:139
 msgid "Send message to online users"
 msgstr "Отправить сообщение пользователям в сети"
 
-#: /home/hanzz/code/test/transport/src/adhoc/adhocadmin.cpp:55
-#: /home/hanzz/code/test/transport/src/adhoc/adhocadmin.cpp:155
+#: /home/hanzz/code/spectrum/src/adhoc/adhocadmin.cpp:55
+#: /home/hanzz/code/spectrum/src/adhoc/adhocadmin.cpp:155
 msgid "Register new user"
 msgstr "Зарегистрировать пользователя"
 
-#: /home/hanzz/code/test/transport/src/adhoc/adhocadmin.cpp:56
-#: /home/hanzz/code/test/transport/src/adhoc/adhocadmin.cpp:177
+#: /home/hanzz/code/spectrum/src/adhoc/adhocadmin.cpp:56
+#: /home/hanzz/code/spectrum/src/adhoc/adhocadmin.cpp:177
 msgid "Unregister user"
 msgstr "Снять регистрацию пользователя"
 
-#: /home/hanzz/code/test/transport/src/adhoc/adhocadmin.cpp:57
+#: /home/hanzz/code/spectrum/src/adhoc/adhocadmin.cpp:57
 msgid "Command"
 msgstr "Команды"
 
-#: /home/hanzz/code/test/transport/src/adhoc/adhocadmin.cpp:123
-#: /home/hanzz/code/test/transport/src/adhoc/adhocadmin.cpp:197
-#: /home/hanzz/code/test/transport/src/adhoc/adhocadmin.cpp:198
+#: /home/hanzz/code/spectrum/src/adhoc/adhocadmin.cpp:123
+#: /home/hanzz/code/spectrum/src/adhoc/adhocadmin.cpp:197
+#: /home/hanzz/code/spectrum/src/adhoc/adhocadmin.cpp:198
 msgid "User information"
 msgstr "Информация о пользователе"
 
-#: /home/hanzz/code/test/transport/src/adhoc/adhocadmin.cpp:124
+#: /home/hanzz/code/spectrum/src/adhoc/adhocadmin.cpp:124
 msgid "Add bare JID of user you want to configure."
 msgstr "Добавьте JID пользователя для настройки"
 
-#: /home/hanzz/code/test/transport/src/adhoc/adhocadmin.cpp:125
-#: /home/hanzz/code/test/transport/src/adhoc/adhocadmin.cpp:157
-#: /home/hanzz/code/test/transport/src/adhoc/adhocadmin.cpp:179
+#: /home/hanzz/code/spectrum/src/adhoc/adhocadmin.cpp:125
+#: /home/hanzz/code/spectrum/src/adhoc/adhocadmin.cpp:157
+#: /home/hanzz/code/spectrum/src/adhoc/adhocadmin.cpp:179
 msgid "Bare JID"
 msgstr "Полный JID"
 
-#: /home/hanzz/code/test/transport/src/adhoc/adhocadmin.cpp:140
+#: /home/hanzz/code/spectrum/src/adhoc/adhocadmin.cpp:140
 msgid "Type message you want to send to all online users."
 msgstr "Напишите сообщение для пользователей в сети"
 
-#: /home/hanzz/code/test/transport/src/adhoc/adhocadmin.cpp:141
+#: /home/hanzz/code/spectrum/src/adhoc/adhocadmin.cpp:141
 msgid "Message"
 msgstr "Сообщение"
 
-#: /home/hanzz/code/test/transport/src/adhoc/adhocadmin.cpp:156
+#: /home/hanzz/code/spectrum/src/adhoc/adhocadmin.cpp:156
 msgid "Enter information about new user."
 msgstr "Введите информацию о новом пользователе"
 
-#: /home/hanzz/code/test/transport/src/adhoc/adhocadmin.cpp:158
+#: /home/hanzz/code/spectrum/src/adhoc/adhocadmin.cpp:158
 msgid "Legacy Network username"
 msgstr "Имя пользователя"
 
-#: /home/hanzz/code/test/transport/src/adhoc/adhocadmin.cpp:162
-#: /home/hanzz/code/test/transport/src/adhoc/adhocadmin.cpp:210
+#: /home/hanzz/code/spectrum/src/adhoc/adhocadmin.cpp:162
+#: /home/hanzz/code/spectrum/src/adhoc/adhocadmin.cpp:210
 msgid "VIP"
 msgstr "VIP"
 
-#: /home/hanzz/code/test/transport/src/adhoc/adhocadmin.cpp:178
+#: /home/hanzz/code/spectrum/src/adhoc/adhocadmin.cpp:178
 msgid "Enter bare JID of user to unregister."
 msgstr "Введите JID пользователя для снятия регистрации"
 
-#: /home/hanzz/code/test/transport/src/adhoc/adhocadmin.cpp:203
-#: /home/hanzz/code/test/transport/src/adhoc/adhocadmin.cpp:229
-#: /home/hanzz/code/test/transport/src/adhoc/adhocadmin.cpp:288
+#: /home/hanzz/code/spectrum/src/adhoc/adhocadmin.cpp:203
+#: /home/hanzz/code/spectrum/src/adhoc/adhocadmin.cpp:229
+#: /home/hanzz/code/spectrum/src/adhoc/adhocadmin.cpp:288
 msgid "This user is not registered."
 msgstr "Пользователь не зарегистрирован"
 
-#: /home/hanzz/code/test/transport/src/adhoc/adhocadmin.cpp:206
+#: /home/hanzz/code/spectrum/src/adhoc/adhocadmin.cpp:206
 #, c-format
 msgid "JID: %s"
 msgstr "JID: %s"
 
-#: /home/hanzz/code/test/transport/src/adhoc/adhocadmin.cpp:207
+#: /home/hanzz/code/spectrum/src/adhoc/adhocadmin.cpp:207
 #, c-format
 msgid "Legacy network name: %s"
 msgstr "Название сети: %s"
 
-#: /home/hanzz/code/test/transport/src/adhoc/adhocadmin.cpp:208
+#: /home/hanzz/code/spectrum/src/adhoc/adhocadmin.cpp:208
 #, c-format
 msgid "Language: %s"
 msgstr "Язык: %s"
 
-#: /home/hanzz/code/test/transport/src/adhoc/adhocadmin.cpp:209
+#: /home/hanzz/code/spectrum/src/adhoc/adhocadmin.cpp:209
 #, c-format
 msgid "Encoding: %s"
 msgstr "Кодировка: %s"
 
-#: /home/hanzz/code/test/transport/src/adhoc/adhocadmin.cpp:272
+#: /home/hanzz/code/spectrum/src/adhoc/adhocadmin.cpp:272
 msgid "This user is already registered."
 msgstr "Пользователь уже зарегистрирован"
 
-#: /home/hanzz/code/test/transport/src/adhoc/adhochandler.cpp:47
-#: /home/hanzz/code/test/transport/src/adhoc/adhocsettings.cpp:46
+#: /home/hanzz/code/spectrum/src/adhoc/adhochandler.cpp:47
+#: /home/hanzz/code/spectrum/src/adhoc/adhocsettings.cpp:46
 msgid "Transport settings"
 msgstr "Настройки транспорта"
 
-#: /home/hanzz/code/test/transport/src/adhoc/adhochandler.cpp:146
-msgid "Ad-Hoc Commands"
-msgstr "Ad-Hoc команды"
-
-#: /home/hanzz/code/test/transport/src/adhoc/adhocsettings.cpp:48
+#: /home/hanzz/code/spectrum/src/adhoc/adhocsettings.cpp:48
 msgid "Change your transport settings here."
 msgstr "Здесь вы можете изменить настройки транспорта"
 
-#: /home/hanzz/code/test/transport/src/adhoc/adhocsettings.cpp:51
+#: /home/hanzz/code/spectrum/src/adhoc/adhocsettings.cpp:51
 msgid "Enable transport"
 msgstr "Включить транспорт"
 
-#: /home/hanzz/code/test/transport/src/adhoc/adhocsettings.cpp:54
+#: /home/hanzz/code/spectrum/src/adhoc/adhocsettings.cpp:54
 msgid "Enable notification of new email (if the legacy network supports it)"
 msgstr "Включить уведомления о новых почтовых сообщениях (если доступно)"
 
-#: /home/hanzz/code/test/transport/src/adhoc/adhocsettings.cpp:57
+#: /home/hanzz/code/spectrum/src/adhoc/adhocsettings.cpp:57
 msgid "Enable avatars"
 msgstr "Включить аватарки"
 
-#: /home/hanzz/code/test/transport/src/adhoc/adhocsettings.cpp:60
+#: /home/hanzz/code/spectrum/src/adhoc/adhocsettings.cpp:60
 msgid "Enable \"is typing\" notifications"
 msgstr "Включить уведомления \"Пользователь пишет сообщение\""
 
-#: /home/hanzz/code/test/transport/src/adhoc/adhocsettings.cpp:63
+#: /home/hanzz/code/spectrum/src/adhoc/adhocsettings.cpp:63
 msgid "You must be online to change transport settings."
 msgstr "Для изменения настроек Вы должны быть в сети."
 
-#: /home/hanzz/code/test/transport/src/adhoc/dataforms.cpp:41
+#: /home/hanzz/code/spectrum/src/adhoc/dataforms.cpp:41
 msgid "Field:"
 msgstr "Поле:"
 
-#: /home/hanzz/code/test/transport/src/adhoc/dataforms.cpp:58
+#: /home/hanzz/code/spectrum/src/adhoc/dataforms.cpp:58
 msgid "Actions"
 msgstr "Действия"
