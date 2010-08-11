@@ -954,7 +954,7 @@ std::list <std::string> SQLClass::getBuddies(long userId) {
 	for (int k = 0; k < buddyIds.size(); k++) {
 		// TODO: move this JID escaping stuff upstream
 		std::string uin = buddyUins[k];
-// 		std::cout << "FLAGS " << m_stmt_getBuddies.resFlags << "\n";
+		std::cout << "FLAGS " << buddyFlags[k] << "\n";
 		if (buddyFlags[k] & SPECTRUM_BUDDY_JID_ESCAPING) {
 			list.push_back(JID::escapeNode(uin));
 		}

@@ -1484,6 +1484,13 @@ void GlooxMessageHandler::handleSubscription(const Subscription &stanza) {
 	}
 	if (user)
 		user->handleSubscription(stanza);
+	else if (stanza.subtype() == Subscription::Unsubscribe) {
+		Tag *tag = new Tag("presence");
+		tag->addAttribute("to", stanza.from().bare());
+		tag->addAttribute("from", stanza.to().username() + "@" + Transport::instance()->jid());
+		tag->addAttribute( "type", "unsubscribed" );
+		Transport::instance()->send( tag );
+	}
 	else
 		Log(stanza.from().full(), "Subscribe presence received, but this user is not logged in");
 

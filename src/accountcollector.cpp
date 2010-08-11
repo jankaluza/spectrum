@@ -58,7 +58,6 @@ void AccountCollector::collect(PurpleAccount *account) {
 }
 
 void AccountCollector::collectNow(PurpleAccount *account, bool remove) {
-	return;
 	if (account->ui_data == NULL) {
 		Log("AccountCollector","freeing account " << purple_account_get_username(account));
 		
