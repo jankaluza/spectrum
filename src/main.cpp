@@ -1517,6 +1517,25 @@ void GlooxMessageHandler::handlePresence(const Presence &stanza){
 	bool isMUC = stanza.findExtension(ExtMUC) != NULL;
 	Log(stanza.from().full(), "Presence received (" << (int)stanza.subtype() << ") for: " << stanza.to().full() << "isMUC" << isMUC);
 
+
+	if (stanza.presence() != Presence::Unavailable && ((stanza.to().username() == "" && !protocol()->tempAccountsAllowed()) || (isMUC && protocol()->tempAccountsAllowed()))) {
+		Tag *stanzaTag = stanza.tag();
+		if (!stanzaTag) return;
+		Tag *c = stanzaTag->findChildWithAttrib("xmlns","http://jabber.org/protocol/caps");
+		Log(stanza.from().full(), "asking for caps/disco#info");
+		// Presence has caps and caps are not cached.
+		if (c != NULL && !Transport::instance()->hasClientCapabilities(c->findAttribute("ver"))) {
+			int context = m_capabilityHandler->waitForCapabilities(c->findAttribute("ver"), stanza.to().full());
+			std::string node = c->findAttribute("node") + std::string("#") + c->findAttribute("ver");;
+			j->disco()->getDiscoInfo(stanza.from(), node, m_capabilityHandler, context, j->getID());
+		}
+		else {
+			int context = m_capabilityHandler->waitForCapabilities(stanza.from().full(), stanza.to().full());
+			j->disco()->getDiscoInfo(stanza.from(), "", m_capabilityHandler, context, j->getID());
+		}
+		delete stanzaTag;
+	}
+	
 	User *user;
 	std::string userkey;
 	if (protocol()->tempAccountsAllowed()) {
@@ -1529,25 +1548,6 @@ void GlooxMessageHandler::handlePresence(const Presence &stanza){
 		userkey = stanza.from().bare();
 	}
 	if (user == NULL) {
-
-		if (stanza.presence() != Presence::Unavailable && ((stanza.to().username() == "" && !protocol()->tempAccountsAllowed()) || (isMUC && protocol()->tempAccountsAllowed()))) {
-			Tag *stanzaTag = stanza.tag();
-			if (!stanzaTag) return;
-			Tag *c = stanzaTag->findChildWithAttrib("xmlns","http://jabber.org/protocol/caps");
-			Log(stanza.from().full(), "asking for caps/disco#info");
-			// Presence has caps and caps are not cached.
-			if (c != NULL && !Transport::instance()->hasClientCapabilities(c->findAttribute("ver"))) {
-				int context = m_capabilityHandler->waitForCapabilities(c->findAttribute("ver"), stanza.to().full());
-				std::string node = c->findAttribute("node") + std::string("#") + c->findAttribute("ver");;
-				j->disco()->getDiscoInfo(stanza.from(), node, m_capabilityHandler, context, j->getID());
-			}
-			else {
-				int context = m_capabilityHandler->waitForCapabilities(stanza.from().full(), stanza.to().full());
-				j->disco()->getDiscoInfo(stanza.from(), "", m_capabilityHandler, context, j->getID());
-			}
-			delete stanzaTag;
-		}
-
 		// we are not connected and probe arrived => answer with unavailable
 		if (stanza.subtype() == Presence::Probe) {
 			Log(stanza.from().full(), "Answering to probe presence with unavailable presence");
