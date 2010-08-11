@@ -2,7 +2,7 @@
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the PACKAGE package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
-#
+# 
 msgid ""
 msgstr ""
 "Project-Id-Version: Spectrum\n"
@@ -11,10 +11,10 @@ msgstr ""
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
-"Language: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"Language: \n"
 "Plural-Forms: nplurals=2; plural=n != 1\n"
 
 #: /home/hanzz/code/spectrum/src/commands.cpp:35
@@ -49,12 +49,8 @@ msgstr "%s сейчас \"%s\"\n"
 
 #: /home/hanzz/code/spectrum/src/commands.cpp:79
 #, c-format
-msgid ""
-"The setting \"%s\" does not exist.  Try \"/transport settings list\" to get "
-"a list of available settings.\n"
-msgstr ""
-"Параметр \"%s\" не найден. Попробуйте \"/transport settings list\" для "
-"получения списка доступных параметров. \n"
+msgid "The setting \"%s\" does not exist.  Try \"/transport settings list\" to get a list of available settings.\n"
+msgstr "Параметр \"%s\" не найден. Попробуйте \"/transport settings list\" для получения списка доступных параметров. \n"
 
 #: /home/hanzz/code/spectrum/src/commands.cpp:115
 msgid "No such command (in this context)."
@@ -65,8 +61,7 @@ msgid ""
 "Use \"/transport help &lt;command&gt;\" for help on a specific command.\n"
 "The following commands are available in this context:\n"
 msgstr ""
-"Используйте \"/transport help &lt;команда&gt;\" для получения помощи по "
-"данной команде.\n"
+"Используйте \"/transport help &lt;команда&gt;\" для получения помощи по данной команде.\n"
 "Доступны следующие команды:\n"
 
 #: /home/hanzz/code/spectrum/src/commands.cpp:142
@@ -92,12 +87,8 @@ msgid "Contact ID"
 msgstr "ID контакта"
 
 #: /home/hanzz/code/spectrum/src/main.cpp:1847
-msgid ""
-"This message couldn't be sent, because you are not connected to legacy "
-"network. You will be automatically reconnected soon."
-msgstr ""
-"Сообщение не может быть отправлено по причине того, что вы не подключены к "
-"сети. Ожидайте попытку подключения."
+msgid "This message couldn't be sent, because you are not connected to legacy network. You will be automatically reconnected soon."
+msgstr "Сообщение не может быть отправлено по причине того, что вы не подключены к сети. Ожидайте попытку подключения."
 
 #: /home/hanzz/code/spectrum/src/registerhandler.cpp:248
 msgid "Registration"
@@ -176,14 +167,12 @@ msgid "GG number"
 msgstr "Имя пользователя GG"
 
 #: /home/hanzz/code/spectrum/src/protocols/hon.cpp:58
-#, fuzzy
 msgid "Enter your HoN username and password:"
-msgstr "Введите Ваше имя пользователя и пароль в сети QQ:"
+msgstr "Введите Ваше имя пользователя и пароль в сети HoN:"
 
 #: /home/hanzz/code/spectrum/src/protocols/hon.cpp:60
-#, fuzzy
 msgid "HoN Username:"
-msgstr "Имя пользователя QQ"
+msgstr "Имя пользователя HoN:"
 
 #: /home/hanzz/code/spectrum/src/protocols/icq.cpp:56
 msgid "Enter your UIN and password:"
@@ -201,14 +190,12 @@ msgid "Please authorize me."
 msgstr "Пожалуйста, добавьте меня."
 
 #: /home/hanzz/code/spectrum/src/protocols/identica.cpp:61
-#, fuzzy
 msgid "Enter your Identica username and password:"
-msgstr "Введите Ваше имя пользователя и пароль в сети SIPE:"
+msgstr "Введите Ваше имя пользователя и пароль в сети Identica:"
 
 #: /home/hanzz/code/spectrum/src/protocols/identica.cpp:63
-#, fuzzy
 msgid "Identica username"
-msgstr "Имя пользователя SIPE"
+msgstr "Имя пользователя Identica"
 
 #: /home/hanzz/code/spectrum/src/protocols/msn.cpp:54
 #: /home/hanzz/code/spectrum/src/protocols/msn_pecan.cpp:54
@@ -263,10 +250,9 @@ msgstr "Имя пользователя Twitter"
 #: /home/hanzz/code/spectrum/src/protocols/twitter.cpp:73
 #, c-format
 msgid ""
-"Please allow Spectrum access to your Twitter account. Open following url and "
-"send the PIN number from the web page back to Spectrum.\n"
+"Please allow Spectrum access to your Twitter account. Open following url and send the PIN number from the web page back to Spectrum.\n"
 "%s"
-msgstr ""
+msgstr "Пожалуйста, разрешите доступ Spectrum к Вашему Twitter-аккаунту. Перейдите по ссылке и введите PIN-код на странице: %s"
 
 #: /home/hanzz/code/spectrum/src/protocols/xmpp.cpp:55
 msgid "Enter your Jabber ID and password:"
