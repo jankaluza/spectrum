@@ -1,4 +1,4 @@
-version 1.4.0 (???):
+version 1.4.0 (2010-08-12):
 	General:
 	* Don't answer twice to disco#items stanzas.
 	* Fixed memory corruption in SpectrumTimer.
