@@ -714,14 +714,14 @@ void SQLClass::updateUser(const UserRow &user) {
 }
 
 void SQLClass::removeBuddy(long userId, const std::string &uin, long buddy_id) {
-	*m_stmt_removeBuddy << userId << uin;
-	*m_stmt_removeBuddySettings << buddy_id;
+	*m_stmt_removeBuddy << (Poco::Int32) userId << uin;
+	*m_stmt_removeBuddySettings << (Poco::Int32) buddy_id;
 	m_stmt_removeBuddy->execute();
 	m_stmt_removeBuddySettings->execute();
 }
 
 void SQLClass::removeUser(long userId) {
-	*m_stmt_removeUser << userId;
+	*m_stmt_removeUser << (Poco::Int32) userId;
 	m_stmt_removeUser->execute();
 	Poco::Int32 id = userId;
 	*m_sess << "DELETE FROM " + p->configuration().sqlPrefix + "buddies WHERE user_id=?", use(id), now;
@@ -730,7 +730,7 @@ void SQLClass::removeUser(long userId) {
 }
 
 void SQLClass::removeUserBuddies(long userId) {
-	*m_stmt_removeUserBuddies << userId;
+	*m_stmt_removeUserBuddies << (Poco::Int32) userId;
 	m_stmt_removeUserBuddies->execute();
 }
 
@@ -740,7 +740,7 @@ void SQLClass::addDownload(const std::string &filename, const std::string &vip) 
 long SQLClass::addBuddy(long userId, const std::string &uin, const std::string &subscription, const std::string &group, const std::string &nickname, int flags) {
 	std::string u(uin);
 	p->protocol()->prepareUsername(u);
-	*m_stmt_addBuddy << userId << u << subscription << group << nickname << flags;
+	*m_stmt_addBuddy << (Poco::Int32) userId << u << subscription << group << nickname << (Poco::Int32) flags;
 	if (p->configuration().sqlType == "mysql") {
 		*m_stmt_addBuddy << group << nickname;
 	}
@@ -751,7 +751,7 @@ long SQLClass::addBuddy(long userId, const std::string &uin, const std::string &
 #ifdef WITH_SQLITE
 	/* SQLite doesn't support "ON DUPLICATE UPDATE". */
 	catch (Poco::Data::SQLite::ConstraintViolationException e) {
-		*m_stmt_updateBuddy << group << nickname << flags << userId << uin;
+		*m_stmt_updateBuddy << group << nickname << (Poco::Int32) flags << (Poco::Int32) userId << uin;
 		try {
 			m_stmt_updateBuddy->executeNoCheck();
 		}
@@ -777,7 +777,7 @@ long SQLClass::addBuddy(long userId, const std::string &uin, const std::string &
 }
 
 void SQLClass::updateBuddySubscription(long userId, const std::string &uin, const std::string &subscription) {
-	*m_stmt_updateBuddySubscription << subscription << userId << uin;
+	*m_stmt_updateBuddySubscription << subscription << (Poco::Int32) userId << uin;
 	
 	m_stmt_updateBuddySubscription->execute();
 }
@@ -788,7 +788,9 @@ UserRow SQLClass::getUserByJid(const std::string &jid){
 	user.vip = 0;
 	*m_stmt_getUserByJid << jid;
 	if (m_stmt_getUserByJid->execute()) {
-		*m_stmt_getUserByJid >> user.id >> user.jid >> user.uin >> user.password >> user.encoding >> user.language >> user.vip;
+		Poco::Int32 id = -1;
+		*m_stmt_getUserByJid >> id >> user.jid >> user.uin >> user.password >> user.encoding >> user.language >> user.vip;
+		user.id = id;
 	}
 
 	return user;
@@ -833,11 +835,11 @@ GHashTable *SQLClass::getBuddies(long userId, PurpleAccount *account) {
 	std::vector <std::string> buddyGroups;
 	std::vector <Poco::Int32> buddyFlags;
 
-	*m_stmt_getBuddiesSettings << userId;
+	*m_stmt_getBuddiesSettings << (Poco::Int32) userId;
 	if (m_stmt_getBuddiesSettings->execute())
 		*m_stmt_getBuddiesSettings >> settingIds >> settingTypes >> settingKeys >> settingValues;
 
-	*m_stmt_getBuddies << userId;
+	*m_stmt_getBuddies << (Poco::Int32) userId;
 	if (m_stmt_getBuddies->execute())
 		*m_stmt_getBuddies >> buddyIds >> buddyUserIds >> buddyUins >> buddySubscriptions >> buddyNicknames >> buddyGroups >> buddyFlags;
 
@@ -947,7 +949,7 @@ std::list <std::string> SQLClass::getBuddies(long userId) {
 	std::vector <std::string> buddyGroups;
 	std::vector <Poco::Int32> buddyFlags;
 
-	*m_stmt_getBuddies << userId;
+	*m_stmt_getBuddies << (Poco::Int32) userId;
 	if (m_stmt_getBuddies->execute())
 		*m_stmt_getBuddies >> buddyIds >> buddyUserIds >> buddyUins >> buddySubscriptions >> buddyNicknames >> buddyGroups >> buddyFlags;
 	
@@ -974,12 +976,12 @@ void SQLClass::addSetting(long userId, const std::string &key, const std::string
 		Log("SQL ERROR", "Trying to add user setting with user_id = 0: " << key);
 		return;
 	}
-	*m_stmt_addSetting << userId << key << type << value;
+	*m_stmt_addSetting << (Poco::Int32) userId << key << (Poco::Int32) type << value;
 	m_stmt_addSetting->execute();
 }
 
 void SQLClass::updateSetting(long userId, const std::string &key, const std::string &value) {
-	*m_stmt_updateSetting << value << userId << key;
+	*m_stmt_updateSetting << value << (Poco::Int32) userId << key;
 	m_stmt_updateSetting->execute();
 }
 
@@ -993,7 +995,7 @@ GHashTable * SQLClass::getSettings(long userId) {
 	std::vector<std::string> variables;
 	std::vector<Poco::Int32> types;
 
-	*m_stmt_getSettings << userId;
+	*m_stmt_getSettings << (Poco::Int32) userId;
 	if (m_stmt_getSettings->execute())
 		*m_stmt_getSettings >> ids >> types >> variables >> values;
 
@@ -1020,7 +1022,7 @@ GHashTable * SQLClass::getSettings(long userId) {
 }
 
 void SQLClass::addBuddySetting(long userId, long buddyId, const std::string &key, const std::string &value, PurpleType type) {
-	*m_stmt_addBuddySetting << userId << buddyId << key << type << value;
+	*m_stmt_addBuddySetting << (Poco::Int32) userId << (Poco::Int32) buddyId << key << (Poco::Int32) type << value;
 	if (p->configuration().sqlType != "sqlite")
 		*m_stmt_addBuddySetting << value;
 	m_stmt_addBuddySetting->execute();
@@ -1035,7 +1037,7 @@ std::vector<std::string> SQLClass::getOnlineUsers() {
 }
 
 void SQLClass::setUserOnline(long userId, bool online) {
-	*m_stmt_setUserOnline << online << userId;
+	*m_stmt_setUserOnline << online << (Poco::Int32) userId;
 	m_stmt_setUserOnline->execute();
 }
 
