@@ -74,12 +74,13 @@ AutoConnectLoop::AutoConnectLoop() {
 
 AutoConnectLoop::~AutoConnectLoop() {
 	Log("connection restorer", "Restorer deleted");
-	delete m_timer;
+	m_timer->deleteLater();
 }
 
 bool AutoConnectLoop::restoreNextConnection() {
 	if (m_users.size() == 0) {
 		Log("connection restorer", "There is no other account to be checked => stopping Restorer");
+		delete this;
 		return false;
 	}
 	std::string jid = m_users.back();

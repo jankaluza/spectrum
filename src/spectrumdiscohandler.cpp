@@ -126,6 +126,7 @@ Tag *SpectrumDiscoHandler::generateDiscoInfoResponse(const IQ &stanza, const Dis
 	Disco::IdentityList::const_iterator it = identities.begin();
 	for( ; it != identities.end(); ++it ) {
 		query->addChild((*it)->tag());
+		delete (*it);
 	}
 	
 	for (StringList::const_iterator it = features.begin() ; it != features.end(); ++it ) {

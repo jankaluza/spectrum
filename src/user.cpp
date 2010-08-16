@@ -276,6 +276,7 @@ void User::connect() {
 		m_account = purple_accounts_find(m_username.c_str(), this->p->protocol()->protocol().c_str());
 		User *user = (User *) Transport::instance()->userManager()->getUserByAccount(m_account);
 		if (user && user != this) {
+			m_account = NULL;
 			Log(m_jid, "This account is already connected by another jid " << user->jid());
 			return;
 		}
