@@ -330,6 +330,7 @@ void User::connect() {
 	purple_account_set_bool(m_account, "require_tls",  Transport::instance()->getConfiguration().require_tls);
 	purple_account_set_bool(m_account, "use_ssl",  Transport::instance()->getConfiguration().require_tls);
 	purple_account_set_bool(m_account, "direct_connect", false);
+	purple_account_set_bool(m_account, "check-mail", purple_value_get_boolean(getSetting("enable_notify_email")));
 
 	m_account->ui_data = this;
 	

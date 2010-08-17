@@ -511,6 +511,14 @@ static void * notifyEmail(PurpleConnection *gc, const char *subject, const char 
 	return NULL;
 }
 
+static void * notifyEmails(PurpleConnection *gc, size_t count, gboolean detailed, const char **subjects, const char **froms, const char **tos, const char **urls) {
+	for (size_t i = 0; i < count; i++) {
+		notifyEmail(gc, *subjects++, *froms++, *tos++, *urls++);
+	}
+	
+	return NULL;
+}
+
 static void * notifyMessage(PurpleNotifyMsgType type, const char *title, const char *primary, const char *secondary) {
 	// TODO: We have to patch libpurple to be able to identify from which account the message came from...
 	// without this the function is quite useles...
@@ -599,7 +607,7 @@ static PurpleNotifyUiOps notifyUiOps =
 {
 		notifyMessage,
 		notifyEmail,
-		NULL,
+		notifyEmails,
 		NULL,
 		notifySearchResults,
 		NULL,
@@ -1371,23 +1379,23 @@ void GlooxMessageHandler::purpleConversationWriteIM(PurpleConversation *conv, co
 }
 
 void GlooxMessageHandler::notifyEmail(PurpleConnection *gc,const char *subject, const char *from,const char *to, const char *url) {
-	if (protocol()->notifyUsername().empty())
-		return;
 	PurpleAccount *account = purple_connection_get_account(gc);
 	User *user = (User *) userManager()->getUserByAccount(account);
 	if (user!=NULL) {
 		if (purple_value_get_boolean(user->getSetting("enable_notify_email"))) {
-			std::string text;
-			if (subject)
-				text+=std::string(subject) + " ";
+			std::string text("New email, ");
 			if (from)
-				text+=std::string(from) + " ";
+				text += "From: " + std::string(from);
 			if (to)
-				text+=std::string(to) + " ";
+				text += ", To: " + std::string(to);
+			if (to || from)
+				text += "\n";
+			if (subject)
+				text += "Subject: " + std::string(subject) + "\n";
 			if (url)
-				text+=std::string(url) + " ";
+				text += "URL: " + std::string(url);
 			Message s(Message::Chat, user->jid(), text);
-			s.setFrom(protocol()->notifyUsername() + "@" + jid() + "/bot");
+			s.setFrom(jid());
 			j->send(s);
 		}
 	}
