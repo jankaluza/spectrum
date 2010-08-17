@@ -4,6 +4,7 @@ This class represents multiple spectrum instances, see L{spectrum_group}.
 import os, sys, socket
 
 from spectrum import spectrum
+import env
 
 class NotRunningError( Exception ):
 	pass
@@ -75,34 +76,25 @@ class spectrum_group:
 				self.instances.append( instance )
 		return( len( self.instances ) )
 		
-
-	def _log( self, msg, newline=True ):
-		if not self.options.quiet:
-			if newline:
-				print( msg )
-			else:   
-				print( msg ),
-#				print( msg, end='' ) #python 3
-
 	def _simple_action( self, action, title=None, args=[] ):
 		ret = 0
 		for instance in self.instances:
 			if not title:
 				title = action.title()
 			jid = instance.get_jid()
-			self._log( "%s %s..."%(title, jid), False )
+			env.log( "%s %s..."%(title, jid), False )
 			try:
 				getattr( instance, action )( *args )
-				self._log( "Ok." )
+				env.log( "Ok." )
 			except socket.error, e:
 				if hasattr( e, 'strerror' ):
 					# python2.5 does not have msg.strerror
 					err = e.strerror
 				else:
 					err = e.message
-				self._log( "Failed (config_interface: %s)"%(err) )
+				env.log( "Failed (config_interface: %s)"%(err) )
 			except RuntimeError, e:
-				self._log( "Failed (%s)"%e.args[0] )
+				env.log( "Failed (%s)"%e.args[0] )
 				ret += e.args[1]
 
 		return ret
@@ -111,18 +103,18 @@ class spectrum_group:
 		if not instance.enabled():
 			return
 
-		print( instance.get_jid() + '...' ),
+		env.log( instance.get_jid() + '...', newline=False )
 		if not instance.running():
-			print( "Not running" )
+			env.log( "Not running" )
 			return
 
 		# exceptions should be handled by the caller!
 		try:
 			retVal = getattr( instance, action )( *args )
-			print( 'ok.' )
+			env.log( 'ok.' )
 			return retVal
 		except RuntimeError, e:
-			print( e.message )
+			env.log( e.message )
 				
 
 	def start( self ):
@@ -194,9 +186,9 @@ class spectrum_group:
 					o.append( name + ': ' + value + ' ' + unit )
 				output.append( "\n".join( o ) )
 			except RuntimeError, e:
-				print( "%s: %s"%(instance.get_jid(), e.message) )
+				env.error( "%s: %s"%(instance.get_jid(), e.message) )
 		if output:
-			print( "\n\n".join( output ) )
+			env.log( "\n\n".join( output ) )
 		return 0
 	
 	def upgrade_db( self ):
@@ -268,7 +260,7 @@ class spectrum_group:
 		@type  encoding: str
 		"""
 		if len( self.instances ) != 1:
-			print( "Error: This command can only be executed with a single instance" )
+			env.error( "Error: This command can only be executed with a single instance" )
 			return 1
 
 		if not password:
@@ -276,7 +268,7 @@ class spectrum_group:
 			pwd_in = getpass.getpass( "password to remote network: " )
 			pwd2_in = getpass.getpass( "confirm: " )
 			if pwd2_in != pwd_in:
-				print( "Error: Passwords do not match" )
+				env.error( "Error: Passwords do not match" )
 			else:
 				password = pwd_in
 
@@ -305,7 +297,7 @@ class spectrum_group:
 		@param jid: The JID to unregister
 		@type  jid: string
 		"""
-		print( "Unregistering user %s" %(jid) )
+		env.log( "Unregistering user %s" %(jid) )
 		for instance in self.instances:
 			self._single_action( instance, 'unregister', [ jid ] )
 
@@ -327,9 +319,9 @@ class spectrum_group:
 		elif state == "1":
 			status_string += "True:"
 		else:
-			print( "Error: status (third argument) must be either 0 or 1" )
+			env.error( "Error: status (third argument) must be either 0 or 1" )
 			return 1
-		print( status_string%(jid) )
+		env.log( status_string%(jid) )
 
 		for instance in self.instances:
 			self._single_action( instance, 'set_vip_status', [jid,state] )
