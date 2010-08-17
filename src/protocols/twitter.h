@@ -42,6 +42,9 @@ class TwitterProtocol : AbstractProtocol
 		bool onNotifyUri(const char *uri);
 		void onRequestClose(void *handle);
 		void onXMPPMessageReceived(AbstractUser *user, const Message &msg);
+		void onDestroy(AbstractUser *user);
+		void onPurpleAccountCreated(PurpleAccount *account);
+		void onUserCreated(AbstractUser *user);
 	private:
 		std::list<std::string> m_transportFeatures;
 		std::list<std::string> m_buddyFeatures;

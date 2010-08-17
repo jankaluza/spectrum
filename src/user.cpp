@@ -156,7 +156,7 @@ void User::updateSetting(const std::string &key, PurpleValue *value) {
 	else if (purple_value_get_type(value) == PURPLE_TYPE_STRING) {
 		p->sql()->updateSetting(m_userID, key, purple_value_get_string(value));
 	}
-	g_hash_table_replace(m_settings, g_strdup(key.c_str()), value);
+	g_hash_table_replace(m_settings, g_strdup(key.c_str()), purple_value_dup(value));
 }
 
 /*
@@ -665,6 +665,7 @@ void User::handleVCard(const VCard* vcard) {
 
 User::~User(){
 	Log("User Destructor", m_jid << " " << m_account << " " << (m_account ? purple_account_get_username(m_account) : "") );
+	p->protocol()->onDestroy(this);
 	g_free(m_lang);
 
 	sendUnavailablePresenceToAll();
@@ -702,8 +703,6 @@ User::~User(){
 	}
 
 	g_hash_table_destroy(m_settings);
-
-	p->protocol()->onDestroy(this);
 }
 
 
