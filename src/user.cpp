@@ -287,6 +287,7 @@ void User::connect() {
 
 		purple_accounts_add(m_account);
 	}
+	p->collector()->stopCollecting(m_account);
 
 	PurplePlugin *plugin = purple_find_prpl(Transport::instance()->protocol()->protocol().c_str());
 	PurplePluginProtocolInfo *prpl_info = PURPLE_PLUGIN_PROTOCOL_INFO(plugin);
