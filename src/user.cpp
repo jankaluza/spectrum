@@ -95,9 +95,9 @@ User::User(GlooxMessageHandler *parent, JID jid, const std::string &username, co
 
 	PurpleValue *value;
 
-	PurpleAccount *act = purple_accounts_find(m_username.c_str(), this->p->protocol()->protocol().c_str());
-	if (act)
-		p->collector()->stopCollecting(act);
+// 	PurpleAccount *act = purple_accounts_find(m_username.c_str(), this->p->protocol()->protocol().c_str());
+// 	if (act)
+// 		p->collector()->stopCollecting(act);
 
 
 	// check default settings
@@ -682,14 +682,14 @@ User::~User(){
 		m_account->ui_data = NULL;
 		p->collector()->collect(m_account);
 	}
-	else {
-		PurpleAccount *act = purple_accounts_find(m_username.c_str(), this->p->protocol()->protocol().c_str());
-		if (act) {
-			act->ui_data = NULL;
-			p->collector()->collect(act);
-			purple_account_set_enabled(act, PURPLE_UI, FALSE);
-		}
-	}
+// 	else {
+// 		PurpleAccount *act = purple_accounts_find(m_username.c_str(), this->p->protocol()->protocol().c_str());
+// 		if (act) {
+// 			act->ui_data = NULL;
+// 			p->collector()->collect(act);
+// 			purple_account_set_enabled(act, PURPLE_UI, FALSE);
+// 		}
+// 	}
 
 	GList *iter;
 	for (iter = purple_get_conversations(); iter; ) {

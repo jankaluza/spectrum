@@ -12,7 +12,7 @@ void AutoConnectLoopTest::up (void) {
 }
 
 void AutoConnectLoopTest::down (void) {
-	delete m_loop;
+// 	delete m_loop;
 }
 
 void AutoConnectLoopTest::restoreNextConnection() {
