@@ -61,6 +61,7 @@ parser.add_option_group( start_group )
 
 options, args = parser.parse_args()
 env.options = options
+env.quiet = options.quiet
 
 all_actions = [ x for x in dir( spectrum_group.spectrum_group ) if not x.startswith( '_' ) ]
 if len( args ) == 0:
@@ -74,4 +75,5 @@ if action not in all_actions:
 	sys.exit(1)
 
 group = spectrum_group.spectrum_group( options )
-getattr( group, action )( *params )
+ret_val = getattr( group, action )( *params )
+sys.exit(ret_val )

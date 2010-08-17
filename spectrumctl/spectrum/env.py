@@ -1,7 +1,21 @@
-import os, grp, pwd, stat
+import os, sys, grp, pwd, stat
 
 from ExistsError import ExistsError
 options = None
+quiet = False
+
+def error( msg, newline=True ):
+	sys.stderr.write( msg )
+	if newline and not msg.endswith( '\n' ):
+		sys.stderr.write( '\n' )
+
+def log( msg, newline=True ):
+	if not quiet:
+		if newline:
+			print( msg )
+		else:   
+			print( msg ),
+#python3:		print( msg, end='' )
 
 def drop_privs( uid, gid ):
 	"""

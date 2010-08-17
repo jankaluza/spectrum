@@ -419,14 +419,14 @@ class spectrum:
 		pid = self.get_pid()
 		try:
 			if debug:
-				print( 'Attempting to kill PID: %s'%(pid) )
+				env.log( 'Attempting to kill PID: %s'%(pid) )
 
 			os.kill( pid, signal.SIGTERM )
 			time.sleep( 0.2 )
 			
 			for i in range(1, 10):
 				if debug:
-					print( 'Try again...' )
+					env.log( 'Try again...' )
 				status = self.status()
 				if status == 3 or status == 1:
 					os.remove( self.pid_file )
@@ -439,24 +439,24 @@ class spectrum:
 				return 0
 			else:
 				if debug:
-					print( 'Attempting to kill with SIGABRT' )
+					env.log( 'Attempting to kill with SIGABRT' )
 					os.kill( pid, signal.SIGABRT )
 				else:
-					print( 'Attempting to kill with SIGKILL' )
+					env.log( 'Attempting to kill with SIGKILL' )
 					os.kill( pid, signal.SIGKILL )
 				time.sleep( 0.2 )
 				status = self.status()
 				if status == 3 or status == 1:
 					if debug:
-						print( 'ok' )
+						env.log( 'ok' )
 					return 0
 				else:
 					raise RuntimeError( "Spectrum did not die", 1 )
 		except OSError, e:
-			print( "pid file: '%s' (%s)"%(self.pid_file, debug) )
+			env.log( "pid file: '%s' (%s)"%(self.pid_file, debug) )
 			raise RuntimeError( "Failed to kill pid '%s'"%(pid), 1 )
 		except Exception, e:
-			print( e )
+			env.log( "%s: %s"%(type(e), e) )
 			raise RuntimeError( "Unknown Error occured", 1 )
 
 	def restart( self, no_daemon=False, debug=False ):
