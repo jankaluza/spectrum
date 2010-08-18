@@ -513,7 +513,7 @@ static void * notifyEmail(PurpleConnection *gc, const char *subject, const char 
 
 static void * notifyEmails(PurpleConnection *gc, size_t count, gboolean detailed, const char **subjects, const char **froms, const char **tos, const char **urls) {
 	for (size_t i = 0; i < count; i++) {
-		notifyEmail(gc, *subjects++, *froms++, *tos++, *urls++);
+		notifyEmail(gc, subjects ? *subjects++ : NULL, froms ? *froms++ : NULL, tos ? *tos++ : NULL, urls ? *urls++ : NULL);
 	}
 	
 	return NULL;
