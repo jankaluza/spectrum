@@ -26,7 +26,7 @@ find_package(cppunit)
 include(FindPythonInterp)
  
 execute_process ( COMMAND ${PYTHON_EXECUTABLE} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()" OUTPUT_VARIABLE PYTHON_SITE_PACKAGES OUTPUT_STRIP_TRAILING_WHITESPACE)
-message(STATUS "Python site-packages directory: " ${PYTHON_SITE_PACKAGES})
+message(STATUS "Python site-packages directory: "  ${PYTHON_SITE_PACKAGES})
 
 include_directories(${GLOOX_INCLUDE_DIR})
 include_directories(${PURPLE_INCLUDE_DIR})
