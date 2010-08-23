@@ -500,7 +500,7 @@ void SpectrumRosterManager::handleSubscription(const Subscription &subscription)
 			else {
 				Log(m_user->jid(), "subscribe presence; user is not in roster => adding to legacy network");
 				// Disable handling new-buddy event, because we're going to create new buddy by Spectrum, not
-				// by libpurple.
+				// by libpurple (so we don't want to add it to RIE queue and send back to XMPP user).
 				m_loadingFromDB = true;
 				PurpleBuddy *buddy = purple_buddy_new(m_user->account(), remote_user.c_str(), remote_user.c_str());
 #ifndef TESTS
@@ -509,6 +509,7 @@ void SpectrumRosterManager::handleSubscription(const Subscription &subscription)
 				s_buddy->setSubscription("to");
 				if (usesJidEscaping(subscription.to().username()))
 					s_buddy->setFlags(s_buddy->getFlags() | SPECTRUM_BUDDY_JID_ESCAPING);
+				addRosterItem(s_buddy);
 #endif
 				// Add newly created buddy to legacy network roster.
 				purple_blist_add_buddy(buddy, NULL, NULL ,NULL);
