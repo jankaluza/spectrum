@@ -374,6 +374,9 @@ void User::connect() {
  */
 void User::disconnected() {
 	m_connected = false;
+	if (m_account) {
+		m_account->ui_data = NULL;
+	}
 	m_account = NULL;
 	m_readyForConnect = true;
 	m_reconnectCount += 1;
