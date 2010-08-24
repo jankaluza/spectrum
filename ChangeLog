@@ -1,3 +1,17 @@
+version 1.4.1 (2010-XX-XX):
+	General:
+	* Fixed memory corruption in SQLClass on x86_64.
+	* Fixed memory leak in SpectrumDiscoHandler.
+	* Fixed memory corruption when user settings is changed.
+	* Fixed memory corruption when XMPP user added legacy network user twice.
+
+	Twitter:
+	* Store Twitter tokens in database. Fixes a bug when Spectrum was asking
+	  for access on almost every login.
+
+	Identica:
+	* Fixed Identica support.
+
 version 1.4.0 (2010-08-12):
 	General:
 	* Don't answer twice to disco#items stanzas.
