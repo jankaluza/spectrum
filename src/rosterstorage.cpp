@@ -45,7 +45,8 @@ static void save_settings(gpointer k, gpointer v, gpointer data) {
 			Transport::instance()->sql()->addBuddySetting(user->storageId(), id, key, "0", purple_value_get_type(value));
 	}
 	else if (purple_value_get_type(value) == PURPLE_TYPE_STRING) {
-		Transport::instance()->sql()->addBuddySetting(user->storageId(), id, key, purple_value_get_string(value), purple_value_get_type(value));
+		const char *str = purple_value_get_string(value);
+		Transport::instance()->sql()->addBuddySetting(user->storageId(), id, key, str ? str : "", purple_value_get_type(value));
 	}
 }
 
