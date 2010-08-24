@@ -1337,7 +1337,8 @@ bool GlooxMessageHandler::loadConfigFile(const std::string &config) {
 	if (!c && !m_configuration)
 		return false;
 	if (c) {
-		c.username_mask = m_configuration.username_mask;
+		if (m_configuration)
+			c.username_mask = m_configuration.username_mask;
 		m_configuration = c;
 	}
 
