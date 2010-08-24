@@ -22,8 +22,7 @@
 #include "../main.h"
 #include "../transport.h"
 
-IdenticaProtocol::IdenticaProtocol(GlooxMessageHandler *main){
-	m_main = main;
+IdenticaProtocol::IdenticaProtocol() {
 	m_transportFeatures.push_back("jabber:iq:register");
 	m_transportFeatures.push_back("jabber:iq:gateway");
 	m_transportFeatures.push_back("http://jabber.org/protocol/disco#info");
@@ -63,3 +62,5 @@ std::string IdenticaProtocol::text(const std::string &key) {
 		return _("Identica username");
 	return "not defined";
 }
+
+SPECTRUM_PROTOCOL(identica, IdenticaProtocol)

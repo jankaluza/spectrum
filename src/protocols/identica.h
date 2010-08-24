@@ -28,7 +28,7 @@ class GlooxMessageHandler;
 class IdenticaProtocol : AbstractProtocol
 {
 	public:
-		IdenticaProtocol(GlooxMessageHandler *main);
+		IdenticaProtocol();
 		~IdenticaProtocol();
 		const std::string gatewayIdentity() { return "identica"; }
 		const std::string protocol() { return "prpl-mbpurple-identica"; }
@@ -39,7 +39,6 @@ class IdenticaProtocol : AbstractProtocol
 		Tag *getVCardTag(AbstractUser *user, GList *vcardEntries) { return NULL; }
 		bool isMUC(AbstractUser *user, const std::string &jid) { return 0; }
 	private:
-		GlooxMessageHandler *m_main;
 		std::list<std::string> m_transportFeatures;
 		std::list<std::string> m_buddyFeatures;
 
