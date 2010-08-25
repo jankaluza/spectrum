@@ -2,8 +2,11 @@ version 1.4.1 (2010-XX-XX):
 	General:
 	* Fixed memory corruption in SQLClass on x86_64.
 	* Fixed memory leak in SpectrumDiscoHandler.
-	* Fixed memory corruption when user settings is changed.
-	* Fixed memory corruption when XMPP user added legacy network user twice.
+	* Fixed memory corruption when user settings are changed.
+	* Fixed memory corruption when XMPP user tried to add legacy network
+	  buddy twice.
+	* Fixed crash when storing buddies settings to database when stored string
+	  is NULL.
 
 	Twitter:
 	* Store Twitter tokens in database. Fixes a bug when Spectrum was asking
