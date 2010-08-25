@@ -7,6 +7,8 @@ version 1.4.1 (2010-XX-XX):
 	  buddy twice.
 	* Fixed crash when storing buddies settings to database when stored string
 	  is NULL.
+	* Fixed crash in Ad-Hoc commands when user submitted his settings after he
+	  disconnected the transport.
 
 	Twitter:
 	* Store Twitter tokens in database. Fixes a bug when Spectrum was asking

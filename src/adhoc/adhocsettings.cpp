@@ -25,6 +25,7 @@
 #include "transport.h"
 #include "adhoctag.h"
 #include "main.h"
+#include "../usermanager.h"
 
 AdhocSettings::AdhocSettings(AbstractUser *user, const std::string &from, const std::string &id) :
 	m_from(from), m_user(user) {
@@ -85,6 +86,7 @@ bool AdhocSettings::handleIq(const IQ &stanza) {
 		return true;
 	}
 
+	m_user = Transport::instance()->userManager()->getUserByJID(stanza.from().bare());
 	Tag *x = tag->findChildWithAttrib("xmlns","jabber:x:data");
 	if (x && m_user) {
 		std::string result("");
