@@ -98,4 +98,93 @@ void XMPPProtocol::onPurpleAccountCreated(PurpleAccount *account) {
 		purple_account_set_bool(account, "require_tls", false);
 }
 
+Tag *XMPPProtocol::getVCardTag(AbstractUser *user, GList *vcardEntries) {
+	Tag *N = new Tag("N");
+	Tag *head = new Tag("ADR");
+	PurpleNotifyUserInfoEntry *vcardEntry;
+	std::string firstName;
+	std::string lastName;
+	std::string header;
+	std::string label;
+
+	Tag *vcard = new Tag( "vCard" );
+	vcard->addAttribute( "xmlns", "vcard-temp" );
+
+	while (vcardEntries) {
+		vcardEntry = (PurpleNotifyUserInfoEntry *)(vcardEntries->data);
+		if (purple_notify_user_info_entry_get_label(vcardEntry) && purple_notify_user_info_entry_get_value(vcardEntry)){
+			label=(std::string)purple_notify_user_info_entry_get_label(vcardEntry);
+			Log("vcard label", label << " => " << (std::string)purple_notify_user_info_entry_get_value(vcardEntry));
+			if (label=="Given Name"){
+				N->addChild( new Tag("GIVEN", (std::string)purple_notify_user_info_entry_get_value(vcardEntry)));
+				firstName = (std::string)purple_notify_user_info_entry_get_value(vcardEntry);
+			}
+			else if (label=="Family Name"){
+				N->addChild( new Tag("FAMILY", (std::string)purple_notify_user_info_entry_get_value(vcardEntry)));
+				lastName = (std::string)purple_notify_user_info_entry_get_value(vcardEntry);
+			}
+			else if (label=="Nickname"){
+				vcard->addChild( new Tag("NICKNAME", (std::string)purple_notify_user_info_entry_get_value(vcardEntry)));
+			}
+			else if (label=="Full Name"){
+				vcard->addChild( new Tag("FN", (std::string)purple_notify_user_info_entry_get_value(vcardEntry)));
+			}
+			else if (label=="Birthday"){
+				vcard->addChild( new Tag("BDAY", (std::string)purple_notify_user_info_entry_get_value(vcardEntry)));
+			}
+			else if (label=="City"){
+				head->addChild( new Tag("LOCALITY", (std::string)purple_notify_user_info_entry_get_value(vcardEntry)));
+			}
+			else if (label=="Country"){
+				head->addChild( new Tag("CTRY", (std::string)purple_notify_user_info_entry_get_value(vcardEntry)));
+			}
+			else if (label=="Company"){
+				head->addChild( new Tag("ORGNAME", (std::string)purple_notify_user_info_entry_get_value(vcardEntry)));
+			}
+			else if (label=="Division"){
+				head->addChild( new Tag("ORGUNIT", (std::string)purple_notify_user_info_entry_get_value(vcardEntry)));
+			}
+			else if (label=="Position"){
+				vcard->addChild( new Tag("TITLE", (std::string)purple_notify_user_info_entry_get_value(vcardEntry)));
+			}
+			else if (label=="Personal Web Page"){
+				std::string page = (std::string)purple_notify_user_info_entry_get_value(vcardEntry);
+
+				//vcard->addChild( new Tag("URL", stripHTMLTags(page)));
+				//vcard->addChild( new Tag("URL", page));
+			}
+		}
+		else if (purple_notify_user_info_entry_get_type(vcardEntry)==PURPLE_NOTIFY_USER_INFO_ENTRY_SECTION_HEADER){
+			header = (std::string)purple_notify_user_info_entry_get_label(vcardEntry);
+			if (head)
+				if (!head->children().empty())
+					vcard->addChild(head);
+			if (header=="Home Address"){
+				head = new Tag("ADR");
+				head->addChild(new Tag("HOME"));
+			}
+			if (header=="Work Address"){
+				head = new Tag("ADR");
+				head->addChild(new Tag("WORK"));
+			}
+			if (header=="Work Information"){
+				head = new Tag("ORG");
+			}
+		}
+		vcardEntries = vcardEntries->next;
+	}
+	// add last head if any
+	if (head)
+		if (!head->children().empty())
+			vcard->addChild(head);
+	// combine first name and last name to full name
+	if ((!firstName.empty() || !lastName.empty()) && vcard->hasChild("FN"))
+		vcard->addChild( new Tag("FN", firstName + " " + lastName));
+	// add photo ant N if any
+	if(!N->children().empty())
+		vcard->addChild(N);
+
+	return vcard;
+}
+
 SPECTRUM_PROTOCOL(xmpp, XMPPProtocol)

@@ -42,6 +42,7 @@ class XMPPProtocol : AbstractProtocol
 		void makeRoomJID(AbstractUser *user, std::string &name);
 		void makePurpleUsernameRoom(AbstractUser *user, const JID &jid, std::string &name);
 		void makeUsernameRoom(AbstractUser *user, std::string &name);
+		Tag *getVCardTag(AbstractUser *user, GList *vcardEntries);
 
 	private:
 		std::list<std::string> m_transportFeatures;
