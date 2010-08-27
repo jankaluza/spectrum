@@ -679,7 +679,7 @@ void SQLClass::upgradeDatabase() {
 				}
 				case 3: {
 					Log("SQL", "Upgrading from version 3 to 4");
-					*m_sess << "ALTER TABLE " + p->configuration().sqlPrefix + "users ADD salt char(6) NOT NULL;", now;
+					*m_sess << "ALTER TABLE " + p->configuration().sqlPrefix + "users ADD salt char(6) NOT NULL DEFAULT '';", now;
 					*m_sess << "REPLACE INTO " + p->configuration().sqlPrefix + "db_version (ver) values(4);", now;
 				}
 				//Please read warning concerning break statement;
@@ -707,7 +707,7 @@ void SQLClass::upgradeDatabase() {
 				}
 				case 2: {
 					Log("SQL", "Upgrading from version 2 to 3");
-					*m_sess << "ALTER  TABLE " + p->configuration().sqlPrefix + "users ADD salt CHAR(6) NOT NULL AFTER password;", now;
+					*m_sess << "ALTER  TABLE " + p->configuration().sqlPrefix + "users ADD salt CHAR(6) NOT NULL DEFAULT '' AFTER password;", now;
 					*m_sess << "ALTER  TABLE " + p->configuration().sqlPrefix + "users CHANGE password password VARCHAR(396) CHARACTER  SET utf8 COLLATE utf8_bin NOT  NULL;", now;
 					*m_sess << "UPDATE " + p->configuration().sqlPrefix + "db_version SET  ver = 3 WHERE " + p->configuration().sqlPrefix + "db_version.ver =2;", now;
 					//Please read warning concerning break statement;
@@ -720,7 +720,7 @@ void SQLClass::upgradeDatabase() {
 	}
 	catch (Poco::Exception e) {
 		m_loaded = false;
-		Log("SQL ERROR", e.displayText());
+		Log("SQL ERROR", e.displayText() << "\n" << e.message());
 		return;
 	}
 	Log("SQL", "Finished upgrading database.");
@@ -740,7 +740,7 @@ int SQLClass::encryptDatabase(){
 	}
 
 	// Iterate through users table. Getting users one by one, will prevent synchronization errors
-	for (int i = 0; i < getRegisteredUsersCount(); i++)	{
+	for (long i = 0; i < getRegisteredUsersCount(); i++)	{
 		Poco::Int32 id = -1;
 		std::string salt = "";
 		std::string password = "";
@@ -764,7 +764,7 @@ int SQLClass::encryptDatabase(){
 			}
 			catch (Poco::Exception e) {
 				//TODO: In case of an Error. The password will be logged. It should be removed in the next version.
-				//Log("SQL ERROR", e.message());
+// 				Log("SQL ERROR", e.message());
 				return 1;
 			}
 		}
@@ -787,7 +787,7 @@ int SQLClass::decryptDatabase(){
 	}
 
 	// Iterate through users table. Getting users one by one, will prevent synchronisation errors
-	for (int i = 0; i < getRegisteredUsersCount(); i++)	{
+	for (long i = 0; i < getRegisteredUsersCount(); i++)	{
 		Poco::Int32 id = -1;
 		std::string salt = "";
 		std::string password = "";

@@ -1,7 +1,7 @@
 IF (HAVE_CRYPTOPP)
 	message(STATUS "Found CACHED Crypto++ in ${CRYPTOPP_SOURCE_DIR}")
 ELSE (HAVE_CRYPTOPP)
-	find_path(CRYPTOPP_SOURCE_DIR NAMES crypto++/cryptlib.h)
+	find_path(CRYPTOPP_SOURCE_DIR NAMES crypto++/cryptlib.h cryptopp/cryptlib.h)
 	
 	IF (CRYPTOPP_SOURCE_DIR)
 		message(STATUS "Found Crypto++ in ${CRYPTOPP_SOURCE_DIR}")
@@ -14,6 +14,6 @@ ENDIF (HAVE_CRYPTOPP)
 
 IF (HAVE_CRYPTOPP)
 	message(STATUS "Using Crypto++ from ${CRYPTOPP_SOURCE_DIR}")
-	find_library(CRYPTOPP_LIBRARIES_LIB NAMES cryptopp)
+	find_library(CRYPTOPP_LIBRARIES NAMES cryptopp)
 
 ENDIF (HAVE_CRYPTOPP)

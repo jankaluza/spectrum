@@ -1972,6 +1972,9 @@ bool GlooxMessageHandler::encryptDatabase(bool encrypt) {
 	if ( !m_sql || !m_sql->loaded()) {
 		Log("ENCRYPTION ERROR", "Error, SQL database not loaded. Aborting encryption/decryption.");
 		return 0;
+	} else if (!m_configuration.sqlEncrypted) {
+		Log("ENCRYPTION ERROR", "Error, SQL database encryption is not allowed in configuration file. Aborting encryption/decryption.");
+		return 0;
 	} else
 	{
 		bool success;
