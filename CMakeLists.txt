@@ -10,7 +10,6 @@ file(WRITE src/transport_config.h "\n")
 set(CMAKE_MODULE_PATH "cmake_modules")
 include_directories(src)
  
- 
 set(gloox_DIR "${CMAKE_SOURCE_DIR}/cmake_modules")
 find_package(gloox REQUIRED)
 set(purple_DIR "${CMAKE_SOURCE_DIR}/cmake_modules")
@@ -19,6 +18,8 @@ set(glib_DIR "${CMAKE_SOURCE_DIR}/cmake_modules")
 find_package(glib REQUIRED)
 set(libpoco_DIR "${CMAKE_SOURCE_DIR}/cmake_modules")
 find_package(libpoco REQUIRED)
+set(cryptopp_DIR "${CMAKE_SOURCE_DIR}/cmake_modules")
+find_package(cryptopp REQUIRED)
 set(cppunit_DIR "${CMAKE_SOURCE_DIR}/cmake_modules")
 find_package(cppunit)
 
@@ -26,7 +27,7 @@ find_package(cppunit)
 include(FindPythonInterp)
  
 execute_process ( COMMAND ${PYTHON_EXECUTABLE} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()" OUTPUT_VARIABLE PYTHON_SITE_PACKAGES OUTPUT_STRIP_TRAILING_WHITESPACE)
-message(STATUS "Python site-packages directory: "  ${PYTHON_SITE_PACKAGES})
+message(STATUS "Python site-packages directory: " ${PYTHON_SITE_PACKAGES})
 
 include_directories(${GLOOX_INCLUDE_DIR})
 include_directories(${PURPLE_INCLUDE_DIR})
@@ -80,6 +81,7 @@ set(spectrum_SRCS
 	src/commands.cpp
 	src/configfile.cpp
 	src/configinterface.cpp
+	src/crypto.cpp
 	src/dnsresolver.cpp
 # 	src/discoinfohandler.cpp
 	src/filetransfermanager.cpp
@@ -150,6 +152,7 @@ set(spectrum_MOC_HDRS
 	src/commands.h
 	src/configfile.h
 	src/configinterface.h
+	src/crypto.h
 	src/dnsresolver.h
 # 	src/discoinfohandler.h
 	src/filetransfermanager.h
@@ -203,9 +206,9 @@ set(spectrum_MOC_HDRS
 add_executable(spectrum ${spectrum_SRCS} ${lrelease_outputs})
 
 if(DEFINED WITH_STATIC_GLOOX)
-	target_link_libraries(spectrum ${WITH_STATIC_GLOOX} -lgnutls ${PURPLE_LIBRARY} ${GLIB2_LIBRARIES} ${LIBPOCO_LIBRARIES} -export-dynamic)
+	target_link_libraries(spectrum ${WITH_STATIC_GLOOX} -lgnutls ${PURPLE_LIBRARY} ${GLIB2_LIBRARIES} ${LIBPOCO_LIBRARIES} ${CRYPTOPP_LIBRARIES} -export-dynamic)
 else(DEFINED WITH_STATIC_GLOOX)
-	target_link_libraries(spectrum ${GLOOX_LIBRARIES} ${PURPLE_LIBRARY} ${GLIB2_LIBRARIES} ${LIBPOCO_LIBRARIES} -export-dynamic)
+	target_link_libraries(spectrum ${GLOOX_LIBRARIES} ${PURPLE_LIBRARY} ${GLIB2_LIBRARIES} ${LIBPOCO_LIBRARIES} ${CRYPTOPP_LIBRARIES} -export-dynamic)
 endif(DEFINED WITH_STATIC_GLOOX)
 
 message(STATUS "Transport will be installed into: " ${CMAKE_INSTALL_PREFIX})
@@ -219,9 +222,9 @@ else (SPECTRUM_VERSION)
 						OUTPUT_VARIABLE GIT_REVISION
 						OUTPUT_STRIP_TRAILING_WHITESPACE
 		)
-		file(APPEND src/transport_config.h "#define VERSION \"1.4.2-git-" ${GIT_REVISION} "\"\n")
+		file(APPEND src/transport_config.h "#define VERSION \"1.4.1-git-" ${GIT_REVISION} "\"\n")
 	else (EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/.git)
-		file(APPEND src/transport_config.h "#define VERSION \"1.4.1\"\n")
+		file(APPEND src/transport_config.h "#define VERSION \"1.4.0\"\n")
 	endif (EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/.git)
 endif (SPECTRUM_VERSION)
 
@@ -322,9 +325,9 @@ add_executable(spectrum_tests ${spectrum_tests_SRCS} ${lrelease_outputs})
 set_target_properties(spectrum_tests PROPERTIES COMPILE_FLAGS -DTESTS)
 
 if(DEFINED WITH_STATIC_GLOOX)
-	target_link_libraries(spectrum_tests ${WITH_STATIC_GLOOX} -lgnutls ${PURPLE_LIBRARY} ${CPPUNIT_LIBRARY} ${GLIB2_LIBRARIES} ${LIBPOCO_LIBRARIES} -export-dynamic)
+	target_link_libraries(spectrum_tests ${WITH_STATIC_GLOOX} -lgnutls ${PURPLE_LIBRARY} ${CPPUNIT_LIBRARY} ${GLIB2_LIBRARIES} ${LIBPOCO_LIBRARIES}  ${CRYPTOPP_LIBRARIES} -export-dynamic)
 else(DEFINED WITH_STATIC_GLOOX)
-	target_link_libraries(spectrum_tests ${GLOOX_LIBRARIES} ${PURPLE_LIBRARY} ${CPPUNIT_LIBRARY} ${GLIB2_LIBRARIES} ${LIBPOCO_LIBRARIES} -export-dynamic)
+	target_link_libraries(spectrum_tests ${GLOOX_LIBRARIES} ${PURPLE_LIBRARY} ${CPPUNIT_LIBRARY} ${GLIB2_LIBRARIES} ${LIBPOCO_LIBRARIES} ${CRYPTOPP_LIBRARIES} -export-dynamic)
 endif(DEFINED WITH_STATIC_GLOOX)
 
 

@@ -149,6 +149,10 @@ class SQLClass : public AbstractBackend {
 		bool ping();
 		bool reconnectCallback();
 		void upgradeDatabase();
+		int encryptDatabase();
+		int decryptDatabase();
+		void encryptPw(std::string &pw, std::string &salt);
+		std::string decryptPw(std::string cryptedpw, std::string salt);
 
 		// settings
 		void addSetting(long userId, const std::string &key, const std::string &value, PurpleType type);
@@ -183,6 +187,7 @@ class SQLClass : public AbstractBackend {
 		SpectrumSQLStatement *m_stmt_updateBuddy;
 		SpectrumSQLStatement *m_stmt_updateBuddySubscription;
 		SpectrumSQLStatement *m_stmt_getUserByJid;
+		SpectrumSQLStatement *m_stmt_getUserByRow;
 		SpectrumSQLStatement *m_stmt_addSetting;
 		SpectrumSQLStatement *m_stmt_getBuddies;
 		SpectrumSQLStatement *m_stmt_updateSetting;

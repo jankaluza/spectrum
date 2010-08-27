@@ -80,7 +80,9 @@ struct Configuration {
 	std::string sqlDb;				// Database name.
 	std::string sqlPrefix;			// Prefix for database tables.
 	std::string sqlType;			// Type of database.
-	
+	bool sqlEncrypted;				// Database uses encryption.
+	std::string sqlEncryptionKey;	// Key used to encrypt the passowords
+
 	std::string hash; 				// Version hash used for caps.
 	
 	std::list <std::string> allowedServers;		// Hostnames which are allowed to connect.
@@ -130,6 +132,7 @@ class ConfigFile {
 		bool loadStringList(std::list <std::string> &variable, const std::string &section, const std::string &key);
 		bool loadHostPort(std::string &variable, int &port, const std::string &section, const std::string &key, const std::string &def_host = "required", const int &def_port = 0);
 		bool loadFeatures(int &features, const std::string &section);
+		bool loadStringFromFile(std::string &variable, const std::string &section, const std::string &key, const std::string &def);
 };
 
 #endif

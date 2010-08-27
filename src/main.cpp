@@ -79,6 +79,8 @@ static gboolean ver = FALSE;
 static gboolean upgrade_db = FALSE;
 static gboolean check_db_version = FALSE;
 static gboolean list_purple_settings = FALSE;
+static gboolean encrypt_db = FALSE;
+static gboolean decrypt_db = FALSE;
 
 static GOptionEntry options_entries[] = {
 	{ "nodaemon", 'n', 0, G_OPTION_ARG_NONE, &nodaemon, "Disable background daemon mode", NULL },
@@ -88,6 +90,8 @@ static GOptionEntry options_entries[] = {
 	{ "list-purple-settings", 's', 0, G_OPTION_ARG_NONE, &list_purple_settings, "Lists purple settings which can be used in config file", NULL },
 	{ "upgrade-db", 'u', 0, G_OPTION_ARG_NONE, &upgrade_db, "Upgrades Spectrum database", NULL },
 	{ "check-db-version", 'c', 0, G_OPTION_ARG_NONE, &check_db_version, "Checks Spectrum database version", NULL },
+	{ "encrypt-db", 'e', 0, G_OPTION_ARG_NONE, &encrypt_db, "Encrypts Spectrum database", NULL },
+	{ "decrypt-db", 'd', 0, G_OPTION_ARG_NONE, &decrypt_db, "Decrypts Spectrum database", NULL },
 	{ NULL, 0, 0, G_OPTION_ARG_NONE, NULL, "", NULL }
 };
 
@@ -1006,6 +1010,13 @@ GlooxMessageHandler::GlooxMessageHandler(const std::string &config) : MessageHan
 		m_sql = new SQLClass(this, upgrade_db);
 		if (!m_sql->loaded())
 			loaded = false;
+	}
+
+	// Wait for the database to be loaded, then try to encrypt/decrypt if told to do so.
+	if (encrypt_db || decrypt_db) {
+		//If both encrypt and decrypt are selected, default to encrypt
+		encryptDatabase(encrypt_db);
+		exit(0);
 	}
 
 	if (loaded) {
@@ -1957,6 +1968,27 @@ bool GlooxMessageHandler::initPurple(){
 	return ret;
 }
 
+bool GlooxMessageHandler::encryptDatabase(bool encrypt) {
+	if ( !m_sql || !m_sql->loaded()) {
+		Log("ENCRYPTION ERROR", "Error, SQL database not loaded. Aborting encryption/decryption.");
+		return 0;
+	} else
+	{
+		bool success;
+		if (encrypt)
+		{
+			success = m_sql->encryptDatabase() == 0;
+			Log("ENCRPYT", (success ? "Database sucessfully encrypted." : "Error encrypting database. Please check the log."));
+			return success;
+		}
+		else
+		{
+			success = m_sql->decryptDatabase() == 0;
+			Log("DECRYPT", (success ? "Database sucessfully decrypted." : "Error decrypting database. Please check the log."));
+			return success;
+		}
+	}
+}
 
 GlooxMessageHandler* GlooxMessageHandler::m_pInstance = NULL;
 

@@ -1,4 +1,4 @@
-/**
+﻿/**
  * XMPP - libpurple transport
  *
  * Copyright (C) 2009, Jan Kaluza <hanzz@soc.pidgin.im>
@@ -22,6 +22,7 @@
 #include "parser.h"
 #include "log.h"
 #include "main.h"
+#include "crypto.h"
 #include "spectrumbuddy.h"
 #include "spectrum_util.h"
 #include "protocols/abstractprotocol.h"
@@ -29,8 +30,8 @@
 #include "usermanager.h"
 #include <sys/time.h>
 
-#define SQLITE_DB_VERSION 3
-#define MYSQL_DB_VERSION 2
+#define SQLITE_DB_VERSION 4
+#define MYSQL_DB_VERSION 3
 
 #if !defined(WITH_MYSQL) && !defined(WITH_SQLITE) && !defined(WITH_ODBC)
 #error There is no libPocoData storage backend installed. Spectrum will not work without one of them.
@@ -285,13 +286,12 @@ SQLClass::SQLClass(GlooxMessageHandler *parent, bool upgrade, bool check) {
 	
 	m_reconnectTimer = new SpectrumTimer(1000, reconnectMe, this);
 	m_pingTimer = new SpectrumTimer(30000, pingSQL, this);
-	
-	
 	try {
 #ifdef WITH_MYSQL
 		if (p->configuration().sqlType == "mysql") {
 			m_dbversion = MYSQL_DB_VERSION;
 			MySQL::Connector::registerConnector();
+			//Blabal
 			m_sess = new Session("MySQL", "user=" + p->configuration().sqlUser + ";password=" + p->configuration().sqlPassword + ";host=" + p->configuration().sqlHost + ";db=" + p->configuration().sqlDb + ";auto-reconnect=true");
 			if (!check && !upgrade)
 				m_pingTimer->start();
@@ -376,11 +376,11 @@ void SQLClass::createStatements() {
 	m_version_stmt = new Statement( ( STATEMENT("SELECT ver FROM " + p->configuration().sqlPrefix + "db_version ORDER BY ver DESC LIMIT 1"), into(m_version) ) );
 
 	if (p->configuration().sqlType == "sqlite")
-		createStatement(&m_stmt_addUser, "sssssb", "INSERT INTO " + p->configuration().sqlPrefix + "users (jid, uin, password, language, encoding, last_login, vip) VALUES (?, ?, ?, ?, ?, DATETIME('NOW'), ?)");
+		createStatement(&m_stmt_addUser, "ssssssb", "INSERT INTO " + p->configuration().sqlPrefix + "users (jid, uin, password, salt, language, encoding, last_login, vip) VALUES (?, ?, ?, ?, ?, ?, DATETIME('NOW'), ?)");
 	else
-		createStatement(&m_stmt_addUser, "sssssb", "INSERT INTO " + p->configuration().sqlPrefix + "users (jid, uin, password, language, encoding, last_login, vip) VALUES (?, ?, ?, ?, ?, NOW(), ?)");
+		createStatement(&m_stmt_addUser, "ssssssb", "INSERT INTO " + p->configuration().sqlPrefix + "users (jid, uin, password, salt, language, encoding, last_login, vip) VALUES (?, ?, ?, ?, ?, ?, NOW(), ?)");
 
-	createStatement(&m_stmt_updateUserPassword, "sssbs", "UPDATE " + p->configuration().sqlPrefix + "users SET password=?, language=?, encoding=?, vip=? WHERE jid=?");
+	createStatement(&m_stmt_updateUserPassword, "ssssbs", "UPDATE " + p->configuration().sqlPrefix + "users SET password=?, salt=?, language=?, encoding=?, vip=? WHERE jid=?");
 	createStatement(&m_stmt_removeBuddy, "is", "DELETE FROM " + p->configuration().sqlPrefix + "buddies WHERE user_id=? AND uin=?");
 	createStatement(&m_stmt_removeUser, "i","DELETE FROM " + p->configuration().sqlPrefix + "users WHERE id=?");
 	createStatement(&m_stmt_removeUserBuddies, "i", "DELETE FROM " + p->configuration().sqlPrefix + "buddies WHERE user_id=?");
@@ -392,7 +392,7 @@ void SQLClass::createStatements() {
 		createStatement(&m_stmt_addBuddy, "issssiss", "INSERT INTO " + p->configuration().sqlPrefix + "buddies (user_id, uin, subscription, groups, nickname, flags) VALUES (?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE groups=?, nickname=?");
 
 	createStatement(&m_stmt_updateBuddySubscription, "sis", "UPDATE " + p->configuration().sqlPrefix + "buddies SET subscription=? WHERE user_id=? AND uin=?");
-	createStatement(&m_stmt_getUserByJid, "s|isssssb", "SELECT id, jid, uin, password, encoding, language, vip FROM " + p->configuration().sqlPrefix + "users WHERE jid=?");
+	createStatement(&m_stmt_getUserByJid, "s|issssssb", "SELECT id, jid, uin, password, salt, encoding, language, vip FROM " + p->configuration().sqlPrefix + "users WHERE jid=?");
 
 	createStatement(&m_stmt_getBuddies, "i|IISSSSI", "SELECT id, user_id, uin, subscription, nickname, groups, flags FROM " + p->configuration().sqlPrefix + "buddies WHERE user_id=? ORDER BY id ASC");
 
@@ -417,7 +417,10 @@ void SQLClass::createStatements() {
 }
 
 void SQLClass::addUser(const UserRow &user) {
-	*m_stmt_addUser << user.jid << user.uin << user.password << user.language << user.encoding << user.vip;
+	std::string pw = user.password;
+	std::string salt;
+	encryptPw(pw, salt);
+	*m_stmt_addUser << user.jid << user.uin << pw << salt << user.language << user.encoding << user.vip;
 	m_stmt_addUser->execute();
 }
 
@@ -547,7 +550,8 @@ void SQLClass::initDb() {
 							"  id INTEGER PRIMARY KEY NOT NULL,"
 							"  jid varchar(255) NOT NULL,"
 							"  uin varchar(4095) NOT NULL,"
-							"  password varchar(255) NOT NULL,"
+							"  password varchar(396) NOT NULL,"
+							"  salt char(6) NOT NULL,"
 							"  language varchar(25) NOT NULL,"
 							"  encoding varchar(50) NOT NULL DEFAULT 'utf8',"
 							"  last_login datetime,"
@@ -636,55 +640,81 @@ void SQLClass::initDb() {
 
 void SQLClass::upgradeDatabase() {
 	try {
-		for (int i = (int) m_version; i < m_dbversion; i++) {
-			Log("SQL", "Upgrading from version " << i << " to " << i + 1);
-			if (i == 0) {
-				if (p->configuration().sqlType == "sqlite") {
+		int i = (int) m_version;
+		if (p->configuration().sqlType == "sqlite") {
+			switch(i) {
+			//Warning: Please make sure the break statement comes right before default: or else execution
+			//will not fall through to the end. This *WILL* break the upgrade process.
+				case 0: {
+					Log("SQL", "Upgrading from version 0 to 1");
 					*m_sess << "CREATE TABLE IF NOT EXISTS " + p->configuration().sqlPrefix + "db_version ("
 						"  ver INTEGER NOT NULL DEFAULT '1'"
 						");", now;
 					*m_sess << "ALTER TABLE " + p->configuration().sqlPrefix + "users ADD online int(1) NOT NULL DEFAULT '0';", now;
 				}
-				else {
-					*m_sess << "CREATE TABLE IF NOT EXISTS `" + p->configuration().sqlPrefix + "db_version` ("
-								"`ver` int(10) unsigned NOT NULL default '1'"
-								");", now;
-					*m_sess << "ALTER TABLE " + p->configuration().sqlPrefix + "users ADD online tinyint(1) NOT NULL DEFAULT '0';", now;
-				}
-				*m_sess << "REPLACE INTO " + p->configuration().sqlPrefix + "db_version (ver) values(1)", now;
-			}
-			else if (i == 1) {
-				if (p->configuration().sqlType == "sqlite") {
-					// Change 'vip' column type from tinyint to int(1)
+				case 1: {
+					Log("SQL", "Upgrading from version 1 to 2");
 					*m_sess << "CREATE TABLE IF NOT EXISTS " + p->configuration().sqlPrefix + "users_new ("
 								"  id INTEGER PRIMARY KEY NOT NULL,"
 								"  jid varchar(255) NOT NULL,"
 								"  uin varchar(4095) NOT NULL,"
-								"  password varchar(255) NOT NULL,"
+								"  password varchar(396) NOT NULL,"
+								"  salt char(6) NOT NULL,"
 								"  language varchar(25) NOT NULL,"
 								"  encoding varchar(50) NOT NULL DEFAULT 'utf8',"
 								"  last_login datetime,"
 								"  vip int(1) NOT NULL DEFAULT '0',"
 								"  online int(1) NOT NULL DEFAULT '0'"
 								");", now;
-					*m_sess << "INSERT INTO " + p->configuration().sqlPrefix + "users_new SELECT id,jid,uin,password,language,encoding,last_login,vip,online FROM " + p->configuration().sqlPrefix + "users;", now;
+					*m_sess << "INSERT INTO " + p->configuration().sqlPrefix + "users_new SELECT id,jid,uin,password,salt,language,encoding,last_login,vip,online FROM " + p->configuration().sqlPrefix + "users;", now;
 					*m_sess << "DROP TABLE " + p->configuration().sqlPrefix + "users;", now;
 					*m_sess << "ALTER TABLE " + p->configuration().sqlPrefix + "users_new RENAME TO " + p->configuration().sqlPrefix + "users;", now;
 					*m_sess << "CREATE UNIQUE INDEX IF NOT EXISTS jid1 ON " + p->configuration().sqlPrefix + "users (jid);", now;
 					*m_sess << "REPLACE INTO " + p->configuration().sqlPrefix + "db_version (ver) values(2)", now;
 				}
-				else {
+				case 2: {
+					Log("SQL", "Upgrading from version 2 to 3");
+					*m_sess << "ALTER TABLE " + p->configuration().sqlPrefix + "buddies ADD flags int(4) NOT NULL DEFAULT '0';", now;
+					*m_sess << "REPLACE INTO " + p->configuration().sqlPrefix + "db_version (ver) values(3);", now;
+				}
+				case 3: {
+					Log("SQL", "Upgrading from version 3 to 4");
+					*m_sess << "ALTER TABLE " + p->configuration().sqlPrefix + "users ADD salt char(6) NOT NULL;", now;
+					*m_sess << "REPLACE INTO " + p->configuration().sqlPrefix + "db_version (ver) values(4);", now;
+				}
+				//Please read warning concerning break statement;
+				break;
+				default:
+					Log("SQL", "No upgrade required. Database is up to date.");
+			}
+		}
+		if (p->configuration().sqlType == "mysql") {
+			//Warning: Please make sure the break statement comes right before default: or else execution
+			//will not fall through to the end. This *WILL* break the upgrade process.
+			switch(i) {
+				case 0: {
+					Log("SQL", "Upgrading from version 0 to 1");
+					*m_sess << "CREATE TABLE IF NOT EXISTS `" + p->configuration().sqlPrefix + "db_version` ("
+								"`ver` int(10) unsigned NOT NULL default '1'"
+								");", now;
+					*m_sess << "ALTER TABLE " + p->configuration().sqlPrefix + "users ADD online tinyint(1) NOT NULL DEFAULT '0';", now;
+				}
+				case 1: {
+					Log("SQL", "Upgrading from version 1 to 2");
 					// Add 'flags' column to buddies table.
 					*m_sess << "ALTER TABLE " + p->configuration().sqlPrefix + "buddies ADD flags smallint(4) NOT NULL DEFAULT '0';", now;
 					*m_sess << "REPLACE INTO " + p->configuration().sqlPrefix + "db_version (ver) values(2);", now;
 				}
-			}
-			else if (i == 2) {
-				if (p->configuration().sqlType == "sqlite") {
-					// Add 'flags' column to buddies table.
-					*m_sess << "ALTER TABLE " + p->configuration().sqlPrefix + "buddies ADD flags int(4) NOT NULL DEFAULT '0';", now;
-					*m_sess << "REPLACE INTO " + p->configuration().sqlPrefix + "db_version (ver) values(3);", now;
+				case 2: {
+					Log("SQL", "Upgrading from version 2 to 3");
+					*m_sess << "ALTER  TABLE " + p->configuration().sqlPrefix + "users ADD salt CHAR(6) NOT NULL AFTER password;", now;
+					*m_sess << "ALTER  TABLE " + p->configuration().sqlPrefix + "users CHANGE password password VARCHAR(396) CHARACTER  SET utf8 COLLATE utf8_bin NOT  NULL;", now;
+					*m_sess << "UPDATE " + p->configuration().sqlPrefix + "db_version SET  ver = 3 WHERE " + p->configuration().sqlPrefix + "db_version.ver =2;", now;
+					//Please read warning concerning break statement;
+					break;
 				}
+				default:
+					Log("SQL", "No upgrade required. Database is up to date.");
 			}
 		}
 	}
@@ -693,7 +723,102 @@ void SQLClass::upgradeDatabase() {
 		Log("SQL ERROR", e.displayText());
 		return;
 	}
-	Log("SQL", "Done");
+	Log("SQL", "Finished upgrading database.");
+}
+
+int SQLClass::encryptDatabase(){
+	// Minimum required db version is 3 for mysql and 4 for sqlite
+	Log("SQL", "Start encrypting database");
+	int required_DB_version = 4;
+	if (p->configuration().sqlType == "mysql")
+		required_DB_version = 3;
+	if ((int) m_version < required_DB_version) {
+		std::stringstream error; 
+		error << "Cannot encrypt database. Database version is " << m_version << ". Required version is: "  << required_DB_version; 
+		Log("SQL ERROR", error.str());
+		return 1;
+	}
+
+	// Iterate through users table. Getting users one by one, will prevent synchronization errors
+	for (int i = 0; i < getRegisteredUsersCount(); i++)	{
+		Poco::Int32 id = -1;
+		std::string salt = "";
+		std::string password = "";
+		std::stringstream sqlCommand;
+		
+		sqlCommand << "SELECT id, password, salt FROM " << p->configuration().sqlPrefix << "users LIMIT 1 OFFSET " << i << ";";
+		try {
+			*m_sess << sqlCommand.str(), into(id), into(password), into(salt), now;
+		}
+		catch (Poco::Exception e) {
+			Log("SQL ERROR", e.message());
+			return 1;
+		}
+		if (id > -1 && salt == "") {
+			encryptPw(password, salt);
+			sqlCommand.str("");
+			sqlCommand.clear();
+			sqlCommand << "UPDATE " << p->configuration().sqlPrefix << "users SET password='" << password << "', salt='" << salt << "' WHERE id=" << id << ";";
+			try {
+				*m_sess << sqlCommand.str(), now;
+			}
+			catch (Poco::Exception e) {
+				//TODO: In case of an Error. The password will be logged. It should be removed in the next version.
+				//Log("SQL ERROR", e.message());
+				return 1;
+			}
+		}
+	}
+	Log("SQL", "Finished encrypting database");
+	return 0;
+}
+
+int SQLClass::decryptDatabase(){
+	// Minimum required db version is 3 for mysql and 4 for sqlite
+	Log("SQL", "Start decrypting database");
+	int required_DB_version = 4;
+	if (p->configuration().sqlType == "mysql")
+		required_DB_version = 3;
+	if ((int) m_version < required_DB_version) {
+		std::stringstream error; 
+		error << "Cannot decrypt database. Database version is " << m_version << ". Required version is: "  << required_DB_version; 
+		Log("SQL ERROR", error.str());
+		return 1;
+	}
+
+	// Iterate through users table. Getting users one by one, will prevent synchronisation errors
+	for (int i = 0; i < getRegisteredUsersCount(); i++)	{
+		Poco::Int32 id = -1;
+		std::string salt = "";
+		std::string password = "";
+		std::stringstream sqlCommand;
+		
+		sqlCommand << "SELECT id, password, salt FROM " << p->configuration().sqlPrefix << "users LIMIT 1 OFFSET " << i << ";";
+		try {
+			*m_sess << sqlCommand.str(), into(id), into(password), into(salt), now;
+		}
+		catch (Poco::Exception e) {
+			Log("SQL ERROR", e.message());
+			return 1;
+		}
+		if (id > -1 && salt != "")
+		{
+			password = decryptPw(password, salt);
+			sqlCommand.str("");
+			sqlCommand.clear();
+			sqlCommand << "UPDATE " << p->configuration().sqlPrefix << "users SET password='" << password << "', salt='' WHERE id=" << id << ";";
+			try {
+				*m_sess << sqlCommand.str(), now;
+			}
+			catch (Poco::Exception e) {
+				//TODO: In case of an Error. The password will be logged. It should be removed in the next version.
+				//Log("SQL ERROR", e.message());
+				return 1;
+			}
+		}
+	}
+	Log("SQL", "Finished decrypting database");
+	return 0;
 }
 
 long SQLClass::getRegisteredUsersCount(){
@@ -709,7 +834,10 @@ long SQLClass::getRegisteredUsersRosterCount(){
 }
 
 void SQLClass::updateUser(const UserRow &user) {
-	*m_stmt_updateUserPassword << user.password << user.language << user.encoding << user.vip << user.jid;
+	std::string pw = user.password;
+	std::string salt;
+	encryptPw(pw, salt);
+	*m_stmt_updateUserPassword << pw << salt << user.language << user.encoding << user.vip << user.jid;
 	m_stmt_updateUserPassword->execute();
 }
 
@@ -789,7 +917,10 @@ UserRow SQLClass::getUserByJid(const std::string &jid){
 	*m_stmt_getUserByJid << jid;
 	if (m_stmt_getUserByJid->execute()) {
 		Poco::Int32 id = -1;
-		*m_stmt_getUserByJid >> id >> user.jid >> user.uin >> user.password >> user.encoding >> user.language >> user.vip;
+		std::string pw;
+		std::string salt;
+		*m_stmt_getUserByJid >> id >> user.jid >> user.uin >> pw >> salt >> user.encoding >> user.language >> user.vip;
+		user.password = decryptPw(pw, salt);
 		user.id = id;
 	}
 
@@ -801,12 +932,14 @@ std::map<std::string, UserRow> SQLClass::getUsersByJid(const std::string &jid) {
 	std::vector<std::string> resJid;
 	std::vector<std::string> resUin;
 	std::vector<std::string> resPassword;
+	std::vector<std::string> resSalt;
 	std::vector<std::string> resEncoding;
-	*m_sess <<  "SELECT id, jid, uin, password, encoding FROM " + p->configuration().sqlPrefix + "users WHERE jid LIKE \"" + jid +"%\"",
+	*m_sess <<  "SELECT id, jid, uin, password, salt, encoding FROM " + p->configuration().sqlPrefix + "users WHERE jid LIKE \"" + jid +"%\"",
 													into(resId),
 													into(resJid),
 													into(resUin),
 													into(resPassword),
+													into(resSalt),
 													into(resEncoding), now;
 	std::map<std::string, UserRow> users;
 	for (int i = 0; i < (int) resId.size(); i++) {
@@ -814,7 +947,7 @@ std::map<std::string, UserRow> SQLClass::getUsersByJid(const std::string &jid) {
 		users[jid].id = resId[i];
 		users[jid].jid = resJid[i];
 		users[jid].uin = resUin[i];
-		users[jid].password = resPassword[i];
+		users[jid].password = decryptPw(resPassword[i], resSalt[i]);
 		users[jid].encoding = resEncoding[i];
 	}
 	return users;
@@ -1049,4 +1182,33 @@ void SQLClass::commitTransaction() {
 	m_sess->commit();
 }
 
+std::string SQLClass::decryptPw(std::string cryptedpw, std::string salt) {
+	//only try to decrypt if there is a valid salt. This enables backward compatibility
+	if (p->configuration().sqlEncrypted && salt != "") {
+		AesClass aes(p->configuration().sqlEncryptionKey);
+		aes.setSalt(salt);
+		try {
+			aes.decrypt(cryptedpw);
+		}
+		catch (const char* mess) {
+			Log("AES ERROR", mess << " Terminating programm.");
+			exit(1);
+		}
+		return aes.getPlaintext();
+	}
+	else {	
+		return cryptedpw;
+	}
+}
 
+void SQLClass::encryptPw(std::string &pw, std::string &salt) {
+	if (p->configuration().sqlEncrypted) {
+		AesClass aes(p->configuration().sqlEncryptionKey);
+		aes.encrypt(pw);
+		pw = aes.getCiphertext();
+		salt = aes.getSalt();
+	} else {
+		salt = "";
+	}
+	return;
+}

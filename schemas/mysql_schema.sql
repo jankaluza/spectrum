@@ -24,7 +24,8 @@ CREATE TABLE IF NOT EXISTS `users` (
   `id` int(10) unsigned NOT NULL auto_increment,
   `jid` varchar(255) collate utf8_bin NOT NULL,
   `uin` varchar(4095) collate utf8_bin NOT NULL,
-  `password` varchar(255) collate utf8_bin NOT NULL,
+  `password` varchar(396) collate utf8_bin NOT NULL,
+  `salt` char(6) collate utf8_bin NOT NULL,
   `language` varchar(25) collate utf8_bin NOT NULL,
   `encoding` varchar(50) collate utf8_bin NOT NULL default 'utf8',
   `last_login` datetime,
@@ -48,5 +49,5 @@ CREATE TABLE IF NOT EXISTS `db_version` (
   UNIQUE KEY `ver` (`ver`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 
-INSERT INTO db_version (ver) VALUES ('2');
+INSERT INTO db_version (ver) VALUES ('3');
 

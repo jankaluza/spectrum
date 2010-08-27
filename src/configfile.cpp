@@ -18,6 +18,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02111-1301  USA
  */
 
+#include <fstream>
+
 #include "configfile.h"
 #include "main.h"
 #include "capabilityhandler.h"
@@ -304,6 +306,30 @@ void ConfigFile::loadPurpleAccountSettings(Configuration &configuration) {
 	}
 }
 
+bool ConfigFile::loadStringFromFile(std::string &variable, const std::string &section, const std::string &key, const std::string &def) {
+	// Load the filename from options file.
+	if (loadString(variable, section, key, def)){
+		std::ifstream outFile;
+		std::stringstream outStream;
+
+		outFile.open (variable.c_str(), std::ifstream::out);
+		if (!outFile.is_open()){
+			return false;
+		}
+		while (outFile.good()) {
+			outStream << (char) outFile.get();
+		}
+		outFile.close();
+
+		variable = outStream.str();
+		return true;
+	}
+	else {
+		variable = "";
+		return false;
+	}
+}
+
 Configuration ConfigFile::getConfiguration() {
 	Configuration configuration;
 	char **bind;
@@ -385,6 +411,12 @@ Configuration ConfigFile::getConfiguration() {
 	LOAD_REQUIRED_STRING_DEFAULT(configuration.sqlUser, "database", "user", configuration.sqlType == "sqlite" ? "optional" : "");
 	LOAD_REQUIRED_STRING_DEFAULT(configuration.sqlPrefix, "database", "prefix", configuration.sqlType == "sqlite" ? "" : "required");
 	LOAD_REQUIRED_STRING(configuration.userDir, "purple", "userdir");
+	loadBoolean(configuration.sqlEncrypted, "database", "encryption", false);
+	if (configuration.sqlEncrypted) {
+		// If loading of the key file fails disable encryption
+		configuration.sqlEncrypted = loadStringFromFile(configuration.sqlEncryptionKey, "database", "encryptionKeyFile", "");
+
+	}
 
 	// Logging section
 	loadString(configuration.logfile, "logging", "log_file", "");

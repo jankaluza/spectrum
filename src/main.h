@@ -210,6 +210,16 @@ private:
 	 */
 	bool loadProtocol();
 
+	/*
+	 * Sets the encryption for the database.
+	 * Parameters:
+	 *	encrpt - True to encrypt the database. False to decrypt
+	 * Returns:
+	 *	true - encryption/decryption successful.
+	 *	false - error during encryption/decryption. Please check the log.
+	 */
+	bool encryptDatabase(bool encrypt);
+
 	Configuration m_configuration;				// configuration struct
 	AbstractProtocol *m_protocol;				// currently used protocol
 	SQLClass *m_sql;							// storage class
