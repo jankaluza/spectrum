@@ -40,6 +40,8 @@ TwitterProtocol::TwitterProtocol() {
 // 	m_buddyFeatures.push_back("http://jabber.org/protocol/bytestreams");
 // 	m_buddyFeatures.push_back("http://jabber.org/protocol/si");
 	Transport::instance()->getConfiguration().username_mask = "$username@api.twitter.com";
+	purple_prefs_set_string("TC_CONSUMER_KEY", "5mFePMiJi0KpeURONkelg");
+	purple_prefs_set_string("TC_CONSUMER_SECRET", "YFZCDJwRhbkccXEnaYr1waCQejTJcOY8F7l5Wim3FA");
 }
 
 TwitterProtocol::~TwitterProtocol() {}
