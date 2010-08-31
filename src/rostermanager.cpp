@@ -390,7 +390,12 @@ authRequest *SpectrumRosterManager::handleAuthorizationRequest(PurpleAccount *ac
 
 	Log(m_user->jid(), "purpleAuthorizeReceived: " << name << "on_list:" << on_list);
 // 	std::for_each( name.begin(), name.end(), replaceBadJidCharacters() );
-	name = JID::escapeNode(name);
+	if (Transport::instance()->getConfiguration().jid_escaping) {
+		name = JID::escapeNode(name);
+	}
+	else {
+		std::for_each( name.begin(), name.end(), replaceBadJidCharacters() );
+	}
 	// send subscribe presence to user
 	Tag *tag = new Tag("presence");
 	tag->addAttribute("type", "subscribe" );
@@ -408,9 +413,12 @@ authRequest *SpectrumRosterManager::handleAuthorizationRequest(PurpleAccount *ac
 }
 
 void SpectrumRosterManager::removeAuthRequest(const std::string &remote_user) {
-	if (m_authRequests.find(remote_user) == m_authRequests.end())
-		return;
 	m_authRequests.erase(remote_user);
+	if (Transport::instance()->getConfiguration().jid_escaping) {
+		std::string name(remote_user);
+		JID::escapeNode(name);
+		m_authRequests.erase(name);
+	}
 }
 
 bool SpectrumRosterManager::hasAuthRequest(const std::string &remote_user) {
