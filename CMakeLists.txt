@@ -115,6 +115,7 @@ set(spectrum_SRCS
 	src/usermanager.cpp
 	src/vcardhandler.cpp
 	src/protocols/aim.cpp
+	src/protocols/bonjour.cpp
 	src/protocols/facebook.cpp
 	src/protocols/gg.cpp
 	src/protocols/identica.cpp
@@ -184,6 +185,7 @@ set(spectrum_MOC_HDRS
 	src/vcardhandler.h
 	src/protocols/abstractprotocol.h
 	src/protocols/aim.h
+	src/protocols/bonjour.h
 	src/protocols/facebook.h
 	src/protocols/gg.h
 	src/protocols/hon.h
