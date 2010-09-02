@@ -233,9 +233,10 @@ bool ConfigFile::loadFeatures(int &features, const std::string &section) {
 			feature = TRANSPORT_FEATURE_AVATARS;
 		else if (key == "filetransfer")
 			feature = TRANSPORT_FEATURE_FILETRANSFER;
+		else if (key == "statistics")
+			feature = TRANSPORT_FEATURE_STATISTICS;
 		else
 			continue;
-		
 		if (val)
 			features = features | feature;
 		else
@@ -341,6 +342,7 @@ Configuration ConfigFile::getConfiguration() {
 	loadHostPort(configuration.filetransfer_proxy_streamhost_ip, configuration.filetransfer_proxy_streamhost_port, "service", "filetransfer_public_address", configuration.filetransfer_proxy_ip, configuration.filetransfer_proxy_port);
 
 	if (!loadFeatures(configuration.transportFeatures, "features")) {
+		configuration.transportFeatures = TRANSPORT_FEATURE_ALL;
 		// TODO: transport_features and vip_features are depracted. remove it for 0.4
 		if(g_key_file_has_key(keyfile,"service","transport_features",NULL)) {
 			bind = g_key_file_get_string_list (keyfile,"service","transport_features",NULL, NULL);
@@ -360,6 +362,7 @@ Configuration ConfigFile::getConfiguration() {
 	}
 
 	if (!loadFeatures(configuration.VIPFeatures, "vip-features")) {
+		configuration.VIPFeatures = TRANSPORT_FEATURE_ALL;
 		if(g_key_file_has_key(keyfile,"service","vip_features",NULL)) {
 			bind = g_key_file_get_string_list (keyfile,"service","vip_features",NULL, NULL);
 			configuration.VIPFeatures = 0;

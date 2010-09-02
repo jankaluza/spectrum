@@ -27,6 +27,9 @@
 #include <iostream>
 #include "glib.h"
 #include <vector>
+#include "gloox/tag.h"
+#include "gloox/stanza.h"
+#include "gloox/iq.h"
 
 #define ELAPSED_TIME_START() struct timeval td_start,td_end;\
 	float elapsed = 0; \
@@ -47,6 +50,8 @@ template <class T> std::string stringOf(T object) {
 	os << object;
 	return (os.str());
 }
+
+using namespace gloox;
 
 /* Replace all instances of from with to in string str in-place */
 void replace(std::string &str, const char *from, const char *to, int count = 0);
@@ -76,5 +81,8 @@ GList *g_hash_table_get_keys(GHashTable *table);
 #ifndef WIN32
 void process_mem_usage(double& vm_usage, double& resident_set);
 #endif
+
+void sendError(int code, const std::string &err, const Tag *iqTag);
+void sendError(int code, const std::string &err, const IQ &stanza);
 
 #endif

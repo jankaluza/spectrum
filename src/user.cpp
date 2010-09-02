@@ -129,6 +129,26 @@ User::User(GlooxMessageHandler *parent, JID jid, const std::string &username, co
 	Transport::instance()->sql()->setUserOnline(m_userID, true);
 
 	p->protocol()->onUserCreated(this);
+
+// 	Tag *iq = new Tag("iq");
+// 	iq->addAttribute("from", Transport::instance()->jid());
+// 	iq->addAttribute("to", m_jid);
+// 	iq->addAttribute("id", Transport::instance()->getId());
+// 	iq->addAttribute("type", "set");
+// 	Tag *query = new Tag("query");
+// 	query->addAttribute("xmlns", "http://spectrum.im/protocol/remote-roster");
+// 	iq->addChild(query);
+// 	Transport::instance()->send(iq);
+// 
+// 	iq = new Tag("iq");
+// 	iq->addAttribute("from", Transport::instance()->jid());
+// 	iq->addAttribute("to", m_jid);
+// 	iq->addAttribute("id", Transport::instance()->getId());
+// 	iq->addAttribute("type", "get");
+// 	query = new Tag("query");
+// 	query->addAttribute("xmlns", "jabber:iq:roster");
+// 	iq->addChild(query);
+// 	Transport::instance()->send(iq);
 }
 
 /*
@@ -389,7 +409,6 @@ void User::connected() {
 	m_connected = true;
 	m_reconnectCount = 0;
 	p->protocol()->onConnected(this);
-
 
 	std::cout << "CONNECTED\n";
 	for (std::list <Tag*>::iterator it = m_autoConnectRooms.begin(); it != m_autoConnectRooms.end() ; it++ ) {

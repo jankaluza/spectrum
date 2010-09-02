@@ -27,6 +27,7 @@
 #include "usermanager.h"
 #include "log.h"
 #include "spectrum_util.h"
+#include "transport.h"
 
 #include "sql.h"
 #include <sstream>
@@ -241,6 +242,10 @@ Tag* GlooxStatsHandler::handleTag (Tag *stanzaTag){
 
 bool GlooxStatsHandler::handleIq (const IQ &stanza){
 	std::cout << "*** "<< stanza.from().full() << ": received stats request\n";
+	if ((CONFIG().transportFeatures & TRANSPORT_FEATURE_STATISTICS) == 0) {
+		sendError(405, "not-allowed", stanza);
+		return true;
+	}
 	Tag *stanzaTag = stanza.tag();
 	Tag *query = handleTag(stanzaTag);
 	delete stanzaTag;

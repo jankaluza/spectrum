@@ -26,6 +26,7 @@
 #include "gloox/jid.h"
 #include <algorithm>
 #include "protocols/abstractprotocol.h"
+#include "transport.h"
 
 
 using namespace gloox;
@@ -204,3 +205,28 @@ GList *g_hash_table_get_keys(GHashTable *table) {
 	return l;
 }
 #endif
+
+void sendError(int code, const std::string &err, const Tag *iqTag) {
+	Tag *iq = new Tag("iq");
+	iq->addAttribute("type", "error");
+	iq->addAttribute("from", Transport::instance()->jid());
+	iq->addAttribute("to", iqTag->findAttribute("from"));
+	iq->addAttribute("id", iqTag->findAttribute("id"));
+
+	Tag *error = new Tag("error");
+	error->addAttribute("code", code);
+	error->addAttribute("type", err == "not-allowed" ? "cancel" : "modify");
+	Tag *bad = new Tag(err);
+	bad->addAttribute("xmlns", "urn:ietf:params:xml:ns:xmpp-stanzas");
+
+	error->addChild(bad);
+	iq->addChild(error);
+
+	Transport::instance()->send(iq);
+}
+
+void sendError(int code, const std::string &err, const IQ &stanza) {
+	Tag *iq = stanza.tag();
+	sendError(code, err, iq);
+	delete iq;
+}
