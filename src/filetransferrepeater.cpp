@@ -410,7 +410,7 @@ void FiletransferRepeater::fileRecvStart() {
 	Log("FiletransferRepeater::fileRecvStart", "accepting FT, data:" << m_from.full() << " " << m_to.full());
 	// We have to say to libpurple that we are ready to receive first data...
 	if (m_resender && m_xfer)
-		g_timeout_add(0, &ui_got_data, this);
+		m_readyTimer->start();
 }
 
 std::string FiletransferRepeater::requestFT() {
