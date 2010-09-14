@@ -25,7 +25,7 @@
 static gboolean collect_account(gpointer key, gpointer v, gpointer data) {
 	AccountCollector *collector = (AccountCollector*) data;
 	PurpleAccount *account = (PurpleAccount *) v;
-// 	collector->collectNow(account, false);
+	collector->collectNow(account, false);
 	return TRUE;
 }
 
@@ -46,7 +46,7 @@ AccountCollector::~AccountCollector() {
 }
 
 void AccountCollector::stopCollecting(PurpleAccount *account) {
-	return;
+// 	return;
 	if (g_hash_table_lookup(m_accounts, purple_account_get_username(account)) != NULL)
 		g_hash_table_remove(m_accounts, purple_account_get_username(account));
 }
@@ -54,7 +54,7 @@ void AccountCollector::stopCollecting(PurpleAccount *account) {
 
 void AccountCollector::collect(PurpleAccount *account) {
 	account->ui_data = NULL;
-	return;
+// 	return;
 	if (g_hash_table_lookup(m_accounts, purple_account_get_username(account)) == NULL)
 		g_hash_table_replace(m_accounts, g_strdup(purple_account_get_username(account)), account);
 }
