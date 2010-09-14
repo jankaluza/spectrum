@@ -38,6 +38,7 @@ struct ResolverData {
 	gchar *error_message;
 	GSList *hosts;
 	bool destroyed;
+	GMutex *mutex;
 };
 
 static GHashTable *query_data_cache = NULL;
@@ -87,6 +88,7 @@ static gboolean
 dns_main_thread_cb(gpointer d)
 {
 	ResolverData *data = (ResolverData *) d;
+	g_mutex_lock(data->mutex);
 	if (data->destroyed) {
 		while (data->hosts) {
 			data->hosts = g_slist_delete_link(data->hosts, data->hosts);
@@ -94,6 +96,7 @@ dns_main_thread_cb(gpointer d)
 			g_free(data->hosts->data);
 			data->hosts = g_slist_delete_link(data->hosts, data->hosts);
 		}
+		g_mutex_free(data->mutex);
 		delete data;
 		return FALSE;
 	}
@@ -115,6 +118,7 @@ dns_main_thread_cb(gpointer d)
 		data->hosts = NULL;
 		data->resolved_cb(query_data, hosts);
 	}
+	g_mutex_unlock(data->mutex);
 	delete data;
 
 	if (queue) {
@@ -216,6 +220,7 @@ static gboolean resolve_host(PurpleDnsQueryData *query_data, PurpleDnsQueryResol
 	data->error_message = NULL;
 	data->hosts = NULL;
 	data->destroyed = false;
+	data->mutex = g_mutex_new();
 
 	if (!resolve_ip(data)) {
 		if (g_hash_table_size(query_data_cache) == 5) {
@@ -235,6 +240,7 @@ static void destroy(PurpleDnsQueryData *query_data) {
 	for (GList *l = queue; l != NULL; l = l->next) {
 		ResolverData *data = (ResolverData *) l->data;
 		if (data->query_data == query_data) {
+			g_mutex_free(data->mutex);
 			queue = g_list_remove(queue, data);
 			break;
 		}
@@ -243,7 +249,9 @@ static void destroy(PurpleDnsQueryData *query_data) {
 	ResolverData *data = (ResolverData *) g_hash_table_lookup(query_data_cache, query_data);
 	if (data) {
 		Log("DNSResolver", "Destroying " << purple_dnsquery_get_host(query_data) << ": will be destroyed soon...");
+		g_mutex_lock(data->mutex);
 		data->destroyed = true;
+		g_mutex_unlock(data->mutex);
 		g_hash_table_remove(query_data_cache, query_data);
 	}
 }
