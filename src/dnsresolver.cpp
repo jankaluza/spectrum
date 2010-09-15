@@ -96,6 +96,7 @@ dns_main_thread_cb(gpointer d)
 			g_free(data->hosts->data);
 			data->hosts = g_slist_delete_link(data->hosts, data->hosts);
 		}
+		g_mutex_unlock(data->mutex);
 		g_mutex_free(data->mutex);
 		delete data;
 		return FALSE;
@@ -119,6 +120,7 @@ dns_main_thread_cb(gpointer d)
 		data->resolved_cb(query_data, hosts);
 	}
 	g_mutex_unlock(data->mutex);
+	g_mutex_free(data->mutex);
 	delete data;
 
 	if (queue) {
@@ -240,6 +242,8 @@ static void destroy(PurpleDnsQueryData *query_data) {
 	for (GList *l = queue; l != NULL; l = l->next) {
 		ResolverData *data = (ResolverData *) l->data;
 		if (data->query_data == query_data) {
+			g_mutex_lock(data->mutex);
+			g_mutex_unlock(data->mutex);
 			g_mutex_free(data->mutex);
 			queue = g_list_remove(queue, data);
 			break;
