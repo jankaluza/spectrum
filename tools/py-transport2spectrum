@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-import os,  os.path, sys
+import os,  os.path, sys, codecs
 try:
 	import MySQLdb
 except:
@@ -73,7 +73,7 @@ def start():
 			if os.path.isfile(f) and not f in ['pubsub', 'avatars']:
 				c += 1
 				print "[" + str(c) + "/" + str(size) + "] " + f
-				fp = open(f, 'r')
+				fp = codecs.open( f, "r", "utf-8" )
 				
 				buff = fp.read()
 				fp.close()
@@ -83,6 +83,7 @@ def start():
 					print "Can't parse", f, ". Skipping..."
 					continue
 				jid = os.path.basename(f).replace('%','@')[:-4]
+				jid = jid.decode('utf-8') 
 				p = x.getElementsByTagName('password')
 				if len(p) != 1:
 					print "No password for jid", jid, ". Skipping..."
