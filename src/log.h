@@ -24,7 +24,7 @@ class LogMessage {
 		LogMessage(std::ofstream &file, bool newline = true);
 		~LogMessage();
 
-		std::ostringstream& Get(const std::string &user);
+		std::ostringstream& Get(const std::string &user, const std::string &category = "");
 
 	protected:
 		std::ostringstream os;
@@ -45,9 +45,10 @@ class LogClass : public LogHandler {
 		std::ofstream m_file;
 };
 #ifdef TESTS
-	#define Log(HEAD,STRING) 
+# define Log(HEAD,STRING) 
 #else
-	#define Log(HEAD,STRING) LogMessage(Log_.fileStream()).Get(HEAD) << STRING;
+# define Log(HEAD,STRING) LogMessage(Log_.fileStream()).Get(HEAD) << STRING;
+# define LOG(CATEGORY, HEAD, STRING) LogMessage(Log_.fileStream()).Get(HEAD, CATEGORY) << STRING;
 #endif
 
 #endif

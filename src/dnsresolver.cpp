@@ -189,7 +189,12 @@ static gpointer dns_thread(gpointer d) {
 		}
 		freeaddrinfo(tmp);
 	} else {
-		data->error_message = g_strdup_printf("Error resolving %s:\n%s", purple_dnsquery_get_host(query_data), purple_gai_strerror(rc));
+		g_mutex_lock(data->mutex);
+		bool destroyed = data->destroyed;
+		g_mutex_unlock(data->mutex);
+		if (!destroyed) {
+			data->error_message = g_strdup_printf("Error resolving %s:\n%s", purple_dnsquery_get_host(query_data), purple_gai_strerror(rc));
+		}
 	}
 // #else
 // 	if ((hp = gethostbyname(hostname))) {
