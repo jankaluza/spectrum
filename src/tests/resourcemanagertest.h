@@ -13,6 +13,7 @@ class ResourceManagerTest : public AbstractTest
 {
 	CPPUNIT_TEST_SUITE (ResourceManagerTest);
 	CPPUNIT_TEST (setResource);
+	CPPUNIT_TEST (defaultValues);
 	CPPUNIT_TEST_SUITE_END ();
 
 	public:
@@ -21,6 +22,7 @@ class ResourceManagerTest : public AbstractTest
 
 	protected:
 		void setResource();
+		void defaultValues();
 
 	private:
 		ResourceManager *m_manager;
