@@ -201,8 +201,7 @@ void SpectrumMessageHandler::handleMessage(const Message& msg) {
 	else {
 		Transport::instance()->protocol()->makePurpleUsernameIM(m_user, msg.to(), username);
 	}
-	
-	Log("SpectrumMessageHandler::handleMessage", "username " << username << " key " << key);
+
 	// open new conversation or get the opened one
 	if (!isOpenedConversation(key)) {
 		// if normalized username is empty, it's broken username...
@@ -222,7 +221,9 @@ void SpectrumMessageHandler::handleMessage(const Message& msg) {
 		m_conversations[key]->setResource(msg.from().resource());
 	}
 	m_currentBody = msg.body();
-
+	Log("SpectrumMessageHandler::handleMessage", "username " << username << ", key " << key << ", PurpleConversation: "
+			<< conv << ", SpectrumConversation: " << m_conversations[key] << ", resource was set to " << msg.from().resource());
+	
 	// Handles commands (TODO: move me to commands.cpp)
 	if (m_currentBody.find("/") == 0) {
 		bool handled = true;
@@ -282,6 +283,7 @@ void SpectrumMessageHandler::handleMessage(const Message& msg) {
 	}
 	g_free(_markup);
 }
+
 void SpectrumMessageHandler::removeConversationResource(const std::string &resource) {
 	for (std::map<std::string, AbstractConversation *>::iterator u = m_conversations.begin(); u != m_conversations.end() ; u++) {
 		if ((*u).second->getResource() == resource) {
@@ -291,7 +293,7 @@ void SpectrumMessageHandler::removeConversationResource(const std::string &resou
 }
 
 bool SpectrumMessageHandler::hasOpenedMUC() {
-	Log("hasOpenedMUC", m_mucs);
+	Log(m_user->jid(), "hasOpenedMUC: " << m_mucs);
 	return m_mucs != 0;
 }
 
@@ -307,7 +309,7 @@ void SpectrumMessageHandler::handleChatState(const std::string &uin, const std::
 		serv_send_typing(purple_account_get_connection(m_user->account()),uin.c_str(),PURPLE_NOT_TYPING);
 }
 
-
+// TODO: only used by IRC for handling PMs, remove it and move the code somewhere... 
 std::string SpectrumMessageHandler::getConversationName(PurpleConversation *conv) {
 	std::string name(purple_conversation_get_name(conv));
 	if (purple_conversation_get_type(conv) == PURPLE_CONV_TYPE_IM) {
@@ -316,7 +318,7 @@ std::string SpectrumMessageHandler::getConversationName(PurpleConversation *conv
 		if (pos != std::string::npos)
 			name.erase((int) pos, name.length() - (int) pos);
 
-// 		std::for_each( name.begin(), name.end(), replaceBadJidCharacters() );
+		// std::for_each( name.begin(), name.end(), replaceBadJidCharacters() );
 		AbstractSpectrumBuddy *s_buddy = NULL;
 #ifndef TESTS
 		User *u = (User *) m_user;
@@ -325,7 +327,7 @@ std::string SpectrumMessageHandler::getConversationName(PurpleConversation *conv
 		if (s_buddy && s_buddy->getFlags() & SPECTRUM_BUDDY_JID_ESCAPING)
 			name = JID::escapeNode(name);
 		else
-			std::for_each( name.begin(), name.end(), replaceBadJidCharacters() ); // OK
+			std::for_each( name.begin(), name.end(), replaceBadJidCharacters() );
 		std::transform(name.begin(), name.end(), name.begin(),(int(*)(int)) std::tolower);
 		if (Transport::instance()->getConfiguration().protocol == "irc") {
 			name += "%" + JID(m_user->username()).server() + "@" + Transport::instance()->jid() + "/bot";
@@ -343,15 +345,24 @@ AbstractConversation *SpectrumMessageHandler::getSpectrumMUCConversation(PurpleC
 	}
 	else {
 #ifndef TESTS
+		// create bare JID from PurpleConversation name
 		std::string jid = purple_conversation_get_name(conv);
 		Transport::instance()->protocol()->makeRoomJID(m_user, jid);
-		std::cout << "CONVNAME:" << purple_conversation_get_name(conv) << "\n";
+
+		// Get resource of XMPP user which joined the room. All messages from legacy network
+		// will be sent to that resource.
 		std::string res = m_user->getRoomResource(purple_conversation_get_name(conv));
 		if (res.empty()) {
+			// IRC and others uses lowered conv names.
 			std::string name = purple_conversation_get_name(conv);
 			std::transform(name.begin(), name.end(), name.begin(),(int(*)(int)) std::tolower);
 			res = m_user->getRoomResource(name);
 		}
+
+		if (res.empty()) {
+			Log("WARNING", "There's no initiator resource set for MUC conversation " << purple_conversation_get_name(conv));
+		}
+
 		s_conv = (AbstractConversation *) new SpectrumMUCConversation(conv, jid, res);
 		addConversation(conv, s_conv);
 #endif

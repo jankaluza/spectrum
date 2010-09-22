@@ -19,12 +19,15 @@
  */
 
 #include "abstractconversation.h"
+#include "log.h"
 
 void AbstractConversation::setResource(const std::string &resource) {
 	m_resource = resource;
+	Log("SpectrumMessageHandler::setResource", "PurpleConversation: "<< getConv() << ", SpectrumConversation: " << this << ", resource was set to " << m_resource);
 }
 
 const std::string &AbstractConversation::getResource() {
+	Log("SpectrumMessageHandler::getResource", "PurpleConversation: "<< getConv() << ", SpectrumConversation: " << this << ", resource was set to " << m_resource);
 	return m_resource;
 }
 
