@@ -159,17 +159,7 @@ Tag *XMPPProtocol::getVCardTag(AbstractUser *user, GList *vcardEntries) {
 			if (head)
 				if (!head->children().empty())
 					vcard->addChild(head);
-			if (header=="Home Address"){
-				head = new Tag("ADR");
-				head->addChild(new Tag("HOME"));
-			}
-			if (header=="Work Address"){
-				head = new Tag("ADR");
-				head->addChild(new Tag("WORK"));
-			}
-			if (header=="Work Information"){
-				head = new Tag("ORG");
-			}
+			head = new Tag("ADR");
 		}
 		vcardEntries = vcardEntries->next;
 	}
