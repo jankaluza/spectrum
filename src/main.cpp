@@ -1793,7 +1793,7 @@ void GlooxMessageHandler::onDisconnect(ConnectionError e) {
 		case NonSaslNotAuthorized: Log("gloox", "Auth error: Non sasl not authorized"); break;
 	};
 
-	if (m_reconnectCount == 1)
+	if (m_reconnectCount == 2)
 		m_userManager->removeAllUsers();
 
 	Log("gloox", "trying to reconnect after 3 seconds");

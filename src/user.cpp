@@ -699,8 +699,21 @@ User::~User(){
 	// if (this->save_timer!=0 && this->save_timer!=-1)
 	// 	std::cout << "* removing timer\n";
 	// 	purple_timeout_remove(this->save_timer);
+
 	if (m_account) {
 		purple_account_set_enabled(m_account, PURPLE_UI, FALSE);
+
+		// Remove conversations.
+		// This has to be called before m_account->ui_data = NULL;, because it uses
+		// ui_data to call SpectrumMessageHandler::purpleConversationDestroyed() callback.
+		GList *iter;
+		for (iter = purple_get_conversations(); iter; ) {
+			PurpleConversation *conv = (PurpleConversation*) iter->data;
+			iter = iter->next;
+			if (purple_conversation_get_account(conv) == m_account)
+				purple_conversation_destroy(conv);
+		}
+
 		m_account->ui_data = NULL;
 		p->collector()->collect(m_account);
 	}
@@ -712,14 +725,6 @@ User::~User(){
 // 			purple_account_set_enabled(act, PURPLE_UI, FALSE);
 // 		}
 // 	}
-
-	GList *iter;
-	for (iter = purple_get_conversations(); iter; ) {
-		PurpleConversation *conv = (PurpleConversation*) iter->data;
-		iter = iter->next;
-		if (purple_conversation_get_account(conv) == m_account)
-			purple_conversation_destroy(conv);
-	}
 
 	if (m_syncTimer != 0) {
 		Log(m_jid, "removing timer\n");
