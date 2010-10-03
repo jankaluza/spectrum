@@ -43,6 +43,7 @@ struct authRequest {
 	void *user_data;
 	std::string who;
 	PurpleAccount *account;
+	std::string mainJID;	// JID of user connected with this request
 };
 
 // Manages all SpectrumBuddies in user's roster.

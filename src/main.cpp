@@ -1325,6 +1325,12 @@ void GlooxMessageHandler::purpleAuthorizeClose(void *data) {
 	if (!d)
 		return;
 	User *user = (User *) userManager()->getUserByAccount(d->account);
+	// When User is disconnected because of an error, m_account->ui_data is NULL and
+	// getUserByAccount can't find him, but some prpls removes authRequests in this
+	// case. So we try to getUserByJID in that case.
+	if (user == NULL) {
+		User *user = (User *) userManager()->getUserByJID(d->mainJID);
+	}
 	if (user != NULL) {
 		user->removeAuthRequest(d->who);
 	}

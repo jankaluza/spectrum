@@ -386,6 +386,7 @@ authRequest *SpectrumRosterManager::handleAuthorizationRequest(PurpleAccount *ac
 	req->user_data = user_data;
 	req->account = m_user->account();
 	req->who = name;
+	req->mainJID = m_user->jid();
 	m_authRequests[name] = req;
 
 	Log(m_user->jid(), "purpleAuthorizeReceived: " << name << "on_list:" << on_list);
