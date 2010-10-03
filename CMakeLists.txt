@@ -21,6 +21,8 @@ set(libpoco_DIR "${CMAKE_SOURCE_DIR}/cmake_modules")
 find_package(libpoco REQUIRED)
 set(cppunit_DIR "${CMAKE_SOURCE_DIR}/cmake_modules")
 find_package(cppunit)
+set(event_DIR "${CMAKE_SOURCE_DIR}/cmake_modules")
+find_package(event)
 
 # correctly find the python interpreter
 include(FindPythonInterp)
@@ -30,7 +32,7 @@ message(STATUS "Python site-packages directory: "  ${PYTHON_SITE_PACKAGES})
 
 include_directories(${GLOOX_INCLUDE_DIR})
 include_directories(${PURPLE_INCLUDE_DIR})
-
+include_directories(${EVENT_INCLUDE_DIRS})
 include_directories(${LIBPOCO_INCLUDE_DIR})
 
 if(GLIB2_FOUND)
@@ -205,9 +207,9 @@ set(spectrum_MOC_HDRS
 add_executable(spectrum ${spectrum_SRCS} ${lrelease_outputs})
 
 if(DEFINED WITH_STATIC_GLOOX)
-	target_link_libraries(spectrum ${WITH_STATIC_GLOOX} -lgnutls ${PURPLE_LIBRARY} ${GLIB2_LIBRARIES} ${LIBPOCO_LIBRARIES} -export-dynamic)
+	target_link_libraries(spectrum ${WITH_STATIC_GLOOX} -lgnutls ${PURPLE_LIBRARY} ${GLIB2_LIBRARIES} ${LIBPOCO_LIBRARIES} ${EVENT_LIBRARIES} -export-dynamic)
 else(DEFINED WITH_STATIC_GLOOX)
-	target_link_libraries(spectrum ${GLOOX_LIBRARIES} ${PURPLE_LIBRARY} ${GLIB2_LIBRARIES} ${LIBPOCO_LIBRARIES} -export-dynamic)
+	target_link_libraries(spectrum ${GLOOX_LIBRARIES} ${PURPLE_LIBRARY} ${GLIB2_LIBRARIES} ${LIBPOCO_LIBRARIES} ${EVENT_LIBRARIES} -export-dynamic)
 endif(DEFINED WITH_STATIC_GLOOX)
 
 message(STATUS "Transport will be installed into: " ${CMAKE_INSTALL_PREFIX})

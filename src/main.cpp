@@ -72,6 +72,10 @@
 #include <gloox/vcardupdate.h>
 #include <gloox/base64.h>
 
+#ifdef WITH_LIBEVENT
+#include <event.h>
+#endif
+
 static gboolean nodaemon = FALSE;
 static gchar *logfile = NULL;
 static gchar *lock_file = NULL;
@@ -866,9 +870,8 @@ static gboolean sendPing(gpointer data) {
 /*
  * Called by notifier when new data can be received from socket
  */
-static gboolean transportDataReceived(GIOChannel *source, GIOCondition condition, gpointer data) {
+static void transportDataReceived(gpointer data, gint source, PurpleInputCondition cond) {
 	GlooxMessageHandler::instance()->j->recv(1000);
-	return TRUE;
 }
 
 static void listPurpleSettings() {
@@ -981,8 +984,16 @@ GlooxMessageHandler::GlooxMessageHandler(const std::string &config) : MessageHan
 
 	if (m_configuration.logAreas & LOG_AREA_PURPLE)
 		j->logInstance().registerLogHandler(LogLevelDebug, LogAreaXmlIncoming | LogAreaXmlOutgoing, &Log_);
-	
-	m_loop = g_main_loop_new(NULL, FALSE);
+	m_loop = NULL;
+	if (CONFIG().eventloop == "glib") {
+		m_loop = g_main_loop_new(NULL, FALSE);
+	}
+#ifdef WITH_LIBEVENT
+	else {
+		struct event_base *base = event_init();
+		std::cout << event_base_get_method(base) << "\n";
+	}
+#endif
 
 	m_userManager = new UserManager();
 	m_adhoc = new GlooxAdhocHandler();
@@ -1039,7 +1050,7 @@ GlooxMessageHandler::GlooxMessageHandler(const std::string &config) : MessageHan
 		ft->addStreamHost( j->jid(), m_configuration.filetransfer_proxy_streamhost_ip, m_configuration.filetransfer_proxy_streamhost_port);
 		ft->registerSOCKS5BytestreamServer( ftServer );
 		if (m_configuration.transportFeatures & TRANSPORT_FEATURE_FILETRANSFER) {
-			purple_timeout_add(50, &ftServerReceive, NULL);
+			purple_timeout_add(500, &ftServerReceive, NULL);
 		}
 
 		j->registerMessageHandler(this);
@@ -1062,7 +1073,14 @@ GlooxMessageHandler::GlooxMessageHandler(const std::string &config) : MessageHan
 		Transport::instance()->registerStanzaExtension( new VCardUpdate );
 
 		transportConnect();
-		g_main_loop_run(m_loop);
+		if (m_loop) {
+			g_main_loop_run(m_loop);
+		}
+#ifdef WITH_LIBEVENT
+		else {
+			event_loop(0);
+		}
+#endif
 	}
 }
 
@@ -1070,8 +1088,15 @@ GlooxMessageHandler::~GlooxMessageHandler(){
 	delete m_userManager;
 	purple_blist_uninit();
 	purple_core_quit();
-	g_main_loop_quit(m_loop);
-	g_main_loop_unref(m_loop);
+	if (m_loop) {
+		g_main_loop_quit(m_loop);
+		g_main_loop_unref(m_loop);
+	}
+#ifdef WITH_LIBEVENT
+	else {
+		event_loopexit(NULL);
+	}
+#endif
 	
 #ifndef WIN32
 	if (m_configInterface)
@@ -1801,10 +1826,10 @@ void GlooxMessageHandler::onDisconnect(ConnectionError e) {
 	Log("gloox", "trying to reconnect after 3 seconds");
 	purple_timeout_add_seconds(3, &transportReconnect, NULL);
 
-	if (connectIO) {
-		g_source_remove(connectID);
-		connectIO = NULL;
-	}
+// 	if (connectIO) {
+// 		g_source_remove(connectID);
+// 		connectIO = NULL;
+// 	}
 }
 
 void GlooxMessageHandler::transportConnect() {
@@ -1813,8 +1838,9 @@ void GlooxMessageHandler::transportConnect() {
 		j->connect(false);
 		int mysock = dynamic_cast<ConnectionTCPClient*>( j->connectionImpl() )->socket();
 		if (mysock > 0) {
-			connectIO = g_io_channel_unix_new(mysock);
-			connectID = g_io_add_watch(connectIO, (GIOCondition) READ_COND, &transportDataReceived, NULL);
+			m_socketId = purple_input_add(mysock, PURPLE_INPUT_READ, &transportDataReceived, NULL);
+// 			connectIO = g_io_channel_unix_new(mysock);
+// 			connectID = g_io_add_watch(connectIO, (GIOCondition) READ_COND, &transportDataReceived, NULL);
 		}
 	}
 	else {

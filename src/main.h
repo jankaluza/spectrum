@@ -238,6 +238,7 @@ private:
 	GMainLoop *m_loop;
 	std::string m_config;
 	unsigned int m_reconnectCount;
+	guint m_socketId;
 };
 
 #endif
