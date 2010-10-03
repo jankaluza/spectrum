@@ -183,7 +183,7 @@ bool AdhocRepeater::handleIq(const IQ &stanza) {
 				((PurpleRequestInputCb) m_cancel_cb)(m_requestData, m_defaultString.c_str());
 		}
 
-		g_timeout_add(0,&removeRepeater,this);
+		purple_timeout_add(0,&removeRepeater,this);
 		delete stanzaTag;
 		return false;
 	}

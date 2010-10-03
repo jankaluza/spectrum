@@ -256,7 +256,7 @@ bool ReceiveFile::receive() {
 	if (m_stream->recv() != ConnNoError || shouldStop()) {
 		m_file.close();
 		Log("ReceiveFile", "transferFinished");
-		g_timeout_add(1000,&transferFinished,this);
+		purple_timeout_add(1000,&transferFinished,this);
 		return false;
 	}
 	return true;

@@ -200,7 +200,7 @@ void SearchRepeater::sendSearchResults(PurpleNotifySearchResults *results) {
 	response->addChild(query);
 	main->j->send(response);
 
-	g_timeout_add(0,&removeRepeater,this);
+	purple_timeout_add(0,&removeRepeater,this);
 }
 
 bool SearchRepeater::handleIq(const IQ &stanza) {
