@@ -1329,7 +1329,7 @@ void GlooxMessageHandler::purpleAuthorizeClose(void *data) {
 	// getUserByAccount can't find him, but some prpls removes authRequests in this
 	// case. So we try to getUserByJID in that case.
 	if (user == NULL) {
-		User *user = (User *) userManager()->getUserByJID(d->mainJID);
+		user = (User *) userManager()->getUserByJID(d->mainJID);
 	}
 	if (user != NULL) {
 		user->removeAuthRequest(d->who);
