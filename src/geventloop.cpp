@@ -133,7 +133,7 @@ static void event_io_destroy(gpointer data)
 	g_free(data);
 }
 
-void event_io_invoke(int fd, short event, void *data)
+static void event_io_invoke(int fd, short event, void *data)
 {
 	PurpleIOClosure *closure = (PurpleIOClosure* )data;
 	PurpleInputCondition purple_cond = (PurpleInputCondition)0;
