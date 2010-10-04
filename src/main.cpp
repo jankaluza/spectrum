@@ -990,7 +990,7 @@ GlooxMessageHandler::GlooxMessageHandler(const std::string &config) : MessageHan
 	}
 #ifdef WITH_LIBEVENT
 	else {
-		struct event_base *base = event_init();
+		struct event_base *base = (struct event_base *) event_init();
 		std::cout << event_base_get_method(base) << "\n";
 	}
 #endif
