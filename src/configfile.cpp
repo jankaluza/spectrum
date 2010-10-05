@@ -413,6 +413,7 @@ Configuration ConfigFile::getConfiguration() {
 	loadString(configuration.username_mask, "registration", "username_mask", "");
 	loadString(configuration.reg_instructions, "registration", "instructions", "");
 	loadString(configuration.reg_username_field, "registration", "username_label", "");
+	loadString(configuration.reg_allowed_usernames, "registration", "allowed_usernames", "");
 
 	if (configuration.sqlType == "sqlite")
 		create_dir(configuration.sqlDb, 0750);

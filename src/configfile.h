@@ -69,6 +69,7 @@ struct Configuration {
 	std::string username_mask;
 	std::string reg_instructions;
 	std::string reg_username_field;
+	std::string reg_allowed_usernames;
 
 	std::string userDir;			// Directory used to store avatars.
 	std::string filetransferCache;	// Directory where transfered files are stored.
