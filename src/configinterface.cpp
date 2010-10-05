@@ -87,7 +87,7 @@ ConfigInterface::ConfigInterface(const std::string &sockfile, const LogSink &log
 
 ConfigInterface::~ConfigInterface() {
 	if (m_socketId)
-		g_source_remove(m_socketId);
+		purple_input_remove(m_socketId);
 	delete m_admin;
 }
 
@@ -115,7 +115,7 @@ void ConfigInterface::handleDisconnect( const ConnectionBase* connection, Connec
 	if (!m_loaded)
 		return;
 	Log("ConfigInterface", "Disconnect connection " << connection);
-	g_source_remove(m_clients[const_cast<ConnectionBase*>( connection )]);
+	purple_input_remove(m_clients[const_cast<ConnectionBase*>( connection )]);
 	m_clients.erase(const_cast<ConnectionBase*>( connection ));
 	delete connection;
 }
