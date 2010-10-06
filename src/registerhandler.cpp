@@ -426,15 +426,23 @@ bool GlooxRegisterHandler::handleIq(const Tag *iqTag) {
 		}
 
 		Transport::instance()->protocol()->prepareUsername(username);
-		if (!Transport::instance()->protocol()->isValidUsername(username)) {
-			Log("GlooxRegisterHandler", "This is not valid username: "<< username);
+
+		std::string newUsername(username);
+		if (!CONFIG().username_mask.empty()) {
+			newUsername = CONFIG().username_mask;
+			replace(newUsername, "$username", username.c_str());
+		}
+
+		if (!Transport::instance()->protocol()->isValidUsername(newUsername)) {
+			Log("GlooxRegisterHandler", "This is not valid username: "<< newUsername);
 			sendError(400, "bad-request", iqTag);
 			return false;
 		}
+
 #if GLIB_CHECK_VERSION(2,14,0)
 		if (!CONFIG().reg_allowed_usernames.empty() &&
-			!g_regex_match_simple(CONFIG().reg_allowed_usernames.c_str(), username.c_str(),(GRegexCompileFlags) (G_REGEX_CASELESS | G_REGEX_EXTENDED), (GRegexMatchFlags) 0)) {
-			Log("GlooxRegisterHandler", "This is not valid username: "<< username);
+			!g_regex_match_simple(CONFIG().reg_allowed_usernames.c_str(), newUsername.c_str(),(GRegexCompileFlags) (G_REGEX_CASELESS | G_REGEX_EXTENDED), (GRegexMatchFlags) 0)) {
+			Log("GlooxRegisterHandler", "This is not valid username: "<< newUsername);
 			sendError(400, "bad-request", iqTag);
 			return false;
 		}
