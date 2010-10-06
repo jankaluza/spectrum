@@ -71,6 +71,7 @@
 #include <gloox/sha.h>
 #include <gloox/vcardupdate.h>
 #include <gloox/base64.h>
+#include <gloox/chatstate.h>
 
 #ifdef WITH_LIBEVENT
 #include <event.h>
@@ -1030,6 +1031,7 @@ GlooxMessageHandler::GlooxMessageHandler(const std::string &config) : MessageHan
 		j->registerIqHandler(m_adhoc, ExtAdhocCommand);
 		j->registerStanzaExtension( new Adhoc::Command() );
 		j->registerStanzaExtension( new MUCRoom::MUC() );
+		j->registerStanzaExtension(new ChatState(ChatStateInvalid));
 		j->disco()->addFeature( XMLNS_ADHOC_COMMANDS );
 		j->disco()->registerNodeHandler( m_adhoc, XMLNS_ADHOC_COMMANDS );
 		j->disco()->registerNodeHandler( m_adhoc, std::string() );
@@ -1879,11 +1881,13 @@ void GlooxMessageHandler::handleMessage (const Message &msg, MessageSession *ses
 		if (user->isConnected()) {
 			Tag *msgTag = msg.tag();
 			if (!msgTag) return;
-			Tag *chatstates = msgTag->findChildWithAttrib("xmlns","http://jabber.org/protocol/chatstates");
+			const StanzaExtension *ext = msg.findExtension(ExtChatState);
+			Tag *chatstates = ext ? ext->tag() : NULL;
 			if (chatstates != NULL) {
 // 				std::string username = msg.to().username();
 // 				std::for_each( username.begin(), username.end(), replaceJidCharacters() );
 				user->handleChatState(purpleUsername(msg.to().username()), chatstates->name());
+				delete chatstates;
 			}
 			if (msgTag->findChild("body") != NULL) {
 				m_stats->messageFromJabber();

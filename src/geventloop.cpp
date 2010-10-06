@@ -137,7 +137,6 @@ static void event_io_invoke(int fd, short event, void *data)
 {
 	PurpleIOClosure *closure = (PurpleIOClosure* )data;
 	PurpleInputCondition purple_cond = (PurpleInputCondition)0;
-	std::cout << "epoll invoke\n";
 	int tmp = 0;
 	if (event & EV_READ)
 	{
