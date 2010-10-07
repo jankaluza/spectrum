@@ -1,3 +1,29 @@
+version 1.4.2 (2010-10-XX):
+	General:
+	* Fixed crash when user rejected susbcribe request after automatic
+	  reconnect.
+	* Fixed crash in DNSResolver when resolving was cancelled in some cases.
+	* Fixed crash when conversations were not properly deleted after logout. 
+	* Fixed chatstates forwarding from XMPP to legacy network.
+	* Sending statistics to anyone can be disabled by setting
+	  [features] statistics=0.
+	* Fixed missing 'ver' attribute in presence caps after
+	  "spectrumctl reload".
+	* Added support for libevent. Epoll can be used instead of poll by setting
+	  [service] eventloop=epoll. Use epoll only with standard libpurple
+	  protocols, otherwise it doesn't have to work well.
+	* Added new [registration] allowed_users=regexp config variable
+	  to white-list registration usernames.
+
+	pytransports2spectrum:
+	* Fixed migration of utf8 usernames from py-transports [Nikolaus Polak].
+
+	Bonjour:
+	* Added Bonjour protocol support.
+
+	XMPP:
+	* Receiving VCards supported.
+
 version 1.4.1 (2010-08-25):
 	General:
 	* Fixed memory corruption in SQLClass on x86_64.
