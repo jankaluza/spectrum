@@ -1,7 +1,7 @@
-version 1.4.2 (2010-10-XX):
+version 1.4.2 (2010-10-08):
 	General:
 	* Fixed crash when user rejected susbcribe request after automatic
-	  reconnect.
+	  reconnection.
 	* Fixed crash in DNSResolver when resolving was cancelled in some cases.
 	* Fixed crash when conversations were not properly deleted after logout. 
 	* Fixed chatstates forwarding from XMPP to legacy network.
