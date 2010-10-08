@@ -26,8 +26,8 @@ SpectrumNodeHandler::SpectrumNodeHandler() {
 	m_features = Transport::instance()->protocol()->buddyFeatures();
 	// These features are added by gloox automatically, so we have to remove them to don't have 
 	// duplicities.
-	m_features.remove("http://jabber.org/protocol/disco#items");
-	m_features.remove("http://jabber.org/protocol/disco#info");
+// 	m_features.remove("http://jabber.org/protocol/disco#items");
+// 	m_features.remove("http://jabber.org/protocol/disco#info");
 }
 
 SpectrumNodeHandler::~SpectrumNodeHandler() {

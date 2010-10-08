@@ -1720,9 +1720,9 @@ void GlooxMessageHandler::onConnect() {
 		m_discoHandler->setIdentity("client", "pc", "Spectrum");
 		j->disco()->setVersion(configuration().discoName, VERSION, "");
 
-		std::string id = "gateway";
+		std::string id = "client";
 		id += '/';
-		id += protocol()->gatewayIdentity();
+		id += "pc";
 		id += '/';
 		id += '/';
 		id += "Spectrum";
@@ -1731,7 +1731,12 @@ void GlooxMessageHandler::onConnect() {
 		std::list<std::string> features = protocol()->transportFeatures();
 		features.sort();
 		for (std::list<std::string>::iterator it = features.begin(); it != features.end(); it++) {
-			j->disco()->addFeature(*it);
+			// these features are default in gloox
+			if (*it != "http://jabber.org/protocol/disco#items" &&
+				*it != "http://jabber.org/protocol/disco#info" &&
+				*it != "http://jabber.org/protocol/commands") {
+				j->disco()->addFeature(*it);
+			}
 		}
 
 		std::list<std::string> f = protocol()->buddyFeatures();
