@@ -181,6 +181,16 @@ void GlooxVCardHandler::userInfoArrived(PurpleConnection *gc, const std::string 
 						std::string avatarData((char *)data,len);
 						base64encode((unsigned char *)data, len, avatarData);
 						photo->addChild( new Tag("BINVAL", avatarData));
+						const gchar *ext = (gchar*)purple_buddy_icon_get_extension(icon);
+						if (ext) {
+							std::string extension(ext);
+							if (extension != "icon") {
+								if (extension == "jpg") {
+									extension = "jpeg";
+								}
+								photo->addChild( new Tag("TYPE", "image/" + extension) );
+							}
+						}
 						Log("VCard", "avatar made");
 	// 					std::cout << photo->xml() << "\n";
 					}
