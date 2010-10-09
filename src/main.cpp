@@ -934,6 +934,7 @@ GlooxMessageHandler::GlooxMessageHandler(const std::string &config) : MessageHan
 	ftServer = NULL;
 	m_stats = NULL;
 	connectIO = NULL;
+	m_socketId = 0;
 #ifndef WIN32
 	m_configInterface = NULL;
 #endif
@@ -1851,6 +1852,8 @@ void GlooxMessageHandler::transportConnect() {
 		j->connect(false);
 		int mysock = dynamic_cast<ConnectionTCPClient*>( j->connectionImpl() )->socket();
 		if (mysock > 0) {
+			if (m_socketId > 0)
+				purple_input_remove(m_socketId);
 			m_socketId = purple_input_add(mysock, PURPLE_INPUT_READ, &transportDataReceived, NULL);
 // 			connectIO = g_io_channel_unix_new(mysock);
 // 			connectID = g_io_add_watch(connectIO, (GIOCondition) READ_COND, &transportDataReceived, NULL);
