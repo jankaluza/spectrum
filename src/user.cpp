@@ -455,17 +455,17 @@ void User::receivedPresence(const Presence &stanza) {
 // 		localization.loadLocale(getLang());
 // 	}
 	
-// 	if (stanza.to().username() == "" && isConnected() && stanza.presence() != Presence::Unavailable) {
-// 		Tag *x_vcard = stanzaTag->findChild("x");
-// 		if (x_vcard) {
-// 			Tag *photo = x_vcard->findChild("photo");
-// 			if (photo && !photo->cdata().empty()) {
-// 				if (photo->cdata() != m_photoHash) {
-// 					p->fetchVCard(jid());
-// 				}
-// 			}
-// 		}
-// 	}
+	if (stanza.to().username() == "" && isConnected() && stanza.presence() != Presence::Unavailable) {
+		Tag *x_vcard = stanzaTag->findChild("x");
+		if (x_vcard) {
+			Tag *photo = x_vcard->findChild("photo");
+			if (photo && !photo->cdata().empty()) {
+				if (photo->cdata() != m_photoHash) {
+					p->fetchVCard(jid());
+				}
+			}
+		}
+	}
 	
 	handlePresence(stanza);
 
