@@ -1837,8 +1837,8 @@ void GlooxMessageHandler::onDisconnect(ConnectionError e) {
 	if (m_reconnectCount == 2)
 		m_userManager->removeAllUsers();
 
-	Log("gloox", "trying to reconnect after 3 seconds");
-	purple_timeout_add_seconds(3, &transportReconnect, NULL);
+	Log("gloox", "trying to reconnect after 1 second");
+	purple_timeout_add_seconds(1, &transportReconnect, NULL);
 
 // 	if (connectIO) {
 // 		g_source_remove(connectID);
@@ -1861,8 +1861,8 @@ void GlooxMessageHandler::transportConnect() {
 	}
 	else {
 		Log("gloox", "Tried to reconnect, but database is not ready yet.");
-		Log("gloox", "trying to reconnect after 3 seconds");
-		purple_timeout_add_seconds(3, &transportReconnect, NULL);
+		Log("gloox", "trying to reconnect after 1 second");
+		purple_timeout_add_seconds(1, &transportReconnect, NULL);
 	}
 }
 
