@@ -30,6 +30,7 @@ MSNProtocol::MSNProtocol() {
 	m_transportFeatures.push_back("http://jabber.org/protocol/commands");
 
 	m_buddyFeatures.push_back("http://jabber.org/protocol/disco#info");
+	m_buddyFeatures.push_back("http://jabber.org/protocol/disco#items");
 	m_buddyFeatures.push_back("http://jabber.org/protocol/caps");
 	m_buddyFeatures.push_back("http://jabber.org/protocol/chatstates");
 	m_buddyFeatures.push_back("http://jabber.org/protocol/commands");

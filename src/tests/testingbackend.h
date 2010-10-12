@@ -38,7 +38,7 @@ struct Buddy {
 
 class TestingBackend : public AbstractBackend {
 	public:
-		TestingBackend() { m_pInstance = this; m_parser = new GlooxParser(); }
+		TestingBackend() { m_pInstance = this; m_parser = new GlooxParser(); reset(); }
 		~TestingBackend() {}
 		static TestingBackend *instance() { return m_pInstance; }
 		void addBuddySetting(long userId, long buddyId, const std::string &key, const std::string &value, PurpleType type) {} 
@@ -59,6 +59,8 @@ class TestingBackend : public AbstractBackend {
 			m_buddies.clear();
 			m_users.clear();
 			Configuration cfg;
+			cfg.jid_escaping = 1;
+			cfg.enable_public_registration = 1;
 			m_configuration = cfg;
 		}
 		

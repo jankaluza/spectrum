@@ -24,6 +24,7 @@ void RegisterHandlerTest::handleIqNoPermission() {
 	Configuration cfg;
 	cfg.onlyForVIP = true;
 	cfg.allowedServers.push_back("example.com");
+	cfg.enable_public_registration = 1;
 	m_backend->setConfiguration(cfg);
 	
 	Tag *iq = new Tag("iq");
@@ -77,6 +78,7 @@ void RegisterHandlerTest::handleIqGetNewUser() {
 	cfg.allowedServers.push_back("spectrum.im");
 	cfg.language = "en";
 	cfg.encoding = "windows-1250";
+	cfg.enable_public_registration = 1;
 	m_backend->setConfiguration(cfg);
 	
 	Tag *iq = new Tag("iq");
@@ -134,6 +136,7 @@ void RegisterHandlerTest::handleIqGetExistingUser() {
 	cfg.allowedServers.push_back("spectrum.im");
 	cfg.language = "en";
 	cfg.encoding = "windows-1250";
+	cfg.enable_public_registration = 1;
 	m_backend->setConfiguration(cfg);
 	
 	UserRow row;
@@ -169,6 +172,7 @@ void RegisterHandlerTest::handleIqRegisterLegacy() {
 	cfg.allowedServers.push_back("spectrum.im");
 	cfg.language = "en";
 	cfg.encoding = "windows-1250";
+	cfg.enable_public_registration = 1;
 	m_backend->setConfiguration(cfg);
 	
 	Tag *iq = new Tag("iq");
@@ -207,6 +211,7 @@ void RegisterHandlerTest::handleIqRegisterLegacyNoPassword() {
 	cfg.allowedServers.push_back("spectrum.im");
 	cfg.language = "en";
 	cfg.encoding = "windows-1250";
+	cfg.enable_public_registration = 1;
 	m_backend->setConfiguration(cfg);
 	
 	Tag *iq = new Tag("iq");
@@ -238,6 +243,7 @@ void RegisterHandlerTest::handleIqRegisterLegacyNoUsername() {
 	cfg.allowedServers.push_back("spectrum.im");
 	cfg.language = "en";
 	cfg.encoding = "windows-1250";
+	cfg.enable_public_registration = 1;
 	m_backend->setConfiguration(cfg);
 	
 	Tag *iq = new Tag("iq");
@@ -267,6 +273,7 @@ void RegisterHandlerTest::handleIqRegisterXData() {
 	cfg.allowedServers.push_back("spectrum.im");
 	cfg.language = "en";
 	cfg.encoding = "windows-1250";
+	cfg.enable_public_registration = 1;
 	m_backend->setConfiguration(cfg);
 	
 	Tag *iq = new Tag("iq");
@@ -343,6 +350,7 @@ void RegisterHandlerTest::handleIqRegisterXDataBadLanguage() {
 	cfg.allowedServers.push_back("spectrum.im");
 	cfg.language = "en";
 	cfg.encoding = "windows-1250";
+	cfg.enable_public_registration = 1;
 	m_backend->setConfiguration(cfg);
 	
 	Tag *iq = new Tag("iq");

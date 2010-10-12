@@ -934,6 +934,7 @@ GlooxMessageHandler::GlooxMessageHandler(const std::string &config) : MessageHan
 	ftServer = NULL;
 	m_stats = NULL;
 	connectIO = NULL;
+	m_socketId = 0;
 #ifndef WIN32
 	m_configInterface = NULL;
 #endif
@@ -1720,9 +1721,9 @@ void GlooxMessageHandler::onConnect() {
 		m_discoHandler->setIdentity("client", "pc", "Spectrum");
 		j->disco()->setVersion(configuration().discoName, VERSION, "");
 
-		std::string id = "gateway";
+		std::string id = "client";
 		id += '/';
-		id += protocol()->gatewayIdentity();
+		id += "pc";
 		id += '/';
 		id += '/';
 		id += "Spectrum";
@@ -1731,7 +1732,12 @@ void GlooxMessageHandler::onConnect() {
 		std::list<std::string> features = protocol()->transportFeatures();
 		features.sort();
 		for (std::list<std::string>::iterator it = features.begin(); it != features.end(); it++) {
-			j->disco()->addFeature(*it);
+			// these features are default in gloox
+			if (*it != "http://jabber.org/protocol/disco#items" &&
+				*it != "http://jabber.org/protocol/disco#info" &&
+				*it != "http://jabber.org/protocol/commands") {
+				j->disco()->addFeature(*it);
+			}
 		}
 
 		std::list<std::string> f = protocol()->buddyFeatures();
@@ -1831,8 +1837,8 @@ void GlooxMessageHandler::onDisconnect(ConnectionError e) {
 	if (m_reconnectCount == 2)
 		m_userManager->removeAllUsers();
 
-	Log("gloox", "trying to reconnect after 3 seconds");
-	purple_timeout_add_seconds(3, &transportReconnect, NULL);
+	Log("gloox", "trying to reconnect after 1 second");
+	purple_timeout_add_seconds(1, &transportReconnect, NULL);
 
 // 	if (connectIO) {
 // 		g_source_remove(connectID);
@@ -1846,6 +1852,8 @@ void GlooxMessageHandler::transportConnect() {
 		j->connect(false);
 		int mysock = dynamic_cast<ConnectionTCPClient*>( j->connectionImpl() )->socket();
 		if (mysock > 0) {
+			if (m_socketId > 0)
+				purple_input_remove(m_socketId);
 			m_socketId = purple_input_add(mysock, PURPLE_INPUT_READ, &transportDataReceived, NULL);
 // 			connectIO = g_io_channel_unix_new(mysock);
 // 			connectID = g_io_add_watch(connectIO, (GIOCondition) READ_COND, &transportDataReceived, NULL);
@@ -1853,8 +1861,8 @@ void GlooxMessageHandler::transportConnect() {
 	}
 	else {
 		Log("gloox", "Tried to reconnect, but database is not ready yet.");
-		Log("gloox", "trying to reconnect after 3 seconds");
-		purple_timeout_add_seconds(3, &transportReconnect, NULL);
+		Log("gloox", "trying to reconnect after 1 second");
+		purple_timeout_add_seconds(1, &transportReconnect, NULL);
 	}
 }
 
