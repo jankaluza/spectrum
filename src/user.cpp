@@ -570,7 +570,10 @@ void User::receivedPresence(const Presence &stanza) {
 				Log(m_jid, "connecting: resource=" << getResource().name);
 				if (m_readyForConnect == false) {
 					m_readyForConnect = true;
-					forwardStatus(presence, stanzaStatus);
+					// Forward status message to legacy network, but only if it's sent from active resource
+					if (getResource().name == stanza.from().resource()) {
+						forwardStatus(presence, stanzaStatus);
+					}
 					if (getResource().caps == -1) {
 						// caps not arrived yet, so we can't connect just now and we have to wait for caps
 					}
