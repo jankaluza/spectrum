@@ -54,6 +54,7 @@ User::User(GlooxMessageHandler *parent, JID jid, const std::string &username, co
 	m_rosterXCalled = false;
 	m_connected = false;
 	m_reconnectCount = 0;
+	m_glooxPresenceType = -1;
 
 	m_password = password;
 	m_username = username;
@@ -387,6 +388,10 @@ void User::connect() {
 			}
 		}
 	}
+
+	Presence tag(Presence::Unavailable, m_jid, tr(getLang(), _("Connecting")));
+	tag.setFrom(p->jid());
+	p->j->send(tag);
 }
 
 /*
@@ -437,7 +442,13 @@ void User::connected() {
 	};
 
 	m_autoConnectRooms.clear();
-	
+
+	if (m_glooxPresenceType != -1) {
+		Presence tag((Presence::PresenceType) m_glooxPresenceType, m_jid, m_statusMessage);
+		tag.setFrom(p->jid());
+		p->j->send(tag);
+		m_glooxPresenceType = -1;
+	}
 }
 
 /*
@@ -610,11 +621,11 @@ void User::receivedPresence(const Presence &stanza) {
 			tag.setFrom(p->jid());
 			p->j->send(tag);
 		}
-		else if (statusChanged) {
-			Presence tag(stanza.presence(), m_jid, stanza.status());
-			tag.setFrom(p->jid());
-			p->j->send(tag);
-		}
+// 		else if (statusChanged) {
+// 			Presence tag(stanza.presence(), m_jid, stanza.status());
+// 			tag.setFrom(p->jid());
+// 			p->j->send(tag);
+// 		}
 
 	}
 	delete stanzaTag;
@@ -652,6 +663,7 @@ void User::forwardStatus(int presence, const std::string &stanzaStatus) {
 	if (!m_connected) {
 		m_presenceType = PurplePresenceType;
 		m_statusMessage = stanzaStatus;
+		m_glooxPresenceType = presence;
 	}
 	else {
 		// we are already connected so we have to change status
@@ -670,6 +682,10 @@ void User::forwardStatus(int presence, const std::string &stanzaStatus) {
 				purple_account_set_status(m_account, purple_status_type_get_id(status_type), TRUE, NULL);
 			}
 		}
+
+		Presence tag((Presence::PresenceType) presence, m_jid, statusMessage);
+		tag.setFrom(p->jid());
+		p->j->send(tag);
 	}
 }
 
