@@ -1,0 +1,61 @@
+/**
+ * XMPP - libpurple transport
+ *
+ * Copyright (C) 2009, Jan Kaluza <hanzz@soc.pidgin.im>
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02111-1301  USA
+ */
+
+#ifndef SPECTRUM_COMPONENT_H
+#define SPECTRUM_COMPONENT_H
+
+#include <vector>
+#include "Swiften/Swiften.h"
+#include "Swiften/Queries/Requests/GetDiscoInfoRequest.h"
+#include "Swiften/Disco/CapsMemoryStorage.h"
+#include "Swiften/Network/BoostTimerFactory.h"
+#include "Swiften/Network/BoostIOServiceThread.h"
+#include "glib.h"
+
+class SpectrumTimer;
+
+class SpectrumComponent {
+	public:
+		SpectrumComponent();
+		~SpectrumComponent();
+
+		// Connect to server
+		void connect();
+	
+	private:
+		void handleConnected();
+		void handleConnectionError(const Swift::ComponentError &error);
+		void handlePresenceReceived(Swift::Presence::ref presence);
+		void handlePresence(Swift::Presence::ref presence);
+		void handleSubscription(Swift::Presence::ref presence);
+		void handleProbePresence(Swift::Presence::ref presence);
+		void handleDataRead(const Swift::String &data);
+		void handleDataWritten(const Swift::String &data);
+
+		Swift::Component *m_component;
+		Swift::BoostTimerFactory m_timerFactory;
+		Swift::Timer::ref m_reconnectTimer;
+		Swift::BoostIOServiceThread m_boostIOServiceThread;
+		Swift::CapsMemoryStorage m_capsMemoryStorage;
+		int m_reconnectCount;
+		bool m_firstConnection;
+};
+
+#endif

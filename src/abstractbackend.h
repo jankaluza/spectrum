@@ -59,6 +59,8 @@ class AbstractBackend {
 		virtual void beginTransaction() { }
 		virtual void commitTransaction() { }
 		virtual void addSetting(long userId, const std::string &key, const std::string &value, PurpleType type) {}
+		virtual GHashTable * getSettings(long userId) { return NULL; }
+		virtual bool loaded() { return true; }
 
 };
 

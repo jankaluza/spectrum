@@ -67,6 +67,7 @@ class AbstractUser : public ResourceManager
 		virtual void setConnected(bool connected) {}
 		AdhocData & adhocData() { return m_adhocData; }
 		void setAdhocData(AdhocData data) { m_adhocData = data; }
+		virtual void setFeatures(int /*f*/) {}
 		
 		void setProtocolData(void *protocolData) { m_protocolData = protocolData; }
 		void *protocolData() { return m_protocolData; }

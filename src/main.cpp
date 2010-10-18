@@ -73,9 +73,9 @@
 #include <gloox/base64.h>
 #include <gloox/chatstate.h>
 
-#ifdef WITH_LIBEVENT
-#include <event.h>
-#endif
+#include "Swiften/Swiften.h"
+#include "spectrumeventloop.h"
+#include "spectrumcomponent.h"
 
 static gboolean nodaemon = FALSE;
 static gchar *logfile = NULL;
@@ -982,20 +982,9 @@ GlooxMessageHandler::GlooxMessageHandler(const std::string &config) : MessageHan
 
 	m_transport = new Transport(m_configuration.jid);
 
-	j = new HiComponent("jabber:component:accept", m_configuration.server, m_configuration.jid, m_configuration.password, m_configuration.port);
+// 	j = new HiComponent("jabber:component:accept", m_configuration.server, m_configuration.jid, m_configuration.password, m_configuration.port);
 
-	if (m_configuration.logAreas & LOG_AREA_PURPLE)
-		j->logInstance().registerLogHandler(LogLevelDebug, LogAreaXmlIncoming | LogAreaXmlOutgoing, &Log_);
-	m_loop = NULL;
-	if (CONFIG().eventloop == "glib") {
-		m_loop = g_main_loop_new(NULL, FALSE);
-	}
-#ifdef WITH_LIBEVENT
-	else {
-		struct event_base *base = (struct event_base *) event_init();
-// 		std::cout << event_base_get_method(base) << "\n";
-	}
-#endif
+	SpectrumEventLoop *loop = new SpectrumEventLoop();
 
 	m_userManager = new UserManager();
 	m_adhoc = new GlooxAdhocHandler();
@@ -1020,6 +1009,11 @@ GlooxMessageHandler::GlooxMessageHandler(const std::string &config) : MessageHan
 		if (!m_sql->loaded())
 			loaded = false;
 	}
+
+	SpectrumComponent component;
+	component.connect();
+	loop->run();
+	return;
 
 	if (loaded) {
 #ifndef WIN32
@@ -1076,14 +1070,16 @@ GlooxMessageHandler::GlooxMessageHandler(const std::string &config) : MessageHan
 		Transport::instance()->registerStanzaExtension( new VCardUpdate );
 
 		transportConnect();
-		if (m_loop) {
-			g_main_loop_run(m_loop);
-		}
-#ifdef WITH_LIBEVENT
-		else {
-			event_loop(0);
-		}
-#endif
+// 		if (m_loop) {
+// 			g_main_loop_run(m_loop);
+// 		}
+// #ifdef WITH_LIBEVENT
+// 		else {
+// 			event_loop(0);
+// 		}
+// #endif
+		
+		loop->run();
 	}
 }
 
@@ -1095,11 +1091,6 @@ GlooxMessageHandler::~GlooxMessageHandler(){
 		g_main_loop_quit(m_loop);
 		g_main_loop_unref(m_loop);
 	}
-#ifdef WITH_LIBEVENT
-	else {
-		event_loopexit(NULL);
-	}
-#endif
 	
 #ifndef WIN32
 	if (m_configInterface)
@@ -1647,7 +1638,7 @@ void GlooxMessageHandler::handlePresence(const Presence &stanza){
 				Log(stanza.from().full(), "Creating new User instance");
 				if (protocol()->tempAccountsAllowed()) {
 					std::string server = stanza.to().username().substr(stanza.to().username().find("%") + 1, stanza.to().username().length() - stanza.to().username().find("%"));
-					user = new User(this, stanza.from(), stanza.to().resource() + "@" + server, "", stanza.from().bare() + server, res.id, res.encoding, res.language, res.vip);
+// 					user = new User(this, stanza.from(), stanza.to().resource() + "@" + server, "", stanza.from().bare() + server, res.id, res.encoding, res.language, res.vip);
 				}
 				else {
 					if (purple_accounts_find(res.uin.c_str(), protocol()->protocol().c_str()) != NULL) {
@@ -1658,7 +1649,7 @@ void GlooxMessageHandler::handlePresence(const Presence &stanza){
 							return;
 						}
 					}
-					user = new User(this, stanza.from(), res.uin, res.password, stanza.from().bare(), res.id, res.encoding, res.language, res.vip);
+// 					user = new User(this, stanza.from(), res.uin, res.password, stanza.from().bare(), res.id, res.encoding, res.language, res.vip);
 				}
 				user->setFeatures(isVip ? configuration().VIPFeatures : configuration().transportFeatures);
 				if (c != NULL)

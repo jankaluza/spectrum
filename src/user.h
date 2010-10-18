@@ -33,8 +33,8 @@
 class RosterManager;
 #include "rostermanager.h"
 #include "spectrummessagehandler.h"
+#include "abstractbackend.h"
 
-class GlooxMessageHandler;
 class FiletransferRepeater;
 
 class RosterRow;
@@ -46,7 +46,7 @@ class User;
 // Representation of XMPP User
 class User : public AbstractUser, public SpectrumRosterManager, public SpectrumMessageHandler {
 	public:
-		User(GlooxMessageHandler *parent, JID jid, const std::string &username, const std::string &password, const std::string &userKey, long id, const std::string &encoding, const std::string &language, bool vip);
+		User(const UserRow &row, const std::string &userKey);
 		virtual ~User();
 
 		// Connects the user to legacy network.
@@ -91,7 +91,6 @@ class User : public AbstractUser, public SpectrumRosterManager, public SpectrumM
 		void setLang(const char *lang) { g_free(m_lang); m_lang = g_strdup(lang); }
 		GHashTable *settings() { return m_settings; }
 
-		GlooxMessageHandler *p;
 		const std::string & userKey() { return m_userKey; }
 		void setFeatures(int f) { m_features = f; }
 		int getFeatures() { return m_features; }

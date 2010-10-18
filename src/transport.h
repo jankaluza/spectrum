@@ -31,6 +31,7 @@
 #include "capabilitymanager.h"
 #include "configfile.h"
 #include "accountcollector.h"
+#include "transport_config.h"
 
 using namespace gloox;
 class UserManager;

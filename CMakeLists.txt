@@ -104,8 +104,10 @@ set(spectrum_SRCS
 	src/searchrepeater.cpp
 	src/spectrum_util.cpp
 	src/spectrumbuddy.cpp
+	src/spectrumcomponent.cpp
 	src/spectrumconversation.cpp
 	src/spectrumdiscohandler.cpp
+	src/spectrumeventloop.cpp
 	src/spectrummucconversation.cpp
 	src/spectrumnodehandler.cpp
 	src/spectrumtimer.cpp
@@ -209,7 +211,7 @@ add_executable(spectrum ${spectrum_SRCS} ${lrelease_outputs})
 if(DEFINED WITH_STATIC_GLOOX)
 	target_link_libraries(spectrum ${WITH_STATIC_GLOOX} -lgnutls ${PURPLE_LIBRARY} ${GLIB2_LIBRARIES} ${LIBPOCO_LIBRARIES} ${EVENT_LIBRARIES} -export-dynamic)
 else(DEFINED WITH_STATIC_GLOOX)
-	target_link_libraries(spectrum ${GLOOX_LIBRARIES} ${PURPLE_LIBRARY} ${GLIB2_LIBRARIES} ${LIBPOCO_LIBRARIES} ${EVENT_LIBRARIES} -export-dynamic)
+	target_link_libraries(spectrum ${GLOOX_LIBRARIES} ${PURPLE_LIBRARY} ${GLIB2_LIBRARIES} ${LIBPOCO_LIBRARIES} ${EVENT_LIBRARIES} -lSwiften -lresolv -lidn -lz -lpthread -lexpat -lidn -lboost_date_time -lboost_system -lboost_filesystem -lboost_program_options -lboost_regex -lboost_thread-mt -lboost_signals -lz -lssl -lcrypto -lexpat -lresolv -lc -export-dynamic)
 endif(DEFINED WITH_STATIC_GLOOX)
 
 message(STATUS "Transport will be installed into: " ${CMAKE_INSTALL_PREFIX})
