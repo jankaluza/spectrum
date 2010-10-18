@@ -140,7 +140,7 @@ bool TwitterProtocol::onPurpleRequestInput(void *handle, AbstractUser *user, con
 		return false;
 	std::string t(title);
 	if (t == "Input your PIN") {
-		std::string text = Poco::format(_("Please allow Spectrum access to your Twitter account. Open following url and send the PIN number from the web page back to Spectrum.\n%s"), m_lastUri);
+		std::string text = Poco::format(_("To allow %s access to your Twitter account. Double click the following url, copy the PIN number from the web page and paste it back to Twitter through this chat window.\n%s"), CONFIG().discoName, m_lastUri);
 		Message s(Message::Chat, user->jid(), tr(user->getLang(), text));
 		s.setFrom(Transport::instance()->jid());
 		Transport::instance()->send(s.tag());
