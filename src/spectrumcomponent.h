@@ -24,10 +24,18 @@
 #include <vector>
 #include "Swiften/Swiften.h"
 #include "Swiften/Queries/Requests/GetDiscoInfoRequest.h"
+#include "Swiften/Disco/EntityCapsManager.h"
+#include "Swiften/Disco/CapsManager.h"
 #include "Swiften/Disco/CapsMemoryStorage.h"
 #include "Swiften/Network/BoostTimerFactory.h"
 #include "Swiften/Network/BoostIOServiceThread.h"
 #include "glib.h"
+
+typedef enum { 	CLIENT_FEATURE_ROSTERX = 2,
+				CLIENT_FEATURE_XHTML_IM = 4,
+				CLIENT_FEATURE_FILETRANSFER = 8,
+				CLIENT_FEATURE_CHATSTATES = 16
+				} SpectrumImportantFeatures;
 
 class SpectrumTimer;
 
@@ -48,12 +56,17 @@ class SpectrumComponent {
 		void handleProbePresence(Swift::Presence::ref presence);
 		void handleDataRead(const Swift::String &data);
 		void handleDataWritten(const Swift::String &data);
+		
+		void handleDiscoInfoResponse(boost::shared_ptr<Swift::DiscoInfo> info, const boost::optional<Swift::ErrorPayload>& error, const Swift::JID& jid);
+		void handleCapsChanged(const Swift::JID& jid);
 
 		Swift::Component *m_component;
 		Swift::BoostTimerFactory m_timerFactory;
 		Swift::Timer::ref m_reconnectTimer;
 		Swift::BoostIOServiceThread m_boostIOServiceThread;
-		Swift::CapsMemoryStorage m_capsMemoryStorage;
+		Swift::EntityCapsManager *m_entityCapsManager;
+		Swift::CapsManager *m_capsManager;
+		Swift::CapsMemoryStorage *m_capsMemoryStorage;
 		int m_reconnectCount;
 		bool m_firstConnection;
 };

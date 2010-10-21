@@ -33,6 +33,7 @@ using namespace boost;
 SpectrumComponent::SpectrumComponent() : m_timerFactory(&m_boostIOServiceThread.getIOService()) {
 	m_reconnectCount = 0;
 	m_firstConnection = true;
+
 	m_reconnectTimer = m_timerFactory.createTimer(1000);
 	m_reconnectTimer->onTick.connect(bind(&SpectrumComponent::connect, this)); 
 
@@ -43,6 +44,10 @@ SpectrumComponent::SpectrumComponent() : m_timerFactory(&m_boostIOServiceThread.
 	m_component->onDataWritten.connect(bind(&SpectrumComponent::handleDataWritten, this, _1));
 	m_component->onPresenceReceived.connect(bind(&SpectrumComponent::handlePresenceReceived, this, _1));
 
+	m_capsMemoryStorage = new CapsMemoryStorage();
+	m_capsManager = new CapsManager(m_capsMemoryStorage, m_component->getStanzaChannel(), m_component->getIQRouter());
+	m_entityCapsManager = new EntityCapsManager(m_capsManager, m_component->getStanzaChannel());
+	m_entityCapsManager->onCapsChanged.connect(boost::bind(&SpectrumComponent::handleCapsChanged, this, _1));
 }
 
 SpectrumComponent::~SpectrumComponent() {
@@ -155,10 +160,13 @@ void SpectrumComponent::handlePresenceReceived(Swift::Presence::ref presence) {
 }
 
 void SpectrumComponent::handlePresence(Swift::Presence::ref presence) {
-	bool isMUC = false;
+	bool isMUC = presence->getPayload<MUCPayload>() != NULL;
+
+	// filter out login/logout presence spam
 	if (!presence->getTo().getNode().isEmpty() && isMUC == false)
 		return;
 
+	// filter out bad presences
 	if (!isValidNode(presence->getFrom().getDomain().getUTF8String())) {
 		Swift::Presence::ref response = Swift::Presence::create();
 		response->setTo(presence->getFrom());
@@ -171,43 +179,20 @@ void SpectrumComponent::handlePresence(Swift::Presence::ref presence) {
 		return;
 	}
 
-// 	bool isMUC = presence->getPayload<SecurityLabel>() != NULL;
-
 	Log(presence->getFrom().toString().getUTF8String(), "Presence received (" << (int) presence->getShow() << ") for: " << presence->getTo().toString().getUTF8String() << " - isMUC = " << isMUC);
 
+	// check if we have this client's capabilities and ask for them
+	bool haveFeatures = false;
 	boost::shared_ptr<CapsInfo> capsInfo = presence->getPayload<CapsInfo>();
-
 	if (capsInfo) {
-		DiscoInfo::ref discoInfo = m_capsMemoryStorage.getDiscoInfo(capsInfo->getHash());
-		if (!discoInfo) {
-			// ask for disco#info to get features
-			GetDiscoInfoRequest::ref discoInfoRequest = GetDiscoInfoRequest::create(presence->getFrom(), capsInfo->getNode(), m_component->getIQRouter());
-// 			discoInfoRequest->onResponse.connect(boost::bind(&MUCSearchController::handleDiscoInfoResponse, this, _1, _2, jid));
-			discoInfoRequest->send();
-		}
+		haveFeatures = m_entityCapsManager->getCaps(presence->getFrom()) != DiscoInfo::ref();
+		std::cout << "has capsInfo " << haveFeatures << "\n";
 	}
 	else {
-		// ask bare jid to get features
+		GetDiscoInfoRequest::ref discoInfoRequest = GetDiscoInfoRequest::create(presence->getFrom(), m_component->getIQRouter());
+		discoInfoRequest->onResponse.connect(boost::bind(&SpectrumComponent::handleDiscoInfoResponse, this, _1, _2, presence->getFrom()));
+		discoInfoRequest->send();
 	}
-
-// 	Tag *c = NULL;
-// 	if (stanza.presence() != Presence::Unavailable && ((stanza.to().username() == "" && !protocol()->tempAccountsAllowed()) || (isMUC && protocol()->tempAccountsAllowed()))) {
-// 		Tag *stanzaTag = stanza.tag();
-// 		if (!stanzaTag) return;
-// 		Tag *c = stanzaTag->findChildWithAttrib("xmlns","http://jabber.org/protocol/caps");
-// 		Log(stanza.from().full(), "asking for caps/disco#info");
-// 		// Presence has caps and caps are not cached.
-// 		if (c != NULL && !Transport::instance()->hasClientCapabilities(c->findAttribute("ver"))) {
-// 			int context = m_capabilityHandler->waitForCapabilities(c->findAttribute("ver"), stanza.to().full());
-// 			std::string node = c->findAttribute("node") + std::string("#") + c->findAttribute("ver");;
-// 			j->disco()->getDiscoInfo(stanza.from(), node, m_capabilityHandler, context, j->getID());
-// 		}
-// 		else {
-// 			int context = m_capabilityHandler->waitForCapabilities(stanza.from().full(), stanza.to().full());
-// 			j->disco()->getDiscoInfo(stanza.from(), "", m_capabilityHandler, context, j->getID());
-// 		}
-// 		delete stanzaTag;
-// 	}
 	
 	AbstractUser *user;
 	std::string barejid = presence->getTo().toBare().toString().getUTF8String();
@@ -331,5 +316,41 @@ void SpectrumComponent::handleDataRead(const String &data) {
 
 void SpectrumComponent::handleDataWritten(const String &data) {
 	Log("XML OUT", data);
+}
+
+void SpectrumComponent::handleDiscoInfoResponse(boost::shared_ptr<DiscoInfo> discoInfo, const boost::optional<ErrorPayload>& error, const Swift::JID& jid) {
+	AbstractUser *user = Transport::instance()->userManager()->getUserByJID(jid.toBare().toString().getUTF8String());
+
+	std::string resource = jid.getResource().getUTF8String();
+	if (user && user->hasResource(resource)) {
+		if (user->getResource(resource).caps == 0) {
+			int capabilities = 0;
+
+			for (std::vector< String >::const_iterator it = discoInfo->getFeatures().begin(); it != discoInfo->getFeatures().end(); ++it) {
+				if (*it == "http://jabber.org/protocol/rosterx") {
+					capabilities |= CLIENT_FEATURE_ROSTERX;
+				}
+				else if (*it == "http://jabber.org/protocol/xhtml-im") {
+					capabilities |= CLIENT_FEATURE_XHTML_IM;
+				}
+				else if (*it == "http://jabber.org/protocol/si/profile/file-transfer") {
+					capabilities |= CLIENT_FEATURE_FILETRANSFER;
+				}
+				else if (*it == "http://jabber.org/protocol/chatstates") {
+					capabilities |= CLIENT_FEATURE_CHATSTATES;
+				}
+			}
+
+			user->setResource(resource, -256, capabilities);
+			if (user->readyForConnect()) {
+				user->connect();
+			}
+		}
+	}
+}
+
+void SpectrumComponent::handleCapsChanged(const Swift::JID& jid) {
+	DiscoInfo::ref discoInfo = m_entityCapsManager->getCaps(jid);
+	handleDiscoInfoResponse(discoInfo, NULL, jid);
 }
 
