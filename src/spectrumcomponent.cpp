@@ -184,7 +184,7 @@ void SpectrumComponent::handlePresence(Swift::Presence::ref presence) {
 	// check if we have this client's capabilities and ask for them
 	bool haveFeatures = false;
 	boost::shared_ptr<CapsInfo> capsInfo = presence->getPayload<CapsInfo>();
-	if (capsInfo) {
+	if (capsInfo && capsInfo->getHash() == "sha-1") {
 		haveFeatures = m_entityCapsManager->getCaps(presence->getFrom()) != DiscoInfo::ref();
 		std::cout << "has capsInfo " << haveFeatures << "\n";
 	}
