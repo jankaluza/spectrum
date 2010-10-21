@@ -12,6 +12,8 @@ void AutoConnectLoopTest::up (void) {
 }
 
 void AutoConnectLoopTest::down (void) {
+	// m_loop removes itself when there's not account to be connected,
+	// so there's no need to delete it here.
 // 	delete m_loop;
 }
 

@@ -361,11 +361,8 @@ class spectrum:
 				except RuntimeError, e:
 					os._exit( 102 )
 
-				# get the absolute path of the config file, so we can change to
-				# spectrums homedir
+				# get the absolute path of the config file
 				path = os.path.abspath( self.config_path )
-				home = pwd.getpwuid( os.getuid() )[5]
-				os.chdir( home )
 
 				# check if database is at current version:
 				check_cmd = [ self.get_binary(), '--check-db-version', path ]
