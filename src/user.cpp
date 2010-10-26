@@ -37,7 +37,7 @@
 #include "gloox/sha.h"
 #include "Swiften/Swiften.h"
 
-User::User(const UserRow &row, const std::string &userKey, Swift::Component *component, Swift::PresenceOracle *presenceOracle, Swift::EntityCapsManager *entityCapsManager) : SpectrumRosterManager(this), SpectrumMessageHandler(this) {
+User::User(const UserRow &row, const std::string &userKey, Swift::Component *component, Swift::PresenceOracle *presenceOracle, Swift::EntityCapsManager *entityCapsManager) : SpectrumRosterManager(this, component), SpectrumMessageHandler(this) {
 // 	p = parent;
 	m_jid = row.jid;
 
@@ -739,6 +739,13 @@ User::~User(){
 	g_free(m_lang);
 
 	sendUnavailablePresenceToAll();
+
+	Swift::Presence::ref response = Swift::Presence::create();
+	response->setTo(Swift::JID(m_jid));
+	response->setFrom(Swift::JID(Transport::instance()->jid()));
+	response->setType(Swift::Presence::Unavailable);
+
+	m_component->sendPresence(response);
 
 	// purple_account_destroy(m_account);
 	// delete(m_account);

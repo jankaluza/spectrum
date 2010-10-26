@@ -29,6 +29,8 @@
 #include <algorithm>
 #include "configfile.h"
 
+#include "Swiften/Swiften.h"
+
 using namespace gloox;
 
 typedef enum { 	SUBSCRIPTION_NONE = 0,
@@ -62,7 +64,7 @@ class AbstractSpectrumBuddy {
 		// Generates whole <presence> stanza without "to" attribute. That attribute
 		// has to be added manually.
 		// only_new - if the stanza is the same as previous generated one, returns NULL.
-		Tag *generatePresenceStanza(int features, bool only_new = false);
+		Swift::Presence::ref generatePresenceStanza(int features, bool only_new = false);
 
 		// Sets online/offline state information.
 		void setOnline();
@@ -109,7 +111,7 @@ class AbstractSpectrumBuddy {
 		long m_id;
 		bool m_online;
 		std::string m_subscription;
-		std::string m_lastPresence;
+		Swift::Presence::ref m_lastPresence;
 		int m_flags;
 };
 

@@ -49,7 +49,7 @@ struct authRequest {
 // Manages all SpectrumBuddies in user's roster.
 class SpectrumRosterManager : public RosterStorage {
 	public:
-		SpectrumRosterManager(AbstractUser *user);
+		SpectrumRosterManager(AbstractUser *user, Swift::Component *component);
 		virtual ~SpectrumRosterManager();
 
 		// Sends unavailable presence of all online buddies.
@@ -134,6 +134,7 @@ class SpectrumRosterManager : public RosterStorage {
 		std::map <std::string, authRequest *> m_authRequests;
 		int m_subscribeLastCount;
 		bool m_loadingFromDB;
+		Swift::Component *m_component;
 
 };
 

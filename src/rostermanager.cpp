@@ -26,6 +26,7 @@
 #include "capabilityhandler.h"
 #include "spectrumtimer.h"
 #include "transport.h"
+#include "spectrumcomponent.h"
 
 #ifndef TESTS
 #include "spectrumbuddy.h"
@@ -35,6 +36,7 @@ struct SendPresenceToAllData {
 	int features;
 	std::string to;
 	bool markOffline;
+	Swift::Component *component;
 };
 
 static void handleAskSubscriptionBuddies(gpointer key, gpointer v, gpointer data) {
@@ -67,14 +69,13 @@ static void sendCurrentPresence(gpointer key, gpointer v, gpointer data) {
 	AbstractSpectrumBuddy *s_buddy = (AbstractSpectrumBuddy *) v;
 	SendPresenceToAllData *d = (SendPresenceToAllData *) data;
 	int features = d->features;
+	Swift::Component *component = d->component;
 	std::string &to = d->to;
-	std::cout << "online: " << s_buddy->isOnline() << "\n";
 	if (s_buddy->isOnline()) {
-		Tag *tag = s_buddy->generatePresenceStanza(features);
-		std::cout << "online: " << tag << "\n";
-		if (tag) {
-			tag->addAttribute("to", to);
-			Transport::instance()->send( tag );
+		Swift::Presence::ref presence = s_buddy->generatePresenceStanza(features);
+		if (presence) {
+			presence->setTo(Swift::JID(to));
+			component->sendPresence(presence);
 		}
 	}
 }
@@ -84,12 +85,13 @@ static gboolean sync_cb(gpointer data) {
 	return manager->syncBuddiesCallback();
 }
 
-SpectrumRosterManager::SpectrumRosterManager(AbstractUser *user) : RosterStorage(user) {
+SpectrumRosterManager::SpectrumRosterManager(AbstractUser *user, Swift::Component *component) : RosterStorage(user) {
 	m_user = user;
 	m_syncTimer = new SpectrumTimer(12000, &sync_cb, this);
 	m_subscribeLastCount = -1;
 	m_roster = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
 	m_loadingFromDB = false;
+	m_component = component;
 }
 
 SpectrumRosterManager::~SpectrumRosterManager() {
@@ -113,6 +115,7 @@ bool SpectrumRosterManager::isInRoster(const std::string &name, const std::strin
 void SpectrumRosterManager::sendUnavailablePresenceToAll(const std::string &resource) {
 	SendPresenceToAllData *data = new SendPresenceToAllData;
 	data->features = m_user->getFeatures();
+	data->component = m_component;
 	if (resource.empty()) {
 		data->to = m_user->jid();
 		data->markOffline = true;
@@ -176,10 +179,10 @@ void SpectrumRosterManager::loadRoster() {
 }
 
 void SpectrumRosterManager::sendPresence(AbstractSpectrumBuddy *s_buddy, const std::string &resource, bool only_new) {
-	Tag *tag = s_buddy->generatePresenceStanza(m_user->getFeatures(), only_new);
-	if (tag) {
-		tag->addAttribute("to", m_user->jid() + std::string(resource.empty() ? "" : "/" + resource));
-		Transport::instance()->send(tag);
+	Swift::Presence::ref presence = s_buddy->generatePresenceStanza(m_user->getFeatures(), only_new);
+	if (presence) {
+		presence->setTo(Swift::JID(m_user->jid() + std::string(resource.empty() ? "" : "/" + resource)));
+		m_component->sendPresence(presence);
 	}
 }
 

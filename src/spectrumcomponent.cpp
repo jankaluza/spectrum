@@ -42,7 +42,7 @@ SpectrumComponent::SpectrumComponent() : m_timerFactory(&m_boostIOServiceThread.
 	m_component->onError.connect(bind(&SpectrumComponent::handleConnectionError, this, _1));
 	m_component->onDataRead.connect(bind(&SpectrumComponent::handleDataRead, this, _1));
 	m_component->onDataWritten.connect(bind(&SpectrumComponent::handleDataWritten, this, _1));
-// 	m_component->onPresenceReceived.connect(bind(&SpectrumComponent::handlePresenceReceived, this, _1));
+	m_component->onPresenceReceived.connect(bind(&SpectrumComponent::handlePresenceReceived, this, _1));
 
 	m_capsMemoryStorage = new CapsMemoryStorage();
 	m_capsManager = new CapsManager(m_capsMemoryStorage, m_component->getStanzaChannel(), m_component->getIQRouter());
@@ -156,7 +156,7 @@ void SpectrumComponent::handlePresenceReceived(Swift::Presence::ref presence) {
 			break;
 		case Swift::Presence::Available:
 		case Swift::Presence::Unavailable:
-			handlePresence(presence);
+// 			handlePresence(presence);
 			break;
 		case Swift::Presence::Probe:
 			handleProbePresence(presence);

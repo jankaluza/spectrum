@@ -67,7 +67,7 @@ void AbstractSpectrumBuddy::setOffline() {
 		Transport::instance()->userManager()->buddyOffline();
 #endif
 	m_online = false;
-	m_lastPresence = "";
+	m_lastPresence = Swift::Presence::ref();
 }
 
 bool AbstractSpectrumBuddy::isOnline() {
@@ -82,39 +82,40 @@ const std::string &AbstractSpectrumBuddy::getSubscription() {
 	return m_subscription;
 }
 
-Tag *AbstractSpectrumBuddy::generatePresenceStanza(int features, bool only_new) {
+Swift::Presence::ref AbstractSpectrumBuddy::generatePresenceStanza(int features, bool only_new) {
 	std::string alias = getAlias();
 	std::string name = getSafeName();
 
 	PurpleStatusPrimitive s;
 	std::string statusMessage;
 	if (!getStatus(s, statusMessage))
-		return NULL;
+		return Swift::Presence::ref();
 
-	Tag *tag = new Tag("presence");
-	tag->addAttribute("from", getJid());
+	Swift::Presence::ref presence = Swift::Presence::create();
+	presence->setFrom(Swift::JID(getJid()));
+	presence->setType(Swift::Presence::Available);
 
 	if (!statusMessage.empty())
-		tag->addChild( new Tag("status", statusMessage) );
+		presence->setStatus(statusMessage);
 
 	switch(s) {
 		case PURPLE_STATUS_AVAILABLE: {
 			break;
 		}
 		case PURPLE_STATUS_AWAY: {
-			tag->addChild( new Tag("show", "away" ) );
+			presence->setShow(Swift::StatusShow::Away);
 			break;
 		}
 		case PURPLE_STATUS_UNAVAILABLE: {
-			tag->addChild( new Tag("show", "dnd" ) );
+			presence->setShow(Swift::StatusShow::DND);
 			break;
 		}
 		case PURPLE_STATUS_EXTENDED_AWAY: {
-			tag->addChild( new Tag("show", "xa" ) );
+			presence->setShow(Swift::StatusShow::XA);
 			break;
 		}
 		case PURPLE_STATUS_OFFLINE: {
-			tag->addAttribute( "type", "unavailable" );
+			presence->setType(Swift::Presence::Unavailable);
 			break;
 		}
 		default:
@@ -123,29 +124,21 @@ Tag *AbstractSpectrumBuddy::generatePresenceStanza(int features, bool only_new) 
 
 	if (s != PURPLE_STATUS_OFFLINE) {
 		// caps
-		Tag *c = new Tag("c");
-		c->addAttribute("xmlns", "http://jabber.org/protocol/caps");
-		c->addAttribute("hash", "sha-1");
-		c->addAttribute("node", "http://spectrum.im/transport");
-		c->addAttribute("ver", Transport::instance()->hash());
-		tag->addChild(c);
+		presence->addPayload(boost::shared_ptr<Swift::Payload>(new Swift::CapsInfo ("http://spectrum.im/transport", Transport::instance()->hash())));
 
 		if (features & TRANSPORT_FEATURE_AVATARS) {
-			// vcard-temp:x:update
-			Tag *x = new Tag("x");
-			x->addAttribute("xmlns","vcard-temp:x:update");
-			x->addChild( new Tag("photo", getIconHash()) );
-			tag->addChild(x);
+			presence->addPayload(boost::shared_ptr<Swift::Payload>(new Swift::VCardUpdate (getIconHash())));
 		}
 	}
 
 	if (only_new) {
-		if (m_lastPresence == tag->xml()) {
-			delete tag;
-			return NULL;
+		if (m_lastPresence)
+			m_lastPresence->setTo(Swift::JID(""));
+		if (m_lastPresence == presence) {
+			return Swift::Presence::ref();
 		}
-		m_lastPresence = tag->xml();
+		m_lastPresence = presence;
 	}
 
-	return tag;
+	return presence;
 }
