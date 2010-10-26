@@ -37,12 +37,14 @@
 #include "gloox/sha.h"
 #include "Swiften/Swiften.h"
 
-User::User(const UserRow &row, const std::string &userKey, Swift::PresenceOracle *presenceOracle, Swift::EntityCapsManager *entityCapsManager) : SpectrumRosterManager(this), SpectrumMessageHandler(this) {
+User::User(const UserRow &row, const std::string &userKey, Swift::Component *component, Swift::PresenceOracle *presenceOracle, Swift::EntityCapsManager *entityCapsManager) : SpectrumRosterManager(this), SpectrumMessageHandler(this) {
 // 	p = parent;
 	m_jid = row.jid;
 
+	m_component = component;
 	m_presenceOracle = presenceOracle;
 	m_entityCapsManager = entityCapsManager;
+	m_activeResource = Swift::JID(m_jid.c_str()).getResource().getUTF8String();
 // 	Resrource r;
 // 	setResource(Swift::JID(m_jid.c_str()).getResource().getUTF8String());
 // 	setActiveResource(Swift::JID(m_jid.c_str()).getResource().getUTF8String());
@@ -400,9 +402,13 @@ void User::connect() {
 		}
 	}
 
-	Presence tag(Presence::Unavailable, m_jid, tr(getLang(), _("Connecting")));
-	tag.setFrom(Transport::instance()->jid());
-	Transport::instance()->send(tag.tag());
+	Swift::Presence::ref response = Swift::Presence::create();
+	response->setTo(Swift::JID(m_jid));
+	response->setFrom(Swift::JID(Transport::instance()->jid()));
+	response->setType(Swift::Presence::Unavailable);
+	response->setStatus(tr(getLang(), _("Connecting")));
+
+	m_component->sendPresence(response);
 }
 
 /*
@@ -454,12 +460,16 @@ void User::connected() {
 
 	m_autoConnectRooms.clear();
 
-	if (m_glooxPresenceType != -1) {
-		Presence tag((Presence::PresenceType) m_glooxPresenceType, m_jid, m_statusMessage);
-		tag.setFrom(Transport::instance()->jid());
-		Transport::instance()->send(tag.tag());
-		m_glooxPresenceType = -1;
-	}
+	
+	Swift::Presence::ref highest = m_presenceOracle->getHighestPriorityPresence(Swift::JID(m_jid));
+	forwardStatus(highest);
+	
+// 	if (m_glooxPresenceType != -1) {
+// 		Presence tag((Presence::PresenceType) m_glooxPresenceType, m_jid, m_statusMessage);
+// 		tag.setFrom(Transport::instance()->jid());
+// 		Transport::instance()->send(tag.tag());
+// 		m_glooxPresenceType = -1;
+// 	}
 }
 
 /*
@@ -525,54 +535,63 @@ void User::receivedPresence(Swift::Presence::ref presence) {
 			if (presence->getTo().getNode().isEmpty()) {
 // // 				removeResource(stanza.from().resource());
 				removeConversationResource(presence->getFrom().getResource().getUTF8String());
-// 						Transport::instance()->adhoc()->unregisterSession(stanza.from().full()); TODO
+// 					T	ransport::instance()->adhoc()->unregisterSession(stanza.from().full()); TODO
 				sendUnavailablePresenceToAll(presence->getFrom().getResource().getUTF8String());
 			}
 			if (m_connected) {
-				if (getResources().empty() || (Transport::instance()->protocol()->tempAccountsAllowed() && !hasOpenedMUC())){
+				Swift::Presence::ref highest = m_presenceOracle->getHighestPriorityPresence(presence->getFrom().toBare());
+				if ((!highest || (highest && highest->getType() == Swift::Presence::Unavailable)) || (Transport::instance()->protocol()->tempAccountsAllowed() && !hasOpenedMUC())){
 					Log(m_jid, "disconecting");
 // // 					sendUnavailablePresenceToAll();
 // // 					purple_account_disconnect(m_account);
 // 					Transport::instance()->adhoc()->unregisterSession(stanza.from().full()); TODO
 				}
 				else {
-					Swiften::Presence::ref highest = m_presenceOracle->getHighestPriorityPresence(presence->getFrom());
+					
 					// Active resource changed, so we probably want to update status message/show.
-					forwardStatus(highest->getShow(), highest->getStatus().getUTF8String());
+					forwardStatus(highest);
 				}
-// 				m_connected=false;
+// // 				m_connected=false;
 			}
 			else {
-				if (!getResources().empty()) {
-					setActiveResource();
-				}
-				else if (m_account) {
-					Log(m_jid, "disconecting2");
+				Swift::Presence::ref highest = m_presenceOracle->getHighestPriorityPresence(presence->getFrom().toBare());
+				if (m_account && (!highest || (highest && highest->getType() == Swift::Presence::Unavailable))) {
 					sendUnavailablePresenceToAll();
-// 					purple_account_disconnect(m_account);
 				}
+// 				if (!getResources().empty()) {
+// 					setActiveResource();
+// 				}
+// 				else if (m_account) {
+// 					Log(m_jid, "disconecting2");
+// 					sendUnavailablePresenceToAll();
+// // 					purple_account_disconnect(m_account);
+// 				}
 			}
+			// move me to presenceoracle
+			std::string resource = presence->getFrom().getResource().getUTF8String();
+			m_resources.erase(resource);
 		} else {
-			std::string oldActiveResource = getResource().name;
-			if (!hasResource(stanza.from().resource())) {
-				setResource(stanza); // add this resource
-				sendPresenceToAll(stanza.from().full());
+			// move me to presenceoracle
+			std::string resource = presence->getFrom().getResource().getUTF8String();
+			if (m_resources.find(resource) == m_resources.end()) {
+				m_resources[resource] = 1;
+				sendPresenceToAll(presence->getFrom().toString().getUTF8String());
 			}
-			else
-				setResource(stanza); // update this resource
 
-			int presence = stanza.presence();
-			std::string stanzaStatus = stanza.status();
+			Swift::StatusShow::Type presenceShow = presence->getShow();
+			std::string stanzaStatus = presence->getStatus().getUTF8String();
 				
 			// Active resource has been changed, so we have to inform SpectrumMessageHandler to send
 			// next message from legacy network to bare jid.
-			if (getResource().name != oldActiveResource) {
-				removeConversationResource(oldActiveResource);
-				presence = getResource().show;
-				stanzaStatus = getResource().status;
+			Swift::Presence::ref highest = m_presenceOracle->getHighestPriorityPresence(presence->getFrom().toBare());
+			if (highest->getFrom().getResource().getUTF8String() != m_activeResource) {
+				removeConversationResource(m_activeResource);
+				m_activeResource = highest->getFrom().getResource().getUTF8String();
+				presenceShow = highest->getShow();
+				stanzaStatus = highest->getStatus().getUTF8String();
 			}
 
-			Log(m_jid, "RESOURCE" << getResource().name << " " << stanza.from().resource());
+// 			Log(m_jid, "RESOURCE" << getResource().name << " " << stanza.from().resource());
 			if (!m_connected) {
 				statusChanged = true;
 				// we are not connected to legacy network, so we should do it when disco#info arrive :)
@@ -580,76 +599,86 @@ void User::receivedPresence(Swift::Presence::ref presence) {
 				if (m_readyForConnect == false) {
 					m_readyForConnect = true;
 					// Forward status message to legacy network, but only if it's sent from active resource
-					if (getResource().name == stanza.from().resource()) {
-						forwardStatus(presence, stanzaStatus);
-					}
-					if (getResource().caps == -1) {
-						// caps not arrived yet, so we can't connect just now and we have to wait for caps
+// 					if (m_activeResource == presence->getFrom().getResource().getUTF8String()) {
+// 						forwardStatus(presenceShow, stanzaStatus);
+// 					}
+					boost::shared_ptr<Swift::CapsInfo> capsInfo = presence->getPayload<Swift::CapsInfo>();
+					if (capsInfo && capsInfo->getHash() == "sha-1") {
+						if (m_entityCapsManager->getCaps(presence->getFrom()) != Swift::DiscoInfo::ref()) {
+							connect();
+						}
 					}
 					else {
 						connect();
 					}
+// 					m_entityCapsManager->getCaps()
+// 					if (getResource().caps == -1) {
+// 						// caps not arrived yet, so we can't connect just now and we have to wait for caps
+// 					}
+// 					else {
+// 						connect();
+// 					}
 				}
 			}
 			// Forward status message to legacy network, but only if it's sent from active resource
-			else if (getResource().name == stanza.from().resource()) {
+			else if (m_activeResource == presence->getFrom().getResource().getUTF8String()) {
 				Log(m_jid, "mirroring presence to legacy network");
 				statusChanged = true;
-				forwardStatus(presence, stanzaStatus);
+				forwardStatus(highest);
 			}
 		}
 
-		if (purple_value_get_boolean(getSetting("enable_transport")) == false) {
-			Tag *tag = new Tag("presence");
-			tag->addAttribute("to", stanza.from().bare());
-			tag->addAttribute("type", "unavailable");
-			tag->addAttribute("from", Transport::instance()->jid());
-			Transport::instance()->send(tag);
-		}
-		// send presence about tranport status to user
-		else if (getResources().empty()) {
-			Tag *tag = new Tag("presence");
-			tag->addAttribute("to", stanza.from().bare());
-			tag->addAttribute("type", "unavailable");
-			tag->addAttribute("from", Transport::instance()->jid());
-			Transport::instance()->send(tag);
-		}
-		else if (stanza.presence() == Presence::Unavailable) {
-			Presence tag(stanza.presence(), stanza.from().full(), stanza.status());
-			tag.setFrom(Transport::instance()->jid());
-			Transport::instance()->send(tag.tag());
-		}
-// 		else if (statusChanged) {
-// 			Presence tag(stanza.presence(), m_jid, stanza.status());
-// 			tag.setFrom(Transport::instance()->jid());
+// 		if (purple_value_get_boolean(getSetting("enable_transport")) == false) {
+// 			Tag *tag = new Tag("presence");
+// 			tag->addAttribute("to", stanza.from().bare());
+// 			tag->addAttribute("type", "unavailable");
+// 			tag->addAttribute("from", Transport::instance()->jid());
 // 			Transport::instance()->send(tag);
 // 		}
+// 		// send presence about tranport status to user
+// 		else if (getResources().empty()) {
+// 			Tag *tag = new Tag("presence");
+// 			tag->addAttribute("to", stanza.from().bare());
+// 			tag->addAttribute("type", "unavailable");
+// 			tag->addAttribute("from", Transport::instance()->jid());
+// 			Transport::instance()->send(tag);
+// 		}
+// 		else if (stanza.presence() == Presence::Unavailable) {
+// 			Presence tag(stanza.presence(), stanza.from().full(), stanza.status());
+// 			tag.setFrom(Transport::instance()->jid());
+// 			Transport::instance()->send(tag.tag());
+// 		}
+// // 		else if (statusChanged) {
+// // 			Presence tag(stanza.presence(), m_jid, stanza.status());
+// // 			tag.setFrom(Transport::instance()->jid());
+// // 			Transport::instance()->send(tag);
+// // 		}
 
 	}
-	delete stanzaTag;
+// 	delete stanzaTag;
 }
 
-void User::forwardStatus(int presence, const std::string &stanzaStatus) {
+void User::forwardStatus(Swift::Presence::ref presence) {
 	int PurplePresenceType;
 	// mirror presence types
-	switch (presence) {
-		case Presence::Available: {
+	switch (presence->getShow()) {
+		case Swift::StatusShow::Online: {
 			PurplePresenceType = PURPLE_STATUS_AVAILABLE;
 			break;
 		}
-		case Presence::Chat: {
+		case Swift::StatusShow::FFC: {
 			PurplePresenceType = PURPLE_STATUS_AVAILABLE;
 			break;
 		}
-		case Presence::Away: {
+		case Swift::StatusShow::Away: {
 			PurplePresenceType = PURPLE_STATUS_AWAY;
 			break;
 		}
-		case Presence::DND: {
+		case Swift::StatusShow::DND: {
 			PurplePresenceType = PURPLE_STATUS_UNAVAILABLE;
 			break;
 		}
-		case Presence::XA: {
+		case Swift::StatusShow::XA: {
 			PurplePresenceType = PURPLE_STATUS_EXTENDED_AWAY;
 			break;
 		}
@@ -658,12 +687,7 @@ void User::forwardStatus(int presence, const std::string &stanzaStatus) {
 			break;
 	}
 
-	if (!m_connected) {
-		m_presenceType = PurplePresenceType;
-		m_statusMessage = stanzaStatus;
-		m_glooxPresenceType = presence;
-	}
-	else {
+	if (m_connected) {
 		// we are already connected so we have to change status
 		const PurpleStatusType *status_type = purple_account_get_status_type_with_primitive(m_account, (PurpleStatusPrimitive) PurplePresenceType);
 		std::string statusMessage;
@@ -671,7 +695,7 @@ void User::forwardStatus(int presence, const std::string &stanzaStatus) {
 			// send presence to legacy network
 			statusMessage.clear();
 
-			statusMessage.append(stanzaStatus);
+			statusMessage.append(presence->getStatus().getUTF8String());
 
 			if (!statusMessage.empty()) {
 				purple_account_set_status(m_account, purple_status_type_get_id(status_type), TRUE, "message", statusMessage.c_str(), NULL);
@@ -681,9 +705,14 @@ void User::forwardStatus(int presence, const std::string &stanzaStatus) {
 			}
 		}
 
-		Presence tag((Presence::PresenceType) presence, m_jid, statusMessage);
-		tag.setFrom(Transport::instance()->jid());
-		Transport::instance()->send(tag.tag());
+		Swift::Presence::ref response = Swift::Presence::create();
+		response->setTo(presence->getFrom().toBare());
+		response->setFrom(presence->getTo());
+		response->setType(presence->getType());
+		response->setShow(presence->getShow());
+		response->setStatus(presence->getStatus());
+
+		m_component->sendPresence(response);
 	}
 }
 

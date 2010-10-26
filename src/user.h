@@ -35,6 +35,7 @@ class RosterManager;
 #include "spectrummessagehandler.h"
 #include "abstractbackend.h"
 
+#include "Swiften/Swiften.h"
 #include "Swiften/Presence/PresenceOracle.h"
 #include "Swiften/Disco/EntityCapsManager.h"
 
@@ -49,7 +50,7 @@ class User;
 // Representation of XMPP User
 class User : public AbstractUser, public SpectrumRosterManager, public SpectrumMessageHandler {
 	public:
-		User(const UserRow &row, const std::string &userKey, Swift::PresenceOracle *presenceOracle, Swift::EntityCapsManager *entityCapsManager);
+		User(const UserRow &row, const std::string &userKey, Swift::Component *component, Swift::PresenceOracle *presenceOracle, Swift::EntityCapsManager *entityCapsManager);
 		virtual ~User();
 
 		// Connects the user to legacy network.
@@ -60,7 +61,7 @@ class User : public AbstractUser, public SpectrumRosterManager, public SpectrumM
 
 		// Handles received presence.
 		void receivedPresence(Swift::Presence::ref presence);
-		void forwardStatus(int presence, const std::string &stanzaStatus);
+		void forwardStatus(Swift::Presence::ref presence);
 
 		void purpleBuddyTypingStopped(const std::string &uin);
 		void purpleBuddyTyping(const std::string &uin);
@@ -126,6 +127,9 @@ class User : public AbstractUser, public SpectrumRosterManager, public SpectrumM
 		int m_glooxPresenceType;
 		std::string m_statusMessage;
 		std::list <Tag *> m_autoConnectRooms;
+		std::string m_activeResource;				// should be part of PresenceOracle
+		std::map <std::string, int> m_resources;	// should be part of PresenceOracle
+		Swift::Component *m_component;
 
 		
 		Swift::EntityCapsManager *m_entityCapsManager;

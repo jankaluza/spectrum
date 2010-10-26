@@ -1010,6 +1010,9 @@ GlooxMessageHandler::GlooxMessageHandler(const std::string &config) : MessageHan
 			loaded = false;
 	}
 
+	m_parser = new GlooxParser();
+	m_collector = new AccountCollector();
+
 	SpectrumComponent component;
 	component.connect();
 	loop->run();
@@ -1035,9 +1038,6 @@ GlooxMessageHandler::GlooxMessageHandler(const std::string &config) : MessageHan
 		m_discoHandler = new SpectrumDiscoHandler(this);
 		j->registerIqHandler(m_discoHandler, ExtDiscoInfo);
 		j->registerIqHandler(m_discoHandler, ExtDiscoItems);
-
-		m_parser = new GlooxParser();
-		m_collector = new AccountCollector();
 
 		ftManager = new FileTransferManager();
 		ft = new SIProfileFT(j, ftManager);

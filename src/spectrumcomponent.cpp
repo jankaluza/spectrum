@@ -190,17 +190,19 @@ void SpectrumComponent::handlePresence(Swift::Presence::ref presence) {
 
 	// check if we have this client's capabilities and ask for them
 	bool haveFeatures = false;
-	boost::shared_ptr<CapsInfo> capsInfo = presence->getPayload<CapsInfo>();
-	if (capsInfo && capsInfo->getHash() == "sha-1") {
-		haveFeatures = m_entityCapsManager->getCaps(presence->getFrom()) != DiscoInfo::ref();
-		std::cout << "has capsInfo " << haveFeatures << "\n";
+	if (presence->getType() != Swift::Presence::Unavailable) {
+		boost::shared_ptr<CapsInfo> capsInfo = presence->getPayload<CapsInfo>();
+		if (capsInfo && capsInfo->getHash() == "sha-1") {
+			haveFeatures = m_entityCapsManager->getCaps(presence->getFrom()) != DiscoInfo::ref();
+			std::cout << "has capsInfo " << haveFeatures << "\n";
+		}
+		else {
+			GetDiscoInfoRequest::ref discoInfoRequest = GetDiscoInfoRequest::create(presence->getFrom(), m_component->getIQRouter());
+			discoInfoRequest->onResponse.connect(boost::bind(&SpectrumComponent::handleDiscoInfoResponse, this, _1, _2, presence->getFrom()));
+			discoInfoRequest->send();
+		}
 	}
-	else {
-		GetDiscoInfoRequest::ref discoInfoRequest = GetDiscoInfoRequest::create(presence->getFrom(), m_component->getIQRouter());
-		discoInfoRequest->onResponse.connect(boost::bind(&SpectrumComponent::handleDiscoInfoResponse, this, _1, _2, presence->getFrom()));
-		discoInfoRequest->send();
-	}
-	
+
 	AbstractUser *user;
 	std::string barejid = presence->getTo().toBare().toString().getUTF8String();
 	std::string userkey = presence->getFrom().toBare().toString().getUTF8String();
@@ -208,13 +210,24 @@ void SpectrumComponent::handlePresence(Swift::Presence::ref presence) {
 		std::string server = barejid.substr(barejid.find("%") + 1, barejid.length() - barejid.find("%"));
 		userkey += server;
 	}
-	
+
 	user = Transport::instance()->userManager()->getUserByJID(userkey);
 
 	if (user == NULL) {
 		// No user, unavailable presence... nothing to do
-			if (presence->getType() == Swift::Presence::Unavailable)
+			if (presence->getType() == Swift::Presence::Unavailable) {
+				Swift::Presence::ref response = Swift::Presence::create();
+				response->setTo(presence->getFrom());
+				response->setFrom(Swift::JID(Transport::instance()->jid()));
+				response->setType(Swift::Presence::Unavailable);
+				m_component->sendPresence(response);
+
+				UserRow res = Transport::instance()->sql()->getUserByJid(userkey);
+				if (res.id != -1) {
+					Transport::instance()->sql()->setUserOnline(res.id, false);
+				}
 				return;
+			}
 			UserRow res = Transport::instance()->sql()->getUserByJid(userkey);
 			if (res.id == -1 && !Transport::instance()->protocol()->tempAccountsAllowed()) {
 				// presence from unregistered user
@@ -256,7 +269,7 @@ void SpectrumComponent::handlePresence(Swift::Presence::ref presence) {
 						}
 					}
 				}
-				user = (AbstractUser *) new User(res, userkey, m_presenceOracle, m_entityCapsManager);
+				user = (AbstractUser *) new User(res, userkey, m_component, m_presenceOracle, m_entityCapsManager);
 				user->setFeatures(isVip ? CONFIG().VIPFeatures : CONFIG().transportFeatures);
 // 				if (c != NULL)
 // 					if (Transport::instance()->hasClientCapabilities(c->findAttribute("ver")))
@@ -283,30 +296,20 @@ void SpectrumComponent::handlePresence(Swift::Presence::ref presence) {
 // 		}
 	}
 	else {
-// 		user->receivedPresence(stanza);
+		user->receivedPresence(presence);
 	}
-// 	if (stanza.to().username() == "" && user != NULL) {
-// 		if(stanza.presence() == Presence::Unavailable && user->isConnected() == true && user->getResources().empty()) {
-// 			Log(stanza.from().full(), "Logging out");
-// 			m_userManager->removeUser(user);
-// 		}
-// 		else if (stanza.presence() == Presence::Unavailable && user->isConnected() == false && user->getResources().empty()) {
-// 			Log(stanza.from().full(), "Logging out, but he's not connected...");
-// 			m_userManager->removeUser(user);
-// 		}
-// // 		else if (stanza.presence() == Presence::Unavailable && user->isConnected() == false) {
-// // 			Log(stanza.from().full(), "Can't logout because we're connecting now...");
-// // 		}
-// 	}
-// 	else if (user != NULL && stanza.presence() == Presence::Unavailable && m_protocol->tempAccountsAllowed() && !user->hasOpenedMUC()) {
-// 		m_userManager->removeUser(user);
-// 	}
-// 	else if (user == NULL && stanza.to().username() == "" && stanza.presence() == Presence::Unavailable) {
-// 		UserRow res = sql()->getUserByJid(userkey);
-// 		if (res.id != -1) {
-// 			sql()->setUserOnline(res.id, false);
-// 		}
-// 	}
+
+	if (presence->getType() == Swift::Presence::Unavailable) {
+		if (user) {
+			Swift::Presence::ref highest = m_presenceOracle->getHighestPriorityPresence(presence->getFrom().toBare());
+			if (presence->getType() == Swift::Presence::Unavailable && (!highest || (highest && highest->getType() == Swift::Presence::Unavailable))) {
+				Transport::instance()->userManager()->removeUser(user);
+			}
+		}
+		else if (user && Transport::instance()->protocol()->tempAccountsAllowed() && !((User *) user)->hasOpenedMUC()) {
+			Transport::instance()->userManager()->removeUser(user);
+		}
+	}
 }
 
 void SpectrumComponent::handleSubscription(Swift::Presence::ref presence) {

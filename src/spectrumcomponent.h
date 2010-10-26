@@ -23,7 +23,7 @@
 
 #include <vector>
 #include "Swiften/Swiften.h"
-#include "Swiften/Queries/Requests/GetDiscoInfoRequest.h"
+#include "Swiften/Disco/GetDiscoInfoRequest.h"
 #include "Swiften/Disco/EntityCapsManager.h"
 #include "Swiften/Disco/CapsManager.h"
 #include "Swiften/Disco/CapsMemoryStorage.h"
