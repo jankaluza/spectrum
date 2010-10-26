@@ -324,14 +324,14 @@ set(spectrum_tests_MOC_HDRS
 	src/transport.h
 )
 
-add_executable(spectrum_tests ${spectrum_tests_SRCS} ${lrelease_outputs})
-set_target_properties(spectrum_tests PROPERTIES COMPILE_FLAGS -DTESTS)
+# add_executable(spectrum_tests ${spectrum_tests_SRCS} ${lrelease_outputs})
+# set_target_properties(spectrum_tests PROPERTIES COMPILE_FLAGS -DTESTS)
 
-if(DEFINED WITH_STATIC_GLOOX)
-	target_link_libraries(spectrum_tests ${WITH_STATIC_GLOOX} -lgnutls ${PURPLE_LIBRARY} ${CPPUNIT_LIBRARY} ${GLIB2_LIBRARIES} ${LIBPOCO_LIBRARIES} -export-dynamic)
-else(DEFINED WITH_STATIC_GLOOX)
-	target_link_libraries(spectrum_tests ${GLOOX_LIBRARIES} ${PURPLE_LIBRARY} ${CPPUNIT_LIBRARY} ${GLIB2_LIBRARIES} ${LIBPOCO_LIBRARIES} -export-dynamic)
-endif(DEFINED WITH_STATIC_GLOOX)
+# if(DEFINED WITH_STATIC_GLOOX)
+# 	target_link_libraries(spectrum_tests ${WITH_STATIC_GLOOX} -lgnutls ${PURPLE_LIBRARY} ${CPPUNIT_LIBRARY} ${GLIB2_LIBRARIES} ${LIBPOCO_LIBRARIES} -export-dynamic)
+# else(DEFINED WITH_STATIC_GLOOX)
+# 	target_link_libraries(spectrum_tests ${GLOOX_LIBRARIES} ${PURPLE_LIBRARY} ${CPPUNIT_LIBRARY} ${GLIB2_LIBRARIES} ${LIBPOCO_LIBRARIES} -export-dynamic)
+# endif(DEFINED WITH_STATIC_GLOOX)
 
 
 

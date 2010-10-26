@@ -27,6 +27,7 @@
 #include "Swiften/Disco/EntityCapsManager.h"
 #include "Swiften/Disco/CapsManager.h"
 #include "Swiften/Disco/CapsMemoryStorage.h"
+#include "Swiften/Presence/PresenceOracle.h"
 #include "Swiften/Network/BoostTimerFactory.h"
 #include "Swiften/Network/BoostIOServiceThread.h"
 #include "glib.h"
@@ -67,6 +68,7 @@ class SpectrumComponent {
 		Swift::EntityCapsManager *m_entityCapsManager;
 		Swift::CapsManager *m_capsManager;
 		Swift::CapsMemoryStorage *m_capsMemoryStorage;
+		Swift::PresenceOracle *m_presenceOracle;
 		int m_reconnectCount;
 		bool m_firstConnection;
 };

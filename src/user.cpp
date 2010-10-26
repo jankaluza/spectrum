@@ -37,13 +37,15 @@
 #include "gloox/sha.h"
 #include "Swiften/Swiften.h"
 
-User::User(const UserRow &row, const std::string &userKey) : SpectrumRosterManager(this), SpectrumMessageHandler(this) {
+User::User(const UserRow &row, const std::string &userKey, Swift::PresenceOracle *presenceOracle, Swift::EntityCapsManager *entityCapsManager) : SpectrumRosterManager(this), SpectrumMessageHandler(this) {
 // 	p = parent;
 	m_jid = row.jid;
 
-	Resource r;
-	setResource(Swift::JID(m_jid.c_str()).getResource().getUTF8String());
-	setActiveResource(Swift::JID(m_jid.c_str()).getResource().getUTF8String());
+	m_presenceOracle = presenceOracle;
+	m_entityCapsManager = entityCapsManager;
+// 	Resrource r;
+// 	setResource(Swift::JID(m_jid.c_str()).getResource().getUTF8String());
+// 	setActiveResource(Swift::JID(m_jid.c_str()).getResource().getUTF8String());
 
 // 	long id;
 // 	std::string jid;
@@ -463,81 +465,68 @@ void User::connected() {
 /*
  * Received jabber presence...
  */
-void User::receivedPresence(const Presence &stanza) {
-	Tag *stanzaTag = stanza.tag();
-	if (!stanzaTag)
-		return;
+void User::receivedPresence(Swift::Presence::ref presence) {
 	bool statusChanged = false;
 
-// 	std::string lang = stanzaTag->findAttribute("xml:lang");
-// 	if (lang != "") {
-// 		setLang(lang.c_str());
-// 		localization.loadLocale(getLang());
+// 	if (stanza.to().username() == "" && isConnected() && stanza.presence() != Presence::Unavailable) {
+// 		Tag *x_vcard = stanzaTag->findChild("x");
+// 		if (x_vcard) {
+// 			Tag *photo = x_vcard->findChild("photo");
+// 			if (photo && !photo->cdata().empty()) {
+// 				if (photo->cdata() != m_photoHash) {
+// // 					Transport::instance()->fetchVCard(jid());
+// 				}
+// 			}
+// 		}
 // 	}
 	
-	if (stanza.to().username() == "" && isConnected() && stanza.presence() != Presence::Unavailable) {
-		Tag *x_vcard = stanzaTag->findChild("x");
-		if (x_vcard) {
-			Tag *photo = x_vcard->findChild("photo");
-			if (photo && !photo->cdata().empty()) {
-				if (photo->cdata() != m_photoHash) {
-// 					Transport::instance()->fetchVCard(jid());
-				}
-			}
-		}
-	}
-	
-	handlePresence(stanza);
+// 	handlePresence(stanza);
 
 
-	// Handle join-the-room presence
-	bool isMUC = stanza.findExtension(ExtMUC) != NULL;
-	if (isMUC && stanza.to().username() != "" && !isOpenedConversation(stanza.to().bare())) {
-		if (stanza.presence() != Presence::Unavailable) {
-			if (m_connected) {
-				GHashTable *comps = NULL;
-				std::string name = "";
-				std::string nickname = stanza.to().resource();
+// 	// Handle join-the-room presence
+// 	bool isMUC = stanza.findExtension(ExtMUC) != NULL;
+// 	if (isMUC && stanza.to().username() != "" && !isOpenedConversation(stanza.to().bare())) {
+// 		if (stanza.presence() != Presence::Unavailable) {
+// 			if (m_connected) {
+// 				GHashTable *comps = NULL;
+// 				std::string name = "";
+// 				std::string nickname = stanza.to().resource();
+// 
+// 				PurpleConnection *gc = purple_account_get_connection(m_account);
+// 				Transport::instance()->protocol()->makePurpleUsernameRoom(this, stanza.to().bare(), name);
+// 				PurpleChat *chat = Transport::instance()->protocol()->getPurpleChat(this, name);
+// 				if (chat) {
+// 					comps = purple_chat_get_components(chat);
+// 				}
+// 				else if (PURPLE_PLUGIN_PROTOCOL_INFO(gc->prpl)->chat_info_defaults != NULL) {
+// 					comps = PURPLE_PLUGIN_PROTOCOL_INFO(gc->prpl)->chat_info_defaults(gc, name.c_str());
+// 				}
+// 				if (comps) {
+// 					setRoomResource(name, stanza.from().resource());
+// 					serv_join_chat(gc, comps);
+// 				}
+// 			}
+// 			else {
+// 				m_autoConnectRooms.push_back(stanza.tag());
+// 			}
+// 		}
+// 	}
 
-				PurpleConnection *gc = purple_account_get_connection(m_account);
-				Transport::instance()->protocol()->makePurpleUsernameRoom(this, stanza.to().bare(), name);
-				PurpleChat *chat = Transport::instance()->protocol()->getPurpleChat(this, name);
-				if (chat) {
-					comps = purple_chat_get_components(chat);
-				}
-				else if (PURPLE_PLUGIN_PROTOCOL_INFO(gc->prpl)->chat_info_defaults != NULL) {
-					comps = PURPLE_PLUGIN_PROTOCOL_INFO(gc->prpl)->chat_info_defaults(gc, name.c_str());
-				}
-				if (comps) {
-					setRoomResource(name, stanza.from().resource());
-					serv_join_chat(gc, comps);
-				}
-			}
-			else {
-				m_autoConnectRooms.push_back(stanza.tag());
-			}
-		}
-	}
-
-	std::cout << "Unavailable" << stanza.to().username() << "\n";
-	if (stanza.to().username() != ""  && stanza.presence() == Presence::Unavailable) {
-		std::string k = stanza.to().bare();
-		removeConversation(k, true);
-	}
+// 	std::cout << "Unavailable" << stanza.to().username() << "\n";
+// 	if (stanza.to().username() != ""  && stanza.presence() == Presence::Unavailable) {
+// 		std::string k = stanza.to().bare();
+// 		removeConversation(k, true);
+// 	}
 
 	// this presence is for the transport
-	if (stanza.to().username() == ""  || (Transport::instance()->protocol()->tempAccountsAllowed())) {
-		if (stanza.presence() == Presence::Unavailable) {
+	if (presence->getTo().getNode().isEmpty()  || (Transport::instance()->protocol()->tempAccountsAllowed())) {
+		if (presence->getType() == Swift::Presence::Unavailable) {
 			// disconnect from legacy network if we are connected
-			if (stanza.to().username() == "") {
-// 				if ((m_connected == false && int(time(NULL)) > int(m_connectionStart) + 10) || m_connected == true) {
-					if (hasResource(stanza.from().resource())) {
-						removeResource(stanza.from().resource());
-						removeConversationResource(stanza.from().resource());
+			if (presence->getTo().getNode().isEmpty()) {
+// // 				removeResource(stanza.from().resource());
+				removeConversationResource(presence->getFrom().getResource().getUTF8String());
 // 						Transport::instance()->adhoc()->unregisterSession(stanza.from().full()); TODO
-					}
-					sendUnavailablePresenceToAll(stanza.from().resource());
-// 				}
+				sendUnavailablePresenceToAll(presence->getFrom().getResource().getUTF8String());
 			}
 			if (m_connected) {
 				if (getResources().empty() || (Transport::instance()->protocol()->tempAccountsAllowed() && !hasOpenedMUC())){
@@ -547,7 +536,8 @@ void User::receivedPresence(const Presence &stanza) {
 // 					Transport::instance()->adhoc()->unregisterSession(stanza.from().full()); TODO
 				}
 				else {
-					setActiveResource();
+// 					setActiveResource();
+					Presence::ref highest = m_presenceOracle->getHighestPriorityPresence(presence->getFrom());
 					// Active resource changed, so we probably want to update status message/show.
 					forwardStatus(getResource().show, getResource().status);
 				}

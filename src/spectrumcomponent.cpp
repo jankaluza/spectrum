@@ -48,9 +48,15 @@ SpectrumComponent::SpectrumComponent() : m_timerFactory(&m_boostIOServiceThread.
 	m_capsManager = new CapsManager(m_capsMemoryStorage, m_component->getStanzaChannel(), m_component->getIQRouter());
 	m_entityCapsManager = new EntityCapsManager(m_capsManager, m_component->getStanzaChannel());
 	m_entityCapsManager->onCapsChanged.connect(boost::bind(&SpectrumComponent::handleCapsChanged, this, _1));
+	
+	m_presenceOracle = new PresenceOracle(m_component->getStanzaChannel());
 }
 
 SpectrumComponent::~SpectrumComponent() {
+	delete m_presenceOracle;
+	delete m_entityCapsManager;
+	delete m_capsManager;
+	delete m_capsMemoryStorage;
 	delete m_component;
 }
 
@@ -249,14 +255,14 @@ void SpectrumComponent::handlePresence(Swift::Presence::ref presence) {
 						}
 					}
 				}
-				user = (AbstractUser *) new User(res, userkey);
+				user = (AbstractUser *) new User(res, userkey, m_presenceOracle, m_entityCapsManager);
 				user->setFeatures(isVip ? CONFIG().VIPFeatures : CONFIG().transportFeatures);
 // 				if (c != NULL)
 // 					if (Transport::instance()->hasClientCapabilities(c->findAttribute("ver")))
 // 						user->setResource(stanza.from().resource(), stanza.priority(), Transport::instance()->getCapabilities(c->findAttribute("ver")));
 // 
 				Transport::instance()->userManager()->addUser(user);
-// 				user->receivedPresence(stanza);
+				user->receivedPresence(stanza);
 // 				if (protocol()->tempAccountsAllowed()) {
 // 					std::string server = stanza.to().username().substr(stanza.to().username().find("%") + 1, stanza.to().username().length() - stanza.to().username().find("%"));
 // 					server = stanza.from().bare() + server;
