@@ -37,7 +37,7 @@
 #include "gloox/sha.h"
 #include "Swiften/Swiften.h"
 
-User::User(const UserRow &row, const std::string &userKey, Swift::Component *component, Swift::PresenceOracle *presenceOracle, Swift::EntityCapsManager *entityCapsManager) : SpectrumRosterManager(this, component), SpectrumMessageHandler(this) {
+User::User(const UserRow &row, const std::string &userKey, Swift::Component *component, Swift::PresenceOracle *presenceOracle, Swift::EntityCapsManager *entityCapsManager) : SpectrumRosterManager(this, component), SpectrumMessageHandler(this, component) {
 // 	p = parent;
 	m_jid = row.jid;
 

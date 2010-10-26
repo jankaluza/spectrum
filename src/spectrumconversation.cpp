@@ -43,8 +43,8 @@ static void sendXhtmlTag(Tag *body, void *data) {
 	Transport::instance()->send(stanzaTag);
 }
 
-SpectrumConversation::SpectrumConversation(PurpleConversation *conv, SpectrumConversationType type, const std::string &room) : AbstractConversation(type),
-	m_conv(conv), m_room(room) {
+SpectrumConversation::SpectrumConversation(Swift::Component *component, PurpleConversation *conv, SpectrumConversationType type, const std::string &room) : AbstractConversation(type),
+	m_conv(conv), m_room(room), m_component(component) {
 #ifndef TESTS
 	m_conv->ui_data = this;
 #endif
@@ -105,41 +105,42 @@ void SpectrumConversation::handleMessage(AbstractUser *user, const char *who, co
 		return;
 	}
 	
-	Message s(Message::Chat, to, message);
+	Swift::Message::ref s(new Swift::Message());
 	if (!m_room.empty())
-		s.setFrom(m_room + "/" + name);
+		s->setFrom(Swift::JID(m_room + "/" + name));
 	else {
 		std::transform(name.begin(), name.end(), name.begin(),(int(*)(int)) std::tolower);
-		s.setFrom(name + std::string(getType() == SPECTRUM_CONV_CHAT ? "" : ("%" + JID(user->username()).server())) + "@" + Transport::instance()->jid() + "/bot");
+		s->setFrom(Swift::JID(name + std::string(getType() == SPECTRUM_CONV_CHAT ? "" : ("%" + JID(user->username()).server())) + "@" + Transport::instance()->jid() + "/bot"));
 	}
+	s->setBody(message);
+	s->setTo(Swift::JID(to));
 
 	// chatstates
-	if (purple_value_get_boolean(user->getSetting("enable_chatstate"))) {
-		if (user->hasFeature(GLOOX_FEATURE_CHATSTATES, getResource())) {
-			ChatState *c = new ChatState(ChatStateActive);
-			s.addExtension(c);
-		}
-	}
+// 	if (purple_value_get_boolean(user->getSetting("enable_chatstate"))) {
+// 		if (user->hasFeature(GLOOX_FEATURE_CHATSTATES, getResource())) {
+// 			ChatState *c = new ChatState(ChatStateActive);
+// 			s.addExtension(c);
+// 		}
+// 	}
 
 	// Delayed messages, we have to count with some delay
-	if (mtime && (unsigned long) time(NULL)-10 > (unsigned long) mtime/* && (unsigned long) time(NULL) - 31536000 < (unsigned long) mtime*/) {
-		char buf[80];
-		strftime(buf, sizeof(buf), "%Y-%m-%dT%H:%M:%SZ", gmtime(&mtime));
-		std::string timestamp(buf);
-		DelayedDelivery *d = new DelayedDelivery(name + "@" + Transport::instance()->jid() + "/bot", timestamp);
-		s.addExtension(d);
-	}
+// 	if (mtime && (unsigned long) time(NULL)-10 > (unsigned long) mtime/* && (unsigned long) time(NULL) - 31536000 < (unsigned long) mtime*/) {
+// 		char buf[80];
+// 		strftime(buf, sizeof(buf), "%Y-%m-%dT%H:%M:%SZ", gmtime(&mtime));
+// 		std::string timestamp(buf);
+// 		DelayedDelivery *d = new DelayedDelivery(name + "@" + Transport::instance()->jid() + "/bot", timestamp);
+// 		s.addExtension(d);
+// 	}
 
-	Tag *stanzaTag = s.tag();
-
-	std::string res = getResource();
-	if (user->hasFeature(GLOOX_FEATURE_XHTML_IM, res) && m != message) {
-		if (m.find("<body") != 0) {
-			m = "<body>" + m + "</body>";
-		}
-		Transport::instance()->parser()->getTag(m, sendXhtmlTag, stanzaTag);
-		return;
-	}
-	Transport::instance()->send(stanzaTag);
+// 	std::string res = getResource();
+// 	if (user->hasFeature(GLOOX_FEATURE_XHTML_IM, res) && m != message) {
+// 		if (m.find("<body") != 0) {
+// 			m = "<body>" + m + "</body>";
+// 		}
+// 		Transport::instance()->parser()->getTag(m, sendXhtmlTag, stanzaTag);
+// 		return;
+// 	}
+// 	Transport::instance()->send(stanzaTag);
+	m_component->sendMessage(s);
 
 }

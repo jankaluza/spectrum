@@ -35,10 +35,11 @@
 #include "user.h"
 #endif
 
-SpectrumMessageHandler::SpectrumMessageHandler(AbstractUser *user) {
+SpectrumMessageHandler::SpectrumMessageHandler(AbstractUser *user, Swift::Component *component) {
 	m_user = user;
 	m_mucs = 0;
 	m_currentBody = "";
+	m_component = component;
 }
 
 SpectrumMessageHandler::~SpectrumMessageHandler() {
@@ -65,7 +66,7 @@ void SpectrumMessageHandler::handlePurpleMessage(PurpleAccount* account, char * 
 		conv = purple_conversation_new(PURPLE_CONV_TYPE_IM, account, name);
 #ifndef TESTS
 		if (Transport::instance()->getConfiguration().protocol == "irc") {
-			m_conversations[getConversationName(conv)] = new SpectrumConversation(conv, SPECTRUM_CONV_GROUPCHAT);
+			m_conversations[getConversationName(conv)] = new SpectrumConversation(m_component, conv, SPECTRUM_CONV_GROUPCHAT);
 			m_conversations[getConversationName(conv)]->setKey(getConversationName(conv));
 		}
 		else if (Transport::instance()->getConfiguration().protocol == "xmpp") {
@@ -73,15 +74,15 @@ void SpectrumMessageHandler::handlePurpleMessage(PurpleAccount* account, char * 
 			Transport::instance()->protocol()->makeRoomJID(m_user, jid);
 			if (m_mucs_names.find(jid) != m_mucs_names.end()) {
 				std::string key = jid + "/" + JID(std::string(name)).resource();
-				m_conversations[key] = new SpectrumConversation(conv, SPECTRUM_CONV_GROUPCHAT, jid);
+				m_conversations[key] = new SpectrumConversation(m_component, conv, SPECTRUM_CONV_GROUPCHAT, jid);
 				m_conversations[key]->setKey(key);
 			}
 			else {
-				addConversation(conv, new SpectrumConversation(conv, SPECTRUM_CONV_CHAT));
+				addConversation(conv, new SpectrumConversation(m_component, conv, SPECTRUM_CONV_CHAT));
 			}
 		}
 		else
-			addConversation(conv, new SpectrumConversation(conv, SPECTRUM_CONV_CHAT));
+			addConversation(conv, new SpectrumConversation(m_component, conv, SPECTRUM_CONV_CHAT));
 #endif
 	}
 }
@@ -212,7 +213,7 @@ void SpectrumMessageHandler::handleMessage(Swift::Message::ref message) {
 		}
 		conv = purple_conversation_new(PURPLE_CONV_TYPE_IM, m_user->account() , username.c_str());
 #ifndef TESTS
-		addConversation(conv, new SpectrumConversation(conv, SPECTRUM_CONV_CHAT, room), key);
+		addConversation(conv, new SpectrumConversation(m_component, conv, SPECTRUM_CONV_CHAT, room), key);
 #endif
 		m_conversations[key]->setResource(message->getFrom().getResource().getUTF8String());
 	}

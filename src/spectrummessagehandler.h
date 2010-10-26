@@ -31,6 +31,7 @@
 #include <algorithm>
 #include "abstractuser.h"
 #include "abstractconversation.h"
+#include "Swiften/Swiften.h"
 
 using namespace gloox;
 
@@ -42,7 +43,7 @@ struct Conversation {
 // Handles messages and conversations.
 class SpectrumMessageHandler {
 	public:
-		SpectrumMessageHandler(AbstractUser *user);
+		SpectrumMessageHandler(AbstractUser *user, Swift::Component *component);
 		virtual ~SpectrumMessageHandler();
 
 		// Adds new conversation to internal database.
@@ -105,6 +106,7 @@ class SpectrumMessageHandler {
 		std::string m_currentBody;
 		AbstractUser *m_user;
 		int m_mucs;
+		Swift::Component *m_component;
 };
 
 #endif

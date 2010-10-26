@@ -1012,6 +1012,7 @@ GlooxMessageHandler::GlooxMessageHandler(const std::string &config) : MessageHan
 
 	m_parser = new GlooxParser();
 	m_collector = new AccountCollector();
+// 	m_stats = new GlooxStatsHandler(this);
 
 	SpectrumComponent component;
 	component.connect();
@@ -1056,7 +1057,7 @@ GlooxMessageHandler::GlooxMessageHandler(const std::string &config) : MessageHan
 		j->registerIqHandler(gatewayHandler, ExtGateway);
 		m_reg = new GlooxRegisterHandler();
 		j->registerIqHandler(m_reg, ExtRegistration);
-		m_stats = new GlooxStatsHandler(this);
+		
 		j->registerIqHandler(m_stats, ExtStats);
 		m_vcardManager = new VCardManager(j);
 #ifndef WIN32
@@ -1403,7 +1404,7 @@ void GlooxMessageHandler::purpleConversationWriteIM(PurpleConversation *conv, co
 	User *user = (User *) userManager()->getUserByAccount(account);
 	if (user) {
 		if (user->isConnected()) {
-			m_stats->messageFromLegacy();
+// 			m_stats->messageFromLegacy();
 			user->handleWriteIM(conv, who, message, flags, mtime);
 		}
 		else {
@@ -1445,7 +1446,7 @@ void GlooxMessageHandler::purpleConversationWriteChat(PurpleConversation *conv, 
 	User *user = (User *) userManager()->getUserByAccount(account);
 	if (user) {
 		if (user->isConnected()) {
-			m_stats->messageFromLegacy();
+// 			m_stats->messageFromLegacy();
 			user->handleWriteChat(conv, who, message, flags, mtime);
 		}
 		else {
@@ -1889,7 +1890,7 @@ void GlooxMessageHandler::handleMessage (const Message &msg, MessageSession *ses
 				delete chatstates;
 			}
 			if (msgTag->findChild("body") != NULL) {
-				m_stats->messageFromJabber();
+// 				m_stats->messageFromJabber();
 				user->handleMessage(msg);
 			}
 			delete msgTag;

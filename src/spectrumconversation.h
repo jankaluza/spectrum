@@ -28,6 +28,7 @@
 #include "gloox/tag.h"
 #include <algorithm>
 #include "abstractconversation.h"
+#include "Swiften/Swiften.h"
 
 using namespace gloox;
 
@@ -38,7 +39,7 @@ class SpectrumConversation : public AbstractConversation {
 	public:
 		// Creates new SpectrumConversation based on 'conv'. Type is SPECTRUM_CONV_GROUPCHAT in case of PM in MUC.
 		// If room is specified and type is SPECTRUM_CONV_GROUPCHAT, messages are sent from room + "/" + who.
-		SpectrumConversation(PurpleConversation *conv, SpectrumConversationType type, const std::string &room = "");
+		SpectrumConversation(Swift::Component *component, PurpleConversation *conv, SpectrumConversationType type, const std::string &room = "");
 		virtual ~SpectrumConversation();
 
 		// Handles message which should be resend to XMPP user.
@@ -53,6 +54,7 @@ class SpectrumConversation : public AbstractConversation {
 #endif
 		PurpleConversation *m_conv;		// Conversation associated with this class.
 		std::string m_room;
+		Swift::Component *m_component;
 };
 
 #endif
