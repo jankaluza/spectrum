@@ -30,6 +30,8 @@
 #include "filetransferrepeater.h"
 #endif
 
+#include "Swiften/Swiften.h"
+
 typedef enum { 	CALLER_ADHOC,
 				CALLER_SEARCH,
 				CALLER_DUMMY
@@ -68,6 +70,7 @@ class AbstractUser : public ResourceManager
 		AdhocData & adhocData() { return m_adhocData; }
 		void setAdhocData(AdhocData data) { m_adhocData = data; }
 		virtual void setFeatures(int /*f*/) {}
+		virtual void receivedPresence(Swift::Presence::ref presence) {}
 		
 		void setProtocolData(void *protocolData) { m_protocolData = protocolData; }
 		void *protocolData() { return m_protocolData; }

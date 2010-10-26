@@ -1544,163 +1544,163 @@ void GlooxMessageHandler::handleSubscription(const Subscription &stanza) {
 }
 
 void GlooxMessageHandler::handlePresence(const Presence &stanza){
-	if (stanza.subtype() == Presence::Error) {
-		return;
-	}
-
-	if (!isValidNode(stanza.from().username())) {
-		Tag *tag = new Tag("presence");
-		tag->addAttribute("to", stanza.from().full());
-		tag->addAttribute("from", stanza.to().full());
-		tag->addAttribute("type", "error");
-
-		Tag *error = new Tag("error");
-		error->addAttribute("type", "modify");
-
-		Tag *jid = new Tag("jid-malformed");
-		jid->addAttribute("xmlns", "urn:ietf:params:xml:ns:xmpp-stanzas");
-		
-		error->addChild(jid);
-		tag->addChild(error);
-		j->send(tag);
-		return;
-	}
-	
-	// get entity capabilities
-	Tag *c = NULL;
-	bool isMUC = stanza.findExtension(ExtMUC) != NULL;
-	Log(stanza.from().full(), "Presence received (" << (int)stanza.subtype() << ") for: " << stanza.to().full() << "isMUC" << isMUC);
-
-
-	if (stanza.presence() != Presence::Unavailable && ((stanza.to().username() == "" && !protocol()->tempAccountsAllowed()) || (isMUC && protocol()->tempAccountsAllowed()))) {
-		Tag *stanzaTag = stanza.tag();
-		if (!stanzaTag) return;
-		Tag *c = stanzaTag->findChildWithAttrib("xmlns","http://jabber.org/protocol/caps");
-		Log(stanza.from().full(), "asking for caps/disco#info");
-		// Presence has caps and caps are not cached.
-		if (c != NULL && !Transport::instance()->hasClientCapabilities(c->findAttribute("ver"))) {
-			int context = m_capabilityHandler->waitForCapabilities(c->findAttribute("ver"), stanza.to().full());
-			std::string node = c->findAttribute("node") + std::string("#") + c->findAttribute("ver");;
-			j->disco()->getDiscoInfo(stanza.from(), node, m_capabilityHandler, context, j->getID());
-		}
-		else {
-			int context = m_capabilityHandler->waitForCapabilities(stanza.from().full(), stanza.to().full());
-			j->disco()->getDiscoInfo(stanza.from(), "", m_capabilityHandler, context, j->getID());
-		}
-		delete stanzaTag;
-	}
-	
-	User *user;
-	std::string userkey;
-	if (protocol()->tempAccountsAllowed()) {
-		std::string server = stanza.to().username().substr(stanza.to().username().find("%") + 1, stanza.to().username().length() - stanza.to().username().find("%"));
-		userkey = stanza.from().bare() + server;
-		user = (User *) userManager()->getUserByJID(stanza.from().bare() + server);
-	}
-	else {
-		user = (User *) userManager()->getUserByJID(stanza.from().bare());
-		userkey = stanza.from().bare();
-	}
-	if (user == NULL) {
-		// we are not connected and probe arrived => answer with unavailable
-		if (stanza.subtype() == Presence::Probe) {
-			Log(stanza.from().full(), "Answering to probe presence with unavailable presence");
-			Tag *tag = new Tag("presence");
-			tag->addAttribute("to", stanza.from().full());
-			tag->addAttribute("from", stanza.to().bare());
-			tag->addAttribute("type", "unavailable");
-			j->send(tag);
-		}
-		else if (((stanza.to().username() == "" && !protocol()->tempAccountsAllowed()) || ( protocol()->tempAccountsAllowed() && isMUC)) && stanza.presence() != Presence::Unavailable){
-			UserRow res = sql()->getUserByJid(userkey);
-			if(res.id==-1 && !protocol()->tempAccountsAllowed()) {
-				// presence from unregistered user
-				Log(stanza.from().full(), "This user is not registered");
-				return;
-			}
-			else {
-				if(res.id==-1 && protocol()->tempAccountsAllowed()) {
-					res.jid = userkey;
-					res.uin = stanza.from().username();
-					res.password = "";
-					res.language = "en";
-					res.encoding = m_configuration.encoding;
-					res.vip = 0;
-					sql()->addUser(res);
-					res = sql()->getUserByJid(userkey);
-				}
-				bool isVip = res.vip;
-				std::list<std::string> const &x = configuration().allowedServers;
-				if (configuration().onlyForVIP && !isVip && std::find(x.begin(), x.end(), stanza.from().server()) == x.end()) {
-					Log(stanza.from().full(), "This user is not VIP, can't login...");
-					return;
-				}
-				Log(stanza.from().full(), "Creating new User instance");
-				if (protocol()->tempAccountsAllowed()) {
-					std::string server = stanza.to().username().substr(stanza.to().username().find("%") + 1, stanza.to().username().length() - stanza.to().username().find("%"));
-// 					user = new User(this, stanza.from(), stanza.to().resource() + "@" + server, "", stanza.from().bare() + server, res.id, res.encoding, res.language, res.vip);
-				}
-				else {
-					if (purple_accounts_find(res.uin.c_str(), protocol()->protocol().c_str()) != NULL) {
-						PurpleAccount *act = purple_accounts_find(res.uin.c_str(), protocol()->protocol().c_str());
-						user = (User *) userManager()->getUserByAccount(act);
-						if (user) {
-							Log(stanza.from().full(), "This account is already connected by another jid " << user->jid());
-							return;
-						}
-					}
-// 					user = new User(this, stanza.from(), res.uin, res.password, stanza.from().bare(), res.id, res.encoding, res.language, res.vip);
-				}
-				user->setFeatures(isVip ? configuration().VIPFeatures : configuration().transportFeatures);
-				if (c != NULL)
-					if (Transport::instance()->hasClientCapabilities(c->findAttribute("ver")))
-						user->setResource(stanza.from().resource(), stanza.priority(), Transport::instance()->getCapabilities(c->findAttribute("ver")));
-
-				m_userManager->addUser(user);
-				user->receivedPresence(stanza);
-				if (protocol()->tempAccountsAllowed()) {
-					std::string server = stanza.to().username().substr(stanza.to().username().find("%") + 1, stanza.to().username().length() - stanza.to().username().find("%"));
-					server = stanza.from().bare() + server;
-					purple_timeout_add_seconds(15, &connectUser, g_strdup(server.c_str()));
-				}
-				else
-					purple_timeout_add_seconds(15, &connectUser, g_strdup(stanza.from().bare().c_str()));
-			}
-		}
-		if (stanza.presence() == Presence::Unavailable && stanza.to().username() == ""){
-			Log(stanza.from().full(), "User is already logged out => sending unavailable presence");
-			Tag *tag = new Tag("presence");
-			tag->addAttribute( "to", stanza.from().bare() );
-			tag->addAttribute( "type", "unavailable" );
-			tag->addAttribute( "from", jid() );
-			j->send( tag );
-		}
-	}
-	else {
-		user->receivedPresence(stanza);
-	}
-	if (stanza.to().username() == "" && user != NULL) {
-		if(stanza.presence() == Presence::Unavailable && user->isConnected() == true && user->getResources().empty()) {
-			Log(stanza.from().full(), "Logging out");
-			m_userManager->removeUser(user);
-		}
-		else if (stanza.presence() == Presence::Unavailable && user->isConnected() == false && user->getResources().empty()) {
-			Log(stanza.from().full(), "Logging out, but he's not connected...");
-			m_userManager->removeUser(user);
-		}
-// 		else if (stanza.presence() == Presence::Unavailable && user->isConnected() == false) {
-// 			Log(stanza.from().full(), "Can't logout because we're connecting now...");
+// 	if (stanza.subtype() == Presence::Error) {
+// 		return;
+// 	}
+// 
+// 	if (!isValidNode(stanza.from().username())) {
+// 		Tag *tag = new Tag("presence");
+// 		tag->addAttribute("to", stanza.from().full());
+// 		tag->addAttribute("from", stanza.to().full());
+// 		tag->addAttribute("type", "error");
+// 
+// 		Tag *error = new Tag("error");
+// 		error->addAttribute("type", "modify");
+// 
+// 		Tag *jid = new Tag("jid-malformed");
+// 		jid->addAttribute("xmlns", "urn:ietf:params:xml:ns:xmpp-stanzas");
+// 		
+// 		error->addChild(jid);
+// 		tag->addChild(error);
+// 		j->send(tag);
+// 		return;
+// 	}
+// 	
+// 	// get entity capabilities
+// 	Tag *c = NULL;
+// 	bool isMUC = stanza.findExtension(ExtMUC) != NULL;
+// 	Log(stanza.from().full(), "Presence received (" << (int)stanza.subtype() << ") for: " << stanza.to().full() << "isMUC" << isMUC);
+// 
+// 
+// 	if (stanza.presence() != Presence::Unavailable && ((stanza.to().username() == "" && !protocol()->tempAccountsAllowed()) || (isMUC && protocol()->tempAccountsAllowed()))) {
+// 		Tag *stanzaTag = stanza.tag();
+// 		if (!stanzaTag) return;
+// 		Tag *c = stanzaTag->findChildWithAttrib("xmlns","http://jabber.org/protocol/caps");
+// 		Log(stanza.from().full(), "asking for caps/disco#info");
+// 		// Presence has caps and caps are not cached.
+// 		if (c != NULL && !Transport::instance()->hasClientCapabilities(c->findAttribute("ver"))) {
+// 			int context = m_capabilityHandler->waitForCapabilities(c->findAttribute("ver"), stanza.to().full());
+// 			std::string node = c->findAttribute("node") + std::string("#") + c->findAttribute("ver");;
+// 			j->disco()->getDiscoInfo(stanza.from(), node, m_capabilityHandler, context, j->getID());
 // 		}
-	}
-	else if (user != NULL && stanza.presence() == Presence::Unavailable && m_protocol->tempAccountsAllowed() && !user->hasOpenedMUC()) {
-		m_userManager->removeUser(user);
-	}
-	else if (user == NULL && stanza.to().username() == "" && stanza.presence() == Presence::Unavailable) {
-		UserRow res = sql()->getUserByJid(userkey);
-		if (res.id != -1) {
-			sql()->setUserOnline(res.id, false);
-		}
-	}
+// 		else {
+// 			int context = m_capabilityHandler->waitForCapabilities(stanza.from().full(), stanza.to().full());
+// 			j->disco()->getDiscoInfo(stanza.from(), "", m_capabilityHandler, context, j->getID());
+// 		}
+// 		delete stanzaTag;
+// 	}
+// 	
+// 	User *user;
+// 	std::string userkey;
+// 	if (protocol()->tempAccountsAllowed()) {
+// 		std::string server = stanza.to().username().substr(stanza.to().username().find("%") + 1, stanza.to().username().length() - stanza.to().username().find("%"));
+// 		userkey = stanza.from().bare() + server;
+// 		user = (User *) userManager()->getUserByJID(stanza.from().bare() + server);
+// 	}
+// 	else {
+// 		user = (User *) userManager()->getUserByJID(stanza.from().bare());
+// 		userkey = stanza.from().bare();
+// 	}
+// 	if (user == NULL) {
+// 		// we are not connected and probe arrived => answer with unavailable
+// 		if (stanza.subtype() == Presence::Probe) {
+// 			Log(stanza.from().full(), "Answering to probe presence with unavailable presence");
+// 			Tag *tag = new Tag("presence");
+// 			tag->addAttribute("to", stanza.from().full());
+// 			tag->addAttribute("from", stanza.to().bare());
+// 			tag->addAttribute("type", "unavailable");
+// 			j->send(tag);
+// 		}
+// 		else if (((stanza.to().username() == "" && !protocol()->tempAccountsAllowed()) || ( protocol()->tempAccountsAllowed() && isMUC)) && stanza.presence() != Presence::Unavailable){
+// 			UserRow res = sql()->getUserByJid(userkey);
+// 			if(res.id==-1 && !protocol()->tempAccountsAllowed()) {
+// 				// presence from unregistered user
+// 				Log(stanza.from().full(), "This user is not registered");
+// 				return;
+// 			}
+// 			else {
+// 				if(res.id==-1 && protocol()->tempAccountsAllowed()) {
+// 					res.jid = userkey;
+// 					res.uin = stanza.from().username();
+// 					res.password = "";
+// 					res.language = "en";
+// 					res.encoding = m_configuration.encoding;
+// 					res.vip = 0;
+// 					sql()->addUser(res);
+// 					res = sql()->getUserByJid(userkey);
+// 				}
+// 				bool isVip = res.vip;
+// 				std::list<std::string> const &x = configuration().allowedServers;
+// 				if (configuration().onlyForVIP && !isVip && std::find(x.begin(), x.end(), stanza.from().server()) == x.end()) {
+// 					Log(stanza.from().full(), "This user is not VIP, can't login...");
+// 					return;
+// 				}
+// 				Log(stanza.from().full(), "Creating new User instance");
+// 				if (protocol()->tempAccountsAllowed()) {
+// 					std::string server = stanza.to().username().substr(stanza.to().username().find("%") + 1, stanza.to().username().length() - stanza.to().username().find("%"));
+// // 					user = new User(this, stanza.from(), stanza.to().resource() + "@" + server, "", stanza.from().bare() + server, res.id, res.encoding, res.language, res.vip);
+// 				}
+// 				else {
+// 					if (purple_accounts_find(res.uin.c_str(), protocol()->protocol().c_str()) != NULL) {
+// 						PurpleAccount *act = purple_accounts_find(res.uin.c_str(), protocol()->protocol().c_str());
+// 						user = (User *) userManager()->getUserByAccount(act);
+// 						if (user) {
+// 							Log(stanza.from().full(), "This account is already connected by another jid " << user->jid());
+// 							return;
+// 						}
+// 					}
+// // 					user = new User(this, stanza.from(), res.uin, res.password, stanza.from().bare(), res.id, res.encoding, res.language, res.vip);
+// 				}
+// 				user->setFeatures(isVip ? configuration().VIPFeatures : configuration().transportFeatures);
+// 				if (c != NULL)
+// 					if (Transport::instance()->hasClientCapabilities(c->findAttribute("ver")))
+// 						user->setResource(stanza.from().resource(), stanza.priority(), Transport::instance()->getCapabilities(c->findAttribute("ver")));
+// 
+// 				m_userManager->addUser(user);
+// 				user->receivedPresence(stanza);
+// 				if (protocol()->tempAccountsAllowed()) {
+// 					std::string server = stanza.to().username().substr(stanza.to().username().find("%") + 1, stanza.to().username().length() - stanza.to().username().find("%"));
+// 					server = stanza.from().bare() + server;
+// 					purple_timeout_add_seconds(15, &connectUser, g_strdup(server.c_str()));
+// 				}
+// 				else
+// 					purple_timeout_add_seconds(15, &connectUser, g_strdup(stanza.from().bare().c_str()));
+// 			}
+// 		}
+// 		if (stanza.presence() == Presence::Unavailable && stanza.to().username() == ""){
+// 			Log(stanza.from().full(), "User is already logged out => sending unavailable presence");
+// 			Tag *tag = new Tag("presence");
+// 			tag->addAttribute( "to", stanza.from().bare() );
+// 			tag->addAttribute( "type", "unavailable" );
+// 			tag->addAttribute( "from", jid() );
+// 			j->send( tag );
+// 		}
+// 	}
+// 	else {
+// 		user->receivedPresence(stanza);
+// 	}
+// 	if (stanza.to().username() == "" && user != NULL) {
+// 		if(stanza.presence() == Presence::Unavailable && user->isConnected() == true && user->getResources().empty()) {
+// 			Log(stanza.from().full(), "Logging out");
+// 			m_userManager->removeUser(user);
+// 		}
+// 		else if (stanza.presence() == Presence::Unavailable && user->isConnected() == false && user->getResources().empty()) {
+// 			Log(stanza.from().full(), "Logging out, but he's not connected...");
+// 			m_userManager->removeUser(user);
+// 		}
+// // 		else if (stanza.presence() == Presence::Unavailable && user->isConnected() == false) {
+// // 			Log(stanza.from().full(), "Can't logout because we're connecting now...");
+// // 		}
+// 	}
+// 	else if (user != NULL && stanza.presence() == Presence::Unavailable && m_protocol->tempAccountsAllowed() && !user->hasOpenedMUC()) {
+// 		m_userManager->removeUser(user);
+// 	}
+// 	else if (user == NULL && stanza.to().username() == "" && stanza.presence() == Presence::Unavailable) {
+// 		UserRow res = sql()->getUserByJid(userkey);
+// 		if (res.id != -1) {
+// 			sql()->setUserOnline(res.id, false);
+// 		}
+// 	}
 }
 
 void GlooxMessageHandler::onConnect() {

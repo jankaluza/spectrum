@@ -531,15 +531,14 @@ void User::receivedPresence(Swift::Presence::ref presence) {
 			if (m_connected) {
 				if (getResources().empty() || (Transport::instance()->protocol()->tempAccountsAllowed() && !hasOpenedMUC())){
 					Log(m_jid, "disconecting");
-// 					sendUnavailablePresenceToAll();
-// 					purple_account_disconnect(m_account);
+// // 					sendUnavailablePresenceToAll();
+// // 					purple_account_disconnect(m_account);
 // 					Transport::instance()->adhoc()->unregisterSession(stanza.from().full()); TODO
 				}
 				else {
-// 					setActiveResource();
-					Presence::ref highest = m_presenceOracle->getHighestPriorityPresence(presence->getFrom());
+					Swiften::Presence::ref highest = m_presenceOracle->getHighestPriorityPresence(presence->getFrom());
 					// Active resource changed, so we probably want to update status message/show.
-					forwardStatus(getResource().show, getResource().status);
+					forwardStatus(highest->getShow(), highest->getStatus().getUTF8String());
 				}
 // 				m_connected=false;
 			}
