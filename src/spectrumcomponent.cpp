@@ -43,6 +43,7 @@ SpectrumComponent::SpectrumComponent() : m_timerFactory(&m_boostIOServiceThread.
 	m_component->onDataRead.connect(bind(&SpectrumComponent::handleDataRead, this, _1));
 	m_component->onDataWritten.connect(bind(&SpectrumComponent::handleDataWritten, this, _1));
 	m_component->onPresenceReceived.connect(bind(&SpectrumComponent::handlePresenceReceived, this, _1));
+	m_component->onMessageReceived.connect(bind(&SpectrumComponent::handleMessageReceived, this, _1));
 
 	m_capsMemoryStorage = new CapsMemoryStorage();
 	m_capsManager = new CapsManager(m_capsMemoryStorage, m_component->getStanzaChannel(), m_component->getIQRouter());
@@ -50,7 +51,7 @@ SpectrumComponent::SpectrumComponent() : m_timerFactory(&m_boostIOServiceThread.
 	m_entityCapsManager->onCapsChanged.connect(boost::bind(&SpectrumComponent::handleCapsChanged, this, _1));
 	
 	m_presenceOracle = new PresenceOracle(m_component->getStanzaChannel());
-	m_presenceOracle->onPresenceChange.connect(bind(&SpectrumComponent::handlePresenceReceived, this, _1));
+	m_presenceOracle->onPresenceChange.connect(bind(&SpectrumComponent::handlePresence, this, _1));
 }
 
 SpectrumComponent::~SpectrumComponent() {
@@ -164,6 +165,67 @@ void SpectrumComponent::handlePresenceReceived(Swift::Presence::ref presence) {
 		default:
 			break;
 	};
+}
+
+void SpectrumComponent::handleMessageReceived(Swift::Message::ref message) {
+	if (message->getFrom().toBare() == message->getTo().toBare())
+		return;
+	if (message->isError())
+		return;
+	
+	
+	User *user;
+	// TODO; move it to IRCProtocol
+	if (CONFIG().protocol == "irc") {
+		std::string barejid = message->getTo().toBare().toString().getUTF8String();
+		std::string server = barejid.substr(barejid.find("%") + 1, barejid.length() - barejid.find("%"));
+		user = (User *) Transport::instance()->userManager()->getUserByJID(message->getFrom().toBare().toString().getUTF8String() + server);
+	}
+	else {
+		user = (User *) Transport::instance()->userManager()->getUserByJID(message->getFrom().toBare().toString().getUTF8String());
+	}
+	if (user!=NULL) {
+		if (user->isConnected()) {
+/*			const StanzaExtension *ext = msg.findExtension(ExtChatState);
+			Tag *chatstates = ext ? ext->tag() : NULL;
+			if (chatstates != NULL) {
+// 				std::string username = msg.to().username();
+// 				std::for_each( username.begin(), username.end(), replaceJidCharacters() );
+				user->handleChatState(purpleUsername(msg.to().username()), chatstates->name());
+				delete chatstates;
+			}*/
+			if (!message->getBody().isEmpty()) {
+// 				m_stats->messageFromJabber();
+				user->handleMessage(message);
+			}
+		}
+// 		else if (msg.to().username() == "") {
+// 			Transport::instance()->protocol()->onXMPPMessageReceived(user, msg);
+// 		}
+		else{
+			Log(message->getFrom().toBare().toString().getUTF8String(), "New message received, but we're not connected yet");
+		}
+	}
+	else {
+// 		Tag *msgTag = msg.tag();
+// 		if (!msgTag) return;
+// 		if (msgTag->findChild("body") != NULL) {
+// 			Message s(Message::Error, msg.from().full(), msg.body());
+// 			s.setFrom(msg.to().full());
+// 			Error *c = new Error(StanzaErrorTypeWait, StanzaErrorRecipientUnavailable);
+// 			c->setText(tr(configuration().language.c_str(),_("This message couldn't be sent, because you are not connected to legacy network. You will be automatically reconnected soon.")));
+// 			s.addExtension(c);
+// 			j->send(s);
+// 
+// 			Tag *stanza = new Tag("presence");
+// 			stanza->addAttribute( "to", msg.from().bare());
+// 			stanza->addAttribute( "type", "probe");
+// 			stanza->addAttribute( "from", jid());
+// 			j->send(stanza);
+// 		}
+// 		delete msgTag;
+	}
+
 }
 
 void SpectrumComponent::handlePresence(Swift::Presence::ref presence) {

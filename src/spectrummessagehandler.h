@@ -65,7 +65,8 @@ class SpectrumMessageHandler {
 		void handlePurpleMessage(PurpleAccount* account, char * name, char *msg, PurpleConversation *conv, PurpleMessageFlags flags);
 
 		// Handles messages from Jabber side.
-		void handleMessage(const Message& msg);
+		void handleMessage(Swift::Message::ref message);
+		void handleMessage(const Message& msg) {}
 
 		// Handles chatstate notifications from Jabber side.
 		void handleChatState(const std::string &uin, const std::string &chatstate);

@@ -64,7 +64,7 @@ class ResourceManager {
 		Resource & getResource(const std::string &r = "");
 
 		// Returns resource with particular feature.
-		Resource & findResourceWithFeature(int feature);
+// 		Resource & findResourceWithFeature(int feature);
 		
 		// Returns true if given resource has feature. If no resource is given,
 		// then active resource is used

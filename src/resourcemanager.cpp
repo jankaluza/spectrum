@@ -88,13 +88,13 @@ Resource & ResourceManager::getResource(const std::string &r) {
 	return m_resources[resource];
 }
 
-Resource & ResourceManager::findResourceWithFeature(int feature) {
-	for (std::map<std::string, Resource>::iterator u = m_resources.begin(); u != m_resources.end() ; u++) {
-		if ((*u).second.caps & feature)
-			return getResource((*u).first);
-	}
-	return DummyResource;
-}
+// Resource & ResourceManager::findResourceWithFeature(int feature) {
+// 	for (std::map<std::string, Resource>::iterator u = m_resources.begin(); u != m_resources.end() ; u++) {
+// 		if ((*u).second.caps & feature)
+// 			return getResource((*u).first);
+// 	}
+// 	return DummyResource;
+// }
 
 bool ResourceManager::hasFeature(int feature, const std::string &resource) {
 	std::string res = resource.empty() ? m_resource : resource;

@@ -411,6 +411,23 @@ void User::connect() {
 	m_component->sendPresence(response);
 }
 
+Swift::Presence::ref User::findResourceWithFeature(const std::string &feature) {
+	Swift::Presence::ref presence;
+	// TODO: Iterate it somehow !!!!!!!!!!!!!!
+	Swift::Presence::ref highest = m_presenceOracle->getHighestPriorityPresence(Swift::JID(m_jid));
+	if (!highest)
+		return Swift::Presence::ref();
+	
+	Swift::DiscoInfo::ref caps = m_entityCapsManager->getCaps(highest->getFrom());
+	if (!caps)
+		return Swift::Presence::ref();
+	
+	if (caps->hasFeature(feature))
+		return Swift::Presence::ref();
+	
+	return highest;
+}
+
 /*
  * called when we are disconnected from legacy network
  */

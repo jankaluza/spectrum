@@ -34,6 +34,7 @@
 #include "../log.h"
 #include "../localization.h"
 #include "../protocolmanager.h"
+#include "Swiften/Swiften.h"
 
 extern Localization localization;
 
@@ -80,6 +81,7 @@ class AbstractProtocol
 		// For XMPP: "spectrum%conference.spectrum.im@irc.spectrum.im" -> "spectrum@conference.spectrum.im"
 		// Note: You can ignore this function if your prpl doesn't support MUC (Groupchat).
 		virtual void makePurpleUsernameRoom(AbstractUser *user, const JID &jid, std::string &name) { }
+		void makePurpleUsernameRoom(AbstractUser *user, Swift::JID jid, std::string &name) { makePurpleUsernameRoom(user, JID(jid.toString().getUTF8String()), name); }
 
 		// This function should create username of room ocupant from libpurple's "who" argument
 		// of purple_conversation_im_write function. New username is then used as resource for JID created by makeRoomJID.
@@ -107,6 +109,9 @@ class AbstractProtocol
 		virtual void makePurpleUsernameIM(AbstractUser *user, const JID &jid, std::string &name) {
 			name.assign(purpleUsername(jid.username()));
 		}
+		void makePurpleUsernameIM(AbstractUser *user, Swift::JID jid, std::string &name) { makePurpleUsernameIM(user, JID(jid.toString().getUTF8String()), name); }
+		
+		
 
 		// Returns disco features used by transport jid.
 		virtual std::list<std::string> transportFeatures() = 0;

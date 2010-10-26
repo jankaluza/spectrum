@@ -71,6 +71,7 @@ class AbstractUser : public ResourceManager
 		void setAdhocData(AdhocData data) { m_adhocData = data; }
 		virtual void setFeatures(int /*f*/) {}
 		virtual void receivedPresence(Swift::Presence::ref presence) {}
+		virtual Swift::Presence::ref findResourceWithFeature(const std::string &feature) { return Swift::Presence::ref(); }
 		
 		void setProtocolData(void *protocolData) { m_protocolData = protocolData; }
 		void *protocolData() { return m_protocolData; }

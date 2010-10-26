@@ -185,21 +185,21 @@ void SpectrumMessageHandler::purpleConversationDestroyed(PurpleConversation *con
 	m_conversations.erase(name);
 }
 
-void SpectrumMessageHandler::handleMessage(const Message& msg) {
+void SpectrumMessageHandler::handleMessage(Swift::Message::ref message) {
 	PurpleConversation * conv;
 
-	std::string key = msg.to().full();	// key for m_conversations
-	std::string username = msg.to().full();
+	std::string key = message->getTo().toString().getUTF8String();	// key for m_conversations
+	std::string username = message->getTo().toString().getUTF8String();
 	std::string room = "";
 	// Translates JID to Purple username
 	// This code covers for example situations where username = "#pidgin%irc.freenode.org@irc.spectrum.im",
 	// but we need username = "#pidgin".
-	if (isMUC(msg.to().bare())) {
-		room = msg.to().bare();
-		Transport::instance()->protocol()->makePurpleUsernameRoom(m_user, msg.to(), username);
+	if (isMUC(message->getTo().toBare().toString().getUTF8String())) {
+		room = message->getTo().toBare().toString().getUTF8String();
+		Transport::instance()->protocol()->makePurpleUsernameRoom(m_user, message->getTo(), username);
 	}
 	else {
-		Transport::instance()->protocol()->makePurpleUsernameIM(m_user, msg.to(), username);
+		Transport::instance()->protocol()->makePurpleUsernameIM(m_user, message->getTo(), username);
 	}
 
 	// open new conversation or get the opened one
@@ -214,15 +214,15 @@ void SpectrumMessageHandler::handleMessage(const Message& msg) {
 #ifndef TESTS
 		addConversation(conv, new SpectrumConversation(conv, SPECTRUM_CONV_CHAT, room), key);
 #endif
-		m_conversations[key]->setResource(msg.from().resource());
+		m_conversations[key]->setResource(message->getFrom().getResource().getUTF8String());
 	}
 	else {
 		conv = m_conversations[key]->getConv();
-		m_conversations[key]->setResource(msg.from().resource());
+		m_conversations[key]->setResource(message->getFrom().getResource().getUTF8String());
 	}
-	m_currentBody = msg.body();
+	m_currentBody = message->getBody().getUTF8String();
 	Log("SpectrumMessageHandler::handleMessage", "username " << username << ", key " << key << ", PurpleConversation: "
-			<< conv << ", SpectrumConversation: " << m_conversations[key] << ", resource was set to " << msg.from().resource());
+			<< conv << ", SpectrumConversation: " << m_conversations[key] << ", resource was set to " << message->getFrom().getResource().getUTF8String());
 	
 	// Handles commands (TODO: move me to commands.cpp)
 	if (m_currentBody.find("/") == 0) {

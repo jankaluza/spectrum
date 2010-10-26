@@ -304,62 +304,62 @@ void SpectrumRosterManager::sendNewBuddies() {
 
 	Log(m_user->jid(), "Sending rosterX");
 
-	Resource res = m_user->findResourceWithFeature(GLOOX_FEATURE_ROSTERX);
+	Swift::Presence::ref res = m_user->findResourceWithFeature("http://jabber.org/protocol/rosterx");
 	if (res) {
-		Tag *tag = new Tag("iq");
-		tag->addAttribute("to", m_user->jid() + "/" + res.name);
-		tag->addAttribute("type", "set");
-		tag->addAttribute("id", Transport::instance()->getId());
-		tag->addAttribute("from", Transport::instance()->jid());
-		Tag *x = new Tag("x");
-		x->addAttribute("xmlns", "http://jabber.org/protocol/rosterx");
-		
-		Tag *item;
-		std::map<std::string, AbstractSpectrumBuddy *>::iterator it = m_subscribeCache.begin();
-		while (it != m_subscribeCache.end()) {
-			AbstractSpectrumBuddy *s_buddy = (*it).second;
-			if (s_buddy->getSubscription() != "both") {
-				std::string jid = s_buddy->getBareJid();
-				std::string alias = s_buddy->getAlias();
-
-				s_buddy->setSubscription("ask");
-				addRosterItem(s_buddy);
-
-				item = new Tag("item");
-				item->addAttribute("action", "add");
-				item->addAttribute("jid", jid);
-				item->addAttribute("name", alias);
-				item->addChild( new Tag("group", s_buddy->getGroup()));
-				x->addChild(item);
-			}
-			it++;
-		}
-		tag->addChild(x);
-		Transport::instance()->send(tag);
+// 		Tag *tag = new Tag("iq");
+// 		tag->addAttribute("to", m_user->jid() + "/" + res->getFrom().getResource().getUTF8String());
+// 		tag->addAttribute("type", "set");
+// 		tag->addAttribute("id", Transport::instance()->getId());
+// 		tag->addAttribute("from", Transport::instance()->jid());
+// 		Tag *x = new Tag("x");
+// 		x->addAttribute("xmlns", "http://jabber.org/protocol/rosterx");
+// 		
+// 		Tag *item;
+// 		std::map<std::string, AbstractSpectrumBuddy *>::iterator it = m_subscribeCache.begin();
+// 		while (it != m_subscribeCache.end()) {
+// 			AbstractSpectrumBuddy *s_buddy = (*it).second;
+// 			if (s_buddy->getSubscription() != "both") {
+// 				std::string jid = s_buddy->getBareJid();
+// 				std::string alias = s_buddy->getAlias();
+// 
+// 				s_buddy->setSubscription("ask");
+// 				addRosterItem(s_buddy);
+// 
+// 				item = new Tag("item");
+// 				item->addAttribute("action", "add");
+// 				item->addAttribute("jid", jid);
+// 				item->addAttribute("name", alias);
+// 				item->addChild( new Tag("group", s_buddy->getGroup()));
+// 				x->addChild(item);
+// 			}
+// 			it++;
+// 		}
+// 		tag->addChild(x);
+// 		Transport::instance()->send(tag);
 	}
 	else {
-		std::map<std::string, AbstractSpectrumBuddy *>::iterator it = m_subscribeCache.begin();
-		while (it != m_subscribeCache.end()) {
-			AbstractSpectrumBuddy *s_buddy = (*it).second;
-			if (s_buddy->getSubscription() != "both") {
-				std::string alias = s_buddy->getAlias();
-
-				Tag *tag = new Tag("presence");
-				tag->addAttribute("type", "subscribe");
-				tag->addAttribute("from", s_buddy->getBareJid());
-				tag->addAttribute("to", m_user->jid());
-				if (!alias.empty()) {
-					Tag *nick = new Tag("nick", alias);
-					nick->addAttribute("xmlns","http://jabber.org/protocol/nick");
-					tag->addChild(nick);
-				}
-				Transport::instance()->send(tag);
-
-				s_buddy->setSubscription("ask");
-				addRosterItem(s_buddy);
-			}
-			it++;
-		}
+// 		std::map<std::string, AbstractSpectrumBuddy *>::iterator it = m_subscribeCache.begin();
+// 		while (it != m_subscribeCache.end()) {
+// 			AbstractSpectrumBuddy *s_buddy = (*it).second;
+// 			if (s_buddy->getSubscription() != "both") {
+// 				std::string alias = s_buddy->getAlias();
+// 
+// 				Tag *tag = new Tag("presence");
+// 				tag->addAttribute("type", "subscribe");
+// 				tag->addAttribute("from", s_buddy->getBareJid());
+// 				tag->addAttribute("to", m_user->jid());
+// 				if (!alias.empty()) {
+// 					Tag *nick = new Tag("nick", alias);
+// 					nick->addAttribute("xmlns","http://jabber.org/protocol/nick");
+// 					tag->addChild(nick);
+// 				}
+// 				Transport::instance()->send(tag);
+// 
+// 				s_buddy->setSubscription("ask");
+// 				addRosterItem(s_buddy);
+// 			}
+// 			it++;
+// 		}
 	}
 
 	m_subscribeCache.clear();

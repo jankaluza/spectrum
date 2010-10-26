@@ -75,6 +75,7 @@ class User : public AbstractUser, public SpectrumRosterManager, public SpectrumM
 
 		// Connected
 		bool isConnected() { return m_connected; }
+		Swift::Presence::ref findResourceWithFeature(const std::string &feature);
 
 		// Settings
 		PurpleValue *getSetting(const char *key);
