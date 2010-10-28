@@ -1,3 +1,17 @@
+version 1.4.3 (2010-10-28):
+	General:
+	* Fixed crash when there were buddies with non-unicode characters
+	  in database
+	* Faster Roster Item Exchange forwarding.
+	* First presence from transport is sent when user is actually
+	  logged in to legacy network.
+	* Forward only presences from active resource to legacy network.
+	* Send mime-types in VCards.
+	* Fixed caps hash.
+
+	ICQ:
+	* Fixed logging issues.
+	
 version 1.4.2 (2010-10-08):
 	General:
 	* Fixed crash when user rejected susbcribe request after automatic
