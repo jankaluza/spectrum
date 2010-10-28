@@ -856,7 +856,8 @@ GHashTable *SQLClass::getBuddies(long userId, PurpleAccount *account) {
 
 		// Don't add buddies with broken names (that's because of some old bugs in spectrum, we can remove it
 		// if there will be some chechdb app/script)
-		if (!buddyUins[k].empty() && std::count(buddyUins[k].begin(), buddyUins[k].end(), '@') <= 1 && g_hash_table_lookup(roster, preparedUin.c_str()) == NULL) {
+		if (!buddyUins[k].empty() && std::count(buddyUins[k].begin(), buddyUins[k].end(), '@') <= 1 && g_hash_table_lookup(roster, preparedUin.c_str()) == NULL
+			&& g_utf8_validate(buddyUins[k].c_str(), -1, NULL)) {
 			std::string subscription = buddySubscriptions[k].empty() ? "ask" : buddySubscriptions[k];
 			std::string group = buddyGroups[k].empty() ? "Buddies" : buddyGroups[k];
 			PurpleGroup *g = purple_find_group(group.c_str());
