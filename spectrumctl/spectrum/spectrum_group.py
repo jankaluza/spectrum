@@ -58,7 +58,12 @@ class spectrum_group:
 		@rtype: int
 		"""
 		self.instances = []
-		config_list = os.listdir( self.options.config_dir )
+		try:
+			config_list = os.listdir( self.options.config_dir )
+		except OSError, e:
+			print( "Error: %s: %s"%(e.filename, e.strerror )
+			return 0
+
 		for config in config_list:
 			path = '%s/%s'%(self.options.config_dir, config)
 			if not os.path.isfile( path ) or not path.endswith( '.cfg' ):
