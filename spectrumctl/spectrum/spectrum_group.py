@@ -61,7 +61,7 @@ class spectrum_group:
 		try:
 			config_list = os.listdir( self.options.config_dir )
 		except OSError, e:
-			print( "Error: %s: %s"%(e.filename, e.strerror )
+			print( "Error: %s: %s"%(e.filename, e.strerror ) )
 			return 0
 
 		for config in config_list:
