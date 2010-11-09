@@ -30,6 +30,7 @@
 #include "Swiften/Presence/PresenceOracle.h"
 #include "Swiften/Network/BoostTimerFactory.h"
 #include "Swiften/Network/BoostIOServiceThread.h"
+#include "Swiften/Network/Connection.h"
 #include "glib.h"
 
 typedef enum { 	CLIENT_FEATURE_ROSTERX = 2,
@@ -49,6 +50,8 @@ class SpectrumComponent {
 		void connect();
 	
 	private:
+		void onNewInstanceConnected(boost::shared_ptr<Swift::Connection> connection);
+		void handleInstanceDataRead(const Swift::ByteArray &data);
 		void handleConnected();
 		void handleConnectionError(const Swift::ComponentError &error);
 		void handlePresenceReceived(Swift::Presence::ref presence);

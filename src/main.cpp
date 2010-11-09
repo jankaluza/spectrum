@@ -992,7 +992,9 @@ GlooxMessageHandler::GlooxMessageHandler(const std::string &config) : MessageHan
 
 	if (list_purple_settings)
 		m_configuration.logAreas = 0;
-	
+
+	SpectrumComponent component;
+
 	if (loaded && !initPurple())
 		loaded = false;
 	
@@ -1014,7 +1016,7 @@ GlooxMessageHandler::GlooxMessageHandler(const std::string &config) : MessageHan
 	m_collector = new AccountCollector();
 // 	m_stats = new GlooxStatsHandler(this);
 
-	SpectrumComponent component;
+	
 	component.connect();
 	loop->run();
 	return;

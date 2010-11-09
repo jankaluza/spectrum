@@ -26,6 +26,8 @@
 #include "usermanager.h"
 #include <boost/bind.hpp>
 #include "user.h"
+#include "spectrumpurple.h"
+#include "Swiften/Network/BoostConnectionServer.h"
 
 using namespace Swift;
 using namespace boost;
@@ -52,6 +54,13 @@ SpectrumComponent::SpectrumComponent() : m_timerFactory(&m_boostIOServiceThread.
 	
 	m_presenceOracle = new PresenceOracle(m_component->getStanzaChannel());
 	m_presenceOracle->onPresenceChange.connect(bind(&SpectrumComponent::handlePresence, this, _1));
+
+	BoostConnectionServer::ref server = BoostConnectionServer::create(19899, &m_boostIOServiceThread.getIOService());
+	server->onNewConnection.connect(boost::bind(&SpectrumComponent::onNewInstanceConnected, this, _1));
+	server->start();
+	
+	new SpectrumPurple(&m_boostIOServiceThread.getIOService());
+	
 }
 
 SpectrumComponent::~SpectrumComponent() {
@@ -61,6 +70,42 @@ SpectrumComponent::~SpectrumComponent() {
 	delete m_capsMemoryStorage;
 	delete m_component;
 }
+
+void SpectrumComponent::onNewInstanceConnected(boost::shared_ptr<Connection> connection) {
+	connection->onDataRead.connect(boost::bind(&SpectrumComponent::handleInstanceDataRead, this, _1));
+	
+	SpectrumBackendMessage msg(PING, 123);
+	msg.send(connection);
+}
+
+void SpectrumComponent::handleInstanceDataRead(const ByteArray &data) {
+	if (data.getSize() <= sizeof(unsigned long))
+		return;
+
+	const char *d = data.getData();
+	size_t s = data.getSize();
+	while (s > 0) {
+		unsigned long size = (unsigned long) *d;
+		if (sizeof(unsigned long) > s) {
+			std::cout << "ignoring packet1\n";
+			break;
+		}
+		d+= sizeof(unsigned long);
+		s -= sizeof(unsigned long);
+		if (size > s) {
+			std::cout << "ignoring packet\n";
+			break;
+		}
+		SpectrumBackendMessage msg;
+		std::istringstream ss(std::string(d, size));
+		boost::archive::binary_iarchive ia(ss);
+		ia >> msg;
+		std::cout << "PONG " << msg.int1 << "\n";
+		s -= size;
+		d += size;
+	}
+}
+	
 
 void SpectrumComponent::connect() {
 	m_reconnectCount++;
