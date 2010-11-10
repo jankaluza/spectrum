@@ -1197,22 +1197,22 @@ void GlooxMessageHandler::purpleConnectionError(PurpleConnection *gc,PurpleConne
 			Log(user->jid(), std::string(text));
 		// fatal error => account will be disconnected, so we have to remove it
 		if (reason != 0) {
-			if (text){
-				Message s(Message::Chat, user->jid(), tr(user->getLang(), text));
-				std::string from;
-				s.setFrom(jid());
-				j->send(s);
-			}
+// 			if (text){
+// 				Message s(Message::Chat, user->jid(), tr(user->getLang(), text));
+// 				std::string from;
+// 				s.setFrom(jid());
+// 				j->send(s);
+// 			}
+			Presence tag(Presence::Unavailable, user->jid(), tr(user->getLang(), _(text ? text : "")));
+			tag.setFrom(Transport::instance()->jid());
+			Transport::instance()->send(tag.tag());
 			m_userManager->removeUserTimer(user);
 		}
 		else {
 			if (user->reconnectCount() > 0) {
-				if (text) {
-					Message s(Message::Chat, user->jid(), tr(user->getLang(), text));
-					std::string from;
-					s.setFrom(jid());
-					j->send(s);
-				}
+				Presence tag(Presence::Unavailable, user->jid(), tr(user->getLang(), _(text ? text : "")));
+				tag.setFrom(Transport::instance()->jid());
+				Transport::instance()->send(tag.tag());
 				m_userManager->removeUserTimer(user);
 			}
 			else {
