@@ -993,14 +993,14 @@ GlooxMessageHandler::GlooxMessageHandler(const std::string &config) : MessageHan
 	if (list_purple_settings)
 		m_configuration.logAreas = 0;
 
+	if (loaded && !loadProtocol())
+		loaded = false;
+
 	SpectrumComponent component;
 
 	if (loaded && !initPurple())
 		loaded = false;
 	
-	if (loaded && !loadProtocol())
-		loaded = false;
-
 	if (list_purple_settings) {
 		listPurpleSettings();
 		loaded = false;
@@ -1150,10 +1150,10 @@ bool GlooxMessageHandler::loadProtocol(){
 		return false;
 	}
 
-	if (!purple_find_prpl(m_protocol->protocol().c_str())) {
-		Log("loadProtocol", "There is no libpurple plugin installed for protocol \"" << configuration().protocol << "\"");
-		return false;
-	}
+// 	if (!purple_find_prpl(m_protocol->protocol().c_str())) {
+// 		Log("loadProtocol", "There is no libpurple plugin installed for protocol \"" << configuration().protocol << "\"");
+// 		return false;
+// 	}
 
 	if (!m_protocol->userSearchAction().empty()) {
 		m_searchHandler = new GlooxSearchHandler(this);
@@ -1163,8 +1163,8 @@ bool GlooxMessageHandler::loadProtocol(){
 	if (m_configuration.encoding.empty())
 		m_configuration.encoding = m_protocol->defaultEncoding();
 
-	ConfigFile cfg(m_config);
-	cfg.loadPurpleAccountSettings(m_configuration);
+// 	ConfigFile cfg(m_config);
+// 	cfg.loadPurpleAccountSettings(m_configuration);
 	
 	return true;
 }

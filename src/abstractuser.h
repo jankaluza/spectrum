@@ -72,6 +72,8 @@ class AbstractUser : public ResourceManager
 		virtual void setFeatures(int /*f*/) {}
 		virtual void receivedPresence(Swift::Presence::ref presence) {}
 		virtual Swift::Presence::ref findResourceWithFeature(const std::string &feature) { return Swift::Presence::ref(); }
+		virtual const std::string &getUIN() = 0;
+		virtual void connected() {}
 		
 		void setProtocolData(void *protocolData) { m_protocolData = protocolData; }
 		void *protocolData() { return m_protocolData; }

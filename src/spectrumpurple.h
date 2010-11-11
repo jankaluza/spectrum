@@ -31,13 +31,18 @@
 #include <boost/archive/text_iarchive.hpp>
 #include <boost/archive/binary_oarchive.hpp>
 #include <boost/archive/binary_iarchive.hpp>
+#include "spectrumconnection.h"
 
 extern LogClass Log_;
 
 enum {
-	PING = 0,
-	PONG,
-	LOGIN
+	MSG_PING = 0,
+	MSG_PONG,
+	MSG_UUID,
+	MSG_CONNECTED,
+	MSG_CHANGE_STATUS,
+	MSG_LOGOUT,
+	MSG_LOGIN
 };
 
 class SpectrumBackendMessage {
@@ -48,29 +53,22 @@ class SpectrumBackendMessage {
 		SpectrumBackendMessage(int t, const std::string &s1) : type(t), str1(s1), int1(0) {}
 		int type;
 		std::string str1;
+		std::string str2;
+		std::string str3;
+		std::string str4;
 		int int1;
-
-		void send(boost::shared_ptr<Swift::Connection> connection) {
-			std::ostringstream ss;
-			boost::archive::binary_oarchive oa(ss);
-			oa & *this;
-
-			unsigned long size = ss.str().size();
-			Swift::ByteArray data((const char *) &size, sizeof(unsigned long));
-			data += Swift::ByteArray(ss.str().data(), size);
-			connection->write(data);
-		}
 
 		void send(GIOChannel *source) {
 			std::ostringstream ss;
 			boost::archive::binary_oarchive oa(ss);
 			oa & *this;
 
-			unsigned long size = ss.str().size();
+			std::ostringstream header_stream;
+			header_stream << std::setw(8) << std::hex << ss.str().size();
+
 			gsize bytes;
-			std::cout << "sending " << int1 << " " << ss.str().data() << "\n";
-			g_io_channel_write_chars(source, (const char *) &size, sizeof(unsigned long), &bytes, NULL);
-			g_io_channel_write_chars(source, ss.str().data(), size, &bytes, NULL);
+			g_io_channel_write_chars(source, header_stream.str().data(), header_stream.str().size(), &bytes, NULL);
+			g_io_channel_write_chars(source, ss.str().data(), ss.str().size(), &bytes, NULL);
 			g_io_channel_flush (source, NULL);
 		}
 
@@ -82,6 +80,9 @@ class SpectrumBackendMessage {
 		{
 			ar & type;
 			ar & str1;
+			ar & str2;
+			ar & str3;
+			ar & str4;
 			ar & int1;
 		}
 };
@@ -91,11 +92,27 @@ class SpectrumPurple {
 		SpectrumPurple(boost::asio::io_service* ioService);
 		~SpectrumPurple();
 
+		void login(const std::string &uin, const std::string &passwd, int status, const std::string &message);
+		void changeStatus(const std::string &uin, int status, const std::string &message);
+		void logout(const std::string &uin);
+
+		const std::string &getUUID() { return m_uuid; }
+		void setUUID(const std::string &uuid) { m_uuid = uuid; }
+
+		const bool &isLogged() { return m_logged; }
+		void setLogged(const bool &logged) { m_logged = logged; }
+
+		void setConnection(connection_ptr conn) { m_conn = conn; }
+
 	private:
 		void handleConnected(bool error);
+		void handleInstanceWrite(const boost::system::error_code& e, connection_ptr conn) { }
 		void initPurple();
 	
 		bool m_parent;
+		std::string m_uuid;
+		bool m_logged;
+		connection_ptr m_conn;
 		
 };
 

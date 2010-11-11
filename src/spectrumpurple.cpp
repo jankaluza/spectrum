@@ -26,6 +26,11 @@
 #include "spectrumeventloop.h"
 #include "geventloop.h"
 #include "log.h"
+#include "spectrum_util.h"
+#include "transport.h"
+#include "main.h"
+
+static GIOChannel *channel;
 
 /*
 
@@ -51,7 +56,7 @@ static void printDebug(PurpleDebugLevel level, const char *category, const char 
 		c.append(category);
 	}
 
-	LogMessage(Log_.fileStream(), false).Get(c) << arg_s;
+// 	LogMessage(Log_.fileStream(), false).Get(c) << arg_s;
 }
 
 /*
@@ -79,25 +84,178 @@ static PurpleCoreUiOps coreUiOps =
 	NULL
 };
 
-static gboolean dataReceived(GIOChannel *source, GIOCondition condition, gpointer unused) {
-// 	SpectrumPurple *parent = (SpectrumPurple *) data;
-	unsigned long header;
+static void signed_on(PurpleConnection *gc, gpointer unused) {
+	PurpleAccount *account = purple_connection_get_account(gc);
+	std::cout << "SIGNED ON\n";
+	SpectrumBackendMessage msg(MSG_CONNECTED, (char *) account->ui_data);
+	msg.send(channel);
+}
+
+static void do_login(const char *protocol, const char *uin, const char *passwd, int status, const char *msg) {
+	PurpleAccount *account = purple_accounts_find(uin, protocol);
+	if (account == NULL) {
+// 		Log(m_jid, "creating new account");
+		account = purple_account_new(uin, protocol);
+		purple_accounts_add(account);
+	}
+// 	Transport::instance()->collector()->stopCollecting(account);
+
+	PurplePlugin *plugin = purple_find_prpl(protocol);
+	PurplePluginProtocolInfo *prpl_info = PURPLE_PLUGIN_PROTOCOL_INFO(plugin);
+	for (GList *l = prpl_info->protocol_options; l != NULL; l = l->next) {
+		PurpleAccountOption *option = (PurpleAccountOption *) l->data;
+		purple_account_remove_setting(account, purple_account_option_get_setting(option));
+	}
+
+	std::map <std::string, PurpleAccountSettingValue> &settings = Transport::instance()->getConfiguration().purple_account_settings;
+	for (std::map <std::string, PurpleAccountSettingValue>::iterator it = settings.begin(); it != settings.end(); it++) {
+		PurpleAccountSettingValue v = (*it).second;
+		std::string key((*it).first);
+		switch (v.type) {
+			case PURPLE_PREF_BOOLEAN:
+				purple_account_set_bool(account, key.c_str(), v.b);
+				break;
+
+			case PURPLE_PREF_INT:
+				purple_account_set_int(account, key.c_str(), v.i);
+				break;
+
+			case PURPLE_PREF_STRING:
+				if (v.str)
+					purple_account_set_string(account, key.c_str(), v.str);
+				else
+					purple_account_remove_setting(account, key.c_str());
+				break;
+
+			case PURPLE_PREF_STRING_LIST:
+				// TODO:
+				break;
+
+			default:
+				continue;
+		}
+	}
+
+// 	purple_account_set_string(account, "encoding", m_encoding.empty() ? Transport::instance()->getConfiguration().encoding.c_str() : m_encoding.c_str());
+	purple_account_set_bool(account, "use_clientlogin", false);
+	purple_account_set_bool(account, "require_tls",  Transport::instance()->getConfiguration().require_tls);
+	purple_account_set_bool(account, "use_ssl",  Transport::instance()->getConfiguration().require_tls);
+	purple_account_set_bool(account, "direct_connect", false);
+// 	purple_account_set_bool(account, "check-mail", purple_value_get_boolean(getSetting("enable_notify_email")));
+
+	account->ui_data = g_strdup(uin);
+	
+	Transport::instance()->protocol()->onPurpleAccountCreated(account);
+
+// 	m_loadingBuddiesFromDB = true;
+// 	loadRoster();
+// 	m_loadingBuddiesFromDB = false;
+
+// 	m_connectionStart = time(NULL);
+// 	m_readyForConnect = false;
+	purple_account_set_password(account,passwd);
+// 	Log(m_jid, "UIN:" << m_username << " USER_ID:" << m_userID);
+
+	if (CONFIG().useProxy) {
+		PurpleProxyInfo *info = purple_proxy_info_new();
+		purple_proxy_info_set_type(info, PURPLE_PROXY_USE_ENVVAR);
+		info->username = NULL;
+		info->password = NULL;
+		purple_account_set_proxy_info(account, info);
+	}
+
+// 	if (valid && purple_value_get_boolean(getSetting("enable_transport"))) {
+		purple_account_set_enabled(account, PURPLE_UI, TRUE);
+// 		purple_account_connect(account);
+		const PurpleStatusType *statusType = purple_account_get_status_type_with_primitive(account, (PurpleStatusPrimitive) status);
+		if (statusType) {
+// 			Log(m_jid, "Setting up default status.");
+			if (msg) {
+				purple_account_set_status(account, purple_status_type_get_id(statusType), TRUE, "message", msg, NULL);
+			}
+			else {
+				purple_account_set_status(account, purple_status_type_get_id(statusType), TRUE, NULL);
+			}
+		}
+// 	}
+}
+
+static void do_change_status(const char *protocol, const char *uin, int status, const char *msg) {
+	PurpleAccount *account = purple_accounts_find(uin, protocol);
+	if (account) {
+		const PurpleStatusType *status_type = purple_account_get_status_type_with_primitive(account, (PurpleStatusPrimitive) status);
+		if (status_type != NULL) {
+			if (msg) {
+				purple_account_set_status(account, purple_status_type_get_id(status_type), TRUE, "message", msg, NULL);
+			}
+			else {
+				purple_account_set_status(account, purple_status_type_get_id(status_type), TRUE, NULL);
+			}
+		}
+	}
+}
+
+static void do_logout(const char *protocol, const char *uin) {
+	PurpleAccount *account = purple_accounts_find(uin, protocol);
+	if (account) {
+		purple_account_set_enabled(account, PURPLE_UI, FALSE);
+
+		// Remove conversations.
+		// This has to be called before m_account->ui_data = NULL;, because it uses
+		// ui_data to call SpectrumMessageHandler::purpleConversationDestroyed() callback.
+		GList *iter;
+		for (iter = purple_get_conversations(); iter; ) {
+			PurpleConversation *conv = (PurpleConversation*) iter->data;
+			iter = iter->next;
+			if (purple_conversation_get_account(conv) == account)
+				purple_conversation_destroy(conv);
+		}
+
+		g_free(account->ui_data);
+		account->ui_data = NULL;
+// 		Transport::instance()->collector()->collect(m_account);
+	}
+}
+
+static gboolean dataReceived(GIOChannel *source, GIOCondition condition, gpointer d) {
+	SpectrumPurple *parent = (SpectrumPurple *) d;
+	gchar header[8];
 	gsize bytes_read;
-	g_io_channel_read_chars(source, (gchar *) &header, sizeof(unsigned long), &bytes_read, NULL);
-// 	std::cout << "HEADER:" << header << "\n";
-	gchar *data = (gchar *) g_malloc(header);
-	g_io_channel_read_chars(source, data, header, &bytes_read, NULL);
-// 	std::cout << "DATA:" << data[3] << "\n";
+	size_t data_size;
+	g_io_channel_read_chars(source, header, 8, &bytes_read, NULL);
+	if (bytes_read != 8)
+		return TRUE;
+	std::istringstream is(std::string(header, 8));
+	is >> std::hex >> data_size;
+	gchar *data = (gchar *) g_malloc(data_size);
+	g_io_channel_read_chars(source, data, data_size, &bytes_read, NULL);
 
 	SpectrumBackendMessage msg;
-	std::istringstream ss(std::string(data, header));
+	std::istringstream ss(std::string(data, data_size));
 	boost::archive::binary_iarchive ia(ss);
 	ia >> msg;
 	std::cout << "TYPE:" << msg.type << " " << msg.int1 << "\n";
+	SpectrumBackendMessage m;
 	switch(msg.type) {
-		case PING:
-			SpectrumBackendMessage m(PONG, msg.int1);
+		case MSG_PING:
+			m.type = MSG_PONG;
+			m.int1 = msg.int1;
 			m.send(source);
+		break;
+		case MSG_UUID:
+			m.type = MSG_UUID;
+			m.str1 = parent->getUUID();
+			m.send(source);
+			parent->setUUID("");
+		break;
+		case MSG_LOGIN:
+			do_login(msg.str4.c_str(), msg.str1.c_str(), msg.str2.c_str(), msg.int1, msg.str3.c_str());
+		break;
+		case MSG_CHANGE_STATUS:
+			do_change_status(msg.str1.c_str(), msg.str2.c_str(), msg.int1, msg.str3.c_str());
+		break;
+		case MSG_LOGOUT:
+			do_logout(msg.str1.c_str(), msg.str2.c_str());
 		break;
 	}
 
@@ -132,6 +290,8 @@ static int socket_connect(const char *host, in_port_t port) {
 
 
 SpectrumPurple::SpectrumPurple(boost::asio::io_service* ioService) {
+	m_uuid = generateUUID();
+	m_logged = false;
 	int pid = fork();
 	// child
 	if (pid == 0) {
@@ -141,6 +301,7 @@ SpectrumPurple::SpectrumPurple(boost::asio::io_service* ioService) {
 
 		int mysock = socket_connect("localhost", 19899);
 		GIOChannel *connectIO = g_io_channel_unix_new(mysock);
+		channel = connectIO;
 		g_io_channel_set_encoding(connectIO, NULL, NULL);
 		int connectID = g_io_add_watch(connectIO, (GIOCondition) READ_COND, &dataReceived, this);
 
@@ -199,7 +360,7 @@ void SpectrumPurple::initPurple() {
 // 		purple_signal_connect(purple_conversations_get_handle(), "buddy-typing", &conversation_handle, PURPLE_CALLBACK(buddyTyping), NULL);
 // 		purple_signal_connect(purple_conversations_get_handle(), "buddy-typed", &conversation_handle, PURPLE_CALLBACK(buddyTyped), NULL);
 // 		purple_signal_connect(purple_conversations_get_handle(), "buddy-typing-stopped", &conversation_handle, PURPLE_CALLBACK(buddyTypingStopped), NULL);
-// 		purple_signal_connect(purple_connections_get_handle(), "signed-on", &conn_handle,PURPLE_CALLBACK(signed_on), NULL);
+		purple_signal_connect(purple_connections_get_handle(), "signed-on", &conn_handle,PURPLE_CALLBACK(signed_on), NULL);
 // 		purple_signal_connect(purple_blist_get_handle(), "buddy-removed", &blist_handle,PURPLE_CALLBACK(buddyRemoved), NULL);
 // 		purple_signal_connect(purple_blist_get_handle(), "buddy-signed-on", &blist_handle,PURPLE_CALLBACK(buddySignedOn), NULL);
 // 		purple_signal_connect(purple_blist_get_handle(), "buddy-signed-off", &blist_handle,PURPLE_CALLBACK(buddySignedOff), NULL);
@@ -216,5 +377,29 @@ void SpectrumPurple::handleConnected(bool error) {
 	std::cout << "connected; error=" << error << "\n";
 }
 
+void SpectrumPurple::changeStatus(const std::string &uin, int status, const std::string &message) {
+	SpectrumBackendMessage msg(MSG_CHANGE_STATUS);
+	msg.str1 = Transport::instance()->protocol()->protocol();
+	msg.str2 = uin;
+	msg.str3 = message;
+	msg.int1 = status;
+	m_conn->async_write(msg, boost::bind(&SpectrumPurple::handleInstanceWrite, this, boost::asio::placeholders::error, m_conn));
+}
 
+void SpectrumPurple::login(const std::string &uin, const std::string &passwd, int status, const std::string &message) {
+	SpectrumBackendMessage msg(MSG_LOGIN);
+	msg.str1 = uin;
+	msg.str2 = passwd;
+	msg.str3 = message;
+	msg.str4 = Transport::instance()->protocol()->protocol();
+	msg.int1 = status;
+	m_conn->async_write(msg, boost::bind(&SpectrumPurple::handleInstanceWrite, this, boost::asio::placeholders::error, m_conn));
+}
+
+void SpectrumPurple::logout(const std::string &uin) {
+	SpectrumBackendMessage msg(MSG_LOGOUT);
+	msg.str1 = Transport::instance()->protocol()->protocol();
+	msg.str2 = uin;
+	m_conn->async_write(msg, boost::bind(&SpectrumPurple::handleInstanceWrite, this, boost::asio::placeholders::error, m_conn));
+}
 

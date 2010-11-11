@@ -47,6 +47,7 @@ static gboolean removeUserCallback(gpointer key, gpointer v, gpointer data) {
 
 UserManager::UserManager() {
 	m_users = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
+	m_users_uins = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
 	m_cachedUser = NULL;
 	m_onlineBuddies = 0;
 }
@@ -54,6 +55,13 @@ UserManager::UserManager() {
 UserManager::~UserManager(){
 	g_hash_table_foreach_remove(m_users, removeUserCallback, NULL);
 	g_hash_table_destroy(m_users);
+	g_hash_table_destroy(m_users_uins);
+}
+
+AbstractUser *UserManager::getUserByUIN(const std::string &uin) {
+	std::cout << "Getting user " << uin << "\n";
+	AbstractUser *user = (AbstractUser*) g_hash_table_lookup(m_users_uins, uin.c_str());
+	return user;
 }
 
 AbstractUser *UserManager::getUserByJID(std::string barejid){
@@ -72,11 +80,14 @@ AbstractUser *UserManager::getUserByAccount(PurpleAccount * account){
 
 void UserManager::addUser(AbstractUser *user) {
 	g_hash_table_replace(m_users, g_strdup(user->userKey().c_str()), user);
+	g_hash_table_replace(m_users_uins, g_strdup(user->getUIN().c_str()), user);
+	std::cout << "Adding user " << user->getUIN() << "\n";
 }
 
 void UserManager::removeUser(AbstractUser *user){
 	Log("logout", "removing user");
 	g_hash_table_remove(m_users, user->userKey().c_str());
+	g_hash_table_remove(m_users_uins, user->getUIN().c_str());
 	if (m_cachedUser && user->userKey() == m_cachedUser->userKey()) {
 		m_cachedUser = NULL;
 	}
@@ -90,6 +101,7 @@ void UserManager::removeUser(AbstractUser *user){
 void UserManager::removeUserTimer(AbstractUser *user){
 	Log("logout", "removing user by timer");
 	g_hash_table_remove(m_users, user->userKey().c_str());
+	g_hash_table_remove(m_users_uins, user->getUIN().c_str());
 	if (m_cachedUser && user->userKey() == m_cachedUser->userKey()) {
 		m_cachedUser = NULL;
 	}

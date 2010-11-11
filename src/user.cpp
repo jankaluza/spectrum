@@ -36,10 +36,12 @@
 #include "transport.h"
 #include "gloox/sha.h"
 #include "Swiften/Swiften.h"
+#include "spectrumpurple.h"
 
-User::User(const UserRow &row, const std::string &userKey, Swift::Component *component, Swift::PresenceOracle *presenceOracle, Swift::EntityCapsManager *entityCapsManager) : SpectrumRosterManager(this, component), SpectrumMessageHandler(this, component) {
+User::User(const UserRow &row, const std::string &userKey, Swift::Component *component, Swift::PresenceOracle *presenceOracle, Swift::EntityCapsManager *entityCapsManager, SpectrumPurple *instance) : SpectrumRosterManager(this, component), SpectrumMessageHandler(this, component) {
 // 	p = parent;
 	m_jid = row.jid;
+	m_instance = instance;
 
 	m_component = component;
 	m_presenceOracle = presenceOracle;
@@ -286,102 +288,103 @@ void User::connect() {
 		return;
 	}
 
-	if (purple_accounts_find(m_username.c_str(), Transport::instance()->protocol()->protocol().c_str()) != NULL){
-		Log(m_jid, "this account already exists");
-		m_account = purple_accounts_find(m_username.c_str(), Transport::instance()->protocol()->protocol().c_str());
-		User *user = (User *) Transport::instance()->userManager()->getUserByAccount(m_account);
-		if (user && user != this) {
-			m_account = NULL;
-			Log(m_jid, "This account is already connected by another jid " << user->jid());
-			return;
-		}
-	}
-	else {
-		Log(m_jid, "creating new account");
-		m_account = purple_account_new(m_username.c_str(), Transport::instance()->protocol()->protocol().c_str());
-
-		purple_accounts_add(m_account);
-	}
-	Transport::instance()->collector()->stopCollecting(m_account);
-
-	PurplePlugin *plugin = purple_find_prpl(Transport::instance()->protocol()->protocol().c_str());
-	PurplePluginProtocolInfo *prpl_info = PURPLE_PLUGIN_PROTOCOL_INFO(plugin);
-	for (GList *l = prpl_info->protocol_options; l != NULL; l = l->next) {
-		PurpleAccountOption *option = (PurpleAccountOption *) l->data;
-		purple_account_remove_setting(m_account, purple_account_option_get_setting(option));
-	}
-
-	std::map <std::string, PurpleAccountSettingValue> &settings = Transport::instance()->getConfiguration().purple_account_settings;
-	for (std::map <std::string, PurpleAccountSettingValue>::iterator it = settings.begin(); it != settings.end(); it++) {
-		PurpleAccountSettingValue v = (*it).second;
-		std::string key((*it).first);
-		switch (v.type) {
-			case PURPLE_PREF_BOOLEAN:
-				purple_account_set_bool(m_account, key.c_str(), v.b);
-				break;
-
-			case PURPLE_PREF_INT:
-				purple_account_set_int(m_account, key.c_str(), v.i);
-				break;
-
-			case PURPLE_PREF_STRING:
-				if (v.str)
-					purple_account_set_string(m_account, key.c_str(), v.str);
-				else
-					purple_account_remove_setting(m_account, key.c_str());
-				break;
-
-			case PURPLE_PREF_STRING_LIST:
-				// TODO:
-				break;
-
-			default:
-				continue;
-		}
-	}
-
-	purple_account_set_string(m_account, "encoding", m_encoding.empty() ? Transport::instance()->getConfiguration().encoding.c_str() : m_encoding.c_str());
-	purple_account_set_bool(m_account, "use_clientlogin", false);
-	purple_account_set_bool(m_account, "require_tls",  Transport::instance()->getConfiguration().require_tls);
-	purple_account_set_bool(m_account, "use_ssl",  Transport::instance()->getConfiguration().require_tls);
-	purple_account_set_bool(m_account, "direct_connect", false);
-	purple_account_set_bool(m_account, "check-mail", purple_value_get_boolean(getSetting("enable_notify_email")));
-
-	m_account->ui_data = this;
-	
-	Transport::instance()->protocol()->onPurpleAccountCreated(m_account);
-
-	m_loadingBuddiesFromDB = true;
-	loadRoster();
-	m_loadingBuddiesFromDB = false;
-
-	m_connectionStart = time(NULL);
-	m_readyForConnect = false;
-	purple_account_set_password(m_account,m_password.c_str());
-	Log(m_jid, "UIN:" << m_username << " USER_ID:" << m_userID);
-
-	if (CONFIG().useProxy) {
-		PurpleProxyInfo *info = purple_proxy_info_new();
-		purple_proxy_info_set_type(info, PURPLE_PROXY_USE_ENVVAR);
-		info->username = NULL;
-		info->password = NULL;
-		purple_account_set_proxy_info(m_account, info);
-	}
-
-	if (valid && purple_value_get_boolean(getSetting("enable_transport"))) {
-		purple_account_set_enabled(m_account, PURPLE_UI, TRUE);
-// 		purple_account_connect(m_account);
-		const PurpleStatusType *statusType = purple_account_get_status_type_with_primitive(m_account, (PurpleStatusPrimitive) m_presenceType);
-		if (statusType) {
-			Log(m_jid, "Setting up default status.");
-			if (!m_statusMessage.empty()) {
-				purple_account_set_status(m_account, purple_status_type_get_id(statusType), TRUE, "message", m_statusMessage.c_str(), NULL);
-			}
-			else {
-				purple_account_set_status(m_account, purple_status_type_get_id(statusType), TRUE, NULL);
-			}
-		}
-	}
+// 	if (purple_accounts_find(m_username.c_str(), Transport::instance()->protocol()->protocol().c_str()) != NULL){
+// 		Log(m_jid, "this account already exists");
+// 		m_account = purple_accounts_find(m_username.c_str(), Transport::instance()->protocol()->protocol().c_str());
+// 		User *user = (User *) Transport::instance()->userManager()->getUserByAccount(m_account);
+// 		if (user && user != this) {
+// 			m_account = NULL;
+// 			Log(m_jid, "This account is already connected by another jid " << user->jid());
+// 			return;
+// 		}
+// 	}
+// 	else {
+// 		Log(m_jid, "creating new account");
+// 		m_account = purple_account_new(m_username.c_str(), Transport::instance()->protocol()->protocol().c_str());
+// 
+// 		purple_accounts_add(m_account);
+// 	}
+// 	Transport::instance()->collector()->stopCollecting(m_account);
+// 
+// 	PurplePlugin *plugin = purple_find_prpl(Transport::instance()->protocol()->protocol().c_str());
+// 	PurplePluginProtocolInfo *prpl_info = PURPLE_PLUGIN_PROTOCOL_INFO(plugin);
+// 	for (GList *l = prpl_info->protocol_options; l != NULL; l = l->next) {
+// 		PurpleAccountOption *option = (PurpleAccountOption *) l->data;
+// 		purple_account_remove_setting(m_account, purple_account_option_get_setting(option));
+// 	}
+// 
+// 	std::map <std::string, PurpleAccountSettingValue> &settings = Transport::instance()->getConfiguration().purple_account_settings;
+// 	for (std::map <std::string, PurpleAccountSettingValue>::iterator it = settings.begin(); it != settings.end(); it++) {
+// 		PurpleAccountSettingValue v = (*it).second;
+// 		std::string key((*it).first);
+// 		switch (v.type) {
+// 			case PURPLE_PREF_BOOLEAN:
+// 				purple_account_set_bool(m_account, key.c_str(), v.b);
+// 				break;
+// 
+// 			case PURPLE_PREF_INT:
+// 				purple_account_set_int(m_account, key.c_str(), v.i);
+// 				break;
+// 
+// 			case PURPLE_PREF_STRING:
+// 				if (v.str)
+// 					purple_account_set_string(m_account, key.c_str(), v.str);
+// 				else
+// 					purple_account_remove_setting(m_account, key.c_str());
+// 				break;
+// 
+// 			case PURPLE_PREF_STRING_LIST:
+// 				// TODO:
+// 				break;
+// 
+// 			default:
+// 				continue;
+// 		}
+// 	}
+// 
+// 	purple_account_set_string(m_account, "encoding", m_encoding.empty() ? Transport::instance()->getConfiguration().encoding.c_str() : m_encoding.c_str());
+// 	purple_account_set_bool(m_account, "use_clientlogin", false);
+// 	purple_account_set_bool(m_account, "require_tls",  Transport::instance()->getConfiguration().require_tls);
+// 	purple_account_set_bool(m_account, "use_ssl",  Transport::instance()->getConfiguration().require_tls);
+// 	purple_account_set_bool(m_account, "direct_connect", false);
+// 	purple_account_set_bool(m_account, "check-mail", purple_value_get_boolean(getSetting("enable_notify_email")));
+// 
+// 	m_account->ui_data = this;
+// 	
+// 	Transport::instance()->protocol()->onPurpleAccountCreated(m_account);
+// 
+// 	m_loadingBuddiesFromDB = true;
+// 	loadRoster();
+// 	m_loadingBuddiesFromDB = false;
+// 
+// 	m_connectionStart = time(NULL);
+// 	m_readyForConnect = false;
+// 	purple_account_set_password(m_account,m_password.c_str());
+// 	Log(m_jid, "UIN:" << m_username << " USER_ID:" << m_userID);
+// 
+// 	if (CONFIG().useProxy) {
+// 		PurpleProxyInfo *info = purple_proxy_info_new();
+// 		purple_proxy_info_set_type(info, PURPLE_PROXY_USE_ENVVAR);
+// 		info->username = NULL;
+// 		info->password = NULL;
+// 		purple_account_set_proxy_info(m_account, info);
+// 	}
+// 
+// 	if (valid && purple_value_get_boolean(getSetting("enable_transport"))) {
+// 		purple_account_set_enabled(m_account, PURPLE_UI, TRUE);
+// // 		purple_account_connect(m_account);
+// 		const PurpleStatusType *statusType = purple_account_get_status_type_with_primitive(m_account, (PurpleStatusPrimitive) m_presenceType);
+// 		if (statusType) {
+// 			Log(m_jid, "Setting up default status.");
+// 			if (!m_statusMessage.empty()) {
+// 				purple_account_set_status(m_account, purple_status_type_get_id(statusType), TRUE, "message", m_statusMessage.c_str(), NULL);
+// 			}
+// 			else {
+// 				purple_account_set_status(m_account, purple_status_type_get_id(statusType), TRUE, NULL);
+// 			}
+// 		}
+// 	}
+	m_instance->login(m_username.c_str(), m_password.c_str(), m_presenceType, m_statusMessage.c_str());
 
 	Swift::Presence::ref response = Swift::Presence::create();
 	response->setTo(Swift::JID(m_jid));
@@ -687,21 +690,7 @@ void User::forwardStatus(Swift::Presence::ref presence) {
 
 	if (m_connected) {
 		// we are already connected so we have to change status
-		const PurpleStatusType *status_type = purple_account_get_status_type_with_primitive(m_account, (PurpleStatusPrimitive) PurplePresenceType);
-		std::string statusMessage;
-		if (status_type != NULL) {
-			// send presence to legacy network
-			statusMessage.clear();
-
-			statusMessage.append(presence->getStatus().getUTF8String());
-
-			if (!statusMessage.empty()) {
-				purple_account_set_status(m_account, purple_status_type_get_id(status_type), TRUE, "message", statusMessage.c_str(), NULL);
-			}
-			else {
-				purple_account_set_status(m_account, purple_status_type_get_id(status_type), TRUE, NULL);
-			}
-		}
+		m_instance->changeStatus(m_username, PurplePresenceType, presence->getStatus().getUTF8String());
 
 		Swift::Presence::ref response = Swift::Presence::create();
 		response->setTo(presence->getFrom().toBare());
@@ -745,37 +734,8 @@ User::~User(){
 
 	m_component->sendPresence(response);
 
-	// purple_account_destroy(m_account);
-	// delete(m_account);
-	// if (this->save_timer!=0 && this->save_timer!=-1)
-	// 	std::cout << "* removing timer\n";
-	// 	purple_timeout_remove(this->save_timer);
+	m_instance->logout(m_username);
 
-	if (m_account) {
-		purple_account_set_enabled(m_account, PURPLE_UI, FALSE);
-
-		// Remove conversations.
-		// This has to be called before m_account->ui_data = NULL;, because it uses
-		// ui_data to call SpectrumMessageHandler::purpleConversationDestroyed() callback.
-		GList *iter;
-		for (iter = purple_get_conversations(); iter; ) {
-			PurpleConversation *conv = (PurpleConversation*) iter->data;
-			iter = iter->next;
-			if (purple_conversation_get_account(conv) == m_account)
-				purple_conversation_destroy(conv);
-		}
-
-		m_account->ui_data = NULL;
-		Transport::instance()->collector()->collect(m_account);
-	}
-// 	else {
-// 		PurpleAccount *act = purple_accounts_find(m_username.c_str(), Transport::instance()->protocol()->protocol().c_str());
-// 		if (act) {
-// 			act->ui_data = NULL;
-// 			Transport::instance()->collector()->collect(act);
-// 			purple_account_set_enabled(act, PURPLE_UI, FALSE);
-// 		}
-// 	}
 
 	if (m_syncTimer != 0) {
 		Log(m_jid, "removing timer\n");
