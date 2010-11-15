@@ -211,11 +211,18 @@ void User::purpleBuddyTypingStopped(const std::string &uin){
 	else
 		std::for_each( username.begin(), username.end(), replaceBadJidCharacters() ); // OK
 
-	Swift::Message::ref s(new Swift::Message());
-	s->setTo(Swift::JID(m_jid));
-	s->setFrom(Swift::JID(username + "@" + Transport::instance()->jid() + "/bot"));
-	s->addPayload(boost::shared_ptr<Swift::ChatState>( new Swift::ChatState(Swift::ChatState::Active) ));
-	m_component->sendMessage(s);
+
+	Tag *s = new Tag("message");
+	s->addAttribute("to",m_jid);
+	s->addAttribute("type","chat");
+	s->addAttribute("from",username + "@" + Transport::instance()->jid() + "/bot");
+
+	// chatstates
+	Tag *active = new Tag("active");
+	active->addAttribute("xmlns","http://jabber.org/protocol/chatstates");
+	s->addChild(active);
+
+	Transport::instance()->send( s );
 }
 
 /*
@@ -234,11 +241,17 @@ void User::purpleBuddyTyping(const std::string &uin){
 	else
 		std::for_each( username.begin(), username.end(), replaceBadJidCharacters() ); // OK
 
-	Swift::Message::ref s(new Swift::Message());
-	s->setTo(Swift::JID(m_jid));
-	s->setFrom(Swift::JID(username + "@" + Transport::instance()->jid() + "/bot"));
-	s->addPayload(boost::shared_ptr<Swift::ChatState>( new Swift::ChatState(Swift::ChatState::Composing) ));
-	m_component->sendMessage(s);
+	Tag *s = new Tag("message");
+	s->addAttribute("to", m_jid);
+	s->addAttribute("type", "chat");
+	s->addAttribute("from",username + "@" + Transport::instance()->jid() + "/bot");
+
+	// chatstates
+	Tag *active = new Tag("composing");
+	active->addAttribute("xmlns","http://jabber.org/protocol/chatstates");
+	s->addChild(active);
+
+	Transport::instance()->send( s );
 }
 
 /*
@@ -258,11 +271,17 @@ void User::purpleBuddyTypingPaused(const std::string &uin){
 		std::for_each( username.begin(), username.end(), replaceBadJidCharacters() ); // OK
 
 
-	Swift::Message::ref s(new Swift::Message());
-	s->setTo(Swift::JID(m_jid));
-	s->setFrom(Swift::JID(username + "@" + Transport::instance()->jid() + "/bot"));
-	s->addPayload(boost::shared_ptr<Swift::ChatState>( new Swift::ChatState(Swift::ChatState::Paused) ));
-	m_component->sendMessage(s);
+	Tag *s = new Tag("message");
+	s->addAttribute("to",m_jid);
+	s->addAttribute("type","chat");
+	s->addAttribute("from",username + "@" + Transport::instance()->jid() + "/bot");
+
+	// chatstates
+	Tag *active = new Tag("paused");
+	active->addAttribute("xmlns","http://jabber.org/protocol/chatstates");
+	s->addChild(active);
+
+	Transport::instance()->send( s );
 }
 
 /*
