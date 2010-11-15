@@ -260,10 +260,14 @@ void SpectrumComponent::handleMessageReceived(Swift::Message::ref message) {
 	}
 	if (user!=NULL) {
 		if (user->isConnected()) {
-			boost::shared_ptr<Swift::ChatState> chatstate = message->getPayload<Swift::ChatState>();
-			if (chatstate != NULL) {
-				user->handleChatState(purpleUsername(message->getTo().getNode().getUTF8String()), chatstate->getChatState());
-			}
+/*			const StanzaExtension *ext = msg.findExtension(ExtChatState);
+			Tag *chatstates = ext ? ext->tag() : NULL;
+			if (chatstates != NULL) {
+// 				std::string username = msg.to().username();
+// 				std::for_each( username.begin(), username.end(), replaceJidCharacters() );
+				user->handleChatState(purpleUsername(msg.to().username()), chatstates->name());
+				delete chatstates;
+			}*/
 			if (!message->getBody().isEmpty()) {
 // 				m_stats->messageFromJabber();
 				user->handleMessage(message);

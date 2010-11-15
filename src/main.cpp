@@ -1888,7 +1888,7 @@ void GlooxMessageHandler::handleMessage (const Message &msg, MessageSession *ses
 			if (chatstates != NULL) {
 // 				std::string username = msg.to().username();
 // 				std::for_each( username.begin(), username.end(), replaceJidCharacters() );
-// 				user->handleChatState(purpleUsername(msg.to().username()), chatstates->name());
+				user->handleChatState(purpleUsername(msg.to().username()), chatstates->name());
 				delete chatstates;
 			}
 			if (msgTag->findChild("body") != NULL) {
