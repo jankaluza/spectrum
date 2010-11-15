@@ -298,16 +298,21 @@ bool SpectrumMessageHandler::hasOpenedMUC() {
 	return m_mucs != 0;
 }
 
-void SpectrumMessageHandler::handleChatState(const std::string &uin, const std::string &state) {
+void SpectrumMessageHandler::handleChatState(const std::string &uin, Swift::ChatState::ChatStateType chatstate) {
 	if (!m_user->hasFeature(GLOOX_FEATURE_CHATSTATES) || !m_user->hasTransportFeature(TRANSPORT_FEATURE_TYPING_NOTIFY))
 		return;
-	Log(m_user->jid(), "Sending " << state << " message to " << uin);
-	if (state == "composing")
-		serv_send_typing(purple_account_get_connection(m_user->account()),uin.c_str(),PURPLE_TYPING);
-	else if (state == "paused")
-		serv_send_typing(purple_account_get_connection(m_user->account()),uin.c_str(),PURPLE_TYPED);
-	else
-		serv_send_typing(purple_account_get_connection(m_user->account()),uin.c_str(),PURPLE_NOT_TYPING);
+	Log(m_user->jid(), "Sending " << (int) chatstate << " message to " << uin);
+	switch (chatstate) {
+		case Swift::ChatState::Composing:
+			serv_send_typing(purple_account_get_connection(m_user->account()), uin.c_str(), PURPLE_TYPING);
+			break;
+		case Swift::ChatState::Paused:
+			serv_send_typing(purple_account_get_connection(m_user->account()), uin.c_str(), PURPLE_TYPED);
+			break;
+		default:
+			serv_send_typing(purple_account_get_connection(m_user->account()),uin.c_str(),PURPLE_NOT_TYPING);
+			break;
+	};
 }
 
 // TODO: only used by IRC for handling PMs, remove it and move the code somewhere... 

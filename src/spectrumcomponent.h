@@ -30,11 +30,7 @@
 #include "Swiften/Presence/PresenceOracle.h"
 #include "Swiften/Network/BoostTimerFactory.h"
 #include "Swiften/Network/BoostIOServiceThread.h"
-#include "Swiften/Network/Connection.h"
 #include "glib.h"
-#include "spectrumconnection.h"
-#include "spectrumpurple.h"
-
 
 typedef enum { 	CLIENT_FEATURE_ROSTERX = 2,
 				CLIENT_FEATURE_XHTML_IM = 4,
@@ -53,9 +49,6 @@ class SpectrumComponent {
 		void connect();
 	
 	private:
-		void handleInstanceAccept(const boost::system::error_code& e, connection_ptr conn);
-		void handleInstanceWrite(const boost::system::error_code& e, connection_ptr conn) { std::cout << "WROTE\n"; }
-		void handleInstanceRead(const boost::system::error_code& e, SpectrumBackendMessage *msg, connection_ptr conn);
 		void handleConnected();
 		void handleConnectionError(const Swift::ComponentError &error);
 		void handlePresenceReceived(Swift::Presence::ref presence);
@@ -70,7 +63,6 @@ class SpectrumComponent {
 		void handleCapsChanged(const Swift::JID& jid);
 
 		Swift::Component *m_component;
-		Swift::ByteArray m_buffer;
 		Swift::BoostTimerFactory m_timerFactory;
 		Swift::Timer::ref m_reconnectTimer;
 		Swift::BoostIOServiceThread m_boostIOServiceThread;
@@ -80,10 +72,6 @@ class SpectrumComponent {
 		Swift::PresenceOracle *m_presenceOracle;
 		int m_reconnectCount;
 		bool m_firstConnection;
-		boost::asio::ip::tcp::acceptor acceptor_;
-		std::vector<SpectrumPurple *> m_instances;
-		int m_lastUsedInstance;
-
 };
 
 #endif

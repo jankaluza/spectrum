@@ -116,21 +116,16 @@ void SpectrumConversation::handleMessage(AbstractUser *user, const char *who, co
 	s->setTo(Swift::JID(to));
 
 	// chatstates
-// 	if (purple_value_get_boolean(user->getSetting("enable_chatstate"))) {
-// 		if (user->hasFeature(GLOOX_FEATURE_CHATSTATES, getResource())) {
-// 			ChatState *c = new ChatState(ChatStateActive);
-// 			s.addExtension(c);
-// 		}
-// 	}
+	if (purple_value_get_boolean(user->getSetting("enable_chatstate"))) {
+		if (user->hasFeature(GLOOX_FEATURE_CHATSTATES, getResource())) {
+			s->addPayload(boost::shared_ptr<Swift::ChatState>( new Swift::ChatState() ));
+		}
+	}
 
 	// Delayed messages, we have to count with some delay
-// 	if (mtime && (unsigned long) time(NULL)-10 > (unsigned long) mtime/* && (unsigned long) time(NULL) - 31536000 < (unsigned long) mtime*/) {
-// 		char buf[80];
-// 		strftime(buf, sizeof(buf), "%Y-%m-%dT%H:%M:%SZ", gmtime(&mtime));
-// 		std::string timestamp(buf);
-// 		DelayedDelivery *d = new DelayedDelivery(name + "@" + Transport::instance()->jid() + "/bot", timestamp);
-// 		s.addExtension(d);
-// 	}
+	if (mtime && (unsigned long) time(NULL)-10 > (unsigned long) mtime/* && (unsigned long) time(NULL) - 31536000 < (unsigned long) mtime*/) {
+		s->addPayload(boost::shared_ptr<Swift::Delay>( new Swift::Delay(boost::posix_time::from_time_t(mtime), Swift::JID(name + "@" + Transport::instance()->jid() + "/bot")) ));
+	}
 
 // 	std::string res = getResource();
 // 	if (user->hasFeature(GLOOX_FEATURE_XHTML_IM, res) && m != message) {

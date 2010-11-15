@@ -42,7 +42,6 @@ class RosterManager;
 class FiletransferRepeater;
 
 class RosterRow;
-class SpectrumPurple;
 
 using namespace gloox;
 
@@ -51,7 +50,7 @@ class User;
 // Representation of XMPP User
 class User : public AbstractUser, public SpectrumRosterManager, public SpectrumMessageHandler {
 	public:
-		User(const UserRow &row, const std::string &userKey, Swift::Component *component, Swift::PresenceOracle *presenceOracle, Swift::EntityCapsManager *entityCapsManager, SpectrumPurple *instance);
+		User(const UserRow &row, const std::string &userKey, Swift::Component *component, Swift::PresenceOracle *presenceOracle, Swift::EntityCapsManager *entityCapsManager);
 		virtual ~User();
 
 		// Connects the user to legacy network.
@@ -71,7 +70,6 @@ class User : public AbstractUser, public SpectrumRosterManager, public SpectrumM
 		void disconnected();
 		void setConnected(bool connected) { m_connected = connected; }
 		void handleVCard(const VCard* vcard);
-		const std::string &getUIN() { return m_username; }
 
 		std::string actionData;
 
@@ -133,7 +131,6 @@ class User : public AbstractUser, public SpectrumRosterManager, public SpectrumM
 		std::string m_activeResource;				// should be part of PresenceOracle
 		std::map <std::string, int> m_resources;	// should be part of PresenceOracle
 		Swift::Component *m_component;
-		SpectrumPurple *m_instance;
 
 		
 		Swift::EntityCapsManager *m_entityCapsManager;

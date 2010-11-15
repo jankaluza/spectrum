@@ -26,17 +26,12 @@
 #include "usermanager.h"
 #include <boost/bind.hpp>
 #include "user.h"
-#include "spectrumpurple.h"
-#include "Swiften/Network/BoostConnectionServer.h"
 
 using namespace Swift;
 using namespace boost;
 
-SpectrumComponent::SpectrumComponent() : m_timerFactory(&m_boostIOServiceThread.getIOService()), acceptor_(m_boostIOServiceThread.getIOService(),
-        boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), 19899))
- {
+SpectrumComponent::SpectrumComponent() : m_timerFactory(&m_boostIOServiceThread.getIOService()) {
 	m_reconnectCount = 0;
-	m_lastUsedInstance = 0;
 	m_firstConnection = true;
 
 	m_reconnectTimer = m_timerFactory.createTimer(1000);
@@ -57,12 +52,6 @@ SpectrumComponent::SpectrumComponent() : m_timerFactory(&m_boostIOServiceThread.
 	
 	m_presenceOracle = new PresenceOracle(m_component->getStanzaChannel());
 	m_presenceOracle->onPresenceChange.connect(bind(&SpectrumComponent::handlePresence, this, _1));
-
-	connection_ptr new_conn(new connection(m_boostIOServiceThread.getIOService()));
-	acceptor_.async_accept(new_conn->socket(), boost::bind(&SpectrumComponent::handleInstanceAccept, this, boost::asio::placeholders::error, new_conn));
-
-	SpectrumPurple *instance = new SpectrumPurple(&m_boostIOServiceThread.getIOService());
-	m_instances.push_back(instance);
 }
 
 SpectrumComponent::~SpectrumComponent() {
@@ -71,69 +60,6 @@ SpectrumComponent::~SpectrumComponent() {
 	delete m_capsManager;
 	delete m_capsMemoryStorage;
 	delete m_component;
-}
-
-void SpectrumComponent::handleInstanceAccept(const boost::system::error_code& e, connection_ptr conn) {
-	if (!e) {
-		SpectrumBackendMessage msg(MSG_UUID);
-		conn->async_write(msg, boost::bind(&SpectrumComponent::handleInstanceWrite, this, boost::asio::placeholders::error, conn));
-
-		SpectrumBackendMessage *msg2 = new SpectrumBackendMessage();
-		conn->async_read(*msg2, boost::bind(&SpectrumComponent::handleInstanceRead, this, boost::asio::placeholders::error, msg2, conn));
-
-		// Start an accept operation for a new connection.
-		connection_ptr new_conn(new connection(acceptor_.io_service()));
-		acceptor_.async_accept(new_conn->socket(), boost::bind(&SpectrumComponent::handleInstanceAccept, this, boost::asio::placeholders::error, new_conn));
-	}
-	else {
-		std::cerr << e.message() << std::endl;
-	}
-}
-
-void SpectrumComponent::handleInstanceRead(const boost::system::error_code& e, SpectrumBackendMessage *msg, connection_ptr conn) {
-	if (!e) {
-		bool close = false;
-		if (conn->getInstance() == NULL && msg->type != MSG_UUID) {
-			close = true;
-		}
-		else {
-			switch (msg->type) {
-				case MSG_UUID:
-					close = true;
-					for (std::vector<SpectrumPurple *>::const_iterator it = m_instances.begin(); it != m_instances.end(); it++) {
-						SpectrumPurple *instance = *it;
-						if (instance->getUUID() == msg->str1) {
-							std::cout << "Registering connection " << conn << "\n";
-							close = false;
-							instance->setLogged(true);
-							conn->setInstance(instance);
-							instance->setConnection(conn);
-							break;
-						}
-					}
-				break;
-				case MSG_CONNECTED:
-					std::string uin = msg->str1;
-					AbstractUser *user = Transport::instance()->userManager()->getUserByUIN(uin);
-					if (user) {
-						user->connected();
-					}
-				break;
-			}
-		}
-
-		delete msg;
-		if (!close) {
-			SpectrumBackendMessage *msg2 = new SpectrumBackendMessage();
-			conn->async_read(*msg2, boost::bind(&SpectrumComponent::handleInstanceRead, this, boost::asio::placeholders::error, msg2, conn));
-		}
-		else {
-			std::cout << "Closing connection " << conn << "\n";
-		}
-	}
-	else {
-		std::cerr << e.message() << std::endl;
-	}
 }
 
 void SpectrumComponent::connect() {
@@ -260,14 +186,10 @@ void SpectrumComponent::handleMessageReceived(Swift::Message::ref message) {
 	}
 	if (user!=NULL) {
 		if (user->isConnected()) {
-/*			const StanzaExtension *ext = msg.findExtension(ExtChatState);
-			Tag *chatstates = ext ? ext->tag() : NULL;
-			if (chatstates != NULL) {
-// 				std::string username = msg.to().username();
-// 				std::for_each( username.begin(), username.end(), replaceJidCharacters() );
-				user->handleChatState(purpleUsername(msg.to().username()), chatstates->name());
-				delete chatstates;
-			}*/
+			boost::shared_ptr<Swift::ChatState> chatstate = message->getPayload<Swift::ChatState>();
+			if (chatstate != NULL) {
+				user->handleChatState(purpleUsername(message->getTo().getNode().getUTF8String()), chatstate->getChatState());
+			}
 			if (!message->getBody().isEmpty()) {
 // 				m_stats->messageFromJabber();
 				user->handleMessage(message);
@@ -405,7 +327,7 @@ void SpectrumComponent::handlePresence(Swift::Presence::ref presence) {
 						}
 					}
 				}
-				user = (AbstractUser *) new User(res, userkey, m_component, m_presenceOracle, m_entityCapsManager, m_instances[m_lastUsedInstance++ % m_instances.size()]);
+				user = (AbstractUser *) new User(res, userkey, m_component, m_presenceOracle, m_entityCapsManager);
 				user->setFeatures(isVip ? CONFIG().VIPFeatures : CONFIG().transportFeatures);
 // 				if (c != NULL)
 // 					if (Transport::instance()->hasClientCapabilities(c->findAttribute("ver")))

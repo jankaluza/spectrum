@@ -43,9 +43,6 @@ class UserManager : MessageSender
 		// Returns user by PurpleAccount.
 		AbstractUser *getUserByAccount(PurpleAccount *account);
 
-		// Returns user by UIN
-		AbstractUser *getUserByUIN(const std::string &uin);
-
 		// Adds new user to manager.
 		void addUser(AbstractUser *user);
 
@@ -75,7 +72,6 @@ class UserManager : MessageSender
 
 	private:
 		GHashTable *m_users;	// key = JID; value = User*
-		GHashTable *m_users_uins;	// key = UIN; value = User*
 		long m_onlineBuddies;
 		AbstractUser *m_cachedUser;
 
