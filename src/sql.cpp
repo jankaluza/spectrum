@@ -793,8 +793,11 @@ UserRow SQLClass::getUserByJid(const std::string &jid){
 		user.id = id;
 	}
 
-// 	*m_sess <<  "SELECT COUNT(jid) as is_vip FROM platby.users WHERE jid='" + jid + "' and expire>NOW();",
-// 													into(user.vip), now;
+	if (!p->configuration().sqlVIP.empty()) {
+		*m_sess <<  p->configuration().sqlVIP, use(jid), into(user.vip), now;
+// 		*m_sess <<  "SELECT COUNT(jid) as is_vip FROM platby.users WHERE jid='" + jid + "' and expire>NOW();",
+// 														into(user.vip), now;
+	}
 	return user;
 }
 

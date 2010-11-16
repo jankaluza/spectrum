@@ -45,6 +45,7 @@ struct Configuration {
 	std::string password;			// Password to connect server.
 	std::string jid;				// Spectrum JID.
 	std::string encoding;			// Default encoding.
+	std::string sqlVIP;
 	int port;						// Server port.
 	std::string config_interface;	// ConfigInterface address.
 	
