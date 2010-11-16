@@ -1014,7 +1014,7 @@ GlooxMessageHandler::GlooxMessageHandler(const std::string &config) : MessageHan
 	m_collector = new AccountCollector();
 // 	m_stats = new GlooxStatsHandler(this);
 
-	SpectrumComponent component;
+	SpectrumComponent component(loop);
 	component.connect();
 	loop->run();
 	return;

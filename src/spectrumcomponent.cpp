@@ -30,14 +30,16 @@
 using namespace Swift;
 using namespace boost;
 
-SpectrumComponent::SpectrumComponent() : m_timerFactory(&m_boostIOServiceThread.getIOService()) {
+SpectrumComponent::SpectrumComponent(Swift::EventLoop *loop) {
 	m_reconnectCount = 0;
 	m_firstConnection = true;
 
-	m_reconnectTimer = m_timerFactory.createTimer(1000);
+	m_factories = new BoostNetworkFactories(loop);
+
+	m_reconnectTimer = m_factories->getTimerFactory()->createTimer(1000);
 	m_reconnectTimer->onTick.connect(bind(&SpectrumComponent::connect, this)); 
 
-	m_component = new Component(Swift::JID(CONFIG().jid), CONFIG().password);
+	m_component = new Component(loop, m_factories, Swift::JID(CONFIG().jid), CONFIG().password);
 	m_component->onConnected.connect(bind(&SpectrumComponent::handleConnected, this));
 	m_component->onError.connect(bind(&SpectrumComponent::handleConnectionError, this, _1));
 	m_component->onDataRead.connect(bind(&SpectrumComponent::handleDataRead, this, _1));
@@ -60,6 +62,7 @@ SpectrumComponent::~SpectrumComponent() {
 	delete m_capsManager;
 	delete m_capsMemoryStorage;
 	delete m_component;
+	delete m_factories;
 }
 
 void SpectrumComponent::connect() {

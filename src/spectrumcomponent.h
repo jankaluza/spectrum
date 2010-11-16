@@ -42,7 +42,7 @@ class SpectrumTimer;
 
 class SpectrumComponent {
 	public:
-		SpectrumComponent();
+		SpectrumComponent(Swift::EventLoop *loop);
 		~SpectrumComponent();
 
 		// Connect to server
@@ -62,8 +62,8 @@ class SpectrumComponent {
 		void handleDiscoInfoResponse(boost::shared_ptr<Swift::DiscoInfo> info, const boost::optional<Swift::ErrorPayload>& error, const Swift::JID& jid);
 		void handleCapsChanged(const Swift::JID& jid);
 
+		Swift::BoostNetworkFactories *m_factories;
 		Swift::Component *m_component;
-		Swift::BoostTimerFactory m_timerFactory;
 		Swift::Timer::ref m_reconnectTimer;
 		Swift::BoostIOServiceThread m_boostIOServiceThread;
 		Swift::EntityCapsManager *m_entityCapsManager;
