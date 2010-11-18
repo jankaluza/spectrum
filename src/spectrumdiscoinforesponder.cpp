@@ -51,6 +51,9 @@ SpectrumDiscoInfoResponder::SpectrumDiscoInfoResponder(Swift::IQRouter *router) 
 	for (std::list<std::string>::iterator it = f.begin(); it != f.end(); it++) {
 		m_buddyInfo.addFeature(*it);
 	}
+
+	CapsInfoGenerator caps("");
+	CONFIG().caps = caps.generateCapsInfo(m_buddyInfo);
 	
 }
 

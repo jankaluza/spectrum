@@ -28,6 +28,7 @@
 #include <map>
 #include <string>
 #include "limits.h"
+#include "Swiften/Elements/CapsInfo.h"
 
 struct PurpleAccountSettingValue {
 	char *str;
@@ -83,7 +84,8 @@ struct Configuration {
 	std::string sqlPrefix;			// Prefix for database tables.
 	std::string sqlType;			// Type of database.
 	
-	std::string hash; 				// Version hash used for caps.
+	std::string hash;
+	Swift::CapsInfo caps; 				// Version hash used for caps.
 	
 	std::list <std::string> allowedServers;		// Hostnames which are allowed to connect.
 	std::list <std::string> admins;				// JIDs of Spectrum administrators

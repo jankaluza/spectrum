@@ -124,7 +124,7 @@ Swift::Presence::ref AbstractSpectrumBuddy::generatePresenceStanza(int features,
 
 	if (s != PURPLE_STATUS_OFFLINE) {
 		// caps
-		presence->addPayload(boost::shared_ptr<Swift::Payload>(new Swift::CapsInfo ("http://spectrum.im/transport", Transport::instance()->hash())));
+		presence->addPayload(boost::shared_ptr<Swift::Payload>(new Swift::CapsInfo (CONFIG().caps)));
 
 		if (features & TRANSPORT_FEATURE_AVATARS) {
 			presence->addPayload(boost::shared_ptr<Swift::Payload>(new Swift::VCardUpdate (getIconHash())));
