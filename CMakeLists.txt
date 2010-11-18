@@ -107,6 +107,7 @@ set(spectrum_SRCS
 	src/spectrumcomponent.cpp
 	src/spectrumconversation.cpp
 	src/spectrumdiscohandler.cpp
+	src/spectrumdiscoinforesponder.cpp
 	src/spectrumeventloop.cpp
 	src/spectrummucconversation.cpp
 	src/spectrumnodehandler.cpp
@@ -168,6 +169,7 @@ set(spectrum_MOC_HDRS
 	src/protocolmanager.h
 	src/spectrummessagehandler.h
 	src/spectrumconversation.h
+	src/spectrumdiscoinforesponder.h
 # 	src/muchandler.h
 	src/parser.h
 	src/registerhandler.h

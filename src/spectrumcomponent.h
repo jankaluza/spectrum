@@ -39,6 +39,7 @@ typedef enum { 	CLIENT_FEATURE_ROSTERX = 2,
 				} SpectrumImportantFeatures;
 
 class SpectrumTimer;
+class SpectrumDiscoInfoResponder;
 
 class SpectrumComponent {
 	public:
@@ -70,6 +71,7 @@ class SpectrumComponent {
 		Swift::CapsManager *m_capsManager;
 		Swift::CapsMemoryStorage *m_capsMemoryStorage;
 		Swift::PresenceOracle *m_presenceOracle;
+		SpectrumDiscoInfoResponder *m_discoInfoResponder;
 		int m_reconnectCount;
 		bool m_firstConnection;
 };

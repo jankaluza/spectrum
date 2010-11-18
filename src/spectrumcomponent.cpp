@@ -26,6 +26,7 @@
 #include "usermanager.h"
 #include <boost/bind.hpp>
 #include "user.h"
+#include "spectrumdiscoinforesponder.h"
 
 using namespace Swift;
 using namespace boost;
@@ -40,6 +41,7 @@ SpectrumComponent::SpectrumComponent(Swift::EventLoop *loop) {
 	m_reconnectTimer->onTick.connect(bind(&SpectrumComponent::connect, this)); 
 
 	m_component = new Component(loop, m_factories, Swift::JID(CONFIG().jid), CONFIG().password);
+	m_component->setSoftwareVersion(CONFIG().discoName, VERSION);
 	m_component->onConnected.connect(bind(&SpectrumComponent::handleConnected, this));
 	m_component->onError.connect(bind(&SpectrumComponent::handleConnectionError, this, _1));
 	m_component->onDataRead.connect(bind(&SpectrumComponent::handleDataRead, this, _1));
@@ -54,6 +56,9 @@ SpectrumComponent::SpectrumComponent(Swift::EventLoop *loop) {
 	
 	m_presenceOracle = new PresenceOracle(m_component->getStanzaChannel());
 	m_presenceOracle->onPresenceChange.connect(bind(&SpectrumComponent::handlePresence, this, _1));
+
+	m_discoInfoResponder = new SpectrumDiscoInfoResponder(m_component->getIQRouter());
+	m_discoInfoResponder->start();
 }
 
 SpectrumComponent::~SpectrumComponent() {
@@ -61,6 +66,7 @@ SpectrumComponent::~SpectrumComponent() {
 	delete m_entityCapsManager;
 	delete m_capsManager;
 	delete m_capsMemoryStorage;
+	delete m_discoInfoResponder;
 	delete m_component;
 	delete m_factories;
 }
