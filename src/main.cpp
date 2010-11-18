@@ -928,7 +928,7 @@ GlooxMessageHandler::GlooxMessageHandler(const std::string &config) : MessageHan
 	m_collector = NULL;
 	m_searchHandler = NULL;
 	m_vcardManager = NULL;
-	m_reg = NULL;
+// 	m_reg = NULL;
 	m_adhoc = NULL;
 	gatewayHandler = NULL;
 	ftServer = NULL;
@@ -1055,8 +1055,8 @@ GlooxMessageHandler::GlooxMessageHandler(const std::string &config) : MessageHan
 		j->registerConnectionListener(this);
 		gatewayHandler = new GlooxGatewayHandler(this);
 		j->registerIqHandler(gatewayHandler, ExtGateway);
-		m_reg = new GlooxRegisterHandler();
-		j->registerIqHandler(m_reg, ExtRegistration);
+// 		m_reg = new GlooxRegisterHandler();
+// 		j->registerIqHandler(m_reg, ExtRegistration);
 		
 		j->registerIqHandler(m_stats, ExtStats);
 		m_vcardManager = new VCardManager(j);
@@ -1103,8 +1103,8 @@ GlooxMessageHandler::~GlooxMessageHandler(){
 		delete m_sql;
 	if (ftManager)
 		delete ftManager;
-	if (m_reg)
-		delete m_reg;
+// 	if (m_reg)
+// 		delete m_reg;
 	if (gatewayHandler)
 		delete gatewayHandler;
 	if (m_stats)

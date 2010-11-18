@@ -268,9 +268,9 @@ Tag *AdhocAdmin::handleTag(Tag *stanzaTag) {
 
 		AdhocTag *adhocTag = new AdhocTag(tag->findAttribute("sessionid"), "transport_admin", "completed");
 		
-		if (!GlooxRegisterHandler::instance()->registerUser(user)) {
-			adhocTag->addNote("error", tr(m_language.c_str(), _("This user is already registered.")));
-		}
+// 		if (!GlooxRegisterHandler::instance()->registerUser(user)) {
+// 			adhocTag->addNote("error", tr(m_language.c_str(), _("This user is already registered.")));
+// 		}
 
 		IQ _response(IQ::Result, stanzaTag->findAttribute("from"), stanzaTag->findAttribute("id"));
 		_response.setFrom(Transport::instance()->jid());
@@ -284,9 +284,9 @@ Tag *AdhocAdmin::handleTag(Tag *stanzaTag) {
 
 		AdhocTag *adhocTag = new AdhocTag(tag->findAttribute("sessionid"), "transport_admin", "completed");
 
-		if (!GlooxRegisterHandler::instance()->unregisterUser(form.field("user_jid")->value())) {
-			adhocTag->addNote("error", tr(m_language.c_str(), _("This user is not registered.")));
-		}
+// 		if (!GlooxRegisterHandler::instance()->unregisterUser(form.field("user_jid")->value())) {
+// 			adhocTag->addNote("error", tr(m_language.c_str(), _("This user is not registered.")));
+// 		}
 
 		IQ _response(IQ::Result, stanzaTag->findAttribute("from"), stanzaTag->findAttribute("id"));
 		_response.setFrom(Transport::instance()->jid());

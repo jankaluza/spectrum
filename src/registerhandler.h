@@ -21,39 +21,16 @@
 #ifndef _HI_CL_H
 #define _HI_CL_H
 
-#include "purple.h"
-#include <gloox/iqhandler.h>
-#include <gloox/stanzaextension.h>
+#include "Swiften/Swiften.h"
+#include "Swiften/Queries/GetResponder.h"
+#include "Swiften/Elements/InBandRegistrationPayload.h"
 
-using namespace gloox;
 struct UserRow;
 
-class RegisterExtension : public StanzaExtension
-{
-
-public:
-    RegisterExtension();
-    RegisterExtension(const Tag *tag);
-    virtual ~RegisterExtension();
-    virtual const std::string& filterString() const;
-    virtual StanzaExtension* newInstance( const Tag* tag ) const
-    {
-        return new RegisterExtension(tag);
-    }
-    virtual Tag* tag() const;
-    virtual StanzaExtension* clone() const
-    {
-        return new RegisterExtension(m_tag);
-    }
-private:
-    Tag *m_tag;
-};
-
-class GlooxRegisterHandler : public IqHandler {
+class SpectrumRegisterHandler : public Swift::GetResponder<Swift::InBandRegistrationPayload> {
 	public:
-		GlooxRegisterHandler();
-		~GlooxRegisterHandler();
-		static GlooxRegisterHandler *instance() { return m_pInstance; }
+		SpectrumRegisterHandler(Swift::IQRouter *router);
+		~SpectrumRegisterHandler();
 
 		// Registers new user, returns false if user was already registered.
 		bool registerUser(const UserRow &row);
@@ -61,14 +38,9 @@ class GlooxRegisterHandler : public IqHandler {
 		// Unregisters user, returns true if user was successfully unregistered.
 		bool unregisterUser(const std::string &barejid);
 
-		bool handleIq (const IQ &iq);
-		bool handleIq (const Tag *iqTag);
-		void handleIqID (const IQ &iq, int context);
-
 	private:
-		void sendError(int code, const std::string &error, const Tag *iqTag);
+		bool handleGetRequest(const Swift::JID& from, const Swift::JID& to, const Swift::String& id, boost::shared_ptr<Swift::InBandRegistrationPayload> payload);
 
-		static GlooxRegisterHandler *m_pInstance;
 };
 
 #endif

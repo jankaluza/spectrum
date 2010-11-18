@@ -27,6 +27,7 @@
 #include <boost/bind.hpp>
 #include "user.h"
 #include "spectrumdiscoinforesponder.h"
+#include "registerhandler.h"
 
 using namespace Swift;
 using namespace boost;
@@ -59,6 +60,9 @@ SpectrumComponent::SpectrumComponent(Swift::EventLoop *loop) {
 
 	m_discoInfoResponder = new SpectrumDiscoInfoResponder(m_component->getIQRouter());
 	m_discoInfoResponder->start();
+
+	m_registerHandler = new SpectrumRegisterHandler(m_component->getIQRouter());
+	m_registerHandler->start();
 }
 
 SpectrumComponent::~SpectrumComponent() {
@@ -67,6 +71,7 @@ SpectrumComponent::~SpectrumComponent() {
 	delete m_capsManager;
 	delete m_capsMemoryStorage;
 	delete m_discoInfoResponder;
+	delete m_registerHandler;
 	delete m_component;
 	delete m_factories;
 }

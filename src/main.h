@@ -84,7 +84,7 @@ extern LogClass Log_;
 
 class CapabilityHandler;
 class SpectrumDiscoHandler;
-class GlooxRegisterHandler;
+// class GlooxRegisterHandler;
 class GlooxXPingHandler;
 class GlooxStatsHandler;
 class GlooxVCardHandler;
@@ -217,7 +217,7 @@ private:
 
 	CapabilityHandler *m_capabilityHandler;
 	SpectrumDiscoHandler *m_discoHandler;		// disco#info handler
- 	GlooxRegisterHandler *m_reg;				// jabber:iq:register handler
+//  	GlooxRegisterHandler *m_reg;				// jabber:iq:register handler
 	GlooxStatsHandler *m_stats;					// Statistic Gathering handler (xep-0039)
 	GlooxVCardHandler *m_vcard;					// VCard handler
 	GlooxSearchHandler *m_searchHandler;		// jabber:iq:search handler
