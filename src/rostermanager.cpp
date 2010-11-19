@@ -52,14 +52,16 @@ static void sendUnavailablePresence(gpointer key, gpointer v, gpointer data) {
 	Log("sendUnavailablePresence", (char *) key);
 	AbstractSpectrumBuddy *s_buddy = (AbstractSpectrumBuddy *) v;
 	SendPresenceToAllData *d = (SendPresenceToAllData *) data;
+	Swift::Component *component = d->component;
 	std::string &to = d->to;
 
 	if (s_buddy->isOnline()) {
-		Tag *tag = new Tag("presence");
-		tag->addAttribute( "to", to );
-		tag->addAttribute( "type", "unavailable" );
-		tag->addAttribute( "from", s_buddy->getJid());
-		Transport::instance()->send( tag );
+		Swift::Presence::ref response = Swift::Presence::create();
+		response->setFrom(Swift::JID(s_buddy->getJid()));
+		response->setTo(Swift::JID(to));
+		response->setType(Swift::Presence::Unavailable);
+		component->sendPresence(response);
+
 		if (d->markOffline)
 			s_buddy->setOffline();
 	}
@@ -195,11 +197,12 @@ void SpectrumRosterManager::sendPresence(const std::string &name, const std::str
 		std::string n(name);
 		std::for_each( n.begin(), n.end(), replaceBadJidCharacters() ); // THIS ONE IS RIGHT
 		Log(m_user->jid(), "answering to probe presence with unavailable presence");
-		Tag *tag = new Tag("presence");
-		tag->addAttribute("to", m_user->jid() + std::string(resource.empty() ? "" : "/" + resource));
-		tag->addAttribute("from", n + "@" + Transport::instance()->jid());
-		tag->addAttribute("type", "unavailable");
-		Transport::instance()->send(tag);
+
+		Swift::Presence::ref response = Swift::Presence::create();
+		response->setFrom(Swift::JID(n + "@" + Transport::instance()->jid()));
+		response->setTo(Swift::JID(m_user->jid() + std::string(resource.empty() ? "" : "/" + resource)));
+		response->setType(Swift::Presence::Unavailable);
+		m_component->sendPresence(response);
 	}
 }
 
@@ -400,19 +403,18 @@ authRequest *SpectrumRosterManager::handleAuthorizationRequest(PurpleAccount *ac
 	else {
 		std::for_each( name.begin(), name.end(), replaceBadJidCharacters() );
 	}
+
 	// send subscribe presence to user
-	Tag *tag = new Tag("presence");
-	tag->addAttribute("type", "subscribe" );
-	tag->addAttribute("from", name + "@" + Transport::instance()->jid());
-	tag->addAttribute("to", m_user->jid());
+	Swift::Presence::ref response = Swift::Presence::create();
+	response->setFrom(Swift::JID(name + "@" + Transport::instance()->jid()));
+	response->setTo(Swift::JID(m_user->jid()));
+	response->setType(Swift::Presence::Subscribe);
 
 	if (alias) {
-		Tag *nick = new Tag("nick", std::string(alias));
-		nick->addAttribute("xmlns","http://jabber.org/protocol/nick");
-		tag->addChild(nick);
+		response->addPayload(boost::shared_ptr<Swift::Payload>(new Swift::Nickname (std::string(alias))));
 	}
 
-	Transport::instance()->send(tag);
+	m_component->sendPresence(response);
 	return req;
 }
 
