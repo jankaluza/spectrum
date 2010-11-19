@@ -49,6 +49,8 @@ class SpectrumComponent {
 
 		// Connect to server
 		void connect();
+		
+		Swift::Component *getComponent() { return m_component; }
 	
 	private:
 		void handleConnected();

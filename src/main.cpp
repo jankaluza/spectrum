@@ -1014,8 +1014,8 @@ GlooxMessageHandler::GlooxMessageHandler(const std::string &config) : MessageHan
 	m_collector = new AccountCollector();
 // 	m_stats = new GlooxStatsHandler(this);
 
-	SpectrumComponent component(loop);
-	component.connect();
+	m_component = new SpectrumComponent(loop);
+	m_component->connect();
 	loop->run();
 	return;
 
@@ -1123,6 +1123,7 @@ GlooxMessageHandler::~GlooxMessageHandler(){
 	if (m_searchHandler)
 		delete m_searchHandler;
 	delete m_transport;
+	delete m_component;
 	delete j;
 }
 
@@ -1190,21 +1191,27 @@ void GlooxMessageHandler::purpleConnectionError(PurpleConnection *gc,PurpleConne
 		// fatal error => account will be disconnected, so we have to remove it
 		if (reason != 0) {
 			if (text){
-				Message s(Message::Chat, user->jid(), tr(user->getLang(), text));
-				std::string from;
-				s.setFrom(jid());
-				j->send(s);
+				Swift::Presence::ref response = Swift::Presence::create();
+				response->setFrom(Swift::JID(Transport::instance()->jid()));
+				response->setTo(Swift::JID(user->jid()));
+				response->setType(Swift::Presence::Unavailable);
+				response->setStatus(tr(user->getLang(), text));
+				m_component->getComponent()->sendPresence(response);
 			}
+			user->disconnected();
 			m_userManager->removeUserTimer(user);
 		}
 		else {
 			if (user->reconnectCount() > 0) {
 				if (text) {
-					Message s(Message::Chat, user->jid(), tr(user->getLang(), text));
-					std::string from;
-					s.setFrom(jid());
-					j->send(s);
+					Swift::Presence::ref response = Swift::Presence::create();
+					response->setFrom(Swift::JID(Transport::instance()->jid()));
+					response->setTo(Swift::JID(user->jid()));
+					response->setType(Swift::Presence::Unavailable);
+					response->setStatus(tr(user->getLang(), text));
+					m_component->getComponent()->sendPresence(response);
 				}
+				user->disconnected();
 				m_userManager->removeUserTimer(user);
 			}
 			else {

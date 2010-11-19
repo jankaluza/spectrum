@@ -23,13 +23,14 @@
 
 #include "Swiften/Swiften.h"
 #include "Swiften/Queries/GetResponder.h"
+#include "Swiften/Queries/SetResponder.h"
 #include "Swiften/Elements/InBandRegistrationPayload.h"
 
 struct UserRow;
 
-class SpectrumRegisterHandler : public Swift::GetResponder<Swift::InBandRegistrationPayload> {
+class SpectrumRegisterHandler : Swift::GetResponder<Swift::InBandRegistrationPayload>, Swift::SetResponder<Swift::InBandRegistrationPayload> {
 	public:
-		SpectrumRegisterHandler(Swift::IQRouter *router);
+		SpectrumRegisterHandler(Swift::Component *component);
 		~SpectrumRegisterHandler();
 
 		// Registers new user, returns false if user was already registered.
@@ -38,8 +39,13 @@ class SpectrumRegisterHandler : public Swift::GetResponder<Swift::InBandRegistra
 		// Unregisters user, returns true if user was successfully unregistered.
 		bool unregisterUser(const std::string &barejid);
 
+		void start();
+
 	private:
 		bool handleGetRequest(const Swift::JID& from, const Swift::JID& to, const Swift::String& id, boost::shared_ptr<Swift::InBandRegistrationPayload> payload);
+		bool handleSetRequest(const Swift::JID& from, const Swift::JID& to, const Swift::String& id, boost::shared_ptr<Swift::InBandRegistrationPayload> payload);
+		
+		Swift::Component *m_component;
 
 };
 

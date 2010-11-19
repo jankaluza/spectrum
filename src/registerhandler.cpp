@@ -30,14 +30,21 @@
 #include "transport.h"
 #include "main.h"
 #include "Swiften/Elements/ErrorPayload.h"
+#include <boost/shared_ptr.hpp>
 
 using namespace Swift;
 
-SpectrumRegisterHandler::SpectrumRegisterHandler(Swift::IQRouter *router) : Swift::GetResponder<Swift::InBandRegistrationPayload>(router) {
+SpectrumRegisterHandler::SpectrumRegisterHandler(Swift::Component *component) : Swift::GetResponder<Swift::InBandRegistrationPayload>(component->getIQRouter()), Swift::SetResponder<Swift::InBandRegistrationPayload>(component->getIQRouter()),
+m_component(component) {
 
 }
 
 SpectrumRegisterHandler::~SpectrumRegisterHandler(){
+}
+
+void SpectrumRegisterHandler::start() {
+	Swift::GetResponder<Swift::InBandRegistrationPayload>::start();
+	Swift::SetResponder<Swift::InBandRegistrationPayload>::start();
 }
 
 bool SpectrumRegisterHandler::registerUser(const UserRow &row) {
@@ -50,11 +57,12 @@ bool SpectrumRegisterHandler::registerUser(const UserRow &row) {
 	Log("SpectrumRegisterHandler", "adding new user: "<< row.jid << ", " << row.uin <<  ", " << row.language);
 	Transport::instance()->sql()->addUser(row);
 
-	Tag *reply = new Tag("presence");
-	reply->addAttribute( "from", Transport::instance()->jid() );
-	reply->addAttribute( "to", row.jid );
-	reply->addAttribute( "type", "subscribe" );
-	Transport::instance()->send( reply );
+	Swift::Presence::ref response = Swift::Presence::create();
+	response->setFrom(Swift::JID(Transport::instance()->jid()));
+	response->setTo(Swift::JID(row.jid));
+	response->setType(Swift::Presence::Subscribe);
+
+	m_component->sendPresence(response);
 
 	return true;
 }
@@ -67,54 +75,54 @@ bool SpectrumRegisterHandler::unregisterUser(const std::string &barejid) {
 
 	Log("SpectrumRegisterHandler", "removing user " << barejid << " from database and disconnecting from legacy network");
 	PurpleAccount *account = NULL;
-	
+	Swift::Presence::ref response;
+
 	AbstractUser *user = Transport::instance()->userManager()->getUserByJID(barejid);
 	if (user && user->hasFeature(GLOOX_FEATURE_ROSTERX) && false) {
-		std::cout << "* sending rosterX\n";
-		Tag *tag = new Tag("message");
-		tag->addAttribute( "to", barejid );
-		std::string _from;
-		_from.append(Transport::instance()->jid());
-		tag->addAttribute( "from", _from );
-		tag->addChild(new Tag("body","removing users"));
-		Tag *x = new Tag("x");
-		x->addAttribute("xmlns","http://jabber.org/protocol/rosterx");
-
-		std::list <std::string> roster;
-		roster = Transport::instance()->sql()->getBuddies(res.id);
-
-		Tag *item;
-		for(std::list<std::string>::iterator u = roster.begin(); u != roster.end() ; u++){
-			std::string name = *u;
-			item = new Tag("item");
-			item->addAttribute("action", "delete");
-			item->addAttribute("jid", name + "@" + Transport::instance()->jid());
-			x->addChild(item);
-		}
-
-		tag->addChild(x);
-		Transport::instance()->send(tag);
+// 		std::cout << "* sending rosterX\n";
+// 		Tag *tag = new Tag("message");
+// 		tag->addAttribute( "to", barejid );
+// 		std::string _from;
+// 		_from.append(Transport::instance()->jid());
+// 		tag->addAttribute( "from", _from );
+// 		tag->addChild(new Tag("body","removing users"));
+// 		Tag *x = new Tag("x");
+// 		x->addAttribute("xmlns","http://jabber.org/protocol/rosterx");
+// 
+// 		std::list <std::string> roster;
+// 		roster = Transport::instance()->sql()->getBuddies(res.id);
+// 
+// 		Tag *item;
+// 		for(std::list<std::string>::iterator u = roster.begin(); u != roster.end() ; u++){
+// 			std::string name = *u;
+// 			item = new Tag("item");
+// 			item->addAttribute("action", "delete");
+// 			item->addAttribute("jid", name + "@" + Transport::instance()->jid());
+// 			x->addChild(item);
+// 		}
+// 
+// 		tag->addChild(x);
+// 		Transport::instance()->send(tag);
 	}
 	else {
 		std::list <std::string> roster;
 		// roster contains already escaped jids
 		roster = Transport::instance()->sql()->getBuddies(res.id);
 
-		Tag *tag;
 		for(std::list<std::string>::iterator u = roster.begin(); u != roster.end() ; u++){
 			std::string name = *u;
 
-			tag = new Tag("presence");
-			tag->addAttribute( "to", barejid );
-			tag->addAttribute( "type", "unsubscribe" );
-			tag->addAttribute( "from", name + "@" + Transport::instance()->jid());
-			Transport::instance()->send( tag );
+			response = Swift::Presence::create();
+			response->setTo(Swift::JID(barejid));
+			response->setFrom(Swift::JID(name + "@" + Transport::instance()->jid()));
+			response->setType(Swift::Presence::Unsubscribe);
+			m_component->sendPresence(response);
 
-			tag = new Tag("presence");
-			tag->addAttribute( "to", barejid );
-			tag->addAttribute( "type", "unsubscribed" );
-			tag->addAttribute( "from", name + "@" + Transport::instance()->jid());
-			Transport::instance()->send( tag );
+			response = Swift::Presence::create();
+			response->setTo(Swift::JID(barejid));
+			response->setFrom(Swift::JID(name + "@" + Transport::instance()->jid()));
+			response->setType(Swift::Presence::Unsubscribed);
+			m_component->sendPresence(response);
 		}
 	}
 
@@ -139,24 +147,24 @@ bool SpectrumRegisterHandler::unregisterUser(const std::string &barejid) {
 		Transport::instance()->collector()->collectNow(account, true);
 #endif
 
-	Tag *reply = new Tag( "presence" );
-	reply->addAttribute( "type", "unsubscribe" );
-	reply->addAttribute( "from", Transport::instance()->jid() );
-	reply->addAttribute( "to", barejid );
-	Transport::instance()->send( reply );
+	response = Swift::Presence::create();
+	response->setTo(Swift::JID(barejid));
+	response->setFrom(Swift::JID(Transport::instance()->jid()));
+	response->setType(Swift::Presence::Unsubscribe);
+	m_component->sendPresence(response);
 
-	reply = new Tag("presence");
-	reply->addAttribute( "type", "unsubscribed" );
-	reply->addAttribute( "from", Transport::instance()->jid() );
-	reply->addAttribute( "to", barejid );
-	Transport::instance()->send( reply );
+	response = Swift::Presence::create();
+	response->setTo(Swift::JID(barejid));
+	response->setFrom(Swift::JID(Transport::instance()->jid()));
+	response->setType(Swift::Presence::Unsubscribed);
+	m_component->sendPresence(response);
 
 	return true;
 }
 
 bool SpectrumRegisterHandler::handleGetRequest(const Swift::JID& from, const Swift::JID& to, const Swift::String& id, boost::shared_ptr<Swift::InBandRegistrationPayload> payload) {
 	if (CONFIG().protocol == "irc") {
-		sendError(from, id, ErrorPayload::BadRequest, ErrorPayload::Modify);
+		Swift::GetResponder<Swift::InBandRegistrationPayload>::sendError(from, id, ErrorPayload::BadRequest, ErrorPayload::Modify);
 		return true;
 	}
 
@@ -167,7 +175,7 @@ bool SpectrumRegisterHandler::handleGetRequest(const Swift::JID& from, const Swi
 		std::list<std::string> const &x = CONFIG().allowedServers;
 		if (std::find(x.begin(), x.end(), from.getDomain().getUTF8String()) == x.end()) {
 			Log("SpectrumRegisterHandler", "This user has no permissions to register an account");
-			sendError(from, id, ErrorPayload::BadRequest, ErrorPayload::Modify);
+			Swift::GetResponder<Swift::InBandRegistrationPayload>::sendError(from, id, ErrorPayload::BadRequest, ErrorPayload::Modify);
 			return true;
 		}
 	}
@@ -238,180 +246,161 @@ bool SpectrumRegisterHandler::handleGetRequest(const Swift::JID& from, const Swi
 		BooleanFormField::ref boolean = BooleanFormField::create();
 		boolean->setName("unregister");
 		boolean->setLabel(tr(_language, _("Remove your registration")));
+		boolean->setValue(0);
 		form->addField(boolean);
 	}
 
 	reg->setForm(form);
 
-	sendResponse(from, id, reg);
+	Swift::GetResponder<Swift::InBandRegistrationPayload>::sendResponse(from, id, reg);
 
 	return true;
 }
 
+bool SpectrumRegisterHandler::handleSetRequest(const Swift::JID& from, const Swift::JID& to, const Swift::String& id, boost::shared_ptr<Swift::InBandRegistrationPayload> payload) {
+	if (CONFIG().protocol == "irc") {
+		Swift::SetResponder<Swift::InBandRegistrationPayload>::sendError(from, id, ErrorPayload::BadRequest, ErrorPayload::Modify);
+		return true;
+	}
 
-// bool SpectrumRegisterHandler::handleIq(const Tag *iqTag) {
-// 	else if (iqTag->findAttribute("type") == "set") {
-// 		bool remove = false;
-// 		Tag *query;
-// 		Tag *usernametag;
-// 		Tag *passwordtag;
-// 		Tag *languagetag;
-// 		Tag *encodingtag;
-// 		std::string username("");
-// 		std::string password("");
-// 		std::string language("");
-// 		std::string encoding("");
-// 
-// 		UserRow res = Transport::instance()->sql()->getUserByJid(from.bare());
-// 		
-// 		query = iqTag->findChild( "query" );
-// 		if (!query) return true;
-// 
-// 		Tag *xdata = query->findChild("x", "xmlns", "jabber:x:data");
-// 		if (xdata) {
-// 			if (query->hasChild( "remove" ))
-// 				remove = true;
-// 			for (std::list<Tag*>::const_iterator it = xdata->children().begin(); it != xdata->children().end(); ++it) {
-// 				std::string key = (*it)->findAttribute("var");
-// 				if (key.empty()) continue;
-// 
-// 				Tag *v = (*it)->findChild("value");
-// 				if (!v) continue;
-// 
-// 				if (key == "username")
-// 					username = v->cdata();
-// 				else if (key == "password")
-// 					password = v->cdata();
-// 				else if (key == "language")
-// 					language = v->cdata();
-// 				else if (key == "encoding")
-// 					encoding = v->cdata();
-// 				else if (key == "unregister")
-// 					remove = atoi(v->cdata().c_str());
-// 			}
-// 		}
-// 		else {
-// 			if (query->hasChild( "remove" ))
-// 				remove = true;
-// 			else {
-// 				usernametag = query->findChild("username");
-// 				passwordtag = query->findChild("password");
-// 				languagetag = query->findChild("language");
-// 				encodingtag = query->findChild("encoding");
-// 
-// 				if (languagetag)
-// 					language = languagetag->cdata();
-// 				else
-// 					language = Transport::instance()->getConfiguration().language;
-// 
-// 				if (encodingtag)
-// 					encoding = encodingtag->cdata();
-// 				else
-// 					encoding = Transport::instance()->getConfiguration().encoding;
-// 
-// 				if (usernametag==NULL || (passwordtag==NULL && CONFIG().protocol != "twitter" && CONFIG().protocol != "bonjour")) {
-// 					sendError(406, "not-acceptable", iqTag);
-// 					return false;
-// 				}
-// 				else {
-// 					username = usernametag->cdata();
-// 					if (passwordtag)
-// 						password = passwordtag->cdata();
-// 					if (username.empty() || (password.empty() && CONFIG().protocol != "twitter" && CONFIG().protocol != "bonjour")) {
-// 						sendError(406, "not-acceptable", iqTag);
-// 						return false;
-// 					}
-// 				}
-// 			}
-// 		}
-// 
-// 		if (Transport::instance()->getConfiguration().protocol == "xmpp") {
-// 			// User tries to register himself.
-// 			if ((JID(username).bare() == from.bare())) {
-// 				sendError(406, "not-acceptable", iqTag);
-// 				return false;
-// 			}
-// 
-// 			// User tries to register someone who's already registered.
-// 			UserRow user_row = Transport::instance()->sql()->getUserByJid(JID(username).bare());
-// 			if (user_row.id != -1) {
-// 				sendError(406, "not-acceptable", iqTag);
-// 				return false;
-// 			}
-// 		}
-// 
-// 		if (remove) {
-// 			unregisterUser(from.bare());
-// 
-// 			Tag *reply = new Tag("iq");
-// 			reply->addAttribute( "type", "result" );
-// 			reply->addAttribute( "from", Transport::instance()->jid() );
-// 			reply->addAttribute( "to", iqTag->findAttribute("from") );
-// 			reply->addAttribute( "id", iqTag->findAttribute("id") );
-// 			Transport::instance()->send( reply );
-// 
-// 			return true;
-// 		}
-// 
-// 		// Register or change password
-// 
-// 		std::string jid = from.bare();
-// 
-// 		if (username.empty() || (password.empty() && CONFIG().protocol != "twitter" && CONFIG().protocol != "bonjour") || localization.getLanguages().find(language) == localization.getLanguages().end()) {
-// 			sendError(406, "not-acceptable", iqTag);
-// 			return false;
-// 		}
-// 
-// 		Transport::instance()->protocol()->prepareUsername(username);
-// 
-// 		std::string newUsername(username);
-// 		if (!CONFIG().username_mask.empty()) {
-// 			newUsername = CONFIG().username_mask;
-// 			replace(newUsername, "$username", username.c_str());
-// 		}
-// 
-// 		if (!Transport::instance()->protocol()->isValidUsername(newUsername)) {
-// 			Log("SpectrumRegisterHandler", "This is not valid username: "<< newUsername);
-// 			sendError(400, "bad-request", iqTag);
-// 			return false;
-// 		}
-// 
-// #if GLIB_CHECK_VERSION(2,14,0)
-// 		if (!CONFIG().reg_allowed_usernames.empty() &&
-// 			!g_regex_match_simple(CONFIG().reg_allowed_usernames.c_str(), newUsername.c_str(),(GRegexCompileFlags) (G_REGEX_CASELESS | G_REGEX_EXTENDED), (GRegexMatchFlags) 0)) {
-// 			Log("SpectrumRegisterHandler", "This is not valid username: "<< newUsername);
-// 			sendError(400, "bad-request", iqTag);
-// 			return false;
-// 		}
-// #endif
-// 		if (res.id == -1) {
-// 			res.jid = from.bare();
-// 			res.uin = username;
-// 			res.password = password;
-// 			res.language = language;
-// 			res.encoding = encoding;
-// 			res.vip = 0;
-// 
-// 			registerUser(res);
-// 		}
-// 		else {
-// 			// change passwordhttp://soumar.jabbim.cz/phpmyadmin/index.php
-// 			Log("SpectrumRegisterHandler", "changing user password: "<< jid << ", " << username);
-// 			res.jid = from.bare();
-// 			res.password = password;
-// 			res.language = language;
-// 			res.encoding = encoding;
-// 			Transport::instance()->sql()->updateUser(res);
-// 		}
-// 
-// 		Tag *reply = new Tag( "iq" );
-// 		reply->addAttribute( "id", iqTag->findAttribute("id") );
-// 		reply->addAttribute( "type", "result" );
-// 		reply->addAttribute( "to", iqTag->findAttribute("from") );
-// 		reply->addAttribute( "from", Transport::instance()->jid() );
-// 		Transport::instance()->send( reply );
-// 
-// 		return true;
-// 	}
-// 	return false;
-// }
+	std::string barejid = from.toBare().toString().getUTF8String();
+
+// 	AbstractUser *user = Transport::instance()->userManager()->getUserByJID(barejid);
+	if (!CONFIG().enable_public_registration) {
+		std::list<std::string> const &x = CONFIG().allowedServers;
+		if (std::find(x.begin(), x.end(), from.getDomain().getUTF8String()) == x.end()) {
+			Log("SpectrumRegisterHandler", "This user has no permissions to register an account");
+			Swift::SetResponder<Swift::InBandRegistrationPayload>::sendError(from, id, ErrorPayload::BadRequest, ErrorPayload::Modify);
+			return true;
+		}
+	}
+
+	UserRow res = Transport::instance()->sql()->getUserByJid(barejid);
+
+	std::string encoding;
+	std::string language;
+
+	Form::ref form = payload->getForm();
+	if (form) {
+		const std::vector<FormField::ref> fields = form->getFields();
+		for (std::vector<FormField::ref>::const_iterator it = fields.begin(); it != fields.end(); it++) {
+			TextSingleFormField::ref textSingle = boost::dynamic_pointer_cast<TextSingleFormField>(*it);
+			if (textSingle) {
+				if (textSingle->getName() == "username") {
+					payload->setUsername(textSingle->getValue());
+				}
+				else if (textSingle->getName() == "encoding") {
+					encoding = textSingle->getValue().getUTF8String();
+				}
+				continue;
+			}
+
+			TextPrivateFormField::ref textPrivate = boost::dynamic_pointer_cast<TextPrivateFormField>(*it);
+			if (textPrivate) {
+				if (textPrivate->getName() == "password") {
+					payload->setPassword(textPrivate->getValue());
+				}
+				continue;
+			}
+
+			ListSingleFormField::ref listSingle = boost::dynamic_pointer_cast<ListSingleFormField>(*it);
+			if (listSingle) {
+				if (listSingle->getName() == "language") {
+					language = listSingle->getValue().getUTF8String();
+				}
+				continue;
+			}
+
+			BooleanFormField::ref boolean = boost::dynamic_pointer_cast<BooleanFormField>(*it);
+			if (boolean) {
+				if (boolean->getName() == "unregister") {
+					if (boolean->getValue()) {
+						payload->setRemove(true);
+					}
+				}
+				continue;
+			}
+		}
+	}
+
+	if (payload->isRemove()) {
+		unregisterUser(barejid);
+		Swift::SetResponder<Swift::InBandRegistrationPayload>::sendResponse(from, id, InBandRegistrationPayload::ref());
+		return true;
+	}
+
+	if (!payload->getUsername() || !payload->getPassword()) {
+		Swift::SetResponder<Swift::InBandRegistrationPayload>::sendError(from, id, ErrorPayload::NotAcceptable, ErrorPayload::Modify);
+		return true;
+	}
+
+	// Register or change password
+	if (payload->getUsername()->isEmpty() ||
+		(payload->getPassword()->isEmpty() && CONFIG().protocol != "twitter" && CONFIG().protocol != "bonjour") ||
+		localization.getLanguages().find(language) == localization.getLanguages().end())
+	{
+		Swift::SetResponder<Swift::InBandRegistrationPayload>::sendError(from, id, ErrorPayload::NotAcceptable, ErrorPayload::Modify);
+		return true;
+	}
+
+	if (CONFIG().protocol == "xmpp") {
+		// User tries to register himself.
+		if ((Swift::JID(*payload->getUsername()).toBare() == from.toBare())) {
+			Swift::SetResponder<Swift::InBandRegistrationPayload>::sendError(from, id, ErrorPayload::NotAcceptable, ErrorPayload::Modify);
+			return true;
+		}
+
+		// User tries to register someone who's already registered.
+		UserRow user_row = Transport::instance()->sql()->getUserByJid(Swift::JID(*payload->getUsername()).toBare().toString().getUTF8String());
+		if (user_row.id != -1) {
+			Swift::SetResponder<Swift::InBandRegistrationPayload>::sendError(from, id, ErrorPayload::NotAcceptable, ErrorPayload::Modify);
+			return true;
+		}
+	}
+
+	std::string username = payload->getUsername()->getUTF8String();
+	Transport::instance()->protocol()->prepareUsername(username);
+
+	std::string newUsername(username);
+	if (!CONFIG().username_mask.empty()) {
+		newUsername = CONFIG().username_mask;
+		replace(newUsername, "$username", username.c_str());
+	}
+
+	if (!Transport::instance()->protocol()->isValidUsername(newUsername)) {
+		Log("SpectrumRegisterHandler", "This is not valid username: "<< newUsername);
+		Swift::SetResponder<Swift::InBandRegistrationPayload>::sendError(from, id, ErrorPayload::NotAcceptable, ErrorPayload::Modify);
+		return true;
+	}
+
+#if GLIB_CHECK_VERSION(2,14,0)
+	if (!CONFIG().reg_allowed_usernames.empty() &&
+		!g_regex_match_simple(CONFIG().reg_allowed_usernames.c_str(), newUsername.c_str(),(GRegexCompileFlags) (G_REGEX_CASELESS | G_REGEX_EXTENDED), (GRegexMatchFlags) 0)) {
+		Log("SpectrumRegisterHandler", "This is not valid username: "<< newUsername);
+		Swift::SetResponder<Swift::InBandRegistrationPayload>::sendError(from, id, ErrorPayload::NotAcceptable, ErrorPayload::Modify);
+		return true;
+	}
+#endif
+	if (res.id == -1) {
+		res.jid = barejid;
+		res.uin = username;
+		res.password = payload->getPassword()->getUTF8String();
+		res.language = language;
+		res.encoding = encoding;
+		res.vip = 0;
+
+		registerUser(res);
+	}
+	else {
+		// change passwordhttp://soumar.jabbim.cz/phpmyadmin/index.php
+		Log("SpectrumRegisterHandler", "changing user password: "<< barejid << ", " << username);
+		res.jid = barejid;
+		res.password = payload->getPassword()->getUTF8String();
+		res.language = language;
+		res.encoding = encoding;
+		Transport::instance()->sql()->updateUser(res);
+	}
+
+	Swift::SetResponder<Swift::InBandRegistrationPayload>::sendResponse(from, id, InBandRegistrationPayload::ref());
+	return true;
+}

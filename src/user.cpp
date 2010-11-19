@@ -738,12 +738,14 @@ User::~User(){
 
 	sendUnavailablePresenceToAll();
 
-	Swift::Presence::ref response = Swift::Presence::create();
-	response->setTo(Swift::JID(m_jid));
-	response->setFrom(Swift::JID(Transport::instance()->jid()));
-	response->setType(Swift::Presence::Unavailable);
-
-	m_component->sendPresence(response);
+	if (m_connected) {
+		Swift::Presence::ref response = Swift::Presence::create();
+		response->setTo(Swift::JID(m_jid));
+		response->setFrom(Swift::JID(Transport::instance()->jid()));
+		response->setType(Swift::Presence::Unavailable);
+		m_component->sendPresence(response);
+	}
+	
 
 	// purple_account_destroy(m_account);
 	// delete(m_account);

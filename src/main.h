@@ -84,7 +84,7 @@ extern LogClass Log_;
 
 class CapabilityHandler;
 class SpectrumDiscoHandler;
-// class GlooxRegisterHandler;
+class GlooxRegisterHandler;
 class GlooxXPingHandler;
 class GlooxStatsHandler;
 class GlooxVCardHandler;
@@ -100,6 +100,7 @@ class GlooxParser;
 class AccountCollector;
 class Transport;
 class SpectrumNodeHandler;
+class SpectrumComponent;
 #ifndef WIN32
 class ConfigInterface;
 #endif
@@ -217,7 +218,7 @@ private:
 
 	CapabilityHandler *m_capabilityHandler;
 	SpectrumDiscoHandler *m_discoHandler;		// disco#info handler
-//  	GlooxRegisterHandler *m_reg;				// jabber:iq:register handler
+ 	GlooxRegisterHandler *m_reg;				// jabber:iq:register handler
 	GlooxStatsHandler *m_stats;					// Statistic Gathering handler (xep-0039)
 	GlooxVCardHandler *m_vcard;					// VCard handler
 	GlooxSearchHandler *m_searchHandler;		// jabber:iq:search handler
@@ -225,6 +226,7 @@ private:
 	GlooxParser *m_parser;						// Gloox parser - makes Tag* from std::string
 	VCardManager* m_vcardManager;
 	SpectrumNodeHandler *m_spectrumNodeHandler;
+	SpectrumComponent *m_component;
 #ifndef WIN32
 	ConfigInterface *m_configInterface;
 #endif

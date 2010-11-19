@@ -61,7 +61,7 @@ SpectrumComponent::SpectrumComponent(Swift::EventLoop *loop) {
 	m_discoInfoResponder = new SpectrumDiscoInfoResponder(m_component->getIQRouter());
 	m_discoInfoResponder->start();
 
-	m_registerHandler = new SpectrumRegisterHandler(m_component->getIQRouter());
+	m_registerHandler = new SpectrumRegisterHandler(m_component);
 	m_registerHandler->start();
 }
 
