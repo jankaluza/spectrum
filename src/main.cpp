@@ -1537,8 +1537,8 @@ void GlooxMessageHandler::handleSubscription(const Subscription &stanza) {
 	else {
 		user = (User *) userManager()->getUserByJID(stanza.from().bare());
 	}
-	if (user)
-		user->handleSubscription(stanza);
+	if (user) {}
+// 		user->handleSubscription(stanza);
 	else if (stanza.subtype() == Subscription::Unsubscribe) {
 		Tag *tag = new Tag("presence");
 		tag->addAttribute("to", stanza.from().bare());

@@ -115,7 +115,7 @@ class SpectrumRosterManager : public RosterStorage {
 		void handlePresence(const Presence &presence);
 
 		// Handles subscription stanza.
-		void handleSubscription(const Subscription &subscription);
+		void handleSubscription(Swift::Presence::ref presence);
 
 		// Returns true if there is authorization request by this user.
  		bool hasAuthRequest(const std::string &remote_user);

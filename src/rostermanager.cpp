@@ -429,8 +429,8 @@ bool SpectrumRosterManager::hasAuthRequest(const std::string &remote_user) {
 	return m_authRequests.find(remote_user) != m_authRequests.end();
 }
 
-void SpectrumRosterManager::handleSubscription(const Subscription &subscription) {
-	std::string remote_user = purpleUsername(subscription.to().username());
+void SpectrumRosterManager::handleSubscription(Swift::Presence::ref presence) {
+	std::string remote_user = purpleUsername(presence->getTo().getNode().getUTF8String());
 	if (remote_user.empty()) {
 		Log(m_user->jid(), "handleSubscription: Remote user is EMPTY!");
 		return;
@@ -448,7 +448,7 @@ void SpectrumRosterManager::handleSubscription(const Subscription &subscription)
 		else
 			buddy = purple_find_buddy(m_user->account(), remote_user.c_str());
 
-		if (subscription.subtype() == Subscription::Subscribed) {
+		if (presence->getType() == Swift::Presence::Subscribed) {
 			// Accept authorize request.
 			if (hasAuthRequest(remote_user)) {
 				Log(m_user->jid(), "subscribed presence for authRequest arrived => accepting the request");
@@ -483,23 +483,24 @@ void SpectrumRosterManager::handleSubscription(const Subscription &subscription)
 			}
 			return;
 		}
-		else if (subscription.subtype() == Subscription::Subscribe) {
+		else if (presence->getType() == Swift::Presence::Subscribe) {
 			// User is in roster, so that's probably response for RIE.
 			if (s_buddy) {
 				Log(m_user->jid(), "subscribe presence; user is already in roster => sending subscribed");
 
 				s_buddy->setSubscription("to");
-				Tag *reply = new Tag("presence");
-				reply->addAttribute( "to", subscription.from().bare() );
-				reply->addAttribute( "from", subscription.to().bare() );
-				reply->addAttribute( "type", "subscribe" );
-				Transport::instance()->send( reply );
 
-				reply = new Tag("presence");
-				reply->addAttribute( "to", subscription.from().bare() );
-				reply->addAttribute( "from", subscription.to().bare() );
-				reply->addAttribute( "type", "subscribed" );
-				Transport::instance()->send( reply );
+				Swift::Presence::ref response = Swift::Presence::create();
+				response->setFrom(presence->getTo());
+				response->setTo(presence->getFrom());
+				response->setType(Swift::Presence::Subscribe);
+				m_component->sendPresence(response);
+
+				response = Swift::Presence::create();
+				response->setFrom(presence->getTo());
+				response->setTo(presence->getFrom());
+				response->setType(Swift::Presence::Subscribed);
+				m_component->sendPresence(response);
 
 				// Sometimes there is "subscribed" request for new user received before "subscribe",
 				// so s_buddy could be already there, but purple_account_add_buddy has not been called.
@@ -519,7 +520,7 @@ void SpectrumRosterManager::handleSubscription(const Subscription &subscription)
 				SpectrumBuddy *s_buddy = new SpectrumBuddy(-1, buddy);
 				buddy->node.ui_data = (void *) s_buddy;
 				s_buddy->setSubscription("to");
-				if (usesJidEscaping(subscription.to().username()))
+				if (usesJidEscaping(presence->getTo().getNode().getUTF8String()))
 					s_buddy->setFlags(s_buddy->getFlags() | SPECTRUM_BUDDY_JID_ESCAPING);
 				addRosterItem(s_buddy);
 #endif
@@ -529,8 +530,8 @@ void SpectrumRosterManager::handleSubscription(const Subscription &subscription)
 				m_loadingFromDB = false;
 			}
 			return;
-		} else if (subscription.subtype() == Subscription::Unsubscribe || subscription.subtype() == Subscription::Unsubscribed) {
-			if (subscription.subtype() == Subscription::Unsubscribed) {
+		} else if (presence->getType() == Swift::Presence::Unsubscribed || presence->getType() == Swift::Presence::Unsubscribe) {
+			if (presence->getType() == Swift::Presence::Unsubscribed) {
 				// Reject authorize request.
 				if (hasAuthRequest(remote_user)) {
 					Log(m_user->jid(), "unsubscribed presence for authRequest arrived => rejecting the request");
@@ -559,19 +560,15 @@ void SpectrumRosterManager::handleSubscription(const Subscription &subscription)
 			removeFromLocalRoster(remote_user);
 
 			// inform user about removing this buddy
-			Tag *tag = new Tag("presence");
-			tag->addAttribute("to", subscription.from().bare());
-			tag->addAttribute("from", subscription.to().username() + "@" + Transport::instance()->jid() + "/bot");
-			if(subscription.subtype() == Subscription::Unsubscribe) {
-				tag->addAttribute( "type", "unsubscribe" );
-			} else {
-				tag->addAttribute( "type", "unsubscribed" );
-			}
-			Transport::instance()->send( tag );
+			Swift::Presence::ref response = Swift::Presence::create();
+			response->setFrom(presence->getTo());
+			response->setTo(presence->getFrom());
+			response->setType(presence->getType());
+			m_component->sendPresence(response);
 			return;
 		}
 	}
 	else {
-		Log(subscription.from().full(), "Subscribe presence received, but is not connected to legacy network yet.");
+		Log(presence->getFrom().toString().getUTF8String(), "Subscribe presence received, but is not connected to legacy network yet.");
 	}
 }

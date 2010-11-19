@@ -385,7 +385,42 @@ void SpectrumComponent::handlePresence(Swift::Presence::ref presence) {
 }
 
 void SpectrumComponent::handleSubscription(Swift::Presence::ref presence) {
-	
+	// answer to subscibe
+	if (presence->getType() == Swift::Presence::Subscribe && presence->getTo().getNode().isEmpty()) {
+		Log(presence->getFrom().toString().getUTF8String(), "Subscribe presence received => sending subscribed");
+		Swift::Presence::ref response = Swift::Presence::create();
+		response->setFrom(presence->getTo());
+		response->setTo(presence->getFrom());
+		response->setType(Swift::Presence::Subscribed);
+		m_component->sendPresence(response);
+		return;
+	}
+
+	if (CONFIG().protocol == "irc") {
+		return;
+	}
+
+	User *user;
+	std::string barejid = presence->getTo().toBare().toString().getUTF8String();
+	std::string userkey = presence->getFrom().toBare().toString().getUTF8String();
+	if (Transport::instance()->protocol()->tempAccountsAllowed()) {
+		std::string server = barejid.substr(barejid.find("%") + 1, barejid.length() - barejid.find("%"));
+		userkey += server;
+	}
+
+	user = (User *) Transport::instance()->userManager()->getUserByJID(userkey);
+	if (user) {
+		user->handleSubscription(presence);
+	}
+	else if (presence->getType() == Swift::Presence::Unsubscribe) {
+		Swift::Presence::ref response = Swift::Presence::create();
+		response->setFrom(presence->getTo());
+		response->setTo(presence->getFrom());
+		response->setType(Swift::Presence::Unsubscribed);
+		m_component->sendPresence(response);
+	}
+	else
+		Log(presence->getFrom().toString().getUTF8String(), "Subscribe presence received, but this user is not logged in");
 }
 
 void SpectrumComponent::handleProbePresence(Swift::Presence::ref presence) {
