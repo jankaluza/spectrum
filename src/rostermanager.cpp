@@ -86,7 +86,7 @@ static gboolean sync_cb(gpointer data) {
 
 SpectrumRosterManager::SpectrumRosterManager(AbstractUser *user) : RosterStorage(user) {
 	m_user = user;
-	m_syncTimer = new SpectrumTimer(CONFIG().protocol == "icq" ? 12000 : 2000, &sync_cb, this);
+	m_syncTimer = new SpectrumTimer(CONFIG().protocol == "icq" ? 12000 : 0, &sync_cb, this);
 	m_subscribeLastCount = -1;
 	m_roster = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
 	m_loadingFromDB = false;
