@@ -152,9 +152,10 @@ Tag *ICQProtocol::getVCardTag(AbstractUser *user, GList *vcardEntries) {
 }
 
 void ICQProtocol::onPurpleAccountCreated(PurpleAccount *account) {
-	purple_account_set_string(account, "server", "login.icq.com");
-	purple_account_set_bool(account, "use_clientlogin", 0);
-	purple_account_set_bool(account, "use_ssl", 0);
+// 	purple_account_set_string(account, "server", "login.icq.com");
+// 	purple_account_set_bool(account, "use_clientlogin", 0);
+// 	purple_account_set_bool(account, "use_ssl", 0);
+// 	purple_account_set_bool(account, "use_ssl", 0);
 }
 
 bool ICQProtocol::onPurpleRequestInput(void *handle, AbstractUser *user, const char *title, const char *primary,const char *secondary, const char *default_value,gboolean multiline, gboolean masked, gchar *hint,const char *ok_text, GCallback ok_cb,const char *cancel_text, GCallback cancel_cb, PurpleAccount *account, const char *who,PurpleConversation *conv, void *user_data) {
