@@ -1,3 +1,14 @@
+version 1.4.4 (2010-11-25):
+	General:
+	* Error messages are sent in presences from transport contact.
+	* SQL statement to check if user is VIP can be changed in config file
+	  using [database] vip_statement config.
+	* Fixed crash when there were buddies with non-unicode characters
+	  in database
+
+	ICQ:
+	* Fixed connecting the network with libpurple 2.7.7.
+
 version 1.4.3 (2010-10-28):
 	General:
 	* Fixed crash when there were buddies with non-unicode characters
