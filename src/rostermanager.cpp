@@ -397,7 +397,14 @@ void SpectrumRosterManager::handlePresence(const Presence &stanza) {
 
 authRequest *SpectrumRosterManager::handleAuthorizationRequest(PurpleAccount *account, const char *remote_user, const char *id, const char *alias, const char *message, gboolean on_list, PurpleAccountRequestAuthorizationCb authorize_cb, PurpleAccountRequestAuthorizationCb deny_cb, void *user_data) {
 	std::string name(remote_user);
-	
+
+	if (purple_value_get_boolean(m_user->getSetting("reject_authorizations"))) {
+		Log(m_user->jid(), "purpleAuthorization rejected: " << name << " on_list:" << on_list);
+		deny_cb(user_data);
+		return NULL;
+	}
+		
+
 	authRequest *req = new authRequest;
 	req->authorize_cb = authorize_cb;
 	req->deny_cb = deny_cb;

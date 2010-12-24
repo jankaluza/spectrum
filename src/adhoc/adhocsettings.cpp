@@ -62,6 +62,9 @@ AdhocSettings::AdhocSettings(AbstractUser *user, const std::string &from, const 
 
 		value = m_user->getSetting("save_files_on_server");
 		adhocTag->addBoolean(tr(m_language, _("Save incoming file transfers on server")), "save_files_on_server", purple_value_get_boolean(value));
+
+		value = m_user->getSetting("reject_authorizations");
+		adhocTag->addBoolean(tr(m_language, _("Reject all incoming authorizations")), "reject_authorizations", purple_value_get_boolean(value));
 	}
 	else {
 		adhocTag->setInstructions(tr(m_language, _("You must be online to change transport settings.")));

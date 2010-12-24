@@ -132,6 +132,12 @@ User::User(GlooxMessageHandler *parent, JID jid, const std::string &username, co
 		purple_value_set_boolean(value, false);
 		g_hash_table_replace(m_settings, g_strdup("save_files_on_server"), value);
 	}
+	if ( (value = getSetting("reject_authorizations")) == NULL ) {
+		p->sql()->addSetting(m_userID, "reject_authorizations", "0", PURPLE_TYPE_BOOLEAN);
+		value = purple_value_new(PURPLE_TYPE_BOOLEAN);
+		purple_value_set_boolean(value, false);
+		g_hash_table_replace(m_settings, g_strdup("reject_authorizations"), value);
+	}
 	
 	Transport::instance()->sql()->setUserOnline(m_userID, true);
 
