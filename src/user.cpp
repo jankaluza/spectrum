@@ -662,7 +662,10 @@ void User::forwardStatus(int presence, const std::string &stanzaStatus) {
 			break;
 		}
 		case Presence::Away: {
-			PurplePresenceType = PURPLE_STATUS_AWAY;
+			if (purple_account_get_status_type_with_primitive(m_account, PURPLE_STATUS_AWAY))
+				PurplePresenceType = PURPLE_STATUS_AWAY;
+			else
+				PurplePresenceType = PURPLE_STATUS_EXTENDED_AWAY;
 			break;
 		}
 		case Presence::DND: {
@@ -670,7 +673,10 @@ void User::forwardStatus(int presence, const std::string &stanzaStatus) {
 			break;
 		}
 		case Presence::XA: {
-			PurplePresenceType = PURPLE_STATUS_EXTENDED_AWAY;
+			if (purple_account_get_status_type_with_primitive(m_account, PURPLE_STATUS_EXTENDED_AWAY))
+				PurplePresenceType = PURPLE_STATUS_EXTENDED_AWAY;
+			else
+				PurplePresenceType = PURPLE_STATUS_AWAY;
 			break;
 		}
 		default:
