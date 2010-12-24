@@ -59,6 +59,8 @@ class AbstractSpectrumBuddy {
 		// Returns full JID.
 		std::string getJid();
 
+		Tag *generateXStatusStanza();
+
 		// Generates whole <presence> stanza without "to" attribute. That attribute
 		// has to be added manually.
 		// only_new - if the stanza is the same as previous generated one, returns NULL.
@@ -101,6 +103,8 @@ class AbstractSpectrumBuddy {
 		// Stores current status in `status` and current status message in `statusMessage`.
 		// Returns true if data can be stored.
 		virtual bool getStatus(PurpleStatusPrimitive &status, std::string &statusMessage) = 0;
+
+		virtual bool getXStatus(std::string &mood, std::string &comment) = 0;
 
 		// Returns SHA-1 hash of buddy icon (avatar) or empty string if there is no avatar.
 		virtual std::string getIconHash() = 0;

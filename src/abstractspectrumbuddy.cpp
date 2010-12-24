@@ -82,6 +82,65 @@ const std::string &AbstractSpectrumBuddy::getSubscription() {
 	return m_subscription;
 }
 
+Tag *AbstractSpectrumBuddy::generateXStatusStanza() {
+	std::string mood;
+	std::string comment;
+	if (!getXStatus(mood, comment))
+		return NULL;
+// <message 
+//     from='juliet@capulet.lit' 
+//     to='romeo@montague.lit'>
+//   <event xmlns='http://jabber.org/protocol/pubsub#event'>
+//     <items node='http://jabber.org/protocol/activity'>
+//       <item id='b5ac48d0-0f9c-11dc-8754-001143d5d5db'>
+//         <activity xmlns='http://jabber.org/protocol/activity'>
+//           <relaxing>
+//             <partying/>
+//           </relaxing>
+//           <text xml:lang='en'>My nurse&apos;s birthday!</text>
+//         </activity>
+//       </item>
+//     </items>
+//   </event>
+// </message>
+
+	std::string xmlns = "http://jabber.org/protocol/mood";
+	std::string tag1 = "annoyed";
+	std::string tag2 = "";
+	std::string type = "mood";
+
+	Transport::instance()->protocol()->getXStatus(mood, type, xmlns, tag1, tag2);
+
+	Tag *tag = new Tag("message");
+	tag->addAttribute("from", getBareJid());
+
+	Tag *event = new Tag("event");
+	event->addAttribute("xmlns", "http://jabber.org/protocol/pubsub#event");
+	tag->addChild(event);
+
+	Tag *items = new Tag("items");
+	items->addAttribute("node", xmlns);
+	event->addChild(items);
+
+	Tag *item = new Tag("item");
+	item->addAttribute("id", Transport::instance()->getId());
+	items->addChild(item);
+
+	Tag *child = new Tag(type);
+	child->addAttribute("xmlns", xmlns);
+	item->addChild(child);
+
+	if (!tag1.empty()) {
+		Tag *t1 = new Tag(tag1);
+		child->addChild(t1);
+		if (!tag2.empty())
+			t1->addChild(new Tag(tag2));
+	}
+	child->addChild(new Tag(type == "tune" ? "title" : "text", comment));
+	
+	return tag;
+}
+
 Tag *AbstractSpectrumBuddy::generatePresenceStanza(int features, bool only_new) {
 	std::string alias = getAlias();
 	std::string name = getSafeName();

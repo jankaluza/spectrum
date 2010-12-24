@@ -34,6 +34,53 @@ ICQProtocol::ICQProtocol() {
 	m_buddyFeatures.push_back("http://jabber.org/protocol/si/profile/file-transfer");
 	m_buddyFeatures.push_back("http://jabber.org/protocol/bytestreams");
 	m_buddyFeatures.push_back("http://jabber.org/protocol/si");
+
+#define XSTATUS(NAME, TYPE, XMLNS, TAG1, TAG2) \
+	m_xstatus[NAME].push_back(TYPE); \
+	m_xstatus[NAME].push_back(XMLNS); \
+	m_xstatus[NAME].push_back(TAG1); \
+	m_xstatus[NAME].push_back(TAG2);
+
+	XSTATUS("thinking", "mood", "http://jabber.org/protocol/mood", "serious", "");
+	XSTATUS("shopping", "activity", "http://jabber.org/protocol/activity", "relaxing", "shopping");
+	XSTATUS("typing", "activity", "http://jabber.org/protocol/activity", "working", "typing");
+	XSTATUS("question", "mood", "http://jabber.org/protocol/mood", "curious", "");
+	XSTATUS("angry", "mood", "http://jabber.org/protocol/mood", "angry", "");
+	XSTATUS("plate", "activity", "http://jabber.org/protocol/activity", "eating", "");
+	XSTATUS("cinema", "activity", "http://jabber.org/protocol/activity", "relaxing", "watching_a_movie");
+	XSTATUS("sick", "mood", "http://jabber.org/protocol/mood", "sick", "");
+	XSTATUS("suit", "activity", "http://jabber.org/protocol/activity", "working", ""); // not sure
+	XSTATUS("bathing", "activity", "http://jabber.org/protocol/activity", "grooming", "taking_a_bath");
+	XSTATUS("tv", "activity", "http://jabber.org/protocol/activity", "relaxing", "watching_tv");
+	XSTATUS("excited", "mood", "http://jabber.org/protocol/mood", "contented", "");
+	XSTATUS("sleeping", "activity", "http://jabber.org/protocol/activity", "inactive", "sleeping");
+// 	{"hiptop", N_("Using a PDA"), NULL},
+	XSTATUS("in_love", "mood", "http://jabber.org/protocol/mood", "in_love", "");
+	XSTATUS("sleepy", "mood", "http://jabber.org/protocol/mood", "sleepy", "");
+	XSTATUS("meeting", "activity", "http://jabber.org/protocol/activity", "relaxing", "socializing");
+	XSTATUS("phone", "activity", "http://jabber.org/protocol/activity", "talking", "on_the_phone");
+	XSTATUS("surfing", "activity", "http://jabber.org/protocol/activity", "exercising", "swimming");
+// 	{"mobile", N_("Mobile"), NULL},
+	XSTATUS("search", "activity", "http://jabber.org/protocol/activity", "relaxing", "reading");
+	XSTATUS("party", "activity", "http://jabber.org/protocol/activity", "relaxing", "partying");
+	XSTATUS("coffee", "activity", "http://jabber.org/protocol/activity", "drinking", "having_a_coffee");
+	XSTATUS("console", "activity", "http://jabber.org/protocol/activity", "relaxing", "gaming");
+	XSTATUS("internet", "activity", "http://jabber.org/protocol/activity", "relaxing", "reading");
+	XSTATUS("cigarette", "activity", "http://jabber.org/protocol/activity", "relaxing", "smoking");
+	XSTATUS("writing", "activity", "http://jabber.org/protocol/activity", "working", "writing");
+	XSTATUS("beer", "activity", "http://jabber.org/protocol/activity", "drinking", "having_a_beer");
+	XSTATUS("music", "tune", "http://jabber.org/protocol/tune", "", "");
+	XSTATUS("studying", "activity", "http://jabber.org/protocol/activity", "working", "studying");
+	XSTATUS("working", "activity", "http://jabber.org/protocol/activity", "working", "");
+	XSTATUS("restroom", "activity", "http://jabber.org/protocol/activity", "grooming", "");
+
+	// probably not used ones
+	XSTATUS("tired", "mood", "http://jabber.org/protocol/mood", "stressed", "");
+	XSTATUS("business", "activity", "http://jabber.org/protocol/activity", "having_appointment", "");
+	XSTATUS("shooting", "activity", "http://jabber.org/protocol/activity", "traveling", "commuting");
+	XSTATUS("picnic", "activity", "http://jabber.org/protocol/activity", "relaxing", "going_out");
+	XSTATUS("happy", "mood", "http://jabber.org/protocol/mood", "happy", "");
+#undef XSTATUS
 }
 
 ICQProtocol::~ICQProtocol() {}
@@ -57,6 +104,17 @@ std::string ICQProtocol::text(const std::string &key) {
 	else if (key == "username")
 		return _("UIN");
 	return "not defined";
+}
+
+bool ICQProtocol::getXStatus(const std::string &mood, std::string &type, std::string &xmlns, std::string &tag1, std::string &tag2) {
+	if (m_xstatus.find(mood) == m_xstatus.end())
+		return false;
+	std::vector <std::string> &l = m_xstatus[mood];
+	type = l[0];
+	xmlns = l[1];
+	tag1 = l[2];
+	tag2 = l[3];
+	return true;
 }
 
 Tag *ICQProtocol::getVCardTag(AbstractUser *user, GList *vcardEntries) {

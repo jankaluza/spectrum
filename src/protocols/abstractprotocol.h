@@ -119,6 +119,9 @@ class AbstractProtocol
 
 		// Parses VCard and returns VCard Tag*.
 		virtual Tag *getVCardTag(AbstractUser *user, GList *vcardEntries) { return NULL; }
+
+		virtual bool getXStatus(const std::string &mood, std::string &type, std::string &xmlns, std::string &tag1, std::string &tag2) { return false; }
+
 		/*
 		 * Returns true if this jid is jid of MUC
 		 */

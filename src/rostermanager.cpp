@@ -181,6 +181,12 @@ void SpectrumRosterManager::sendPresence(AbstractSpectrumBuddy *s_buddy, const s
 		tag->addAttribute("to", m_user->jid() + std::string(resource.empty() ? "" : "/" + resource));
 		Transport::instance()->send(tag);
 	}
+
+	tag = s_buddy->generateXStatusStanza();
+	if (tag) {
+		tag->addAttribute("to", m_user->jid());
+		Transport::instance()->send(tag);
+	}
 }
 
 void SpectrumRosterManager::sendPresence(const std::string &name, const std::string &resource) {
