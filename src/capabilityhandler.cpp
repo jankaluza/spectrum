@@ -75,6 +75,15 @@ void CapabilityHandler::handleDiscoInfo(const JID &jid, Tag *query, int context)
 		else if ((*it)->findAttribute("var") == "http://jabber.org/protocol/chatstates") {
 			capabilities |= GLOOX_FEATURE_CHATSTATES;
 		}
+		else if ((*it)->findAttribute("var") == "http://jabber.org/protocol/tune+notify") {
+			capabilities |= GLOOX_FEATURE_TUNE;
+		}
+		else if ((*it)->findAttribute("var") == "http://jabber.org/protocol/mood+notify") {
+			capabilities |= GLOOX_FEATURE_MOOD;
+		}
+		else if ((*it)->findAttribute("var") == "http://jabber.org/protocol/activity+notify") {
+			capabilities |= GLOOX_FEATURE_ACTIVITY;
+		}
 	}
 	
 	Log("*** FEATURES ARRIVED: ", capabilities);

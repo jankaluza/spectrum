@@ -33,6 +33,7 @@
 
 struct SendPresenceToAllData {
 	int features;
+	int user_feature;
 	std::string to;
 	bool markOffline;
 };
@@ -67,6 +68,7 @@ static void sendCurrentPresence(gpointer key, gpointer v, gpointer data) {
 	AbstractSpectrumBuddy *s_buddy = (AbstractSpectrumBuddy *) v;
 	SendPresenceToAllData *d = (SendPresenceToAllData *) data;
 	int features = d->features;
+	int user_feature = d->user_feature;
 	std::string &to = d->to;
 	std::cout << "online: " << s_buddy->isOnline() << "\n";
 	if (s_buddy->isOnline()) {
@@ -75,6 +77,13 @@ static void sendCurrentPresence(gpointer key, gpointer v, gpointer data) {
 		if (tag) {
 			tag->addAttribute("to", to);
 			Transport::instance()->send( tag );
+		}
+		if (features & TRANSPORT_FEATURE_XSTATUS) {
+			tag = s_buddy->generateXStatusStanza(user_feature);
+			if (tag) {
+				tag->addAttribute("to", JID(to).bare());
+				Transport::instance()->send(tag);
+			}
 		}
 	}
 }
@@ -113,6 +122,7 @@ bool SpectrumRosterManager::isInRoster(const std::string &name, const std::strin
 void SpectrumRosterManager::sendUnavailablePresenceToAll(const std::string &resource) {
 	SendPresenceToAllData *data = new SendPresenceToAllData;
 	data->features = m_user->getFeatures();
+	data->user_feature = m_user->getMergedFeatures();
 	if (resource.empty()) {
 		data->to = m_user->jid();
 		data->markOffline = true;
@@ -182,10 +192,12 @@ void SpectrumRosterManager::sendPresence(AbstractSpectrumBuddy *s_buddy, const s
 		Transport::instance()->send(tag);
 	}
 
-	tag = s_buddy->generateXStatusStanza();
-	if (tag) {
-		tag->addAttribute("to", m_user->jid());
-		Transport::instance()->send(tag);
+	if (m_user->getFeatures() & TRANSPORT_FEATURE_XSTATUS) {
+		tag = s_buddy->generateXStatusStanza(m_user->getMergedFeatures());
+		if (tag) {
+			tag->addAttribute("to", m_user->jid());
+			Transport::instance()->send(tag);
+		}
 	}
 }
 

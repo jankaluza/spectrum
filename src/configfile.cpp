@@ -235,6 +235,8 @@ bool ConfigFile::loadFeatures(int &features, const std::string &section) {
 			feature = TRANSPORT_FEATURE_FILETRANSFER;
 		else if (key == "statistics")
 			feature = TRANSPORT_FEATURE_STATISTICS;
+		else if (key == "xstatus")
+			feature = TRANSPORT_FEATURE_STATISTICS;
 		else
 			continue;
 		if (val)

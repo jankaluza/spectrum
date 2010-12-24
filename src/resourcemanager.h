@@ -70,6 +70,8 @@ class ResourceManager {
 		// then active resource is used
 		bool hasFeature(int feature, const std::string &resource = "");
 
+		int getMergedFeatures();
+
 		// Returns all resources.
 		const std::map <std::string, Resource> &getResources();
 

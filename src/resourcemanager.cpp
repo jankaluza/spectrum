@@ -111,3 +111,11 @@ void ResourceManager::removeResource(const std::string &resource) {
 	m_resources.erase(resource);
 	setActiveResource();
 }
+
+int ResourceManager::getMergedFeatures() {
+	int features = 0;
+	for (std::map<std::string, Resource>::iterator u = m_resources.begin(); u != m_resources.end() ; u++) {
+		features |= (*u).second.caps;
+	}
+	return features;
+}

@@ -59,7 +59,7 @@ class AbstractSpectrumBuddy {
 		// Returns full JID.
 		std::string getJid();
 
-		Tag *generateXStatusStanza();
+		Tag *generateXStatusStanza(int user_features);
 
 		// Generates whole <presence> stanza without "to" attribute. That attribute
 		// has to be added manually.

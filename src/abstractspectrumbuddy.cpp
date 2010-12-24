@@ -22,6 +22,7 @@
 #include "main.h" // just for replaceBadJidCharacters
 #include "transport.h"
 #include "usermanager.h"
+#include "capabilityhandler.h"
 
 AbstractSpectrumBuddy::AbstractSpectrumBuddy(long id) : m_id(id), m_online(false), m_subscription("ask"), m_flags(0) {
 }
@@ -82,7 +83,7 @@ const std::string &AbstractSpectrumBuddy::getSubscription() {
 	return m_subscription;
 }
 
-Tag *AbstractSpectrumBuddy::generateXStatusStanza() {
+Tag *AbstractSpectrumBuddy::generateXStatusStanza(int user_features) {
 	std::string mood;
 	std::string comment;
 	if (!getXStatus(mood, comment))
@@ -110,6 +111,11 @@ Tag *AbstractSpectrumBuddy::generateXStatusStanza() {
 	std::string type = "mood";
 
 	if (!Transport::instance()->protocol()->getXStatus(mood, type, xmlns, tag1, tag2))
+		return NULL;
+
+	if ((type == "mood" && (user_features & GLOOX_FEATURE_MOOD) == 0) ||
+		(type == "activity" && (user_features & GLOOX_FEATURE_ACTIVITY) == 0) ||
+		(type == "tune" && (user_features & GLOOX_FEATURE_TUNE) == 0))
 		return NULL;
 
 	Tag *tag = new Tag("message");
