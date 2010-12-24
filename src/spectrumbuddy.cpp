@@ -68,6 +68,9 @@ bool SpectrumBuddy::getStatus(PurpleStatusPrimitive &status, std::string &status
 	}
 	else
 		statusMessage = "";
+	const char *mood = purple_status_get_attr_string(stat, PURPLE_MOOD_NAME);
+	const char *comment = purple_status_get_attr_string(stat, PURPLE_MOOD_COMMENT);
+	std::cout << "MOOOOD '" << mood << "' '" << comment << "'\n";
 	return true;
 }
 

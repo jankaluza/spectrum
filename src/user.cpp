@@ -355,16 +355,12 @@ void User::connect() {
 				break;
 
 			case PURPLE_PREF_STRING:
+			case PURPLE_PREF_STRING_LIST:
 				if (v.str)
 					purple_account_set_string(m_account, key.c_str(), v.str);
 				else
 					purple_account_remove_setting(m_account, key.c_str());
 				break;
-
-			case PURPLE_PREF_STRING_LIST:
-				// TODO:
-				break;
-
 			default:
 				continue;
 		}

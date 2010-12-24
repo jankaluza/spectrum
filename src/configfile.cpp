@@ -280,6 +280,7 @@ void ConfigFile::loadPurpleAccountSettings(Configuration &configuration) {
 				break;
 
 			case PURPLE_PREF_STRING:
+			case PURPLE_PREF_STRING_LIST:
 				if (g_key_file_has_key(keyfile, "purple", key.c_str(), NULL)) {
 					std::string str;
 					loadString(str, "purple", key);
@@ -292,12 +293,12 @@ void ConfigFile::loadPurpleAccountSettings(Configuration &configuration) {
 // 				}
 				break;
 
-			case PURPLE_PREF_STRING_LIST:
-				if (g_key_file_has_key(keyfile, "purple", key.c_str(), NULL)) {
-					loadStringList(v.strlist, "purple", key);
-					configuration.purple_account_settings[key] = v;
-				}
-				break;
+// 			case PURPLE_PREF_STRING_LIST:
+// 				if (g_key_file_has_key(keyfile, "purple", key.c_str(), NULL)) {
+// 					loadStringList(v.strlist, "purple", key);
+// 					configuration.purple_account_settings[key] = v;
+// 				}
+// 				break;
 
 			default:
 				continue;
