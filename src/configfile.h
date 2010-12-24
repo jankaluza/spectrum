@@ -61,6 +61,7 @@ struct Configuration {
 	bool useProxy;					// True if transport has to use proxy to connect legacy network.
 	bool jid_escaping;				// True if jid escaping is enabled by default.
 	bool require_tls;
+	bool filetransferForceDir;
 	std::string filetransfer_proxy_ip;
 	int filetransfer_proxy_port;
 	std::string filetransfer_proxy_streamhost_ip;

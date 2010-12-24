@@ -272,7 +272,9 @@ void FileTransferManager::handleXferFileReceiveRequest(PurpleXfer *xfer) {
 	AbstractUser *user = Transport::instance()->userManager()->getUserByAccount(purple_xfer_get_account(xfer));
 	if (user != NULL) {
 		FiletransferRepeater *repeater = (FiletransferRepeater *) xfer->ui_data;
-		if (user->hasFeature(GLOOX_FEATURE_FILETRANSFER)) {
+		if (user->hasFeature(GLOOX_FEATURE_FILETRANSFER) && 
+			!purple_value_get_boolean(user->getSetting("save_files_on_server")) &&
+			!Transport::instance()->getConfiguration().filetransferForceDir) {
 			// TODO: CHECK IF requestFT could be part of this class...
 			std::string sid = repeater->requestFT();
 			if (m_repeaters.find(sid) != m_repeaters.end()) {

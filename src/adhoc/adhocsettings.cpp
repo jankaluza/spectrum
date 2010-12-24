@@ -59,6 +59,9 @@ AdhocSettings::AdhocSettings(AbstractUser *user, const std::string &from, const 
 
 		value = m_user->getSetting("enable_chatstate");
 		adhocTag->addBoolean(tr(m_language, _("Enable \"is typing\" notifications")), "enable_chatstate", purple_value_get_boolean(value));
+
+		value = m_user->getSetting("save_files_on_server");
+		adhocTag->addBoolean(tr(m_language, _("Save incoming file transfers on server")), "save_files_on_server", purple_value_get_boolean(value));
 	}
 	else {
 		adhocTag->setInstructions(tr(m_language, _("You must be online to change transport settings.")));
