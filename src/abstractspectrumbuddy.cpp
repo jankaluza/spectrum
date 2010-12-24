@@ -109,7 +109,8 @@ Tag *AbstractSpectrumBuddy::generateXStatusStanza() {
 	std::string tag2 = "";
 	std::string type = "mood";
 
-	Transport::instance()->protocol()->getXStatus(mood, type, xmlns, tag1, tag2);
+	if (!Transport::instance()->protocol()->getXStatus(mood, type, xmlns, tag1, tag2))
+		return NULL;
 
 	Tag *tag = new Tag("message");
 	tag->addAttribute("from", getBareJid());
