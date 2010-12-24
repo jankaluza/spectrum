@@ -120,6 +120,7 @@ set(spectrum_SRCS
 	src/protocols/bonjour.cpp
 	src/protocols/facebook.cpp
 	src/protocols/gg.cpp
+        src/protocols/groupwise.cpp
 	src/protocols/identica.cpp
 	src/protocols/icq.cpp
 	src/protocols/irc.cpp

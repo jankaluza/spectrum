@@ -56,9 +56,11 @@ SpectrumConversation::~SpectrumConversation() {
 void SpectrumConversation::handleMessage(AbstractUser *user, const char *who, const char *msg, PurpleMessageFlags flags, time_t mtime, const std::string &currentBody) {
 	std::string name(who);
 	// Remove resource if it's XMPP JID
-	size_t pos = name.find("/");
-	if (pos != std::string::npos)
-		name.erase((int) pos, name.length() - (int) pos);
+	if (Transport::instance()->getConfiguration().protocol == "xmpp") {
+		size_t pos = name.find("/");
+		if (pos != std::string::npos)
+			name.erase((int) pos, name.length() - (int) pos);
+	}
 	AbstractSpectrumBuddy *s_buddy = NULL;
 #ifndef TESTS
 	User *u = (User *) user;

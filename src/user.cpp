@@ -190,6 +190,12 @@ void User::purpleBuddyTypingStopped(const std::string &uin){
 		return;
 	Log(m_jid, uin << " stopped typing");
 	std::string username(uin);
+	// Remove resource if it's XMPP JID
+	if (Transport::instance()->getConfiguration().protocol == "xmpp") {
+		size_t pos = username.find("/");
+		if (pos != std::string::npos)
+			username.erase((int) pos, username.length() - (int) pos);
+	}
 	AbstractSpectrumBuddy *s_buddy = getRosterItem(uin);
 	if (s_buddy && s_buddy->getFlags() & SPECTRUM_BUDDY_JID_ESCAPING)
 		username = JID::escapeNode(username);
@@ -220,6 +226,12 @@ void User::purpleBuddyTyping(const std::string &uin){
 		return;
 	Log(m_jid, uin << " is typing");
 	std::string username(uin);
+	// Remove resource if it's XMPP JID
+	if (Transport::instance()->getConfiguration().protocol == "xmpp") {
+		size_t pos = username.find("/");
+		if (pos != std::string::npos)
+			username.erase((int) pos, username.length() - (int) pos);
+	}
 	AbstractSpectrumBuddy *s_buddy = getRosterItem(uin);
 	if (s_buddy && s_buddy->getFlags() & SPECTRUM_BUDDY_JID_ESCAPING)
 		username = JID::escapeNode(username);
@@ -249,6 +261,12 @@ void User::purpleBuddyTypingPaused(const std::string &uin){
 		return;
 	Log(m_jid, uin << " paused typing");
 	std::string username(uin);
+	// Remove resource if it's XMPP JID
+	if (Transport::instance()->getConfiguration().protocol == "xmpp") {
+		size_t pos = username.find("/");
+		if (pos != std::string::npos)
+			username.erase((int) pos, username.length() - (int) pos);
+	}
 	AbstractSpectrumBuddy *s_buddy = getRosterItem(uin);
 	if (s_buddy && s_buddy->getFlags() & SPECTRUM_BUDDY_JID_ESCAPING)
 		username = JID::escapeNode(username);
