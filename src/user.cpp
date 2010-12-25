@@ -625,6 +625,12 @@ void User::receivedPresence(const Presence &stanza) {
 				statusChanged = true;
 				forwardStatus(presence, stanzaStatus);
 			}
+			// Just forward user presence to XMPP user, not change it in legacy network
+			else {
+				Presence tag((Presence::PresenceType) presence, m_jid, stanzaStatus);
+				tag.setFrom(p->jid());
+				p->j->send(tag);
+			}
 		}
 
 		if (purple_value_get_boolean(getSetting("enable_transport")) == false) {
