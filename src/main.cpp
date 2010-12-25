@@ -536,8 +536,8 @@ static void * notifyEmails(PurpleConnection *gc, size_t count, gboolean detailed
 	else {
 		PurpleAccount *account = purple_connection_get_account(gc);
 		User *user = (User *) GlooxMessageHandler::instance()->userManager()->getUserByAccount(account);
-		std::string message = Poco::format(_("%s has %d new message."), *tos, (int) count );
-		Message s(Message::Chat, user->jid(), message);
+		std::string message = Poco::format(_("%s has %d new message."), std::string(*tos), (int) count );
+		Message s(Message::Chat, user->jid(), tr(user->getLang(), message));
 		s.setFrom(Transport::instance()->jid());
 		Transport::instance()->send(s.tag());
 	}
