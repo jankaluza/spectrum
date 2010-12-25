@@ -517,17 +517,29 @@ static void * notifyEmail(PurpleConnection *gc, const char *subject, const char 
 }
 
 static void * notifyEmails(PurpleConnection *gc, size_t count, gboolean detailed, const char **subjects, const char **froms, const char **tos, const char **urls) {
-	return NULL;
-	for (size_t i = 0; i < count; i++) {
-		notifyEmail(gc, subjects ? *subjects : NULL, froms ? *froms : NULL, tos ? *tos : NULL, urls ? *urls : NULL);
-		if (subjects)
-			subjects++;
-		if (froms)
-			froms++;
-		if (tos)
-			tos++;
-		if (urls)
-			urls++;
+	if (count == 0)
+		return NULL;
+
+	if (detailed) {
+		for ( ; count; --count) {
+			notifyEmail(gc, subjects ? *subjects : NULL, froms ? *froms : NULL, tos ? *tos : NULL, urls ? *urls : NULL);
+			if (subjects)
+				subjects++;
+			if (froms)
+				froms++;
+			if (tos)
+				tos++;
+			if (urls)
+				urls++;
+		}
+	}
+	else {
+		PurpleAccount *account = purple_connection_get_account(gc);
+		User *user = (User *) GlooxMessageHandler::instance()->userManager()->getUserByAccount(account);
+		std::string message = Poco::format(_("%s has %d new message."), *tos, (int) count );
+		Message s(Message::Chat, user->jid(), message);
+		s.setFrom(Transport::instance()->jid());
+		Transport::instance()->send(s.tag());
 	}
 	
 	return NULL;
