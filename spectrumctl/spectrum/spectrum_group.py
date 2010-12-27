@@ -382,6 +382,53 @@ class spectrum_group:
 			print
 		return 0
 
+	def cron( self ):
+		output_dir = self.options.output_dir
+
+		for instance in self.instances:
+			if not instance.enabled():
+				continue
+
+			status = instance.status()
+			if status in [ 0, 3 ]: # running or totally dead
+				continue
+			elif status != 1:
+				print( "Error: %s: Unknown status (%s)."%(instance.get_jid(), status) )
+				continue
+			
+			os.remove( instance.pid_file )
+			print( "%s seems to have crashed:"%(instance.get_jid()) )
+
+			try:
+				loc = instance.coredump( output_dir )
+				print( "\tCoredump can be found at %s."%(loc) )
+			except RuntimeError as e:
+				if hasattr( e, 'strerror' ):
+					# python2.5 does not have msg.strerror
+					print( e.strerror )
+				else:  
+					print( e.message )
+				
+			try:
+				loc = instance.logtail( output_dir )
+				print( "\tLogfile can be found at %s."%(loc) )
+			except RuntimeError as e:
+				if hasattr( e, 'strerror' ):
+					# python2.5 does not have msg.strerror
+					print( e.strerror )
+				else:  
+					print( e.message )
+			
+			try:
+				loc = instance.saveversion( output_dir )
+				print( "\tVersion can be found at %s."%(loc) )
+			except RuntimeError as e:
+				if hasattr( e, 'strerror' ):
+					# python2.5 does not have msg.strerror
+					print( e.strerror )
+				else:  
+					print( e.message )
+			
 	def help( self, cmd=None ):
 		"""
 		Give help about the method I{cmd}. If I{cmd} is omitted, print

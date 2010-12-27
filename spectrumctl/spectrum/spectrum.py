@@ -19,7 +19,8 @@
 Represents a single spectrum instance, see L{spectrum.spectrum}.
 """
 
-import os, sys, pwd, stat, time, signal, subprocess, resource
+import os, sys, pwd, stat, time, signal, resource
+from subprocess import call, Popen, PIPE, STDOUT
 import spectrumconfigparser, config_interface, env
 from ExistsError import ExistsError
 
@@ -362,7 +363,7 @@ class spectrum:
 
 				# check if database is at current version:
 				check_cmd = [ self.get_binary(), '--check-db-version', path ]
-				process = subprocess.Popen( check_cmd, stdout=subprocess.PIPE )
+				process = Popen( check_cmd, stdout=PIPE )
 				process.communicate()
 				if process.returncode != 0:
 					os._exit( process.returncode )
@@ -378,7 +379,7 @@ class spectrum:
 					resource.setrlimit( resource.RLIMIT_CORE, (-1,-1) )
 
 				cmd.append( path )
-				os._exit( subprocess.call( cmd ) )
+				os._exit( call( cmd ) )
 			except OSError, e:
 				os._exit( 100 ) # spectrum wasn't found
 			except Exception, e:
@@ -527,12 +528,12 @@ class spectrum:
 					os._exit( 102 )
 
 				check_cmd = [ self.get_binary(), '--check-db-version', path ]
-				process = subprocess.Popen( check_cmd, stdout=subprocess.PIPE )
+				process = Popen( check_cmd, stdout=PIPE )
 				process.communicate()
 
 				if process.returncode == 2:
 					update_cmd = [ 'spectrum', '--upgrade-db', path ]
-					process = subprocess.Popen( update_cmd, stdout=subprocess.PIPE )
+					process = Popen( update_cmd, stdout=PIPE )
 					process.communicate()
 					os._exit( process.returncode )
 
@@ -645,3 +646,50 @@ class spectrum:
 			return interface.query( nodes, ns )
 		except RuntimeError, e:
 			raise RuntimeError( "%s"%(e.message ) )
+
+	def _get_output_file( self, directory, name, suffix ):
+		first = '%s/%s.%s'%(directory, name, suffix)
+		if not os.path.exists( first ):
+			return first
+
+		i = 1
+		while True:
+			path = '%s/%s.%s.%s'%(directory, name, i, suffix)
+			if not os.path.exists( path ):
+				return path
+			i += 1
+
+	def coredump( self, output_dir ):
+		userdir = self.config.get( 'purple', 'userdir' )
+		coredump = os.path.normpath( userdir + '/core' )
+
+		if not os.path.exists( coredump ):
+			raise RuntimeError( "Error: %s: Coredump does not exist."%(coredump) )
+
+		# create core dump:
+		output_path = self._get_output_file( output_dir, self.get_jid(), 'trace' )
+		output_file = open( output_path, 'w' )
+		cmd = ['gdb', 'spectrum', coredump]
+		p = Popen( cmd, stdin=PIPE, stderr=STDOUT, stdout=output_file )
+		p.stdin.write( 'bt full\n' )
+		p.stdin.write( 'quit\n' )
+		p.wait()
+		p.stdin.close()
+
+		return os.path.normpath( output_file )
+
+	def logtail( self, output_dir ):
+		log_file = self.config.get( 'logging', 'log_file' )
+		if not os.path.exists( log_file ):
+			raise RuntimeError( "Error: %s: Logfile does not exist."%(log_file) )
+
+		output_path = self.get_output_file( output_dir, self.get_jid(), 'log' )
+		output_file = open( output_path, 'w' )
+
+		for line in open(log_file).readlines()[:50]:
+			output_file.write( line )
+
+		return os.path.normpath( output_file )
+
+	def saveversion( self, output_dir ):
+		pass
