@@ -676,7 +676,7 @@ class spectrum:
 		p.wait()
 		p.stdin.close()
 
-		return os.path.normpath( output_file )
+		return os.path.normpath( output_path )
 
 	def logtail( self, output_dir ):
 		log_file = self.config.get( 'logging', 'log_file' )
@@ -689,7 +689,7 @@ class spectrum:
 		for line in open(log_file).readlines()[:50]:
 			output_file.write( line )
 
-		return os.path.normpath( output_file )
+		return os.path.normpath( output_path )
 
 	def saveversion( self, output_dir ):
 		pass
