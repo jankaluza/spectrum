@@ -25,6 +25,16 @@ version 1.4.5 (20xx-xx-xx):
 	GroupWise:
 	* Added support, use protocol=groupwise in config file.
 
+	spectrumctl:
+	* No longer enforce any permissions on filetransfer_cache (it has to
+	  be writable by the webserver)
+	* Remove the --cron option for action 'list'
+	* New action 'cron' is now intended for regular cron runs:
+	  * It outputs transports that have crashed
+	  * Saves backtraces, logs and the current spectrum_version (see
+	    new --output-dir option)
+	  * Prints location of those files
+
 version 1.4.4 (2010-11-25):
 	General:
 	* Error messages are sent in presences from transport contact.
