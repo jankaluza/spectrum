@@ -692,4 +692,14 @@ class spectrum:
 		return os.path.normpath( output_path )
 
 	def saveversion( self, output_dir ):
-		pass
+		cmd = [ 'spectrum', '--version' ]
+		p = Popen( cmd , stdout=PIPE )
+		stdin, stderr = p.communicate()
+		print( stdin )
+		
+		output_path = self._get_output_file( output_dir, self.get_jid(), 'version' )
+		output_file = open( output_path, 'w' )
+		output_file.write( stdin )
+		output_file.close()
+
+		return output_path
