@@ -383,6 +383,10 @@ class spectrum_group:
 		return 0
 
 	def cron( self ):
+		"""
+		Output transports that recently have crashed and create
+		coredumps and log-files.
+		"""
 		output_dir = self.options.output_dir
 
 		for instance in self.instances:
