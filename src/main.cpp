@@ -1641,11 +1641,11 @@ void GlooxMessageHandler::handlePresence(const Presence &stanza){
 			tag->addAttribute("type", "unavailable");
 			j->send(tag);
 			if (stanza.to().username() == "") {
-				Tag *stanza = new Tag("presence");
-				stanza->addAttribute( "to", msg.from().bare());
-				stanza->addAttribute( "type", "probe");
-				stanza->addAttribute( "from", jid());
-				j->send(stanza);
+				Tag *s = new Tag("presence");
+				s->addAttribute( "to", stanza.from().bare());
+				s->addAttribute( "type", "probe");
+				s->addAttribute( "from", jid());
+				j->send(s);
 			}
 		}
 		else if (((stanza.to().username() == "" && !protocol()->tempAccountsAllowed()) || ( protocol()->tempAccountsAllowed() && isMUC)) && stanza.presence() != Presence::Unavailable){
