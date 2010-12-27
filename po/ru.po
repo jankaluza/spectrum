@@ -2,19 +2,21 @@
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the PACKAGE package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
-# 
+#
+#: /home/hanzz/code/spectrum/src/main.cpp:1227
+#: /home/hanzz/code/spectrum/src/main.cpp:1234
 msgid ""
 msgstr ""
 "Project-Id-Version: Spectrum\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2010-08-11 14:49+0200\n"
+"POT-Creation-Date: 2010-12-27 09:18+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Language: \n"
 "Plural-Forms: nplurals=2; plural=n != 1\n"
 
 #: /home/hanzz/code/spectrum/src/commands.cpp:35
@@ -49,8 +51,12 @@ msgstr "%s сейчас \"%s\"\n"
 
 #: /home/hanzz/code/spectrum/src/commands.cpp:79
 #, c-format
-msgid "The setting \"%s\" does not exist.  Try \"/transport settings list\" to get a list of available settings.\n"
-msgstr "Параметр \"%s\" не найден. Попробуйте \"/transport settings list\" для получения списка доступных параметров. \n"
+msgid ""
+"The setting \"%s\" does not exist.  Try \"/transport settings list\" to get "
+"a list of available settings.\n"
+msgstr ""
+"Параметр \"%s\" не найден. Попробуйте \"/transport settings list\" для "
+"получения списка доступных параметров. \n"
 
 #: /home/hanzz/code/spectrum/src/commands.cpp:115
 msgid "No such command (in this context)."
@@ -61,7 +67,8 @@ msgid ""
 "Use \"/transport help &lt;command&gt;\" for help on a specific command.\n"
 "The following commands are available in this context:\n"
 msgstr ""
-"Используйте \"/transport help &lt;команда&gt;\" для получения помощи по данной команде.\n"
+"Используйте \"/transport help &lt;команда&gt;\" для получения помощи по "
+"данной команде.\n"
 "Доступны следующие команды:\n"
 
 #: /home/hanzz/code/spectrum/src/commands.cpp:142
@@ -73,7 +80,7 @@ msgstr "help &lt;команда&gt;: помощь по выбранной ком
 msgid "settings set &lt;command&gt; settings list:  Configure transport."
 msgstr "settings set &lt;команда&gt; settings list: Изменить настройки."
 
-#: /home/hanzz/code/spectrum/src/filetransfermanager.cpp:307
+#: /home/hanzz/code/spectrum/src/filetransfermanager.cpp:309
 #, c-format
 msgid "Received file '%s'.  You can download it at: %s"
 msgstr "Получен файл '%s'. Вы можете скачать его по адресу: %s"
@@ -86,9 +93,18 @@ msgstr "Введите ID Вашего контакта"
 msgid "Contact ID"
 msgstr "ID контакта"
 
-#: /home/hanzz/code/spectrum/src/main.cpp:1847
-msgid "This message couldn't be sent, because you are not connected to legacy network. You will be automatically reconnected soon."
-msgstr "Сообщение не может быть отправлено по причине того, что вы не подключены к сети. Ожидайте попытку подключения."
+#: /home/hanzz/code/spectrum/src/main.cpp:548
+#, c-format
+msgid "%s has %d new message."
+msgstr ""
+
+#: /home/hanzz/code/spectrum/src/main.cpp:1941
+msgid ""
+"This message couldn't be sent, because you are not connected to legacy "
+"network. You will be automatically reconnected soon."
+msgstr ""
+"Сообщение не может быть отправлено по причине того, что вы не подключены к "
+"сети. Ожидайте попытку подключения."
 
 #: /home/hanzz/code/spectrum/src/registerhandler.cpp:248
 msgid "Registration"
@@ -122,29 +138,33 @@ msgstr "Для поиска Вам необходим клиент, поддер
 msgid "Ad-Hoc Commands"
 msgstr "Ad-Hoc команды"
 
-#: /home/hanzz/code/spectrum/src/spectrummessagehandler.cpp:244
+#: /home/hanzz/code/spectrum/src/spectrummessagehandler.cpp:245
 msgid "Transport: Unknown command."
 msgstr "транспорт: неизвестная команда."
 
-#: /home/hanzz/code/spectrum/src/spectrummessagehandler.cpp:248
+#: /home/hanzz/code/spectrum/src/spectrummessagehandler.cpp:249
 msgid "Syntax Error: Wrong number of arguments."
 msgstr "Ошибка синтаксиса: неправильное число аргументов"
 
-#: /home/hanzz/code/spectrum/src/spectrummessagehandler.cpp:251
+#: /home/hanzz/code/spectrum/src/spectrummessagehandler.cpp:252
 msgid "The command failed for an unknown reason."
 msgstr "Неизвестная ошибка"
 
-#: /home/hanzz/code/spectrum/src/spectrummessagehandler.cpp:255
+#: /home/hanzz/code/spectrum/src/spectrummessagehandler.cpp:256
 msgid "That command only works in group chats, not 1:1 conversations."
 msgstr "Эта команда работает только в конференциях, не в одиночных чатах."
 
-#: /home/hanzz/code/spectrum/src/spectrummessagehandler.cpp:257
+#: /home/hanzz/code/spectrum/src/spectrummessagehandler.cpp:258
 msgid "That command only works in 1:1 conversations, not group chats."
 msgstr "Эта команда работает только в одиночных чатах, не в конференциях"
 
-#: /home/hanzz/code/spectrum/src/spectrummessagehandler.cpp:264
+#: /home/hanzz/code/spectrum/src/spectrummessagehandler.cpp:265
 msgid "That command is not supported for this legacy network."
 msgstr "Команда не поддерживается для этой сети"
+
+#: /home/hanzz/code/spectrum/src/user.cpp:418
+msgid "Connecting"
+msgstr ""
 
 #: /home/hanzz/code/spectrum/src/protocols/aim.cpp:54
 msgid "Enter your screenname and password:"
@@ -153,6 +173,16 @@ msgstr "Введите Ваше имя пользователя и пароль 
 #: /home/hanzz/code/spectrum/src/protocols/aim.cpp:56
 msgid "Screenname"
 msgstr "имя пользователя"
+
+#: /home/hanzz/code/spectrum/src/protocols/bonjour.cpp:54
+#, fuzzy
+msgid "Enter your Bonjour username:"
+msgstr "Введите Ваше имя пользователя и пароль в сети HoN:"
+
+#: /home/hanzz/code/spectrum/src/protocols/bonjour.cpp:56
+#, fuzzy
+msgid "Bonjour username"
+msgstr "Имя пользователя QQ"
 
 #: /home/hanzz/code/spectrum/src/protocols/facebook.cpp:59
 msgid "Enter your Facebook email and password:"
@@ -166,6 +196,14 @@ msgstr "Введите Ваше имя пользователя и пароль 
 msgid "GG number"
 msgstr "Имя пользователя GG"
 
+#: /home/hanzz/code/spectrum/src/protocols/groupwise.cpp:53
+msgid "Please use user@server:port"
+msgstr ""
+
+#: /home/hanzz/code/spectrum/src/protocols/groupwise.cpp:55
+msgid "user@server:port"
+msgstr ""
+
 #: /home/hanzz/code/spectrum/src/protocols/hon.cpp:58
 msgid "Enter your HoN username and password:"
 msgstr "Введите Ваше имя пользователя и пароль в сети HoN:"
@@ -174,35 +212,35 @@ msgstr "Введите Ваше имя пользователя и пароль 
 msgid "HoN Username:"
 msgstr "Имя пользователя HoN:"
 
-#: /home/hanzz/code/spectrum/src/protocols/icq.cpp:56
+#: /home/hanzz/code/spectrum/src/protocols/icq.cpp:103
 msgid "Enter your UIN and password:"
 msgstr "Введите Ваш UIN и пароль в сети ICQ:"
 
-#: /home/hanzz/code/spectrum/src/protocols/icq.cpp:58
+#: /home/hanzz/code/spectrum/src/protocols/icq.cpp:105
 msgid "UIN"
 msgstr "UIN"
 
-#: /home/hanzz/code/spectrum/src/protocols/icq.cpp:158
-#: /home/hanzz/code/spectrum/src/protocols/msn.cpp:156
+#: /home/hanzz/code/spectrum/src/protocols/icq.cpp:222
+#: /home/hanzz/code/spectrum/src/protocols/msn.cpp:157
 #: /home/hanzz/code/spectrum/src/protocols/msn_pecan.cpp:156
 #: /home/hanzz/code/spectrum/src/protocols/qq.cpp:51
 msgid "Please authorize me."
 msgstr "Пожалуйста, добавьте меня."
 
-#: /home/hanzz/code/spectrum/src/protocols/identica.cpp:61
+#: /home/hanzz/code/spectrum/src/protocols/identica.cpp:60
 msgid "Enter your Identica username and password:"
 msgstr "Введите Ваше имя пользователя и пароль в сети Identica:"
 
-#: /home/hanzz/code/spectrum/src/protocols/identica.cpp:63
+#: /home/hanzz/code/spectrum/src/protocols/identica.cpp:62
 msgid "Identica username"
 msgstr "Имя пользователя Identica"
 
-#: /home/hanzz/code/spectrum/src/protocols/msn.cpp:54
+#: /home/hanzz/code/spectrum/src/protocols/msn.cpp:55
 #: /home/hanzz/code/spectrum/src/protocols/msn_pecan.cpp:54
 msgid "Enter your Live ID and password:"
 msgstr "Введите Ваш Live ID и пароль:"
 
-#: /home/hanzz/code/spectrum/src/protocols/msn.cpp:56
+#: /home/hanzz/code/spectrum/src/protocols/msn.cpp:57
 #: /home/hanzz/code/spectrum/src/protocols/msn_pecan.cpp:56
 msgid "Live ID"
 msgstr "Live ID"
@@ -239,20 +277,24 @@ msgstr "Введите Ваше имя пользователя и пароль 
 msgid "SIPE username"
 msgstr "Имя пользователя SIPE"
 
-#: /home/hanzz/code/spectrum/src/protocols/twitter.cpp:57
+#: /home/hanzz/code/spectrum/src/protocols/twitter.cpp:127
 msgid "Enter your Twitter username and password:"
 msgstr "Введите Ваше имя пользователя и пароль в сети Twitter:"
 
-#: /home/hanzz/code/spectrum/src/protocols/twitter.cpp:59
+#: /home/hanzz/code/spectrum/src/protocols/twitter.cpp:129
 msgid "Twitter username"
 msgstr "Имя пользователя Twitter"
 
-#: /home/hanzz/code/spectrum/src/protocols/twitter.cpp:73
-#, c-format
+#: /home/hanzz/code/spectrum/src/protocols/twitter.cpp:143
+#, fuzzy, c-format
 msgid ""
-"Please allow Spectrum access to your Twitter account. Open following url and send the PIN number from the web page back to Spectrum.\n"
+"To allow %s access to your Twitter account. Double click the following url, "
+"copy the PIN number from the web page and paste it back to Twitter through "
+"this chat window.\n"
 "%s"
-msgstr "Пожалуйста, разрешите доступ Spectrum к Вашему Twitter-аккаунту. Перейдите по ссылке и введите PIN-код на странице: %s"
+msgstr ""
+"Пожалуйста, разрешите доступ Spectrum к Вашему Twitter-аккаунту. Перейдите "
+"по ссылке и введите PIN-код на странице: %s"
 
 #: /home/hanzz/code/spectrum/src/protocols/xmpp.cpp:55
 msgid "Enter your Jabber ID and password:"
@@ -374,31 +416,39 @@ msgid "This user is already registered."
 msgstr "Пользователь уже зарегистрирован"
 
 #: /home/hanzz/code/spectrum/src/adhoc/adhochandler.cpp:47
-#: /home/hanzz/code/spectrum/src/adhoc/adhocsettings.cpp:46
+#: /home/hanzz/code/spectrum/src/adhoc/adhocsettings.cpp:47
 msgid "Transport settings"
 msgstr "Настройки транспорта"
 
-#: /home/hanzz/code/spectrum/src/adhoc/adhocsettings.cpp:48
+#: /home/hanzz/code/spectrum/src/adhoc/adhocsettings.cpp:49
 msgid "Change your transport settings here."
 msgstr "Здесь вы можете изменить настройки транспорта"
 
-#: /home/hanzz/code/spectrum/src/adhoc/adhocsettings.cpp:51
+#: /home/hanzz/code/spectrum/src/adhoc/adhocsettings.cpp:52
 msgid "Enable transport"
 msgstr "Включить транспорт"
 
-#: /home/hanzz/code/spectrum/src/adhoc/adhocsettings.cpp:54
+#: /home/hanzz/code/spectrum/src/adhoc/adhocsettings.cpp:55
 msgid "Enable notification of new email (if the legacy network supports it)"
 msgstr "Включить уведомления о новых почтовых сообщениях (если доступно)"
 
-#: /home/hanzz/code/spectrum/src/adhoc/adhocsettings.cpp:57
+#: /home/hanzz/code/spectrum/src/adhoc/adhocsettings.cpp:58
 msgid "Enable avatars"
 msgstr "Включить аватарки"
 
-#: /home/hanzz/code/spectrum/src/adhoc/adhocsettings.cpp:60
+#: /home/hanzz/code/spectrum/src/adhoc/adhocsettings.cpp:61
 msgid "Enable \"is typing\" notifications"
 msgstr "Включить уведомления \"Пользователь пишет сообщение\""
 
-#: /home/hanzz/code/spectrum/src/adhoc/adhocsettings.cpp:63
+#: /home/hanzz/code/spectrum/src/adhoc/adhocsettings.cpp:64
+msgid "Save incoming file transfers on server"
+msgstr ""
+
+#: /home/hanzz/code/spectrum/src/adhoc/adhocsettings.cpp:67
+msgid "Reject all incoming authorizations"
+msgstr ""
+
+#: /home/hanzz/code/spectrum/src/adhoc/adhocsettings.cpp:70
 msgid "You must be online to change transport settings."
 msgstr "Для изменения настроек Вы должны быть в сети."
 

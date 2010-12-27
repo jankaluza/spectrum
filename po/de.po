@@ -2,19 +2,21 @@
 # Copyright (C) 2010
 # This file is distributed under the same license as the spectrum package.
 # Christian Dröge <christian@draugr.de>, 2010
-# 
+#
+#: /home/hanzz/code/spectrum/src/main.cpp:1227
+#: /home/hanzz/code/spectrum/src/main.cpp:1234
 msgid ""
 msgstr ""
 "Project-Id-Version: Spectrum\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2010-08-11 14:49+0200\n"
+"POT-Creation-Date: 2010-12-27 09:18+0100\n"
 "PO-Revision-Date: 2010-05-11 01:17+0100\n"
 "Last-Translator: Christian Dröge <Christian@draugr.de>\n"
 "Language-Team: German\n"
+"Language: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Language: \n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "X-Poedit-Language: German\n"
 
@@ -50,8 +52,12 @@ msgstr "%s wurde auf \"%s\" gesetzt\n"
 
 #: /home/hanzz/code/spectrum/src/commands.cpp:79
 #, c-format
-msgid "The setting \"%s\" does not exist.  Try \"/transport settings list\" to get a list of available settings.\n"
-msgstr "Die Einstellung \"%s\" existiert nicht.  Benutze \"/transport settings list\" um eine Auflistung der verfügbaren Einstellungen zu erhalten.\n"
+msgid ""
+"The setting \"%s\" does not exist.  Try \"/transport settings list\" to get "
+"a list of available settings.\n"
+msgstr ""
+"Die Einstellung \"%s\" existiert nicht.  Benutze \"/transport settings list"
+"\" um eine Auflistung der verfügbaren Einstellungen zu erhalten.\n"
 
 #: /home/hanzz/code/spectrum/src/commands.cpp:115
 msgid "No such command (in this context)."
@@ -62,7 +68,8 @@ msgid ""
 "Use \"/transport help &lt;command&gt;\" for help on a specific command.\n"
 "The following commands are available in this context:\n"
 msgstr ""
-"Benutze \"/transport help &lt;Befehl&gt;\" um die Hilfe für den jeweiligen Befehl aufzurufen.\n"
+"Benutze \"/transport help &lt;Befehl&gt;\" um die Hilfe für den jeweiligen "
+"Befehl aufzurufen.\n"
 "Die folgenden Befehle existieren in diesem Zusammenhang:\n"
 
 #: /home/hanzz/code/spectrum/src/commands.cpp:142
@@ -72,12 +79,15 @@ msgstr "help &lt;Befehl&gt;:  Hilfe zu einem Befehl aufrufen."
 #: /home/hanzz/code/spectrum/src/commands.cpp:143
 #: /home/hanzz/code/spectrum/src/commands.cpp:144
 msgid "settings set &lt;command&gt; settings list:  Configure transport."
-msgstr "settings set &lt;Einstellung&gt; settings list:  Transport konfigurieren."
+msgstr ""
+"settings set &lt;Einstellung&gt; settings list:  Transport konfigurieren."
 
-#: /home/hanzz/code/spectrum/src/filetransfermanager.cpp:307
+#: /home/hanzz/code/spectrum/src/filetransfermanager.cpp:309
 #, c-format
 msgid "Received file '%s'.  You can download it at: %s"
-msgstr "Die Datei '%s' wurde empfangen. Du kannst es unter der folgenden Adresse herunterladen: %s"
+msgstr ""
+"Die Datei '%s' wurde empfangen. Du kannst es unter der folgenden Adresse "
+"herunterladen: %s"
 
 #: /home/hanzz/code/spectrum/src/gatewayhandler.cpp:83
 msgid "Please enter the legacy ID of your contact."
@@ -87,9 +97,18 @@ msgstr "Bitte die Adresse deines Kontaktes aus dem Fremdnetzwerk eingeben."
 msgid "Contact ID"
 msgstr "Kontakt Adresse"
 
-#: /home/hanzz/code/spectrum/src/main.cpp:1847
-msgid "This message couldn't be sent, because you are not connected to legacy network. You will be automatically reconnected soon."
-msgstr "Diese Nachricht konnte nicht gesendet werden, weil du noch nicht mit dem Fremdnetzwerk verbunden bist. Du wirst bald automatisch neu verbunden."
+#: /home/hanzz/code/spectrum/src/main.cpp:548
+#, c-format
+msgid "%s has %d new message."
+msgstr ""
+
+#: /home/hanzz/code/spectrum/src/main.cpp:1941
+msgid ""
+"This message couldn't be sent, because you are not connected to legacy "
+"network. You will be automatically reconnected soon."
+msgstr ""
+"Diese Nachricht konnte nicht gesendet werden, weil du noch nicht mit dem "
+"Fremdnetzwerk verbunden bist. Du wirst bald automatisch neu verbunden."
 
 #: /home/hanzz/code/spectrum/src/registerhandler.cpp:248
 msgid "Registration"
@@ -116,36 +135,46 @@ msgstr "Deine Registrierung entfernen"
 
 #: /home/hanzz/code/spectrum/src/searchrepeater.cpp:81
 msgid "Searching requires a client which supports Data Forms (XEP-0004)."
-msgstr "Die Suche benötigt einen Client, der die XMPP Erweiterung 'Data Forms' unterstützt (XEP-0004)."
+msgstr ""
+"Die Suche benötigt einen Client, der die XMPP Erweiterung 'Data Forms' "
+"unterstützt (XEP-0004)."
 
 #: /home/hanzz/code/spectrum/src/spectrumdiscohandler.cpp:55
 #: /home/hanzz/code/spectrum/src/adhoc/adhochandler.cpp:170
 msgid "Ad-Hoc Commands"
 msgstr "Ad-Hoc Befehle"
 
-#: /home/hanzz/code/spectrum/src/spectrummessagehandler.cpp:244
+#: /home/hanzz/code/spectrum/src/spectrummessagehandler.cpp:245
 msgid "Transport: Unknown command."
 msgstr "Transport: Unbekannter Befehl."
 
-#: /home/hanzz/code/spectrum/src/spectrummessagehandler.cpp:248
+#: /home/hanzz/code/spectrum/src/spectrummessagehandler.cpp:249
 msgid "Syntax Error: Wrong number of arguments."
 msgstr "Syntax Fehler: Falsche Anzahl an Argumenten."
 
-#: /home/hanzz/code/spectrum/src/spectrummessagehandler.cpp:251
+#: /home/hanzz/code/spectrum/src/spectrummessagehandler.cpp:252
 msgid "The command failed for an unknown reason."
 msgstr "Der Befehl schlug aus unbekannten Gründen fehl."
 
-#: /home/hanzz/code/spectrum/src/spectrummessagehandler.cpp:255
+#: /home/hanzz/code/spectrum/src/spectrummessagehandler.cpp:256
 msgid "That command only works in group chats, not 1:1 conversations."
-msgstr "Dieser Befehl funktioniert nur in Mehrbenutzer-Chats und nicht in Unterhaltungen zwischen 2 Benutzern."
+msgstr ""
+"Dieser Befehl funktioniert nur in Mehrbenutzer-Chats und nicht in "
+"Unterhaltungen zwischen 2 Benutzern."
 
-#: /home/hanzz/code/spectrum/src/spectrummessagehandler.cpp:257
+#: /home/hanzz/code/spectrum/src/spectrummessagehandler.cpp:258
 msgid "That command only works in 1:1 conversations, not group chats."
-msgstr "Dieser Befehl funktioniert nur in Unterhaltungen zwischen 2 Benutzern und nicht in Mehrbenutzer-Chats."
+msgstr ""
+"Dieser Befehl funktioniert nur in Unterhaltungen zwischen 2 Benutzern und "
+"nicht in Mehrbenutzer-Chats."
 
-#: /home/hanzz/code/spectrum/src/spectrummessagehandler.cpp:264
+#: /home/hanzz/code/spectrum/src/spectrummessagehandler.cpp:265
 msgid "That command is not supported for this legacy network."
 msgstr "Dieser Befehl wird für dieses Fremdnetzwerk nicht unterstützt."
+
+#: /home/hanzz/code/spectrum/src/user.cpp:418
+msgid "Connecting"
+msgstr ""
 
 #: /home/hanzz/code/spectrum/src/protocols/aim.cpp:54
 msgid "Enter your screenname and password:"
@@ -154,6 +183,16 @@ msgstr "Gebe deinen AIM Benutzernamen und Passwort ein:"
 #: /home/hanzz/code/spectrum/src/protocols/aim.cpp:56
 msgid "Screenname"
 msgstr "AIM Benutzername"
+
+#: /home/hanzz/code/spectrum/src/protocols/bonjour.cpp:54
+#, fuzzy
+msgid "Enter your Bonjour username:"
+msgstr "Gebe deinen HoN Benutzernamen und Passwort ein:"
+
+#: /home/hanzz/code/spectrum/src/protocols/bonjour.cpp:56
+#, fuzzy
+msgid "Bonjour username"
+msgstr "QQ Benutzername"
 
 #: /home/hanzz/code/spectrum/src/protocols/facebook.cpp:59
 msgid "Enter your Facebook email and password:"
@@ -167,6 +206,14 @@ msgstr "Gebe deine GG Nummer und Passwort ein:"
 msgid "GG number"
 msgstr "GG Nummer"
 
+#: /home/hanzz/code/spectrum/src/protocols/groupwise.cpp:53
+msgid "Please use user@server:port"
+msgstr ""
+
+#: /home/hanzz/code/spectrum/src/protocols/groupwise.cpp:55
+msgid "user@server:port"
+msgstr ""
+
 #: /home/hanzz/code/spectrum/src/protocols/hon.cpp:58
 msgid "Enter your HoN username and password:"
 msgstr "Gebe deinen HoN Benutzernamen und Passwort ein:"
@@ -175,35 +222,35 @@ msgstr "Gebe deinen HoN Benutzernamen und Passwort ein:"
 msgid "HoN Username:"
 msgstr "HoN Benutzername:"
 
-#: /home/hanzz/code/spectrum/src/protocols/icq.cpp:56
+#: /home/hanzz/code/spectrum/src/protocols/icq.cpp:103
 msgid "Enter your UIN and password:"
 msgstr "Gebe deine ICQ Nummer und Passwort ein:"
 
-#: /home/hanzz/code/spectrum/src/protocols/icq.cpp:58
+#: /home/hanzz/code/spectrum/src/protocols/icq.cpp:105
 msgid "UIN"
 msgstr "ICQ Nummer"
 
-#: /home/hanzz/code/spectrum/src/protocols/icq.cpp:158
-#: /home/hanzz/code/spectrum/src/protocols/msn.cpp:156
+#: /home/hanzz/code/spectrum/src/protocols/icq.cpp:222
+#: /home/hanzz/code/spectrum/src/protocols/msn.cpp:157
 #: /home/hanzz/code/spectrum/src/protocols/msn_pecan.cpp:156
 #: /home/hanzz/code/spectrum/src/protocols/qq.cpp:51
 msgid "Please authorize me."
 msgstr "Bitte autorisiere mich."
 
-#: /home/hanzz/code/spectrum/src/protocols/identica.cpp:61
+#: /home/hanzz/code/spectrum/src/protocols/identica.cpp:60
 msgid "Enter your Identica username and password:"
 msgstr "Gebe deinen Identica Benutzernamen und Passwort ein:"
 
-#: /home/hanzz/code/spectrum/src/protocols/identica.cpp:63
+#: /home/hanzz/code/spectrum/src/protocols/identica.cpp:62
 msgid "Identica username"
 msgstr "Identica Benutzername:"
 
-#: /home/hanzz/code/spectrum/src/protocols/msn.cpp:54
+#: /home/hanzz/code/spectrum/src/protocols/msn.cpp:55
 #: /home/hanzz/code/spectrum/src/protocols/msn_pecan.cpp:54
 msgid "Enter your Live ID and password:"
 msgstr "Gebe deine Live ID und Passwort ein:"
 
-#: /home/hanzz/code/spectrum/src/protocols/msn.cpp:56
+#: /home/hanzz/code/spectrum/src/protocols/msn.cpp:57
 #: /home/hanzz/code/spectrum/src/protocols/msn_pecan.cpp:56
 msgid "Live ID"
 msgstr "Live ID"
@@ -240,21 +287,24 @@ msgstr "Gebe deinen SIPE Benutzernamen und Passwort ein:"
 msgid "SIPE username"
 msgstr "SIPE Benutzername"
 
-#: /home/hanzz/code/spectrum/src/protocols/twitter.cpp:57
+#: /home/hanzz/code/spectrum/src/protocols/twitter.cpp:127
 msgid "Enter your Twitter username and password:"
 msgstr "Gebe deinen Twitter Benutzernamen und Passwort ein:"
 
-#: /home/hanzz/code/spectrum/src/protocols/twitter.cpp:59
+#: /home/hanzz/code/spectrum/src/protocols/twitter.cpp:129
 msgid "Twitter username"
 msgstr "Twitter Benutzername"
 
-#: /home/hanzz/code/spectrum/src/protocols/twitter.cpp:73
-#, c-format
+#: /home/hanzz/code/spectrum/src/protocols/twitter.cpp:143
+#, fuzzy, c-format
 msgid ""
-"Please allow Spectrum access to your Twitter account. Open following url and send the PIN number from the web page back to Spectrum.\n"
+"To allow %s access to your Twitter account. Double click the following url, "
+"copy the PIN number from the web page and paste it back to Twitter through "
+"this chat window.\n"
 "%s"
 msgstr ""
-"Bitte erlaube Spectrum auf deinen Twitter Account zugreifen zu können. Öffne dazu die folgende URL und sende die PIN von der Webseite an Spectrum.\n"
+"Bitte erlaube Spectrum auf deinen Twitter Account zugreifen zu können. Öffne "
+"dazu die folgende URL und sende die PIN von der Webseite an Spectrum.\n"
 "%s"
 
 #: /home/hanzz/code/spectrum/src/protocols/xmpp.cpp:55
@@ -323,7 +373,9 @@ msgstr "JID"
 
 #: /home/hanzz/code/spectrum/src/adhoc/adhocadmin.cpp:140
 msgid "Type message you want to send to all online users."
-msgstr "Gebe eine Nachricht ein, die du an alle angemeldeten Benutzer schicken möchtest."
+msgstr ""
+"Gebe eine Nachricht ein, die du an alle angemeldeten Benutzer schicken "
+"möchtest."
 
 #: /home/hanzz/code/spectrum/src/adhoc/adhocadmin.cpp:141
 msgid "Message"
@@ -344,7 +396,8 @@ msgstr "VIP"
 
 #: /home/hanzz/code/spectrum/src/adhoc/adhocadmin.cpp:178
 msgid "Enter bare JID of user to unregister."
-msgstr "Gebe die JID des Benutzers ein, dessen Registrierung entfernt werden soll."
+msgstr ""
+"Gebe die JID des Benutzers ein, dessen Registrierung entfernt werden soll."
 
 #: /home/hanzz/code/spectrum/src/adhoc/adhocadmin.cpp:203
 #: /home/hanzz/code/spectrum/src/adhoc/adhocadmin.cpp:229
@@ -377,31 +430,41 @@ msgid "This user is already registered."
 msgstr "Dieser Benutzer ist schon registriert."
 
 #: /home/hanzz/code/spectrum/src/adhoc/adhochandler.cpp:47
-#: /home/hanzz/code/spectrum/src/adhoc/adhocsettings.cpp:46
+#: /home/hanzz/code/spectrum/src/adhoc/adhocsettings.cpp:47
 msgid "Transport settings"
 msgstr "Transport Einstellungen"
 
-#: /home/hanzz/code/spectrum/src/adhoc/adhocsettings.cpp:48
+#: /home/hanzz/code/spectrum/src/adhoc/adhocsettings.cpp:49
 msgid "Change your transport settings here."
 msgstr "Ändere deine Transport Einstellungen hier."
 
-#: /home/hanzz/code/spectrum/src/adhoc/adhocsettings.cpp:51
+#: /home/hanzz/code/spectrum/src/adhoc/adhocsettings.cpp:52
 msgid "Enable transport"
 msgstr "Transport aktivieren"
 
-#: /home/hanzz/code/spectrum/src/adhoc/adhocsettings.cpp:54
+#: /home/hanzz/code/spectrum/src/adhoc/adhocsettings.cpp:55
 msgid "Enable notification of new email (if the legacy network supports it)"
-msgstr "Benachrichtigung über neue E-Mails aktivieren (wenn dies vom Fremdnetzwerk unterstützt wird)"
+msgstr ""
+"Benachrichtigung über neue E-Mails aktivieren (wenn dies vom Fremdnetzwerk "
+"unterstützt wird)"
 
-#: /home/hanzz/code/spectrum/src/adhoc/adhocsettings.cpp:57
+#: /home/hanzz/code/spectrum/src/adhoc/adhocsettings.cpp:58
 msgid "Enable avatars"
 msgstr "Avatare aktivieren"
 
-#: /home/hanzz/code/spectrum/src/adhoc/adhocsettings.cpp:60
+#: /home/hanzz/code/spectrum/src/adhoc/adhocsettings.cpp:61
 msgid "Enable \"is typing\" notifications"
 msgstr "Benachrichtigung über den Chatstatus aktivieren"
 
-#: /home/hanzz/code/spectrum/src/adhoc/adhocsettings.cpp:63
+#: /home/hanzz/code/spectrum/src/adhoc/adhocsettings.cpp:64
+msgid "Save incoming file transfers on server"
+msgstr ""
+
+#: /home/hanzz/code/spectrum/src/adhoc/adhocsettings.cpp:67
+msgid "Reject all incoming authorizations"
+msgstr ""
+
+#: /home/hanzz/code/spectrum/src/adhoc/adhocsettings.cpp:70
 msgid "You must be online to change transport settings."
 msgstr "Du musst online sein, um die Transport Einstellungen ändern zu können."
 

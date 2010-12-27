@@ -1,3 +1,30 @@
+version 1.4.5 (20xx-xx-xx):
+	General:
+	* Map Extended Away status to Away if particular libpurple protocol
+	  plugin does not support XA status.
+	* Added new filetransfer_force_cache_storage=0 config variable to force
+	  storing files from legacy network on server. This is also configurable
+	  per user via Transport Settings adhoc commands.
+	* Added "Reject all incoming authorizations" Transport Settings option.
+	* Fixed forwarding of initial presence to XMPP user when more resource
+	  are connected.
+
+	ICQ:
+	* Working XStatus forwarding from ICQ buddies to XMPP user.
+
+	XMPP:
+	* Fixed GTalk's new email notification when there are more pending emails.
+
+	IRC:
+	* Fixed forwarding of IRC users modes changes.
+
+	Yahoo:
+	* Fixed issues when receiving messages from MSN buddies using Yahoo
+	  transport. Thanks to Paolo Encomienda. 
+
+	GroupWise:
+	* Added support, use protocol=groupwise in config file.
+
 version 1.4.4 (2010-11-25):
 	General:
 	* Error messages are sent in presences from transport contact.
