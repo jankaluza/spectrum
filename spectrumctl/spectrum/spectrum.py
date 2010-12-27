@@ -695,7 +695,6 @@ class spectrum:
 		cmd = [ 'spectrum', '--version' ]
 		p = Popen( cmd , stdout=PIPE )
 		stdin, stderr = p.communicate()
-		print( stdin )
 		
 		output_path = self._get_output_file( output_dir, self.get_jid(), 'version' )
 		output_file = open( output_path, 'w' )
