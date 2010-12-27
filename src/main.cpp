@@ -212,6 +212,15 @@ static void conv_chat_add_users(PurpleConversation *conv, GList *cbuddies, gbool
 	GlooxMessageHandler::instance()->purpleChatAddUsers(conv, cbuddies, new_arrivals);
 }
 
+static void conv_chat_update_user(PurpleConversation *conv, const char *user) {
+	PurpleConvChatBuddy *cb = purple_conv_chat_cb_find(PURPLE_CONV_CHAT(conv), user);
+	if (!cb)
+		return;
+	GList *cbuddies = NULL;
+	cbuddies = g_list_prepend(cbuddies, cb);
+	conv_chat_add_users(conv, cbuddies, 0);
+}
+
 /*
  * Called when user is renamed
  */
@@ -717,7 +726,7 @@ static PurpleConversationUiOps conversation_ui_ops =
 	conv_chat_add_users,       /* chat_add_users       */
 	conv_chat_rename_user,     /* chat_rename_user     */
 	conv_chat_remove_users,    /* chat_remove_users    */
-	NULL,//pidgin_conv_chat_update_user,     /* chat_update_user     */
+	conv_chat_update_user,     /* chat_update_user     */
 	NULL,//pidgin_conv_present_conversation, /* present              */
 	NULL,//pidgin_conv_has_focus,            /* has_focus            */
 	NULL,//pidgin_conv_custom_smiley_add,    /* custom_smiley_add    */
