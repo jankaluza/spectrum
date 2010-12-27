@@ -57,7 +57,6 @@ cmds = [
 	action( 'set-vip-status',
 		args=[ arg( 'jid' ), arg( 'status' ) ] ),
 	action( 'list' ),
-	action( 'cron', args=[ arg( 'output-dir', True ) ] ),
 	action( 'help', args=[ arg('cmd', True) ] ),
 ]
 

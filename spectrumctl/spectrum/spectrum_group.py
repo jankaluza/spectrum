@@ -336,28 +336,15 @@ class spectrum_group:
 		List all selected transports along with their pid, protocol and hostname. If
 		invoked with I{--quiet}, this action does not print a header line and only
 		prints the status for transports that are not currently runnning. 
-		
-		If invoked with the I{--cron} option, this method only prints
-		transports that are not running but where their pid file still
-		exists. The pid files for those transports are removed. This
-		allows you to run this method as a cron-job for watchdog
-		purposes.
 		"""
 		lines = []
 
 		for instance in self.instances:
 			line = instance.list()
 
-			if self.options.cron:
-				if line[3] == "dead but pid-file exists":
-					os.remove( instance.pid_file )
-					lines.append( line )
-				else:
-					continue
-			else:
-				if line[3] == 'running' and self.options.quiet:
-					continue
-				lines.append( line ) 
+			if line[3] == 'running' and self.options.quiet:
+				continue
+			lines.append( line ) 
 		
 		if len( lines ) > 0 and not self.options.quiet:
 			lines.insert( 0, ('PID', 'PROTOCOL', 'HOSTNAME', 'STATUS' ) )
