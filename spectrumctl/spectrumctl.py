@@ -59,6 +59,11 @@ start_group.add_option( '--debug', action='store_true', default=False,
 	help = 'Start spectrum in debug mode.' )
 parser.add_option_group( start_group )
 
+coredump_group = OptionGroup( parser, 'Options for action "cron"' )
+coredump_group.add_option( '--output-dir', metavar='DIR', default='/root/',
+	help="Output coredumps to DIR (default: %default)" )
+parser.add_option_group( coredump_group )
+
 options, args = parser.parse_args()
 env.options = options
 env.quiet = options.quiet
