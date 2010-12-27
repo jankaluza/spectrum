@@ -151,10 +151,6 @@ class spectrum:
 		filetransfer_cache = self.config.get( 'service', 'filetransfer_cache' )
 		try:
 			env.check_exists( filetransfer_cache, 'dir' )
-			env.check_ownership( filetransfer_cache )
-			env.check_permissions( filetransfer_cache, # rwxr-x---
-				[ stat.S_IRUSR, stat.S_IWUSR, stat.S_IXUSR, 
-				  stat.S_IRGRP, stat.S_IXGRP ] )
 		except ExistsError:
 			env.create_dir( filetransfer_cache )
 
