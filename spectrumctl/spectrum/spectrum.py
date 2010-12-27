@@ -683,7 +683,7 @@ class spectrum:
 		if not os.path.exists( log_file ):
 			raise RuntimeError( "Error: %s: Logfile does not exist."%(log_file) )
 
-		output_path = self.get_output_file( output_dir, self.get_jid(), 'log' )
+		output_path = self._get_output_file( output_dir, self.get_jid(), 'log' )
 		output_file = open( output_path, 'w' )
 
 		for line in open(log_file).readlines()[:50]:
