@@ -60,6 +60,8 @@ parser.add_option_group( start_group )
 coredump_group = OptionGroup( parser, 'Options for action "cron"' )
 coredump_group.add_option( '--output-dir', metavar='DIR', default='/root/',
 	help="Output coredumps to DIR (default: %default)" )
+coredump_group.add_option( '--no-backtraces', action='store_true',
+	default=False, help="Do not create any backtraces." )
 parser.add_option_group( coredump_group )
 
 options, args = parser.parse_args()
