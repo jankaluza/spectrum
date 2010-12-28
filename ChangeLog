@@ -1,4 +1,4 @@
-version 1.4.5 (20xx-xx-xx):
+version 1.4.5 (2010-12-28):
 	General:
 	* Map Extended Away status to Away if particular libpurple protocol
 	  plugin does not support XA status.
@@ -8,6 +8,7 @@ version 1.4.5 (20xx-xx-xx):
 	* Added "Reject all incoming authorizations" Transport Settings option.
 	* Fixed forwarding of initial presence to XMPP user when more resource
 	  are connected.
+	* Automatic tests (spectrum_test) are temporarily disabled.
 
 	ICQ:
 	* Working XStatus forwarding from ICQ buddies to XMPP user.
