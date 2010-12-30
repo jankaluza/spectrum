@@ -393,7 +393,7 @@ class spectrum_group:
 			try:
 				loc = instance.coredump( output_dir )
 				print( "* coredump: %s"%(loc) )
-			except RuntimeError as e:
+			except RuntimeError, e:
 				if hasattr( e, 'strerror' ):
 					# python2.5 does not have msg.strerror
 					print( e.strerror )
@@ -403,7 +403,7 @@ class spectrum_group:
 			try:
 				loc = instance.logtail( output_dir )
 				print( "* logfile %s"%(loc) )
-			except RuntimeError as e:
+			except RuntimeError, e:
 				if hasattr( e, 'strerror' ):
 					# python2.5 does not have msg.strerror
 					print( e.strerror )
@@ -413,7 +413,7 @@ class spectrum_group:
 			try:
 				loc = instance.saveversion( output_dir )
 				print( "* version %s"%(loc) )
-			except RuntimeError as e:
+			except RuntimeError, e:
 				if hasattr( e, 'strerror' ):
 					# python2.5 does not have msg.strerror
 					print( e.strerror )
