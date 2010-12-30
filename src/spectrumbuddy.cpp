@@ -72,18 +72,20 @@ bool SpectrumBuddy::getStatus(PurpleStatusPrimitive &status, std::string &status
 }
 
 bool SpectrumBuddy::getXStatus(std::string &mood, std::string &comment) {
+#if defined(PURPLE_MOOD_NAME) && defined(PURPLE_MOOD_COMMENT)
 	PurplePresence *pres = purple_buddy_get_presence(m_buddy);
 	if (pres == NULL)
 		return false;
+
 	if (purple_presence_is_status_primitive_active(pres, PURPLE_STATUS_MOOD)) {
 		PurpleStatus *stat = purple_presence_get_status(pres, "mood");
 		const char *m = purple_status_get_attr_string(stat, PURPLE_MOOD_NAME);
 		const char *c = purple_status_get_attr_string(stat, PURPLE_MOOD_COMMENT);
 		mood = m ? m : "";
 		comment = c ? c : "";
-		std::cout << "MOOOOD '" << mood << "' '" << comment << "'\n";
 		return true;
 	}
+#endif
 	return false;
 }
 
