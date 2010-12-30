@@ -1,3 +1,12 @@
+version 1.4.6 (2010-12-30):
+	General:
+	* Fixed compilation issues with older libpurple (XStatus for ICQ is
+	  disabled when Spectrum is compiled with libpurple which doesn't
+	  support it).
+
+	spectrumctl:
+	* Fixed syntax error caused by use of newer Python features.
+
 version 1.4.5 (2010-12-28):
 	General:
 	* Map Extended Away status to Away if particular libpurple protocol
