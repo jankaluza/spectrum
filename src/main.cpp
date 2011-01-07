@@ -1866,6 +1866,10 @@ void GlooxMessageHandler::onDisconnect(ConnectionError e) {
 		m_userManager->removeAllUsers();
 
 	Log("gloox", "trying to reconnect after 1 second");
+	if (m_socketId > 0) {
+		purple_input_remove(m_socketId);
+		m_socketId = 0;
+	}
 	purple_timeout_add_seconds(1, &transportReconnect, NULL);
 
 // 	if (connectIO) {
