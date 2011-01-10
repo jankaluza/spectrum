@@ -786,7 +786,7 @@ void User::handleVCard(const VCard* vcard) {
 		if (img.size().width() != width || img.size().height() != height) {
 			Magick::Geometry g = Magick::Geometry(width,height);
 			g.aspect(CONFIG().protocol == "icq");
-			img.resize(g);
+			img.scale(g);
 		}
 		
 		Magick::Blob output;
