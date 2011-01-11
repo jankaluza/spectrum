@@ -144,3 +144,82 @@ std::string SpectrumBuddy::getSafeName() {
 	return name;
 }
 
+void SpectrumBuddy::changeGroup(std::list<Tag*> &groups) {
+	Tag *for_free = NULL;
+	if (groups.size() == 0) {
+		for_free = new Tag("group", "Buddies");
+		groups.push_back(for_free);
+	}
+
+	std::list<PurpleBuddy*> to_remove;
+	PurpleBuddy *alive_buddy = NULL;
+	for (GSList *buddies = purple_find_buddies(purple_buddy_get_account(m_buddy), purple_buddy_get_name(m_buddy)); buddies; buddies = g_slist_delete_link(buddies, buddies)) {
+		PurpleBuddy *b = (PurpleBuddy *) buddies->data;
+		// check if this libpurple buddy for particular group is also in that group in roster push
+		std::cout << "handling buddy in " << purple_group_get_name(purple_buddy_get_group(b)) << "\n";
+		std::cout << "groups size:" << groups.size() << "\n";
+		bool found = false;
+		for (std::list<Tag*>::iterator it = groups.begin(); it != groups.end(); ++it) {
+			std::string group = (*it)->cdata();
+			std::cout << "trying to match " << group << " and " <<  purple_group_get_name(purple_buddy_get_group(b)) << "\n";
+			if (group == purple_group_get_name(purple_buddy_get_group(b))) {
+				found = true;
+				groups.remove(*it);
+				alive_buddy = b;
+				break;
+			}
+		}
+
+		// this buddy has *not* been found in roster push in his group, so we have to
+		// remove him from that group.
+		if (!found) {
+			std::cout << "not found\n";
+			// we can't remove it just now, because we could loose the only one buddy.
+			to_remove.push_back(b);
+		}
+	}
+
+	// Remaining groups are groups where there is no buddy for this contact, so we have to add that buddy there.
+	// We will use buddies from to_remove list if there are any, so we don't have to clone buddies so often.
+	for (std::list<Tag*>::iterator it = groups.begin(); it != groups.end(); ++it) {
+		std::string group = (*it)->cdata();
+		PurpleGroup *g = purple_find_group(group.c_str());
+		if (!g) {
+			g = purple_group_new(group.c_str());
+			purple_blist_add_group(g, NULL);
+		}
+		// there's no buddy marked to remove, so we have to create new one and add it to group
+		if (to_remove.empty()) {
+			PurpleContact *contact = purple_contact_new();
+			purple_blist_add_contact(contact, g, NULL);
+
+			// create buddy
+			PurpleBuddy *buddy = purple_buddy_new(purple_buddy_get_account(m_buddy), getName().c_str(), getAlias().c_str());
+			purple_blist_add_buddy(buddy, contact, g, NULL);
+			purple_account_add_buddy(purple_buddy_get_account(m_buddy), buddy);
+			alive_buddy = buddy;
+		}
+		else {
+			PurpleBuddy *b = to_remove.back();
+			to_remove.pop_back();
+			purple_blist_add_contact(purple_buddy_get_contact(b), g, NULL);
+			alive_buddy = b;
+		}
+	}
+
+	// remove buddies marked for removing
+	for (std::list<PurpleBuddy*>::const_iterator it = to_remove.begin(); it != to_remove.end(); ++it) {
+		// change our buddy if this one is marked for deletion
+		if (*it == m_buddy) {
+			// switch ui_data
+			void *data = m_buddy->node.ui_data;
+			m_buddy->node.ui_data = alive_buddy->node.ui_data;
+			alive_buddy->node.ui_data = data;
+			m_buddy = alive_buddy;
+		}
+		purple_account_remove_buddy(purple_buddy_get_account(m_buddy), *it, purple_buddy_get_group(*it));
+		purple_blist_remove_buddy(*it);
+	}
+	if (for_free)
+		delete for_free;
+}

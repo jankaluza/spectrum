@@ -99,6 +99,7 @@ SpectrumRosterManager::SpectrumRosterManager(AbstractUser *user) : RosterStorage
 	m_subscribeLastCount = -1;
 	m_roster = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
 	m_loadingFromDB = false;
+	m_supportRosterIQ = false;
 }
 
 SpectrumRosterManager::~SpectrumRosterManager() {
@@ -319,61 +320,104 @@ void SpectrumRosterManager::sendNewBuddies() {
 
 	Log(m_user->jid(), "Sending rosterX");
 
-	Resource res = m_user->findResourceWithFeature(GLOOX_FEATURE_ROSTERX);
-	if (res) {
-		Tag *tag = new Tag("iq");
-		tag->addAttribute("to", m_user->jid() + "/" + res.name);
-		tag->addAttribute("type", "set");
-		tag->addAttribute("id", Transport::instance()->getId());
-		tag->addAttribute("from", Transport::instance()->jid());
-		Tag *x = new Tag("x");
-		x->addAttribute("xmlns", "http://jabber.org/protocol/rosterx");
-		
+	if (m_supportRosterIQ) {
+		// <iq to='juliet@example.com' type='set' id='roster_3'>
+		//   <query xmlns='jabber:iq:roster'>
+		//     <item jid='123456789@icq.example.net'
+		//           name='Romeo'
+		//           subscription='both'>
+		//       <group>Friends</group>
+		//       <group>Lovers</group>
+		//     </item>
+		//   </query>
+		// </iq>
 		Tag *item;
 		std::map<std::string, AbstractSpectrumBuddy *>::iterator it = m_subscribeCache.begin();
 		while (it != m_subscribeCache.end()) {
 			AbstractSpectrumBuddy *s_buddy = (*it).second;
 			if (s_buddy->getSubscription() != "both") {
+				Tag *tag = new Tag("iq");
+				tag->addAttribute("to", m_user->jid());
+				tag->addAttribute("type", "set");
+				tag->addAttribute("id", Transport::instance()->getId());
+				tag->addAttribute("from", Transport::instance()->jid());
+				Tag *x = new Tag("query");
+				x->addAttribute("xmlns", "jabber:iq:roster");
 				std::string jid = s_buddy->getBareJid();
 				std::string alias = s_buddy->getAlias();
 
-				s_buddy->setSubscription("ask");
+				s_buddy->setSubscription("both");
 				addRosterItem(s_buddy);
 
 				item = new Tag("item");
-				item->addAttribute("action", "add");
 				item->addAttribute("jid", jid);
 				item->addAttribute("name", alias);
+				item->addAttribute("subscription", "both");
 				item->addChild( new Tag("group", s_buddy->getGroup()));
 				x->addChild(item);
+				tag->addChild(x);
+				Transport::instance()->send(tag);
 			}
 			it++;
 		}
-		tag->addChild(x);
-		Transport::instance()->send(tag);
 	}
 	else {
-		std::map<std::string, AbstractSpectrumBuddy *>::iterator it = m_subscribeCache.begin();
-		while (it != m_subscribeCache.end()) {
-			AbstractSpectrumBuddy *s_buddy = (*it).second;
-			if (s_buddy->getSubscription() != "both") {
-				std::string alias = s_buddy->getAlias();
+		Resource res = m_user->findResourceWithFeature(GLOOX_FEATURE_ROSTERX);
+		if (res) {
+			Tag *tag = new Tag("iq");
+			tag->addAttribute("to", m_user->jid() + "/" + res.name);
+			tag->addAttribute("type", "set");
+			tag->addAttribute("id", Transport::instance()->getId());
+			tag->addAttribute("from", Transport::instance()->jid());
+			Tag *x = new Tag("x");
+			x->addAttribute("xmlns", "http://jabber.org/protocol/rosterx");
+			
+			Tag *item;
+			std::map<std::string, AbstractSpectrumBuddy *>::iterator it = m_subscribeCache.begin();
+			while (it != m_subscribeCache.end()) {
+				AbstractSpectrumBuddy *s_buddy = (*it).second;
+				if (s_buddy->getSubscription() != "both") {
+					std::string jid = s_buddy->getBareJid();
+					std::string alias = s_buddy->getAlias();
 
-				Tag *tag = new Tag("presence");
-				tag->addAttribute("type", "subscribe");
-				tag->addAttribute("from", s_buddy->getBareJid());
-				tag->addAttribute("to", m_user->jid());
-				if (!alias.empty()) {
-					Tag *nick = new Tag("nick", alias);
-					nick->addAttribute("xmlns","http://jabber.org/protocol/nick");
-					tag->addChild(nick);
+					s_buddy->setSubscription("ask");
+					addRosterItem(s_buddy);
+
+					item = new Tag("item");
+					item->addAttribute("action", "add");
+					item->addAttribute("jid", jid);
+					item->addAttribute("name", alias);
+					item->addChild( new Tag("group", s_buddy->getGroup()));
+					x->addChild(item);
 				}
-				Transport::instance()->send(tag);
-
-				s_buddy->setSubscription("ask");
-				addRosterItem(s_buddy);
+				it++;
 			}
-			it++;
+			tag->addChild(x);
+			Transport::instance()->send(tag);
+		}
+		else {
+			std::map<std::string, AbstractSpectrumBuddy *>::iterator it = m_subscribeCache.begin();
+			while (it != m_subscribeCache.end()) {
+				AbstractSpectrumBuddy *s_buddy = (*it).second;
+				if (s_buddy->getSubscription() != "both") {
+					std::string alias = s_buddy->getAlias();
+
+					Tag *tag = new Tag("presence");
+					tag->addAttribute("type", "subscribe");
+					tag->addAttribute("from", s_buddy->getBareJid());
+					tag->addAttribute("to", m_user->jid());
+					if (!alias.empty()) {
+						Tag *nick = new Tag("nick", alias);
+						nick->addAttribute("xmlns","http://jabber.org/protocol/nick");
+						tag->addChild(nick);
+					}
+					Transport::instance()->send(tag);
+
+					s_buddy->setSubscription("ask");
+					addRosterItem(s_buddy);
+				}
+				it++;
+			}
 		}
 	}
 
@@ -595,5 +639,63 @@ void SpectrumRosterManager::handleSubscription(const Subscription &subscription)
 	}
 	else {
 		Log(subscription.from().full(), "Subscribe presence received, but is not connected to legacy network yet.");
+	}
+}
+
+void SpectrumRosterManager::handleRosterResponse(Tag *iq) {
+	if (iq->findAttribute("type") == "error") {
+		return;
+	}
+
+	if (m_supportRosterIQ == false) {
+		Log(m_user->jid(), "rosterIQ XEP is supported");
+		m_supportRosterIQ = true;
+	}
+
+	if (iq->findAttribute("type") == "set") {
+		Tag *query = iq->findChild("query");
+		if (query == NULL) {
+			std::cout << "query is null!\n";
+			return;
+		}
+		Tag *item = query->findChild("item");
+		if (item == NULL) {
+			std::cout << "item is null!\n";
+			return;
+		}
+		std::string remote_user = purpleUsername(JID(item->findAttribute("jid")).username());
+		AbstractSpectrumBuddy *s_buddy = getRosterItem(remote_user);
+		if (s_buddy == NULL) {
+			std::cout << remote_user << " buddy is null!\n";
+			return;
+		}
+
+		// resend presence, because this can be the first time user added this user
+		sendPresence(s_buddy);
+
+		// Change buddy alias if it changed
+		std::string alias = item->findAttribute("name");
+		std::cout << alias << " " << s_buddy->getAlias() << "\n";
+		if (alias != s_buddy->getAlias()) {
+			PurpleBuddy *buddy = s_buddy->getBuddy();
+			purple_blist_alias_buddy(buddy, alias.c_str());
+			serv_alias_buddy(buddy);
+		}
+
+		// Change buddy group if it changed
+		std::list<Tag*> groups = item->findChildren("group");
+		s_buddy->changeGroup(groups);
+/*
+		std::cout << group << " " << s_buddy->getGroup() << "\n";
+		if (group != s_buddy->getGroup()) {
+			PurpleGroup *g = purple_find_group(group.c_str());
+			PurpleBuddy *buddy = s_buddy->getBuddy();
+			if (!g) {
+				g = purple_group_new(group.c_str());
+				purple_blist_add_group(g, NULL);
+			}
+			std::cout << "MOVING\n";
+			purple_blist_add_contact(purple_buddy_get_contact(buddy), g, NULL);
+		}*/
 	}
 }

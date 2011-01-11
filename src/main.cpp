@@ -1054,6 +1054,7 @@ GlooxMessageHandler::GlooxMessageHandler(const std::string &config) : MessageHan
 		j->registerStanzaExtension( new Adhoc::Command() );
 		j->registerStanzaExtension( new MUCRoom::MUC() );
 		j->registerStanzaExtension(new ChatState(ChatStateInvalid));
+		j->registerStanzaExtension( new RosterExtension() );
 		j->disco()->addFeature( XMLNS_ADHOC_COMMANDS );
 		j->disco()->registerNodeHandler( m_adhoc, XMLNS_ADHOC_COMMANDS );
 		j->disco()->registerNodeHandler( m_adhoc, std::string() );
@@ -1062,6 +1063,7 @@ GlooxMessageHandler::GlooxMessageHandler(const std::string &config) : MessageHan
 		m_discoHandler = new SpectrumDiscoHandler(this);
 		j->registerIqHandler(m_discoHandler, ExtDiscoInfo);
 		j->registerIqHandler(m_discoHandler, ExtDiscoItems);
+		j->registerIqHandler(this, 1055);
 
 		m_parser = new GlooxParser();
 		m_collector = new AccountCollector();
@@ -2033,6 +2035,23 @@ bool GlooxMessageHandler::initPurple(){
 
 	}
 	return ret;
+}
+
+
+bool GlooxMessageHandler::handleIq (const IQ &iq) {
+	Tag *tag = iq.tag();
+	if (!tag)
+		return true;
+	User *user = (User *) GlooxMessageHandler::instance()->userManager()->getUserByJID(iq.from().bare());
+	if (user) {
+		user->handleRosterResponse(tag);
+	}
+	delete tag;
+	return true;
+}
+
+void GlooxMessageHandler::handleIqID (const IQ &iq, int context) {
+	
 }
 
 

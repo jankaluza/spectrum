@@ -46,6 +46,32 @@ struct authRequest {
 	std::string mainJID;	// JID of user connected with this request
 };
 
+class RosterExtension : public StanzaExtension {
+	public:
+		RosterExtension() : StanzaExtension( 1055 ) { m_tag = NULL; }
+		RosterExtension(const Tag *tag) : StanzaExtension( 1055 ) { m_tag = tag->clone(); }
+		virtual ~RosterExtension() { if (m_tag) delete m_tag; }
+
+		virtual const std::string& filterString() const {
+			static const std::string filter = "iq/query[@xmlns='jabber:iq:roster']";
+			return filter;
+		}
+		virtual StanzaExtension* newInstance( const Tag* tag ) const
+		{
+			return new RosterExtension(tag);
+		}
+
+		virtual Tag* tag() const { return m_tag->clone(); }
+
+		virtual StanzaExtension* clone() const
+		{
+			return new RosterExtension(m_tag);
+		}
+
+	private:
+		Tag *m_tag;
+};
+
 // Manages all SpectrumBuddies in user's roster.
 class SpectrumRosterManager : public RosterStorage {
 	public:
@@ -123,6 +149,9 @@ class SpectrumRosterManager : public RosterStorage {
 		// Handles authorization request from legacy network,
 		authRequest *handleAuthorizationRequest(PurpleAccount *account, const char *remote_user, const char *id, const char *alias, const char *message, gboolean on_list, PurpleAccountRequestAuthorizationCb authorize_cb, PurpleAccountRequestAuthorizationCb deny_cb, void *user_data);
 
+		// Handles user's roster sent by server.
+		void handleRosterResponse(Tag *iq);
+
 		// Removes authorization request from internal storage.
 		void removeAuthRequest(const std::string &remote_user);
 
@@ -134,6 +163,7 @@ class SpectrumRosterManager : public RosterStorage {
 		std::map <std::string, authRequest *> m_authRequests;
 		int m_subscribeLastCount;
 		bool m_loadingFromDB;
+		bool m_supportRosterIQ;
 
 };
 

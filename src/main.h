@@ -113,14 +113,15 @@ struct authData;
  * Enum used by gloox::StanzaExtension to identify StanzaExtension by Gloox.
  */
 typedef enum {	ExtGateway = 1024,
-				ExtStats = 1025
+				ExtStats = 1025,
+				ExtRosters = 1026,
 } MyStanzaExtensions;
 
 /*
  * Main transport class. It inits libpurple and Gloox, runs event loop and handles almost all signals.
  * This class is created only once and can be reached by static GlooxMessageHandler::instance() function.
  */
-class GlooxMessageHandler : public MessageHandler, ConnectionListener, PresenceHandler, SubscriptionHandler, LogHandler, public EventHandler, public VCardHandler {
+class GlooxMessageHandler : public MessageHandler, ConnectionListener, PresenceHandler, SubscriptionHandler, LogHandler, public EventHandler, public VCardHandler, public IqHandler {
 public:
 	GlooxMessageHandler(const std::string &config);
 	~GlooxMessageHandler();
@@ -177,6 +178,9 @@ public:
 	void handleVCard(const JID& jid, const VCard* vcard);
 	void handleVCardResult(VCardContext context, const JID& jid, StanzaError se);
 	void fetchVCard(const std::string &jid) { m_vcardManager->fetchVCard(jid, this); }
+
+	bool handleIq (const IQ &iq);
+	void handleIqID (const IQ &iq, int context);
 
 	UserManager *userManager() { return m_userManager; }
 	GlooxStatsHandler *stats() { return m_stats; }
