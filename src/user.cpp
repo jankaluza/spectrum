@@ -36,6 +36,10 @@
 #include "transport.h"
 #include "gloox/sha.h"
 
+#ifdef WITH_IMAGEMAGICK
+#include "Magick++.h"
+#endif
+
 User::User(GlooxMessageHandler *parent, JID jid, const std::string &username, const std::string &password, const std::string &userKey, long id, const std::string &encoding, const std::string &language, bool vip) : SpectrumRosterManager(this), SpectrumMessageHandler(this) {
 	p = parent;
 	m_jid = jid.bare();
@@ -735,15 +739,80 @@ void User::forwardStatus(int presence, const std::string &stanzaStatus) {
 	}
 }
 
-/* XXX: This needs to handle conversion to the right size and format,
- * per the PurplePluginProtocolInfo::icon_spec spec.
- */
 void User::handleVCard(const VCard* vcard) {
 	Log("handleVCard", "setting account icon for " << m_jid);
 	gssize size = vcard->photo().binval.size();
 	// this will be freed by libpurple
 	guchar *photo = (guchar *) g_malloc(size * sizeof(guchar));
 	memcpy(photo, vcard->photo().binval.c_str(), size);
+
+#ifdef WITH_IMAGEMAGICK
+	if (size != 0) {
+		PurplePlugin *plugin = purple_find_prpl(Transport::instance()->protocol()->protocol().c_str());
+		PurplePluginProtocolInfo *prpl_info = PURPLE_PLUGIN_PROTOCOL_INFO(plugin);
+		if (prpl_info->icon_spec.format == NULL) {
+			g_free(photo);
+			return;
+		}
+		try {
+			Magick::Blob blob(photo, size);
+			g_free(photo);
+			photo = NULL;
+			Magick::Image img(blob);
+
+			std::string format;
+			gchar **strlist = g_strsplit(prpl_info->icon_spec.format, ",", 10);
+			for (gchar **f = strlist; *f != NULL; f++) {
+				// jpeg is the best
+				if (strcmp(*f, "jpeg") == 0 || strcmp(*f, "jpg") == 0) {
+					format = "jpg";
+				}
+				// png is number two
+				else if (strcmp(*f, "png") == 0 && format != "jpg") {
+					format = *f;
+				}
+				// gif is alright if there's not jpeg or png
+				else if (strcmp(*f, "gif") == 0 && format != "jpg" && format != "png") {
+					format = *f;
+				}
+				else if (format.empty()) {
+					format = *f;
+				}
+			}
+			g_strfreev(strlist);
+			img.magick(format);
+
+			int width, height;
+			if (CONFIG().protocol == "icq") {
+				width = 48;
+				height = 48;
+			}
+			else {
+				purple_buddy_icon_get_scale_size(&prpl_info->icon_spec, &width, &height);
+			}
+
+			if (img.size().width() != width || img.size().height() != height) {
+				Magick::Geometry g = Magick::Geometry(width,height);
+				g.aspect(CONFIG().protocol == "icq");
+				img.scale(g);
+			}
+
+			Magick::Blob output;
+			img.write(&output);
+			size = output.length();
+			// this will be freed by libpurple
+			photo = (guchar *) g_malloc(size * sizeof(guchar));
+			memcpy(photo, output.data(), size);
+		}
+		catch ( Magick::Exception & error) {
+			Log("handleVCard","Caught Magick++ exception: " << error.what());
+		} catch(...) {   // catch all other exceptions
+		}
+	}
+#endif /* WITH_IMAGEMAGICK */
+
+	if (!photo)
+		return;
 	purple_buddy_icons_set_account_icon(m_account, photo, size);
 
 	SHA sha;
