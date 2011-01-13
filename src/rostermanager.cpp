@@ -38,6 +38,13 @@ struct SendPresenceToAllData {
 	bool markOffline;
 };
 
+static void merge_buddy(gpointer key, gpointer v, gpointer data) {
+	AbstractSpectrumBuddy *s_buddy = (AbstractSpectrumBuddy *) v;
+	SpectrumRosterManager *manager = (SpectrumRosterManager *) data;
+
+	manager->mergeBuddy(s_buddy);
+}
+
 static void handleAskSubscriptionBuddies(gpointer key, gpointer v, gpointer data) {
 	AbstractSpectrumBuddy *s_buddy = (AbstractSpectrumBuddy *) v;
 	SpectrumRosterManager *manager = (SpectrumRosterManager *) data;
@@ -278,6 +285,20 @@ void SpectrumRosterManager::handleBuddyCreated(AbstractSpectrumBuddy *s_buddy) {
 		Log(m_user->jid(), "Not in roster => adding to subscribe cache");
 		m_subscribeCache[name] = s_buddy;
 	}
+	else {
+		if (m_supportRosterIQ && m_xmppRoster.find(name) != m_xmppRoster.end()) {
+			// first synchronization = From XMPP to legacy network and we don't care what's on legacy network
+			if (purple_value_get_boolean(m_user->getSetting("first_synchronization_done")) == false) {
+				s_buddy->changeAlias(m_xmppRoster[name].nickname);
+				s_buddy->changeGroup(m_xmppRoster[name].groups);
+			}
+			// other synchronizations are done from ICQ to XMPP here
+			else {
+				m_syncTimer->start();
+				m_subscribeCache[name] = s_buddy;
+			}
+		}
+	}
 }
 
 void SpectrumRosterManager::handleBuddyCreated(PurpleBuddy *buddy) {
@@ -336,15 +357,21 @@ void SpectrumRosterManager::sendNewBuddies() {
 		std::map<std::string, AbstractSpectrumBuddy *>::iterator it = m_subscribeCache.begin();
 		while (it != m_subscribeCache.end()) {
 			AbstractSpectrumBuddy *s_buddy = (*it).second;
-			if (s_buddy->getSubscription() != "both") {
+			std::string jid = s_buddy->getBareJid();
+			std::string alias = s_buddy->getAlias();
+			std::string name = s_buddy->getName();
+			bool send = true;
+			if (m_xmppRoster.find(name) != m_xmppRoster.end()) {
+				std::string group = m_xmppRoster[name].groups.size() == 0 ? "Buddies" : m_xmppRoster[name].groups.front();
+				send = m_xmppRoster[name].nickname != alias ||  s_buddy->getGroup() != group;
+			}
+			if (send || s_buddy->getSubscription() != "both") {
 				m_rosterPushes[m_rosterPushesContext++] = s_buddy;
 				IQ iq(IQ::Set, m_user->jid());
 				iq.setFrom(Transport::instance()->jid());
 
 				Tag *x = new Tag("query");
 				x->addAttribute("xmlns", "jabber:iq:roster");
-				std::string jid = s_buddy->getBareJid();
-				std::string alias = s_buddy->getAlias();
 
 				s_buddy->setSubscription("both");
 				addRosterItem(s_buddy);
@@ -684,6 +711,25 @@ void SpectrumRosterManager::handleRosterResponse(Tag *iq) {
 		}
 		s_buddy->changeGroup(groups);
 	}
+	else if (iq->findAttribute("type") == "result") {
+		Tag *query = iq->findChild("query");
+		if (query == NULL) {
+			std::cout << "query is null!\n";
+			return;
+		}
+
+		std::list<Tag*> items = query->findChildren("item");
+		for (std::list<Tag*>::const_iterator it = items.begin(); it != items.end(); it++) {
+			Tag *item = *it;
+			std::string remote_user = purpleUsername(JID(item->findAttribute("jid")).username());
+			m_xmppRoster[remote_user].jid = item->findAttribute("jid");
+			m_xmppRoster[remote_user].nickname = item->findAttribute("name");
+			std::list<Tag*> tags = item->findChildren("group");
+			for (std::list<Tag*>::const_iterator it = tags.begin(); it != tags.end(); it++) {
+				m_xmppRoster[remote_user].groups.push_back((*it)->cdata());
+			}
+		}
+	}
 }
 
 void SpectrumRosterManager::handleIqID(const IQ &iq, int id) {
@@ -694,5 +740,31 @@ void SpectrumRosterManager::handleIqID(const IQ &iq, int id) {
 		std::cout << "sending presence\n";
 		sendPresence(m_rosterPushes[id]);
 		m_rosterPushes.erase(id);
+	}
+}
+
+void SpectrumRosterManager::mergeRoster() {
+	if (m_supportRosterIQ)
+		g_hash_table_foreach(m_roster, merge_buddy, this);
+	PurpleValue *v = m_user->getSetting("first_synchronization_done");
+	if (purple_value_get_boolean(v) == false) {
+		purple_value_set_boolean(v, true);
+		m_user->updateSetting("first_synchronization_done", v);
+	}
+}
+
+void SpectrumRosterManager::mergeBuddy(AbstractSpectrumBuddy *s_buddy) {
+	std::string name = s_buddy->getName();
+	if (m_xmppRoster.find(name) != m_xmppRoster.end()) {
+		// first synchronization = From XMPP to legacy network and we don't care what's on legacy network
+		if (purple_value_get_boolean(m_user->getSetting("first_synchronization_done")) == false) {
+			s_buddy->changeAlias(m_xmppRoster[name].nickname);
+			s_buddy->changeGroup(m_xmppRoster[name].groups);
+		}
+		// other synchronizations are done from ICQ to XMPP here
+		else {
+			m_syncTimer->start();
+			m_subscribeCache[name] = s_buddy;
+		}
 	}
 }

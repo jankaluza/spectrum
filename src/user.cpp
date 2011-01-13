@@ -138,6 +138,12 @@ User::User(GlooxMessageHandler *parent, JID jid, const std::string &username, co
 		purple_value_set_boolean(value, false);
 		g_hash_table_replace(m_settings, g_strdup("reject_authorizations"), value);
 	}
+	if ( (value = getSetting("first_synchronization_done")) == NULL ) {
+		p->sql()->addSetting(m_userID, "first_synchronization_done", "0", PURPLE_TYPE_BOOLEAN);
+		value = purple_value_new(PURPLE_TYPE_BOOLEAN);
+		purple_value_set_boolean(value, false);
+		g_hash_table_replace(m_settings, g_strdup("first_synchronization_done"), value);
+	}
 	
 	Transport::instance()->sql()->setUserOnline(m_userID, true);
 
@@ -476,6 +482,7 @@ void User::connected() {
 		p->j->send(tag);
 		m_glooxPresenceType = -1;
 	}
+	mergeRoster();
 }
 
 /*

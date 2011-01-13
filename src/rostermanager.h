@@ -47,6 +47,13 @@ struct authRequest {
 	std::string mainJID;	// JID of user connected with this request
 };
 
+struct RosterItem {
+	std::string jid;
+	std::string subscription;
+	std::string nickname;
+	std::list<std::string> groups;
+};
+
 class RosterExtension : public StanzaExtension {
 	public:
 		RosterExtension() : StanzaExtension( 1055 ) { m_tag = NULL; }
@@ -158,6 +165,8 @@ class SpectrumRosterManager : public RosterStorage, public IqHandler {
 
 		bool handleIq (const IQ &iq) { return true; }
 		void handleIqID (const IQ &iq, int context);
+		void mergeRoster();
+		void mergeBuddy(AbstractSpectrumBuddy *s_buddy);
 
 	private:
 		GHashTable *m_roster;
@@ -170,6 +179,7 @@ class SpectrumRosterManager : public RosterStorage, public IqHandler {
 		bool m_supportRosterIQ;
 		std::map<int, AbstractSpectrumBuddy *> m_rosterPushes;
 		int m_rosterPushesContext;
+		std::map<std::string, RosterItem> m_xmppRoster;
 
 };
 
