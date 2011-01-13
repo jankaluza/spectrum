@@ -157,15 +157,23 @@ class SpectrumRosterManager : public RosterStorage, public IqHandler {
 		// Handles authorization request from legacy network,
 		authRequest *handleAuthorizationRequest(PurpleAccount *account, const char *remote_user, const char *id, const char *alias, const char *message, gboolean on_list, PurpleAccountRequestAuthorizationCb authorize_cb, PurpleAccountRequestAuthorizationCb deny_cb, void *user_data);
 
-		// Handles user's roster sent by server.
+		// Handles user's roster sent by server (jabber:iq:roster result).
 		void handleRosterResponse(Tag *iq);
 
 		// Removes authorization request from internal storage.
 		void removeAuthRequest(const std::string &remote_user);
 
+		// Doesn't handle anything, but it's here just because IqHandler need that...
+		// stupid gloox...
 		bool handleIq (const IQ &iq) { return true; }
+
+		// Handles jabber:iq:roster results for roster pushes
 		void handleIqID (const IQ &iq, int context);
+
+		// Synchronizes legacy network roster with the one stored in Jabber server.
 		void mergeRoster();
+
+		// Synchronizes one AbstractSpectrumBuddy with Jabber/legacy network roster.
 		void mergeBuddy(AbstractSpectrumBuddy *s_buddy);
 
 	private:

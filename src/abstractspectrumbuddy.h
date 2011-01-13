@@ -104,13 +104,18 @@ class AbstractSpectrumBuddy {
 		// Returns true if data can be stored.
 		virtual bool getStatus(PurpleStatusPrimitive &status, std::string &statusMessage) = 0;
 
+		// Stores current mood in 'mood' and comment in 'comment'.
+		// Returns true if mood is set.
 		virtual bool getXStatus(std::string &mood, std::string &comment) = 0;
 
 		// Returns SHA-1 hash of buddy icon (avatar) or empty string if there is no avatar.
 		virtual std::string getIconHash() = 0;
 
+		// Changes groups this buddy is in. Note that 'groups' can be changed during
+		// this call.
 		virtual void changeGroup(std::list<std::string> &groups) = 0;
-		
+
+		// Changes server-side alias for this buddy.
 		virtual void changeAlias(const std::string &alias) = 0;
 
 	private:

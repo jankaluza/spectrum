@@ -37,15 +37,38 @@ class SpectrumBuddy : public AbstractSpectrumBuddy {
 		SpectrumBuddy(long id, PurpleBuddy *buddy);
 		virtual ~SpectrumBuddy();
 
-		std::string getAlias();
+		// Returns buddy's name (so for example UIN for ICQ, JID for XMPP...).
 		std::string getName();
+
+		// Returns buddy's alias (nickname).
+		std::string getAlias();
+
+		// Stores current status in `status` and current status message in `statusMessage`.
+		// Returns true if data can be stored.
 		bool getStatus(PurpleStatusPrimitive &status, std::string &statusMessage);
+
+		// Stores current mood in 'mood' and comment in 'comment'.
+		// Returns true if mood is set.
 		bool getXStatus(std::string &mood, std::string &comment);
+
+		// Returns SHA-1 hash of buddy icon (avatar) or empty string if there is no avatar.
 		std::string getIconHash();
+
+		// Returns buddy's group name.
 		std::string getGroup();
+
+		// Returns name which doesn't contain unsafe characters, so it can be used.
+		// in JIDs.
 		std::string getSafeName();
+
+		// Returns PurpleBuddy* connected with this SpectrumBuddy.
 		PurpleBuddy *getBuddy() { return m_buddy; }
+
+		// Changes groups this buddy is in. Note that 'groups' can be changed during
+		// this call.
 		void changeGroup(std::list<std::string> &groups);
+
+		// Changes server-side alias for this buddy.
 		void changeAlias(const std::string &alias);
 
 	private:
