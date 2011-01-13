@@ -56,6 +56,7 @@ class Transport : public CapabilityManager {
 		~Transport();
 		static Transport *instance() { return m_pInstance; }
 		void send(Tag *tag);
+		void send(IQ &iq, IqHandler *ih, int context, bool del=false);
 		UserManager *userManager();
 		const std::string &hash();
 		AbstractBackend *sql();

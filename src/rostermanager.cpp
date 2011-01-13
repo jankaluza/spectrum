@@ -100,6 +100,7 @@ SpectrumRosterManager::SpectrumRosterManager(AbstractUser *user) : RosterStorage
 	m_roster = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
 	m_loadingFromDB = false;
 	m_supportRosterIQ = false;
+	m_rosterPushesContext = 0;
 }
 
 SpectrumRosterManager::~SpectrumRosterManager() {
@@ -336,11 +337,10 @@ void SpectrumRosterManager::sendNewBuddies() {
 		while (it != m_subscribeCache.end()) {
 			AbstractSpectrumBuddy *s_buddy = (*it).second;
 			if (s_buddy->getSubscription() != "both") {
-				Tag *tag = new Tag("iq");
-				tag->addAttribute("to", m_user->jid());
-				tag->addAttribute("type", "set");
-				tag->addAttribute("id", Transport::instance()->getId());
-				tag->addAttribute("from", Transport::instance()->jid());
+				m_rosterPushes[m_rosterPushesContext++] = s_buddy;
+				IQ iq(IQ::Set, m_user->jid());
+				iq.setFrom(Transport::instance()->jid());
+
 				Tag *x = new Tag("query");
 				x->addAttribute("xmlns", "jabber:iq:roster");
 				std::string jid = s_buddy->getBareJid();
@@ -355,8 +355,11 @@ void SpectrumRosterManager::sendNewBuddies() {
 				item->addAttribute("subscription", "both");
 				item->addChild( new Tag("group", s_buddy->getGroup()));
 				x->addChild(item);
-				tag->addChild(x);
-				Transport::instance()->send(tag);
+				
+				iq.addExtension(new RosterExtension(x));
+				delete x;
+				Transport::instance()->send(iq, this, m_rosterPushesContext);
+				
 			}
 			it++;
 		}
@@ -670,32 +673,26 @@ void SpectrumRosterManager::handleRosterResponse(Tag *iq) {
 			return;
 		}
 
-		// resend presence, because this can be the first time user added this user
-		sendPresence(s_buddy);
-
 		// Change buddy alias if it changed
-		std::string alias = item->findAttribute("name");
-		std::cout << alias << " " << s_buddy->getAlias() << "\n";
-		if (alias != s_buddy->getAlias()) {
-			PurpleBuddy *buddy = s_buddy->getBuddy();
-			purple_blist_alias_buddy(buddy, alias.c_str());
-			serv_alias_buddy(buddy);
-		}
+		s_buddy->changeAlias(item->findAttribute("name"));
 
-		// Change buddy group if it changed
-		std::list<Tag*> groups = item->findChildren("group");
+		// Change groups if they changed
+		std::list<std::string> groups;
+		std::list<Tag*> tags = item->findChildren("group");
+		for (std::list<Tag*>::const_iterator it = tags.begin(); it != tags.end(); it++) {
+			groups.push_back((*it)->cdata());
+		}
 		s_buddy->changeGroup(groups);
-/*
-		std::cout << group << " " << s_buddy->getGroup() << "\n";
-		if (group != s_buddy->getGroup()) {
-			PurpleGroup *g = purple_find_group(group.c_str());
-			PurpleBuddy *buddy = s_buddy->getBuddy();
-			if (!g) {
-				g = purple_group_new(group.c_str());
-				purple_blist_add_group(g, NULL);
-			}
-			std::cout << "MOVING\n";
-			purple_blist_add_contact(purple_buddy_get_contact(buddy), g, NULL);
-		}*/
+	}
+}
+
+void SpectrumRosterManager::handleIqID(const IQ &iq, int id) {
+	std::cout << "rosterPush with id " << id << "\n";
+	// This buddy was added into roster by transport just now, so we have to
+	// send initial presence.
+	if (m_rosterPushes.find(id) != m_rosterPushes.end()) {
+		std::cout << "sending presence\n";
+		sendPresence(m_rosterPushes[id]);
+		m_rosterPushes.erase(id);
 	}
 }

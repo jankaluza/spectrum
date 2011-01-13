@@ -13,6 +13,10 @@ void Transport::send(Tag *tag) {
 	GlooxMessageHandler::instance()->j->send(tag);
 }
 
+void Transport::send(IQ &iq, IqHandler *ih, int context, bool del) {
+	GlooxMessageHandler::instance()->j->send(iq, ih, context, del);
+}
+
 UserManager *Transport::userManager() {
 	return GlooxMessageHandler::instance()->userManager();
 }

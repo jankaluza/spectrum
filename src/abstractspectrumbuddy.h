@@ -108,8 +108,10 @@ class AbstractSpectrumBuddy {
 
 		// Returns SHA-1 hash of buddy icon (avatar) or empty string if there is no avatar.
 		virtual std::string getIconHash() = 0;
+
+		virtual void changeGroup(std::list<std::string> &groups) = 0;
 		
-		virtual void changeGroup(std::list<Tag*> &groups) = 0;
+		virtual void changeAlias(const std::string &alias) = 0;
 
 	private:
 		long m_id;

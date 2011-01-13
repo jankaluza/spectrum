@@ -28,6 +28,7 @@
 #include "gloox/tag.h"
 #include "gloox/presence.h"
 #include "gloox/subscription.h"
+#include "gloox/iqhandler.h"
 #include <algorithm>
 #include "abstractuser.h"
 #include "rosterstorage.h"
@@ -73,7 +74,7 @@ class RosterExtension : public StanzaExtension {
 };
 
 // Manages all SpectrumBuddies in user's roster.
-class SpectrumRosterManager : public RosterStorage {
+class SpectrumRosterManager : public RosterStorage, public IqHandler {
 	public:
 		SpectrumRosterManager(AbstractUser *user);
 		virtual ~SpectrumRosterManager();
@@ -155,6 +156,9 @@ class SpectrumRosterManager : public RosterStorage {
 		// Removes authorization request from internal storage.
 		void removeAuthRequest(const std::string &remote_user);
 
+		bool handleIq (const IQ &iq) { return true; }
+		void handleIqID (const IQ &iq, int context);
+
 	private:
 		GHashTable *m_roster;
 		AbstractUser *m_user;
@@ -164,6 +168,8 @@ class SpectrumRosterManager : public RosterStorage {
 		int m_subscribeLastCount;
 		bool m_loadingFromDB;
 		bool m_supportRosterIQ;
+		std::map<int, AbstractSpectrumBuddy *> m_rosterPushes;
+		int m_rosterPushesContext;
 
 };
 

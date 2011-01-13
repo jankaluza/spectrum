@@ -45,7 +45,8 @@ class SpectrumBuddy : public AbstractSpectrumBuddy {
 		std::string getGroup();
 		std::string getSafeName();
 		PurpleBuddy *getBuddy() { return m_buddy; }
-		void changeGroup(std::list<Tag*> &groups);
+		void changeGroup(std::list<std::string> &groups);
+		void changeAlias(const std::string &alias);
 
 	private:
 		PurpleBuddy *m_buddy;

@@ -144,11 +144,9 @@ std::string SpectrumBuddy::getSafeName() {
 	return name;
 }
 
-void SpectrumBuddy::changeGroup(std::list<Tag*> &groups) {
-	Tag *for_free = NULL;
+void SpectrumBuddy::changeGroup(std::list<std::string> &groups) {
 	if (groups.size() == 0) {
-		for_free = new Tag("group", "Buddies");
-		groups.push_back(for_free);
+		groups.push_back("Buddies");
 	}
 
 	std::list<PurpleBuddy*> to_remove;
@@ -159,8 +157,8 @@ void SpectrumBuddy::changeGroup(std::list<Tag*> &groups) {
 		std::cout << "handling buddy in " << purple_group_get_name(purple_buddy_get_group(b)) << "\n";
 		std::cout << "groups size:" << groups.size() << "\n";
 		bool found = false;
-		for (std::list<Tag*>::iterator it = groups.begin(); it != groups.end(); ++it) {
-			std::string group = (*it)->cdata();
+		for (std::list<std::string>::iterator it = groups.begin(); it != groups.end(); ++it) {
+			std::string group = *it;
 			std::cout << "trying to match " << group << " and " <<  purple_group_get_name(purple_buddy_get_group(b)) << "\n";
 			if (group == purple_group_get_name(purple_buddy_get_group(b))) {
 				found = true;
@@ -181,8 +179,8 @@ void SpectrumBuddy::changeGroup(std::list<Tag*> &groups) {
 
 	// Remaining groups are groups where there is no buddy for this contact, so we have to add that buddy there.
 	// We will use buddies from to_remove list if there are any, so we don't have to clone buddies so often.
-	for (std::list<Tag*>::iterator it = groups.begin(); it != groups.end(); ++it) {
-		std::string group = (*it)->cdata();
+	for (std::list<std::string>::iterator it = groups.begin(); it != groups.end(); ++it) {
+		std::string group = *it;
 		PurpleGroup *g = purple_find_group(group.c_str());
 		if (!g) {
 			g = purple_group_new(group.c_str());
@@ -220,6 +218,11 @@ void SpectrumBuddy::changeGroup(std::list<Tag*> &groups) {
 		purple_account_remove_buddy(purple_buddy_get_account(m_buddy), *it, purple_buddy_get_group(*it));
 		purple_blist_remove_buddy(*it);
 	}
-	if (for_free)
-		delete for_free;
+}
+
+void SpectrumBuddy::changeAlias(const std::string &alias) {
+	if (alias != getAlias()) {
+		purple_blist_alias_buddy(m_buddy, alias.c_str());
+		serv_alias_buddy(m_buddy);
+	}
 }
