@@ -77,17 +77,9 @@ bool GlooxRegisterHandler::registerUser(const UserRow &row) {
 
 	Log("GlooxRegisterHandler", "adding new user: "<< row.jid << ", " << row.uin <<  ", " << row.language);
 	Transport::instance()->sql()->addUser(row);
-
-	if (Transport::instance()->supportRosterIq()) {
-		SpectrumRosterManager::sendRosterPush(row.jid, Transport::instance()->jid(), "both");
-	}
-	else {
-		Tag *reply = new Tag("presence");
-		reply->addAttribute( "from", Transport::instance()->jid() );
-		reply->addAttribute( "to", row.jid );
-		reply->addAttribute( "type", "subscribe" );
-		Transport::instance()->send( reply );
-	}
+	
+	m_to = row.jid;
+	SpectrumRosterManager::sendRosterPush(row.jid, Transport::instance()->jid(), "both", this, 0);
 
 	return true;
 }
@@ -101,98 +93,8 @@ bool GlooxRegisterHandler::unregisterUser(const std::string &barejid) {
 	Log("GlooxRegisterHandler", "removing user " << barejid << " from database and disconnecting from legacy network");
 	PurpleAccount *account = NULL;
 
-	AbstractUser *user = Transport::instance()->userManager()->getUserByJID(barejid);
-	if (Transport::instance()->supportRosterIq()) {
-		std::list <std::string> roster;
-		roster = Transport::instance()->sql()->getBuddies(res.id);
-		for(std::list<std::string>::iterator u = roster.begin(); u != roster.end() ; u++){
-			std::string name = *u;
-			SpectrumRosterManager::sendRosterPush(barejid, name + "@" + Transport::instance()->jid(), "remove");
-		}
-		SpectrumRosterManager::sendRosterPush(barejid, Transport::instance()->jid(), "remove");
-	}
-	else {
-		if (user && user->hasFeature(GLOOX_FEATURE_ROSTERX) && false) {
-			std::cout << "* sending rosterX\n";
-			Tag *tag = new Tag("message");
-			tag->addAttribute( "to", barejid );
-			std::string _from;
-			_from.append(Transport::instance()->jid());
-			tag->addAttribute( "from", _from );
-			tag->addChild(new Tag("body","removing users"));
-			Tag *x = new Tag("x");
-			x->addAttribute("xmlns","http://jabber.org/protocol/rosterx");
-
-			std::list <std::string> roster;
-			roster = Transport::instance()->sql()->getBuddies(res.id);
-
-			Tag *item;
-			for(std::list<std::string>::iterator u = roster.begin(); u != roster.end() ; u++){
-				std::string name = *u;
-				item = new Tag("item");
-				item->addAttribute("action", "delete");
-				item->addAttribute("jid", name + "@" + Transport::instance()->jid());
-				x->addChild(item);
-			}
-
-			tag->addChild(x);
-			Transport::instance()->send(tag);
-		}
-		else {
-			std::list <std::string> roster;
-			// roster contains already escaped jids
-			roster = Transport::instance()->sql()->getBuddies(res.id);
-
-			Tag *tag;
-			for(std::list<std::string>::iterator u = roster.begin(); u != roster.end() ; u++){
-				std::string name = *u;
-
-				tag = new Tag("presence");
-				tag->addAttribute( "to", barejid );
-				tag->addAttribute( "type", "unsubscribe" );
-				tag->addAttribute( "from", name + "@" + Transport::instance()->jid());
-				Transport::instance()->send( tag );
-
-				tag = new Tag("presence");
-				tag->addAttribute( "to", barejid );
-				tag->addAttribute( "type", "unsubscribed" );
-				tag->addAttribute( "from", name + "@" + Transport::instance()->jid());
-				Transport::instance()->send( tag );
-			}
-		}
-		Tag *reply = new Tag( "presence" );
-		reply->addAttribute( "type", "unsubscribe" );
-		reply->addAttribute( "from", Transport::instance()->jid() );
-		reply->addAttribute( "to", barejid );
-		Transport::instance()->send( reply );
-
-		reply = new Tag("presence");
-		reply->addAttribute( "type", "unsubscribed" );
-		reply->addAttribute( "from", Transport::instance()->jid() );
-		reply->addAttribute( "to", barejid );
-		Transport::instance()->send( reply );
-	}
-
-	// Remove user from database
-	if (res.id != -1) {
-		Transport::instance()->sql()->removeUser(res.id);
-	}
-
-	// Disconnect the user
-	if (user != NULL) {
-		account = user->account();
-		Transport::instance()->userManager()->removeUser(user);	
-	}
-
-	if (!account) {
-		account = purple_accounts_find(res.uin.c_str(), Transport::instance()->protocol()->protocol().c_str());
-	}
-
-#ifndef TESTS
-	// Remove account from memory
-	if (account)
-		Transport::instance()->collector()->collectNow(account, true);
-#endif
+	m_to = barejid;
+	SpectrumRosterManager::sendRosterPush(barejid, Transport::instance()->jid(), "remove", this, 1);
 
 	return true;
 }
@@ -496,7 +398,115 @@ bool GlooxRegisterHandler::handleIq(const Tag *iqTag) {
 }
 
 void GlooxRegisterHandler::handleIqID (const IQ &iq, int context){
-	std::cout << "IQ ID IQ ID IQ ID\n";
+	// adding user
+	if (context == 0) {
+		if (iq.subtype() == IQ::Error) {
+			Tag *reply = new Tag("presence");
+			reply->addAttribute( "from", Transport::instance()->jid() );
+			reply->addAttribute( "to", m_to);
+			reply->addAttribute( "type", "subscribe" );
+			Transport::instance()->send( reply );
+		}
+	}
+	// removing user
+	else if (context == 1) {
+		PurpleAccount *account = NULL;
+		UserRow res = Transport::instance()->sql()->getUserByJid(m_to);
+		// This user is already registered
+		if (res.id == -1)
+			return;
+		AbstractUser *user = Transport::instance()->userManager()->getUserByJID(m_to);
+		if (iq.subtype() == IQ::Result) {
+			std::list <std::string> roster;
+			roster = Transport::instance()->sql()->getBuddies(res.id);
+			for(std::list<std::string>::iterator u = roster.begin(); u != roster.end() ; u++){
+				std::string name = *u;
+				SpectrumRosterManager::sendRosterPush(m_to, name + "@" + Transport::instance()->jid(), "remove");
+			}
+		}
+		else {
+			if (user && user->hasFeature(GLOOX_FEATURE_ROSTERX) && false) {
+				std::cout << "* sending rosterX\n";
+				Tag *tag = new Tag("message");
+				tag->addAttribute( "to", m_to );
+				std::string _from;
+				_from.append(Transport::instance()->jid());
+				tag->addAttribute( "from", _from );
+				tag->addChild(new Tag("body","removing users"));
+				Tag *x = new Tag("x");
+				x->addAttribute("xmlns","http://jabber.org/protocol/rosterx");
+
+				std::list <std::string> roster;
+				roster = Transport::instance()->sql()->getBuddies(res.id);
+
+				Tag *item;
+				for(std::list<std::string>::iterator u = roster.begin(); u != roster.end() ; u++){
+					std::string name = *u;
+					item = new Tag("item");
+					item->addAttribute("action", "delete");
+					item->addAttribute("jid", name + "@" + Transport::instance()->jid());
+					x->addChild(item);
+				}
+
+				tag->addChild(x);
+				Transport::instance()->send(tag);
+			}
+			else {
+				std::list <std::string> roster;
+				// roster contains already escaped jids
+				roster = Transport::instance()->sql()->getBuddies(res.id);
+
+				Tag *tag;
+				for(std::list<std::string>::iterator u = roster.begin(); u != roster.end() ; u++){
+					std::string name = *u;
+
+					tag = new Tag("presence");
+					tag->addAttribute( "to", m_to );
+					tag->addAttribute( "type", "unsubscribe" );
+					tag->addAttribute( "from", name + "@" + Transport::instance()->jid());
+					Transport::instance()->send( tag );
+
+					tag = new Tag("presence");
+					tag->addAttribute( "to", m_to );
+					tag->addAttribute( "type", "unsubscribed" );
+					tag->addAttribute( "from", name + "@" + Transport::instance()->jid());
+					Transport::instance()->send( tag );
+				}
+			}
+			Tag *reply = new Tag( "presence" );
+			reply->addAttribute( "type", "unsubscribe" );
+			reply->addAttribute( "from", Transport::instance()->jid() );
+			reply->addAttribute( "to", m_to );
+			Transport::instance()->send( reply );
+
+			reply = new Tag("presence");
+			reply->addAttribute( "type", "unsubscribed" );
+			reply->addAttribute( "from", Transport::instance()->jid() );
+			reply->addAttribute( "to", m_to );
+			Transport::instance()->send( reply );
+		}
+
+		// Remove user from database
+		if (res.id != -1) {
+			Transport::instance()->sql()->removeUser(res.id);
+		}
+
+		// Disconnect the user
+		if (user != NULL) {
+			account = user->account();
+			Transport::instance()->userManager()->removeUser(user);	
+		}
+
+		if (!account) {
+			account = purple_accounts_find(res.uin.c_str(), Transport::instance()->protocol()->protocol().c_str());
+		}
+
+#ifndef TESTS
+		// Remove account from memory
+		if (account)
+			Transport::instance()->collector()->collectNow(account, true);
+#endif
+	}
 }
 
 void GlooxRegisterHandler::sendError(int code, const std::string &err, const Tag *iqTag) {

@@ -69,6 +69,7 @@ class GlooxRegisterHandler : public IqHandler {
 		void sendError(int code, const std::string &error, const Tag *iqTag);
 
 		static GlooxRegisterHandler *m_pInstance;
+		std::string m_to;
 };
 
 #endif

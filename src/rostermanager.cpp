@@ -107,6 +107,7 @@ SpectrumRosterManager::SpectrumRosterManager(AbstractUser *user) : RosterStorage
 	m_roster = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
 	m_loadingFromDB = false;
 	m_rosterPushesContext = 0;
+	m_supportRosterIQ = false;
 }
 
 SpectrumRosterManager::~SpectrumRosterManager() {
@@ -285,7 +286,7 @@ void SpectrumRosterManager::handleBuddyCreated(AbstractSpectrumBuddy *s_buddy) {
 		m_subscribeCache[name] = s_buddy;
 	}
 	else {
-		if (Transport::instance()->supportRosterIq() && m_xmppRoster.find(name) != m_xmppRoster.end()) {
+		if (m_supportRosterIQ && m_xmppRoster.find(name) != m_xmppRoster.end()) {
 			// first synchronization = From XMPP to legacy network and we don't care what's on legacy network
 			if (purple_value_get_boolean(m_user->getSetting("first_synchronization_done")) == false) {
 				s_buddy->changeAlias(m_xmppRoster[name].nickname);
@@ -341,7 +342,7 @@ void SpectrumRosterManager::sendNewBuddies() {
 
 	Log(m_user->jid(), "Sending rosterX");
 
-	if (Transport::instance()->supportRosterIq()) {
+	if (m_supportRosterIQ) {
 		// <iq to='juliet@example.com' type='set' id='roster_3'>
 		//   <query xmlns='jabber:iq:roster'>
 		//     <item jid='123456789@icq.example.net'
@@ -676,7 +677,7 @@ void SpectrumRosterManager::handleRosterResponse(Tag *iq) {
 		return;
 	}
 
-	Transport::instance()->setSupportRosterIq();
+	m_supportRosterIQ = true;
 
 	if (iq->findAttribute("type") == "set") {
 		Tag *query = iq->findChild("query");
@@ -740,7 +741,7 @@ void SpectrumRosterManager::handleIqID(const IQ &iq, int id) {
 }
 
 void SpectrumRosterManager::mergeRoster() {
-	if (Transport::instance()->supportRosterIq())
+	if (m_supportRosterIQ)
 		g_hash_table_foreach(m_roster, merge_buddy, this);
 	PurpleValue *v = m_user->getSetting("first_synchronization_done");
 	if (purple_value_get_boolean(v) == false) {
@@ -765,7 +766,7 @@ void SpectrumRosterManager::mergeBuddy(AbstractSpectrumBuddy *s_buddy) {
 	}
 }
 
-void SpectrumRosterManager::sendRosterPush(const std::string &to, const std::string &jid, const std::string &subscription) {
+void SpectrumRosterManager::sendRosterPush(const std::string &to, const std::string &jid, const std::string &subscription, IqHandler *ih, int context) {
 	IQ iq(IQ::Set, to);
 	iq.setFrom(Transport::instance()->jid());
 
@@ -779,5 +780,8 @@ void SpectrumRosterManager::sendRosterPush(const std::string &to, const std::str
 	
 	iq.addExtension(new RosterExtension(x));
 	delete x;
-	Transport::instance()->send(iq.tag());
+	if (ih)
+		Transport::instance()->send(iq, ih, context);
+	else
+		Transport::instance()->send(iq.tag());
 }
