@@ -106,7 +106,6 @@ SpectrumRosterManager::SpectrumRosterManager(AbstractUser *user) : RosterStorage
 	m_subscribeLastCount = -1;
 	m_roster = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
 	m_loadingFromDB = false;
-	m_supportRosterIQ = false;
 	m_rosterPushesContext = 0;
 }
 
@@ -286,7 +285,7 @@ void SpectrumRosterManager::handleBuddyCreated(AbstractSpectrumBuddy *s_buddy) {
 		m_subscribeCache[name] = s_buddy;
 	}
 	else {
-		if (m_supportRosterIQ && m_xmppRoster.find(name) != m_xmppRoster.end()) {
+		if (Transport::instance()->supportRosterIq() && m_xmppRoster.find(name) != m_xmppRoster.end()) {
 			// first synchronization = From XMPP to legacy network and we don't care what's on legacy network
 			if (purple_value_get_boolean(m_user->getSetting("first_synchronization_done")) == false) {
 				s_buddy->changeAlias(m_xmppRoster[name].nickname);
@@ -342,7 +341,7 @@ void SpectrumRosterManager::sendNewBuddies() {
 
 	Log(m_user->jid(), "Sending rosterX");
 
-	if (m_supportRosterIQ) {
+	if (Transport::instance()->supportRosterIq()) {
 		// <iq to='juliet@example.com' type='set' id='roster_3'>
 		//   <query xmlns='jabber:iq:roster'>
 		//     <item jid='123456789@icq.example.net'
@@ -677,10 +676,7 @@ void SpectrumRosterManager::handleRosterResponse(Tag *iq) {
 		return;
 	}
 
-	if (m_supportRosterIQ == false) {
-		Log(m_user->jid(), "rosterIQ XEP is supported");
-		m_supportRosterIQ = true;
-	}
+	Transport::instance()->setSupportRosterIq();
 
 	if (iq->findAttribute("type") == "set") {
 		Tag *query = iq->findChild("query");
@@ -744,7 +740,7 @@ void SpectrumRosterManager::handleIqID(const IQ &iq, int id) {
 }
 
 void SpectrumRosterManager::mergeRoster() {
-	if (m_supportRosterIQ)
+	if (Transport::instance()->supportRosterIq())
 		g_hash_table_foreach(m_roster, merge_buddy, this);
 	PurpleValue *v = m_user->getSetting("first_synchronization_done");
 	if (purple_value_get_boolean(v) == false) {
@@ -767,4 +763,21 @@ void SpectrumRosterManager::mergeBuddy(AbstractSpectrumBuddy *s_buddy) {
 			m_subscribeCache[name] = s_buddy;
 		}
 	}
+}
+
+void SpectrumRosterManager::sendRosterPush(const std::string &to, const std::string &jid, const std::string &subscription) {
+	IQ iq(IQ::Set, to);
+	iq.setFrom(Transport::instance()->jid());
+
+	Tag *x = new Tag("query");
+	x->addAttribute("xmlns", "jabber:iq:roster");
+
+	Tag *item = new Tag("item");
+	item->addAttribute("jid", jid);
+	item->addAttribute("subscription", subscription);
+	x->addChild(item);
+	
+	iq.addExtension(new RosterExtension(x));
+	delete x;
+	Transport::instance()->send(iq.tag());
 }

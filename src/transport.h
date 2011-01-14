@@ -73,6 +73,8 @@ class Transport : public CapabilityManager {
 		const std::string requestFT( const JID& to, const std::string& name, long size, const std::string& hash = EmptyString, const std::string& desc = EmptyString, const std::string& date = EmptyString, const std::string& mimetype = EmptyString, int streamTypes = SIProfileFT::FTTypeAll, const JID& from = JID(), const std::string& sid = EmptyString );
 		void acceptFT( const JID& to, const std::string& sid, SIProfileFT::StreamType type = SIProfileFT::FTTypeS5B, const JID& from = JID() );
 		AccountCollector *collector();
+		bool supportRosterIq() { return m_supportRosterIq; }
+		void setSupportRosterIq() { m_supportRosterIq = true; }
 
 
 		
@@ -81,6 +83,7 @@ class Transport : public CapabilityManager {
 		std::string m_hash;
 		std::list <Tag *> m_tags;
 		UserManager *m_userManager;
+		bool m_supportRosterIq;
 		static Transport *m_pInstance;
 };
 

@@ -24,6 +24,7 @@
 #include "sql.h"
 #include "capabilityhandler.h"
 #include "usermanager.h"
+#include "rostermanager.h"
 #include "accountcollector.h"
 #include "protocols/abstractprotocol.h"
 #include "user.h"
@@ -77,11 +78,16 @@ bool GlooxRegisterHandler::registerUser(const UserRow &row) {
 	Log("GlooxRegisterHandler", "adding new user: "<< row.jid << ", " << row.uin <<  ", " << row.language);
 	Transport::instance()->sql()->addUser(row);
 
-	Tag *reply = new Tag("presence");
-	reply->addAttribute( "from", Transport::instance()->jid() );
-	reply->addAttribute( "to", row.jid );
-	reply->addAttribute( "type", "subscribe" );
-	Transport::instance()->send( reply );
+	if (Transport::instance()->supportRosterIq()) {
+		SpectrumRosterManager::sendRosterPush(row.jid, Transport::instance()->jid(), "both");
+	}
+	else {
+		Tag *reply = new Tag("presence");
+		reply->addAttribute( "from", Transport::instance()->jid() );
+		reply->addAttribute( "to", row.jid );
+		reply->addAttribute( "type", "subscribe" );
+		Transport::instance()->send( reply );
+	}
 
 	return true;
 }
@@ -94,55 +100,77 @@ bool GlooxRegisterHandler::unregisterUser(const std::string &barejid) {
 
 	Log("GlooxRegisterHandler", "removing user " << barejid << " from database and disconnecting from legacy network");
 	PurpleAccount *account = NULL;
-	
-	AbstractUser *user = Transport::instance()->userManager()->getUserByJID(barejid);
-	if (user && user->hasFeature(GLOOX_FEATURE_ROSTERX) && false) {
-		std::cout << "* sending rosterX\n";
-		Tag *tag = new Tag("message");
-		tag->addAttribute( "to", barejid );
-		std::string _from;
-		_from.append(Transport::instance()->jid());
-		tag->addAttribute( "from", _from );
-		tag->addChild(new Tag("body","removing users"));
-		Tag *x = new Tag("x");
-		x->addAttribute("xmlns","http://jabber.org/protocol/rosterx");
 
+	AbstractUser *user = Transport::instance()->userManager()->getUserByJID(barejid);
+	if (Transport::instance()->supportRosterIq()) {
 		std::list <std::string> roster;
 		roster = Transport::instance()->sql()->getBuddies(res.id);
-
-		Tag *item;
 		for(std::list<std::string>::iterator u = roster.begin(); u != roster.end() ; u++){
 			std::string name = *u;
-			item = new Tag("item");
-			item->addAttribute("action", "delete");
-			item->addAttribute("jid", name + "@" + Transport::instance()->jid());
-			x->addChild(item);
+			SpectrumRosterManager::sendRosterPush(barejid, name + "@" + Transport::instance()->jid(), "remove");
 		}
-
-		tag->addChild(x);
-		Transport::instance()->send(tag);
+		SpectrumRosterManager::sendRosterPush(barejid, Transport::instance()->jid(), "remove");
 	}
 	else {
-		std::list <std::string> roster;
-		// roster contains already escaped jids
-		roster = Transport::instance()->sql()->getBuddies(res.id);
-
-		Tag *tag;
-		for(std::list<std::string>::iterator u = roster.begin(); u != roster.end() ; u++){
-			std::string name = *u;
-
-			tag = new Tag("presence");
+		if (user && user->hasFeature(GLOOX_FEATURE_ROSTERX) && false) {
+			std::cout << "* sending rosterX\n";
+			Tag *tag = new Tag("message");
 			tag->addAttribute( "to", barejid );
-			tag->addAttribute( "type", "unsubscribe" );
-			tag->addAttribute( "from", name + "@" + Transport::instance()->jid());
-			Transport::instance()->send( tag );
+			std::string _from;
+			_from.append(Transport::instance()->jid());
+			tag->addAttribute( "from", _from );
+			tag->addChild(new Tag("body","removing users"));
+			Tag *x = new Tag("x");
+			x->addAttribute("xmlns","http://jabber.org/protocol/rosterx");
 
-			tag = new Tag("presence");
-			tag->addAttribute( "to", barejid );
-			tag->addAttribute( "type", "unsubscribed" );
-			tag->addAttribute( "from", name + "@" + Transport::instance()->jid());
-			Transport::instance()->send( tag );
+			std::list <std::string> roster;
+			roster = Transport::instance()->sql()->getBuddies(res.id);
+
+			Tag *item;
+			for(std::list<std::string>::iterator u = roster.begin(); u != roster.end() ; u++){
+				std::string name = *u;
+				item = new Tag("item");
+				item->addAttribute("action", "delete");
+				item->addAttribute("jid", name + "@" + Transport::instance()->jid());
+				x->addChild(item);
+			}
+
+			tag->addChild(x);
+			Transport::instance()->send(tag);
 		}
+		else {
+			std::list <std::string> roster;
+			// roster contains already escaped jids
+			roster = Transport::instance()->sql()->getBuddies(res.id);
+
+			Tag *tag;
+			for(std::list<std::string>::iterator u = roster.begin(); u != roster.end() ; u++){
+				std::string name = *u;
+
+				tag = new Tag("presence");
+				tag->addAttribute( "to", barejid );
+				tag->addAttribute( "type", "unsubscribe" );
+				tag->addAttribute( "from", name + "@" + Transport::instance()->jid());
+				Transport::instance()->send( tag );
+
+				tag = new Tag("presence");
+				tag->addAttribute( "to", barejid );
+				tag->addAttribute( "type", "unsubscribed" );
+				tag->addAttribute( "from", name + "@" + Transport::instance()->jid());
+				Transport::instance()->send( tag );
+			}
+		}
+		Tag *reply = new Tag( "presence" );
+		reply->addAttribute( "type", "unsubscribe" );
+		reply->addAttribute( "from", Transport::instance()->jid() );
+		reply->addAttribute( "to", barejid );
+		Transport::instance()->send( reply );
+
+		reply = new Tag("presence");
+		reply->addAttribute( "type", "unsubscribed" );
+		reply->addAttribute( "from", Transport::instance()->jid() );
+		reply->addAttribute( "to", barejid );
+		Transport::instance()->send( reply );
 	}
 
 	// Remove user from database
@@ -165,18 +193,6 @@ bool GlooxRegisterHandler::unregisterUser(const std::string &barejid) {
 	if (account)
 		Transport::instance()->collector()->collectNow(account, true);
 #endif
-
-	Tag *reply = new Tag( "presence" );
-	reply->addAttribute( "type", "unsubscribe" );
-	reply->addAttribute( "from", Transport::instance()->jid() );
-	reply->addAttribute( "to", barejid );
-	Transport::instance()->send( reply );
-
-	reply = new Tag("presence");
-	reply->addAttribute( "type", "unsubscribed" );
-	reply->addAttribute( "from", Transport::instance()->jid() );
-	reply->addAttribute( "to", barejid );
-	Transport::instance()->send( reply );
 
 	return true;
 }
