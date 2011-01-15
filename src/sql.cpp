@@ -373,6 +373,19 @@ void SQLClass::createStatement(SpectrumSQLStatement **statement, const std::stri
 }
 
 void SQLClass::createStatements() {
+#ifdef WITH_MYSQL
+	// set collation
+	try {
+		*m_sess << "set collation_connection=utf8_general_ci", now;
+		*m_sess << "set character_set_results=utf8", now;
+		*m_sess << "set character_set_connection=utf8", now;
+		*m_sess << "set character_set_client=utf8", now;
+	}
+	catch (Poco::Exception e) {
+		Log("SQL ERROR", "Can't set utf8 encoding");
+	}
+#endif
+
 	m_version_stmt = new Statement( ( STATEMENT("SELECT ver FROM " + p->configuration().sqlPrefix + "db_version ORDER BY ver DESC LIMIT 1"), into(m_version) ) );
 
 	if (p->configuration().sqlType == "sqlite")
