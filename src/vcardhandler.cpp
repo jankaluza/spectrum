@@ -96,8 +96,19 @@ GlooxVCardHandler::~GlooxVCardHandler(){
 
 bool GlooxVCardHandler::handleIq (const IQ &stanza){
 
-	if (stanza.to().username()=="")
-		return false;
+	if (stanza.to().username() == "") {
+		Tag *reply = new Tag( "iq" );
+		reply->addAttribute( "id", stanza.id() );
+		reply->addAttribute( "type", "result" );
+		reply->addAttribute( "to", stanza.from().full() );
+		reply->addAttribute( "from", stanza.to().full() );
+		Tag *vcard = new Tag( "vCard" );
+		vcard->addAttribute( "xmlns", "vcard-temp" );
+		vcard->addChild( new Tag("NICKNAME", CONFIG().discoName));
+		reply->addChild(vcard);
+		p->j->send(reply);
+		return true;
+	}
 
 	User *user = (User *) p->userManager()->getUserByJID(stanza.from().bare());
 	if (user==NULL)
