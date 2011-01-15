@@ -837,10 +837,18 @@ User::~User(){
 	if (m_account) {
 		purple_account_set_enabled(m_account, PURPLE_UI, FALSE);
 
+		GList *iter;
+		// Remove filetransfers
+		for (iter = purple_xfers_get_all(); iter; ) {
+			PurpleXfer *xfer = (PurpleXfer *) iter->data;
+			iter = iter->next;
+			if (purple_xfer_get_account(xfer) == m_account)
+				purple_xfer_cancel_local(xfer);
+		}
+
 		// Remove conversations.
 		// This has to be called before m_account->ui_data = NULL;, because it uses
 		// ui_data to call SpectrumMessageHandler::purpleConversationDestroyed() callback.
-		GList *iter;
 		for (iter = purple_get_conversations(); iter; ) {
 			PurpleConversation *conv = (PurpleConversation*) iter->data;
 			iter = iter->next;
