@@ -173,17 +173,20 @@ void GlooxVCardHandler::userInfoArrived(PurpleConnection *gc, const std::string 
 		if (user->hasTransportFeature(TRANSPORT_FEATURE_AVATARS))
 			Log("VCard", "TRANSPORT_FEATURE_AVATARS IS READY");
 
+		PurpleBuddy *buddy = purple_find_buddy(purple_connection_get_account(gc), name.c_str());
+		if (buddy) {
+			AbstractSpectrumBuddy *s_buddy = (AbstractSpectrumBuddy *) buddy->node.ui_data;
+			if (s_buddy)
+				reply->addAttribute( "from", s_buddy->getBareJid() );
+			else
+				reply->addAttribute( "from", JID::escapeNode(who) + "@" + p->jid() );
+		}
+
 		if (purple_value_get_boolean(user->getSetting("enable_avatars")) && user->hasTransportFeature(TRANSPORT_FEATURE_AVATARS)) {
 			Tag *photo = new Tag("PHOTO");
 
 			Log("VCard", "Trying to find out " << name);
-			PurpleBuddy *buddy = purple_find_buddy(purple_connection_get_account(gc), name.c_str());
 			if (buddy){
-				AbstractSpectrumBuddy *s_buddy = (AbstractSpectrumBuddy *) buddy->node.ui_data;
-				if (s_buddy)
-					reply->addAttribute( "from", s_buddy->getBareJid() );
-				else
-					reply->addAttribute( "from", JID::escapeNode(who) + "@" + p->jid() );
 				Log("VCard", "found buddy " << name);
 				gsize len;
 				PurpleBuddyIcon *icon = NULL;
@@ -211,9 +214,6 @@ void GlooxVCardHandler::userInfoArrived(PurpleConnection *gc, const std::string 
 	// 					std::cout << photo->xml() << "\n";
 					}
 				}
-			}
-			else {
-				reply->addAttribute( "from", JID::escapeNode(who) + "@" + p->jid() );
 			}
 
 			if(!photo->children().empty())
