@@ -63,4 +63,72 @@ std::string IdenticaProtocol::text(const std::string &key) {
 	return "not defined";
 }
 
+void IdenticaProtocol::onUserCreated(AbstractUser *user) {
+	PurpleValue *value;
+	if ( (value = user->getSetting("twitter_oauth_secret")) == NULL ) {
+		Transport::instance()->sql()->addSetting(user->storageId(), "twitter_oauth_secret", "", PURPLE_TYPE_STRING);
+		value = purple_value_new(PURPLE_TYPE_STRING);
+		purple_value_set_string(value, "");
+		g_hash_table_replace(user->settings(), g_strdup("twitter_oauth_secret"), value);
+	}
+	if ( (value = user->getSetting("twitter_oauth_token")) == NULL ) {
+		Transport::instance()->sql()->addSetting(user->storageId(), "twitter_oauth_token", "", PURPLE_TYPE_STRING);
+		value = purple_value_new(PURPLE_TYPE_STRING);
+		purple_value_set_string(value, "");
+		g_hash_table_replace(user->settings(), g_strdup("twitter_oauth_token"), value);
+	}
+	if ( (value = user->getSetting("twitter_sent_msg_ids")) == NULL ) {
+		Transport::instance()->sql()->addSetting(user->storageId(), "twitter_sent_msg_ids", "", PURPLE_TYPE_STRING);
+		value = purple_value_new(PURPLE_TYPE_STRING);
+		purple_value_set_string(value, "");
+		g_hash_table_replace(user->settings(), g_strdup("twitter_sent_msg_ids"), value);
+	}
+	if ( (value = user->getSetting("twitter_last_msg_id")) == NULL ) {
+		Transport::instance()->sql()->addSetting(user->storageId(), "twitter_last_msg_id", "", PURPLE_TYPE_STRING);
+		value = purple_value_new(PURPLE_TYPE_STRING);
+		purple_value_set_string(value, "");
+		g_hash_table_replace(user->settings(), g_strdup("twitter_last_msg_id"), value);
+	}
+}
+
+void IdenticaProtocol::onDestroy(AbstractUser *user) {
+	PurpleAccount *account = user->account();
+	if (account == NULL)
+		return;
+	PurpleValue *value = NULL;
+	if ( (value = user->getSetting("twitter_oauth_secret")) != NULL ) {
+		purple_value_set_string(value, purple_account_get_string(account, "twitter_oauth_secret", ""));
+		user->updateSetting("twitter_oauth_secret", value);
+	}
+	if ( (value = user->getSetting("twitter_oauth_token")) != NULL ) {
+		purple_value_set_string(value, purple_account_get_string(account, "twitter_oauth_token", ""));
+		user->updateSetting("twitter_oauth_token", value);
+	}
+	if ( (value = user->getSetting("twitter_sent_msg_ids")) != NULL ) {
+		purple_value_set_string(value, purple_account_get_string(account, "twitter_sent_msg_ids", ""));
+		user->updateSetting("twitter_sent_msg_ids", value);
+	}
+	if ( (value = user->getSetting("twitter_last_msg_id")) != NULL ) {
+		purple_value_set_string(value, purple_account_get_string(account, "twitter_last_msg_id", ""));
+		user->updateSetting("twitter_last_msg_id", value);
+	}
+}
+
+void IdenticaProtocol::onPurpleAccountCreated(PurpleAccount *account) {
+	AbstractUser *user = (AbstractUser *) account->ui_data;
+	PurpleValue *value = NULL;
+	if ( (value = user->getSetting("twitter_oauth_secret")) != NULL ) {
+		purple_account_set_string(account, "twitter_oauth_secret", purple_value_get_string(value));
+	}
+	if ( (value = user->getSetting("twitter_oauth_token")) != NULL ) {
+		purple_account_set_string(account, "twitter_oauth_token", purple_value_get_string(value));
+	}
+	if ( (value = user->getSetting("twitter_sent_msg_ids")) != NULL ) {
+		purple_account_set_string(account, "twitter_sent_msg_ids", purple_value_get_string(value));
+	}
+	if ( (value = user->getSetting("twitter_last_msg_id")) != NULL ) {
+		purple_account_set_string(account, "twitter_last_msg_id", purple_value_get_string(value));
+	}
+}
+
 SPECTRUM_PROTOCOL(identica, IdenticaProtocol)

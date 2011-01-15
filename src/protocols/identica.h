@@ -38,6 +38,9 @@ class IdenticaProtocol : AbstractProtocol
 		std::string text(const std::string &key);
 		Tag *getVCardTag(AbstractUser *user, GList *vcardEntries) { return NULL; }
 		bool isMUC(AbstractUser *user, const std::string &jid) { return 0; }
+		void onDestroy(AbstractUser *user);
+		void onPurpleAccountCreated(PurpleAccount *account);
+		void onUserCreated(AbstractUser *user);
 	private:
 		std::list<std::string> m_transportFeatures;
 		std::list<std::string> m_buddyFeatures;
