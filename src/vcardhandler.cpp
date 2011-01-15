@@ -99,17 +99,19 @@ bool GlooxVCardHandler::handleIq (const IQ &stanza){
 		return true;
 	}
 
-	if (stanza.to().username() == "") {
-		Tag *reply = new Tag( "iq" );
-		reply->addAttribute( "id", stanza.id() );
-		reply->addAttribute( "type", "result" );
-		reply->addAttribute( "to", stanza.from().full() );
-		reply->addAttribute( "from", Transport::instance()->jid() );
-		Tag *vcard = new Tag( "vCard" );
-		vcard->addAttribute( "xmlns", "vcard-temp" );
-		vcard->addChild( new Tag("NICKNAME", CONFIG().discoName));
-		reply->addChild(vcard);
-		p->j->send(reply);
+	if (stanza.to().username() == "" ) {
+		if (stanza.subtype() == IQ::Get) {
+			Tag *reply = new Tag( "iq" );
+			reply->addAttribute( "id", stanza.id() );
+			reply->addAttribute( "type", "result" );
+			reply->addAttribute( "to", stanza.from().full() );
+			reply->addAttribute( "from", Transport::instance()->jid() );
+			Tag *vcard = new Tag( "vCard" );
+			vcard->addAttribute( "xmlns", "vcard-temp" );
+			vcard->addChild( new Tag("NICKNAME", CONFIG().discoName));
+			reply->addChild(vcard);
+			p->j->send(reply);
+		}
 		return true;
 	}
 
