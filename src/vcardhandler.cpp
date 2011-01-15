@@ -181,6 +181,9 @@ void GlooxVCardHandler::userInfoArrived(PurpleConnection *gc, const std::string 
 			else
 				reply->addAttribute( "from", JID::escapeNode(who) + "@" + p->jid() );
 		}
+		else {
+			reply->addAttribute( "from", JID::escapeNode(who) + "@" + p->jid() );
+		}
 
 		if (purple_value_get_boolean(user->getSetting("enable_avatars")) && user->hasTransportFeature(TRANSPORT_FEATURE_AVATARS)) {
 			Tag *photo = new Tag("PHOTO");
