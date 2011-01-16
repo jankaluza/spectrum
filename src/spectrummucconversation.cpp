@@ -57,7 +57,7 @@ void SpectrumMUCConversation::handleMessage(AbstractUser *user, const char *who,
 
 	std::string to = user->jid() + m_res;
 	std::cout << user->jid() << " " << m_res << "\n";
-	
+
 	Message s(Message::Groupchat, to, message);
 	s.setFrom(m_jid + "/" + name);
 
@@ -127,6 +127,7 @@ void SpectrumMUCConversation::addUsers(AbstractUser *user, GList *cbuddies) {
 		}
 
 		std::transform(name.begin(), name.end(), name.begin(),(int(*)(int)) std::tolower);
+		std::cout << "NICKNAME " << name << " " << m_nickname << "\n";
 		if (name == m_nickname) {
 			Tag *status = new Tag("status");
 			status->addAttribute("code", "110");

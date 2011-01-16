@@ -471,6 +471,10 @@ void User::connected() {
 		std::cout << name << " JOINING\n";
 		if (comps) {
 			setRoomResource(name, JID(stanza->findAttribute("from")).resource());
+			// for XMPP we have to store bare jid there...
+			std::string bare = JID(name).bare();
+			if (!bare.empty())
+				setRoomResource(bare, JID(stanza->findAttribute("from")).resource());
 			serv_join_chat(gc, comps);
 			g_hash_table_destroy(comps);
 		}
@@ -536,7 +540,11 @@ void User::receivedPresence(const Presence &stanza) {
 					comps = PURPLE_PLUGIN_PROTOCOL_INFO(gc->prpl)->chat_info_defaults(gc, name.c_str());
 				}
 				if (comps) {
+					std::cout << name << " JOINING\n";
 					setRoomResource(name, stanza.from().resource());
+					std::string bare = JID(name).bare();
+					if (!bare.empty())
+						setRoomResource(bare, stanza.from().resource());
 					serv_join_chat(gc, comps);
 				}
 			}
