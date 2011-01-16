@@ -188,7 +188,6 @@ void SpectrumMessageHandler::purpleConversationDestroyed(PurpleConversation *con
 void SpectrumMessageHandler::handleMessage(const Message& msg) {
 	PurpleConversation * conv;
 
-	std::string key = msg.to().full();	// key for m_conversations
 	std::string username = msg.to().full();
 	std::string room = "";
 	// Translates JID to Purple username
@@ -200,6 +199,13 @@ void SpectrumMessageHandler::handleMessage(const Message& msg) {
 	}
 	else {
 		Transport::instance()->protocol()->makePurpleUsernameIM(m_user, msg.to(), username);
+	}
+
+	std::string key = msg.to().full();	// key for m_conversations
+	// We have to handle resources here, so there can be for example "uin@icq.localhost" conversation,
+	// and also "uin@icq.localhost/bot", which are identical
+	if (!isOpenedConversation(key)) {
+		key = msg.to().bare();
 	}
 
 	// open new conversation or get the opened one
@@ -331,6 +337,9 @@ std::string SpectrumMessageHandler::getConversationName(PurpleConversation *conv
 		std::transform(name.begin(), name.end(), name.begin(),(int(*)(int)) std::tolower);
 		if (Transport::instance()->getConfiguration().protocol == "irc") {
 			name += "%" + JID(m_user->username()).server() + "@" + Transport::instance()->jid() + "/bot";
+		}
+		else {
+			name += "@" + Transport::instance()->jid();
 		}
 	}
 	else
