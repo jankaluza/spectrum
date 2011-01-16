@@ -31,6 +31,12 @@
 #include <algorithm>
 #include "transport.h"
 
+static bool compareItems(Disco::Item *first, Disco::Item *second) {
+	std::cout << (strcmp(first->name().c_str(), second->name().c_str()) < 0) << " " << first->name() << " " << second->name() << "\n";
+	return strcmp(first->name().c_str(), second->name().c_str()) < 0;
+}
+
+
 static AdhocCommandHandler * createSettingsHandler(AbstractUser *user, const std::string &from, const std::string &id) {
 	AdhocCommandHandler *handler = new AdhocSettings(user, from, id);
 	return handler;
@@ -153,6 +159,8 @@ Disco::ItemList GlooxAdhocHandler::handleDiscoNodeItems( const JID &_from, const
 			}
 		}
 	}
+
+	lst.sort(compareItems);
 	return lst;
 }
 
