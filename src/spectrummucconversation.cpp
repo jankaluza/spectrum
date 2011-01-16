@@ -126,7 +126,7 @@ void SpectrumMUCConversation::addUsers(AbstractUser *user, GList *cbuddies) {
 			item->addAttribute("role", "participant");
 		}
 
-		std::cout << "NICKNAME " << name << " " << m_nickname << "\n";
+		std::transform(name.begin(), name.end(), name.begin(),(int(*)(int)) std::tolower);
 		if (name == m_nickname) {
 			Tag *status = new Tag("status");
 			status->addAttribute("code", "110");

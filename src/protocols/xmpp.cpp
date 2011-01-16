@@ -68,7 +68,8 @@ void XMPPProtocol::makePurpleUsernameRoom(AbstractUser *user, const JID &to, std
 	// "spectrum%conference.spectrum.im@irc.spectrum.im" -> "spectrum@conference.spectrum.im"
 	else {
 		std::for_each( username.begin(), username.end(), replaceJidCharacters() );
-		name.assign(username);
+		// keep old name if any
+		name.assign(username + (name.empty() ? "" : ("/" + name)));
 	}
 }
 

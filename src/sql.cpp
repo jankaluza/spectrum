@@ -382,7 +382,7 @@ void SQLClass::createStatements() {
 		*m_sess << "set character_set_client=utf8", now;
 	}
 	catch (Poco::Exception e) {
-		Log("SQL ERROR", "Can't set utf8 encoding");
+		Log("SQL ERROR", "Can't set utf8 encoding " << e.displayText());
 	}
 #endif
 

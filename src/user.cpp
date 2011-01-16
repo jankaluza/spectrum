@@ -456,8 +456,7 @@ void User::connected() {
 	for (std::list <Tag*>::iterator it = m_autoConnectRooms.begin(); it != m_autoConnectRooms.end() ; it++ ) {
 		Tag *stanza = (*it);
 		GHashTable *comps = NULL;
-		std::string name = "";
-		std::string nickname = JID(stanza->findAttribute("to")).resource();
+		std::string name = JID(stanza->findAttribute("to")).resource();
 
 		PurpleConnection *gc = purple_account_get_connection(m_account);
 
@@ -525,8 +524,7 @@ void User::receivedPresence(const Presence &stanza) {
 		if (stanza.presence() != Presence::Unavailable) {
 			if (m_connected) {
 				GHashTable *comps = NULL;
-				std::string name = "";
-				std::string nickname = stanza.to().resource();
+				std::string name = stanza.to().resource();
 
 				PurpleConnection *gc = purple_account_get_connection(m_account);
 				Transport::instance()->protocol()->makePurpleUsernameRoom(this, stanza.to().bare(), name);
