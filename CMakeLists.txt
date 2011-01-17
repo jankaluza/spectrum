@@ -50,7 +50,7 @@ if(Magick_LIBRARY AND Magick_INCLUDE_DIR)
 	file(APPEND src/transport_config.h "#define WITH_IMAGEMAGICK 1\n")
 else(Magick_LIBRARY AND Magick_INCLUDE_DIR)
 	message( STATUS "Magick++ not found - avatars synchronization don't have to work!!!")
-    SET(${Magick_LIBRARY}    "")
+    SET(Magick_LIBRARY "")
 endif(Magick_LIBRARY AND Magick_INCLUDE_DIR)
 
 
