@@ -106,7 +106,12 @@ void SpectrumConversation::handleMessage(AbstractUser *user, const char *who, co
 		Transport::instance()->send(s.tag());
 		return;
 	}
-	
+
+	// This fixes adium 1.4 bug...
+	if (message.find("<HTML>") == 0) {
+		message = message.substr(6);
+	}
+
 	Message s(Message::Chat, to, message);
 	if (!m_room.empty())
 		s.setFrom(m_room + "/" + name);
