@@ -1,3 +1,33 @@
+version 1.4.7 (2011-01-xx):
+	General:
+	* Fixed 100% cpu usage when Spectrum can't connect Jabber server.
+	* Resize and convert avatars before sending them into legacy network.
+	  Needs libmagick++ installed during compilation.
+	* Working nicknames/groups synchronization in both directions
+	  using Remote Roster protoXEP. Need patched Ejabberd or extra Prosody
+	  module. Check http://spectrum.im/projects/spectrum/wiki/Remote_roster.
+	* Fixed crash when filetransfers have not been cancelled when XMPP user
+	  disconnected.
+	* Send Adhoc Commands always in the same order.
+	* Answer to VCard IQ for transport contact.
+	* Fixed bug when two SpectrumConversations were created for single
+	  PurpleConversation and therefore messages have been sent to resource
+	  with lower priority sometimes.
+
+	ICQ:
+	* Fixed avatars forwarding.
+	* Set use_clientlogin=0 and server=login.icq.com as default values
+	  for older libpurple.
+	* Forward more informations in VCards. Thanks to Alexander Skovpen.
+
+	XMPP:
+	* Fixed nickname setting for Jabber MUC.
+	* Send status code 110 while joining the room.
+
+	Identica:
+	* Store last message ID in database, so Spectrum doesn't send the same
+	  messages again.
+
 version 1.4.6 (2010-12-30):
 	General:
 	* Fixed compilation issues with older libpurple (XStatus for ICQ is
