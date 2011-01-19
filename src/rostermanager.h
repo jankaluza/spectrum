@@ -176,8 +176,13 @@ class SpectrumRosterManager : public RosterStorage, public IqHandler {
 		// Synchronizes one AbstractSpectrumBuddy with Jabber/legacy network roster.
 		void mergeBuddy(AbstractSpectrumBuddy *s_buddy);
 
-		static void sendRosterPush(const std::string &to, const std::string &jid, const std::string &subscription, IqHandler *ih = NULL, int context = 0);
+		// Sends presences as answer to roster push result IQ sent by server as response
+		// to mergeBuddy/mergeRoster jabber:iq:roster stanzas
 		bool _sendRosterPresences();
+
+		// Sends roster push.
+		static void sendRosterPush(const std::string &to, const std::string &jid, const std::string &subscription, IqHandler *ih = NULL, int context = 0);
+		
 
 	private:
 		GHashTable *m_roster;

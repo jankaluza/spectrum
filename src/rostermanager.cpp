@@ -739,6 +739,8 @@ void SpectrumRosterManager::handleIqID(const IQ &iq, int id) {
 	std::cout << "rosterPush with id " << id << "\n";
 	// This buddy was added into roster by transport just now, so we have to
 	// send initial presence.
+	// We can send it from here, because ejabberd is not ready just after this
+	// result iq... :/ (therefore there's timer)
 	if (m_rosterPushes.find(id) != m_rosterPushes.end()) {
 		std::cout << "sending presence\n";
 		m_presenceTimer->start();
