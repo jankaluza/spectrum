@@ -157,8 +157,14 @@ Tag *ICQProtocol::getVCardTag(AbstractUser *user, GList *vcardEntries) {
 			else if (label=="City"){
 				head->addChild( new Tag("LOCALITY", (std::string)purple_notify_user_info_entry_get_value(vcardEntry)));
 			}
+			else if (label=="Address"){
+				head->addChild( new Tag("STREET", (std::string)purple_notify_user_info_entry_get_value(vcardEntry)));
+			}
+			else if (label=="Zip Code"){
+				head->addChild( new Tag("PCODE", (std::string)purple_notify_user_info_entry_get_value(vcardEntry)));
+			}
 			else if (label=="State"){
-				head->addChild( new Tag("CTRY", (std::string)purple_notify_user_info_entry_get_value(vcardEntry)));
+				head->addChild( new Tag("REGION", (std::string)purple_notify_user_info_entry_get_value(vcardEntry)));
 			}
 			else if (label=="Company"){
 				head->addChild( new Tag("ORGNAME", (std::string)purple_notify_user_info_entry_get_value(vcardEntry)));
