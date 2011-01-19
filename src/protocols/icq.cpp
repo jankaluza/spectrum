@@ -169,6 +169,18 @@ Tag *ICQProtocol::getVCardTag(AbstractUser *user, GList *vcardEntries) {
 			else if (label=="Position"){
 				vcard->addChild( new Tag("TITLE", (std::string)purple_notify_user_info_entry_get_value(vcardEntry)));
 			}
+			else if (label=="Additional Information"){
+					vcard->addChild( new Tag("DESC", (std::string)purple_notify_user_info_entry_get_value(vcardEntry)));
+			}
+			else if (label=="Email Address"){
+					char *stripped = purple_markup_strip_html(purple_notify_user_info_entry_get_value(vcardEntry));
+					Tag *email = new Tag("EMAIL");
+					email->addChild( new Tag ("INTERNET"));
+					email->addChild( new Tag ("PREF"));
+					email->addChild( new Tag("USERID", stripped));
+					vcard->addChild(email);
+					g_free(stripped);
+			}
 			else if (label=="Personal Web Page"){
 				std::string page = (std::string)purple_notify_user_info_entry_get_value(vcardEntry);
 
