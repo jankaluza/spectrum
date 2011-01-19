@@ -177,11 +177,13 @@ class SpectrumRosterManager : public RosterStorage, public IqHandler {
 		void mergeBuddy(AbstractSpectrumBuddy *s_buddy);
 
 		static void sendRosterPush(const std::string &to, const std::string &jid, const std::string &subscription, IqHandler *ih = NULL, int context = 0);
+		bool _sendRosterPresences();
 
 	private:
 		GHashTable *m_roster;
 		AbstractUser *m_user;
 		SpectrumTimer *m_syncTimer;
+		SpectrumTimer *m_presenceTimer;
 		std::map <std::string, AbstractSpectrumBuddy *> m_subscribeCache;
 		std::map <std::string, authRequest *> m_authRequests;
 		int m_subscribeLastCount;

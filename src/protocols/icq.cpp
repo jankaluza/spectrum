@@ -175,6 +175,18 @@ Tag *ICQProtocol::getVCardTag(AbstractUser *user, GList *vcardEntries) {
 			else if (label=="Position"){
 				vcard->addChild( new Tag("TITLE", (std::string)purple_notify_user_info_entry_get_value(vcardEntry)));
 			}
+			else if (label=="Additional Information"){
+					vcard->addChild( new Tag("DESC", (std::string)purple_notify_user_info_entry_get_value(vcardEntry)));
+			}
+			else if (label=="Email Address"){
+					char *stripped = purple_markup_strip_html(purple_notify_user_info_entry_get_value(vcardEntry));
+					Tag *email = new Tag("EMAIL");
+					email->addChild( new Tag ("INTERNET"));
+					email->addChild( new Tag ("PREF"));
+					email->addChild( new Tag("USERID", stripped));
+					vcard->addChild(email);
+					g_free(stripped);
+			}
 			else if (label=="Personal Web Page"){
 				std::string page = (std::string)purple_notify_user_info_entry_get_value(vcardEntry);
 
@@ -217,10 +229,12 @@ Tag *ICQProtocol::getVCardTag(AbstractUser *user, GList *vcardEntries) {
 
 void ICQProtocol::onPurpleAccountCreated(PurpleAccount *account) {
 	purple_account_set_string(account, "server", "login.icq.com");
-#if ! PURPLE_VERSION_CHECK(2,7,7)
-	purple_account_set_bool(account, "use_clientlogin", 0);
-	purple_account_set_bool(account, "use_ssl", 0);
-#endif
+
+	if (purple_version_check(2, 7, 7) != NULL) {
+		purple_account_set_bool(account, "use_clientlogin", 0);
+		purple_account_set_bool(account, "use_ssl", 0);
+	}
+
 }
 
 bool ICQProtocol::onPurpleRequestInput(void *handle, AbstractUser *user, const char *title, const char *primary,const char *secondary, const char *default_value,gboolean multiline, gboolean masked, gchar *hint,const char *ok_text, GCallback ok_cb,const char *cancel_text, GCallback cancel_cb, PurpleAccount *account, const char *who,PurpleConversation *conv, void *user_data) {

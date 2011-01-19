@@ -106,7 +106,7 @@ void SpectrumConversation::handleMessage(AbstractUser *user, const char *who, co
 		Transport::instance()->send(s.tag());
 		return;
 	}
-	
+
 	Message s(Message::Chat, to, message);
 	if (!m_room.empty())
 		s.setFrom(m_room + "/" + name);

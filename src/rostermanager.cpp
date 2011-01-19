@@ -100,9 +100,15 @@ static gboolean sync_cb(gpointer data) {
 	return manager->syncBuddiesCallback();
 }
 
+static gboolean sendRosterPresences(gpointer data) {
+	SpectrumRosterManager *manager = (SpectrumRosterManager *) data;
+	return manager->_sendRosterPresences();
+}
+
 SpectrumRosterManager::SpectrumRosterManager(AbstractUser *user) : RosterStorage(user) {
 	m_user = user;
 	m_syncTimer = new SpectrumTimer(CONFIG().protocol == "icq" ? 12000 : 1000, &sync_cb, this);
+	m_presenceTimer = new SpectrumTimer(5000, &sendRosterPresences, this);
 	m_subscribeLastCount = -1;
 	m_roster = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
 	m_loadingFromDB = false;
@@ -735,9 +741,16 @@ void SpectrumRosterManager::handleIqID(const IQ &iq, int id) {
 	// send initial presence.
 	if (m_rosterPushes.find(id) != m_rosterPushes.end()) {
 		std::cout << "sending presence\n";
-		sendPresence(m_rosterPushes[id]);
-		m_rosterPushes.erase(id);
+		m_presenceTimer->start();
 	}
+}
+
+bool SpectrumRosterManager::_sendRosterPresences() {
+	for (std::map<int, AbstractSpectrumBuddy *>::iterator it = m_rosterPushes.begin(); it != m_rosterPushes.end(); it++) {
+		sendPresence((*it).second);
+	}
+	m_rosterPushes.clear();
+	return false;
 }
 
 void SpectrumRosterManager::mergeRoster() {
