@@ -565,12 +565,18 @@ int FiletransferRepeater::getDataToSend(std::string &data) {
 }
 
 void FiletransferRepeater::ready() {
-	if (!m_readyCalled && m_xfer)
+	if (!m_readyCalled && m_xfer) {
+		Log("FiletransferRepeater::ready", "timer started");
 		m_readyTimer->start();
+	}
+	else {
+		Log("FiletransferRepeater::ready", "not ready: " << m_readyCalled << " " << m_xfer);
+	}
 	m_readyCalled = true;
 }
 
 void FiletransferRepeater::ui_ready_callback() {
+	std::cout << "xfer_ui_ready" << m_xfer << "\n";
 	purple_xfer_ui_ready(m_xfer);
 }
 

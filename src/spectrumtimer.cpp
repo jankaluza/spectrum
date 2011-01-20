@@ -47,6 +47,10 @@ SpectrumTimer::~SpectrumTimer() {
 
 void SpectrumTimer::start() {
 	g_mutex_lock(m_mutex);
+
+	if (m_inCallback)
+		m_startAgain = true;
+
 	if (m_id == 0) {
 #ifdef TESTS
 		m_id = 1;
@@ -83,8 +87,12 @@ void SpectrumTimer::deleteLater() {
 // this is always in main thread.
 gboolean SpectrumTimer::timeout() {
 	m_inCallback = true;
+	m_startAgain = false;
 	gboolean ret = m_callback(m_data);
 	m_inCallback = false;
+	if (m_startAgain)
+		ret = TRUE;
+	
 	if (m_deleteLater) {
 		m_id = 0;
 		delete this;

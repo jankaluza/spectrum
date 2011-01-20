@@ -65,6 +65,7 @@ class SpectrumTimer {
 		GMutex *m_mutex;					// Mutex.
 		bool m_deleteLater;					// True if SpectrumTimer should be remove after callback.
 		bool m_inCallback;					// True if deleteLater has been called in callback.
+		bool m_startAgain;					// True if start has been called in callback
 };
 
 #endif
