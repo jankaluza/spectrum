@@ -8,6 +8,7 @@ version 1.4.7 (2011-01-xx):
 	  module. Check http://spectrum.im/projects/spectrum/wiki/Remote_roster.
 	* Fixed crash when filetransfers have not been cancelled when XMPP user
 	  disconnected.
+	* Fixed bug when filetranfer got stuck sometimes.
 	* Send Adhoc Commands always in the same order.
 	* Answer to VCard IQ for transport contact.
 	* Fixed bug when two SpectrumConversations were created for single
