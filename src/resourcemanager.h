@@ -77,6 +77,10 @@ class ResourceManager {
 
 		// Removes resource.
 		void removeResource(const std::string &resource);
+
+		// Returns true if all resources have the same priority. If there's just one
+		// resource, it returns false everytime.
+		bool hasSamePriorities();
 		
 	private:
 		std::map <std::string, Resource> m_resources;

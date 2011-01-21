@@ -119,3 +119,16 @@ int ResourceManager::getMergedFeatures() {
 	}
 	return features;
 }
+
+bool ResourceManager::hasSamePriorities() {
+	if (m_resources.size() <= 1)
+		return false;
+
+	std::map<std::string, Resource>::iterator u = m_resources.begin();
+	int prio = (*u).second.priority;
+	for (; u != m_resources.end() ; u++) {
+		if (prio != (*u).second.priority)
+			return false;
+	}
+	return true;
+}

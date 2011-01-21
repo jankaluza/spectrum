@@ -220,12 +220,17 @@ void SpectrumMessageHandler::handleMessage(const Message& msg) {
 #ifndef TESTS
 		addConversation(conv, new SpectrumConversation(conv, SPECTRUM_CONV_CHAT, room), key);
 #endif
-		m_conversations[key]->setResource(msg.from().resource());
 	}
 	else {
 		conv = m_conversations[key]->getConv();
-		m_conversations[key]->setResource(msg.from().resource());
 	}
+
+	// If there are only resources with the same priorities, send responses to bare jid
+	if (m_user->hasSamePriorities())
+		m_conversations[key]->setResource("");
+	else
+		m_conversations[key]->setResource(msg.from().resource());
+
 	m_currentBody = msg.body();
 	Log("SpectrumMessageHandler::handleMessage", "username " << username << ", key " << key << ", PurpleConversation: "
 			<< conv << ", SpectrumConversation: " << m_conversations[key] << ", resource was set to " << msg.from().resource());
