@@ -244,6 +244,10 @@ bool ICQProtocol::onPurpleRequestInput(void *handle, AbstractUser *user, const c
 			((PurpleRequestInputCb) ok_cb)(user_data,tr(user->getLang(),_("Please authorize me.")));
 			return true;
 		}
+		else if (primaryString == "Authorization Denied Message:") {
+			((PurpleRequestInputCb) ok_cb)(user_data,tr(user->getLang(),_("Authorization denied.")));
+			return true;
+		}
 	}
 	return false;
 }

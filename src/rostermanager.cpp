@@ -370,6 +370,11 @@ void SpectrumRosterManager::sendNewBuddies() {
 			if (m_xmppRoster.find(name) != m_xmppRoster.end()) {
 				std::string group = m_xmppRoster[name].groups.size() == 0 ? "Buddies" : m_xmppRoster[name].groups.front();
 				send = m_xmppRoster[name].nickname != alias ||  s_buddy->getGroup() != group;
+				if (send)
+					std::cout << "will send " << m_xmppRoster[name].nickname << " " << alias << " " << s_buddy->getGroup() << " " << group << "\n";
+			}
+			else {
+				std::cout << "will send because it's not in xmppRoster " << name << "\n";
 			}
 			if (send || s_buddy->getSubscription() != "both") {
 				m_rosterPushes[m_rosterPushesContext++] = s_buddy;
@@ -380,6 +385,7 @@ void SpectrumRosterManager::sendNewBuddies() {
 				x->addAttribute("xmlns", "jabber:iq:roster");
 
 				s_buddy->setSubscription("both");
+				storeBuddy(s_buddy);
 				addRosterItem(s_buddy);
 
 				item = new Tag("item");
