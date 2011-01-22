@@ -14,12 +14,16 @@ version 1.4.7 (2011-01-xx):
 	* Fixed bug when two SpectrumConversations were created for single
 	  PurpleConversation and therefore messages have been sent to resource
 	  with lower priority sometimes.
+	* Send messages always to bare JID when resources have the same priority.
+	* Send disco#info and disco#items features for all protocols. Fixes
+	  bad capability hash in presences.
 
 	ICQ:
 	* Fixed avatars forwarding.
 	* Set use_clientlogin=0 and server=login.icq.com as default values
 	  for older libpurple.
 	* Forward more informations in VCards. Thanks to Alexander Skovpen.
+	* Fixed denying of authorization requests.
 
 	XMPP:
 	* Fixed nickname setting for Jabber MUC.
