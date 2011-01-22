@@ -181,7 +181,13 @@ class SpectrumRosterManager : public RosterStorage, public IqHandler {
 		bool _sendRosterPresences();
 
 		// Sends roster push.
-		static void sendRosterPush(const std::string &to, const std::string &jid, const std::string &subscription, IqHandler *ih = NULL, int context = 0);
+		static void sendRosterPush(const std::string &to, const std::string &jid, const std::string &subscription,
+								   const std::string &nickname = "", const std::string &group = "",
+								   IqHandler *ih = NULL, int context = 0);
+
+		// Sends presence.
+		static void sendPresence(const std::string &from, const std::string &to, const std::string &type);
+		static void sendSubscribePresence(const std::string &from, const std::string &to, const std::string &nick = "");
 		
 
 	private:

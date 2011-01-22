@@ -61,11 +61,7 @@ static void sendUnavailablePresence(gpointer key, gpointer v, gpointer data) {
 	std::string &to = d->to;
 
 	if (s_buddy->isOnline()) {
-		Tag *tag = new Tag("presence");
-		tag->addAttribute( "to", to );
-		tag->addAttribute( "type", "unavailable" );
-		tag->addAttribute( "from", s_buddy->getJid());
-		Transport::instance()->send( tag );
+		SpectrumRosterManager::sendPresence(s_buddy->getJid(), to, "unavailable");
 		if (d->markOffline)
 			s_buddy->setOffline();
 	}
@@ -222,14 +218,12 @@ void SpectrumRosterManager::sendPresence(const std::string &name, const std::str
 		sendPresence(s_buddy, resource);
 	}
 	else {
-		std::string n(name);
-		std::for_each( n.begin(), n.end(), replaceBadJidCharacters() ); // THIS ONE IS RIGHT
 		Log(m_user->jid(), "answering to probe presence with unavailable presence");
-		Tag *tag = new Tag("presence");
-		tag->addAttribute("to", m_user->jid() + std::string(resource.empty() ? "" : "/" + resource));
-		tag->addAttribute("from", n + "@" + Transport::instance()->jid());
-		tag->addAttribute("type", "unavailable");
-		Transport::instance()->send(tag);
+		std::string n(name);
+		std::for_each( n.begin(), n.end(), replaceBadJidCharacters() );
+		std::string from = n + "@" + Transport::instance()->jid();
+		std::string to = m_user->jid() + std::string(resource.empty() ? "" : "/" + resource);
+		SpectrumRosterManager::sendPresence(from, to, "unavailable");
 	}
 }
 
@@ -349,56 +343,29 @@ void SpectrumRosterManager::sendNewBuddies() {
 	Log(m_user->jid(), "Sending rosterX");
 
 	if (m_supportRosterIQ) {
-		// <iq to='juliet@example.com' type='set' id='roster_3'>
-		//   <query xmlns='jabber:iq:roster'>
-		//     <item jid='123456789@icq.example.net'
-		//           name='Romeo'
-		//           subscription='both'>
-		//       <group>Friends</group>
-		//       <group>Lovers</group>
-		//     </item>
-		//   </query>
-		// </iq>
-		Tag *item;
 		std::map<std::string, AbstractSpectrumBuddy *>::iterator it = m_subscribeCache.begin();
 		while (it != m_subscribeCache.end()) {
 			AbstractSpectrumBuddy *s_buddy = (*it).second;
 			std::string jid = s_buddy->getBareJid();
 			std::string alias = s_buddy->getAlias();
 			std::string name = s_buddy->getName();
-			bool send = true;
+
+			// check if buddy in jabber roster differs from buddy in legacy network contact list.
+			bool differs = true;
 			if (m_xmppRoster.find(name) != m_xmppRoster.end()) {
 				std::string group = m_xmppRoster[name].groups.size() == 0 ? "Buddies" : m_xmppRoster[name].groups.front();
-				send = m_xmppRoster[name].nickname != alias ||  s_buddy->getGroup() != group;
-				if (send)
-					std::cout << "will send " << m_xmppRoster[name].nickname << " " << alias << " " << s_buddy->getGroup() << " " << group << "\n";
+				differs = m_xmppRoster[name].nickname != alias ||  s_buddy->getGroup() != group;
 			}
-			else {
-				std::cout << "will send because it's not in xmppRoster " << name << "\n";
-			}
-			if (send || s_buddy->getSubscription() != "both") {
+
+			// send roster push if buddies are different or subscription is not both
+			if (differs || s_buddy->getSubscription() != "both") {
 				m_rosterPushes[m_rosterPushesContext++] = s_buddy;
-				IQ iq(IQ::Set, m_user->jid());
-				iq.setFrom(Transport::instance()->jid());
+				SpectrumRosterManager::sendRosterPush(m_user->jid(), jid, "both", alias, name, this, m_rosterPushesContext);
 
-				Tag *x = new Tag("query");
-				x->addAttribute("xmlns", "jabber:iq:roster");
-
+				// Set subscription to both and store buddy
 				s_buddy->setSubscription("both");
 				storeBuddy(s_buddy);
 				addRosterItem(s_buddy);
-
-				item = new Tag("item");
-				item->addAttribute("jid", jid);
-				item->addAttribute("name", alias);
-				item->addAttribute("subscription", "both");
-				item->addChild( new Tag("group", s_buddy->getGroup()));
-				x->addChild(item);
-				
-				iq.addExtension(new RosterExtension(x));
-				delete x;
-				Transport::instance()->send(iq, this, m_rosterPushesContext);
-				
 			}
 			it++;
 		}
@@ -443,17 +410,7 @@ void SpectrumRosterManager::sendNewBuddies() {
 				AbstractSpectrumBuddy *s_buddy = (*it).second;
 				if (s_buddy->getSubscription() != "both") {
 					std::string alias = s_buddy->getAlias();
-
-					Tag *tag = new Tag("presence");
-					tag->addAttribute("type", "subscribe");
-					tag->addAttribute("from", s_buddy->getBareJid());
-					tag->addAttribute("to", m_user->jid());
-					if (!alias.empty()) {
-						Tag *nick = new Tag("nick", alias);
-						nick->addAttribute("xmlns","http://jabber.org/protocol/nick");
-						tag->addChild(nick);
-					}
-					Transport::instance()->send(tag);
+					SpectrumRosterManager::sendSubscribePresence(s_buddy->getBareJid(), m_user->jid(), alias);
 
 					s_buddy->setSubscription("ask");
 					addRosterItem(s_buddy);
@@ -501,7 +458,7 @@ authRequest *SpectrumRosterManager::handleAuthorizationRequest(PurpleAccount *ac
 	m_authRequests[name] = req;
 
 	Log(m_user->jid(), "purpleAuthorizeReceived: " << name << "on_list:" << on_list);
-// 	std::for_each( name.begin(), name.end(), replaceBadJidCharacters() );
+
 	if (Transport::instance()->getConfiguration().jid_escaping) {
 		name = JID::escapeNode(name);
 	}
@@ -509,18 +466,8 @@ authRequest *SpectrumRosterManager::handleAuthorizationRequest(PurpleAccount *ac
 		std::for_each( name.begin(), name.end(), replaceBadJidCharacters() );
 	}
 	// send subscribe presence to user
-	Tag *tag = new Tag("presence");
-	tag->addAttribute("type", "subscribe" );
-	tag->addAttribute("from", name + "@" + Transport::instance()->jid());
-	tag->addAttribute("to", m_user->jid());
-
-	if (alias) {
-		Tag *nick = new Tag("nick", std::string(alias));
-		nick->addAttribute("xmlns","http://jabber.org/protocol/nick");
-		tag->addChild(nick);
-	}
-
-	Transport::instance()->send(tag);
+	std::string nickname = alias ? alias : "";
+	SpectrumRosterManager::sendSubscribePresence(name + "@" + Transport::instance()->jid(), m_user->jid(), nickname);
 	return req;
 }
 
@@ -597,17 +544,8 @@ void SpectrumRosterManager::handleSubscription(const Subscription &subscription)
 				Log(m_user->jid(), "subscribe presence; user is already in roster => sending subscribed");
 
 				s_buddy->setSubscription("to");
-				Tag *reply = new Tag("presence");
-				reply->addAttribute( "to", subscription.from().bare() );
-				reply->addAttribute( "from", subscription.to().bare() );
-				reply->addAttribute( "type", "subscribe" );
-				Transport::instance()->send( reply );
-
-				reply = new Tag("presence");
-				reply->addAttribute( "to", subscription.from().bare() );
-				reply->addAttribute( "from", subscription.to().bare() );
-				reply->addAttribute( "type", "subscribed" );
-				Transport::instance()->send( reply );
+				SpectrumRosterManager::sendPresence(subscription.to().bare(), subscription.from().bare(), "subscribe");
+				SpectrumRosterManager::sendPresence(subscription.to().bare(), subscription.from().bare(), "subscribed");
 
 				// Sometimes there is "subscribed" request for new user received before "subscribe",
 				// so s_buddy could be already there, but purple_account_add_buddy has not been called.
@@ -667,15 +605,9 @@ void SpectrumRosterManager::handleSubscription(const Subscription &subscription)
 			removeFromLocalRoster(remote_user);
 
 			// inform user about removing this buddy
-			Tag *tag = new Tag("presence");
-			tag->addAttribute("to", subscription.from().bare());
-			tag->addAttribute("from", subscription.to().username() + "@" + Transport::instance()->jid() + "/bot");
-			if(subscription.subtype() == Subscription::Unsubscribe) {
-				tag->addAttribute( "type", "unsubscribe" );
-			} else {
-				tag->addAttribute( "type", "unsubscribed" );
-			}
-			Transport::instance()->send( tag );
+			SpectrumRosterManager::sendPresence(subscription.to().username() + "@" + Transport::instance()->jid() + "/bot",
+												subscription.from().bare(),
+												subscription.subtype() == Subscription::Unsubscribe ? "unsubscribe" : "unsubscribed");
 			return;
 		}
 	}
@@ -787,7 +719,7 @@ void SpectrumRosterManager::mergeBuddy(AbstractSpectrumBuddy *s_buddy) {
 	}
 }
 
-void SpectrumRosterManager::sendRosterPush(const std::string &to, const std::string &jid, const std::string &subscription, IqHandler *ih, int context) {
+void SpectrumRosterManager::sendRosterPush(const std::string &to, const std::string &jid, const std::string &subscription, const std::string &alias, const std::string &group, IqHandler *ih, int context) {
 	IQ iq(IQ::Set, to);
 	iq.setFrom(Transport::instance()->jid());
 
@@ -797,6 +729,10 @@ void SpectrumRosterManager::sendRosterPush(const std::string &to, const std::str
 	Tag *item = new Tag("item");
 	item->addAttribute("jid", jid);
 	item->addAttribute("subscription", subscription);
+	if (!alias.empty())
+		item->addAttribute("name", alias);
+	if (!group.empty())
+		item->addChild(new Tag("group", group));
 	x->addChild(item);
 	
 	iq.addExtension(new RosterExtension(x));
@@ -805,4 +741,25 @@ void SpectrumRosterManager::sendRosterPush(const std::string &to, const std::str
 		Transport::instance()->send(iq, ih, context);
 	else
 		Transport::instance()->send(iq.tag());
+}
+
+void SpectrumRosterManager::sendPresence(const std::string &from, const std::string &to, const std::string &type) {
+	Tag *tag = new Tag("presence");
+	tag->addAttribute("to", to);
+	tag->addAttribute("type", type);
+	tag->addAttribute("from", from);
+	Transport::instance()->send(tag);
+}
+
+void SpectrumRosterManager::sendSubscribePresence(const std::string &from, const std::string &to, const std::string &nick) {
+	Tag *tag = new Tag("presence");
+	tag->addAttribute("type", "subscribe");
+	tag->addAttribute("from", from);
+	tag->addAttribute("to", to);
+	if (!nick.empty()) {
+		Tag *n = new Tag("nick", nick);
+		n->addAttribute("xmlns", "http://jabber.org/protocol/nick");
+		tag->addChild(n);
+	}
+	Transport::instance()->send(tag);
 }

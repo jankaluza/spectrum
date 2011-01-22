@@ -79,7 +79,7 @@ bool GlooxRegisterHandler::registerUser(const UserRow &row) {
 	Transport::instance()->sql()->addUser(row);
 	
 	m_to = row.jid;
-	SpectrumRosterManager::sendRosterPush(row.jid, Transport::instance()->jid(), "both", this, 0);
+	SpectrumRosterManager::sendRosterPush(row.jid, Transport::instance()->jid(), "both", "", "", this, 0);
 
 	return true;
 }
@@ -94,7 +94,7 @@ bool GlooxRegisterHandler::unregisterUser(const std::string &barejid) {
 	PurpleAccount *account = NULL;
 
 	m_to = barejid;
-	SpectrumRosterManager::sendRosterPush(barejid, Transport::instance()->jid(), "remove", this, 1);
+	SpectrumRosterManager::sendRosterPush(barejid, Transport::instance()->jid(), "remove", "", "", this, 1);
 
 	return true;
 }
