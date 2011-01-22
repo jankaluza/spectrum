@@ -1,4 +1,4 @@
-version 1.4.7 (2011-01-xx):
+version 1.4.7 (2011-01-22):
 	General:
 	* Fixed 100% cpu usage when Spectrum can't connect Jabber server.
 	* Resize and convert avatars before sending them into legacy network.
@@ -6,7 +6,7 @@ version 1.4.7 (2011-01-xx):
 	* Working nicknames/groups synchronization in both directions
 	  using Remote Roster protoXEP. Need patched Ejabberd or extra Prosody
 	  module. Check http://spectrum.im/projects/spectrum/wiki/Remote_roster.
-	* Fixed crash when filetransfers have not been cancelled when XMPP user
+	* Fixed crash when filetransfers have not been cancelled before XMPP user
 	  disconnected.
 	* Fixed bug when filetranfer got stuck sometimes.
 	* Send Adhoc Commands always in the same order.
@@ -19,7 +19,7 @@ version 1.4.7 (2011-01-xx):
 	  bad capability hash in presences.
 
 	ICQ:
-	* Fixed avatars forwarding.
+	* Fixed avatars forwarding from Jabber to ICQ.
 	* Set use_clientlogin=0 and server=login.icq.com as default values
 	  for older libpurple.
 	* Forward more informations in VCards. Thanks to Alexander Skovpen.
