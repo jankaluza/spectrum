@@ -24,7 +24,7 @@
 #include "abstractprotocol.h"
 #include "../adhoc/adhoccommandhandler.h"
 
-class AbstractUser;
+class User;
 
 extern Localization localization;
 
@@ -38,7 +38,7 @@ class IRCProtocolData {
 
 class ConfigHandler : public AdhocCommandHandler {
 	public:
-		ConfigHandler(AbstractUser *user, const std::string &from, const std::string &id);
+		ConfigHandler(User *user, const std::string &from, const std::string &id);
 		virtual ~ConfigHandler();
 		
 		bool handleIq(const IQ &iq);
@@ -46,7 +46,7 @@ class ConfigHandler : public AdhocCommandHandler {
 	
 	private:
 		std::string m_from;
-		AbstractUser *m_user;
+		User *m_user;
 		std::list <std::string> m_userId;
 };
 
@@ -61,19 +61,19 @@ class IRCProtocol : AbstractProtocol
 		std::list<std::string> transportFeatures();
 		std::list<std::string> buddyFeatures();
 		std::string text(const std::string &key);
-		Tag *getVCardTag(AbstractUser *user, GList *vcardEntries);
-		bool isMUC(AbstractUser *user, const std::string &jid) { return jid.find("%") != std::string::npos && jid.find("#") == 0; }
+		Tag *getVCardTag(User *user, GList *vcardEntries);
+		bool isMUC(User *user, const std::string &jid) { return jid.find("%") != std::string::npos && jid.find("#") == 0; }
 		bool tempAccountsAllowed() { return true; }
 		bool changeNickname(const std::string &nick, PurpleConversation *conv);
-		void makeRoomJID(AbstractUser *user, std::string &name);
-		void makePurpleUsernameRoom(AbstractUser *user, const JID &jid, std::string &name);
-		void makePurpleUsernameIM(AbstractUser *user, const JID &jid, std::string &name);
-		void makeUsernameRoom(AbstractUser *user, std::string &name);
+		void makeRoomJID(User *user, std::string &name);
+		void makePurpleUsernameRoom(User *user, const JID &jid, std::string &name);
+		void makePurpleUsernameIM(User *user, const JID &jid, std::string &name);
+		void makeUsernameRoom(User *user, std::string &name);
 
 		// SIGNALS
 
-		void onUserCreated(AbstractUser *user);
-		void onConnected(AbstractUser *user);
+		void onUserCreated(User *user);
+		void onConnected(User *user);
 		void onPurpleAccountCreated(PurpleAccount *account);
 
 	private:

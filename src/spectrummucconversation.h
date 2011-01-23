@@ -30,6 +30,7 @@
 #include "abstractconversation.h"
 
 using namespace gloox;
+class User;
 
 // Class representing MUC Conversation.
 class SpectrumMUCConversation : public AbstractConversation {
@@ -38,25 +39,25 @@ class SpectrumMUCConversation : public AbstractConversation {
 		virtual ~SpectrumMUCConversation();
 
 		// Handles message which should be resend to XMPP user.
-		void handleMessage(AbstractUser *user, const char *who, const char *msg, PurpleMessageFlags flags, time_t mtime, const std::string &currentBody = "");
+		void handleMessage(User *user, const char *who, const char *msg, PurpleMessageFlags flags, time_t mtime, const std::string &currentBody = "");
 
 		// Called when new users join the room.
-		void addUsers(AbstractUser *user, GList *cbuddies);
+		void addUsers(User *user, GList *cbuddies);
 
 		// Called when some user is renamed.
-		void renameUser(AbstractUser *user, const char *old_name, const char *new_name, const char *new_alias);
+		void renameUser(User *user, const char *old_name, const char *new_name, const char *new_alias);
 
 		// Called when some user is removed.
-		void removeUsers(AbstractUser *user, GList *users);
+		void removeUsers(User *user, GList *users);
 
 		// Called when some the topic is changed.
-		void changeTopic(AbstractUser *user, const char *who, const char *topic);
+		void changeTopic(User *user, const char *who, const char *topic);
 
 		// Returns pointer to PurpleConversation associated with this conversation.
 		PurpleConversation *getConv() { return m_conv; }
 
 		// Sends current topic to XMPP user.
-		void sendTopic(AbstractUser *user);
+		void sendTopic(User *user);
 
 	private:
 		PurpleConversation *m_conv;		// Conversation associated with this class.

@@ -42,57 +42,57 @@ static void get_settings(gpointer key, gpointer v, gpointer data) {
 }
 
 
-static PurpleCmdRet settings_command_cb(PurpleConversation *conv, const char *cmd, char **args, char **error, void *data) {
-	GString *s = NULL;
-	User *user = (User *) GlooxMessageHandler::instance()->userManager()->getUserByAccount(purple_conversation_get_account(conv));
-	if (!user)
-		return PURPLE_CMD_RET_OK;
-	if (args[0] != NULL) {
-		std::string cmd(args[0]);
-		if (cmd == "list") {
-			s = g_string_new("Transport: ");
-			GHashTable *settings = user->settings();
-			g_hash_table_foreach(settings, get_settings, s);
-		}
-		else if (cmd == "set") {
-			if (args[1] != NULL) {
-				s = g_string_new("Transport: ");
-				PurpleValue *value = user->getSetting(args[1]);
-				if (value) {
-					if (purple_value_get_type(value) == PURPLE_TYPE_BOOLEAN) {
-						value = purple_value_new(PURPLE_TYPE_BOOLEAN);
-						purple_value_set_boolean(value, atoi(args[2]));
-						user->updateSetting(args[1], value);
-						if (purple_value_get_boolean(value))
-							g_string_append_printf(s, tr(user->getLang(),_("%s is now True\n")), args[1]);
-						else
-							g_string_append_printf(s, tr(user->getLang(),_("%s is now False\n")), args[1]);
-					}
-					else if (purple_value_get_type(value) == PURPLE_TYPE_STRING) {
-						value = purple_value_new(PURPLE_TYPE_STRING);
-						purple_value_set_string(value, args[2]);
-						user->updateSetting(args[1], value);
-						g_string_append_printf(s, tr(user->getLang(),_("%s is now \"%s\"\n")), args[1], args[2]);
-					}
-				}
-				else {
-					g_string_append_printf(s, tr(user->getLang(), _("The setting \"%s\" does not exist.  Try \"/transport settings list\" to get a list of available settings.\n")), args[1]);
-				}
-			}
-		}
-	}
-	if (s) {
-		if (purple_conversation_get_type(conv) == PURPLE_CONV_TYPE_IM) {
-			purple_conv_im_write(PURPLE_CONV_IM(conv), purple_conversation_get_name(conv), s->str, PURPLE_MESSAGE_RECV, time(NULL));
-		}
-		else if (purple_conversation_get_type(conv) == PURPLE_CONV_TYPE_CHAT) {
-			purple_conv_chat_write(PURPLE_CONV_CHAT(conv), "transport", s->str, PURPLE_MESSAGE_RECV, time(NULL));
-		}
-		g_string_free(s, TRUE);
-	}
-
-	return PURPLE_CMD_RET_OK;
-}
+// static PurpleCmdRet settings_command_cb(PurpleConversation *conv, const char *cmd, char **args, char **error, void *data) {
+// 	GString *s = NULL;
+// 	User *user = (User *) GlooxMessageHandler::instance()->userManager()->getUserByAccount(purple_conversation_get_account(conv));
+// 	if (!user)
+// 		return PURPLE_CMD_RET_OK;
+// 	if (args[0] != NULL) {
+// 		std::string cmd(args[0]);
+// 		if (cmd == "list") {
+// 			s = g_string_new("Transport: ");
+// 			GHashTable *settings = user->settings();
+// 			g_hash_table_foreach(settings, get_settings, s);
+// 		}
+// 		else if (cmd == "set") {
+// 			if (args[1] != NULL) {
+// 				s = g_string_new("Transport: ");
+// 				PurpleValue *value = user->getSetting<PurpleValue *>(args[1]);
+// 				if (value) {
+// 					if (purple_value_get_type(value) == PURPLE_TYPE_BOOLEAN) {
+// 						value = purple_value_new(PURPLE_TYPE_BOOLEAN);
+// 						purple_value_set_boolean(value, atoi(args[2]));
+// 						user->updateSetting(args[1], value);
+// 						if (purple_value_get_boolean(value))
+// 							g_string_append_printf(s, tr(user->getLang(),_("%s is now True\n")), args[1]);
+// 						else
+// 							g_string_append_printf(s, tr(user->getLang(),_("%s is now False\n")), args[1]);
+// 					}
+// 					else if (purple_value_get_type(value) == PURPLE_TYPE_STRING) {
+// 						value = purple_value_new(PURPLE_TYPE_STRING);
+// 						purple_value_set_string(value, args[2]);
+// 						user->updateSetting(args[1], value);
+// 						g_string_append_printf(s, tr(user->getLang(),_("%s is now \"%s\"\n")), args[1], args[2]);
+// 					}
+// 				}
+// 				else {
+// 					g_string_append_printf(s, tr(user->getLang(), _("The setting \"%s\" does not exist.  Try \"/transport settings list\" to get a list of available settings.\n")), args[1]);
+// 				}
+// 			}
+// 		}
+// 	}
+// 	if (s) {
+// 		if (purple_conversation_get_type(conv) == PURPLE_CONV_TYPE_IM) {
+// 			purple_conv_im_write(PURPLE_CONV_IM(conv), purple_conversation_get_name(conv), s->str, PURPLE_MESSAGE_RECV, time(NULL));
+// 		}
+// 		else if (purple_conversation_get_type(conv) == PURPLE_CONV_TYPE_CHAT) {
+// 			purple_conv_chat_write(PURPLE_CONV_CHAT(conv), "transport", s->str, PURPLE_MESSAGE_RECV, time(NULL));
+// 		}
+// 		g_string_free(s, TRUE);
+// 	}
+// 
+// 	return PURPLE_CMD_RET_OK;
+// }
 
 static PurpleCmdRet help_command_cb(PurpleConversation *conv, const char *cmd, char **args, char **error, void *data) {
 	GList *l, *text;
@@ -140,6 +140,6 @@ static PurpleCmdRet help_command_cb(PurpleConversation *conv, const char *cmd, c
 
 void purple_commands_init() {
 	purple_cmd_register("help", "w", PURPLE_CMD_P_DEFAULT, (PurpleCmdFlag) (PURPLE_CMD_FLAG_CHAT | PURPLE_CMD_FLAG_IM | PURPLE_CMD_FLAG_ALLOW_WRONG_ARGS), NULL, help_command_cb, _("help &lt;command&gt;:  Help on a specific command."), NULL);
-	purple_cmd_register("settings", "www", PURPLE_CMD_P_DEFAULT, (PurpleCmdFlag) (PURPLE_CMD_FLAG_CHAT | PURPLE_CMD_FLAG_IM), NULL, settings_command_cb, _("settings set &lt;command&gt; settings list:  Configure transport."), NULL);
-	purple_cmd_register("settings", "w", PURPLE_CMD_P_DEFAULT, (PurpleCmdFlag) (PURPLE_CMD_FLAG_CHAT | PURPLE_CMD_FLAG_IM), NULL, settings_command_cb, _("settings set &lt;command&gt; settings list:  Configure transport."), NULL);
+// 	purple_cmd_register("settings", "www", PURPLE_CMD_P_DEFAULT, (PurpleCmdFlag) (PURPLE_CMD_FLAG_CHAT | PURPLE_CMD_FLAG_IM), NULL, settings_command_cb, _("settings set &lt;command&gt; settings list:  Configure transport."), NULL);
+// 	purple_cmd_register("settings", "w", PURPLE_CMD_P_DEFAULT, (PurpleCmdFlag) (PURPLE_CMD_FLAG_CHAT | PURPLE_CMD_FLAG_IM), NULL, settings_command_cb, _("settings set &lt;command&gt; settings list:  Configure transport."), NULL);
 }

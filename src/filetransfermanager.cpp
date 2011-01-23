@@ -145,7 +145,7 @@ void FileTransferManager::handleFTRequest (const JID &from, const JID &to, const
 	
 	std::string uname = purpleUsername(to.username());
 
-	AbstractUser *user = Transport::instance()->userManager()->getUserByJID(from.bare());
+	User *user = Transport::instance()->userManager()->getUserByJID(from.bare());
 	if (user && user->account() && user->isConnected()) {
 		bool canSendFile = Transport::instance()->canSendFile(user->account(), uname);
 		Log("CanSendFile = ", canSendFile);
@@ -199,7 +199,7 @@ void FileTransferManager::handleFTBytestream (Bytestream *bs) {
 }
 
 void FileTransferManager::handleXferCreated(PurpleXfer *xfer) {
-	AbstractUser *user = (AbstractUser *) Transport::instance()->userManager()->getUserByAccount(purple_xfer_get_account(xfer));
+	User *user = (User *) Transport::instance()->userManager()->getUserByAccount(purple_xfer_get_account(xfer));
 	if (!user) {
 		Log("xfercreated", "no user " << xfer->who);
 		return;
@@ -269,11 +269,11 @@ void FileTransferManager::handleXferFileReceiveRequest(PurpleXfer *xfer) {
 		}
 	}
 
-	AbstractUser *user = Transport::instance()->userManager()->getUserByAccount(purple_xfer_get_account(xfer));
+	User *user = Transport::instance()->userManager()->getUserByAccount(purple_xfer_get_account(xfer));
 	if (user != NULL) {
 		FiletransferRepeater *repeater = (FiletransferRepeater *) xfer->ui_data;
 		if (user->hasFeature(GLOOX_FEATURE_FILETRANSFER) && 
-			!purple_value_get_boolean(user->getSetting("save_files_on_server")) &&
+			!user->getSetting<bool>("save_files_on_server") &&
 			!Transport::instance()->getConfiguration().filetransferForceDir) {
 			// TODO: CHECK IF requestFT could be part of this class...
 			std::string sid = repeater->requestFT();
@@ -295,7 +295,7 @@ void FileTransferManager::handleXferFileReceiveComplete(PurpleXfer *xfer) {
 	std::string remote_user(purple_xfer_get_remote_user(xfer));
 	if (purple_xfer_get_local_filename(xfer)) {
 		std::string localname(purple_xfer_get_local_filename(xfer));
-		AbstractUser *user = Transport::instance()->userManager()->getUserByAccount(purple_xfer_get_account(xfer));
+		User *user = Transport::instance()->userManager()->getUserByAccount(purple_xfer_get_account(xfer));
 		if (user != NULL) {
 			if (user->isConnected()) {
 				// filename is in form "/full/path/to/file/HASH/file.tld" where "/full/path/to/file/"

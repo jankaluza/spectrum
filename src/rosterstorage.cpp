@@ -24,6 +24,7 @@
 #include "transport.h"
 #include "spectrumbuddy.h"
 #include "spectrumtimer.h"
+#include "user.h"
 
 extern LogClass Log_;
 
@@ -36,7 +37,7 @@ static void save_settings(gpointer k, gpointer v, gpointer data) {
 	PurpleValue *value = (PurpleValue *) v;
 	std::string key((char *) k);
 	SaveData *s = (SaveData *) data;
-	AbstractUser *user = s->user;
+	User *user = s->user;
 	long id = s->id;
 	if (purple_value_get_type(value) == PURPLE_TYPE_BOOLEAN) {
 		if (purple_value_get_boolean(value))
@@ -51,7 +52,7 @@ static void save_settings(gpointer k, gpointer v, gpointer data) {
 }
 
 static gboolean storeAbstractSpectrumBuddy(gpointer key, gpointer v, gpointer data) {
-	AbstractUser *user = (AbstractUser *) data;
+	User *user = (User *) data;
 	AbstractSpectrumBuddy *s_buddy = (AbstractSpectrumBuddy *) v;
 	if (s_buddy->getFlags() & SPECTRUM_BUDDY_IGNORE)
 		return TRUE;
@@ -81,7 +82,7 @@ static gboolean storeAbstractSpectrumBuddy(gpointer key, gpointer v, gpointer da
 	return TRUE;
 }
 
-RosterStorage::RosterStorage(AbstractUser *user) : m_user(user) {
+RosterStorage::RosterStorage(User *user) : m_user(user) {
 	m_storageCache = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
 	m_storageTimer = new SpectrumTimer(10000, &storageTimeout, this);
 }

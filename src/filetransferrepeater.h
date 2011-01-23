@@ -33,7 +33,7 @@
 #include "thread.h"
 #include <fstream>
 
-class AbstractUser;
+class User;
 class SpectrumTimer;
 
 extern Localization localization;
@@ -44,7 +44,7 @@ class FiletransferRepeater;
 
 class ReceiveFile : public BytestreamDataHandler, public Thread{
 	public:
-		ReceiveFile(Bytestream *stream, int size, const std::string &filename, AbstractUser *user, FiletransferRepeater *manager);
+		ReceiveFile(Bytestream *stream, int size, const std::string &filename, User *user, FiletransferRepeater *manager);
 		~ReceiveFile();
 
 		bool receive();
@@ -54,7 +54,7 @@ class ReceiveFile : public BytestreamDataHandler, public Thread{
 		void handleBytestreamClose(Bytestream *s5b);
 
 		const std::string &filename() { return m_filename; }
-		AbstractUser *user () { return m_user; }
+		User *user () { return m_user; }
 		const std::string &target() { return m_target; }
 		void dispose();
 
@@ -64,7 +64,7 @@ class ReceiveFile : public BytestreamDataHandler, public Thread{
 		std::string m_target;
 		int m_size;
 		bool m_finished;
-		AbstractUser *m_user;
+		User *m_user;
 		FiletransferRepeater *m_parent;
 		std::ofstream m_file;
 };
@@ -92,7 +92,7 @@ class ReceiveFileStraight : public BytestreamDataHandler, public Thread {
 
 class SendFile : public BytestreamDataHandler, public Thread {
 	public:
-		SendFile(Bytestream *stream, int size, const std::string &filename, AbstractUser *user, FiletransferRepeater *manager);
+		SendFile(Bytestream *stream, int size, const std::string &filename, User *user, FiletransferRepeater *manager);
 		~SendFile();
 
 		bool send();
@@ -102,13 +102,13 @@ class SendFile : public BytestreamDataHandler, public Thread {
 		void handleBytestreamClose(Bytestream *s5b);
 
 		const std::string &filename() { return m_filename; }
-		AbstractUser *user() { return m_user; }
+		User *user() { return m_user; }
 		void dispose();
 
 	private:
 		Bytestream *m_stream;
 		std::string m_filename;
-		AbstractUser *m_user;
+		User *m_user;
 		int m_size;
 		FiletransferRepeater *m_parent;
 		std::ofstream m_file;

@@ -167,7 +167,7 @@ void GlooxVCardHandler::userInfoArrived(PurpleConnection *gc, const std::string 
 			vcard->addAttribute( "xmlns", "vcard-temp" );
 		}
 
-		if (purple_value_get_boolean(user->getSetting("enable_avatars")))
+		if (user->getSetting<bool>("enable_avatars"))
 			Log("VCard", "AVATARS ENABLED IN USER SETTINGS");
 		
 		if (user->hasTransportFeature(TRANSPORT_FEATURE_AVATARS))
@@ -185,7 +185,7 @@ void GlooxVCardHandler::userInfoArrived(PurpleConnection *gc, const std::string 
 			reply->addAttribute( "from", JID::escapeNode(who) + "@" + p->jid() );
 		}
 
-		if (purple_value_get_boolean(user->getSetting("enable_avatars")) && user->hasTransportFeature(TRANSPORT_FEATURE_AVATARS)) {
+		if (user->getSetting<bool>("enable_avatars") && user->hasTransportFeature(TRANSPORT_FEATURE_AVATARS)) {
 			Tag *photo = new Tag("PHOTO");
 
 			Log("VCard", "Trying to find out " << name);

@@ -27,7 +27,6 @@
 #include "glib.h"
 #include "gloox/tag.h"
 #include <algorithm>
-#include "abstractuser.h"
 
 typedef enum {	SPECTRUM_CONV_CHAT = 0,
 				SPECTRUM_CONV_GROUPCHAT,
@@ -35,6 +34,7 @@ typedef enum {	SPECTRUM_CONV_CHAT = 0,
 				} SpectrumConversationType;
 
 using namespace gloox;
+class User;
 
 // Wrapper for PurpleBuddy.
 class AbstractConversation {
@@ -57,19 +57,19 @@ class AbstractConversation {
 		const std::string &getKey();
 
 		// Handles message which should be resend to XMPP user.
-		virtual void handleMessage(AbstractUser *user, const char *who, const char *msg, PurpleMessageFlags flags, time_t mtime, const std::string &currentBody = "") = 0;
+		virtual void handleMessage(User *user, const char *who, const char *msg, PurpleMessageFlags flags, time_t mtime, const std::string &currentBody = "") = 0;
 
 		// Called when new users join the room.
-		virtual void addUsers(AbstractUser *user, GList *cbuddies) {}
+		virtual void addUsers(User *user, GList *cbuddies) {}
 
 		// Called when some user is renamed.
-		virtual void renameUser(AbstractUser *user, const char *old_name, const char *new_name, const char *new_alias) {}
+		virtual void renameUser(User *user, const char *old_name, const char *new_name, const char *new_alias) {}
 
 		// Called when some user is removed.
-		virtual void removeUsers(AbstractUser *user, GList *users) {}
+		virtual void removeUsers(User *user, GList *users) {}
 
 		// Called when some the topic is changed.
-		virtual void changeTopic(AbstractUser *user, const char *who, const char *topic) {}
+		virtual void changeTopic(User *user, const char *who, const char *topic) {}
 
 		// Returns pointer to PurpleConversation associated with this conversation.
 		virtual PurpleConversation *getConv() = 0;

@@ -87,7 +87,7 @@ bool AutoConnectLoop::restoreNextConnection() {
 	m_users.pop_back();
 
 	Log("connection restorer", "Checking next jid " << jid);
-	AbstractUser *user = Transport::instance()->userManager()->getUserByJID(jid);
+	User *user = Transport::instance()->userManager()->getUserByJID(jid);
 	if (user == NULL) {
 		Log("connection restorer", "Sending probe presence to " << jid);
 		Tag *stanza = new Tag("presence");

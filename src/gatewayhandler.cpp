@@ -26,6 +26,7 @@
 #include "spectrum_util.h"
 #include "usermanager.h"
 #include "transport.h"
+#include "user.h"
 
 GatewayExtension::GatewayExtension() : StanzaExtension( ExtGateway )
 {
@@ -98,7 +99,7 @@ bool GlooxGatewayHandler::handleIq (const IQ &stanza){
 			return false;
 		std::string uin(prompt->cdata());
 		
-		AbstractUser *user = Transport::instance()->userManager()->getUserByJID(stanza.from().bare());
+		User *user = Transport::instance()->userManager()->getUserByJID(stanza.from().bare());
 		PurpleAccount *account = user ? user->account() : NULL;
 
 		Transport::instance()->protocol()->prepareUsername(uin, account);

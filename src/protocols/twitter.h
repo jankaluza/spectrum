@@ -38,13 +38,13 @@ class TwitterProtocol : AbstractProtocol
 		std::list<std::string> transportFeatures();
 		std::list<std::string> buddyFeatures();
 		std::string text(const std::string &key);
-		bool onPurpleRequestInput(void *handle, AbstractUser *user, const char *title, const char *primary,const char *secondary, const char *default_value,gboolean multiline, gboolean masked, gchar *hint,const char *ok_text, GCallback ok_cb,const char *cancel_text, GCallback cancel_cb, PurpleAccount *account, const char *who,PurpleConversation *conv, void *user_data);
+		bool onPurpleRequestInput(void *handle, User *user, const char *title, const char *primary,const char *secondary, const char *default_value,gboolean multiline, gboolean masked, gchar *hint,const char *ok_text, GCallback ok_cb,const char *cancel_text, GCallback cancel_cb, PurpleAccount *account, const char *who,PurpleConversation *conv, void *user_data);
 		bool onNotifyUri(const char *uri);
 		void onRequestClose(void *handle);
-		void onXMPPMessageReceived(AbstractUser *user, const Message &msg);
-		void onDestroy(AbstractUser *user);
+		void onXMPPMessageReceived(User *user, const Message &msg);
+		void onDestroy(User *user);
 		void onPurpleAccountCreated(PurpleAccount *account);
-		void onUserCreated(AbstractUser *user);
+		void onUserCreated(User *user);
 	private:
 		std::list<std::string> m_transportFeatures;
 		std::list<std::string> m_buddyFeatures;

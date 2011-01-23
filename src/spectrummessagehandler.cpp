@@ -35,7 +35,7 @@
 #include "user.h"
 #endif
 
-SpectrumMessageHandler::SpectrumMessageHandler(AbstractUser *user) {
+SpectrumMessageHandler::SpectrumMessageHandler(User *user) {
 	m_user = user;
 	m_mucs = 0;
 	m_currentBody = "";

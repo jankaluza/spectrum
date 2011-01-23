@@ -20,6 +20,7 @@
 
 #include "abstractconversation.h"
 #include "log.h"
+#include "user.h"
 
 void AbstractConversation::setResource(const std::string &resource) {
 	m_resource = resource;

@@ -30,13 +30,13 @@
 #include "gloox/subscription.h"
 #include "gloox/iqhandler.h"
 #include <algorithm>
-#include "abstractuser.h"
 #include "rosterstorage.h"
 
 using namespace gloox;
 
 class AbstractSpectrumBuddy;
 class SpectrumTimer;
+class User;
 
 struct authRequest {
 	PurpleAccountRequestAuthorizationCb authorize_cb;
@@ -83,7 +83,7 @@ class RosterExtension : public StanzaExtension {
 // Manages all SpectrumBuddies in user's roster.
 class SpectrumRosterManager : public RosterStorage, public IqHandler {
 	public:
-		SpectrumRosterManager(AbstractUser *user);
+		SpectrumRosterManager(User *user);
 		virtual ~SpectrumRosterManager();
 
 		// Sends unavailable presence of all online buddies.
@@ -193,7 +193,7 @@ class SpectrumRosterManager : public RosterStorage, public IqHandler {
 
 	private:
 		GHashTable *m_roster;
-		AbstractUser *m_user;
+		User *m_user;
 		SpectrumTimer *m_syncTimer;
 		SpectrumTimer *m_presenceTimer;
 		std::map <std::string, AbstractSpectrumBuddy *> m_subscribeCache;

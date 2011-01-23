@@ -33,7 +33,7 @@ using namespace gloox;
 
 class AdhocRepeater;
 class AdhocCommandHandler;
-class AbstractUser;
+class User;
 
 /*
  * Structure used for registering Ad-Hoc command
@@ -42,7 +42,7 @@ struct adhocCommand {
 	std::string name;	// command's name
 	bool admin;			// true if the user has to be admin to execute this command
 	// function which creates AdhocCommandHandler class which will be used as handler for this command
-	AdhocCommandHandler * (*createHandler)(AbstractUser *user, const std::string &from, const std::string &id);
+	AdhocCommandHandler * (*createHandler)(User *user, const std::string &from, const std::string &id);
 };
 
 class GlooxAdhocHandler : public DiscoNodeHandler, public DiscoHandler, public IqHandler

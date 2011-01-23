@@ -31,7 +31,7 @@
 
 #define IRCHELPER_ID "core-rlaager-irchelper"
 
-ConfigHandler::ConfigHandler(AbstractUser *user, const std::string &from, const std::string &id) : m_from(from), m_user(user) {
+ConfigHandler::ConfigHandler(User *user, const std::string &from, const std::string &id) : m_from(from), m_user(user) {
 	setRequestType(CALLER_ADHOC);
 	std::string bare(JID(from).bare());
 
@@ -80,7 +80,7 @@ bool ConfigHandler::handleIq(const IQ &stanza) {
 	return true;
 }
 
-static AdhocCommandHandler * createConfigHandler(AbstractUser *user, const std::string &from, const std::string &id) {
+static AdhocCommandHandler * createConfigHandler(User *user, const std::string &from, const std::string &id) {
 	AdhocCommandHandler *handler = new ConfigHandler(user, from, id);
 	return handler;
 }
@@ -122,7 +122,7 @@ std::string IRCProtocol::text(const std::string &key) {
 	return "not defined";
 }
 
-Tag *IRCProtocol::getVCardTag(AbstractUser *user, GList *vcardEntries) {
+Tag *IRCProtocol::getVCardTag(User *user, GList *vcardEntries) {
 // 	PurpleNotifyUserInfoEntry *vcardEntry;
 
 	Tag *vcard = new Tag( "vCard" );
@@ -139,21 +139,15 @@ bool IRCProtocol::changeNickname(const std::string &nick, PurpleConversation *co
 	return true;
 }
 
-void IRCProtocol::onUserCreated(AbstractUser *user) {
+void IRCProtocol::onUserCreated(User *user) {
 	PurpleValue *value;
-	if ( (value = user->getSetting("nickserv")) == NULL ) {
-		Transport::instance()->sql()->addSetting(user->storageId(), "nickserv", "", PURPLE_TYPE_STRING);
-		value = purple_value_new(PURPLE_TYPE_STRING);
-		purple_value_set_string(value, "");
-		g_hash_table_replace(user->settings(), g_strdup("nickserv"), value);
-	}
+	user->addSetting<std::string>("nickserv", "");
 }
 
-void IRCProtocol::onConnected(AbstractUser *user) {
+void IRCProtocol::onConnected(User *user) {
 	// IRC helper is not loaded, so we have to authenticate by ourself
 	if (m_irchelper == NULL) {
-		const char *n = purple_value_get_string(user->getSetting("nickserv"));
-		std::string nickserv(n ? n : "");
+		std::string nickserv = user->getSetting<std::string>("nickserv");
 		if (!nickserv.empty()) {
 			std::string msg = "identify " + nickserv;
 			PurpleConversation *conv = purple_conversation_new(PURPLE_CONV_TYPE_IM, user->account(), "NickServ");
@@ -166,13 +160,10 @@ void IRCProtocol::onConnected(AbstractUser *user) {
 
 void IRCProtocol::onPurpleAccountCreated(PurpleAccount *account) {
 	User *user = (User *) account->ui_data;
-	const char *n = purple_value_get_string(user->getSetting("nickserv"));
-	if (n) {
-		purple_account_set_string(account, IRCHELPER_ID "_nickpassword", n);
-	}
+	purple_account_set_string(account, IRCHELPER_ID "_nickpassword", user->getSetting<std::string>("nickserv", "").c_str());
 }
 
-void IRCProtocol::makePurpleUsernameRoom(AbstractUser *user, const JID &to, std::string &name) {
+void IRCProtocol::makePurpleUsernameRoom(User *user, const JID &to, std::string &name) {
 	std::string username = to.username();
 	// "#pidgin%irc.freenode.org@irc.spectrum.im/HanzZ" -> "HanzZ"
 	if (!to.resource().empty() && to.resource() != "bot") {
@@ -194,11 +185,11 @@ void IRCProtocol::makePurpleUsernameRoom(AbstractUser *user, const JID &to, std:
 	name.assign(username);
 }
 
-void IRCProtocol::makePurpleUsernameIM(AbstractUser *user, const JID &to, std::string &name) {
+void IRCProtocol::makePurpleUsernameIM(User *user, const JID &to, std::string &name) {
 	makePurpleUsernameRoom(user, to, name);
 }
 
-void IRCProtocol::makeRoomJID(AbstractUser *user, std::string &name) {
+void IRCProtocol::makeRoomJID(User *user, std::string &name) {
 	// #pidgin" -> "#pidgin%irc.freenode.net@irc.spectrum.im"
 	std::transform(name.begin(), name.end(), name.begin(),(int(*)(int)) std::tolower);
 	std::string name_safe = name;
@@ -207,7 +198,7 @@ void IRCProtocol::makeRoomJID(AbstractUser *user, std::string &name) {
 	std::cout << "ROOMJID: " << name << "\n";
 }
 
-void IRCProtocol::makeUsernameRoom(AbstractUser *user, std::string &name) {
+void IRCProtocol::makeUsernameRoom(User *user, std::string &name) {
 }
 
 SPECTRUM_PROTOCOL(irc, IRCProtocol)

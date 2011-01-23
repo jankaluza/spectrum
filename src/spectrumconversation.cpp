@@ -53,7 +53,7 @@ SpectrumConversation::SpectrumConversation(PurpleConversation *conv, SpectrumCon
 SpectrumConversation::~SpectrumConversation() {
 }
 
-void SpectrumConversation::handleMessage(AbstractUser *user, const char *who, const char *msg, PurpleMessageFlags flags, time_t mtime, const std::string &currentBody) {
+void SpectrumConversation::handleMessage(User *user, const char *who, const char *msg, PurpleMessageFlags flags, time_t mtime, const std::string &currentBody) {
 	std::string name(who);
 	// Remove resource if it's XMPP JID
 	if (Transport::instance()->getConfiguration().protocol == "xmpp") {
@@ -116,7 +116,7 @@ void SpectrumConversation::handleMessage(AbstractUser *user, const char *who, co
 	}
 
 	// chatstates
-	if (purple_value_get_boolean(user->getSetting("enable_chatstate"))) {
+	if (user->getSetting<bool>("enable_chatstate")) {
 		if (user->hasFeature(GLOOX_FEATURE_CHATSTATES, getResource())) {
 			ChatState *c = new ChatState(ChatStateActive);
 			s.addExtension(c);

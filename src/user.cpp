@@ -91,64 +91,21 @@ User::User(JID jid, const std::string &username, const std::string &password, co
 
 	m_features = 0;
 	m_connectionStart = time(NULL);
-	m_settings = Transport::instance()->sql()->getSettings(m_userID);
+	setSettings(Transport::instance()->sql()->getSettings(m_userID));
 
 	m_loadingBuddiesFromDB = false;
 	m_photoHash.clear();
 
-	PurpleValue *value;
+	// Add default settings
+	addSetting("enable_transport", true);
+	addSetting("enable_notify_email", false);
+	addSetting("enable_avatars", true);
+	addSetting("enable_chatstate", true);
+	addSetting("save_files_on_server", false);
+	addSetting("reject_authorizations", false);
+	addSetting("first_synchronization_done", false);
 
-// 	PurpleAccount *act = purple_accounts_find(m_username.c_str(), Transport::instance()->protocol()->protocol().c_str());
-// 	if (act)
-// 		Transport::instance()->collector()->stopCollecting(act);
-
-
-	// check default settings
-	if ( (value = getSetting("enable_transport")) == NULL ) {
-		Transport::instance()->sql()->addSetting(m_userID, "enable_transport", "1", PURPLE_TYPE_BOOLEAN);
-		value = purple_value_new(PURPLE_TYPE_BOOLEAN);
-		purple_value_set_boolean(value, true);
-		g_hash_table_replace(m_settings, g_strdup("enable_transport"), value);
-	}
-	if ( (value = getSetting("enable_notify_email")) == NULL ) {
-		Transport::instance()->sql()->addSetting(m_userID, "enable_notify_email", "0", PURPLE_TYPE_BOOLEAN);
-		value = purple_value_new(PURPLE_TYPE_BOOLEAN);
-		purple_value_set_boolean(value, false);
-		g_hash_table_replace(m_settings, g_strdup("enable_notify_email"), value);
-	}
-	if ( (value = getSetting("enable_avatars")) == NULL ) {
-		Transport::instance()->sql()->addSetting(m_userID, "enable_avatars", "1", PURPLE_TYPE_BOOLEAN);
-		value = purple_value_new(PURPLE_TYPE_BOOLEAN);
-		purple_value_set_boolean(value, true);
-		g_hash_table_replace(m_settings, g_strdup("enable_avatars"), value);
-	}
-	if ( (value = getSetting("enable_chatstate")) == NULL ) {
-		Transport::instance()->sql()->addSetting(m_userID, "enable_chatstate", "1", PURPLE_TYPE_BOOLEAN);
-		value = purple_value_new(PURPLE_TYPE_BOOLEAN);
-		purple_value_set_boolean(value, true);
-		g_hash_table_replace(m_settings, g_strdup("enable_chatstate"), value);
-	}
-	if ( (value = getSetting("save_files_on_server")) == NULL ) {
-		Transport::instance()->sql()->addSetting(m_userID, "save_files_on_server", "0", PURPLE_TYPE_BOOLEAN);
-		value = purple_value_new(PURPLE_TYPE_BOOLEAN);
-		purple_value_set_boolean(value, false);
-		g_hash_table_replace(m_settings, g_strdup("save_files_on_server"), value);
-	}
-	if ( (value = getSetting("reject_authorizations")) == NULL ) {
-		Transport::instance()->sql()->addSetting(m_userID, "reject_authorizations", "0", PURPLE_TYPE_BOOLEAN);
-		value = purple_value_new(PURPLE_TYPE_BOOLEAN);
-		purple_value_set_boolean(value, false);
-		g_hash_table_replace(m_settings, g_strdup("reject_authorizations"), value);
-	}
-	if ( (value = getSetting("first_synchronization_done")) == NULL ) {
-		Transport::instance()->sql()->addSetting(m_userID, "first_synchronization_done", "0", PURPLE_TYPE_BOOLEAN);
-		value = purple_value_new(PURPLE_TYPE_BOOLEAN);
-		purple_value_set_boolean(value, false);
-		g_hash_table_replace(m_settings, g_strdup("first_synchronization_done"), value);
-	}
-	
 	Transport::instance()->sql()->setUserOnline(m_userID, true);
-
 	Transport::instance()->protocol()->onUserCreated(this);
 
 	// Ask for user's roster
@@ -173,23 +130,23 @@ bool User::hasTransportFeature(int feature) {
 	return false;
 }
 
-PurpleValue * User::getSetting(const char *key) {
-	PurpleValue *value = (PurpleValue *) g_hash_table_lookup(m_settings, key);
-	return value;
-}
+// PurpleValue * User::getSetting(const char *key) {
+// 	PurpleValue *value = (PurpleValue *) g_hash_table_lookup(m_settings, key);
+// 	return value;
+// }
 
-void User::updateSetting(const std::string &key, PurpleValue *value) {
-	if (purple_value_get_type(value) == PURPLE_TYPE_BOOLEAN) {
-		if (purple_value_get_boolean(value))
-			Transport::instance()->sql()->updateSetting(m_userID, key, "1");
-		else
-			Transport::instance()->sql()->updateSetting(m_userID, key, "0");
-	}
-	else if (purple_value_get_type(value) == PURPLE_TYPE_STRING) {
-		Transport::instance()->sql()->updateSetting(m_userID, key, purple_value_get_string(value));
-	}
-	g_hash_table_replace(m_settings, g_strdup(key.c_str()), purple_value_dup(value));
-}
+// void User::updateSetting(const std::string &key, PurpleValue *value) {
+// 	if (purple_value_get_type(value) == PURPLE_TYPE_BOOLEAN) {
+// 		if (purple_value_get_boolean(value))
+// 			Transport::instance()->sql()->updateSetting(m_userID, key, "1");
+// 		else
+// 			Transport::instance()->sql()->updateSetting(m_userID, key, "0");
+// 	}
+// 	else if (purple_value_get_type(value) == PURPLE_TYPE_STRING) {
+// 		Transport::instance()->sql()->updateSetting(m_userID, key, purple_value_get_string(value));
+// 	}
+// 	g_hash_table_replace(m_settings, g_strdup(key.c_str()), purple_value_dup(value));
+// }
 
 /*
  * Called when legacy network user stops typing.
@@ -197,7 +154,7 @@ void User::updateSetting(const std::string &key, PurpleValue *value) {
 void User::purpleBuddyTypingStopped(const std::string &uin){
 	if (!hasFeature(GLOOX_FEATURE_CHATSTATES) || !hasTransportFeature(TRANSPORT_FEATURE_TYPING_NOTIFY))
 		return;
-	if (!purple_value_get_boolean(getSetting("enable_chatstate")))
+	if (!getSetting<bool>("enable_chatstate"))
 		return;
 	Log(m_jid, uin << " stopped typing");
 	std::string username(uin);
@@ -233,7 +190,7 @@ void User::purpleBuddyTypingStopped(const std::string &uin){
 void User::purpleBuddyTyping(const std::string &uin){
 	if (!hasFeature(GLOOX_FEATURE_CHATSTATES) || !hasTransportFeature(TRANSPORT_FEATURE_TYPING_NOTIFY))
 		return;
-	if (!purple_value_get_boolean(getSetting("enable_chatstate")))
+	if (!getSetting<bool>("enable_chatstate"))
 		return;
 	Log(m_jid, uin << " is typing");
 	std::string username(uin);
@@ -268,7 +225,7 @@ void User::purpleBuddyTyping(const std::string &uin){
 void User::purpleBuddyTypingPaused(const std::string &uin){
 	if (!hasFeature(GLOOX_FEATURE_CHATSTATES) || !hasTransportFeature(TRANSPORT_FEATURE_TYPING_NOTIFY))
 		return;
-	if (!purple_value_get_boolean(getSetting("enable_chatstate")))
+	if (!getSetting<bool>("enable_chatstate"))
 		return;
 	Log(m_jid, uin << " paused typing");
 	std::string username(uin);
@@ -376,7 +333,7 @@ void User::connect() {
 	purple_account_set_bool(m_account, "require_tls",  Transport::instance()->getConfiguration().require_tls);
 	purple_account_set_bool(m_account, "use_ssl",  Transport::instance()->getConfiguration().require_tls);
 	purple_account_set_bool(m_account, "direct_connect", false);
-	purple_account_set_bool(m_account, "check-mail", purple_value_get_boolean(getSetting("enable_notify_email")));
+	purple_account_set_bool(m_account, "check-mail", getSetting<bool>("enable_notify_email"));
 
 	m_account->ui_data = this;
 	
@@ -399,7 +356,7 @@ void User::connect() {
 		purple_account_set_proxy_info(m_account, info);
 	}
 
-	if (valid && purple_value_get_boolean(getSetting("enable_transport"))) {
+	if (valid && getSetting<bool>("enable_transport")) {
 		purple_account_set_enabled(m_account, PURPLE_UI, TRUE);
 // 		purple_account_connect(m_account);
 		const PurpleStatusType *statusType = purple_account_get_status_type_with_primitive(m_account, (PurpleStatusPrimitive) m_presenceType);
@@ -635,7 +592,7 @@ void User::receivedPresence(const Presence &stanza) {
 			}
 		}
 
-		if (purple_value_get_boolean(getSetting("enable_transport")) == false) {
+		if (getSetting<bool>("enable_transport") == false) {
 			Tag *tag = new Tag("presence");
 			tag->addAttribute("to", stanza.from().bare());
 			tag->addAttribute("type", "unavailable");
@@ -855,8 +812,6 @@ User::~User(){
 // 			purple_account_set_enabled(act, PURPLE_UI, FALSE);
 // 		}
 // 	}
-
-	g_hash_table_destroy(m_settings);
 }
 
 

@@ -37,12 +37,12 @@ static bool compareItems(Disco::Item *first, Disco::Item *second) {
 }
 
 
-static AdhocCommandHandler * createSettingsHandler(AbstractUser *user, const std::string &from, const std::string &id) {
+static AdhocCommandHandler * createSettingsHandler(User *user, const std::string &from, const std::string &id) {
 	AdhocCommandHandler *handler = new AdhocSettings(user, from, id);
 	return handler;
 }
 
-static AdhocCommandHandler * createAdminHandler(AbstractUser *user, const std::string &from, const std::string &id) {
+static AdhocCommandHandler * createAdminHandler(User *user, const std::string &from, const std::string &id) {
 	AdhocCommandHandler *handler = new AdhocAdmin(user, from, id);
 	return handler;
 }
@@ -76,7 +76,7 @@ Disco::ItemList GlooxAdhocHandler::handleDiscoNodeItems( const JID &_from, const
 	std::string to = _to.bare();
 	Log("GlooxAdhocHandler", "sending items from " << from << " to " << to);
 
-	AbstractUser *user = Transport::instance()->userManager()->getUserByJID(from);
+	User *user = Transport::instance()->userManager()->getUserByJID(from);
 	std::string language;
 	if (user)
 		language = std::string(user->getLang());
@@ -168,7 +168,7 @@ Disco::ItemList GlooxAdhocHandler::handleDiscoNodeItems( const JID &_from, const
  * Returns IdentityList (copied from Gloox :) )
  */
 Disco::IdentityList GlooxAdhocHandler::handleDiscoNodeIdentities( const JID& from, const std::string& node ) {
-	AbstractUser *user = Transport::instance()->userManager()->getUserByJID(from.bare());
+	User *user = Transport::instance()->userManager()->getUserByJID(from.bare());
 	std::string language;
 	if (user)
 		language = std::string(user->getLang());
@@ -196,7 +196,7 @@ bool GlooxAdhocHandler::handleIq( const IQ &stanza ) {
 		return false;
 	}
 
-	AbstractUser *user = Transport::instance()->userManager()->getUserByJID(from);
+	User *user = Transport::instance()->userManager()->getUserByJID(from);
 	// check if we have existing session for this jid
 	if (hasSession(stanza.from().full())) {
 		if (m_sessions[stanza.from().full()]->handleIq(stanza)) {

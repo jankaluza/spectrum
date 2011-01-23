@@ -27,22 +27,22 @@
 #include "glib.h"
 #include "gloox/tag.h"
 #include <algorithm>
-#include "abstractuser.h"
 #include "abstractspectrumbuddy.h"
 
 using namespace gloox;
 
 class SpectrumTimer;
+class User;
 
 struct SaveData {
-	AbstractUser *user;
+	User *user;
 	long id;
 };
 
 // Stores buddies into DB Backend.
 class RosterStorage {
 	public:
-		RosterStorage(AbstractUser *user);
+		RosterStorage(User *user);
 		virtual ~RosterStorage();
 
 		// Add buddy to store queue and store it in future. Nothing
@@ -59,7 +59,7 @@ class RosterStorage {
 		void removeBuddy(AbstractSpectrumBuddy *buddy);
 
 	private:
-		AbstractUser *m_user;
+		User *m_user;
 		GHashTable *m_storageCache;
 		SpectrumTimer *m_storageTimer;
 };

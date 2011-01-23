@@ -36,8 +36,22 @@ class SettingsManager {
 		SettingsManager(AbstractUser *user);
 		virtual ~SettingsManager();
 
+		// Adds new boolean setting. It does nothing if setting already exists.
+		template <typename T> void addSetting(const std::string &key, const T &value);
+
+		// Returns setting. If if doesn't exist, return default value defined by 'def'.
+		template<typename T> T getSetting(const std::string& key, const T& def = T());
+
+		template <typename T> void updateSetting(const std::string &key, const T &value);
+
+		PurpleValue *getSettingValue(const std::string &key);
+
+		// Replaces all settings and sets the new ones.
+		void setSettings(GHashTable *settings);
+
 	private:
 		AbstractUser *m_user;
+		GHashTable *m_settings;
 };
 
 #endif

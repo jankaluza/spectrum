@@ -27,7 +27,7 @@
 #include "main.h"
 #include "../usermanager.h"
 
-AdhocSettings::AdhocSettings(AbstractUser *user, const std::string &from, const std::string &id) :
+AdhocSettings::AdhocSettings(User *user, const std::string &from, const std::string &id) :
 	m_from(from), m_user(user) {
 	setRequestType(CALLER_ADHOC);
 
@@ -36,7 +36,7 @@ AdhocSettings::AdhocSettings(AbstractUser *user, const std::string &from, const 
 	else
 		m_language = Transport::instance()->getConfiguration().language;
 	
-	PurpleValue *value;
+	bool value;
 
 	IQ _response(IQ::Result, from, id);
 	Tag *response = _response.tag();
@@ -48,23 +48,23 @@ AdhocSettings::AdhocSettings(AbstractUser *user, const std::string &from, const 
 	if (user) {
 		adhocTag->setInstructions(tr(m_language, _("Change your transport settings here.")));
 		
-		value = m_user->getSetting("enable_transport");
-		adhocTag->addBoolean(tr(m_language, _("Enable transport")), "enable_transport", purple_value_get_boolean(value));
+		value = m_user->getSetting<bool>("enable_transport");
+		adhocTag->addBoolean(tr(m_language, _("Enable transport")), "enable_transport", value);
 
-		value = m_user->getSetting("enable_notify_email");
-		adhocTag->addBoolean(tr(m_language, _("Enable notification of new email (if the legacy network supports it)")), "enable_notify_email", purple_value_get_boolean(value));
+		value = m_user->getSetting<bool>("enable_notify_email");
+		adhocTag->addBoolean(tr(m_language, _("Enable notification of new email (if the legacy network supports it)")), "enable_notify_email", value);
 
-		value = m_user->getSetting("enable_avatars");
-		adhocTag->addBoolean(tr(m_language, _("Enable avatars")), "enable_avatars", purple_value_get_boolean(value));
+		value = m_user->getSetting<bool>("enable_avatars");
+		adhocTag->addBoolean(tr(m_language, _("Enable avatars")), "enable_avatars", value);
 
-		value = m_user->getSetting("enable_chatstate");
-		adhocTag->addBoolean(tr(m_language, _("Enable \"is typing\" notifications")), "enable_chatstate", purple_value_get_boolean(value));
+		value = m_user->getSetting<bool>("enable_chatstate");
+		adhocTag->addBoolean(tr(m_language, _("Enable \"is typing\" notifications")), "enable_chatstate", value);
 
-		value = m_user->getSetting("save_files_on_server");
-		adhocTag->addBoolean(tr(m_language, _("Save incoming file transfers on server")), "save_files_on_server", purple_value_get_boolean(value));
+		value = m_user->getSetting<bool>("save_files_on_server");
+		adhocTag->addBoolean(tr(m_language, _("Save incoming file transfers on server")), "save_files_on_server", value);
 
-		value = m_user->getSetting("reject_authorizations");
-		adhocTag->addBoolean(tr(m_language, _("Reject all incoming authorizations")), "reject_authorizations", purple_value_get_boolean(value));
+		value = m_user->getSetting<bool>("reject_authorizations");
+		adhocTag->addBoolean(tr(m_language, _("Reject all incoming authorizations")), "reject_authorizations", value);
 	}
 	else {
 		adhocTag->setInstructions(tr(m_language, _("You must be online to change transport settings.")));
@@ -100,7 +100,7 @@ bool AdhocSettings::handleIq(const IQ &stanza) {
 			std::string key = (*it)->findAttribute("var");
 			if (key.empty()) continue;
 
-			PurpleValue * savedValue = m_user->getSetting(key.c_str());
+			PurpleValue * savedValue = m_user->getSettingValue(key);
 			if (!savedValue) continue;
 
 			Tag *v =(*it)->findChild("value");
@@ -114,7 +114,7 @@ bool AdhocSettings::handleIq(const IQ &stanza) {
 					purple_value_destroy(value);
 					continue;
 				}
-				m_user->updateSetting(key, value);
+				m_user->updateSetting<bool>(key, purple_value_get_boolean(value));
 			}
 		}
 

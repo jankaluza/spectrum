@@ -118,7 +118,7 @@ bool GlooxRegisterHandler::handleIq(const Tag *iqTag) {
 		return false;
 	}
 	
-	AbstractUser *user = Transport::instance()->userManager()->getUserByJID(from.bare());
+	User *user = Transport::instance()->userManager()->getUserByJID(from.bare());
 	if (!Transport::instance()->getConfiguration().enable_public_registration) {
 		std::list<std::string> const &x = Transport::instance()->getConfiguration().allowedServers;
 		if (std::find(x.begin(), x.end(), from.server()) == x.end()) {
@@ -415,7 +415,7 @@ void GlooxRegisterHandler::handleIqID (const IQ &iq, int context){
 		// This user is already registered
 		if (res.id == -1)
 			return;
-		AbstractUser *user = Transport::instance()->userManager()->getUserByJID(m_to);
+		User *user = Transport::instance()->userManager()->getUserByJID(m_to);
 		if (iq.subtype() == IQ::Result) {
 			std::list <std::string> roster;
 			roster = Transport::instance()->sql()->getBuddies(res.id);

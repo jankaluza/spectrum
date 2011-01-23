@@ -36,14 +36,14 @@ class AbstractUser;
 class AdhocSettings : public AdhocCommandHandler
 {
 	public:
-		AdhocSettings(AbstractUser *user, const std::string &from, const std::string &id);
+		AdhocSettings(User *user, const std::string &from, const std::string &id);
 		~AdhocSettings();
 		bool handleIq(const IQ &iq);
 		const std::string & getInitiator() { return m_from; }
 
 	private:
 		std::string m_from;				// full jid
-		AbstractUser *m_user;			// User class
+		User *m_user;			// User class
 		std::string m_language;
 };
 

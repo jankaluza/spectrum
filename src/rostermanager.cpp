@@ -26,6 +26,7 @@
 #include "capabilityhandler.h"
 #include "spectrumtimer.h"
 #include "transport.h"
+#include "user.h"
 
 #ifndef TESTS
 #include "spectrumbuddy.h"
@@ -101,7 +102,7 @@ static gboolean sendRosterPresences(gpointer data) {
 	return manager->_sendRosterPresences();
 }
 
-SpectrumRosterManager::SpectrumRosterManager(AbstractUser *user) : RosterStorage(user) {
+SpectrumRosterManager::SpectrumRosterManager(User *user) : RosterStorage(user) {
 	m_user = user;
 	m_syncTimer = new SpectrumTimer(CONFIG().protocol == "icq" ? 12000 : 1000, &sync_cb, this);
 	m_presenceTimer = new SpectrumTimer(5000, &sendRosterPresences, this);
@@ -288,7 +289,7 @@ void SpectrumRosterManager::handleBuddyCreated(AbstractSpectrumBuddy *s_buddy) {
 	else {
 		if (m_supportRosterIQ && m_xmppRoster.find(name) != m_xmppRoster.end()) {
 			// first synchronization = From XMPP to legacy network and we don't care what's on legacy network
-			if (purple_value_get_boolean(m_user->getSetting("first_synchronization_done")) == false) {
+			if (m_user->getSetting<bool>("first_synchronization_done") == false) {
 				s_buddy->changeAlias(m_xmppRoster[name].nickname);
 				s_buddy->changeGroup(m_xmppRoster[name].groups);
 			}
@@ -441,7 +442,7 @@ void SpectrumRosterManager::handlePresence(const Presence &stanza) {
 authRequest *SpectrumRosterManager::handleAuthorizationRequest(PurpleAccount *account, const char *remote_user, const char *id, const char *alias, const char *message, gboolean on_list, PurpleAccountRequestAuthorizationCb authorize_cb, PurpleAccountRequestAuthorizationCb deny_cb, void *user_data) {
 	std::string name(remote_user);
 
-	if (purple_value_get_boolean(m_user->getSetting("reject_authorizations"))) {
+	if (m_user->getSetting<bool>("reject_authorizations")) {
 		Log(m_user->jid(), "purpleAuthorization rejected: " << name << " on_list:" << on_list);
 		deny_cb(user_data);
 		return NULL;
@@ -696,10 +697,8 @@ bool SpectrumRosterManager::_sendRosterPresences() {
 void SpectrumRosterManager::mergeRoster() {
 	if (m_supportRosterIQ)
 		g_hash_table_foreach(m_roster, merge_buddy, this);
-	PurpleValue *v = m_user->getSetting("first_synchronization_done");
-	if (purple_value_get_boolean(v) == false) {
-		purple_value_set_boolean(v, true);
-		m_user->updateSetting("first_synchronization_done", v);
+	if (m_user->getSetting<bool>("first_synchronization_done", false) == false) {
+		m_user->updateSetting("first_synchronization_done", true);
 	}
 }
 
@@ -707,7 +706,7 @@ void SpectrumRosterManager::mergeBuddy(AbstractSpectrumBuddy *s_buddy) {
 	std::string name = s_buddy->getName();
 	if (m_xmppRoster.find(name) != m_xmppRoster.end()) {
 		// first synchronization = From XMPP to legacy network and we don't care what's on legacy network
-		if (purple_value_get_boolean(m_user->getSetting("first_synchronization_done")) == false) {
+		if (m_user->getSetting<bool>("first_synchronization_done") == false) {
 			s_buddy->changeAlias(m_xmppRoster[name].nickname);
 			s_buddy->changeGroup(m_xmppRoster[name].groups);
 		}

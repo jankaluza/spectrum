@@ -42,7 +42,7 @@ struct Conversation {
 // Handles messages and conversations.
 class SpectrumMessageHandler {
 	public:
-		SpectrumMessageHandler(AbstractUser *user);
+		SpectrumMessageHandler(User *user);
 		virtual ~SpectrumMessageHandler();
 
 		// Adds new conversation to internal database.
@@ -102,7 +102,7 @@ class SpectrumMessageHandler {
 		std::map <std::string, AbstractConversation *> m_conversations;
 		std::map <std::string, int> m_mucs_names;
 		std::string m_currentBody;
-		AbstractUser *m_user;
+		User *m_user;
 		int m_mucs;
 };
 

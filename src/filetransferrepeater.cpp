@@ -28,6 +28,7 @@
 #include "transport.h"
 #include "spectrummessagehandler.h"
 #include "spectrumtimer.h"
+#include "user.h"
 
 static gboolean ui_got_data(gpointer data){
 	FiletransferRepeater *repeater = (FiletransferRepeater *) data;
@@ -51,7 +52,7 @@ static gpointer sendFileCallback(gpointer data) {
 	return NULL;
 }
 
-SendFile::SendFile(Bytestream *stream, int size, const std::string &filename, AbstractUser *user, FiletransferRepeater *manager) {
+SendFile::SendFile(Bytestream *stream, int size, const std::string &filename, User *user, FiletransferRepeater *manager) {
     m_stream = stream;
     m_size = size;
 	m_filename = filename;
@@ -193,7 +194,7 @@ void SendFileStraight::handleBytestreamClose(gloox::Bytestream *s5b) {
 
 static gboolean transferFinished(gpointer data) {
 	ReceiveFile *receive = (ReceiveFile *) data;
-	AbstractUser *user = receive->user();
+	User *user = receive->user();
 	std::string filename(receive->filename());
 	Log(user->jid(), "trying to send file "<< filename);
 	if (user->account()){
@@ -228,7 +229,7 @@ static gpointer receiveFileCallback(gpointer data) {
 	return NULL;
 }
 
-ReceiveFile::ReceiveFile(gloox::Bytestream *stream, int size, const std::string &filename, AbstractUser *user, FiletransferRepeater *manager) {
+ReceiveFile::ReceiveFile(gloox::Bytestream *stream, int size, const std::string &filename, User *user, FiletransferRepeater *manager) {
 	m_stream = stream;
 	m_size = size;
 	m_filename = filename;
@@ -429,7 +430,7 @@ void FiletransferRepeater::handleFTReceiveBytestream(Bytestream *bs, const std::
 	if (filename.empty())
 		m_resender = new ReceiveFileStraight(bs, this);
 	else {
-		AbstractUser *user = Transport::instance()->userManager()->getUserByJID(bs->initiator().bare());
+		User *user = Transport::instance()->userManager()->getUserByJID(bs->initiator().bare());
 		m_resender = new ReceiveFile(bs, 0, filename, user, this);
 	}
 }
@@ -443,7 +444,7 @@ void FiletransferRepeater::handleFTSendBytestream(Bytestream *bs, const std::str
 	if (filename.empty())
 		m_resender = new SendFileStraight(bs, 0, this);
 	else {
-		AbstractUser *user = Transport::instance()->userManager()->getUserByJID(bs->initiator().bare());
+		User *user = Transport::instance()->userManager()->getUserByJID(bs->initiator().bare());
 		m_resender = new SendFile(bs, 0, filename, user, this);
 	}
 }

@@ -54,72 +54,29 @@ std::list<std::string> TwitterProtocol::buddyFeatures(){
 	return m_buddyFeatures;
 }
 
-void TwitterProtocol::onUserCreated(AbstractUser *user) {
-	PurpleValue *value;
-	if ( (value = user->getSetting("twitter_oauth_secret")) == NULL ) {
-		Transport::instance()->sql()->addSetting(user->storageId(), "twitter_oauth_secret", "", PURPLE_TYPE_STRING);
-		value = purple_value_new(PURPLE_TYPE_STRING);
-		purple_value_set_string(value, "");
-		g_hash_table_replace(user->settings(), g_strdup("twitter_oauth_secret"), value);
-	}
-	if ( (value = user->getSetting("twitter_oauth_token")) == NULL ) {
-		Transport::instance()->sql()->addSetting(user->storageId(), "twitter_oauth_token", "", PURPLE_TYPE_STRING);
-		value = purple_value_new(PURPLE_TYPE_STRING);
-		purple_value_set_string(value, "");
-		g_hash_table_replace(user->settings(), g_strdup("twitter_oauth_token"), value);
-	}
-	if ( (value = user->getSetting("twitter_sent_msg_ids")) == NULL ) {
-		Transport::instance()->sql()->addSetting(user->storageId(), "twitter_sent_msg_ids", "", PURPLE_TYPE_STRING);
-		value = purple_value_new(PURPLE_TYPE_STRING);
-		purple_value_set_string(value, "");
-		g_hash_table_replace(user->settings(), g_strdup("twitter_sent_msg_ids"), value);
-	}
-	if ( (value = user->getSetting("twitter_last_msg_id")) == NULL ) {
-		Transport::instance()->sql()->addSetting(user->storageId(), "twitter_last_msg_id", "", PURPLE_TYPE_STRING);
-		value = purple_value_new(PURPLE_TYPE_STRING);
-		purple_value_set_string(value, "");
-		g_hash_table_replace(user->settings(), g_strdup("twitter_last_msg_id"), value);
-	}
+void TwitterProtocol::onUserCreated(User *user) {
+	user->addSetting<std::string>("twitter_oauth_secret", "");
+	user->addSetting<std::string>("twitter_oauth_token", "");
+	user->addSetting<std::string>("twitter_sent_msg_ids", "");
+	user->addSetting<std::string>("twitter_last_msg_id", "");
 }
 
-void TwitterProtocol::onDestroy(AbstractUser *user) {
+void TwitterProtocol::onDestroy(User *user) {
 	PurpleAccount *account = user->account();
 	if (account == NULL)
 		return;
-	PurpleValue *value = NULL;
-	if ( (value = user->getSetting("twitter_oauth_secret")) != NULL ) {
-		purple_value_set_string(value, purple_account_get_string(account, "twitter_oauth_secret", ""));
-		user->updateSetting("twitter_oauth_secret", value);
-	}
-	if ( (value = user->getSetting("twitter_oauth_token")) != NULL ) {
-		purple_value_set_string(value, purple_account_get_string(account, "twitter_oauth_token", ""));
-		user->updateSetting("twitter_oauth_token", value);
-	}
-	if ( (value = user->getSetting("twitter_sent_msg_ids")) != NULL ) {
-		purple_value_set_string(value, purple_account_get_string(account, "twitter_sent_msg_ids", ""));
-		user->updateSetting("twitter_sent_msg_ids", value);
-	}
-	if ( (value = user->getSetting("twitter_last_msg_id")) != NULL ) {
-		purple_value_set_string(value, purple_account_get_string(account, "twitter_last_msg_id", ""));
-		user->updateSetting("twitter_last_msg_id", value);
-	}
+	user->updateSetting<std::string>("twitter_oauth_secret", purple_account_get_string(account, "twitter_oauth_secret", ""));
+	user->updateSetting<std::string>("twitter_oauth_token", purple_account_get_string(account, "twitter_oauth_token", ""));
+	user->updateSetting<std::string>("twitter_sent_msg_ids", purple_account_get_string(account, "twitter_sent_msg_ids", ""));
+	user->updateSetting<std::string>("twitter_last_msg_id", purple_account_get_string(account, "twitter_last_msg_id", ""));
 }
 
 void TwitterProtocol::onPurpleAccountCreated(PurpleAccount *account) {
-	AbstractUser *user = (AbstractUser *) account->ui_data;
-	PurpleValue *value = NULL;
-	if ( (value = user->getSetting("twitter_oauth_secret")) != NULL ) {
-		purple_account_set_string(account, "twitter_oauth_secret", purple_value_get_string(value));
-	}
-	if ( (value = user->getSetting("twitter_oauth_token")) != NULL ) {
-		purple_account_set_string(account, "twitter_oauth_token", purple_value_get_string(value));
-	}
-	if ( (value = user->getSetting("twitter_sent_msg_ids")) != NULL ) {
-		purple_account_set_string(account, "twitter_sent_msg_ids", purple_value_get_string(value));
-	}
-	if ( (value = user->getSetting("twitter_last_msg_id")) != NULL ) {
-		purple_account_set_string(account, "twitter_last_msg_id", purple_value_get_string(value));
-	}
+	User *user = (User *) account->ui_data;
+	purple_account_set_string(account, "twitter_oauth_secret", user->getSetting<std::string>("twitter_oauth_secret", "").c_str());
+	purple_account_set_string(account, "twitter_oauth_token", user->getSetting<std::string>("twitter_oauth_token", "").c_str());
+	purple_account_set_string(account, "twitter_sent_msg_ids", user->getSetting<std::string>("twitter_sent_msg_ids", "").c_str());
+	purple_account_set_string(account, "twitter_last_msg_id", user->getSetting<std::string>("twitter_last_msg_id", "").c_str());
 }
 
 std::string TwitterProtocol::text(const std::string &key) {
@@ -135,7 +92,7 @@ bool TwitterProtocol::onNotifyUri(const char *uri) {
 	return true;
 }
 
-bool TwitterProtocol::onPurpleRequestInput(void *handle, AbstractUser *user, const char *title, const char *primary,const char *secondary, const char *default_value,gboolean multiline, gboolean masked, gchar *hint,const char *ok_text, GCallback ok_cb,const char *cancel_text, GCallback cancel_cb, PurpleAccount *account, const char *who,PurpleConversation *conv, void *user_data) {
+bool TwitterProtocol::onPurpleRequestInput(void *handle, User *user, const char *title, const char *primary,const char *secondary, const char *default_value,gboolean multiline, gboolean masked, gchar *hint,const char *ok_text, GCallback ok_cb,const char *cancel_text, GCallback cancel_cb, PurpleAccount *account, const char *who,PurpleConversation *conv, void *user_data) {
 	if (title == NULL)
 		return false;
 	std::string t(title);
@@ -156,7 +113,7 @@ void TwitterProtocol::onRequestClose(void *handle) {
 	m_callbacks.erase(handle);
 }
 
-void TwitterProtocol::onXMPPMessageReceived(AbstractUser *user, const Message &msg) {
+void TwitterProtocol::onXMPPMessageReceived(User *user, const Message &msg) {
 	void *handle = user->protocolData();
 	if (m_callbacks.find(handle) == m_callbacks.end())
 		return;

@@ -52,18 +52,17 @@ class AbstractUser : public ResourceManager
 		virtual long storageId() = 0;
 		virtual PurpleAccount *account() = 0;
 		virtual const std::string &jid() = 0;
-		virtual PurpleValue *getSetting(const char *key) = 0;
+// 		virtual PurpleValue *getSetting(const char *key) = 0;
 		virtual bool hasTransportFeature(int feature) = 0;
 		virtual int getFeatures() = 0;
 		virtual const std::string &username() = 0;
 		virtual const char *getLang() { return "en"; }
-		virtual GHashTable *settings() = 0;
+// 		virtual GHashTable *settings() {return NULL;}
 		virtual bool isConnectedInRoom(const std::string &room) = 0;
 		virtual bool isConnected() = 0;
 		virtual bool readyForConnect() = 0;
 		virtual void connect() = 0;
 		virtual void disconnected() = 0;
-		virtual void updateSetting(const std::string &key, PurpleValue *value) {}
 		virtual void setConnected(bool connected) {}
 		AdhocData & adhocData() { return m_adhocData; }
 		void setAdhocData(AdhocData data) { m_adhocData = data; }

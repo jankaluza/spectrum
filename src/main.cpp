@@ -1451,7 +1451,7 @@ void GlooxMessageHandler::notifyEmail(PurpleConnection *gc,const char *subject, 
 	PurpleAccount *account = purple_connection_get_account(gc);
 	User *user = (User *) userManager()->getUserByAccount(account);
 	if (user!=NULL) {
-		if (purple_value_get_boolean(user->getSetting("enable_notify_email"))) {
+		if (user->getSetting<bool>("enable_notify_email")) {
 			std::string text("New email, ");
 			if (from)
 				text += "From: " + std::string(from);

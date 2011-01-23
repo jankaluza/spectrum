@@ -34,10 +34,12 @@
 #include "../log.h"
 #include "../localization.h"
 #include "../protocolmanager.h"
+#include "../user.h"
 
 extern Localization localization;
 
 using namespace gloox;
+
 
 // Abstract class for wrapping libpurple protocols
 class AbstractProtocol
@@ -68,7 +70,7 @@ class AbstractProtocol
 		// For IRC: #pidgin" -> "#pidgin%irc.freenode.net@irc.spectrum.im"
 		// For XMPP: spectrum@conference.spectrum.im/something" -> "spectrum%conference.spectrum.im@irc.spectrum.im"
 		// Note: You can ignore this function if your prpl doesn't support MUC (Groupchat).
-		virtual void makeRoomJID(AbstractUser *user, std::string &purpleConversationName) { }
+		virtual void makeRoomJID(User *user, std::string &purpleConversationName) { }
 
 		// This function should create purple username from JID defined in 'to' attribute in incoming message.
 		// Purple username created by this function is then used to create new PurpleConversation. This function
@@ -79,20 +81,20 @@ class AbstractProtocol
 		// For XMPP: "spectrum%conference.spectrum.im@irc.spectrum.im/HanzZ" -> "spectrum@conference.spectrum.im/HanzZ"
 		// For XMPP: "spectrum%conference.spectrum.im@irc.spectrum.im" -> "spectrum@conference.spectrum.im"
 		// Note: You can ignore this function if your prpl doesn't support MUC (Groupchat).
-		virtual void makePurpleUsernameRoom(AbstractUser *user, const JID &jid, std::string &name) { }
+		virtual void makePurpleUsernameRoom(User *user, const JID &jid, std::string &name) { }
 
 		// This function should create username of room ocupant from libpurple's "who" argument
 		// of purple_conversation_im_write function. New username is then used as resource for JID created by makeRoomJID.
 		// Examples:
 		// For XMPP: "spectrum@conference.spectrum.im/HanzZ" -> "HanzZ"
 		// Note: You can ignore this function if your prpl doesn't support MUC (Groupchat).
-		virtual void makeUsernameRoom(AbstractUser *user, std::string &name) {
+		virtual void makeUsernameRoom(User *user, std::string &name) {
 			name = JID(name).resource();
 		}
 
 		// Tries to find PurpleChat. This function is called before joining the room to check if the room is not stored
 		// in buddy list.
-		virtual PurpleChat *getPurpleChat(AbstractUser *user, const std::string &purpleUsername) {
+		virtual PurpleChat *getPurpleChat(User *user, const std::string &purpleUsername) {
 			return purple_blist_find_chat(user->account(), purpleUsername.c_str());
 		}
 
@@ -104,7 +106,7 @@ class AbstractProtocol
 		// Default: "hanzz%test.im@xmpp.spectrum.im/bot" -> "hanzz@test.im"
 		// Default: "hanzz\40test.im@xmpp.spectrum.im/bot" -> "hanzz@test.im"
 		// For IRC: "hanzz%irc.freenode.org@irc.spectrum.im/bot" -> "hanzz"
-		virtual void makePurpleUsernameIM(AbstractUser *user, const JID &jid, std::string &name) {
+		virtual void makePurpleUsernameIM(User *user, const JID &jid, std::string &name) {
 			name.assign(purpleUsername(jid.username()));
 		}
 
@@ -118,14 +120,14 @@ class AbstractProtocol
 		virtual std::string text(const std::string &key) = 0;
 
 		// Parses VCard and returns VCard Tag*.
-		virtual Tag *getVCardTag(AbstractUser *user, GList *vcardEntries) { return NULL; }
+		virtual Tag *getVCardTag(User *user, GList *vcardEntries) { return NULL; }
 
 		virtual bool getXStatus(const std::string &mood, std::string &type, std::string &xmlns, std::string &tag1, std::string &tag2) { return false; }
 
 		/*
 		 * Returns true if this jid is jid of MUC
 		 */
-		virtual bool isMUC(AbstractUser *user, const std::string &jid) { return false; }
+		virtual bool isMUC(User *user, const std::string &jid) { return false; }
 		/*
 		 * Returns the username of contact from which notifications will be sent
 		 */
@@ -154,27 +156,27 @@ class AbstractProtocol
 		/*
 		 * Called when new user is created
 		 */
-		virtual void onUserCreated(AbstractUser *user) { }
+		virtual void onUserCreated(User *user) { }
 		/*
 		 * Called when user gets connected
 		 */
-		virtual void onConnected(AbstractUser *user) { }
+		virtual void onConnected(User *user) { }
 		/*
 		 * Called when user class is getting destroyed
 		 */
-		virtual void onDestroy(AbstractUser *user) { }
+		virtual void onDestroy(User *user) { }
 		/*
 		 * Presence Received. Returns true if the presence was handled.
 		 */
-		virtual bool onPresenceReceived(AbstractUser *user, const Presence &stanza) { return false; }
+		virtual bool onPresenceReceived(User *user, const Presence &stanza) { return false; }
 		/*
 		 * Called on purple_request_input.
 		 */
-		virtual bool onPurpleRequestInput(void *handle, AbstractUser *user, const char *title, const char *primary,const char *secondary, const char *default_value,gboolean multiline, gboolean masked, gchar *hint,const char *ok_text, GCallback ok_cb,const char *cancel_text, GCallback cancel_cb, PurpleAccount *account, const char *who,PurpleConversation *conv, void *user_data) { return false; }
+		virtual bool onPurpleRequestInput(void *handle, User *user, const char *title, const char *primary,const char *secondary, const char *default_value,gboolean multiline, gboolean masked, gchar *hint,const char *ok_text, GCallback ok_cb,const char *cancel_text, GCallback cancel_cb, PurpleAccount *account, const char *who,PurpleConversation *conv, void *user_data) { return false; }
 		virtual void onPurpleAccountCreated(PurpleAccount *account) {}
 		virtual bool onNotifyUri(const char *uri) { return false; }
 		virtual void onRequestClose(void *handle) { }
-		virtual void onXMPPMessageReceived(AbstractUser *user, const Message &msg) {}
+		virtual void onXMPPMessageReceived(User *user, const Message &msg) {}
 };
 
 #endif

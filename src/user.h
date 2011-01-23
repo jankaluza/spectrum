@@ -71,10 +71,6 @@ class User : public AbstractUser, public SpectrumRosterManager, public SpectrumM
 		// Connected
 		bool isConnected() { return m_connected; }
 
-		// Settings
-		PurpleValue *getSetting(const char *key);
-		void updateSetting(const std::string &key, PurpleValue *value);
-
 		// connection start
 		time_t connectionStart() { return m_connectionStart; }
 
@@ -88,7 +84,6 @@ class User : public AbstractUser, public SpectrumRosterManager, public SpectrumM
 
 		const char *getLang() { return m_lang; }
 		void setLang(const char *lang) { g_free(m_lang); m_lang = g_strdup(lang); }
-		GHashTable *settings() { return m_settings; }
 
 		const std::string & userKey() { return m_userKey; }
 		void setFeatures(int f) { m_features = f; }
@@ -114,7 +109,6 @@ class User : public AbstractUser, public SpectrumRosterManager, public SpectrumM
 		char *m_lang;			// xml:lang
 		int m_features;
 		time_t m_connectionStart;	// connection start timestamp
-		GHashTable *m_settings;		// user settings
 		bool m_loadingBuddiesFromDB;
 		std::string m_photoHash;
 		int m_presenceType;

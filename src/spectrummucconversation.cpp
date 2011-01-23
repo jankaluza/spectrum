@@ -22,6 +22,7 @@
 #include "main.h" // just for replaceBadJidCharacters
 #include "transport.h"
 #include "usermanager.h"
+#include "user.h"
 
 SpectrumMUCConversation::SpectrumMUCConversation(PurpleConversation *conv, const std::string &jid, const std::string &resource) : AbstractConversation(SPECTRUM_CONV_GROUPCHAT) {
 	m_jid = jid;
@@ -39,7 +40,7 @@ SpectrumMUCConversation::SpectrumMUCConversation(PurpleConversation *conv, const
 SpectrumMUCConversation::~SpectrumMUCConversation() {
 }
 
-void SpectrumMUCConversation::handleMessage(AbstractUser *user, const char *who, const char *msg, PurpleMessageFlags flags, time_t mtime, const std::string &currentBody) {
+void SpectrumMUCConversation::handleMessage(User *user, const char *who, const char *msg, PurpleMessageFlags flags, time_t mtime, const std::string &currentBody) {
 	std::string name(who);
 // 
 // 	// send message to user
@@ -87,7 +88,7 @@ void SpectrumMUCConversation::handleMessage(AbstractUser *user, const char *who,
 
 }
 
-void SpectrumMUCConversation::addUsers(AbstractUser *user, GList *cbuddies) {
+void SpectrumMUCConversation::addUsers(User *user, GList *cbuddies) {
 	Log(m_jid, "ADDING USERS3");
 	GList *l = cbuddies;
 	while (l != NULL) {
@@ -152,7 +153,7 @@ void SpectrumMUCConversation::addUsers(AbstractUser *user, GList *cbuddies) {
 	m_connected = true;
 }
 
-void SpectrumMUCConversation::renameUser(AbstractUser *user, const char *old_name, const char *new_name, const char *new_alias) {
+void SpectrumMUCConversation::renameUser(User *user, const char *old_name, const char *new_name, const char *new_alias) {
 	std::string oldName(old_name);
 	std::string newName(new_name);
 	Tag *tag = new Tag("presence");
@@ -193,7 +194,7 @@ void SpectrumMUCConversation::renameUser(AbstractUser *user, const char *old_nam
 	Transport::instance()->send(tag);
 }
 
-void SpectrumMUCConversation::removeUsers(AbstractUser *_user, GList *users) {
+void SpectrumMUCConversation::removeUsers(User *_user, GList *users) {
 	GList *l;
 	for (l = users; l != NULL; l = l->next) {
 		std::string user((char *)l->data);
@@ -215,14 +216,14 @@ void SpectrumMUCConversation::removeUsers(AbstractUser *_user, GList *users) {
 	}
 }
 
-void SpectrumMUCConversation::changeTopic(AbstractUser *user, const char *who, const char *topic) {
+void SpectrumMUCConversation::changeTopic(User *user, const char *who, const char *topic) {
 	m_topic = topic ? topic : "";
 	m_topicUser = who ? who : m_jid.substr(0,m_jid.find('%'));
 // 	if (user->connected())
 	sendTopic(user);
 }
 
-void SpectrumMUCConversation::sendTopic(AbstractUser *user) {
+void SpectrumMUCConversation::sendTopic(User *user) {
 	Tag *m = new Tag("message");
 	m->addAttribute("from", m_jid + "/" + m_topicUser);
 	m->addAttribute("to", user->jid() + m_res);

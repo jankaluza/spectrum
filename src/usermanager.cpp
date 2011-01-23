@@ -25,7 +25,7 @@
 #include "transport.h"
 
 static gboolean deleteUser(gpointer data){
-	AbstractUser *user = (AbstractUser*) data;
+	User *user = (User*) data;
 	Transport::instance()->sql()->setUserOnline(user->storageId(), false);
 	delete user;
 	Log("logout", "delete user; called => user is sucesfully removed");
@@ -33,7 +33,7 @@ static gboolean deleteUser(gpointer data){
 }
 
 static gboolean removeUserCallback(gpointer key, gpointer v, gpointer data) {
-	AbstractUser *user = (AbstractUser *) v;
+	User *user = (User *) v;
 	Log("logout", "Removing user " << user->jid());
 	Tag *tag = new Tag("presence");
 	tag->addAttribute("to", user->jid());
@@ -56,25 +56,25 @@ UserManager::~UserManager(){
 	g_hash_table_destroy(m_users);
 }
 
-AbstractUser *UserManager::getUserByJID(std::string barejid){
+User *UserManager::getUserByJID(std::string barejid){
 	if (m_cachedUser && barejid == m_cachedUser->userKey()) {
 		return m_cachedUser;
 	}
-	AbstractUser *user = (AbstractUser*) g_hash_table_lookup(m_users, barejid.c_str());
+	User *user = (User*) g_hash_table_lookup(m_users, barejid.c_str());
 	m_cachedUser = user;
 	return user;
 }
 
-AbstractUser *UserManager::getUserByAccount(PurpleAccount * account){
+User *UserManager::getUserByAccount(PurpleAccount * account){
 	if (account == NULL) return NULL;
-	return (AbstractUser *) account->ui_data;
+	return (User *) account->ui_data;
 }
 
-void UserManager::addUser(AbstractUser *user) {
+void UserManager::addUser(User *user) {
 	g_hash_table_replace(m_users, g_strdup(user->userKey().c_str()), user);
 }
 
-void UserManager::removeUser(AbstractUser *user){
+void UserManager::removeUser(User *user){
 	Log("logout", "removing user");
 	g_hash_table_remove(m_users, user->userKey().c_str());
 	if (m_cachedUser && user->userKey() == m_cachedUser->userKey()) {
@@ -87,7 +87,7 @@ void UserManager::removeUser(AbstractUser *user){
 	Log("logout", "delete user; called => user is sucesfully removed");
 }
 
-void UserManager::removeUserTimer(AbstractUser *user){
+void UserManager::removeUserTimer(User *user){
 	Log("logout", "removing user by timer");
 	g_hash_table_remove(m_users, user->userKey().c_str());
 	if (m_cachedUser && user->userKey() == m_cachedUser->userKey()) {
