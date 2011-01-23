@@ -71,9 +71,6 @@ class User : public AbstractUser, public SpectrumRosterManager, public SpectrumM
 		// Connected
 		bool isConnected() { return m_connected; }
 
-		// connection start
-		time_t connectionStart() { return m_connectionStart; }
-
 		PurpleAccount *account() { return m_account; }
 		int reconnectCount() { return m_reconnectCount; }
 		bool isVIP() { return m_vip; }
@@ -90,17 +87,14 @@ class User : public AbstractUser, public SpectrumRosterManager, public SpectrumM
 		int getFeatures() { return m_features; }
 		long storageId() { return m_userID; }
 		bool loadingBuddiesFromDB() { return m_loadingBuddiesFromDB; }
-		bool isConnectedInRoom(const std::string &room) { return isOpenedConversation(room); }
 
 	private:
 		std::string m_jid;			// Jabber ID of this user
 		long m_userID;				// userID for Database
 		std::string m_userKey;
 		PurpleAccount *m_account;	// PurpleAccount to which this user is connected
-		int m_subscribeLastCount;	// number of buddies which was in subscribeCache in previous iteration of m_syncTimer
 		bool m_vip;					// true if the user is VIP
 		bool m_readyForConnect;		// true if the user user wants to connect and we're ready to do it
-		bool m_rosterXCalled;		// true if we are counting buddies for roster X
 		bool m_connected;			// true if this user is connected to legacy account
 		int m_reconnectCount;		// number of passed reconnect tries
 		std::string m_password;		// password used to connect to legacy network
@@ -108,7 +102,6 @@ class User : public AbstractUser, public SpectrumRosterManager, public SpectrumM
 		std::string m_encoding;
 		char *m_lang;			// xml:lang
 		int m_features;
-		time_t m_connectionStart;	// connection start timestamp
 		bool m_loadingBuddiesFromDB;
 		std::string m_photoHash;
 		int m_presenceType;

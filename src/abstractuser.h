@@ -58,7 +58,6 @@ class AbstractUser : public ResourceManager
 		virtual const std::string &username() = 0;
 		virtual const char *getLang() { return "en"; }
 // 		virtual GHashTable *settings() {return NULL;}
-		virtual bool isConnectedInRoom(const std::string &room) = 0;
 		virtual bool isConnected() = 0;
 		virtual bool readyForConnect() = 0;
 		virtual void connect() = 0;

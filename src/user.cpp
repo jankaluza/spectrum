@@ -49,10 +49,8 @@ User::User(JID jid, const std::string &username, const std::string &password, co
 	m_userID = id;
 	m_userKey = userKey;
 	m_account = NULL;
-	m_subscribeLastCount = -1;
 	m_vip = vip;
 	m_readyForConnect = false;
-	m_rosterXCalled = false;
 	m_connected = false;
 	m_reconnectCount = 0;
 	m_glooxPresenceType = -1;
@@ -60,7 +58,6 @@ User::User(JID jid, const std::string &username, const std::string &password, co
 	m_encoding = encoding;
 	m_lang = g_strdup(language.c_str());
 	m_features = 0;
-	m_connectionStart = time(NULL);
 	m_loadingBuddiesFromDB = false;
 	m_photoHash.clear();
 
@@ -271,7 +268,6 @@ void User::connect() {
 	loadRoster();
 	m_loadingBuddiesFromDB = false;
 
-	m_connectionStart = time(NULL);
 	m_readyForConnect = false;
 	purple_account_set_password(m_account,m_password.c_str());
 	Log(m_jid, "UIN:" << m_username << " USER_ID:" << m_userID);
