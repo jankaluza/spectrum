@@ -84,3 +84,5 @@ void Transport::acceptFT( const JID& to, const std::string& sid, SIProfileFT::St
 AccountCollector *Transport::collector() {
 	return GlooxMessageHandler::instance()->collector();
 }
+
+void Transport::fetchVCard(const std::string &jid) { GlooxMessageHandler::instance()->fetchVCard(jid); }

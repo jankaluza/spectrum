@@ -48,17 +48,22 @@ SpectrumTimer::~SpectrumTimer() {
 void SpectrumTimer::start() {
 	g_mutex_lock(m_mutex);
 
-	if (m_inCallback)
+	if (m_inCallback) {
 		m_startAgain = true;
+	}
 
 	if (m_id == 0) {
 #ifdef TESTS
 		m_id = 1;
 #else
+		m_id = 1;
+		int id;
 		if (m_timeout >= 1000)
-			m_id = purple_timeout_add_seconds(m_timeout / 1000, _callback, this);
+			id = purple_timeout_add_seconds(m_timeout / 1000, _callback, this);
 		else
-			m_id = purple_timeout_add(m_timeout, _callback, this);
+			id = purple_timeout_add(m_timeout, _callback, this);
+		if (m_id != 0)
+			m_id = id;
 #endif
 	}
 	g_mutex_unlock(m_mutex);
@@ -90,8 +95,9 @@ gboolean SpectrumTimer::timeout() {
 	m_startAgain = false;
 	gboolean ret = m_callback(m_data);
 	m_inCallback = false;
-	if (m_startAgain)
+	if (m_startAgain) {
 		ret = TRUE;
+	}
 	
 	if (m_deleteLater) {
 		m_id = 0;

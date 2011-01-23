@@ -30,11 +30,10 @@
 #include "purple.h"
 #include "abstractuser.h"
 #include "account.h"
-class RosterManager;
 #include "rostermanager.h"
 #include "spectrummessagehandler.h"
+#include "settingsmanager.h"
 
-class GlooxMessageHandler;
 class FiletransferRepeater;
 
 class RosterRow;
@@ -44,9 +43,9 @@ using namespace gloox;
 class User;
 
 // Representation of XMPP User
-class User : public AbstractUser, public SpectrumRosterManager, public SpectrumMessageHandler {
+class User : public AbstractUser, public SpectrumRosterManager, public SpectrumMessageHandler, public SettingsManager {
 	public:
-		User(GlooxMessageHandler *parent, JID jid, const std::string &username, const std::string &password, const std::string &userKey, long id, const std::string &encoding, const std::string &language, bool vip);
+		User(JID jid, const std::string &username, const std::string &password, const std::string &userKey, long id, const std::string &encoding, const std::string &language, bool vip);
 		virtual ~User();
 
 		// Connects the user to legacy network.
@@ -91,7 +90,6 @@ class User : public AbstractUser, public SpectrumRosterManager, public SpectrumM
 		void setLang(const char *lang) { g_free(m_lang); m_lang = g_strdup(lang); }
 		GHashTable *settings() { return m_settings; }
 
-		GlooxMessageHandler *p;
 		const std::string & userKey() { return m_userKey; }
 		void setFeatures(int f) { m_features = f; }
 		int getFeatures() { return m_features; }
@@ -104,7 +102,6 @@ class User : public AbstractUser, public SpectrumRosterManager, public SpectrumM
 		long m_userID;				// userID for Database
 		std::string m_userKey;
 		PurpleAccount *m_account;	// PurpleAccount to which this user is connected
-		guint m_syncTimer;			// timer used for syncing purple buddy list and roster
 		int m_subscribeLastCount;	// number of buddies which was in subscribeCache in previous iteration of m_syncTimer
 		bool m_vip;					// true if the user is VIP
 		bool m_readyForConnect;		// true if the user user wants to connect and we're ready to do it

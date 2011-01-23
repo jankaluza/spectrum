@@ -40,8 +40,7 @@
 #include "Magick++.h"
 #endif
 
-User::User(GlooxMessageHandler *parent, JID jid, const std::string &username, const std::string &password, const std::string &userKey, long id, const std::string &encoding, const std::string &language, bool vip) : SpectrumRosterManager(this), SpectrumMessageHandler(this) {
-	p = parent;
+User::User(JID jid, const std::string &username, const std::string &password, const std::string &userKey, long id, const std::string &encoding, const std::string &language, bool vip) : SpectrumRosterManager(this), SpectrumMessageHandler(this), SettingsManager(this) {
 	m_jid = jid.bare();
 
 	Resource r;
@@ -51,7 +50,6 @@ User::User(GlooxMessageHandler *parent, JID jid, const std::string &username, co
 	m_userID = id;
 	m_userKey = userKey;
 	m_account = NULL;
-	m_syncTimer = 0;
 	m_subscribeLastCount = -1;
 	m_vip = vip;
 	m_readyForConnect = false;
@@ -93,57 +91,57 @@ User::User(GlooxMessageHandler *parent, JID jid, const std::string &username, co
 
 	m_features = 0;
 	m_connectionStart = time(NULL);
-	m_settings = p->sql()->getSettings(m_userID);
+	m_settings = Transport::instance()->sql()->getSettings(m_userID);
 
 	m_loadingBuddiesFromDB = false;
 	m_photoHash.clear();
 
 	PurpleValue *value;
 
-// 	PurpleAccount *act = purple_accounts_find(m_username.c_str(), this->p->protocol()->protocol().c_str());
+// 	PurpleAccount *act = purple_accounts_find(m_username.c_str(), Transport::instance()->protocol()->protocol().c_str());
 // 	if (act)
-// 		p->collector()->stopCollecting(act);
+// 		Transport::instance()->collector()->stopCollecting(act);
 
 
 	// check default settings
 	if ( (value = getSetting("enable_transport")) == NULL ) {
-		p->sql()->addSetting(m_userID, "enable_transport", "1", PURPLE_TYPE_BOOLEAN);
+		Transport::instance()->sql()->addSetting(m_userID, "enable_transport", "1", PURPLE_TYPE_BOOLEAN);
 		value = purple_value_new(PURPLE_TYPE_BOOLEAN);
 		purple_value_set_boolean(value, true);
 		g_hash_table_replace(m_settings, g_strdup("enable_transport"), value);
 	}
 	if ( (value = getSetting("enable_notify_email")) == NULL ) {
-		p->sql()->addSetting(m_userID, "enable_notify_email", "0", PURPLE_TYPE_BOOLEAN);
+		Transport::instance()->sql()->addSetting(m_userID, "enable_notify_email", "0", PURPLE_TYPE_BOOLEAN);
 		value = purple_value_new(PURPLE_TYPE_BOOLEAN);
 		purple_value_set_boolean(value, false);
 		g_hash_table_replace(m_settings, g_strdup("enable_notify_email"), value);
 	}
 	if ( (value = getSetting("enable_avatars")) == NULL ) {
-		p->sql()->addSetting(m_userID, "enable_avatars", "1", PURPLE_TYPE_BOOLEAN);
+		Transport::instance()->sql()->addSetting(m_userID, "enable_avatars", "1", PURPLE_TYPE_BOOLEAN);
 		value = purple_value_new(PURPLE_TYPE_BOOLEAN);
 		purple_value_set_boolean(value, true);
 		g_hash_table_replace(m_settings, g_strdup("enable_avatars"), value);
 	}
 	if ( (value = getSetting("enable_chatstate")) == NULL ) {
-		p->sql()->addSetting(m_userID, "enable_chatstate", "1", PURPLE_TYPE_BOOLEAN);
+		Transport::instance()->sql()->addSetting(m_userID, "enable_chatstate", "1", PURPLE_TYPE_BOOLEAN);
 		value = purple_value_new(PURPLE_TYPE_BOOLEAN);
 		purple_value_set_boolean(value, true);
 		g_hash_table_replace(m_settings, g_strdup("enable_chatstate"), value);
 	}
 	if ( (value = getSetting("save_files_on_server")) == NULL ) {
-		p->sql()->addSetting(m_userID, "save_files_on_server", "0", PURPLE_TYPE_BOOLEAN);
+		Transport::instance()->sql()->addSetting(m_userID, "save_files_on_server", "0", PURPLE_TYPE_BOOLEAN);
 		value = purple_value_new(PURPLE_TYPE_BOOLEAN);
 		purple_value_set_boolean(value, false);
 		g_hash_table_replace(m_settings, g_strdup("save_files_on_server"), value);
 	}
 	if ( (value = getSetting("reject_authorizations")) == NULL ) {
-		p->sql()->addSetting(m_userID, "reject_authorizations", "0", PURPLE_TYPE_BOOLEAN);
+		Transport::instance()->sql()->addSetting(m_userID, "reject_authorizations", "0", PURPLE_TYPE_BOOLEAN);
 		value = purple_value_new(PURPLE_TYPE_BOOLEAN);
 		purple_value_set_boolean(value, false);
 		g_hash_table_replace(m_settings, g_strdup("reject_authorizations"), value);
 	}
 	if ( (value = getSetting("first_synchronization_done")) == NULL ) {
-		p->sql()->addSetting(m_userID, "first_synchronization_done", "0", PURPLE_TYPE_BOOLEAN);
+		Transport::instance()->sql()->addSetting(m_userID, "first_synchronization_done", "0", PURPLE_TYPE_BOOLEAN);
 		value = purple_value_new(PURPLE_TYPE_BOOLEAN);
 		purple_value_set_boolean(value, false);
 		g_hash_table_replace(m_settings, g_strdup("first_synchronization_done"), value);
@@ -151,18 +149,8 @@ User::User(GlooxMessageHandler *parent, JID jid, const std::string &username, co
 	
 	Transport::instance()->sql()->setUserOnline(m_userID, true);
 
-	p->protocol()->onUserCreated(this);
+	Transport::instance()->protocol()->onUserCreated(this);
 
-// 	Tag *iq = new Tag("iq");
-// 	iq->addAttribute("from", Transport::instance()->jid());
-// 	iq->addAttribute("to", m_jid);
-// 	iq->addAttribute("id", Transport::instance()->getId());
-// 	iq->addAttribute("type", "set");
-// 	Tag *query = new Tag("query");
-// 	query->addAttribute("xmlns", "http://spectrum.im/protocol/remote-roster");
-// 	iq->addChild(query);
-// 	Transport::instance()->send(iq);
-// 
 	// Ask for user's roster
 	Tag *iq = new Tag("iq");
 	iq->addAttribute("from", Transport::instance()->jid());
@@ -193,12 +181,12 @@ PurpleValue * User::getSetting(const char *key) {
 void User::updateSetting(const std::string &key, PurpleValue *value) {
 	if (purple_value_get_type(value) == PURPLE_TYPE_BOOLEAN) {
 		if (purple_value_get_boolean(value))
-			p->sql()->updateSetting(m_userID, key, "1");
+			Transport::instance()->sql()->updateSetting(m_userID, key, "1");
 		else
-			p->sql()->updateSetting(m_userID, key, "0");
+			Transport::instance()->sql()->updateSetting(m_userID, key, "0");
 	}
 	else if (purple_value_get_type(value) == PURPLE_TYPE_STRING) {
-		p->sql()->updateSetting(m_userID, key, purple_value_get_string(value));
+		Transport::instance()->sql()->updateSetting(m_userID, key, purple_value_get_string(value));
 	}
 	g_hash_table_replace(m_settings, g_strdup(key.c_str()), purple_value_dup(value));
 }
@@ -229,14 +217,14 @@ void User::purpleBuddyTypingStopped(const std::string &uin){
 	Tag *s = new Tag("message");
 	s->addAttribute("to",m_jid);
 	s->addAttribute("type","chat");
-	s->addAttribute("from",username + "@" + p->jid() + "/bot");
+	s->addAttribute("from",username + "@" + Transport::instance()->jid() + "/bot");
 
 	// chatstates
 	Tag *active = new Tag("active");
 	active->addAttribute("xmlns","http://jabber.org/protocol/chatstates");
 	s->addChild(active);
 
-	p->j->send( s );
+	Transport::instance()->send( s );
 }
 
 /*
@@ -264,14 +252,14 @@ void User::purpleBuddyTyping(const std::string &uin){
 	Tag *s = new Tag("message");
 	s->addAttribute("to", m_jid);
 	s->addAttribute("type", "chat");
-	s->addAttribute("from",username + "@" + p->jid() + "/bot");
+	s->addAttribute("from",username + "@" + Transport::instance()->jid() + "/bot");
 
 	// chatstates
 	Tag *active = new Tag("composing");
 	active->addAttribute("xmlns","http://jabber.org/protocol/chatstates");
 	s->addChild(active);
 
-	p->j->send( s );
+	Transport::instance()->send( s );
 }
 
 /*
@@ -300,14 +288,14 @@ void User::purpleBuddyTypingPaused(const std::string &uin){
 	Tag *s = new Tag("message");
 	s->addAttribute("to",m_jid);
 	s->addAttribute("type","chat");
-	s->addAttribute("from",username + "@" + p->jid() + "/bot");
+	s->addAttribute("from",username + "@" + Transport::instance()->jid() + "/bot");
 
 	// chatstates
 	Tag *active = new Tag("paused");
 	active->addAttribute("xmlns","http://jabber.org/protocol/chatstates");
 	s->addChild(active);
 
-	p->j->send( s );
+	Transport::instance()->send( s );
 }
 
 /*
@@ -326,16 +314,16 @@ void User::connect() {
 	// check if it's valid uin
 	bool valid = false;
 	if (!m_username.empty()) {
-		valid = p->protocol()->isValidUsername(m_username);
+		valid = Transport::instance()->protocol()->isValidUsername(m_username);
 	}
 	if (!valid) {
 		Log(m_jid, m_username << " This username is not valid, not connecting.");
 		return;
 	}
 
-	if (purple_accounts_find(m_username.c_str(), this->p->protocol()->protocol().c_str()) != NULL){
+	if (purple_accounts_find(m_username.c_str(), Transport::instance()->protocol()->protocol().c_str()) != NULL){
 		Log(m_jid, "this account already exists");
-		m_account = purple_accounts_find(m_username.c_str(), this->p->protocol()->protocol().c_str());
+		m_account = purple_accounts_find(m_username.c_str(), Transport::instance()->protocol()->protocol().c_str());
 		User *user = (User *) Transport::instance()->userManager()->getUserByAccount(m_account);
 		if (user && user != this) {
 			m_account = NULL;
@@ -345,11 +333,11 @@ void User::connect() {
 	}
 	else {
 		Log(m_jid, "creating new account");
-		m_account = purple_account_new(m_username.c_str(), this->p->protocol()->protocol().c_str());
+		m_account = purple_account_new(m_username.c_str(), Transport::instance()->protocol()->protocol().c_str());
 
 		purple_accounts_add(m_account);
 	}
-	p->collector()->stopCollecting(m_account);
+	Transport::instance()->collector()->stopCollecting(m_account);
 
 	PurplePlugin *plugin = purple_find_prpl(Transport::instance()->protocol()->protocol().c_str());
 	PurplePluginProtocolInfo *prpl_info = PURPLE_PLUGIN_PROTOCOL_INFO(plugin);
@@ -392,7 +380,7 @@ void User::connect() {
 
 	m_account->ui_data = this;
 	
-	p->protocol()->onPurpleAccountCreated(m_account);
+	Transport::instance()->protocol()->onPurpleAccountCreated(m_account);
 
 	m_loadingBuddiesFromDB = true;
 	loadRoster();
@@ -403,7 +391,7 @@ void User::connect() {
 	purple_account_set_password(m_account,m_password.c_str());
 	Log(m_jid, "UIN:" << m_username << " USER_ID:" << m_userID);
 
-	if (p->configuration().useProxy) {
+	if (CONFIG().useProxy) {
 		PurpleProxyInfo *info = purple_proxy_info_new();
 		purple_proxy_info_set_type(info, PURPLE_PROXY_USE_ENVVAR);
 		info->username = NULL;
@@ -426,9 +414,7 @@ void User::connect() {
 		}
 	}
 
-	Presence tag(Presence::Unavailable, m_jid, tr(getLang(), _("Connecting")));
-	tag.setFrom(p->jid());
-	p->j->send(tag);
+	SpectrumRosterManager::sendPresence(Transport::instance()->jid(), m_jid, "unavailable", tr(getLang(), _("Connecting")));
 }
 
 /*
@@ -450,7 +436,7 @@ void User::disconnected() {
 void User::connected() {
 	m_connected = true;
 	m_reconnectCount = 0;
-	p->protocol()->onConnected(this);
+	Transport::instance()->protocol()->onConnected(this);
 
 	std::cout << "CONNECTED\n";
 	for (std::list <Tag*>::iterator it = m_autoConnectRooms.begin(); it != m_autoConnectRooms.end() ; it++ ) {
@@ -484,9 +470,8 @@ void User::connected() {
 	m_autoConnectRooms.clear();
 
 	if (m_glooxPresenceType != -1) {
-		Presence tag((Presence::PresenceType) m_glooxPresenceType, m_jid, m_statusMessage);
-		tag.setFrom(p->jid());
-		p->j->send(tag);
+		SpectrumRosterManager::sendPresence(Transport::instance()->jid(), m_jid,
+											(Presence::PresenceType) m_glooxPresenceType, m_statusMessage);
 		m_glooxPresenceType = -1;
 	}
 	mergeRoster();
@@ -513,7 +498,7 @@ void User::receivedPresence(const Presence &stanza) {
 			Tag *photo = x_vcard->findChild("photo");
 			if (photo && !photo->cdata().empty()) {
 				if (photo->cdata() != m_photoHash) {
-					p->fetchVCard(jid());
+					Transport::instance()->fetchVCard(jid());
 				}
 			}
 		}
@@ -561,7 +546,7 @@ void User::receivedPresence(const Presence &stanza) {
 	}
 
 	// this presence is for the transport
-	if (stanza.to().username() == ""  || (p->protocol()->tempAccountsAllowed())) {
+	if (stanza.to().username() == ""  || (Transport::instance()->protocol()->tempAccountsAllowed())) {
 		if (stanza.presence() == Presence::Unavailable) {
 			// disconnect from legacy network if we are connected
 			if (stanza.to().username() == "") {
@@ -569,17 +554,17 @@ void User::receivedPresence(const Presence &stanza) {
 					if (hasResource(stanza.from().resource())) {
 						removeResource(stanza.from().resource());
 						removeConversationResource(stanza.from().resource());
-						p->adhoc()->unregisterSession(stanza.from().full());
+						GlooxAdhocHandler::instance()->unregisterSession(stanza.from().full());
 					}
 					sendUnavailablePresenceToAll(stanza.from().resource());
 // 				}
 			}
 			if (m_connected) {
-				if (getResources().empty() || (p->protocol()->tempAccountsAllowed() && !hasOpenedMUC())){
+				if (getResources().empty() || (Transport::instance()->protocol()->tempAccountsAllowed() && !hasOpenedMUC())){
 					Log(m_jid, "disconecting");
 // 					sendUnavailablePresenceToAll();
 // 					purple_account_disconnect(m_account);
-					p->adhoc()->unregisterSession(stanza.from().full());
+					GlooxAdhocHandler::instance()->unregisterSession(stanza.from().full());
 				}
 				else {
 					setActiveResource();
@@ -645,9 +630,8 @@ void User::receivedPresence(const Presence &stanza) {
 			}
 			// Just forward user presence to XMPP user, not change it in legacy network
 			else {
-				Presence tag((Presence::PresenceType) presence, m_jid, stanzaStatus);
-				tag.setFrom(p->jid());
-				p->j->send(tag);
+				SpectrumRosterManager::sendPresence(Transport::instance()->jid(), m_jid,
+													(Presence::PresenceType) presence, stanzaStatus);
 			}
 		}
 
@@ -655,26 +639,25 @@ void User::receivedPresence(const Presence &stanza) {
 			Tag *tag = new Tag("presence");
 			tag->addAttribute("to", stanza.from().bare());
 			tag->addAttribute("type", "unavailable");
-			tag->addAttribute("from", p->jid());
-			p->j->send(tag);
+			tag->addAttribute("from", Transport::instance()->jid());
+			Transport::instance()->send(tag);
 		}
 		// send presence about tranport status to user
 		else if (getResources().empty()) {
 			Tag *tag = new Tag("presence");
 			tag->addAttribute("to", stanza.from().bare());
 			tag->addAttribute("type", "unavailable");
-			tag->addAttribute("from", p->jid());
-			p->j->send(tag);
+			tag->addAttribute("from", Transport::instance()->jid());
+			Transport::instance()->send(tag);
 		}
 		else if (stanza.presence() == Presence::Unavailable) {
-			Presence tag(stanza.presence(), stanza.from().full(), stanza.status());
-			tag.setFrom(p->jid());
-			p->j->send(tag);
+			SpectrumRosterManager::sendPresence(Transport::instance()->jid(), stanza.from().full(),
+												stanza.presence(), stanza.status());
 		}
 // 		else if (statusChanged) {
 // 			Presence tag(stanza.presence(), m_jid, stanza.status());
-// 			tag.setFrom(p->jid());
-// 			p->j->send(tag);
+// 			tag.setFrom(Transport::instance()->jid());
+// 			Transport::instance()->send(tag);
 // 		}
 
 	}
@@ -739,9 +722,8 @@ void User::forwardStatus(int presence, const std::string &stanzaStatus) {
 			}
 		}
 
-		Presence tag((Presence::PresenceType) presence, m_jid, statusMessage);
-		tag.setFrom(p->jid());
-		p->j->send(tag);
+		SpectrumRosterManager::sendPresence(Transport::instance()->jid(), m_jid,
+											(Presence::PresenceType) presence, statusMessage);
 	}
 }
 
@@ -829,7 +811,7 @@ void User::handleVCard(const VCard* vcard) {
 
 User::~User(){
 	Log("User Destructor", m_jid << " " << m_account << " " << (m_account ? purple_account_get_username(m_account) : "") );
-	p->protocol()->onDestroy(this);
+	Transport::instance()->protocol()->onDestroy(this);
 	g_free(m_lang);
 
 	sendUnavailablePresenceToAll();
@@ -863,21 +845,16 @@ User::~User(){
 		}
 
 		m_account->ui_data = NULL;
-		p->collector()->collect(m_account);
+		Transport::instance()->collector()->collect(m_account);
 	}
 // 	else {
-// 		PurpleAccount *act = purple_accounts_find(m_username.c_str(), this->p->protocol()->protocol().c_str());
+// 		PurpleAccount *act = purple_accounts_find(m_username.c_str(), Transport::instance()->protocol()->protocol().c_str());
 // 		if (act) {
 // 			act->ui_data = NULL;
-// 			p->collector()->collect(act);
+// 			Transport::instance()->collector()->collect(act);
 // 			purple_account_set_enabled(act, PURPLE_UI, FALSE);
 // 		}
 // 	}
-
-	if (m_syncTimer != 0) {
-		Log(m_jid, "removing timer\n");
-		purple_timeout_remove(m_syncTimer);
-	}
 
 	g_hash_table_destroy(m_settings);
 }

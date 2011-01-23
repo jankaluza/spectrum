@@ -22,6 +22,7 @@
 #define _ABSTRACT_BACKEND_H
 
 #include <string>
+#include "glib.h"
 #include <list>
 #include "account.h"
 #include "value.h"
@@ -59,6 +60,7 @@ class AbstractBackend {
 		virtual void beginTransaction() { }
 		virtual void commitTransaction() { }
 		virtual void addSetting(long userId, const std::string &key, const std::string &value, PurpleType type) {}
+		virtual GHashTable * getSettings(long userId) = 0;
 
 };
 

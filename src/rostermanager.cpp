@@ -743,12 +743,20 @@ void SpectrumRosterManager::sendRosterPush(const std::string &to, const std::str
 		Transport::instance()->send(iq.tag());
 }
 
-void SpectrumRosterManager::sendPresence(const std::string &from, const std::string &to, const std::string &type) {
+void SpectrumRosterManager::sendPresence(const std::string &from, const std::string &to, const std::string &type, const std::string &message) {
 	Tag *tag = new Tag("presence");
 	tag->addAttribute("to", to);
 	tag->addAttribute("type", type);
 	tag->addAttribute("from", from);
+	if (!message.empty())
+		tag->addChild( new Tag("status", message) );
 	Transport::instance()->send(tag);
+}
+
+void SpectrumRosterManager::sendPresence(const std::string &from, const std::string &to, const Presence::PresenceType &type, const std::string &message) {
+	Presence tag(type, to, message);
+	tag.setFrom(from);
+	Transport::instance()->send(tag.tag());
 }
 
 void SpectrumRosterManager::sendSubscribePresence(const std::string &from, const std::string &to, const std::string &nick) {

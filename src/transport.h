@@ -75,6 +75,7 @@ class Transport : public CapabilityManager {
 		AccountCollector *collector();
 		bool supportRosterIq() { return m_supportRosterIq; }
 		void setSupportRosterIq() { m_supportRosterIq = true; }
+		void fetchVCard(const std::string &jid);
 
 
 		

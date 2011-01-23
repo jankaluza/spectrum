@@ -113,6 +113,7 @@ set(spectrum_SRCS
 	src/rosterstorage.cpp
 	src/searchhandler.cpp
 	src/searchrepeater.cpp
+	src/settingsmanager.cpp
 	src/spectrum_util.cpp
 	src/spectrumbuddy.cpp
 	src/spectrumconversation.cpp

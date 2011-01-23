@@ -119,6 +119,7 @@ static gpointer sendFileStraightCallback(gpointer data) {
 		if (!resender->send())
 			break;
 	}
+	
 	resender->stopped();
 	return NULL;
 }
@@ -147,6 +148,7 @@ bool SendFileStraight::send() {
 			if (ret < 1) {
 				std::cout << "error in sending or sending probably finished\n";
 				unlockMutex();
+				Transport::instance()->disposeBytestream(m_stream);
 				return false;
 			};
 		}
@@ -161,10 +163,12 @@ bool SendFileStraight::send() {
 	if (m_stream->recv(2000) != ConnNoError) {
 		m_parent->tryToDeleteMe();
 // 		g_timeout_add(0, &try_to_delete_me, m_parent);
+		Transport::instance()->disposeBytestream(m_stream);
 		return false;
 	}
 	if (shouldStop()) {
 		Log("SendFileStraight", "stopping thread");
+		Transport::instance()->disposeBytestream(m_stream);
 		return false;
 	}
 	
@@ -306,10 +310,12 @@ bool ReceiveFileStraight::receive() {
 		Log("ReceiveFileStraight", "socket closed => stopping thread");
 		m_parent->tryToDeleteMe();
 // 		g_timeout_add(0, &try_to_delete_me, m_parent);
+		Transport::instance()->disposeBytestream(m_stream);
 		return false;
 	}
 	if (shouldStop()) {
 		Log("ReceiveFileStraight", "stopping thread");
+		Transport::instance()->disposeBytestream(m_stream);
 		return false;
 	}
 	return true;
@@ -344,7 +350,7 @@ FiletransferRepeater::FiletransferRepeater(const JID& to, const std::string& sid
 	m_send = false;
 	m_readyCalled = false;
 	m_xfer = NULL;
-	m_deleteMeTimer = new SpectrumTimer(0, try_to_delete_me, this);
+	m_deleteMeTimer = new SpectrumTimer(1, try_to_delete_me, this);
 	m_readyTimer = new SpectrumTimer(0, ui_got_data, this);
 	
 }
@@ -361,7 +367,7 @@ FiletransferRepeater::FiletransferRepeater(const JID& from, const JID& to) {
 	m_send = true;
 	m_readyCalled = false;
 	m_xfer = NULL;
-	m_deleteMeTimer = new SpectrumTimer(0, try_to_delete_me, this);
+	m_deleteMeTimer = new SpectrumTimer(1, try_to_delete_me, this);
 	m_readyTimer = new SpectrumTimer(0, ui_got_data, this);
 }
 
@@ -554,10 +560,12 @@ int FiletransferRepeater::getDataToSend(guchar **data, gssize size) {
 
 int FiletransferRepeater::getDataToSend(std::string &data) {
 	int size = 0;
+
 	if (m_buffer_size != 0) {
 		data.assign((char *) m_buffer, m_buffer_size);
 		size = m_buffer_size;
 		m_buffer_size = 0;
+		tryToDeleteMe();
 	}
 	m_readyCalled = false;
 	ready();
