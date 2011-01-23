@@ -43,7 +43,6 @@
 User::User(JID jid, const std::string &username, const std::string &password, const std::string &userKey, long id, const std::string &encoding, const std::string &language, bool vip) : SpectrumRosterManager(this), SpectrumMessageHandler(this), SettingsManager(this) {
 	m_jid = jid.bare();
 
-	Resource r;
 	setResource(jid.resource());
 	setActiveResource(jid.resource());
 
@@ -58,6 +57,13 @@ User::User(JID jid, const std::string &username, const std::string &password, co
 	m_reconnectCount = 0;
 	m_glooxPresenceType = -1;
 
+	m_encoding = encoding;
+	m_lang = g_strdup(language.c_str());
+	m_features = 0;
+	m_connectionStart = time(NULL);
+	m_loadingBuddiesFromDB = false;
+	m_photoHash.clear();
+
 	m_password = password;
 	m_username = username;
 	if (!CONFIG().username_mask.empty()) {
@@ -65,36 +71,8 @@ User::User(JID jid, const std::string &username, const std::string &password, co
 		replace(newUsername, "$username", m_username.c_str());
 		m_username = newUsername;
 	}
-	
-	m_encoding = encoding;
 
-	// There is some garbage in language column before 0.3 (this bug is fixed in 0.3), so we're trying to set default
-	// values here.
-	// TODO: Remove me for 0.4
-	if (localization.getLanguages().find(language) == localization.getLanguages().end()) {
-		UserRow res;
-		res.jid = m_jid;
-		res.password = m_password;
-		if (language == "English") {
-			res.language = "en";
-			m_lang = g_strdup("en");
-		}
-		else {
-			res.language = Transport::instance()->getConfiguration().language;
-			m_lang = g_strdup(res.language.c_str());
-		}
-		res.encoding = m_encoding;
-		Transport::instance()->sql()->updateUser(res);
-	}
-	else
-		m_lang = g_strdup(language.c_str());
-
-	m_features = 0;
-	m_connectionStart = time(NULL);
 	setSettings(Transport::instance()->sql()->getSettings(m_userID));
-
-	m_loadingBuddiesFromDB = false;
-	m_photoHash.clear();
 
 	// Add default settings
 	addSetting("enable_transport", true);
@@ -109,15 +87,7 @@ User::User(JID jid, const std::string &username, const std::string &password, co
 	Transport::instance()->protocol()->onUserCreated(this);
 
 	// Ask for user's roster
-	Tag *iq = new Tag("iq");
-	iq->addAttribute("from", Transport::instance()->jid());
-	iq->addAttribute("to", m_jid);
-	iq->addAttribute("id", Transport::instance()->getId());
-	iq->addAttribute("type", "get");
-	Tag *query = new Tag("query");
-	query->addAttribute("xmlns", "jabber:iq:roster");
-	iq->addChild(query);
-	Transport::instance()->send(iq);
+	sendRosterGet(m_jid);
 }
 
 /*
@@ -130,24 +100,6 @@ bool User::hasTransportFeature(int feature) {
 	return false;
 }
 
-// PurpleValue * User::getSetting(const char *key) {
-// 	PurpleValue *value = (PurpleValue *) g_hash_table_lookup(m_settings, key);
-// 	return value;
-// }
-
-// void User::updateSetting(const std::string &key, PurpleValue *value) {
-// 	if (purple_value_get_type(value) == PURPLE_TYPE_BOOLEAN) {
-// 		if (purple_value_get_boolean(value))
-// 			Transport::instance()->sql()->updateSetting(m_userID, key, "1");
-// 		else
-// 			Transport::instance()->sql()->updateSetting(m_userID, key, "0");
-// 	}
-// 	else if (purple_value_get_type(value) == PURPLE_TYPE_STRING) {
-// 		Transport::instance()->sql()->updateSetting(m_userID, key, purple_value_get_string(value));
-// 	}
-// 	g_hash_table_replace(m_settings, g_strdup(key.c_str()), purple_value_dup(value));
-// }
-
 /*
  * Called when legacy network user stops typing.
  */
@@ -156,7 +108,9 @@ void User::purpleBuddyTypingStopped(const std::string &uin){
 		return;
 	if (!getSetting<bool>("enable_chatstate"))
 		return;
+
 	Log(m_jid, uin << " stopped typing");
+
 	std::string username(uin);
 	// Remove resource if it's XMPP JID
 	if (Transport::instance()->getConfiguration().protocol == "xmpp") {
@@ -170,18 +124,7 @@ void User::purpleBuddyTypingStopped(const std::string &uin){
 	else
 		std::for_each( username.begin(), username.end(), replaceBadJidCharacters() ); // OK
 
-
-	Tag *s = new Tag("message");
-	s->addAttribute("to",m_jid);
-	s->addAttribute("type","chat");
-	s->addAttribute("from",username + "@" + Transport::instance()->jid() + "/bot");
-
-	// chatstates
-	Tag *active = new Tag("active");
-	active->addAttribute("xmlns","http://jabber.org/protocol/chatstates");
-	s->addChild(active);
-
-	Transport::instance()->send( s );
+	SpectrumMessageHandler::sendChatstate(username + "@" + Transport::instance()->jid() + "/bot", m_jid, "active");
 }
 
 /*
@@ -192,7 +135,9 @@ void User::purpleBuddyTyping(const std::string &uin){
 		return;
 	if (!getSetting<bool>("enable_chatstate"))
 		return;
+
 	Log(m_jid, uin << " is typing");
+
 	std::string username(uin);
 	// Remove resource if it's XMPP JID
 	if (Transport::instance()->getConfiguration().protocol == "xmpp") {
@@ -200,23 +145,14 @@ void User::purpleBuddyTyping(const std::string &uin){
 		if (pos != std::string::npos)
 			username.erase((int) pos, username.length() - (int) pos);
 	}
+
 	AbstractSpectrumBuddy *s_buddy = getRosterItem(uin);
 	if (s_buddy && s_buddy->getFlags() & SPECTRUM_BUDDY_JID_ESCAPING)
 		username = JID::escapeNode(username);
 	else
 		std::for_each( username.begin(), username.end(), replaceBadJidCharacters() ); // OK
 
-	Tag *s = new Tag("message");
-	s->addAttribute("to", m_jid);
-	s->addAttribute("type", "chat");
-	s->addAttribute("from",username + "@" + Transport::instance()->jid() + "/bot");
-
-	// chatstates
-	Tag *active = new Tag("composing");
-	active->addAttribute("xmlns","http://jabber.org/protocol/chatstates");
-	s->addChild(active);
-
-	Transport::instance()->send( s );
+	SpectrumMessageHandler::sendChatstate(username + "@" + Transport::instance()->jid() + "/bot", m_jid, "composing");
 }
 
 /*
@@ -227,7 +163,9 @@ void User::purpleBuddyTypingPaused(const std::string &uin){
 		return;
 	if (!getSetting<bool>("enable_chatstate"))
 		return;
+
 	Log(m_jid, uin << " paused typing");
+
 	std::string username(uin);
 	// Remove resource if it's XMPP JID
 	if (Transport::instance()->getConfiguration().protocol == "xmpp") {
@@ -235,24 +173,14 @@ void User::purpleBuddyTypingPaused(const std::string &uin){
 		if (pos != std::string::npos)
 			username.erase((int) pos, username.length() - (int) pos);
 	}
+
 	AbstractSpectrumBuddy *s_buddy = getRosterItem(uin);
 	if (s_buddy && s_buddy->getFlags() & SPECTRUM_BUDDY_JID_ESCAPING)
 		username = JID::escapeNode(username);
 	else
 		std::for_each( username.begin(), username.end(), replaceBadJidCharacters() ); // OK
 
-
-	Tag *s = new Tag("message");
-	s->addAttribute("to",m_jid);
-	s->addAttribute("type","chat");
-	s->addAttribute("from",username + "@" + Transport::instance()->jid() + "/bot");
-
-	// chatstates
-	Tag *active = new Tag("paused");
-	active->addAttribute("xmlns","http://jabber.org/protocol/chatstates");
-	s->addChild(active);
-
-	Transport::instance()->send( s );
+	SpectrumMessageHandler::sendChatstate(username + "@" + Transport::instance()->jid() + "/bot", m_jid, "paused");
 }
 
 /*
@@ -593,19 +521,13 @@ void User::receivedPresence(const Presence &stanza) {
 		}
 
 		if (getSetting<bool>("enable_transport") == false) {
-			Tag *tag = new Tag("presence");
-			tag->addAttribute("to", stanza.from().bare());
-			tag->addAttribute("type", "unavailable");
-			tag->addAttribute("from", Transport::instance()->jid());
-			Transport::instance()->send(tag);
+			SpectrumRosterManager::sendPresence(Transport::instance()->jid(), stanza.from().bare(),
+												"unavailable");
 		}
 		// send presence about tranport status to user
 		else if (getResources().empty()) {
-			Tag *tag = new Tag("presence");
-			tag->addAttribute("to", stanza.from().bare());
-			tag->addAttribute("type", "unavailable");
-			tag->addAttribute("from", Transport::instance()->jid());
-			Transport::instance()->send(tag);
+			SpectrumRosterManager::sendPresence(Transport::instance()->jid(), stanza.from().bare(),
+												"unavailable");
 		}
 		else if (stanza.presence() == Presence::Unavailable) {
 			SpectrumRosterManager::sendPresence(Transport::instance()->jid(), stanza.from().full(),

@@ -383,3 +383,17 @@ AbstractConversation *SpectrumMessageHandler::getSpectrumMUCConversation(PurpleC
 	}
 	return s_conv;
 }
+
+void SpectrumMessageHandler::sendChatstate(const std::string &from, const std::string &to, const std::string &type) {
+	Tag *s = new Tag("message");
+	s->addAttribute("to", to);
+	s->addAttribute("type", "chat");
+	s->addAttribute("from", from);
+
+	// chatstates
+	Tag *active = new Tag(type);
+	active->addAttribute("xmlns","http://jabber.org/protocol/chatstates");
+	s->addChild(active);
+
+	Transport::instance()->send(s);
+}

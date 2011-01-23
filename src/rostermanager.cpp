@@ -770,3 +770,15 @@ void SpectrumRosterManager::sendSubscribePresence(const std::string &from, const
 	}
 	Transport::instance()->send(tag);
 }
+
+void SpectrumRosterManager::sendRosterGet(const std::string &to) {
+	Tag *iq = new Tag("iq");
+	iq->addAttribute("from", Transport::instance()->jid());
+	iq->addAttribute("to", to);
+	iq->addAttribute("id", Transport::instance()->getId());
+	iq->addAttribute("type", "get");
+	Tag *query = new Tag("query");
+	query->addAttribute("xmlns", "jabber:iq:roster");
+	iq->addChild(query);
+	Transport::instance()->send(iq);
+}

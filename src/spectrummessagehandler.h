@@ -91,6 +91,9 @@ class SpectrumMessageHandler {
 		// Called by libpurple when PurpleConversation is destroyed.
 		void purpleConversationDestroyed(PurpleConversation *conv);
 
+//	static:
+		static void sendChatstate(const std::string &from, const std::string &to, const std::string &type);
+
 	private:
 		std::string getConversationName(PurpleConversation *conv);
 		AbstractConversation *getSpectrumMUCConversation(PurpleConversation *conv);
