@@ -55,27 +55,27 @@ class Transport : public CapabilityManager {
 		Transport(const std::string jid);
 		~Transport();
 		static Transport *instance() { return m_pInstance; }
-		void send(Tag *tag);
-		void send(IQ &iq, IqHandler *ih, int context, bool del=false);
-		UserManager *userManager();
+		static void send(Tag *tag);
+		static void send(IQ &iq, IqHandler *ih, int context, bool del=false);
+		static UserManager *userManager();
 		const std::string &hash();
-		AbstractBackend *sql();
+		static AbstractBackend *sql();
 		const std::string &jid() { return m_jid; }
-		std::string getId();
+		static std::string getId();
 		std::list <Tag *> &getTags() { return m_tags; }
 		void clearTags() { m_tags.clear(); }
-		GlooxParser *parser();
-		AbstractProtocol *protocol();
-		Configuration &getConfiguration();
-		void registerStanzaExtension(StanzaExtension *extension);
-		bool canSendFile(PurpleAccount *account, const std::string &uname);
-		void disposeBytestream(Bytestream *stream);
-		const std::string requestFT( const JID& to, const std::string& name, long size, const std::string& hash = EmptyString, const std::string& desc = EmptyString, const std::string& date = EmptyString, const std::string& mimetype = EmptyString, int streamTypes = SIProfileFT::FTTypeAll, const JID& from = JID(), const std::string& sid = EmptyString );
-		void acceptFT( const JID& to, const std::string& sid, SIProfileFT::StreamType type = SIProfileFT::FTTypeS5B, const JID& from = JID() );
-		AccountCollector *collector();
+		static GlooxParser *parser();
+		static AbstractProtocol *protocol();
+		static Configuration &getConfiguration();
+		static void registerStanzaExtension(StanzaExtension *extension);
+		static bool canSendFile(PurpleAccount *account, const std::string &uname);
+		static void disposeBytestream(Bytestream *stream);
+		static const std::string requestFT( const JID& to, const std::string& name, long size, const std::string& hash = EmptyString, const std::string& desc = EmptyString, const std::string& date = EmptyString, const std::string& mimetype = EmptyString, int streamTypes = SIProfileFT::FTTypeAll, const JID& from = JID(), const std::string& sid = EmptyString );
+		static void acceptFT( const JID& to, const std::string& sid, SIProfileFT::StreamType type = SIProfileFT::FTTypeS5B, const JID& from = JID() );
+		static AccountCollector *collector();
 		bool supportRosterIq() { return m_supportRosterIq; }
 		void setSupportRosterIq() { m_supportRosterIq = true; }
-		void fetchVCard(const std::string &jid);
+		static void fetchVCard(const std::string &jid);
 		static bool isAdmin(const std::string &barejid);
 
 
