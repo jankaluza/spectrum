@@ -32,11 +32,11 @@
 #include <algorithm>
 #include "transport.h"
 
+// Used for sorting Disco::Items alphabetically
 static bool compareItems(Disco::Item *first, Disco::Item *second) {
 	std::cout << (strcmp(first->name().c_str(), second->name().c_str()) < 0) << " " << first->name() << " " << second->name() << "\n";
 	return strcmp(first->name().c_str(), second->name().c_str()) < 0;
 }
-
 
 static AdhocCommandHandler * createSettingsHandler(User *user, const std::string &from, const std::string &id) {
 	AdhocCommandHandler *handler = new AdhocSettings(user, from, id);
@@ -85,46 +85,40 @@ Disco::ItemList GlooxAdhocHandler::handleDiscoNodeItems( const JID &_from, const
 		language = Transport::instance()->getConfiguration().language;
 	
 	if (to == Transport::instance()->jid()) {
-		std::list<std::string> const &admins = Transport::instance()->getConfiguration().admins;
-
 		// add internal commands from m_handlers
 		for (std::map<std::string, adhocCommand>::iterator u = m_handlers.begin(); u != m_handlers.end() ; u++) {
 			Log("GlooxAdhocHandler", "sending item " << (*u).first << " " << (*u).second.name);
-			if (((*u).second.admin && std::find(admins.begin(), admins.end(), from) != admins.end()) || (*u).second.admin == false)
-				lst.push_back( new Disco::Item( Transport::instance()->jid(), (*u).first, (std::string) tr(language, (*u).second.name)) );
-				if (m_nodes.find((*u).first) == m_nodes.end()) {
-					m_nodes[(*u).first] = 1;
-					GlooxMessageHandler::instance()->j->disco()->registerNodeHandler(this, (*u).first);
-				}
-
+			// Skip commands which are only for admin when user is not admin
+			if ((*u).second.admin && !Transport::isAdmin(from))
+				break;
+			lst.push_back( new Disco::Item(Transport::instance()->jid(), (*u).first, tr(language, (*u).second.name)) );
 		}
 
-		if (user) {
-			// add commands from libpurple
-			if (user->isConnected() && purple_account_get_connection(user->account())) {
-				PurpleConnection *gc = purple_account_get_connection(user->account());
-				PurplePlugin *plugin = gc && PURPLE_CONNECTION_IS_CONNECTED(gc) ? gc->prpl : NULL;
-				if (plugin && PURPLE_PLUGIN_HAS_ACTIONS(plugin)) {
-					PurplePluginAction *action = NULL;
-					GList *actions, *l;
+		// add commands from libpurple
+		if (user && user->isConnected()) {
+			PurpleConnection *gc = purple_account_get_connection(user->account());
+			PurplePlugin *plugin = gc && PURPLE_CONNECTION_IS_CONNECTED(gc) ? gc->prpl : NULL;
+			if (plugin && PURPLE_PLUGIN_HAS_ACTIONS(plugin)) {
+				PurplePluginAction *action = NULL;
+				GList *actions, *l;
 
-					actions = PURPLE_PLUGIN_ACTIONS(plugin, gc);
+				actions = PURPLE_PLUGIN_ACTIONS(plugin, gc);
 
-					for (l = actions; l != NULL; l = l->next) {
-						if (l->data) {
-							action = (PurplePluginAction *) l->data;
-							if (action->label == NULL) {
-								purple_plugin_action_free(action);
-								continue;
-							}
-							// we are using "transport_" prefix here to identify command in disco#info handler
-							lst.push_back( new Disco::Item( Transport::instance()->jid(), "transport_" + (std::string) action->label,(std::string) tr(user->getLang(), action->label) ) );
-							if (m_nodes.find("transport_" + (std::string) action->label) == m_nodes.end()) {
-								m_nodes["transport_" + (std::string) action->label] = 1;
-								GlooxMessageHandler::instance()->j->disco()->registerNodeHandler(this, "transport_" + (std::string) action->label);
-							}
+				for (l = actions; l != NULL; l = l->next) {
+					if (l->data) {
+						action = (PurplePluginAction *) l->data;
+						if (action->label == NULL) {
 							purple_plugin_action_free(action);
+							continue;
 						}
+						// we are using "transport_" prefix here to identify command in disco#info handler
+						lst.push_back( new Disco::Item( Transport::instance()->jid(), "transport_" + (std::string) action->label, tr(user->getLang(), action->label) ) );
+
+						if (m_nodes.find("transport_" + (std::string) action->label) == m_nodes.end()) {
+							m_nodes["transport_" + (std::string) action->label] = 1;
+							GlooxMessageHandler::instance()->j->disco()->registerNodeHandler(this, "transport_" + (std::string) action->label);
+						}
+						purple_plugin_action_free(action);
 					}
 				}
 			}
@@ -319,6 +313,7 @@ void GlooxAdhocHandler::handleDiscoError(const JID &jid, const Error *error, int
 
 void GlooxAdhocHandler::registerAdhocCommandHandler(const std::string &name, const adhocCommand command) {
 	m_handlers[name] = command;
+	GlooxMessageHandler::instance()->j->disco()->registerNodeHandler(this, name);
 }
 
 void GlooxAdhocHandler::unregisterSession(const std::string &jid) {

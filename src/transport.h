@@ -76,6 +76,7 @@ class Transport : public CapabilityManager {
 		bool supportRosterIq() { return m_supportRosterIq; }
 		void setSupportRosterIq() { m_supportRosterIq = true; }
 		void fetchVCard(const std::string &jid);
+		static bool isAdmin(const std::string &barejid);
 
 
 		

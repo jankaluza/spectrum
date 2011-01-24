@@ -86,3 +86,8 @@ AccountCollector *Transport::collector() {
 }
 
 void Transport::fetchVCard(const std::string &jid) { GlooxMessageHandler::instance()->fetchVCard(jid); }
+
+bool Transport::isAdmin(const std::string &bare_jid) {
+	std::list<std::string> const &admins = Transport::instance()->getConfiguration().admins;
+	return (std::find(admins.begin(), admins.end(), bare_jid) != admins.end());
+}
