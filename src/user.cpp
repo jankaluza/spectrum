@@ -573,24 +573,23 @@ void User::forwardStatus(int presence, const std::string &stanzaStatus) {
 			PurplePresenceType = PURPLE_STATUS_AVAILABLE;
 			break;
 	}
+	
+	gchar *_markup = purple_markup_escape_text(stanzaStatus.c_str(), -1);
+	std::string markup(_markup);
+	g_free(_markup);
 
 	if (!m_connected) {
 		m_presenceType = PurplePresenceType;
-		m_statusMessage = stanzaStatus;
+		m_statusMessage = markup;
 		m_glooxPresenceType = presence;
 	}
 	else {
 		// we are already connected so we have to change status
 		const PurpleStatusType *status_type = purple_account_get_status_type_with_primitive(m_account, (PurpleStatusPrimitive) PurplePresenceType);
-		std::string statusMessage;
 		if (status_type != NULL) {
 			// send presence to legacy network
-			statusMessage.clear();
-
-			statusMessage.append(stanzaStatus);
-
-			if (!statusMessage.empty()) {
-				purple_account_set_status(m_account, purple_status_type_get_id(status_type), TRUE, "message", statusMessage.c_str(), NULL);
+			if (!markup.empty()) {
+				purple_account_set_status(m_account, purple_status_type_get_id(status_type), TRUE, "message", markup.c_str(), NULL);
 			}
 			else {
 				purple_account_set_status(m_account, purple_status_type_get_id(status_type), TRUE, NULL);
@@ -598,7 +597,7 @@ void User::forwardStatus(int presence, const std::string &stanzaStatus) {
 		}
 
 		SpectrumRosterManager::sendPresence(Transport::instance()->jid(), m_jid,
-											(Presence::PresenceType) presence, statusMessage);
+											(Presence::PresenceType) presence, markup);
 	}
 }
 
