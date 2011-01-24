@@ -1224,7 +1224,7 @@ void GlooxMessageHandler::purpleConnectionError(PurpleConnection *gc,PurpleConne
 // 				Message s(Message::Chat, user->jid(), tr(user->getLang(), text));
 // 				std::string from;
 // 				s.setFrom(jid());
-// 				j->send(s);
+// 				Transport::instance()->send(s);
 // 			}
 			Presence tag(Presence::Unavailable, user->jid(), tr(user->getLang(), _(text ? text : "")));
 			tag.setFrom(Transport::instance()->jid());
@@ -1465,7 +1465,7 @@ void GlooxMessageHandler::notifyEmail(PurpleConnection *gc,const char *subject, 
 				text += "URL: " + std::string(url);
 			Message s(Message::Chat, user->jid(), text);
 			s.setFrom(jid());
-			j->send(s);
+			Transport::instance()->send(s.tag());
 		}
 	}
 }
@@ -1545,7 +1545,7 @@ void GlooxMessageHandler::handleSubscription(const Subscription &stanza) {
 		reply->addAttribute( "to", stanza.from().bare() );
 		reply->addAttribute( "from", stanza.to().bare() );
 		reply->addAttribute( "type", "subscribed" );
-		j->send( reply );
+		Transport::instance()->send( reply );
 		return;
 	}
 
@@ -1594,7 +1594,7 @@ void GlooxMessageHandler::handlePresence(const Presence &stanza){
 		
 		error->addChild(jid);
 		tag->addChild(error);
-		j->send(tag);
+		Transport::instance()->send(tag);
 		return;
 	}
 	
@@ -1641,13 +1641,13 @@ void GlooxMessageHandler::handlePresence(const Presence &stanza){
 			tag->addAttribute("to", stanza.from().full());
 			tag->addAttribute("from", stanza.to().bare());
 			tag->addAttribute("type", "unavailable");
-			j->send(tag);
+			Transport::instance()->send(tag);
 			if (stanza.to().username() == "") {
 				Tag *s = new Tag("presence");
 				s->addAttribute( "to", stanza.from().bare());
 				s->addAttribute( "type", "probe");
 				s->addAttribute( "from", jid());
-				j->send(s);
+				Transport::instance()->send(s);
 			}
 		}
 		else if (((stanza.to().username() == "" && !protocol()->tempAccountsAllowed()) || ( protocol()->tempAccountsAllowed() && isMUC)) && stanza.presence() != Presence::Unavailable){
@@ -1712,7 +1712,7 @@ void GlooxMessageHandler::handlePresence(const Presence &stanza){
 			tag->addAttribute( "to", stanza.from().bare() );
 			tag->addAttribute( "type", "unavailable" );
 			tag->addAttribute( "from", jid() );
-			j->send( tag );
+			Transport::instance()->send( tag );
 		}
 	}
 	else {
@@ -1953,13 +1953,13 @@ void GlooxMessageHandler::handleMessage (const Message &msg, MessageSession *ses
 			Error *c = new Error(StanzaErrorTypeWait, StanzaErrorRecipientUnavailable);
 			c->setText(tr(configuration().language.c_str(),_("This message couldn't be sent, because you are not connected to legacy network. You will be automatically reconnected soon.")));
 			s.addExtension(c);
-			j->send(s);
+			Transport::instance()->send(s.tag());
 
 			Tag *stanza = new Tag("presence");
 			stanza->addAttribute( "to", msg.from().bare());
 			stanza->addAttribute( "type", "probe");
 			stanza->addAttribute( "from", jid());
-			j->send(stanza);
+			Transport::instance()->send(stanza);
 		}
 		delete msgTag;
 	}
