@@ -56,7 +56,7 @@ bool SpectrumDiscoHandler::handleIq (const IQ &stanza) {
 			query->addChild(item);
 
 			t->addChild(query);
-			m_parent->j->send(t);
+			Transport::instance()->send(t);
 			return true;
 		}
 		else {
@@ -98,7 +98,7 @@ bool SpectrumDiscoHandler::handleIq (const IQ &stanza) {
 			}
 			if (!re)
 				return false;
-			m_parent->j->send(re);
+			Transport::instance()->send(re);
 			return true;
 		}
 		

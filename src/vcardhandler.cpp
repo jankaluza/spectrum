@@ -110,7 +110,7 @@ bool GlooxVCardHandler::handleIq (const IQ &stanza){
 			vcard->addAttribute( "xmlns", "vcard-temp" );
 			vcard->addChild( new Tag("NICKNAME", CONFIG().discoName));
 			reply->addChild(vcard);
-			p->j->send(reply);
+			Transport::instance()->send(reply);
 		}
 		return true;
 	}
@@ -226,7 +226,7 @@ void GlooxVCardHandler::userInfoArrived(PurpleConnection *gc, const std::string 
 		}
 
 		reply->addChild(vcard);
-		p->j->send(reply);
+		Transport::instance()->send(reply);
 		vcardRequests.erase(who);
 	}
 }

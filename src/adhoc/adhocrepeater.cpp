@@ -69,7 +69,7 @@ AdhocRepeater::AdhocRepeater(GlooxMessageHandler *m, User *user, const std::stri
 	m_defaultString = value;
 
 	response->addChild(c);
-	main->j->send(response);
+	Transport::instance()->send(response);
 }
 
 AdhocRepeater::AdhocRepeater(GlooxMessageHandler *m, User *user, const std::string &title, const std::string &primaryString, const std::string &secondaryString, int default_action, void * user_data, size_t action_count, va_list acts) {
@@ -116,7 +116,7 @@ AdhocRepeater::AdhocRepeater(GlooxMessageHandler *m, User *user, const std::stri
 
 	c->addChild( xdataFromRequestAction(m_language, tr(m_language,title.c_str()), tr(m_language,primaryString.c_str()), action_count, m_actions) );
 	response->addChild(c);
-	main->j->send(response);
+	Transport::instance()->send(response);
 
 }
 
@@ -150,7 +150,7 @@ AdhocRepeater::AdhocRepeater(GlooxMessageHandler *m, User *user, const std::stri
 
 	c->addChild( xdataFromRequestFields(m_language, tr(m_language,title.c_str()), tr(m_language,primaryString.c_str()), fields) );
 	response->addChild(c);
-	main->j->send(response);
+	Transport::instance()->send(response);
 }
 
 AdhocRepeater::~AdhocRepeater() {}
@@ -172,7 +172,7 @@ bool AdhocRepeater::handleIq(const IQ &stanza) {
 		c->addAttribute("node","configuration");
 		c->addAttribute("status","canceled");
 		response->addChild(c);
-		main->j->send(response);
+		Transport::instance()->send(response);
 
 		if (m_type == PURPLE_REQUEST_FIELDS) {
 			if (m_cancel_cb)
@@ -228,7 +228,7 @@ bool AdhocRepeater::handleIq(const IQ &stanza) {
 		c->addAttribute("node","configuration");
 		c->addAttribute("status","completed");
 		s->addChild(c);
-		main->j->send(s);
+		Transport::instance()->send(s);
 
 		g_timeout_add(0,&removeRepeater,this);
 

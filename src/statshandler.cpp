@@ -251,7 +251,7 @@ bool GlooxStatsHandler::handleIq (const IQ &stanza){
 	Tag *query = handleTag(stanzaTag);
 	delete stanzaTag;
 	if (query)
-		p->j->send(query);
+		Transport::instance()->send(query);
 
 	return true;
 }

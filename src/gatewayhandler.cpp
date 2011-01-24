@@ -85,7 +85,7 @@ bool GlooxGatewayHandler::handleIq (const IQ &stanza){
 		query->addChild(new Tag("prompt",tr(language, _("Contact ID"))));
 		s->addChild(query);
 
-		p->j->send( s );
+		Transport::instance()->send( s );
 		return true;
 	}
 	else if(stanza.subtype() == IQ::Set){
@@ -116,7 +116,7 @@ bool GlooxGatewayHandler::handleIq (const IQ &stanza){
 
 		s->addChild(query);
 
-		p->j->send( s );
+		Transport::instance()->send( s );
 		delete stanzaTag;
 		return true;
 	}

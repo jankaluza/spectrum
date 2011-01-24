@@ -83,7 +83,7 @@ SearchRepeater::SearchRepeater(GlooxMessageHandler *m, User *user, const std::st
 	query->addChild( xdataFromRequestInput(language, title, primaryString, value, multiline) );
 
 	response->addChild(query);
-	main->j->send(response);
+	Transport::instance()->send(response);
 }
 
 SearchRepeater::SearchRepeater(GlooxMessageHandler *m, User *user, const std::string &title, const std::string &primaryString, const std::string &secondaryString, PurpleRequestFields *fields, GCallback ok_cb, GCallback cancel_cb, void * user_data) {
@@ -121,7 +121,7 @@ SearchRepeater::SearchRepeater(GlooxMessageHandler *m, User *user, const std::st
 	
 	c->addChild( xdataFromRequestFields(language, title, primaryString, fields) );
 	response->addChild(c);
-	main->j->send(response);
+	Transport::instance()->send(response);
 }
 
 SearchRepeater::~SearchRepeater() {
@@ -198,7 +198,7 @@ void SearchRepeater::sendSearchResults(PurpleNotifySearchResults *results) {
 
 	query->addChild(xdata);
 	response->addChild(query);
-	main->j->send(response);
+	Transport::instance()->send(response);
 
 	purple_timeout_add(0,&removeRepeater,this);
 }
