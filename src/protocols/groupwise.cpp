@@ -58,7 +58,7 @@ std::string GroupWiseProtocol::text(const std::string &key) {
 
 void GroupWiseProtocol::onPurpleAccountCreated(PurpleAccount *account) {
 
-        AbstractUser *user = (AbstractUser *) account->ui_data;
+        User *user = (User *) account->ui_data;
         std::vector <std::string> u = split(user->username(), '@');
         purple_account_set_username(account, (const char*) u.front().c_str());
         std::vector <std::string> s = split(u.back(), ':'); 

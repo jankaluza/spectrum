@@ -61,7 +61,7 @@ std::string HoNProtocol::text(const std::string &key) {
 	return "not defined";
 }
 
-void HoNProtocol::makePurpleUsernameRoom(AbstractUser *user, const JID &to, std::string &name) {
+void HoNProtocol::makePurpleUsernameRoom(User *user, const JID &to, std::string &name) {
 	std::string username = to.username();
 // 	// "spectrum%conference.spectrum.im@irc.spectrum.im/HanzZ" -> "spectrum@conference.spectrum.im/HanzZ"
 // 	if (!to.resource().empty()) {
@@ -75,7 +75,7 @@ void HoNProtocol::makePurpleUsernameRoom(AbstractUser *user, const JID &to, std:
 // 	}
 }
 
-void HoNProtocol::makeRoomJID(AbstractUser *user, std::string &name) {
+void HoNProtocol::makeRoomJID(User *user, std::string &name) {
 	// Hon 30" -> "Hon\2030@hon.domain.tld"
 	std::string name_safe = JID::escapeNode(name);
 	name.assign(name_safe + "@" + Transport::instance()->jid());
@@ -86,7 +86,7 @@ void HoNProtocol::makeRoomJID(AbstractUser *user, std::string &name) {
 	std::cout << "ROOMJID: " << name << "\n";
 }
 
-void HoNProtocol::makeUsernameRoom(AbstractUser *user, std::string &name) {
+void HoNProtocol::makeUsernameRoom(User *user, std::string &name) {
 	// "spectrum@conferece.spectrum.im/HanzZ" -> "HanzZ"
 	name = JID(name).resource();
 }

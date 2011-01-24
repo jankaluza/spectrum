@@ -33,7 +33,7 @@ class GGProtocol : AbstractProtocol
 		std::list<std::string> transportFeatures();
 		std::list<std::string> buddyFeatures();
 		std::string text(const std::string &key);
-		Tag *getVCardTag(AbstractUser *user, GList *vcardEntries);
+		Tag *getVCardTag(User *user, GList *vcardEntries);
 
 	private:
 		std::list<std::string> m_transportFeatures;

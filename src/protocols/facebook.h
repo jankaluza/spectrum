@@ -36,8 +36,8 @@ class FacebookProtocol : AbstractProtocol
 		std::list<std::string> transportFeatures();
 		std::list<std::string> buddyFeatures();
 		std::string text(const std::string &key);
-		Tag *getVCardTag(AbstractUser *user, GList *vcardEntries);
-		bool isMUC(AbstractUser *user, const std::string &jid) { return false; }
+		Tag *getVCardTag(User *user, GList *vcardEntries);
+		bool isMUC(User *user, const std::string &jid) { return false; }
 		const std::string notifyUsername() { return "info"; }
 		const std::string userSearchAction() { return "Search for buddies..."; }
 

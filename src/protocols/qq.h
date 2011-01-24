@@ -36,7 +36,7 @@ class QQProtocol : AbstractProtocol
 		std::list<std::string> buddyFeatures();
 		std::string text(const std::string &key);
 		void onPurpleAccountCreated(PurpleAccount *account);
-		bool onPurpleRequestInput(void *handle, AbstractUser *user, const char *title, const char *primary,const char *secondary, const char *default_value,gboolean multiline, gboolean masked, gchar *hint,const char *ok_text, GCallback ok_cb,const char *cancel_text, GCallback cancel_cb, PurpleAccount *account, const char *who,PurpleConversation *conv, void *user_data);
+		bool onPurpleRequestInput(void *handle, User *user, const char *title, const char *primary,const char *secondary, const char *default_value,gboolean multiline, gboolean masked, gchar *hint,const char *ok_text, GCallback ok_cb,const char *cancel_text, GCallback cancel_cb, PurpleAccount *account, const char *who,PurpleConversation *conv, void *user_data);
 
 	private:
 		std::list<std::string> m_transportFeatures;

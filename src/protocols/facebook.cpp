@@ -60,7 +60,7 @@ std::string FacebookProtocol::text(const std::string &key) {
 	return "not defined";
 }
 
-Tag *FacebookProtocol::getVCardTag(AbstractUser *user, GList *vcardEntries) {
+Tag *FacebookProtocol::getVCardTag(User *user, GList *vcardEntries) {
 	PurpleNotifyUserInfoEntry *vcardEntry;
 	std::string firstName;
 	std::string lastName;

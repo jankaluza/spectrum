@@ -33,7 +33,7 @@ class GroupWiseProtocol : AbstractProtocol
 		std::list<std::string> transportFeatures();
 		std::list<std::string> buddyFeatures();
 		std::string text(const std::string &key);
-		bool isMUC(AbstractUser *user, const std::string &jid) { return false; }
+		bool isMUC(User *user, const std::string &jid) { return false; }
 	        void onPurpleAccountCreated(PurpleAccount *account);	
 
 	private:

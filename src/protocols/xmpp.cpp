@@ -58,7 +58,7 @@ std::string XMPPProtocol::text(const std::string &key) {
 	return "not defined";
 }
 
-void XMPPProtocol::makePurpleUsernameRoom(AbstractUser *user, const JID &to, std::string &name) {
+void XMPPProtocol::makePurpleUsernameRoom(User *user, const JID &to, std::string &name) {
 	std::string username = to.username();
 	// "spectrum%conference.spectrum.im@irc.spectrum.im/HanzZ" -> "spectrum@conference.spectrum.im/HanzZ"
 	if (!to.resource().empty()) {
@@ -73,7 +73,7 @@ void XMPPProtocol::makePurpleUsernameRoom(AbstractUser *user, const JID &to, std
 	}
 }
 
-void XMPPProtocol::makeRoomJID(AbstractUser *user, std::string &name) {
+void XMPPProtocol::makeRoomJID(User *user, std::string &name) {
 	JID j(name);
 	name = j.bare();
 	// spectrum@conference.spectrum.im/something" -> "spectrum%conference.spectrum.im@irc.spectrum.im"
@@ -87,7 +87,7 @@ void XMPPProtocol::makeRoomJID(AbstractUser *user, std::string &name) {
 	std::cout << "ROOMJID: " << name << "\n";
 }
 
-void XMPPProtocol::makeUsernameRoom(AbstractUser *user, std::string &name) {
+void XMPPProtocol::makeUsernameRoom(User *user, std::string &name) {
 	// "spectrum@conferece.spectrum.im/HanzZ" -> "HanzZ"
 	name = JID(name).resource();
 }
@@ -99,7 +99,7 @@ void XMPPProtocol::onPurpleAccountCreated(PurpleAccount *account) {
 		purple_account_set_bool(account, "require_tls", false);
 }
 
-Tag *XMPPProtocol::getVCardTag(AbstractUser *user, GList *vcardEntries) {
+Tag *XMPPProtocol::getVCardTag(User *user, GList *vcardEntries) {
 	Tag *N = new Tag("N");
 	Tag *head = new Tag("ADR");
 	PurpleNotifyUserInfoEntry *vcardEntry;

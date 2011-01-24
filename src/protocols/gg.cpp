@@ -49,7 +49,7 @@ std::list<std::string> GGProtocol::buddyFeatures(){
 }
 
 
-Tag *GGProtocol::getVCardTag(AbstractUser *user, GList *vcardEntries) {
+Tag *GGProtocol::getVCardTag(User *user, GList *vcardEntries) {
 	Tag *N = new Tag("N");
 	Tag *head = new Tag("ADR");
 	PurpleNotifyUserInfoEntry *vcardEntry;

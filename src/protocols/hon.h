@@ -37,9 +37,9 @@ class HoNProtocol : AbstractProtocol
 		std::list<std::string> buddyFeatures();
 		std::string text(const std::string &key);
 		void onPurpleAccountCreated(PurpleAccount *account);
-		void makeRoomJID(AbstractUser *user, std::string &name);
-		void makePurpleUsernameRoom(AbstractUser *user, const JID &jid, std::string &name);
-		void makeUsernameRoom(AbstractUser *user, std::string &name);
+		void makeRoomJID(User *user, std::string &name);
+		void makePurpleUsernameRoom(User *user, const JID &jid, std::string &name);
+		void makeUsernameRoom(User *user, std::string &name);
 
 	private:
 		std::list<std::string> m_transportFeatures;

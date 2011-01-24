@@ -36,7 +36,7 @@ class MyspaceProtocol : AbstractProtocol
 		std::list<std::string> buddyFeatures();
 		std::string text(const std::string &key);
 
-		void onConnected(AbstractUser *user);
+		void onConnected(User *user);
 
 	private:
 		std::list<std::string> m_transportFeatures;

@@ -58,7 +58,7 @@ std::string MSNProtocol::text(const std::string &key) {
 	return "not defined";
 }
 
-Tag *MSNProtocol::getVCardTag(AbstractUser *user, GList *vcardEntries) {
+Tag *MSNProtocol::getVCardTag(User *user, GList *vcardEntries) {
 	Tag *N = new Tag("N");
 	Tag *head = new Tag("ADR");
 	PurpleNotifyUserInfoEntry *vcardEntry;
@@ -150,7 +150,7 @@ Tag *MSNProtocol::getVCardTag(AbstractUser *user, GList *vcardEntries) {
 	return vcard;
 }
 
-bool MSNProtocol::onPurpleRequestInput(void *handle, AbstractUser *user, const char *title, const char *primary,const char *secondary, const char *default_value,gboolean multiline, gboolean masked, gchar *hint,const char *ok_text, GCallback ok_cb,const char *cancel_text, GCallback cancel_cb, PurpleAccount *account, const char *who,PurpleConversation *conv, void *user_data) {
+bool MSNProtocol::onPurpleRequestInput(void *handle, User *user, const char *title, const char *primary,const char *secondary, const char *default_value,gboolean multiline, gboolean masked, gchar *hint,const char *ok_text, GCallback ok_cb,const char *cancel_text, GCallback cancel_cb, PurpleAccount *account, const char *who,PurpleConversation *conv, void *user_data) {
 	if (primary){
 		std::string primaryString(primary);
 		if (primaryString == "Authorization Request Message:") {

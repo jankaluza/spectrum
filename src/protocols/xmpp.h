@@ -39,10 +39,10 @@ class XMPPProtocol : AbstractProtocol
 		const std::string userSearchAction() { return "Search for Users..."; }
 		const std::string userSearchColumn() { return "Jabber ID"; }
 		void onPurpleAccountCreated(PurpleAccount *account);
-		void makeRoomJID(AbstractUser *user, std::string &name);
-		void makePurpleUsernameRoom(AbstractUser *user, const JID &jid, std::string &name);
-		void makeUsernameRoom(AbstractUser *user, std::string &name);
-		Tag *getVCardTag(AbstractUser *user, GList *vcardEntries);
+		void makeRoomJID(User *user, std::string &name);
+		void makePurpleUsernameRoom(User *user, const JID &jid, std::string &name);
+		void makeUsernameRoom(User *user, std::string &name);
+		Tag *getVCardTag(User *user, GList *vcardEntries);
 
 	private:
 		std::list<std::string> m_transportFeatures;

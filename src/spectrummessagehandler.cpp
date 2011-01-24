@@ -204,7 +204,7 @@ void SpectrumMessageHandler::handleMessage(const Message& msg) {
 	std::string key = msg.to().full();	// key for m_conversations
 	// We have to handle resources here, so there can be for example "uin@icq.localhost" conversation,
 	// and also "uin@icq.localhost/bot", which are identical
-	if (!isOpenedConversation(key)) {
+	if (!isOpenedConversation(key) && msg.to().resource() == "bot") {
 		key = msg.to().bare();
 	}
 

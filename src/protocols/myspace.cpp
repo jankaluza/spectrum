@@ -58,7 +58,7 @@ std::string MyspaceProtocol::text(const std::string &key) {
 	return "not defined";
 }
 
-void MyspaceProtocol::onConnected(AbstractUser *user) {
+void MyspaceProtocol::onConnected(User *user) {
 	if (purple_account_get_connection(user->account())) {
 		PurpleConnection *gc = purple_account_get_connection(user->account());
 		PurplePlugin *plugin = gc && PURPLE_CONNECTION_IS_CONNECTED(gc) ? gc->prpl : NULL;
