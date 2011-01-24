@@ -24,6 +24,7 @@
 #include "adhocrepeater.h"
 #include "adhocsettings.h"
 #include "adhocadmin.h"
+#include "adhoctag.h"
 #include "adhoccommandhandler.h"
 #include "abstractuser.h"
 #include "gloox/disconodehandler.h"
@@ -325,5 +326,16 @@ void GlooxAdhocHandler::unregisterSession(const std::string &jid) {
 	m_sessions.erase(jid);
 }
 
-GlooxAdhocHandler* GlooxAdhocHandler::m_pInstance = NULL;
+void GlooxAdhocHandler::sendAdhocResult(const std::string &from, const std::string &to, const std::string &id, AdhocTag *payload) {
+	IQ _response(IQ::Result, to, id);
+	Tag *response = _response.tag();
+	response->addAttribute("from", from);
+	response->addChild(payload);
+	Transport::instance()->send(response);
+}
 
+void GlooxAdhocHandler::sendAdhocResult(const std::string &to, const std::string &id, AdhocTag *payload) {
+	sendAdhocResult(Transport::instance()->jid(), to, id, payload);
+}
+
+GlooxAdhocHandler* GlooxAdhocHandler::m_pInstance = NULL;

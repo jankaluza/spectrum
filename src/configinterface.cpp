@@ -123,10 +123,22 @@ void ConfigInterface::handleDisconnect( const ConnectionBase* connection, Connec
 void ConfigInterface::handleTag(Tag *tag) {
 	for (std::list <AbstractConfigInterfaceHandler *>::const_iterator i = m_handlers.begin(); i != m_handlers.end(); i++) {
 		if ((*i)->handleCondition(tag)) {
-			Tag *response = (*i)->handleTag(tag);
-			if (response) {
+			AdhocTag *payload = (*i)->handleAdhocTag(tag);
+			if (payload) {
+				std::cout << "handle payload\n";
+				IQ _response(IQ::Result, tag->findAttribute("from"), tag->findAttribute("id"));
+				Tag *response = _response.tag();
+				response->addAttribute("from", tag->findAttribute("to"));
+				response->addChild(payload);
 				m_connection->send(response->xml());
 				delete response;
+				break;
+			}
+			Tag *t = (*i)->handleTag(tag);
+			if (t) {
+				std::cout << "handle tag\n";
+				m_connection->send(t->xml());
+				delete t;
 				break;
 			}
 		}

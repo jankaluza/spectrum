@@ -71,6 +71,7 @@ GlooxStatsHandler::~GlooxStatsHandler(){
 }
 
 bool GlooxStatsHandler::handleCondition(Tag *stanzaTag) {
+	std::cout << "conditiong" << stanzaTag->findChild("query","xmlns","http://jabber.org/protocol/stats") << "\n";
 	return stanzaTag->findChild("query","xmlns","http://jabber.org/protocol/stats") != NULL;
 }
 
@@ -88,7 +89,7 @@ Tag* GlooxStatsHandler::handleTag (Tag *stanzaTag){
 //                 </iq>
 //
 	Tag *s;
-
+	std::cout << stanzaTag->xml();
 	Tag *query = stanzaTag->findChild("query");
 	if (query==NULL) {
 		return NULL;

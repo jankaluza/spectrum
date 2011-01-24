@@ -208,6 +208,10 @@ bool AdhocTag::isCanceled() {
 	return hasAttribute("action", "cancel");
 }
 
+bool AdhocTag::isFinished() {
+	return findAttribute("status") != "executing";
+}
+
 void AdhocTag::initXData() {
 	xdata = new Tag("x");
 	xdata->addAttribute("xmlns","jabber:x:data");

@@ -38,6 +38,7 @@ class AdhocSettings : public AdhocCommandHandler
 	public:
 		AdhocSettings(User *user, const std::string &from, const std::string &id);
 		~AdhocSettings();
+
 		bool handleIq(const IQ &iq);
 		const std::string & getInitiator() { return m_from; }
 

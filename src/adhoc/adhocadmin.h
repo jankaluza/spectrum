@@ -53,7 +53,7 @@ class AdhocAdmin : public AdhocCommandHandler, public AbstractConfigInterfaceHan
 		AdhocAdmin();
 		~AdhocAdmin();
 		bool handleCondition(Tag *stanzaTag);
-		Tag *handleTag(Tag *stanzaTag);
+		AdhocTag *handleAdhocTag(Tag *stanzaTag);
 		bool handleIq(const IQ &iq);
 		const std::string & getInitiator() { return m_from; }
 

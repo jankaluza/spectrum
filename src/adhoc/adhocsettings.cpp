@@ -26,6 +26,7 @@
 #include "adhoctag.h"
 #include "main.h"
 #include "../usermanager.h"
+#include "adhochandler.h"
 
 AdhocSettings::AdhocSettings(User *user, const std::string &from, const std::string &id) :
 	m_from(from), m_user(user) {
@@ -34,13 +35,7 @@ AdhocSettings::AdhocSettings(User *user, const std::string &from, const std::str
 	if (user)
 		m_language = std::string(user->getLang());
 	else
-		m_language = Transport::instance()->getConfiguration().language;
-	
-	bool value;
-
-	IQ _response(IQ::Result, from, id);
-	Tag *response = _response.tag();
-	response->addAttribute("from", Transport::instance()->jid());
+		m_language = Transport::instance()->getConfiguration().language;	
 
 	AdhocTag *adhocTag = new AdhocTag(Transport::instance()->getId(), "transport_settings", "executing");
 	adhocTag->setAction("complete");
@@ -48,7 +43,7 @@ AdhocSettings::AdhocSettings(User *user, const std::string &from, const std::str
 	if (user) {
 		adhocTag->setInstructions(tr(m_language, _("Change your transport settings here.")));
 		
-		value = m_user->getSetting<bool>("enable_transport");
+		bool value = m_user->getSetting<bool>("enable_transport");
 		adhocTag->addBoolean(tr(m_language, _("Enable transport")), "enable_transport", value);
 
 		value = m_user->getSetting<bool>("enable_notify_email");
@@ -70,9 +65,7 @@ AdhocSettings::AdhocSettings(User *user, const std::string &from, const std::str
 		adhocTag->setInstructions(tr(m_language, _("You must be online to change transport settings.")));
 	}
 
-	response->addChild(adhocTag);
-	Transport::instance()->send(response);
-
+	GlooxAdhocHandler::sendAdhocResult(from, id, adhocTag);
 }
 
 AdhocSettings::~AdhocSettings() {}
@@ -82,12 +75,8 @@ bool AdhocSettings::handleIq(const IQ &stanza) {
 	Tag *tag = stanzaTag->findChild( "command" );
 
 	if (tag->hasAttribute("action","cancel")) {
-		IQ _response(IQ::Result, stanza.from().full(), stanza.id());
-		_response.setFrom(Transport::instance()->jid());
-		Tag *response = _response.tag();
-		response->addChild( new AdhocTag(tag->findAttribute("sessionid"), "transport_settings", "canceled") );
-		Transport::instance()->send(response);
-
+		AdhocTag *payload = new AdhocTag(tag->findAttribute("sessionid"), "transport_settings", "canceled");
+		GlooxAdhocHandler::sendAdhocResult(stanza.from().full(), stanza.id(), payload);
 		delete stanzaTag;
 		return true;
 	}
@@ -95,7 +84,7 @@ bool AdhocSettings::handleIq(const IQ &stanza) {
 	m_user = Transport::instance()->userManager()->getUserByJID(stanza.from().bare());
 	Tag *x = tag->findChildWithAttrib("xmlns","jabber:x:data");
 	if (x && m_user) {
-		std::string result("");
+		std::string result;
 		for (std::list<Tag*>::const_iterator it = x->children().begin(); it != x->children().end(); ++it) {
 			std::string key = (*it)->findAttribute("var");
 			if (key.empty()) continue;
@@ -118,11 +107,8 @@ bool AdhocSettings::handleIq(const IQ &stanza) {
 			}
 		}
 
-		IQ _response(IQ::Result, stanza.from().full(), stanza.id());
-		_response.setFrom(Transport::instance()->jid());
-		Tag *response = _response.tag();
-		response->addChild( new AdhocTag(tag->findAttribute("sessionid"), "transport_settings", "completed") );
-		Transport::instance()->send(response);
+		AdhocTag *payload = new AdhocTag(tag->findAttribute("sessionid"), "transport_settings", "completed");
+		GlooxAdhocHandler::sendAdhocResult(stanza.from().full(), stanza.id(), payload);
 	}
 
 	delete stanzaTag;

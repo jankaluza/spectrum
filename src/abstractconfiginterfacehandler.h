@@ -25,6 +25,7 @@
 #include <list>
 #include "purple.h"
 #include "gloox/tag.h"
+#include "adhoc/adhoctag.h"
 
 using namespace gloox;
 
@@ -36,7 +37,9 @@ class AbstractConfigInterfaceHandler {
 		virtual bool handleCondition(Tag *tag) = 0;
 
 		// Handles Tag*. ConfigInterface will send the response if it's not NULL.
-		virtual Tag *handleTag(Tag *tag) = 0;
+		virtual AdhocTag *handleAdhocTag(Tag *tag) { return NULL; }
+
+		virtual Tag *handleTag(Tag *tag) { return NULL; }
 };
 
 #endif

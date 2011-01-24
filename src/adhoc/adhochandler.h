@@ -34,6 +34,7 @@ using namespace gloox;
 class AdhocRepeater;
 class AdhocCommandHandler;
 class User;
+class AdhocTag;
 
 /*
  * Structure used for registering Ad-Hoc command
@@ -63,6 +64,10 @@ class GlooxAdhocHandler : public DiscoNodeHandler, public DiscoHandler, public I
 		void unregisterSession(const std::string &jid);
 		bool hasSession(const std::string &jid);
 		void registerAdhocCommandHandler(const std::string &name, const adhocCommand command);
+
+// 	static:
+		static void sendAdhocResult(const std::string &from, const std::string &to, const std::string &id, AdhocTag *payload);
+		static void sendAdhocResult(const std::string &to, const std::string &id, AdhocTag *payload);
 
 	private:
 		std::map<std::string, AdhocCommandHandler *> m_sessions;	// sessions (m_sessions[full_jid] = handler)
