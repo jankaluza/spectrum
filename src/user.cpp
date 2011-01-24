@@ -705,8 +705,11 @@ User::~User(){
 		for (iter = purple_xfers_get_all(); iter; ) {
 			PurpleXfer *xfer = (PurpleXfer *) iter->data;
 			iter = iter->next;
-			if (purple_xfer_get_account(xfer) == m_account)
-				purple_xfer_cancel_local(xfer);
+			if (purple_xfer_get_account(xfer) == m_account) {
+				if (purple_xfer_get_status(xfer) != PURPLE_XFER_STATUS_DONE) {
+					purple_xfer_cancel_local(xfer);
+				}
+			}
 		}
 
 		// Remove conversations.
