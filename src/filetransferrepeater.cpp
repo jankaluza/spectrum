@@ -210,7 +210,7 @@ static gboolean transferFinished(gpointer data) {
 			s.setFrom(user->jid());
 			// TODO: rewrite me to not use GlooxMessageHandler
 #ifndef TESTS
-			GlooxMessageHandler::instance()->handleMessage(s, NULL);
+			Transport::instance()->handleMessage(s, NULL);
 #endif
 			
 		}

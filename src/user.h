@@ -66,6 +66,8 @@ class User : public AbstractUser, public SpectrumRosterManager, public SpectrumM
 		void setConnected(bool connected) { m_connected = connected; }
 		void handleVCard(const VCard* vcard);
 
+		static void signedOnCallback(PurpleConnection *gc, gpointer unused);
+
 		std::string actionData;
 
 		// Connected

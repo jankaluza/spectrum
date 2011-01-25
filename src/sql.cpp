@@ -180,7 +180,7 @@ int SpectrumSQLStatement::execute() {
 	catch (Poco::Exception e) {
 		m_error++;
 		LogMessage(Log_.fileStream()).Get("SQL ERROR") << m_error << " " << e.code() << " " << e.displayText() << " " << m_stmt;
-		if (m_error != 3 && Transport::instance()->getConfiguration().sqlType != "sqlite") {
+		if (m_error != 3 && CONFIG().sqlType != "sqlite") {
 			if (e.code() == 1243) {
 				if (m_statement) delete m_statement;
 				m_statement = NULL;
@@ -255,8 +255,7 @@ SpectrumSQLStatement& SpectrumSQLStatement::operator >> (T& t) {
 	return *this;
 }
 
-SQLClass::SQLClass(GlooxMessageHandler *parent, bool upgrade, bool check) {
-	p = parent;
+SQLClass::SQLClass(bool upgrade, bool check) {
 	m_loaded = false;
 	m_check = check;
 	m_upgrade = upgrade;
@@ -289,20 +288,20 @@ SQLClass::SQLClass(GlooxMessageHandler *parent, bool upgrade, bool check) {
 	
 	try {
 #ifdef WITH_MYSQL
-		if (p->configuration().sqlType == "mysql") {
+		if (CONFIG().sqlType == "mysql") {
 			m_dbversion = MYSQL_DB_VERSION;
 			MySQL::Connector::registerConnector();
-			m_sess = new Session("MySQL", "user=" + p->configuration().sqlUser + ";password=" + p->configuration().sqlPassword + ";host=" + p->configuration().sqlHost + ";db=" + p->configuration().sqlDb + ";auto-reconnect=true");
+			m_sess = new Session("MySQL", "user=" + CONFIG().sqlUser + ";password=" + CONFIG().sqlPassword + ";host=" + CONFIG().sqlHost + ";db=" + CONFIG().sqlDb + ";auto-reconnect=true");
 			if (!check && !upgrade)
 				m_pingTimer->start();
 		}
 #endif
 #ifdef WITH_SQLITE
-		if (p->configuration().sqlType == "sqlite") {
+		if (CONFIG().sqlType == "sqlite") {
 			m_dbversion = SQLITE_DB_VERSION;
 			SQLite::Connector::registerConnector(); 
-			m_sess = new Session("SQLite", p->configuration().sqlDb);
-			g_chmod(p->configuration().sqlDb.c_str(), 0640);
+			m_sess = new Session("SQLite", CONFIG().sqlDb);
+			g_chmod(CONFIG().sqlDb.c_str(), 0640);
 		}
 #endif
 	}
@@ -334,7 +333,7 @@ SQLClass::SQLClass(GlooxMessageHandler *parent, bool upgrade, bool check) {
 	
 	initDb();
 
-// 	if (!vipSQL->connect("platby",p->configuration().sqlHost.c_str(),p->configuration().sqlUser.c_str(),p->configuration().sqlPassword.c_str()))
+// 	if (!vipSQL->connect("platby",CONFIG().sqlHost.c_str(),CONFIG().sqlUser.c_str(),CONFIG().sqlPassword.c_str()))
 }
 
 SQLClass::~SQLClass() {
@@ -386,47 +385,47 @@ void SQLClass::createStatements() {
 	}
 #endif
 
-	m_version_stmt = new Statement( ( STATEMENT("SELECT ver FROM " + p->configuration().sqlPrefix + "db_version ORDER BY ver DESC LIMIT 1"), into(m_version) ) );
+	m_version_stmt = new Statement( ( STATEMENT("SELECT ver FROM " + CONFIG().sqlPrefix + "db_version ORDER BY ver DESC LIMIT 1"), into(m_version) ) );
 
-	if (p->configuration().sqlType == "sqlite")
-		createStatement(&m_stmt_addUser, "sssssb", "INSERT INTO " + p->configuration().sqlPrefix + "users (jid, uin, password, language, encoding, last_login, vip) VALUES (?, ?, ?, ?, ?, DATETIME('NOW'), ?)");
+	if (CONFIG().sqlType == "sqlite")
+		createStatement(&m_stmt_addUser, "sssssb", "INSERT INTO " + CONFIG().sqlPrefix + "users (jid, uin, password, language, encoding, last_login, vip) VALUES (?, ?, ?, ?, ?, DATETIME('NOW'), ?)");
 	else
-		createStatement(&m_stmt_addUser, "sssssb", "INSERT INTO " + p->configuration().sqlPrefix + "users (jid, uin, password, language, encoding, last_login, vip) VALUES (?, ?, ?, ?, ?, NOW(), ?)");
+		createStatement(&m_stmt_addUser, "sssssb", "INSERT INTO " + CONFIG().sqlPrefix + "users (jid, uin, password, language, encoding, last_login, vip) VALUES (?, ?, ?, ?, ?, NOW(), ?)");
 
-	createStatement(&m_stmt_updateUserPassword, "sssbs", "UPDATE " + p->configuration().sqlPrefix + "users SET password=?, language=?, encoding=?, vip=? WHERE jid=?");
-	createStatement(&m_stmt_removeBuddy, "is", "DELETE FROM " + p->configuration().sqlPrefix + "buddies WHERE user_id=? AND uin=?");
-	createStatement(&m_stmt_removeUser, "i","DELETE FROM " + p->configuration().sqlPrefix + "users WHERE id=?");
-	createStatement(&m_stmt_removeUserBuddies, "i", "DELETE FROM " + p->configuration().sqlPrefix + "buddies WHERE user_id=?");
+	createStatement(&m_stmt_updateUserPassword, "sssbs", "UPDATE " + CONFIG().sqlPrefix + "users SET password=?, language=?, encoding=?, vip=? WHERE jid=?");
+	createStatement(&m_stmt_removeBuddy, "is", "DELETE FROM " + CONFIG().sqlPrefix + "buddies WHERE user_id=? AND uin=?");
+	createStatement(&m_stmt_removeUser, "i","DELETE FROM " + CONFIG().sqlPrefix + "users WHERE id=?");
+	createStatement(&m_stmt_removeUserBuddies, "i", "DELETE FROM " + CONFIG().sqlPrefix + "buddies WHERE user_id=?");
 	
-	if (p->configuration().sqlType == "sqlite") {
-		createStatement(&m_stmt_addBuddy, "issssi", "INSERT INTO " + p->configuration().sqlPrefix + "buddies (user_id, uin, subscription, groups, nickname, flags) VALUES (?, ?, ?, ?, ?, ?)");
-		createStatement(&m_stmt_updateBuddy, "ssiis", "UPDATE " + p->configuration().sqlPrefix + "buddies SET groups=?, nickname=?, flags=? WHERE user_id=? AND uin=?");
+	if (CONFIG().sqlType == "sqlite") {
+		createStatement(&m_stmt_addBuddy, "issssi", "INSERT INTO " + CONFIG().sqlPrefix + "buddies (user_id, uin, subscription, groups, nickname, flags) VALUES (?, ?, ?, ?, ?, ?)");
+		createStatement(&m_stmt_updateBuddy, "ssiis", "UPDATE " + CONFIG().sqlPrefix + "buddies SET groups=?, nickname=?, flags=? WHERE user_id=? AND uin=?");
 	} else
-		createStatement(&m_stmt_addBuddy, "issssiss", "INSERT INTO " + p->configuration().sqlPrefix + "buddies (user_id, uin, subscription, groups, nickname, flags) VALUES (?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE groups=?, nickname=?");
+		createStatement(&m_stmt_addBuddy, "issssiss", "INSERT INTO " + CONFIG().sqlPrefix + "buddies (user_id, uin, subscription, groups, nickname, flags) VALUES (?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE groups=?, nickname=?");
 
-	createStatement(&m_stmt_updateBuddySubscription, "sis", "UPDATE " + p->configuration().sqlPrefix + "buddies SET subscription=? WHERE user_id=? AND uin=?");
-	createStatement(&m_stmt_getUserByJid, "s|isssssb", "SELECT id, jid, uin, password, encoding, language, vip FROM " + p->configuration().sqlPrefix + "users WHERE jid=?");
+	createStatement(&m_stmt_updateBuddySubscription, "sis", "UPDATE " + CONFIG().sqlPrefix + "buddies SET subscription=? WHERE user_id=? AND uin=?");
+	createStatement(&m_stmt_getUserByJid, "s|isssssb", "SELECT id, jid, uin, password, encoding, language, vip FROM " + CONFIG().sqlPrefix + "users WHERE jid=?");
 
-	createStatement(&m_stmt_getBuddies, "i|IISSSSI", "SELECT id, user_id, uin, subscription, nickname, groups, flags FROM " + p->configuration().sqlPrefix + "buddies WHERE user_id=? ORDER BY id ASC");
+	createStatement(&m_stmt_getBuddies, "i|IISSSSI", "SELECT id, user_id, uin, subscription, nickname, groups, flags FROM " + CONFIG().sqlPrefix + "buddies WHERE user_id=? ORDER BY id ASC");
 
-	createStatement(&m_stmt_addSetting, "isis", "INSERT INTO " + p->configuration().sqlPrefix + "users_settings (user_id, var, type, value) VALUES (?,?,?,?)");
-	createStatement(&m_stmt_updateSetting, "sis", "UPDATE " + p->configuration().sqlPrefix + "users_settings SET value=? WHERE user_id=? AND var=?");
-	createStatement(&m_stmt_getBuddiesSettings, "i|IISS", "SELECT buddy_id, type, var, value FROM " + p->configuration().sqlPrefix + "buddies_settings WHERE user_id=? ORDER BY buddy_id ASC");
+	createStatement(&m_stmt_addSetting, "isis", "INSERT INTO " + CONFIG().sqlPrefix + "users_settings (user_id, var, type, value) VALUES (?,?,?,?)");
+	createStatement(&m_stmt_updateSetting, "sis", "UPDATE " + CONFIG().sqlPrefix + "users_settings SET value=? WHERE user_id=? AND var=?");
+	createStatement(&m_stmt_getBuddiesSettings, "i|IISS", "SELECT buddy_id, type, var, value FROM " + CONFIG().sqlPrefix + "buddies_settings WHERE user_id=? ORDER BY buddy_id ASC");
 
-	if (p->configuration().sqlType == "sqlite")
-		createStatement(&m_stmt_addBuddySetting, "iisis", "INSERT OR REPLACE INTO " + p->configuration().sqlPrefix + "buddies_settings (user_id, buddy_id, var, type, value) VALUES (?, ?, ?, ?, ?)");
+	if (CONFIG().sqlType == "sqlite")
+		createStatement(&m_stmt_addBuddySetting, "iisis", "INSERT OR REPLACE INTO " + CONFIG().sqlPrefix + "buddies_settings (user_id, buddy_id, var, type, value) VALUES (?, ?, ?, ?, ?)");
 	else
-		createStatement(&m_stmt_addBuddySetting, "iisiss", "INSERT INTO " + p->configuration().sqlPrefix + "buddies_settings (user_id, buddy_id, var, type, value) VALUES (?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE value=?");
+		createStatement(&m_stmt_addBuddySetting, "iisiss", "INSERT INTO " + CONFIG().sqlPrefix + "buddies_settings (user_id, buddy_id, var, type, value) VALUES (?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE value=?");
 
-	createStatement(&m_stmt_removeBuddySettings, "i", "DELETE FROM " + p->configuration().sqlPrefix + "buddies_settings WHERE buddy_id=?");
-	createStatement(&m_stmt_getSettings, "i|IISS", "SELECT user_id, type, var, value FROM " + p->configuration().sqlPrefix + "users_settings WHERE user_id=?");
+	createStatement(&m_stmt_removeBuddySettings, "i", "DELETE FROM " + CONFIG().sqlPrefix + "buddies_settings WHERE buddy_id=?");
+	createStatement(&m_stmt_getSettings, "i|IISS", "SELECT user_id, type, var, value FROM " + CONFIG().sqlPrefix + "users_settings WHERE user_id=?");
 	
-	createStatement(&m_stmt_getOnlineUsers, "|S","SELECT jid FROM " + p->configuration().sqlPrefix + "users WHERE online=1");
+	createStatement(&m_stmt_getOnlineUsers, "|S","SELECT jid FROM " + CONFIG().sqlPrefix + "users WHERE online=1");
 
-	if (p->configuration().sqlType == "sqlite")
-		createStatement(&m_stmt_setUserOnline, "bi", "UPDATE " + p->configuration().sqlPrefix + "users SET online=?, last_login=DATETIME('NOW')  WHERE id=?");
+	if (CONFIG().sqlType == "sqlite")
+		createStatement(&m_stmt_setUserOnline, "bi", "UPDATE " + CONFIG().sqlPrefix + "users SET online=?, last_login=DATETIME('NOW')  WHERE id=?");
 	else
-		createStatement(&m_stmt_setUserOnline, "bi", "UPDATE " + p->configuration().sqlPrefix + "users SET online=?, last_login=NOW()  WHERE id=?");
+		createStatement(&m_stmt_setUserOnline, "bi", "UPDATE " + CONFIG().sqlPrefix + "users SET online=?, last_login=NOW()  WHERE id=?");
 }
 
 void SQLClass::addUser(const UserRow &user) {
@@ -470,7 +469,7 @@ bool SQLClass::reconnect() {
 		// so that's feature, not bug).
 		for (i = 0; i < 20; i++) {
 			try {
-				m_sess = new Session("MySQL", "user=" + p->configuration().sqlUser + ";password=" + p->configuration().sqlPassword + ";host=" + p->configuration().sqlHost + ";db=" + p->configuration().sqlDb + ";auto-reconnect=true");
+				m_sess = new Session("MySQL", "user=" + CONFIG().sqlUser + ";password=" + CONFIG().sqlPassword + ";host=" + CONFIG().sqlHost + ";db=" + CONFIG().sqlDb + ";auto-reconnect=true");
 				break;
 			}
 			catch (Poco::Exception e) {
@@ -502,7 +501,7 @@ bool SQLClass::reconnect() {
 
 bool SQLClass::reconnectCallback() {
 	try {
-		m_sess = new Session("MySQL", "user=" + p->configuration().sqlUser + ";password=" + p->configuration().sqlPassword + ";host=" + p->configuration().sqlHost + ";db=" + p->configuration().sqlDb + ";auto-reconnect=true");
+		m_sess = new Session("MySQL", "user=" + CONFIG().sqlUser + ";password=" + CONFIG().sqlPassword + ";host=" + CONFIG().sqlHost + ";db=" + CONFIG().sqlDb + ";auto-reconnect=true");
 		createStatements();
 		m_version_stmt->execute();
 		m_loaded = true;
@@ -527,13 +526,13 @@ bool SQLClass::ping() {
 }
 
 void SQLClass::initDb() {
-	if (p->configuration().sqlType == "sqlite") {
+	if (CONFIG().sqlType == "sqlite") {
 		try {
 			m_version_stmt->execute();
 		}
 		catch (Poco::Exception e) {
 			try {
-				*m_sess << "CREATE TABLE IF NOT EXISTS " + p->configuration().sqlPrefix + "buddies ("
+				*m_sess << "CREATE TABLE IF NOT EXISTS " + CONFIG().sqlPrefix + "buddies ("
 							"  id INTEGER PRIMARY KEY NOT NULL,"
 							"  user_id int(10) NOT NULL,"
 							"  uin varchar(255) NOT NULL,"
@@ -543,9 +542,9 @@ void SQLClass::initDb() {
 							"  flags int(4) NOT NULL DEFAULT '0'"
 							");", now;
 
-				*m_sess << "CREATE UNIQUE INDEX IF NOT EXISTS user_id ON " + p->configuration().sqlPrefix + "buddies (user_id, uin);", now;
+				*m_sess << "CREATE UNIQUE INDEX IF NOT EXISTS user_id ON " + CONFIG().sqlPrefix + "buddies (user_id, uin);", now;
 
-				*m_sess << "CREATE TABLE IF NOT EXISTS " + p->configuration().sqlPrefix + "buddies_settings ("
+				*m_sess << "CREATE TABLE IF NOT EXISTS " + CONFIG().sqlPrefix + "buddies_settings ("
 							"  user_id int(10) NOT NULL,"
 							"  buddy_id int(10) NOT NULL,"
 							"  var varchar(50) NOT NULL,"
@@ -554,9 +553,9 @@ void SQLClass::initDb() {
 							"  PRIMARY KEY (buddy_id, var)"
 							");", now;
 
-				*m_sess << "CREATE INDEX IF NOT EXISTS user_id02 ON " + p->configuration().sqlPrefix + "buddies_settings (user_id);", now;
+				*m_sess << "CREATE INDEX IF NOT EXISTS user_id02 ON " + CONFIG().sqlPrefix + "buddies_settings (user_id);", now;
 
-				*m_sess << "CREATE TABLE IF NOT EXISTS " + p->configuration().sqlPrefix + "users ("
+				*m_sess << "CREATE TABLE IF NOT EXISTS " + CONFIG().sqlPrefix + "users ("
 							"  id INTEGER PRIMARY KEY NOT NULL,"
 							"  jid varchar(255) NOT NULL,"
 							"  uin varchar(4095) NOT NULL,"
@@ -568,9 +567,9 @@ void SQLClass::initDb() {
 							"  online int(1) NOT NULL DEFAULT '0'"
 							");", now;
 
-				*m_sess << "CREATE UNIQUE INDEX IF NOT EXISTS jid ON " + p->configuration().sqlPrefix + "users (jid);", now;
+				*m_sess << "CREATE UNIQUE INDEX IF NOT EXISTS jid ON " + CONFIG().sqlPrefix + "users (jid);", now;
 
-				*m_sess << "CREATE TABLE " + p->configuration().sqlPrefix + "users_settings ("
+				*m_sess << "CREATE TABLE " + CONFIG().sqlPrefix + "users_settings ("
 							"  user_id int(10) NOT NULL,"
 							"  var varchar(50) NOT NULL,"
 							"  type int(4) NOT NULL,"
@@ -578,12 +577,12 @@ void SQLClass::initDb() {
 							"  PRIMARY KEY (user_id, var)"
 							");", now;
 							
-				*m_sess << "CREATE INDEX IF NOT EXISTS user_id03 ON " + p->configuration().sqlPrefix + "users_settings (user_id);", now;
+				*m_sess << "CREATE INDEX IF NOT EXISTS user_id03 ON " + CONFIG().sqlPrefix + "users_settings (user_id);", now;
 
-				*m_sess << "CREATE TABLE IF NOT EXISTS " + p->configuration().sqlPrefix + "db_version ("
+				*m_sess << "CREATE TABLE IF NOT EXISTS " + CONFIG().sqlPrefix + "db_version ("
 					"  ver INTEGER NOT NULL DEFAULT '3'"
 					");", now;
-				*m_sess << "REPLACE INTO " + p->configuration().sqlPrefix + "db_version (ver) values(3)", now;
+				*m_sess << "REPLACE INTO " + CONFIG().sqlPrefix + "db_version (ver) values(3)", now;
 			}
 			catch (Poco::Exception e) {
 				Log("SQL ERROR", e.displayText());
@@ -604,11 +603,11 @@ void SQLClass::initDb() {
 		else {
 			Log("SQL ERROR", e.displayText());
 			Log("SQL ERROR CODE", e.code());
-			if (p->configuration().sqlType != "sqlite" && !m_upgrade) {
+			if (CONFIG().sqlType != "sqlite" && !m_upgrade) {
 				Log("SQL", "Maybe the database schema is not updated. Try to run \"spectrum <config_file.cfg> --upgrade-db\" to fix that.");
 				return;
 			}
-			if (p->configuration().sqlType == "sqlite") {
+			if (CONFIG().sqlType == "sqlite") {
 				m_loaded = true;
 				upgradeDatabase();
 				return;
@@ -618,14 +617,14 @@ void SQLClass::initDb() {
 	if (m_check) {
 		m_loaded = false;
 		std::cout << "Current DB schema version: " << m_version << "\n";
-		if (m_version < m_dbversion && p->configuration().sqlType != "sqlite")
+		if (m_version < m_dbversion && CONFIG().sqlType != "sqlite")
 			exit(2);
 		else
 			exit(0);
 	}
 	else {
 		Log("SQL", "Current DB version: " << m_version);
-		if ((p->configuration().sqlType == "sqlite" || (p->configuration().sqlType != "sqlite" && m_upgrade)) && m_version < m_dbversion) {
+		if ((CONFIG().sqlType == "sqlite" || (CONFIG().sqlType != "sqlite" && m_upgrade)) && m_version < m_dbversion) {
 			Log("SQL", "Starting DB upgrade.");
 			m_loaded = true;
 			upgradeDatabase();
@@ -652,24 +651,24 @@ void SQLClass::upgradeDatabase() {
 		for (int i = (int) m_version; i < m_dbversion; i++) {
 			Log("SQL", "Upgrading from version " << i << " to " << i + 1);
 			if (i == 0) {
-				if (p->configuration().sqlType == "sqlite") {
-					*m_sess << "CREATE TABLE IF NOT EXISTS " + p->configuration().sqlPrefix + "db_version ("
+				if (CONFIG().sqlType == "sqlite") {
+					*m_sess << "CREATE TABLE IF NOT EXISTS " + CONFIG().sqlPrefix + "db_version ("
 						"  ver INTEGER NOT NULL DEFAULT '1'"
 						");", now;
-					*m_sess << "ALTER TABLE " + p->configuration().sqlPrefix + "users ADD online int(1) NOT NULL DEFAULT '0';", now;
+					*m_sess << "ALTER TABLE " + CONFIG().sqlPrefix + "users ADD online int(1) NOT NULL DEFAULT '0';", now;
 				}
 				else {
-					*m_sess << "CREATE TABLE IF NOT EXISTS `" + p->configuration().sqlPrefix + "db_version` ("
+					*m_sess << "CREATE TABLE IF NOT EXISTS `" + CONFIG().sqlPrefix + "db_version` ("
 								"`ver` int(10) unsigned NOT NULL default '1'"
 								");", now;
-					*m_sess << "ALTER TABLE " + p->configuration().sqlPrefix + "users ADD online tinyint(1) NOT NULL DEFAULT '0';", now;
+					*m_sess << "ALTER TABLE " + CONFIG().sqlPrefix + "users ADD online tinyint(1) NOT NULL DEFAULT '0';", now;
 				}
-				*m_sess << "REPLACE INTO " + p->configuration().sqlPrefix + "db_version (ver) values(1)", now;
+				*m_sess << "REPLACE INTO " + CONFIG().sqlPrefix + "db_version (ver) values(1)", now;
 			}
 			else if (i == 1) {
-				if (p->configuration().sqlType == "sqlite") {
+				if (CONFIG().sqlType == "sqlite") {
 					// Change 'vip' column type from tinyint to int(1)
-					*m_sess << "CREATE TABLE IF NOT EXISTS " + p->configuration().sqlPrefix + "users_new ("
+					*m_sess << "CREATE TABLE IF NOT EXISTS " + CONFIG().sqlPrefix + "users_new ("
 								"  id INTEGER PRIMARY KEY NOT NULL,"
 								"  jid varchar(255) NOT NULL,"
 								"  uin varchar(4095) NOT NULL,"
@@ -680,23 +679,23 @@ void SQLClass::upgradeDatabase() {
 								"  vip int(1) NOT NULL DEFAULT '0',"
 								"  online int(1) NOT NULL DEFAULT '0'"
 								");", now;
-					*m_sess << "INSERT INTO " + p->configuration().sqlPrefix + "users_new SELECT id,jid,uin,password,language,encoding,last_login,vip,online FROM " + p->configuration().sqlPrefix + "users;", now;
-					*m_sess << "DROP TABLE " + p->configuration().sqlPrefix + "users;", now;
-					*m_sess << "ALTER TABLE " + p->configuration().sqlPrefix + "users_new RENAME TO " + p->configuration().sqlPrefix + "users;", now;
-					*m_sess << "CREATE UNIQUE INDEX IF NOT EXISTS jid1 ON " + p->configuration().sqlPrefix + "users (jid);", now;
-					*m_sess << "REPLACE INTO " + p->configuration().sqlPrefix + "db_version (ver) values(2)", now;
+					*m_sess << "INSERT INTO " + CONFIG().sqlPrefix + "users_new SELECT id,jid,uin,password,language,encoding,last_login,vip,online FROM " + CONFIG().sqlPrefix + "users;", now;
+					*m_sess << "DROP TABLE " + CONFIG().sqlPrefix + "users;", now;
+					*m_sess << "ALTER TABLE " + CONFIG().sqlPrefix + "users_new RENAME TO " + CONFIG().sqlPrefix + "users;", now;
+					*m_sess << "CREATE UNIQUE INDEX IF NOT EXISTS jid1 ON " + CONFIG().sqlPrefix + "users (jid);", now;
+					*m_sess << "REPLACE INTO " + CONFIG().sqlPrefix + "db_version (ver) values(2)", now;
 				}
 				else {
 					// Add 'flags' column to buddies table.
-					*m_sess << "ALTER TABLE " + p->configuration().sqlPrefix + "buddies ADD flags smallint(4) NOT NULL DEFAULT '0';", now;
-					*m_sess << "REPLACE INTO " + p->configuration().sqlPrefix + "db_version (ver) values(2);", now;
+					*m_sess << "ALTER TABLE " + CONFIG().sqlPrefix + "buddies ADD flags smallint(4) NOT NULL DEFAULT '0';", now;
+					*m_sess << "REPLACE INTO " + CONFIG().sqlPrefix + "db_version (ver) values(2);", now;
 				}
 			}
 			else if (i == 2) {
-				if (p->configuration().sqlType == "sqlite") {
+				if (CONFIG().sqlType == "sqlite") {
 					// Add 'flags' column to buddies table.
-					*m_sess << "ALTER TABLE " + p->configuration().sqlPrefix + "buddies ADD flags int(4) NOT NULL DEFAULT '0';", now;
-					*m_sess << "REPLACE INTO " + p->configuration().sqlPrefix + "db_version (ver) values(3);", now;
+					*m_sess << "ALTER TABLE " + CONFIG().sqlPrefix + "buddies ADD flags int(4) NOT NULL DEFAULT '0';", now;
+					*m_sess << "REPLACE INTO " + CONFIG().sqlPrefix + "db_version (ver) values(3);", now;
 				}
 			}
 		}
@@ -711,13 +710,13 @@ void SQLClass::upgradeDatabase() {
 
 long SQLClass::getRegisteredUsersCount(){
 	Poco::UInt64 users;
-	*m_sess << "SELECT count(*) FROM " + p->configuration().sqlPrefix + "users", into(users), now;
+	*m_sess << "SELECT count(*) FROM " + CONFIG().sqlPrefix + "users", into(users), now;
 	return users;
 }
 
 long SQLClass::getRegisteredUsersRosterCount(){
 	Poco::UInt64 users;
-	*m_sess << "SELECT count(*) FROM " + p->configuration().sqlPrefix + "buddies", into(users), now;
+	*m_sess << "SELECT count(*) FROM " + CONFIG().sqlPrefix + "buddies", into(users), now;
 	return users;
 }
 
@@ -737,9 +736,9 @@ void SQLClass::removeUser(long userId) {
 	*m_stmt_removeUser << (Poco::Int32) userId;
 	m_stmt_removeUser->execute();
 	Poco::Int32 id = userId;
-	*m_sess << "DELETE FROM " + p->configuration().sqlPrefix + "buddies WHERE user_id=?", use(id), now;
-	*m_sess << "DELETE FROM " + p->configuration().sqlPrefix + "buddies_settings WHERE user_id=?", use(id), now;
-	*m_sess << "DELETE FROM " + p->configuration().sqlPrefix + "users_settings WHERE user_id=?", use(id), now;
+	*m_sess << "DELETE FROM " + CONFIG().sqlPrefix + "buddies WHERE user_id=?", use(id), now;
+	*m_sess << "DELETE FROM " + CONFIG().sqlPrefix + "buddies_settings WHERE user_id=?", use(id), now;
+	*m_sess << "DELETE FROM " + CONFIG().sqlPrefix + "users_settings WHERE user_id=?", use(id), now;
 }
 
 void SQLClass::removeUserBuddies(long userId) {
@@ -752,9 +751,9 @@ void SQLClass::addDownload(const std::string &filename, const std::string &vip) 
 
 long SQLClass::addBuddy(long userId, const std::string &uin, const std::string &subscription, const std::string &group, const std::string &nickname, int flags) {
 	std::string u(uin);
-	p->protocol()->prepareUsername(u);
+	PROTOCOL()->prepareUsername(u);
 	*m_stmt_addBuddy << (Poco::Int32) userId << u << subscription << group << nickname << (Poco::Int32) flags;
-	if (p->configuration().sqlType == "mysql") {
+	if (CONFIG().sqlType == "mysql") {
 		*m_stmt_addBuddy << group << nickname;
 	}
 
@@ -777,7 +776,7 @@ long SQLClass::addBuddy(long userId, const std::string &uin, const std::string &
 		Log("SQL ERROR", e.displayText());
 	}
 	// It would be much more better to find out the way how to get last_inserted_rowid from Poco.
-	if (p->configuration().sqlType == "sqlite") {
+	if (CONFIG().sqlType == "sqlite") {
 		Poco::UInt64 id = -1;
 		*m_sess << "SELECT last_insert_rowid();", into(id), now;
 		return id;
@@ -806,8 +805,8 @@ UserRow SQLClass::getUserByJid(const std::string &jid){
 		user.id = id;
 	}
 
-	if (!p->configuration().sqlVIP.empty()) {
-		*m_sess <<  p->configuration().sqlVIP, use(jid), into(user.vip), now;
+	if (!CONFIG().sqlVIP.empty()) {
+		*m_sess <<  CONFIG().sqlVIP, use(jid), into(user.vip), now;
 // 		*m_sess <<  "SELECT COUNT(jid) as is_vip FROM platby.users WHERE jid='" + jid + "' and expire>NOW();",
 // 														into(user.vip), now;
 	}
@@ -820,7 +819,7 @@ std::map<std::string, UserRow> SQLClass::getUsersByJid(const std::string &jid) {
 	std::vector<std::string> resUin;
 	std::vector<std::string> resPassword;
 	std::vector<std::string> resEncoding;
-	*m_sess <<  "SELECT id, jid, uin, password, encoding FROM " + p->configuration().sqlPrefix + "users WHERE jid LIKE \"" + jid +"%\"",
+	*m_sess <<  "SELECT id, jid, uin, password, encoding FROM " + CONFIG().sqlPrefix + "users WHERE jid LIKE \"" + jid +"%\"",
 													into(resId),
 													into(resJid),
 													into(resUin),
@@ -1042,7 +1041,7 @@ GHashTable * SQLClass::getSettings(long userId) {
 
 void SQLClass::addBuddySetting(long userId, long buddyId, const std::string &key, const std::string &value, PurpleType type) {
 	*m_stmt_addBuddySetting << (Poco::Int32) userId << (Poco::Int32) buddyId << key << (Poco::Int32) type << value;
-	if (p->configuration().sqlType != "sqlite")
+	if (CONFIG().sqlType != "sqlite")
 		*m_stmt_addBuddySetting << value;
 	m_stmt_addBuddySetting->execute();
 

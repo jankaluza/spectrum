@@ -54,8 +54,7 @@ Tag* SearchExtension::tag() const
 	return m_tag->clone();
 }
 
-GlooxSearchHandler::GlooxSearchHandler(GlooxMessageHandler *parent) : IqHandler() {
-	p=parent;
+GlooxSearchHandler::GlooxSearchHandler() : IqHandler() {
 	Transport::instance()->registerStanzaExtension( new SearchExtension() );
 }
 
@@ -75,14 +74,14 @@ void GlooxSearchHandler::searchResultsArrived(const std::string &from, PurpleNot
 }
 
 bool GlooxSearchHandler::handleIq (const IQ &iq) {
-	User *user = (User *) p->userManager()->getUserByJID(iq.from().bare());
+	User *user = (User *) Transport::instance()->userManager()->getUserByJID(iq.from().bare());
 	if (!user) return true;
 
 	if(iq.subtype() == IQ::Get) {
 		AdhocData data;
 		data.id = iq.id();
 		data.from = iq.from().full();
-		data.node = p->protocol()->userSearchAction();
+		data.node = Transport::instance()->protocol()->userSearchAction();
 		data.callerType = CALLER_SEARCH;
 		user->setAdhocData(data);
 		PurpleConnection *gc = purple_account_get_connection(user->account());

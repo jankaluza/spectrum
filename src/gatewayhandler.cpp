@@ -54,8 +54,7 @@ Tag* GatewayExtension::tag() const
 	return m_tag->clone();
 }
 
-GlooxGatewayHandler::GlooxGatewayHandler(GlooxMessageHandler *parent) : IqHandler(){
-	p=parent;
+GlooxGatewayHandler::GlooxGatewayHandler() : IqHandler(){
 	Transport::instance()->registerStanzaExtension( new GatewayExtension() );
 }
 
@@ -75,7 +74,7 @@ bool GlooxGatewayHandler::handleIq (const IQ &stanza){
 		//     </query>
 		//   </iq>
 		IQ _s(IQ::Result, stanza.from(), stanza.id());
-		_s.setFrom(p->jid());
+		_s.setFrom(Transport::instance()->jid());
 		Tag *s = _s.tag();
 		Tag *query = new Tag("query");
 		query->setXmlns("jabber:iq:gateway");
@@ -106,13 +105,13 @@ bool GlooxGatewayHandler::handleIq (const IQ &stanza){
 		uin = JID::escapeNode(uin);
 
 		IQ _s(IQ::Result, stanza.from(), stanza.id());
-		_s.setFrom(p->jid());
+		_s.setFrom(Transport::instance()->jid());
 		Tag *s = _s.tag();
 		query = new Tag("query");
 		query->setXmlns("jabber:iq:gateway");
 
-		query->addChild(new Tag("jid",uin+"@"+p->jid()));
-		query->addChild(new Tag("prompt",uin+"@"+p->jid()));
+		query->addChild(new Tag("jid",uin+"@"+Transport::instance()->jid()));
+		query->addChild(new Tag("prompt",uin+"@"+Transport::instance()->jid()));
 
 		s->addChild(query);
 

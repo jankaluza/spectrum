@@ -241,8 +241,8 @@ static PurpleEventLoopUiOps libEventLoopOps =
 
 #endif /* WITH_LIBEVENT*/
 
-PurpleEventLoopUiOps * getEventLoopUiOps(void){
-	if (CONFIG().eventloop == "glib")
+PurpleEventLoopUiOps * getEventLoopUiOps(Configuration &cfg){
+	if (cfg.eventloop == "glib")
 		return &eventLoopOps;
 #ifdef WITH_LIBEVENT
 	std::cout << "EPOLL\n";

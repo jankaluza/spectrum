@@ -782,3 +782,21 @@ void SpectrumRosterManager::sendRosterGet(const std::string &to) {
 	iq->addChild(query);
 	Transport::instance()->send(iq);
 }
+
+void SpectrumRosterManager::sendErrorPresence(const std::string &from, const std::string &to, const std::string &error) {
+	Tag *tag = new Tag("presence");
+	tag->addAttribute("to", to);
+	tag->addAttribute("from", from);
+	tag->addAttribute("type", "error");
+	if (error == "jid-malformed") {
+		Tag *err = new Tag("error");
+		err->addAttribute("type", "modify");
+
+		Tag *jid = new Tag(error);
+		jid->addAttribute("xmlns", "urn:ietf:params:xml:ns:xmpp-stanzas");
+		
+		err->addChild(jid);
+		tag->addChild(err);
+	}
+	Transport::instance()->send(tag);
+}

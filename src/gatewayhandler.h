@@ -73,11 +73,10 @@ class GlooxGatewayHandler : public IqHandler
 {
 
 public:
-	GlooxGatewayHandler(GlooxMessageHandler *parent);
+	GlooxGatewayHandler();
 	~GlooxGatewayHandler();
 	bool handleIq (const IQ &iq);
 	void handleIqID (const IQ &iq, int context);
-	GlooxMessageHandler *p;
 };
 
 #endif

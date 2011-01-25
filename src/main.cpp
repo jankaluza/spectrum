@@ -239,12 +239,6 @@ static void conv_chat_remove_users(PurpleConversation *conv, GList *users) {
 	GlooxMessageHandler::instance()->purpleChatRemoveUsers(conv, users);
 }
 
-/*
- * Called when user is logged in...
- */
-static void signed_on(PurpleConnection *gc,gpointer unused) {
-	GlooxMessageHandler::instance()->signedOn(gc, unused);
-}
 
 /*
  * Called when somebody from legacy network start typing
@@ -838,20 +832,7 @@ static gboolean getVCard(gpointer data) {
 	std::string name((char*)data);
 	User *user = (User *) GlooxMessageHandler::instance()->userManager()->getUserByJID(name);
 	if (user && user->isConnected()) {
-		GlooxMessageHandler::instance()->fetchVCard(name);
-	}
-	g_free(data);
-	return FALSE;
-}
-
-/*
- * Connect user to legacy network
- */
-static gboolean connectUser(gpointer data) {
-	std::string name((char*)data);
-	User *user = (User *) GlooxMessageHandler::instance()->userManager()->getUserByJID(name);
-	if (user && user->readyForConnect() && !user->isConnected()) {
-		user->connect();
+		Transport::instance()->fetchVCard(name);
 	}
 	g_free(data);
 	return FALSE;
@@ -867,20 +848,6 @@ static gboolean reconnect(gpointer data) {
 		user->connect();
 	}
 	g_free(data);
-	return FALSE;
-}
-
-/*
- * Checking new connections for our gloox proxy...
- */
-static gboolean ftServerReceive(gpointer data) {
-	if (GlooxMessageHandler::instance()->ftServer->recv(1) == ConnNoError)
-		return TRUE;
-	return FALSE;
-}
-
-static gboolean transportReconnect(gpointer data) {
-	GlooxMessageHandler::instance()->transportConnect();
 	return FALSE;
 }
 
@@ -925,143 +892,7 @@ static void listPurpleSettings() {
 	}
 }
 
-GlooxMessageHandler::GlooxMessageHandler(const std::string &config) : MessageHandler(),ConnectionListener(),PresenceHandler(),SubscriptionHandler() {
-	m_pInstance = this;
-	m_reconnectCount = 0;
-	m_config = config;
-	m_firstConnection = true;
-	ftManager = NULL;
-	m_parser = NULL;
-	m_sql = NULL;
-	m_collector = NULL;
-	m_searchHandler = NULL;
-	m_vcardManager = NULL;
-	m_reg = NULL;
-	m_adhoc = NULL;
-	gatewayHandler = NULL;
-	ftServer = NULL;
-	m_stats = NULL;
-	connectIO = NULL;
-	m_socketId = 0;
-#ifndef WIN32
-	m_configInterface = NULL;
-#endif
-
-	bool loaded = true;
-
-	if (!loadConfigFile(config))
-		loaded = false;
-
-	g_thread_init(NULL);
-	if (check_db_version) {
-		m_sql = new SQLClass(this, upgrade_db, true);
-		if (!m_sql->loaded())
-			exit(3);
-	}
-	if (upgrade_db) {
-		m_sql = new SQLClass(this, upgrade_db);
-		if (!m_sql->loaded())
-			loaded = false;
-	}
-	
-	if (!list_purple_settings) {
-		if (loaded && !nodaemon)
-			daemonize(configuration().userDir.c_str());
-
-#ifndef WIN32
-		if (!nodaemon) {
-			int logfd = open("/dev/null", O_WRONLY | O_CREAT, 0644);
-			if (logfd <= 0) {
-				std::cout << "Can't open log file\n";
-				exit(1);
-			}
-			if (dup2(logfd, STDERR_FILENO) < 0) {
-				std::cout << "Can't redirect stderr\n";
-				exit(1);
-			}
-			if (dup2(logfd, STDOUT_FILENO) < 0) {
-				std::cout << "Can't redirect stdout\n";
-				exit(1);
-			}
-			close(logfd);
-		}
-#endif
-	}
-
-	m_transport = new Transport(m_configuration.jid, m_configuration.server, m_configuration.password, m_configuration.port);
-
-// 	j = new HiComponent("jabber:component:accept", m_configuration.server, m_configuration.jid, m_configuration.password, m_configuration.port);
-
-	m_loop = NULL;
-	if (CONFIG().eventloop == "glib") {
-		m_loop = g_main_loop_new(NULL, FALSE);
-	}
-#ifdef WITH_LIBEVENT
-	else {
-		struct event_base *base = (struct event_base *) event_init();
-// 		std::cout << event_base_get_method(base) << "\n";
-	}
-#endif
-
-	m_userManager = new UserManager();
-	m_searchHandler = NULL;
-
-	if (list_purple_settings)
-		m_configuration.logAreas = 0;
-	
-	if (loaded && !initPurple())
-		loaded = false;
-	
-	if (loaded && !loadProtocol())
-		loaded = false;
-
-	if (list_purple_settings) {
-		listPurpleSettings();
-		loaded = false;
-	}
-
-	if (loaded) {
-		m_sql = new SQLClass(this, upgrade_db);
-		if (!m_sql->loaded())
-			loaded = false;
-	}
-
-	if (loaded) {
-		m_capabilityHandler = new CapabilityHandler();
-		m_spectrumNodeHandler = new SpectrumNodeHandler();
-
-		m_parser = new GlooxParser();
-		m_collector = new AccountCollector();
-
-		j->registerMessageHandler(this);
-		j->registerConnectionListener(this);
-		gatewayHandler = new GlooxGatewayHandler(this);
-		j->registerIqHandler(gatewayHandler, ExtGateway);
-		m_reg = new GlooxRegisterHandler();
-		j->registerIqHandler(m_reg, ExtRegistration);
-		m_stats = new GlooxStatsHandler(this);
-		j->registerIqHandler(m_stats, ExtStats);
-		m_vcardManager = new VCardManager(j);
-#ifndef WIN32
-		if (m_configInterface)
-			m_configInterface->registerHandler(m_stats);
-#endif
-		m_vcard = new GlooxVCardHandler(this);
-		j->registerIqHandler(m_vcard, ExtVCard);
-		j->registerPresenceHandler(this);
-		j->registerSubscriptionHandler(this);
-		Transport::instance()->registerStanzaExtension( new VCardUpdate );
-
-		transportConnect();
-		if (m_loop) {
-			g_main_loop_run(m_loop);
-		}
-#ifdef WITH_LIBEVENT
-		else {
-			event_loop(0);
-		}
-#endif
-	}
+GlooxMessageHandler::GlooxMessageHandler(const std::string &config){
 }
 
 GlooxMessageHandler::~GlooxMessageHandler(){
@@ -1108,20 +939,20 @@ GlooxMessageHandler::~GlooxMessageHandler(){
 	if (m_searchHandler)
 		delete m_searchHandler;
 	delete m_transport;
-	delete j;
+// 	delete j;
 }
 
-bool GlooxMessageHandler::loadProtocol(){
-	m_protocol = NULL;
+static AbstractProtocol *loadProtocol(Configuration &cfg) {
+	AbstractProtocol *m_protocol = NULL;
 	for (GList *l = getSupportedProtocols(); l != NULL; l = l->next) {
 		_spectrum_protocol *protocol = (_spectrum_protocol *) l->data;
-		if (configuration().protocol == protocol->prpl_id) {
+		if (cfg.protocol == protocol->prpl_id) {
 			m_protocol = protocol->create_protocol();
 			break;
 		}
 	}
 	if (m_protocol == NULL) {
-		Log("loadProtocol", "Protocol \"" << configuration().protocol << "\" is not supported.");
+		Log("loadProtocol", "Protocol \"" << cfg.protocol << "\" is not supported.");
 		std::string protocols = "";
 		for (GList *l = getSupportedProtocols(); l != NULL; l = l->next) {
 			_spectrum_protocol *protocol = (_spectrum_protocol *) l->data;
@@ -1130,39 +961,15 @@ bool GlooxMessageHandler::loadProtocol(){
 				protocols += ", ";
 		}
 		Log("loadProtocol", "Protocol has to be one of: " << protocols << ".");
-		return false;
+		return NULL;
 	}
 
 	if (!purple_find_prpl(m_protocol->protocol().c_str())) {
-		Log("loadProtocol", "There is no libpurple plugin installed for protocol \"" << configuration().protocol << "\"");
-		return false;
+		Log("loadProtocol", "There is no libpurple plugin installed for protocol \"" << cfg.protocol << "\"");
+		return NULL;
 	}
 
-	if (!m_protocol->userSearchAction().empty()) {
-		m_searchHandler = new GlooxSearchHandler(this);
-		j->registerIqHandler(m_searchHandler, ExtSearch);
-	}
-	
-	if (m_configuration.encoding.empty())
-		m_configuration.encoding = m_protocol->defaultEncoding();
-
-	ConfigFile cfg(m_config);
-	cfg.loadPurpleAccountSettings(m_configuration);
-	
-	return true;
-}
-
-void GlooxMessageHandler::handleLog(LogLevel level, LogArea area, const std::string &message) {
-// 	if (m_configuration.logAreas & LOG_AREA_XML) {
-// 		if (area == LogAreaXmlIncoming)
-// 			Log("XML IN", message);
-// 		else
-// 			Log("XML OUT", message);
-// 	}
-}
-
-void GlooxMessageHandler::onSessionCreateError(const Error *error) {
-	Log("gloox", "sessionCreateError");
+	return m_protocol;
 }
 
 void GlooxMessageHandler::purpleConnectionError(PurpleConnection *gc,PurpleConnectionError reason,const char *text) {
@@ -1233,7 +1040,7 @@ void GlooxMessageHandler::purpleBuddyCreated(PurpleBuddy *buddy) {
 	else {
 		buddy->node.ui_data = (void *) new SpectrumBuddy(-1, buddy);
 		SpectrumBuddy *s_buddy = (SpectrumBuddy *) buddy->node.ui_data;
-		if (GlooxMessageHandler::instance()->configuration().jid_escaping)
+		if (m_configuration.jid_escaping)
 			s_buddy->setFlags(SPECTRUM_BUDDY_JID_ESCAPING);
 	}
 		
@@ -1290,16 +1097,6 @@ void GlooxMessageHandler::purpleBuddyTypingPaused(PurpleAccount *account, const 
 	}
 }
 
-void GlooxMessageHandler::signedOn(PurpleConnection *gc, gpointer unused) {
-	PurpleAccount *account = purple_connection_get_account(gc);
-	User *user = (User *) userManager()->getUserByAccount(account);
-	if (user != NULL) {
-		Log(user->jid(), "Logged in to legacy network");
-		purple_timeout_add_seconds(30, &getVCard, g_strdup(user->jid().c_str()));
-		user->connected();
-	}
-}
-
 void GlooxMessageHandler::purpleAuthorizeClose(void *data) {
 	authRequest *d = (authRequest *) data;
 	if (!d)
@@ -1338,33 +1135,36 @@ void * GlooxMessageHandler::purpleAuthorizeReceived(PurpleAccount *account, cons
 	return NULL;
 }
 
-bool GlooxMessageHandler::loadConfigFile(const std::string &config) {
-	ConfigFile cfg(config.empty() ? m_config : config);
+static Configuration loadConfigFile(const std::string &config) {
+	ConfigFile cfg(config.empty() ? CONFIG().file : config);
 	Configuration c = cfg.getConfiguration();
 
-	if (m_configuration)
+	if (Transport::instance() && CONFIG())
 		cfg.loadPurpleAccountSettings(c);
 	
-	if (!c && !m_configuration)
-		return false;
+	if (Transport::instance()) {
+		if (!c && !CONFIG())
+			return c;
+	}
+	else if (!c)
+		return c;
 	if (c) {
-		if (m_configuration) {
-			c.username_mask = m_configuration.username_mask;
-			c.hash = m_configuration.hash;
+		if (Transport::instance() && CONFIG()) {
+			c.username_mask = CONFIG().username_mask;
+			c.hash = CONFIG().hash;
 		}
-		m_configuration = c;
 	}
 
 	if (logfile)
-		m_configuration.logfile = std::string(logfile);
+		c.logfile = std::string(logfile);
 	
-	if (!m_configuration.logfile.empty())
-		Log_.setLogFile(m_configuration.logfile);
+	if (!c.logfile.empty())
+		Log_.setLogFile(c.logfile);
 
 	if (!lock_file)
-		lock_file = g_strdup(m_configuration.pid_f.c_str());
+		lock_file = g_strdup(c.pid_f.c_str());
 	
-	return true;
+	return c;
 }
 
 void GlooxMessageHandler::purpleMessageReceived(PurpleAccount* account, char * name, char *msg, PurpleConversation *conv, PurpleMessageFlags flags) {
@@ -1491,458 +1291,29 @@ void GlooxMessageHandler::purpleChatRemoveUsers(PurpleConversation *conv, GList 
 	}
 }
 
-void GlooxMessageHandler::handleSubscription(const Subscription &stanza) {
-	// answer to subscibe
-	if(stanza.subtype() == Subscription::Subscribe && stanza.to().username() == "") {
-		Log(stanza.from().full(), "Subscribe presence received => sending subscribed");
-		Tag *reply = new Tag("presence");
-		reply->addAttribute( "to", stanza.from().bare() );
-		reply->addAttribute( "from", stanza.to().bare() );
-		reply->addAttribute( "type", "subscribed" );
-		Transport::instance()->send( reply );
-		return;
-	}
+// void GlooxMessageHandler::handleLog(LogLevel level, LogArea area, const std::string &message) {
+// // 	if (m_configuration.logAreas & LOG_AREA_XML) {
+// // 		if (area == LogAreaXmlIncoming)
+// // 			Log("XML IN", message);
+// // 		else
+// // 			Log("XML OUT", message);
+// // 	}
+// }
 
-	if (CONFIG().protocol == "irc") {
-		return;
-	}
+// void GlooxMessageHandler::onSessionCreateError(const Error *error) {
+// 	Log("gloox", "sessionCreateError");
+//
 
-	User *user;
-	if (protocol()->tempAccountsAllowed()) {
-		std::string server = stanza.to().username().substr(stanza.to().username().find("%") + 1, stanza.to().username().length() - stanza.to().username().find("%"));
-		user = (User *) userManager()->getUserByJID(stanza.from().bare() + server);
-	}
-	else {
-		user = (User *) userManager()->getUserByJID(stanza.from().bare());
-	}
-	if (user)
-		user->handleSubscription(stanza);
-	else if (stanza.subtype() == Subscription::Unsubscribe) {
-		Tag *tag = new Tag("presence");
-		tag->addAttribute("to", stanza.from().bare());
-		tag->addAttribute("from", stanza.to().username() + "@" + Transport::instance()->jid());
-		tag->addAttribute( "type", "unsubscribed" );
-		Transport::instance()->send( tag );
-	}
-	else
-		Log(stanza.from().full(), "Subscribe presence received, but this user is not logged in");
-
-}
-
-void GlooxMessageHandler::handlePresence(const Presence &stanza){
-	if (stanza.subtype() == Presence::Error) {
-		return;
-	}
-
-	if (!isValidNode(stanza.from().username())) {
-		Tag *tag = new Tag("presence");
-		tag->addAttribute("to", stanza.from().full());
-		tag->addAttribute("from", stanza.to().full());
-		tag->addAttribute("type", "error");
-
-		Tag *error = new Tag("error");
-		error->addAttribute("type", "modify");
-
-		Tag *jid = new Tag("jid-malformed");
-		jid->addAttribute("xmlns", "urn:ietf:params:xml:ns:xmpp-stanzas");
-		
-		error->addChild(jid);
-		tag->addChild(error);
-		Transport::instance()->send(tag);
-		return;
-	}
-	
-	// get entity capabilities
-	Tag *c = NULL;
-	bool isMUC = stanza.findExtension(ExtMUC) != NULL;
-	Log(stanza.from().full(), "Presence received (" << (int)stanza.subtype() << ") for: " << stanza.to().full() << "isMUC" << isMUC);
-
-
-	if (stanza.presence() != Presence::Unavailable && ((stanza.to().username() == "" && !protocol()->tempAccountsAllowed()) || (isMUC && protocol()->tempAccountsAllowed()))) {
-		Tag *stanzaTag = stanza.tag();
-		if (!stanzaTag) return;
-		Tag *c = stanzaTag->findChildWithAttrib("xmlns","http://jabber.org/protocol/caps");
-		Log(stanza.from().full(), "asking for caps/disco#info");
-		// Presence has caps and caps are not cached.
-		if (c != NULL && !Transport::instance()->hasClientCapabilities(c->findAttribute("ver"))) {
-			int context = m_capabilityHandler->waitForCapabilities(c->findAttribute("ver"), stanza.to().full());
-			std::string node = c->findAttribute("node") + std::string("#") + c->findAttribute("ver");;
-			j->disco()->getDiscoInfo(stanza.from(), node, m_capabilityHandler, context, j->getID());
-		}
-		else {
-			int context = m_capabilityHandler->waitForCapabilities(stanza.from().full(), stanza.to().full());
-			j->disco()->getDiscoInfo(stanza.from(), "", m_capabilityHandler, context, j->getID());
-		}
-		delete stanzaTag;
-	}
-	
-	User *user;
-	std::string userkey;
-	if (protocol()->tempAccountsAllowed()) {
-		std::string server = stanza.to().username().substr(stanza.to().username().find("%") + 1, stanza.to().username().length() - stanza.to().username().find("%"));
-		userkey = stanza.from().bare() + server;
-		user = (User *) userManager()->getUserByJID(stanza.from().bare() + server);
-	}
-	else {
-		user = (User *) userManager()->getUserByJID(stanza.from().bare());
-		userkey = stanza.from().bare();
-	}
-	if (user == NULL) {
-		// we are not connected and probe arrived => answer with unavailable
-		if (stanza.subtype() == Presence::Probe) {
-			Log(stanza.from().full(), "Answering to probe presence with unavailable presence");
-			Tag *tag = new Tag("presence");
-			tag->addAttribute("to", stanza.from().full());
-			tag->addAttribute("from", stanza.to().bare());
-			tag->addAttribute("type", "unavailable");
-			Transport::instance()->send(tag);
-			if (stanza.to().username() == "") {
-				Tag *s = new Tag("presence");
-				s->addAttribute( "to", stanza.from().bare());
-				s->addAttribute( "type", "probe");
-				s->addAttribute( "from", jid());
-				Transport::instance()->send(s);
-			}
-		}
-		else if (((stanza.to().username() == "" && !protocol()->tempAccountsAllowed()) || ( protocol()->tempAccountsAllowed() && isMUC)) && stanza.presence() != Presence::Unavailable){
-			UserRow res = sql()->getUserByJid(userkey);
-			if(res.id==-1 && !protocol()->tempAccountsAllowed()) {
-				// presence from unregistered user
-				Log(stanza.from().full(), "This user is not registered");
-				return;
-			}
-			else {
-				if(res.id==-1 && protocol()->tempAccountsAllowed()) {
-					res.jid = userkey;
-					res.uin = stanza.from().username();
-					res.password = "";
-					res.language = "en";
-					res.encoding = m_configuration.encoding;
-					res.vip = 0;
-					sql()->addUser(res);
-					res = sql()->getUserByJid(userkey);
-				}
-				bool isVip = res.vip;
-				std::list<std::string> const &x = configuration().allowedServers;
-				if (configuration().onlyForVIP && !isVip && std::find(x.begin(), x.end(), stanza.from().server()) == x.end()) {
-					Log(stanza.from().full(), "This user is not VIP, can't login...");
-					return;
-				}
-				Log(stanza.from().full(), "Creating new User instance");
-				if (protocol()->tempAccountsAllowed()) {
-					std::string server = stanza.to().username().substr(stanza.to().username().find("%") + 1, stanza.to().username().length() - stanza.to().username().find("%"));
-					user = new User(stanza.from(), stanza.to().resource() + "@" + server, "", stanza.from().bare() + server, res.id, res.encoding, res.language, res.vip);
-				}
-				else {
-					if (purple_accounts_find(res.uin.c_str(), protocol()->protocol().c_str()) != NULL) {
-						PurpleAccount *act = purple_accounts_find(res.uin.c_str(), protocol()->protocol().c_str());
-						user = (User *) userManager()->getUserByAccount(act);
-						if (user) {
-							Log(stanza.from().full(), "This account is already connected by another jid " << user->jid());
-							return;
-						}
-					}
-					user = new User(stanza.from(), res.uin, res.password, stanza.from().bare(), res.id, res.encoding, res.language, res.vip);
-				}
-				user->setFeatures(isVip ? configuration().VIPFeatures : configuration().transportFeatures);
-				if (c != NULL)
-					if (Transport::instance()->hasClientCapabilities(c->findAttribute("ver")))
-						user->setResource(stanza.from().resource(), stanza.priority(), Transport::instance()->getCapabilities(c->findAttribute("ver")));
-
-				m_userManager->addUser(user);
-				user->receivedPresence(stanza);
-				if (protocol()->tempAccountsAllowed()) {
-					std::string server = stanza.to().username().substr(stanza.to().username().find("%") + 1, stanza.to().username().length() - stanza.to().username().find("%"));
-					server = stanza.from().bare() + server;
-					purple_timeout_add_seconds(15, &connectUser, g_strdup(server.c_str()));
-				}
-				else
-					purple_timeout_add_seconds(15, &connectUser, g_strdup(stanza.from().bare().c_str()));
-			}
-		}
-		if (stanza.presence() == Presence::Unavailable && stanza.to().username() == ""){
-			Log(stanza.from().full(), "User is already logged out => sending unavailable presence");
-			Tag *tag = new Tag("presence");
-			tag->addAttribute( "to", stanza.from().bare() );
-			tag->addAttribute( "type", "unavailable" );
-			tag->addAttribute( "from", jid() );
-			Transport::instance()->send( tag );
-		}
-	}
-	else {
-		user->receivedPresence(stanza);
-	}
-	if (stanza.to().username() == "" && user != NULL) {
-		if(stanza.presence() == Presence::Unavailable && user->isConnected() == true && user->getResources().empty()) {
-			Log(stanza.from().full(), "Logging out");
-			m_userManager->removeUser(user);
-		}
-		else if (stanza.presence() == Presence::Unavailable && user->isConnected() == false && user->getResources().empty()) {
-			Log(stanza.from().full(), "Logging out, but he's not connected...");
-			m_userManager->removeUser(user);
-		}
-// 		else if (stanza.presence() == Presence::Unavailable && user->isConnected() == false) {
-// 			Log(stanza.from().full(), "Can't logout because we're connecting now...");
-// 		}
-	}
-	else if (user != NULL && stanza.presence() == Presence::Unavailable && m_protocol->tempAccountsAllowed() && !user->hasOpenedMUC()) {
-		m_userManager->removeUser(user);
-	}
-	else if (user == NULL && stanza.to().username() == "" && stanza.presence() == Presence::Unavailable) {
-		UserRow res = sql()->getUserByJid(userkey);
-		if (res.id != -1) {
-			sql()->setUserOnline(res.id, false);
-		}
-	}
-}
-
-void GlooxMessageHandler::onConnect() {
-	Log("gloox", "CONNECTED!");
-	m_reconnectCount = 0;
-
-	if (m_firstConnection) {
-		j->disco()->setIdentity("gateway", protocol()->gatewayIdentity(), configuration().discoName);
-		m_discoHandler->setIdentity("client", "pc", "Spectrum");
-		j->disco()->setVersion(configuration().discoName, VERSION, "");
-
-		std::string id = "client";
-		id += '/';
-		id += "pc";
-		id += '/';
-		id += '/';
-		id += "Spectrum";
-		id += '<';
-		
-		std::list<std::string> features = protocol()->transportFeatures();
-		features.sort();
-		for (std::list<std::string>::iterator it = features.begin(); it != features.end(); it++) {
-			// these features are default in gloox
-			if (*it != "http://jabber.org/protocol/disco#items" &&
-				*it != "http://jabber.org/protocol/disco#info" &&
-				*it != "http://jabber.org/protocol/commands") {
-				j->disco()->addFeature(*it);
-			}
-		}
-
-		std::list<std::string> f = protocol()->buddyFeatures();
-		if (find(f.begin(), f.end(), "http://jabber.org/protocol/disco#items") == f.end())
-			f.push_back("http://jabber.org/protocol/disco#items");
-		if (find(f.begin(), f.end(), "http://jabber.org/protocol/disco#info") == f.end())
-			f.push_back("http://jabber.org/protocol/disco#info");
-		f.sort();
-		for (std::list<std::string>::iterator it = f.begin(); it != f.end(); it++) {
-			id += (*it);
-			id += '<';
-			m_discoHandler->addFeature(*it);
-		}
-
-		SHA sha;
-		sha.feed( id );
-		m_configuration.hash = Base64::encode64( sha.binary() );
-		j->disco()->registerNodeHandler( m_spectrumNodeHandler, "http://spectrum.im/transport#" + m_configuration.hash );
-		m_discoHandler->registerNodeHandler( m_spectrumNodeHandler, "http://spectrum.im/transport#" + m_configuration.hash );
-
-		if (m_configuration.protocol != "irc")
-			new AutoConnectLoop();
-		m_firstConnection = false;
-// 		purple_timeout_add_seconds(60, &sendPing, this);
-	}
-}
-
-void GlooxMessageHandler::onDisconnect(ConnectionError e) {
-	Log("gloox", "Disconnected from Jabber server !");
-	switch (e) {
-		case ConnNoError: Log("gloox", "Reason: No error"); break;
-		case ConnStreamError: Log("gloox", "Reason: Stream error"); break;
-		case ConnStreamVersionError: Log("gloox", "Reason: Stream version error"); break;
-		case ConnStreamClosed: Log("gloox", "Reason: Stream closed"); break;
-		case ConnProxyAuthRequired: Log("gloox", "Reason: Proxy auth required"); break;
-		case ConnProxyAuthFailed: Log("gloox", "Reason: Proxy auth failed"); break;
-		case ConnProxyNoSupportedAuth: Log("gloox", "Reason: Proxy no supported auth"); break;
-		case ConnIoError: Log("gloox", "Reason: IO Error"); break;
-		case ConnParseError: Log("gloox", "Reason: Parse error"); break;
-		case ConnConnectionRefused: Log("gloox", "Reason: Connection refused"); break;
-// 		case ConnSocketError: Log("gloox", "Reason: Socket error"); break;
-		case ConnDnsError: Log("gloox", "Reason: DNS Error"); break;
-		case ConnOutOfMemory: Log("gloox", "Reason: Out Of Memory"); break;
-		case ConnNoSupportedAuth: Log("gloox", "Reason: No supported auth"); break;
-		case ConnTlsFailed: Log("gloox", "Reason: Tls failed"); break;
-		case ConnTlsNotAvailable: Log("gloox", "Reason: Tls not available"); break;
-		case ConnCompressionFailed: Log("gloox", "Reason: Compression failed"); break;
-// 		case ConnCompressionNotAvailable: Log("gloox", "Reason: Compression not available"); break;
-		case ConnAuthenticationFailed: Log("gloox", "Reason: Authentication Failed"); break;
-		case ConnUserDisconnected: Log("gloox", "Reason: User disconnected"); break;
-		case ConnNotConnected: Log("gloox", "Reason: Not connected"); break;
-	};
-
-	switch (j->streamError()) {
-		case StreamErrorBadFormat: Log("gloox", "Stream error: Bad format"); break;
-		case StreamErrorBadNamespacePrefix: Log("gloox", "Stream error: Bad namespace prefix"); break;
-		case StreamErrorConflict: Log("gloox", "Stream error: Conflict"); break;
-		case StreamErrorConnectionTimeout: Log("gloox", "Stream error: Connection timeout"); break;
-		case StreamErrorHostGone: Log("gloox", "Stream error: Host gone"); break;
-		case StreamErrorHostUnknown: Log("gloox", "Stream error: Host unknown"); break;
-		case StreamErrorImproperAddressing: Log("gloox", "Stream error: Improper addressing"); break;
-		case StreamErrorInternalServerError: Log("gloox", "Stream error: Internal server error"); break;
-		case StreamErrorInvalidFrom: Log("gloox", "Stream error: Invalid from"); break;
-		case StreamErrorInvalidId: Log("gloox", "Stream error: Invalid ID"); break;
-		case StreamErrorInvalidNamespace: Log("gloox", "Stream error: Invalid Namespace"); break;
-		case StreamErrorInvalidXml: Log("gloox", "Stream error: Invalid XML"); break;
-		case StreamErrorNotAuthorized: Log("gloox", "Stream error: Not Authorized"); break;
-		case StreamErrorPolicyViolation: Log("gloox", "Stream error: Policy violation"); break;
-		case StreamErrorRemoteConnectionFailed: Log("gloox", "Stream error: Remote connection failed"); break;
-		case StreamErrorResourceConstraint: Log("gloox", "Stream error: Resource constraint"); break;
-		case StreamErrorRestrictedXml: Log("gloox", "Stream error: Restricted XML"); break;
-		case StreamErrorSeeOtherHost: Log("gloox", "Stream error: See other host"); break;
-		case StreamErrorSystemShutdown: Log("gloox", "Stream error: System shutdown"); break;
-		case StreamErrorUndefinedCondition: Log("gloox", "Stream error: Undefined Condition"); break;
-		case StreamErrorUnsupportedEncoding: Log("gloox", "Stream error: Unsupported encoding"); break;
-		case StreamErrorUnsupportedStanzaType: Log("gloox", "Stream error: Unsupported stanza type"); break;
-		case StreamErrorUnsupportedVersion: Log("gloox", "Stream error: Unsupported version"); break;
-		case StreamErrorXmlNotWellFormed: Log("gloox", "Stream error: XML Not well formed"); break;
-		case StreamErrorUndefined: Log("gloox", "Stream error: Error undefined"); break;
-	};
-
-	switch (j->authError()) {
-		case AuthErrorUndefined: Log("gloox", "Auth error: Error undefined"); break;
-		case SaslAborted: Log("gloox", "Auth error: Sasl aborted"); break;
-		case SaslIncorrectEncoding: Log("gloox", "Auth error: Sasl incorrect encoding"); break;        
-		case SaslInvalidAuthzid: Log("gloox", "Auth error: Sasl invalid authzid"); break;
-		case SaslInvalidMechanism: Log("gloox", "Auth error: Sasl invalid mechanism"); break;
-		case SaslMalformedRequest: Log("gloox", "Auth error: Sasl malformed request"); break;
-		case SaslMechanismTooWeak: Log("gloox", "Auth error: Sasl mechanism too weak"); break;
-		case SaslNotAuthorized: Log("gloox", "Auth error: Sasl Not authorized"); break;
-		case SaslTemporaryAuthFailure: Log("gloox", "Auth error: Sasl temporary auth failure"); break;
-		case NonSaslConflict: Log("gloox", "Auth error: Non sasl conflict"); break;
-		case NonSaslNotAcceptable: Log("gloox", "Auth error: Non sasl not acceptable"); break;
-		case NonSaslNotAuthorized: Log("gloox", "Auth error: Non sasl not authorized"); break;
-	};
-
-	if (m_reconnectCount == 2)
-		m_userManager->removeAllUsers();
-
-	Log("gloox", "trying to reconnect after 1 second");
-	if (m_socketId > 0) {
-		purple_input_remove(m_socketId);
-		m_socketId = 0;
-	}
-	purple_timeout_add_seconds(1, &transportReconnect, NULL);
-
-// 	if (connectIO) {
-// 		g_source_remove(connectID);
-// 		connectIO = NULL;
-// 	}
-}
-
-void GlooxMessageHandler::transportConnect() {
-	m_reconnectCount++;
-	if (m_sql->loaded()) {
-		j->connect(false);
-		int mysock = dynamic_cast<ConnectionTCPClient*>( j->connectionImpl() )->socket();
-		if (mysock > 0) {
-			if (m_socketId > 0)
-				purple_input_remove(m_socketId);
-			m_socketId = purple_input_add(mysock, PURPLE_INPUT_READ, &transportDataReceived, NULL);
-// 			connectIO = g_io_channel_unix_new(mysock);
-// 			connectID = g_io_add_watch(connectIO, (GIOCondition) READ_COND, &transportDataReceived, NULL);
-		}
-	}
-	else {
-		Log("gloox", "Tried to reconnect, but database is not ready yet.");
-		Log("gloox", "trying to reconnect after 1 second");
-		purple_timeout_add_seconds(1, &transportReconnect, NULL);
-	}
-}
-
-bool GlooxMessageHandler::onTLSConnect(const CertInfo & info) {
-	return false;
-}
-
-void GlooxMessageHandler::handleMessage (const Message &msg, MessageSession *session) {
-	if (msg.from().bare() == msg.to().bare())
-		return;
-	if (msg.subtype() == Message::Error || msg.subtype() == Message::Invalid)
-		return;
-	
-	User *user;
-	// TODO; move it to IRCProtocol
-	if (m_configuration.protocol == "irc") {
-		std::string server = msg.to().username().substr(msg.to().username().find("%") + 1, msg.to().username().length() - msg.to().username().find("%"));
-		user = (User *) userManager()->getUserByJID(msg.from().bare() + server);
-	}
-	else {
-		user = (User *) userManager()->getUserByJID(msg.from().bare());
-	}
-	if (user!=NULL) {
-		if (user->isConnected()) {
-			Tag *msgTag = msg.tag();
-			if (!msgTag) return;
-			const StanzaExtension *ext = msg.findExtension(ExtChatState);
-			Tag *chatstates = ext ? ext->tag() : NULL;
-			if (chatstates != NULL) {
-// 				std::string username = msg.to().username();
-// 				std::for_each( username.begin(), username.end(), replaceJidCharacters() );
-				user->handleChatState(purpleUsername(msg.to().username()), chatstates->name());
-				delete chatstates;
-			}
-			if (msgTag->findChild("body") != NULL) {
-				m_stats->messageFromJabber();
-				user->handleMessage(msg);
-			}
-			delete msgTag;
-		}
-		else if (msg.to().username() == "") {
-			Transport::instance()->protocol()->onXMPPMessageReceived(user, msg);
-		}
-		else{
-			Log(msg.from().bare(), "New message received, but we're not connected yet");
-		}
-	}
-	else {
-		Tag *msgTag = msg.tag();
-		if (!msgTag) return;
-		if (msgTag->findChild("body") != NULL) {
-			Message s(Message::Error, msg.from().full(), msg.body());
-			s.setFrom(msg.to().full());
-			Error *c = new Error(StanzaErrorTypeWait, StanzaErrorRecipientUnavailable);
-			c->setText(tr(configuration().language.c_str(),_("This message couldn't be sent, because you are not connected to legacy network. You will be automatically reconnected soon.")));
-			s.addExtension(c);
-			Transport::instance()->send(s.tag());
-
-			Tag *stanza = new Tag("presence");
-			stanza->addAttribute( "to", msg.from().bare());
-			stanza->addAttribute( "type", "probe");
-			stanza->addAttribute( "from", jid());
-			Transport::instance()->send(stanza);
-		}
-		delete msgTag;
-	}
-
-}
-
-void GlooxMessageHandler::handleVCard(const JID& jid, const VCard* vcard) {
-	if (!vcard)
-		return;
-	User *user = (User *) GlooxMessageHandler::instance()->userManager()->getUserByJID(jid.bare());
-	if (user && user->isConnected()) {
-		user->handleVCard(vcard);
-	}
-}
-
-void GlooxMessageHandler::handleVCardResult(VCardContext context, const JID& jid, StanzaError se) {
-	
-}
-
-bool GlooxMessageHandler::initPurple(){
+static bool initPurple(Configuration &cfg) {
 	bool ret;
 
-	purple_util_set_user_dir(configuration().userDir.c_str());
+	purple_util_set_user_dir(cfg.userDir.c_str());
 
-	if (m_configuration.logAreas & LOG_AREA_PURPLE)
+	if (cfg.logAreas & LOG_AREA_PURPLE)
 		purple_debug_set_ui_ops(&debugUiOps);
 
 	purple_core_set_ui_ops(&coreUiOps);
-	purple_eventloop_set_ui_ops(getEventLoopUiOps());
+	purple_eventloop_set_ui_ops(getEventLoopUiOps(cfg));
 
 	ret = purple_core_init(PURPLE_UI);
 	if (ret) {
@@ -1977,7 +1348,7 @@ bool GlooxMessageHandler::initPurple(){
 		purple_signal_connect(purple_conversations_get_handle(), "buddy-typing", &conversation_handle, PURPLE_CALLBACK(buddyTyping), NULL);
 		purple_signal_connect(purple_conversations_get_handle(), "buddy-typed", &conversation_handle, PURPLE_CALLBACK(buddyTyped), NULL);
 		purple_signal_connect(purple_conversations_get_handle(), "buddy-typing-stopped", &conversation_handle, PURPLE_CALLBACK(buddyTypingStopped), NULL);
-		purple_signal_connect(purple_connections_get_handle(), "signed-on", &conn_handle,PURPLE_CALLBACK(signed_on), NULL);
+		purple_signal_connect(purple_connections_get_handle(), "signed-on", &conn_handle,PURPLE_CALLBACK(User::signedOnCallback), NULL);
 		purple_signal_connect(purple_blist_get_handle(), "buddy-removed", &blist_handle,PURPLE_CALLBACK(buddyRemoved), NULL);
 		purple_signal_connect(purple_blist_get_handle(), "buddy-signed-on", &blist_handle,PURPLE_CALLBACK(buddySignedOn), NULL);
 		purple_signal_connect(purple_blist_get_handle(), "buddy-signed-off", &blist_handle,PURPLE_CALLBACK(buddySignedOff), NULL);
@@ -1991,32 +1362,108 @@ bool GlooxMessageHandler::initPurple(){
 	return ret;
 }
 
-
-bool GlooxMessageHandler::handleIq (const IQ &iq) {
-	Tag *tag = iq.tag();
-	if (!tag)
-		return true;
-	User *user = (User *) GlooxMessageHandler::instance()->userManager()->getUserByJID(iq.from().bare());
-	if (user) {
-		user->handleRosterResponse(tag);
-	}
-	delete tag;
-	return true;
-}
-
-void GlooxMessageHandler::handleIqID (const IQ &iq, int context) {
-	
-}
-
-
 GlooxMessageHandler* GlooxMessageHandler::m_pInstance = NULL;
 
+static void start_transport(const std::string &config) {
+	Configuration c = loadConfigFile(config);
+	if (!c)
+		return;
+
+	g_thread_init(NULL);
+
+	if (!list_purple_settings) {
+		if (!nodaemon)
+			daemonize(c.userDir.c_str());
+
+#ifndef WIN32
+		if (!nodaemon) {
+			int logfd = open("/dev/null", O_WRONLY | O_CREAT, 0644);
+			if (logfd <= 0) {
+				std::cout << "Can't open log file\n";
+				exit(1);
+			}
+			if (dup2(logfd, STDERR_FILENO) < 0) {
+				std::cout << "Can't redirect stderr\n";
+				exit(1);
+			}
+			if (dup2(logfd, STDOUT_FILENO) < 0) {
+				std::cout << "Can't redirect stdout\n";
+				exit(1);
+			}
+			close(logfd);
+		}
+#endif
+	}
+
+	if (list_purple_settings) {
+		c.logAreas = 0;
+	}
+	
+	if (!initPurple(c))
+		return;
+
+	AbstractProtocol *protocol = loadProtocol(c);
+	if (!protocol)
+		return;
+
+
+	Transport *transport = new Transport(c, protocol);
+
+
+	AbstractBackend *sql = NULL;
+	if (check_db_version) {
+		sql = new SQLClass(upgrade_db, true);
+		if (!sql->loaded())
+			exit(3);
+	}
+	if (upgrade_db) {
+		sql = new SQLClass(upgrade_db);
+		if (!sql->loaded()) {
+			delete sql;
+			return;
+		}
+	}
+
+	GMainLoop *loop = NULL;
+	if (CONFIG().eventloop == "glib") {
+		loop = g_main_loop_new(NULL, FALSE);
+	}
+#ifdef WITH_LIBEVENT
+	else {
+		struct event_base *base = (struct event_base *) event_init();
+	}
+#endif
+
+
+	if (list_purple_settings) {
+		listPurpleSettings();
+		return;
+	}
+
+	sql = new SQLClass(upgrade_db);
+	if (!sql->loaded()) {
+		return;
+	}
+
+	transport->setSQLBackend(sql);
+	transport->transportConnect();
+	
+	if (loop) {
+		g_main_loop_run(loop);
+	}
+#ifdef WITH_LIBEVENT
+	else {
+		event_loop(0);
+	}
+#endif
+}
+
 static void spectrum_sigint_handler(int sig) {
-	delete GlooxMessageHandler::instance();
+	delete Transport::instance();
 }
 
 static void spectrum_sigterm_handler(int sig) {
-	delete GlooxMessageHandler::instance();
+	delete Transport::instance();
 }
 
 #ifndef WIN32
@@ -2036,7 +1483,9 @@ static void spectrum_sigchld_handler(int sig)
 	}
 }
 static void spectrum_sighup_handler(int sig) {
-	GlooxMessageHandler::instance()->loadConfigFile();
+	Configuration c = loadConfigFile(CONFIG().file);
+	if (c)
+		Transport::instance()->setConfiguration(c);
 }
 #endif
 
@@ -2102,8 +1551,9 @@ int main( int argc, char* argv[] ) {
 		}
 #endif
 		std::string config(argv[1]);
-		new GlooxMessageHandler(config);
+		start_transport(config);
 	}
 	g_option_context_free(context);
+	return 0;
 }
 

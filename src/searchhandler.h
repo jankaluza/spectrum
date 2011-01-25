@@ -72,7 +72,7 @@ class GlooxSearchHandler : public IqHandler
 {
 
 public:
-	GlooxSearchHandler(GlooxMessageHandler *parent);
+	GlooxSearchHandler();
 	~GlooxSearchHandler();
 	bool handleIq (const IQ &iq);
 	void handleIqID (const IQ &iq, int context);
@@ -84,7 +84,6 @@ public:
 
 private:
 	std::map<std::string, SearchRepeater *> m_sessions;
-	GlooxMessageHandler *p;
 };
 
 #endif

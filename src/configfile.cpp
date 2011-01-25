@@ -310,6 +310,7 @@ void ConfigFile::loadPurpleAccountSettings(Configuration &configuration) {
 
 Configuration ConfigFile::getConfiguration() {
 	Configuration configuration;
+	configuration.file = m_filename;
 	char **bind;
 	int i;
 	

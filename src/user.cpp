@@ -597,7 +597,7 @@ void User::forwardStatus(int presence, const std::string &stanzaStatus) {
 		}
 
 		SpectrumRosterManager::sendPresence(Transport::instance()->jid(), m_jid,
-											(Presence::PresenceType) presence, statusMessage);
+											(Presence::PresenceType) presence, stanzaStatus);
 	}
 }
 
@@ -731,6 +731,16 @@ User::~User(){
 // 			purple_account_set_enabled(act, PURPLE_UI, FALSE);
 // 		}
 // 	}
+}
+
+void User::signedOnCallback(PurpleConnection *gc, gpointer unused) {
+	PurpleAccount *account = purple_connection_get_account(gc);
+	User *user = (User *) Transport::instance()->userManager()->getUserByAccount(account);
+	if (user != NULL) {
+		Log(user->jid(), "Logged in to legacy network");
+// 		purple_timeout_add_seconds(30, &getVCard, g_strdup(user->jid().c_str()));
+		user->connected();
+	}
 }
 
 

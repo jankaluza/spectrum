@@ -90,7 +90,7 @@ Disco::ItemList GlooxAdhocHandler::handleDiscoNodeItems( const JID &_from, const
 		for (std::map<std::string, adhocCommand>::iterator u = m_handlers.begin(); u != m_handlers.end() ; u++) {
 			Log("GlooxAdhocHandler", "sending item " << (*u).first << " " << (*u).second.name);
 			// Skip commands which are only for admin when user is not admin
-			if ((*u).second.admin && !Transport::isAdmin(from))
+			if ((*u).second.admin && !Transport::instance()->isAdmin(from))
 				break;
 			lst.push_back( new Disco::Item(Transport::instance()->jid(), (*u).first, tr(language, (*u).second.name)) );
 		}

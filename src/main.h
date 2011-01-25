@@ -121,7 +121,7 @@ typedef enum {	ExtGateway = 1024,
  * Main transport class. It inits libpurple and Gloox, runs event loop and handles almost all signals.
  * This class is created only once and can be reached by static GlooxMessageHandler::instance() function.
  */
-class GlooxMessageHandler : public MessageHandler, ConnectionListener, PresenceHandler, SubscriptionHandler, LogHandler, public EventHandler, public VCardHandler, public IqHandler {
+class GlooxMessageHandler  {
 public:
 	GlooxMessageHandler(const std::string &config);
 	~GlooxMessageHandler();
@@ -165,22 +165,22 @@ public:
 	/*
 	 * Gloox callbacks
 	 */
-	void onConnect();
-	void onDisconnect(ConnectionError e);
-	void onSessionCreateError(const Error *error);
-	bool onTLSConnect(const CertInfo & info);
+// 	void onConnect();
+// 	void onDisconnect(ConnectionError e);
+// 	void onSessionCreateError(const Error *error);
+// 	bool onTLSConnect(const CertInfo & info);
 	
-	void handleMessage (const Message &msg, MessageSession *session = 0);
-	void handlePresence(const Presence &presence);
-	void handleSubscription(const Subscription &stanza);
-	void handleLog(LogLevel level, LogArea area, const std::string &message);
-	void handleEvent (const Event &event) {}
-	void handleVCard(const JID& jid, const VCard* vcard);
-	void handleVCardResult(VCardContext context, const JID& jid, StanzaError se);
-	void fetchVCard(const std::string &jid) { m_vcardManager->fetchVCard(jid, this); }
+// 	void handleMessage (const Message &msg, MessageSession *session = 0);
+// 	void handlePresence(const Presence &presence);
+// 	void handleSubscription(const Subscription &stanza);
+// 	void handleLog(LogLevel level, LogArea area, const std::string &message);
+// 	void handleEvent (const Event &event) {}
+// 	void handleVCard(const JID& jid, const VCard* vcard);
+// 	void handleVCardResult(VCardContext context, const JID& jid, StanzaError se);
+// 	void fetchVCard(const std::string &jid) { m_vcardManager->fetchVCard(jid, this); }
 
-	bool handleIq (const IQ &iq);
-	void handleIqID (const IQ &iq, int context);
+// 	bool handleIq (const IQ &iq);
+// 	void handleIqID (const IQ &iq, int context);
 
 	UserManager *userManager() { return m_userManager; }
 	GlooxStatsHandler *stats() { return m_stats; }
@@ -199,7 +199,6 @@ public:
 	GlooxGatewayHandler *gatewayHandler;
 	SOCKS5BytestreamServer* ftServer;
 	GMainLoop *loop() { return m_loop; }
-	bool loadConfigFile(const std::string &config = "");
 
 private:
 	/*

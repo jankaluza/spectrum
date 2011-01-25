@@ -60,8 +60,7 @@ Tag* StatsExtension::tag() const
 	return m_tag->clone();
 }
 
-GlooxStatsHandler::GlooxStatsHandler(GlooxMessageHandler *parent) : IqHandler(){
-	p=parent;
+GlooxStatsHandler::GlooxStatsHandler() : IqHandler(){
 	m_messagesIn = m_messagesOut = 0;
 	m_startTime = time(NULL);
 	Transport::instance()->registerStanzaExtension( new StatsExtension() );
@@ -99,7 +98,7 @@ Tag* GlooxStatsHandler::handleTag (Tag *stanzaTag){
 		std::cout << "* sending stats keys\n";
 		IQ _s(IQ::Result, stanzaTag->findAttribute("from"), stanzaTag->findAttribute("id"));
 		std::string from;
-		from.append(p->jid());
+		from.append(Transport::instance()->jid());
 		_s.setFrom(from);
 
 		s = _s.tag();
@@ -148,7 +147,7 @@ Tag* GlooxStatsHandler::handleTag (Tag *stanzaTag){
 		std::cout << "* sending stats values\n";
 		IQ _s(IQ::Result, stanzaTag->findAttribute("from"), stanzaTag->findAttribute("id"));
 		std::string from;
-		from.append(p->jid());
+		from.append(Transport::instance()->jid());
 		_s.setFrom(from);
 
 		s = _s.tag();
@@ -156,15 +155,15 @@ Tag* GlooxStatsHandler::handleTag (Tag *stanzaTag){
 		query->setXmlns("http://jabber.org/protocol/stats");
 
 		Tag *t;
-		long registered = p->sql()->getRegisteredUsersCount();
-		long registeredUsers = p->sql()->getRegisteredUsersRosterCount();
+		long registered = Transport::instance()->sql()->getRegisteredUsersCount();
+		long registeredUsers = Transport::instance()->sql()->getRegisteredUsersRosterCount();
 
 		std::stringstream out;
 		out << registered;
 
 		time_t seconds = time(NULL);
 
-		long users = p->userManager()->onlineBuddiesCount();
+		long users = Transport::instance()->userManager()->onlineBuddiesCount();
 
 		for (std::list<Tag*>::iterator i = stats.begin(); i != stats.end(); i++) {
 			std::string name = (*i)->findAttribute("name");
@@ -184,7 +183,7 @@ Tag* GlooxStatsHandler::handleTag (Tag *stanzaTag){
 				t = new Tag("stat");
 				t->addAttribute("name","users/online");
 				t->addAttribute("units","users");
-				t->addAttribute("value",p->userManager()->userCount());
+				t->addAttribute("value",Transport::instance()->userManager()->userCount());
 				query->addChild(t);
 			} else if (name == "contacts/total") {
 				t = new Tag("stat");

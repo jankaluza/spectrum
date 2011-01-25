@@ -130,7 +130,7 @@ class SpectrumSQLStatement {
  */
 class SQLClass : public AbstractBackend {
 	public:
-		SQLClass(GlooxMessageHandler *parent, bool upgrade = false, bool check = false);
+		SQLClass(bool upgrade = false, bool check = false);
 		~SQLClass();
 
 		void addUser(const UserRow &user);

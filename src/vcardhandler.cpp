@@ -86,8 +86,7 @@ static void base64encode(const unsigned char * input, int len, std::string & out
     }
 }
 
-GlooxVCardHandler::GlooxVCardHandler(GlooxMessageHandler *parent) : IqHandler(){
-	p=parent;
+GlooxVCardHandler::GlooxVCardHandler() : IqHandler(){
 	Transport::instance()->registerStanzaExtension( new VCard() );
 }
 
@@ -115,7 +114,7 @@ bool GlooxVCardHandler::handleIq (const IQ &stanza){
 		return true;
 	}
 
-	User *user = (User *) p->userManager()->getUserByJID(stanza.from().bare());
+	User *user = (User *) Transport::instance()->userManager()->getUserByJID(stanza.from().bare());
 	if (user==NULL)
 		return false;
 	if (!user->isConnected()){
@@ -145,7 +144,7 @@ bool GlooxVCardHandler::hasVCardRequest(const std::string &name){
 
 void GlooxVCardHandler::userInfoArrived(PurpleConnection *gc, const std::string &who, PurpleNotifyUserInfo *user_info){
 	GList *vcardEntries = purple_notify_user_info_get_entries(user_info);
-	User *user = (User *) p->userManager()->getUserByAccount(purple_connection_get_account(gc));
+	User *user = (User *) Transport::instance()->userManager()->getUserByAccount(purple_connection_get_account(gc));
 
 	if (user!=NULL){
 		if (!user->isConnected())
@@ -161,7 +160,7 @@ void GlooxVCardHandler::userInfoArrived(PurpleConnection *gc, const std::string 
 		reply->addAttribute( "type", "result" );
 		reply->addAttribute( "to", vcardRequests[who].back() );
 
-		Tag *vcard = p->protocol()->getVCardTag(user, vcardEntries);
+		Tag *vcard = Transport::instance()->protocol()->getVCardTag(user, vcardEntries);
 		if (!vcard) {
 			vcard = new Tag( "vCard" );
 			vcard->addAttribute( "xmlns", "vcard-temp" );
@@ -179,10 +178,10 @@ void GlooxVCardHandler::userInfoArrived(PurpleConnection *gc, const std::string 
 			if (s_buddy)
 				reply->addAttribute( "from", s_buddy->getBareJid() );
 			else
-				reply->addAttribute( "from", JID::escapeNode(who) + "@" + p->jid() );
+				reply->addAttribute( "from", JID::escapeNode(who) + "@" + Transport::instance()->jid() );
 		}
 		else {
-			reply->addAttribute( "from", JID::escapeNode(who) + "@" + p->jid() );
+			reply->addAttribute( "from", JID::escapeNode(who) + "@" + Transport::instance()->jid() );
 		}
 
 		if (user->getSetting<bool>("enable_avatars") && user->hasTransportFeature(TRANSPORT_FEATURE_AVATARS)) {

@@ -66,13 +66,12 @@ class GlooxVCardHandler : public IqHandler
 {
 
 public:
-	GlooxVCardHandler(GlooxMessageHandler *parent);
+	GlooxVCardHandler();
 	~GlooxVCardHandler();
 	bool handleIq (const IQ &iq);
 	void handleIqID (const IQ &iq, int context);
 	bool hasVCardRequest (const std::string &name);
 	void userInfoArrived(PurpleConnection *gc, const std::string &who, PurpleNotifyUserInfo *user_info);
-	GlooxMessageHandler *p;
 	std::map<std::string,std::list<std::string> > vcardRequests;
 };
 

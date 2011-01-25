@@ -190,6 +190,7 @@ class SpectrumRosterManager : public RosterStorage, public IqHandler {
 		static void sendPresence(const std::string &from, const std::string &to, const std::string &type, const std::string &message = "");
 		static void sendPresence(const std::string &from, const std::string &to, const Presence::PresenceType &type, const std::string &message = "");
 		static void sendSubscribePresence(const std::string &from, const std::string &to, const std::string &nick = "");
+		static void sendErrorPresence(const std::string &from, const std::string &to, const std::string &error);
 
 		// Asks for user's roster using jabber:iq:roster (for remote-roster protoXEP)
 		static void sendRosterGet(const std::string &to);

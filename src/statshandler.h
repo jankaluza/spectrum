@@ -75,13 +75,12 @@ private:
 class GlooxStatsHandler : public IqHandler, public AbstractConfigInterfaceHandler
 {
 	public:
-		GlooxStatsHandler(GlooxMessageHandler *parent);
+		GlooxStatsHandler();
 		~GlooxStatsHandler();
 		bool handleCondition(Tag *stanzaTag);
 		Tag *handleTag(Tag *stanzaTag);
 		bool handleIq (const IQ &iq);
 		void handleIqID (const IQ &iq, int context);
-		GlooxMessageHandler *p;
 
 		void messageFromLegacy() { m_messagesOut++; }
 		void messageFromJabber() { m_messagesIn++; }

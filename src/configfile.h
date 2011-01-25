@@ -39,6 +39,7 @@ struct PurpleAccountSettingValue {
 
 // Structure used for storing transport configuration.
 struct Configuration {
+	std::string file;
 	std::string discoName;			// Name for service discovery.
 	std::string protocol;			// Libpurple protocol.
 	std::string server;				// XMPP server address.
