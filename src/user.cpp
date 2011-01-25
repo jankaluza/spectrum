@@ -597,7 +597,7 @@ void User::forwardStatus(int presence, const std::string &stanzaStatus) {
 		}
 
 		SpectrumRosterManager::sendPresence(Transport::instance()->jid(), m_jid,
-											(Presence::PresenceType) presence, statusMessage);
+											(Presence::PresenceType) presence, stanzaStatus);
 	}
 }
 
