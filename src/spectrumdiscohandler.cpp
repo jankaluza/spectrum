@@ -31,7 +31,7 @@
 #include <sstream>
 #include <fstream>
 
-SpectrumDiscoHandler::SpectrumDiscoHandler(GlooxMessageHandler *parent) : IqHandler() {
+SpectrumDiscoHandler::SpectrumDiscoHandler(Disco *parent) : IqHandler() {
 	m_parent = parent;
 }
 
@@ -60,7 +60,7 @@ bool SpectrumDiscoHandler::handleIq (const IQ &stanza) {
 			return true;
 		}
 		else {
-			return m_parent->j->disco()->handleIq(stanza);
+			return m_parent->handleIq(stanza);
 		}
 	}
 	else {
@@ -108,7 +108,7 @@ bool SpectrumDiscoHandler::handleIq (const IQ &stanza) {
 }
 
 void SpectrumDiscoHandler::handleIqID (const IQ &iq, int context) {
-	m_parent->j->disco()->handleIqID(iq, context);
+	m_parent->handleIqID(iq, context);
 }
 
 void SpectrumDiscoHandler::registerNodeHandler(DiscoNodeHandler* nh, const std::string& node) {

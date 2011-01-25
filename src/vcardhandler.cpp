@@ -88,7 +88,7 @@ static void base64encode(const unsigned char * input, int len, std::string & out
 
 GlooxVCardHandler::GlooxVCardHandler(GlooxMessageHandler *parent) : IqHandler(){
 	p=parent;
-	p->j->registerStanzaExtension( new VCard() );
+	Transport::instance()->registerStanzaExtension( new VCard() );
 }
 
 GlooxVCardHandler::~GlooxVCardHandler(){

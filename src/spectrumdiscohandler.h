@@ -26,9 +26,8 @@
 #include <gloox/stanzaextension.h>
 #include <gloox/iqhandler.h>
 #include <gloox/disconodehandler.h>
+#include <gloox/disco.h>
 #include "abstractconfiginterfacehandler.h"
-
-class GlooxMessageHandler;
 
 using namespace gloox;
 
@@ -36,7 +35,7 @@ using namespace gloox;
 class SpectrumDiscoHandler : public IqHandler
 {
 	public:
-		SpectrumDiscoHandler(GlooxMessageHandler *parent);
+		SpectrumDiscoHandler(Disco *parent);
 		~SpectrumDiscoHandler();
 		bool handleIq (const IQ &iq);
 		void handleIqID (const IQ &iq, int context);
@@ -51,7 +50,7 @@ class SpectrumDiscoHandler : public IqHandler
 	private:
 		Tag *generateDiscoInfoResponse(const IQ &stanza, const Disco::IdentityList &identities, const StringList &features);
 		
-		GlooxMessageHandler *m_parent;
+		Disco *m_parent;
 		std::map<std::string, std::list<DiscoNodeHandler*> > m_nodeHandlers;
 		Disco::IdentityList m_identities;
 		StringList m_features;

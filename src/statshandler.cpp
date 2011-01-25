@@ -64,7 +64,7 @@ GlooxStatsHandler::GlooxStatsHandler(GlooxMessageHandler *parent) : IqHandler(){
 	p=parent;
 	m_messagesIn = m_messagesOut = 0;
 	m_startTime = time(NULL);
-	p->j->registerStanzaExtension( new StatsExtension() );
+	Transport::instance()->registerStanzaExtension( new StatsExtension() );
 }
 
 GlooxStatsHandler::~GlooxStatsHandler(){

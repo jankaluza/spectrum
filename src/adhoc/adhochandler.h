@@ -28,6 +28,7 @@
 #include "gloox/disconodehandler.h"
 #include "gloox/iqhandler.h"
 #include "gloox/discohandler.h"
+#include "gloox/disco.h"
 
 using namespace gloox;
 
@@ -49,7 +50,7 @@ struct adhocCommand {
 class GlooxAdhocHandler : public DiscoNodeHandler, public DiscoHandler, public IqHandler
 {
 	public:
-		GlooxAdhocHandler();
+		GlooxAdhocHandler(Disco *disco);
 		~GlooxAdhocHandler();
 		static GlooxAdhocHandler *instance() { return m_pInstance; }
 		StringList handleDiscoNodeFeatures (const JID &from, const std::string &node);
@@ -74,6 +75,7 @@ class GlooxAdhocHandler : public DiscoNodeHandler, public DiscoHandler, public I
 		std::map<std::string, adhocCommand> m_handlers;				// handlers (m_handlers[node] = handler)
 		static GlooxAdhocHandler *m_pInstance;
 		std::map <std::string, int> m_nodes;
+		Disco *m_disco;
 
 };
 

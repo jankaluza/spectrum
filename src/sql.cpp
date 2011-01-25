@@ -486,7 +486,7 @@ bool SQLClass::reconnect() {
 			Log("SQL ERROR", "Removing All connected users.");
 			Transport::instance()->userManager()->removeAllUsers();
 			Log("SQL ERROR", "Disconnecting from Jabber");
-			p->j->disconnect();
+			Transport::instance()->disconnect();
 			m_reconnectTimer->start();
 		}
 		return false;

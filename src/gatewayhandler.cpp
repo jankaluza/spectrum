@@ -56,7 +56,7 @@ Tag* GatewayExtension::tag() const
 
 GlooxGatewayHandler::GlooxGatewayHandler(GlooxMessageHandler *parent) : IqHandler(){
 	p=parent;
-	p->j->registerStanzaExtension( new GatewayExtension() );
+	Transport::instance()->registerStanzaExtension( new GatewayExtension() );
 }
 
 GlooxGatewayHandler::~GlooxGatewayHandler(){

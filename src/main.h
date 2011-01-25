@@ -196,8 +196,6 @@ public:
 
 	// TODO: Make me private!
 	FileTransferManager* ftManager;
-	SIProfileFT* ft;
-	Component *j;
 	GlooxGatewayHandler *gatewayHandler;
 	SOCKS5BytestreamServer* ftServer;
 	GMainLoop *loop() { return m_loop; }

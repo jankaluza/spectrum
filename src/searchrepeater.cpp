@@ -104,7 +104,7 @@ SearchRepeater::SearchRepeater(GlooxMessageHandler *m, User *user, const std::st
 
 	Tag *c = new Tag("command");
 	c->addAttribute("xmlns","http://jabber.org/protocol/commands");
-	c->addAttribute("sessionid",main->j->getID());
+	c->addAttribute("sessionid",Transport::instance()->getId());
 	c->addAttribute("node",data.node);
 	c->addAttribute("status","executing");
 

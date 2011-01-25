@@ -25,6 +25,7 @@
 #include "protocols/abstractprotocol.h"
 #include "log.h"
 #include "searchrepeater.h"
+#include "transport.h"
 
 SearchExtension::SearchExtension() : StanzaExtension( ExtSearch )
 {
@@ -55,7 +56,7 @@ Tag* SearchExtension::tag() const
 
 GlooxSearchHandler::GlooxSearchHandler(GlooxMessageHandler *parent) : IqHandler() {
 	p=parent;
-	p->j->registerStanzaExtension( new SearchExtension() );
+	Transport::instance()->registerStanzaExtension( new SearchExtension() );
 }
 
 GlooxSearchHandler::~GlooxSearchHandler() {

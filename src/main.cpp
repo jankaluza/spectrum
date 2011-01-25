@@ -884,18 +884,6 @@ static gboolean transportReconnect(gpointer data) {
 	return FALSE;
 }
 
-static gboolean sendPing(gpointer data) {
-	GlooxMessageHandler::instance()->j->xmppPing(GlooxMessageHandler::instance()->jid(), GlooxMessageHandler::instance());
-	return TRUE;
-}
-
-/*
- * Called by notifier when new data can be received from socket
- */
-static void transportDataReceived(gpointer data, gint source, PurpleInputCondition cond) {
-	GlooxMessageHandler::instance()->j->recv(1000);
-}
-
 static void listPurpleSettings() {
 	std::cout << "You can use those variables in [purple] section in Spectrum config file.\n";
 	PurplePlugin *plugin = purple_find_prpl(Transport::instance()->protocol()->protocol().c_str());
@@ -943,7 +931,6 @@ GlooxMessageHandler::GlooxMessageHandler(const std::string &config) : MessageHan
 	m_config = config;
 	m_firstConnection = true;
 	ftManager = NULL;
-	ft = NULL;
 	m_parser = NULL;
 	m_sql = NULL;
 	m_collector = NULL;
@@ -1001,12 +988,10 @@ GlooxMessageHandler::GlooxMessageHandler(const std::string &config) : MessageHan
 #endif
 	}
 
-	m_transport = new Transport(m_configuration.jid);
+	m_transport = new Transport(m_configuration.jid, m_configuration.server, m_configuration.password, m_configuration.port);
 
-	j = new HiComponent("jabber:component:accept", m_configuration.server, m_configuration.jid, m_configuration.password, m_configuration.port);
+// 	j = new HiComponent("jabber:component:accept", m_configuration.server, m_configuration.jid, m_configuration.password, m_configuration.port);
 
-	if (m_configuration.logAreas & LOG_AREA_PURPLE)
-		j->logInstance().registerLogHandler(LogLevelDebug, LogAreaXmlIncoming | LogAreaXmlOutgoing, &Log_);
 	m_loop = NULL;
 	if (CONFIG().eventloop == "glib") {
 		m_loop = g_main_loop_new(NULL, FALSE);
@@ -1019,7 +1004,6 @@ GlooxMessageHandler::GlooxMessageHandler(const std::string &config) : MessageHan
 #endif
 
 	m_userManager = new UserManager();
-	m_adhoc = new GlooxAdhocHandler();
 	m_searchHandler = NULL;
 
 	if (list_purple_settings)
@@ -1043,41 +1027,11 @@ GlooxMessageHandler::GlooxMessageHandler(const std::string &config) : MessageHan
 	}
 
 	if (loaded) {
-#ifndef WIN32
-		if (!m_configuration.config_interface.empty())
-			m_configInterface = new ConfigInterface(m_configuration.config_interface, j->logInstance());
-#endif
 		m_capabilityHandler = new CapabilityHandler();
 		m_spectrumNodeHandler = new SpectrumNodeHandler();
 
-		j->registerIqHandler(m_adhoc, ExtAdhocCommand);
-		j->registerStanzaExtension( new Adhoc::Command() );
-		j->registerStanzaExtension( new MUCRoom::MUC() );
-		j->registerStanzaExtension(new ChatState(ChatStateInvalid));
-		j->registerStanzaExtension( new RosterExtension() );
-		j->disco()->addFeature( XMLNS_ADHOC_COMMANDS );
-		j->disco()->registerNodeHandler( m_adhoc, XMLNS_ADHOC_COMMANDS );
-		j->disco()->registerNodeHandler( m_adhoc, std::string() );
-		j->removeIqHandler( j->disco(), ExtDiscoInfo );
-		j->removeIqHandler( j->disco(), ExtDiscoItems );
-		m_discoHandler = new SpectrumDiscoHandler(this);
-		j->registerIqHandler(m_discoHandler, ExtDiscoInfo);
-		j->registerIqHandler(m_discoHandler, ExtDiscoItems);
-		j->registerIqHandler(this, 1055);
-
 		m_parser = new GlooxParser();
 		m_collector = new AccountCollector();
-
-		ftManager = new FileTransferManager();
-		ft = new SIProfileFT(j, ftManager);
-		ftManager->setSIProfileFT(ft);
-		ftServer = new SOCKS5BytestreamServer(j->logInstance(), m_configuration.filetransfer_proxy_port, m_configuration.filetransfer_proxy_ip);
-		if( ftServer->listen() != ConnNoError ) {}
-		ft->addStreamHost( j->jid(), m_configuration.filetransfer_proxy_streamhost_ip, m_configuration.filetransfer_proxy_streamhost_port);
-		ft->registerSOCKS5BytestreamServer( ftServer );
-		if (m_configuration.transportFeatures & TRANSPORT_FEATURE_FILETRANSFER) {
-			purple_timeout_add(500, &ftServerReceive, NULL);
-		}
 
 		j->registerMessageHandler(this);
 		j->registerConnectionListener(this);
@@ -1791,7 +1745,7 @@ void GlooxMessageHandler::onConnect() {
 		if (m_configuration.protocol != "irc")
 			new AutoConnectLoop();
 		m_firstConnection = false;
-		purple_timeout_add_seconds(60, &sendPing, this);
+// 		purple_timeout_add_seconds(60, &sendPing, this);
 	}
 }
 

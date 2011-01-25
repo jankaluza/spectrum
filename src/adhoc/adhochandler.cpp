@@ -48,8 +48,9 @@ static AdhocCommandHandler * createAdminHandler(User *user, const std::string &f
 	return handler;
 }
 
-GlooxAdhocHandler::GlooxAdhocHandler() {
+GlooxAdhocHandler::GlooxAdhocHandler(Disco *disco) {
 	m_pInstance = this;
+	m_disco = disco;
 
 	m_handlers["transport_settings"].name = _("Transport settings");
 	m_handlers["transport_settings"].admin = false;
@@ -116,7 +117,7 @@ Disco::ItemList GlooxAdhocHandler::handleDiscoNodeItems( const JID &_from, const
 
 						if (m_nodes.find("transport_" + (std::string) action->label) == m_nodes.end()) {
 							m_nodes["transport_" + (std::string) action->label] = 1;
-							GlooxMessageHandler::instance()->j->disco()->registerNodeHandler(this, "transport_" + (std::string) action->label);
+							m_disco->registerNodeHandler(this, "transport_" + (std::string) action->label);
 						}
 						purple_plugin_action_free(action);
 					}
@@ -147,7 +148,7 @@ Disco::ItemList GlooxAdhocHandler::handleDiscoNodeItems( const JID &_from, const
 					lst.push_back( new Disco::Item( _to.bare(), "transport_" + (std::string) action->label, (std::string) tr(user->getLang(), action->label) ) );
 					if (m_nodes.find("transport_" + (std::string) action->label) == m_nodes.end()) {
 						m_nodes["transport_" + (std::string) action->label] = 1;
-						GlooxMessageHandler::instance()->j->disco()->registerNodeHandler(this, "transport_" + (std::string) action->label);
+						m_disco->registerNodeHandler(this, "transport_" + (std::string) action->label);
 					}
 					purple_menu_action_free(action);
 				}
@@ -313,7 +314,7 @@ void GlooxAdhocHandler::handleDiscoError(const JID &jid, const Error *error, int
 
 void GlooxAdhocHandler::registerAdhocCommandHandler(const std::string &name, const adhocCommand command) {
 	m_handlers[name] = command;
-	GlooxMessageHandler::instance()->j->disco()->registerNodeHandler(this, name);
+	m_disco->registerNodeHandler(this, name);
 }
 
 void GlooxAdhocHandler::unregisterSession(const std::string &jid) {
