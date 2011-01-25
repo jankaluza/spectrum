@@ -597,7 +597,7 @@ void User::forwardStatus(int presence, const std::string &stanzaStatus) {
 		}
 
 		SpectrumRosterManager::sendPresence(Transport::instance()->jid(), m_jid,
-											(Presence::PresenceType) presence, markup);
+											(Presence::PresenceType) presence, statusMessage);
 	}
 }
 
@@ -697,8 +697,6 @@ User::~User(){
 	// 	purple_timeout_remove(this->save_timer);
 
 	if (m_account) {
-		purple_account_set_enabled(m_account, PURPLE_UI, FALSE);
-
 		GList *iter;
 		// Remove filetransfers
 		for (iter = purple_xfers_get_all(); iter; ) {
@@ -721,6 +719,7 @@ User::~User(){
 				purple_conversation_destroy(conv);
 		}
 
+		purple_account_set_enabled(m_account, PURPLE_UI, FALSE);
 		m_account->ui_data = NULL;
 		Transport::instance()->collector()->collect(m_account);
 	}
