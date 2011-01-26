@@ -115,6 +115,20 @@ Do not start spectrum as daemon.
 .RS 4
 Start spectrum in debug mode. Currently this just sets the maximum size of the
 core files to unlimited.
+
+.RE
+.RE
+Options for action "\\fBcron\\fR":
+.sp
+.RS 4
+\\fB\-\-output\-dir\\fR=\\fIDIR\\fR
+.RS 4
+Output files to directory \\fIDIR\\fR (default: \\fI/root\\fR).
+.sp
+.RE
+\\fB\-\-no\-backtraces\\fR
+.RS 4
+Do not create backtraces. 
 .RE
 .SH SHELL
 This tool also sports a fancy interactive shell that you can use to perform
