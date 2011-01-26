@@ -688,18 +688,21 @@ class spectrum:
 #			output_file.write( line )
 		f = open( log_file )
 		f.seek( 0, 2 ) # seek to end
-		bytes = f.tell() # get total size
-		size = window
+		total_size = f.tell() # get total size
+		size = 50
 		block= -1
-		while size > 0 and bytes+block*1024 > 0:
-			f.seek( block*1024, 2 )
+		while size > 0 and total_size + block * 1024 > 0:
+			f.seek( block * 1024, 2 )
 			data = f.read( 1024 )
 			linesFound = data.count('\n')
 			size -= linesFound
 			block -= 1
 
-		f.seek( block*1024, 2 )
-		f.readline()
+		if -block*1024 < total_size:
+			f.seek( block*1024, 2 )
+			f.readline() # find newline
+		else:
+			f.seek( 0 )
 		lastBlocks = f.readlines()[-50:]
 
 		# write lines to output file
