@@ -388,7 +388,12 @@ class spectrum_group:
 				continue
 			
 			os.remove( instance.pid_file )
-			print( "%s seems to have crashed:"%(instance.get_jid()) )
+
+			if options.no_backtraces:
+				print( "%s seems to have crashed."%(instance.get_jid()) )
+				continue
+			else:
+				print( "%s seems to have crashed:"%(instance.get_jid()) )
 
 			try:
 				loc = instance.coredump( output_dir )

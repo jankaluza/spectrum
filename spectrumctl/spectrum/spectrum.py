@@ -683,11 +683,29 @@ class spectrum:
 		if not os.path.exists( log_file ):
 			raise RuntimeError( "Error: %s: Logfile does not exist."%(log_file) )
 
+
+#		for line in open(log_file).readlines()[:50]:
+#			output_file.write( line )
+		f = open( log_file )
+		f.seek( 0, 2 ) # seek to end
+		bytes = f.tell() # get total size
+		size = window
+		block= -1
+		while size > 0 and bytes+block*1024 > 0:
+			f.seek( block*1024, 2 )
+			data = f.read( 1024 )
+			linesFound = data.count('\n')
+			size -= linesFound
+			block -= 1
+
+		f.seek( block*1024, 2 )
+		f.readline()
+		lastBlocks = f.readlines()[-50:]
+
+		# write lines to output file
 		output_path = self._get_output_file( output_dir, self.get_jid(), 'log' )
 		output_file = open( output_path, 'w' )
-
-		for line in open(log_file).readlines()[:50]:
-			output_file.write( line )
+		output_file.writelines( lastBlocks )
 
 		return os.path.normpath( output_path )
 

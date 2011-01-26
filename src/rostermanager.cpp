@@ -652,6 +652,7 @@ void SpectrumRosterManager::handleRosterResponse(Tag *iq) {
 			groups.push_back((*it)->cdata());
 		}
 		s_buddy->changeGroup(groups);
+		storeBuddy(s_buddy);
 	}
 	else if (iq->findAttribute("type") == "result") {
 		Tag *query = iq->findChild("query");

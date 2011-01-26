@@ -79,6 +79,7 @@ version 1.4.5 (2010-12-28):
 	  * Saves backtraces, logs and the current spectrum_version (see
 	    new --output-dir option)
 	  * Prints location of those files
+	  * Creation of backtraces can be surpressed with --no-backtraces.
 
 version 1.4.4 (2010-11-25):
 	General:
