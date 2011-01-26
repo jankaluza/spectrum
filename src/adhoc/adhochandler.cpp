@@ -58,6 +58,8 @@ GlooxAdhocHandler::GlooxAdhocHandler() {
 	m_handlers["transport_admin"].name = _("Transport administration");
 	m_handlers["transport_admin"].admin = true;
 	m_handlers["transport_admin"].createHandler = createAdminHandler;
+	GlooxMessageHandler::instance()->j->disco()->registerNodeHandler(this, "transport_settings");
+	GlooxMessageHandler::instance()->j->disco()->registerNodeHandler(this, "transport_admin");
 }
 
 GlooxAdhocHandler::~GlooxAdhocHandler() { }
