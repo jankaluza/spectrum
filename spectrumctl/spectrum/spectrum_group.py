@@ -389,7 +389,7 @@ class spectrum_group:
 			
 			os.remove( instance.pid_file )
 
-			if options.no_backtraces:
+			if self.options.no_backtraces:
 				print( "%s seems to have crashed."%(instance.get_jid()) )
 				continue
 			else:
