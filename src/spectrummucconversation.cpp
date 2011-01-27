@@ -133,6 +133,10 @@ void SpectrumMUCConversation::addUsers(User *user, GList *cbuddies) {
 			Tag *status = new Tag("status");
 			status->addAttribute("code", "110");
 			item->addChild(status);
+
+			status = new Tag("status");
+			status->addAttribute("code", "210");
+			item->addChild(status);
 		}
 
 		x->addChild(item);
