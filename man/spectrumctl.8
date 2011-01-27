@@ -86,6 +86,11 @@ Set the VIP status of the user \fBjid\fR. The \fIstatus\fR should be "0" to disa
 List all selected transports along with their pid, protocol and hostname. If invoked with \fI--quiet\fR, this action does not print a header line and only prints the status for transports that are not currently runnning.
 .RE
 .sp
+\fBcron\fR
+.RS 4
+Output transports that recently have crashed and create coredumps and log-files.
+.RE
+.sp
 \fBhelp\fR [\fIcmd\fR]
 .RS 4
 Give help about the command \fIcmd\fR. If \fIcmd\fR is omitted, print a list of available commands.
@@ -158,6 +163,20 @@ Do not start spectrum as daemon.
 .RS 4
 Start spectrum in debug mode. Currently this just sets the maximum size of the
 core files to unlimited.
+
+.RE
+.RE
+Options for action "\fBcron\fR":
+.sp
+.RS 4
+\fB\-\-output\-dir\fR=\fIDIR\fR
+.RS 4
+Output files to directory \fIDIR\fR (default: \fI/root\fR).
+.sp
+.RE
+\fB\-\-no\-backtraces\fR
+.RS 4
+Do not create backtraces. 
 .RE
 .SH SHELL
 This tool also sports a fancy interactive shell that you can use to perform
