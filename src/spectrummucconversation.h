@@ -28,6 +28,7 @@
 #include "gloox/tag.h"
 #include <algorithm>
 #include "abstractconversation.h"
+#include "abstractuser.h"
 
 using namespace gloox;
 class User;
@@ -35,7 +36,7 @@ class User;
 // Class representing MUC Conversation.
 class SpectrumMUCConversation : public AbstractConversation {
 	public:
-		SpectrumMUCConversation(PurpleConversation *conv, const std::string &jid, const std::string &resource);
+		SpectrumMUCConversation(PurpleConversation *conv, const std::string &jid, const RoomData &data);
 		virtual ~SpectrumMUCConversation();
 
 		// Handles message which should be resend to XMPP user.
@@ -68,6 +69,7 @@ class SpectrumMUCConversation : public AbstractConversation {
 		std::string m_topic;			// Current topic.
 		std::string m_topicUser;		// Name of user who set topic.
 		std::string m_res;			// Current XMPP user's resource.
+		std::string m_initialNickname;
 };
 
 #endif

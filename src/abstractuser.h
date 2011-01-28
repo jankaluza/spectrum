@@ -42,6 +42,14 @@ struct AdhocData {
 	AdhocDataCallerType callerType;
 };
 
+struct RoomData {
+	std::string resource;
+	std::string nickname;
+	operator bool() const {
+		return !resource.empty();
+	}
+};
+
 class AbstractUser : public ResourceManager
 {
 	public:
@@ -68,15 +76,15 @@ class AbstractUser : public ResourceManager
 		
 		void setProtocolData(void *protocolData) { m_protocolData = protocolData; }
 		void *protocolData() { return m_protocolData; }
-		std::string &getRoomResource(const std::string &room) { return m_roomResources[room]; }
-		void setRoomResource(const std::string &room, const std::string &resource) { m_roomResources[room] = resource; }
+		RoomData &getRoomData(const std::string &room) { return m_roomData[room]; }
+		void setRoomData(const std::string &room, const RoomData &data) { m_roomData[room] = data; }
 
 		guint removeTimer;
 
 	private:
 		void *m_protocolData;
 		AdhocData m_adhocData;
-		std::map<std::string, std::string> m_roomResources;
+		std::map<std::string, RoomData> m_roomData;
 		GHashTable *m_filetransfers;
 		
 };

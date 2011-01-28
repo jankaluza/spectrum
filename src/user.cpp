@@ -337,11 +337,14 @@ void User::connected() {
 		}
 		std::cout << name << " JOINING\n";
 		if (comps) {
-			setRoomResource(name, JID(stanza->findAttribute("from")).resource());
+			RoomData d;
+			d.resource = JID(stanza->findAttribute("from")).resource();
+			d.nickname = name;
+			setRoomData(name, d);
 			// for XMPP we have to store bare jid there...
 			std::string bare = JID(name).bare();
 			if (!bare.empty())
-				setRoomResource(bare, JID(stanza->findAttribute("from")).resource());
+				setRoomData(bare, d);
 			serv_join_chat(gc, comps);
 			g_hash_table_destroy(comps);
 		}
@@ -407,10 +410,14 @@ void User::receivedPresence(const Presence &stanza) {
 				}
 				if (comps) {
 					std::cout << name << " JOINING\n";
-					setRoomResource(name, stanza.from().resource());
+					RoomData d;
+					d.resource = stanza.from().resource();
+					d.nickname = name;
+					setRoomData(name, d);
+					// for XMPP we have to store bare jid there...
 					std::string bare = JID(name).bare();
 					if (!bare.empty())
-						setRoomResource(bare, stanza.from().resource());
+						setRoomData(bare, d);
 					serv_join_chat(gc, comps);
 				}
 			}

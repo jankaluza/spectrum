@@ -24,9 +24,9 @@
 #include "usermanager.h"
 #include "user.h"
 
-SpectrumMUCConversation::SpectrumMUCConversation(PurpleConversation *conv, const std::string &jid, const std::string &resource) : AbstractConversation(SPECTRUM_CONV_GROUPCHAT) {
+SpectrumMUCConversation::SpectrumMUCConversation(PurpleConversation *conv, const std::string &jid, const RoomData &data) : AbstractConversation(SPECTRUM_CONV_GROUPCHAT) {
 	m_jid = jid;
-	m_res = "/" + resource;
+	m_res = "/" + data.resource;
 	m_conv = conv;
 	m_connected = false;
 	m_lastPresence = NULL;
@@ -35,9 +35,12 @@ SpectrumMUCConversation::SpectrumMUCConversation(PurpleConversation *conv, const
 	PurpleConvChat *chat = purple_conversation_get_chat_data(m_conv);
 	m_nickname = purple_conv_chat_get_nick(chat);
 #endif
+	m_initialNickname = data.nickname;
+		
 }
 
 SpectrumMUCConversation::~SpectrumMUCConversation() {
+	delete m_lastPresence;
 }
 
 void SpectrumMUCConversation::handleMessage(User *user, const char *who, const char *msg, PurpleMessageFlags flags, time_t mtime, const std::string &currentBody) {
@@ -133,16 +136,30 @@ void SpectrumMUCConversation::addUsers(User *user, GList *cbuddies) {
 			Tag *status = new Tag("status");
 			status->addAttribute("code", "110");
 			item->addChild(status);
-
-			status = new Tag("status");
-			status->addAttribute("code", "210");
-			item->addChild(status);
 		}
 
 		x->addChild(item);
 		tag->addChild(x);
 
 		if (name == m_nickname) {
+			// if m_nickname != m_initialNickname then libpurple renamed our
+			// user while logging him in, so we have to send one presence with
+			// original nickname (to finish MUC roster sending) and then send another
+			// one to rename our user (to inform his client about renaming).
+			if (m_nickname != m_initialNickname) {
+				Tag *pr = tag->clone();
+
+				tag->removeAttribute("from");
+				tag->addAttribute("from", m_jid + "/" + m_initialNickname);
+
+				Tag *it = pr->findChild("x")->findChild("item");
+				Tag *status = new Tag("status");
+				status->addAttribute("code", "210");
+				item->addChild(status);
+
+				m_initialNickname = m_nickname;
+			}
+
 			if (m_lastPresence)
 				delete m_lastPresence;
 			m_lastPresence = tag->clone();

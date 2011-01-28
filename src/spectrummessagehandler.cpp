@@ -365,19 +365,19 @@ AbstractConversation *SpectrumMessageHandler::getSpectrumMUCConversation(PurpleC
 
 		// Get resource of XMPP user which joined the room. All messages from legacy network
 		// will be sent to that resource.
-		std::string res = m_user->getRoomResource(purple_conversation_get_name(conv));
-		if (res.empty()) {
+		RoomData &data = m_user->getRoomData(purple_conversation_get_name(conv));
+		if (!data) {
 			// IRC and others uses lowered conv names.
 			std::string name = purple_conversation_get_name(conv);
 			std::transform(name.begin(), name.end(), name.begin(),(int(*)(int)) std::tolower);
-			res = m_user->getRoomResource(name);
+			data = m_user->getRoomData(name);
 		}
 
-		if (res.empty()) {
-			Log("WARNING", "There's no initiator resource set for MUC conversation " << purple_conversation_get_name(conv));
+		if (!data) {
+			Log("WARNING", "There's no roomtData set for MUC conversation " << purple_conversation_get_name(conv));
 		}
 
-		s_conv = (AbstractConversation *) new SpectrumMUCConversation(conv, jid, res);
+		s_conv = (AbstractConversation *) new SpectrumMUCConversation(conv, jid, data);
 		addConversation(conv, s_conv);
 #endif
 	}
