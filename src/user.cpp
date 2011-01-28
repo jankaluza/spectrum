@@ -339,7 +339,7 @@ void User::connected() {
 		if (comps) {
 			RoomData d;
 			d.resource = JID(stanza->findAttribute("from")).resource();
-			d.nickname = name;
+			d.nickname = JID(stanza->findAttribute("to")).resource();
 			setRoomData(name, d);
 			// for XMPP we have to store bare jid there...
 			std::string bare = JID(name).bare();
@@ -412,7 +412,7 @@ void User::receivedPresence(const Presence &stanza) {
 					std::cout << name << " JOINING\n";
 					RoomData d;
 					d.resource = stanza.from().resource();
-					d.nickname = name;
+					d.nickname = stanza.to().resource();
 					setRoomData(name, d);
 					// for XMPP we have to store bare jid there...
 					std::string bare = JID(name).bare();

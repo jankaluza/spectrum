@@ -147,24 +147,23 @@ void SpectrumMUCConversation::addUsers(User *user, GList *cbuddies) {
 			// original nickname (to finish MUC roster sending) and then send another
 			// one to rename our user (to inform his client about renaming).
 			if (m_nickname != m_initialNickname) {
-				Tag *pr = tag->clone();
-
 				tag->removeAttribute("from");
 				tag->addAttribute("from", m_jid + "/" + m_initialNickname);
 
-				Tag *it = pr->findChild("x")->findChild("item");
-				Tag *status = new Tag("status");
-				status->addAttribute("code", "210");
-				item->addChild(status);
-
+				Transport::instance()->send(tag);
+				tag = NULL;
+				renameUser(user, m_initialNickname.c_str(), m_nickname.c_str(), "");
 				m_initialNickname = m_nickname;
 			}
 
-			if (m_lastPresence)
-				delete m_lastPresence;
-			m_lastPresence = tag->clone();
+			if (tag) {
+				if (m_lastPresence)
+					delete m_lastPresence;
+				m_lastPresence = tag->clone();
+			}
 		}
-		Transport::instance()->send(tag);
+		if (tag)
+			Transport::instance()->send(tag);
 
 		l = l->next;
 	}
