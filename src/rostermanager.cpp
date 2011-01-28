@@ -619,10 +619,14 @@ void SpectrumRosterManager::handleSubscription(const Subscription &subscription)
 
 void SpectrumRosterManager::handleRosterResponse(Tag *iq) {
 	if (iq->findAttribute("type") == "error") {
+		Log(m_user->jid(), "This server doesn't support remoter-roster XEP");
 		return;
 	}
 
-	m_supportRosterIQ = true;
+	if (m_supportRosterIQ == false) {
+		Log(m_user->jid(), "This server supports remoter-roster XEP");
+		m_supportRosterIQ = true;
+	}
 
 	if (iq->findAttribute("type") == "set") {
 		Tag *query = iq->findChild("query");
