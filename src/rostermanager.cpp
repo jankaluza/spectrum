@@ -361,7 +361,7 @@ void SpectrumRosterManager::sendNewBuddies() {
 			// send roster push if buddies are different or subscription is not both
 			if (differs || s_buddy->getSubscription() != "both") {
 				m_rosterPushes[m_rosterPushesContext++] = s_buddy;
-				SpectrumRosterManager::sendRosterPush(m_user->jid(), jid, "both", alias, group, this, m_rosterPushesContext);
+				SpectrumRosterManager::sendRosterPush(m_user->jid(), jid, "both", alias, s_buddy->getGroup(), this, m_rosterPushesContext);
 
 				// Set subscription to both and store buddy
 				s_buddy->setSubscription("both");
