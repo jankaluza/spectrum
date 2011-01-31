@@ -150,9 +150,12 @@ void IRCProtocol::onConnected(User *user) {
 		std::string nickserv = user->getSetting<std::string>("nickserv");
 		if (!nickserv.empty()) {
 			std::string msg = "identify " + nickserv;
-			PurpleConversation *conv = purple_conversation_new(PURPLE_CONV_TYPE_IM, user->account(), "NickServ");
-			purple_conv_chat_send(PURPLE_CONV_CHAT(conv), msg.c_str());
-			purple_conversation_destroy(conv);
+			Message s(Message::Chat, JID("#test%irc.freenode.net@icq.localhost/NickServ"), msg);
+			s.setFrom(user->jid());
+			// TODO: rewrite me to not use GlooxMessageHandler
+#ifndef TESTS
+			GlooxMessageHandler::instance()->handleMessage(s, NULL);
+#endif
 		}
 	}
 }
