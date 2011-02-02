@@ -36,7 +36,13 @@ SpectrumMUCConversation::SpectrumMUCConversation(PurpleConversation *conv, const
 	m_nickname = purple_conv_chat_get_nick(chat);
 #endif
 	m_initialNickname = data.nickname;
-		
+
+	std::string lowerCasedInitialNickname = m_initialNickname;
+	// purple_normalize lowercases nicknames, so they are "same" if they differes *just* in case-sensitivity
+	std::transform(lowerCasedInitialNickname.begin(), lowerCasedInitialNickname.end(), lowerCasedInitialNickname.begin(),(int(*)(int)) std::tolower);
+	if (lowerCasedInitialNickname == m_nickname) {
+		m_initialNickname = lowerCasedInitialNickname;
+	}
 }
 
 SpectrumMUCConversation::~SpectrumMUCConversation() {
