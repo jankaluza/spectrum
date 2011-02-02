@@ -118,6 +118,8 @@ class AbstractSpectrumBuddy {
 		// Changes server-side alias for this buddy.
 		virtual void changeAlias(const std::string &alias) = 0;
 
+		virtual void handleBuddyRemoved(PurpleBuddy *buddy) = 0;
+
 	private:
 		long m_id;
 		bool m_online;

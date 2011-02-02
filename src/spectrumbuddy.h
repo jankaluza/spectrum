@@ -71,6 +71,8 @@ class SpectrumBuddy : public AbstractSpectrumBuddy {
 		// Changes server-side alias for this buddy.
 		void changeAlias(const std::string &alias);
 
+		void handleBuddyRemoved(PurpleBuddy *buddy);
+
 	private:
 		PurpleBuddy *m_buddy;
 };

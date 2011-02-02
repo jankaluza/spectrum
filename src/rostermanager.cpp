@@ -259,8 +259,20 @@ void SpectrumRosterManager::handleBuddyStatusChanged(PurpleBuddy *buddy, PurpleS
 }
 
 void SpectrumRosterManager::handleBuddyRemoved(AbstractSpectrumBuddy *s_buddy) {
-	if (s_buddy->getFlags() & SPECTRUM_BUDDY_IGNORE)
-		return;
+	if (s_buddy->getFlags() & SPECTRUM_BUDDY_IGNORE) {
+		// just for case we would remove some PurpleBuddy* which is used
+		// in SpectrumBuddy.
+		AbstractSpectrumBuddy *s_buddy_1 = getRosterItem(s_buddy->getName());
+		// this should be always true, but it's not bad to be defensive here.
+		if (s_buddy_1 != s_buddy) {
+			s_buddy_1->handleBuddyRemoved(s_buddy->getBuddy());
+			// this should be always false, but if it's not, we have to remove
+			// this buddy from local roster
+			if (s_buddy_1->getBuddy() != s_buddy->getBuddy()) {
+				return;
+			}
+		}
+	}
 	m_subscribeCache.erase(s_buddy->getName());
 	removeFromLocalRoster(s_buddy->getName());
 	removeBuddy(s_buddy);

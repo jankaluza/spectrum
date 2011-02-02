@@ -226,3 +226,25 @@ void SpectrumBuddy::changeAlias(const std::string &alias) {
 		serv_alias_buddy(m_buddy);
 	}
 }
+
+void SpectrumBuddy::handleBuddyRemoved(PurpleBuddy *buddy) {
+	// it's not our buddy who is being removed, so it's ok
+	if (buddy != m_buddy)
+		return;
+	// find alive buddy
+	PurpleBuddy *alive_buddy = NULL;
+	for (GSList *buddies = purple_find_buddies(purple_buddy_get_account(m_buddy), purple_buddy_get_name(m_buddy)); buddies; buddies = g_slist_delete_link(buddies, buddies)) {
+		PurpleBuddy *b = (PurpleBuddy *) buddies->data;
+		if (b != buddy) {
+			alive_buddy = b;
+			break;
+		}
+	}
+	// switch them
+	if (alive_buddy) {
+		void *data = m_buddy->node.ui_data;
+		m_buddy->node.ui_data = alive_buddy->node.ui_data;
+		alive_buddy->node.ui_data = data;
+		m_buddy = alive_buddy;
+	}
+}
