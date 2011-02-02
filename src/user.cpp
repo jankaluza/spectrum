@@ -710,7 +710,11 @@ User::~User(){
 			PurpleXfer *xfer = (PurpleXfer *) iter->data;
 			iter = iter->next;
 			if (purple_xfer_get_account(xfer) == m_account) {
-				if (purple_xfer_get_status(xfer) != PURPLE_XFER_STATUS_DONE) {
+				// TODO: We have to remove FileRepetears somehow and unref xfer
+				// if status is PURPLE_XFER_STATUS_CANCEL_REMOTE
+				if (purple_xfer_get_status(xfer) != PURPLE_XFER_STATUS_DONE &&
+					purple_xfer_get_status(xfer) != PURPLE_XFER_STATUS_CANCEL_REMOTE
+				) {
 					purple_xfer_cancel_local(xfer);
 				}
 			}
