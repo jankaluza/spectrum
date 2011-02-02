@@ -85,11 +85,6 @@ ICQProtocol::ICQProtocol() {
 
 ICQProtocol::~ICQProtocol() {}
 
-bool ICQProtocol::isValidUsername(const std::string &str) {
-	static std::string const digits("0123456789");
-	return str.find_first_not_of(digits) == std::string::npos;
-}
-
 std::list<std::string> ICQProtocol::transportFeatures(){
 	return m_transportFeatures;
 }

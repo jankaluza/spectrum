@@ -30,7 +30,6 @@ class ICQProtocol : AbstractProtocol
 		~ICQProtocol();
 		const std::string gatewayIdentity() { return "icq"; }
 		const std::string protocol() { return "prpl-icq"; }
-		bool isValidUsername(const std::string &username);
 		std::list<std::string> transportFeatures();
 		std::list<std::string> buddyFeatures();
 		std::string text(const std::string &key);
