@@ -49,6 +49,7 @@ AdhocAdmin::AdhocAdmin(AbstractUser *user, const std::string &from, const std::s
 	std::map <std::string, std::string> values;
 	values[tr(m_language.c_str(), _("User"))] = "User";
 	values[tr(m_language.c_str(), _("Send message to online users"))] = "Send message to online users";
+	values[tr(m_language.c_str(), _("List online users"))] = "List online users";
 	values[tr(m_language.c_str(), _("Register new user"))] = "Register new user";
 	values[tr(m_language.c_str(), _("Unregister user"))] = "Unregister user";
 	adhocTag->addListSingle(tr(m_language.c_str(), _("Command")), "config_area", values);
@@ -150,6 +151,15 @@ AdhocTag *AdhocAdmin::handleAdhocTag(Tag *stanzaTag) {
 			adhocTag->setTitle(tr(m_language.c_str(), _("Unregister user")));
 			adhocTag->setInstructions(tr(m_language.c_str(), _("Enter bare JID of user to unregister.")));
 			adhocTag->addTextSingle(tr(m_language.c_str(), _("Bare JID")), "user_jid");
+
+			return adhocTag;
+		}
+		else if (result == "List online users") {
+			AdhocTag *adhocTag = new AdhocTag(tag->findAttribute("sessionid"), "transport_admin", "completed");
+			adhocTag->setTitle(tr(m_language.c_str(), _("Online users")));
+			std::vector<std::string> onlineUsers = Transport::instance()->sql()->getOnlineUsers();
+			std::list<std::string> users(onlineUsers.begin(), onlineUsers.end());
+			adhocTag->addJIDMulti(tr(m_language.c_str(), _("Online Users")), "online_users", users);
 
 			return adhocTag;
 		}

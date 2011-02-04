@@ -102,6 +102,20 @@ void AdhocTag::addListSingle(const std::string &label, const std::string &var, s
 	xdata->addChild(field);
 }
 
+void AdhocTag::addJIDMulti(const std::string &label, const std::string &var, std::list <std::string> &values) {
+	if (xdata == NULL)
+		initXData();
+	Tag *field = new Tag("field");
+	field->addAttribute("type", "jid-multi");
+	field->addAttribute("label", label);
+	field->addAttribute("var", var);
+
+	for (std::list<std::string>::iterator it = values.begin(); it != values.end(); it++) {
+		field->addChild( new Tag("value", *it) );
+	}
+	xdata->addChild(field);
+}
+
 void AdhocTag::addBoolean(const std::string &label, const std::string &var, bool value) {
 	if (xdata == NULL)
 		initXData();

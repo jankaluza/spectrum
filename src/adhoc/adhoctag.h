@@ -52,6 +52,9 @@ class AdhocTag : public Tag {
 		void addListSingle(const std::string &label, const std::string &var, std::list <std::string> &values);
 		void addListSingle(const std::string &label, const std::string &var, std::map <std::string, std::string> &values);
 
+		// Adds JID-multi.
+		void addJIDMulti(const std::string &label, const std::string &var, std::list <std::string> &values);
+
 		// Adds checkbox.
 		void addBoolean(const std::string &label, const std::string &var, bool value);
 
