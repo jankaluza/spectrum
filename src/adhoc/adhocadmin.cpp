@@ -31,6 +31,82 @@
 #include "registerhandler.h"
 #include "adhochandler.h"
 
+enum {
+	SORT_BY_JID,
+	SORT_BY_UIN,
+	SORT_BY_BUDDIES,
+};
+
+struct SortData {
+	std::string data;
+	int iKey;
+	std::string sKey;
+};
+
+struct ListData {
+	std::list<SortData> output;
+	bool only_vip;
+	bool show_jid;
+	bool show_uin;
+	bool show_buddies;
+	int sort_by;
+	unsigned int users_per_page;
+};
+
+static bool compareSDataASC(SortData &a, SortData &b) {
+	return strcmp(a.sKey.c_str(), b.sKey.c_str()) < 0;
+}
+
+static bool compareIDataASC(SortData &a, SortData &b) {
+	return a.iKey < b.iKey;
+}
+
+static bool compareSDataDESC(SortData &a, SortData &b) {
+	return strcmp(a.sKey.c_str(), b.sKey.c_str()) > 0;
+}
+
+static bool compareIDataDESC(SortData &a, SortData &b) {
+	return a.iKey > b.iKey;
+}
+
+static void generateOutput(gpointer key, gpointer v, gpointer data) {
+	ListData *d = (ListData *) data;
+	User *user = (User *) v;
+
+	if (d->users_per_page == 0)
+		return;
+
+	if (d->only_vip && !user->isVIP())
+		return;
+
+	SortData output;
+	d->users_per_page--;
+
+	if (d->show_jid) {
+		output.data += user->jid() + ";";
+		if (d->sort_by == SORT_BY_JID) {
+			output.sKey = user->jid();
+		}
+	}
+
+	if (d->show_uin) {
+		output.data += user->username() + ";";
+		if (d->sort_by == SORT_BY_UIN) {
+			output.sKey = user->username();
+		}
+	}
+
+	if (d->show_buddies) {
+		int buddies = user->buddiesCount();
+		output.data += stringOf(buddies) + ";";
+		if (d->sort_by == SORT_BY_BUDDIES) {
+			output.iKey = buddies;
+		}
+	}
+	output.data += "\n";
+	d->output.push_back(output);
+}
+
 AdhocAdmin::AdhocAdmin(AbstractUser *user, const std::string &from, const std::string &id) {
 	setRequestType(CALLER_ADHOC);
 	m_from = std::string(from);
@@ -155,14 +231,85 @@ AdhocTag *AdhocAdmin::handleAdhocTag(Tag *stanzaTag) {
 			return adhocTag;
 		}
 		else if (result == "List online users") {
-			AdhocTag *adhocTag = new AdhocTag(tag->findAttribute("sessionid"), "transport_admin", "completed");
-			adhocTag->setTitle(tr(m_language.c_str(), _("Online users")));
-			std::vector<std::string> onlineUsers = Transport::instance()->sql()->getOnlineUsers();
-			std::list<std::string> users(onlineUsers.begin(), onlineUsers.end());
-			adhocTag->addJIDMulti(tr(m_language.c_str(), _("Online Users")), "online_users", users);
+			m_state = ADHOC_ADMIN_LIST_USERS;
 
+			AdhocTag *adhocTag = new AdhocTag(tag->findAttribute("sessionid"), "transport_admin", "executing");
+			adhocTag->setTitle(tr(m_language.c_str(), _("List online users")));
+
+			adhocTag->addFixedText(tr(m_language.c_str(), _("Which users should be selected?")));
+			adhocTag->addBoolean(tr(m_language.c_str(), _("VIP users only")), "users_vip", false);
+
+			adhocTag->addFixedText(tr(m_language.c_str(), _("What should be displayed?")));
+			adhocTag->addBoolean(tr(m_language.c_str(), _("JID")), "show_jid", true);
+			adhocTag->addBoolean(tr(m_language.c_str(), _("Legacy network username")), "show_uin", true);
+			adhocTag->addBoolean(tr(m_language.c_str(), _("Number of buddies")), "show_buddies", true);
+			
+			adhocTag->addFixedText(tr(m_language.c_str(), _("Sorting")));
+			std::map <std::string, std::string> values;
+			values[tr(m_language.c_str(), _("JID"))] = "show_jid";
+			values[tr(m_language.c_str(), _("Legacy network username"))] = "show_uin";
+			values[tr(m_language.c_str(), _("Number of buddies"))] = "show_buddies";
+			adhocTag->addListSingle(tr(m_language.c_str(), _("Sort by")), "show_sort_by", values);
+			std::map <std::string, std::string> order;
+			order[tr(m_language.c_str(), _("ASC"))] = "asc";
+			order[tr(m_language.c_str(), _("DESC"))] = "desc";
+			adhocTag->addListSingle(tr(m_language.c_str(), _("Sorting order")), "show_sort_order", order);
+			adhocTag->addTextSingle(tr(m_language.c_str(), _("Users per page")), "show_max_per_page", "100");
 			return adhocTag;
 		}
+	}
+	else if (m_state == ADHOC_ADMIN_LIST_USERS) {
+		if (!form.hasField("users_vip") || !form.hasField("show_jid") || !form.hasField("show_uin")
+			|| !form.hasField("show_buddies") || !form.hasField("show_sort_by") || !form.hasField("show_sort_order")
+			|| !form.hasField("show_max_per_page")
+		) {
+			std::cout << "error\n";
+			return NULL;
+		}
+
+		ListData data;
+		data.only_vip = form.field("users_vip")->value() == "1";
+		data.show_jid = form.field("show_jid")->value() == "1";
+		data.show_uin = form.field("show_uin")->value() == "1";
+		data.show_buddies = form.field("show_buddies")->value() == "1";
+		if (form.field("show_sort_by")->value() == "show_jid")
+			data.sort_by = SORT_BY_JID;
+		else if (form.field("show_sort_by")->value() == "show_uin")
+			data.sort_by = SORT_BY_UIN;
+		else if (form.field("show_sort_by")->value() == "show_buddies")
+			data.sort_by = SORT_BY_BUDDIES;
+
+// 		std::istringstream buffer(form.field("show_max_par_page")->value());
+// 		buffer >> data.users_per_page;
+		data.users_per_page = 100;
+
+		bool sort_asc = form.field("show_sort_order")->value() == "asc";
+
+		GHashTable *users = Transport::instance()->userManager()->getUsersTable();
+		g_hash_table_foreach(users, generateOutput, &data);
+		
+		std::string output = std::string(data.show_jid ? "JID;" : "") + (data.show_uin ? "UIN;" : "") + (data.show_buddies ? "Number of buddies;" : "") + "\n";
+
+		if (data.sort_by == SORT_BY_BUDDIES) {
+			if (sort_asc)
+				data.output.sort(compareIDataASC);
+			else
+				data.output.sort(compareIDataDESC);
+		}
+		else {
+			if (sort_asc)
+				data.output.sort(compareSDataASC);
+			else
+				data.output.sort(compareSDataDESC);
+		}
+
+		for (std::list<SortData>::iterator it = data.output.begin(); it != data.output.end(); it++) {
+			output += (*it).data;
+		}
+
+		AdhocTag *adhocTag = new AdhocTag(tag->findAttribute("sessionid"), "transport_admin", "completed");
+		adhocTag->addTextMulti("CSV:", "csv", output);
+		return adhocTag;
 	}
 	else if (m_state == ADHOC_ADMIN_USER) {
 		m_state = ADHOC_ADMIN_USER2;

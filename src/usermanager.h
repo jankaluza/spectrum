@@ -71,6 +71,10 @@ class UserManager : MessageSender
 		// Sends message to all online users.
 		bool sendMessageToAll(const std::string &message);
 
+		// Returns GHashTable used to store users.
+		// This table MUST NOT CHANGE!
+		GHashTable *getUsersTable() { return m_users; }
+
 	private:
 		GHashTable *m_users;	// key = JID; value = User*
 		long m_onlineBuddies;

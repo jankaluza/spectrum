@@ -180,6 +180,8 @@ class SpectrumRosterManager : public RosterStorage, public IqHandler {
 		// to mergeBuddy/mergeRoster jabber:iq:roster stanzas
 		bool _sendRosterPresences();
 
+		int buddiesCount() { return (int) g_hash_table_size(m_roster); }
+
 //	static:
 		// Sends roster push.
 		static void sendRosterPush(const std::string &to, const std::string &jid, const std::string &subscription,
@@ -193,7 +195,6 @@ class SpectrumRosterManager : public RosterStorage, public IqHandler {
 
 		// Asks for user's roster using jabber:iq:roster (for remote-roster protoXEP)
 		static void sendRosterGet(const std::string &to);
-		
 
 	private:
 		GHashTable *m_roster;

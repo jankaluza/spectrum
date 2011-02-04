@@ -34,7 +34,6 @@
 
 // Used for sorting Disco::Items alphabetically
 static bool compareItems(Disco::Item *first, Disco::Item *second) {
-	std::cout << (strcmp(first->name().c_str(), second->name().c_str()) < 0) << " " << first->name() << " " << second->name() << "\n";
 	return strcmp(first->name().c_str(), second->name().c_str()) < 0;
 }
 
