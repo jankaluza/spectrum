@@ -144,4 +144,5 @@ void SpectrumConversation::handleMessage(User *user, const char *who, const char
 	}
 	Transport::instance()->send(stanzaTag);
 
+	purple_conv_im_set_typing_state(PURPLE_CONV_IM(m_conv), PURPLE_NOT_TYPING);
 }
