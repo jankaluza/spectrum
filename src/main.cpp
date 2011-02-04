@@ -1252,8 +1252,10 @@ void GlooxMessageHandler::purpleBuddyTyping(PurpleAccount *account, const char *
 	if (user != NULL) {
 		PurpleConversation *conv = purple_find_conversation_with_account(PURPLE_CONV_TYPE_IM, who, account);
 		if (0 == conv) {
+			Log("purpleBuddyTyping", "WARNING: there is no conversation for account =" << purple_account_get_username(account) << " " << who);
 			return;
 		}
+		Log("purpleBuddyTyping", "user typing received");
 		user->purpleBuddyTyping(who);
 	}
 	else {
@@ -1309,6 +1311,7 @@ void GlooxMessageHandler::purpleBuddySignedOff(PurpleBuddy *buddy) {
 void GlooxMessageHandler::purpleBuddyTypingStopped(PurpleAccount *account, const char *who) {
 	PurpleConversation *conv = purple_find_conversation_with_account(PURPLE_CONV_TYPE_IM, who, account);
 	if (0 == conv) {
+		Log("purpleBuddyTypingStopped", "WARNING: there is no conversation for account =" << purple_account_get_username(account) << " " << who);
 		return;
 	}
   
@@ -1324,6 +1327,7 @@ void GlooxMessageHandler::purpleBuddyTypingStopped(PurpleAccount *account, const
 void GlooxMessageHandler::purpleBuddyTypingPaused(PurpleAccount *account, const char *who) {
 	PurpleConversation *conv = purple_find_conversation_with_account(PURPLE_CONV_TYPE_IM, who, account);
 	if (0 == conv) {
+		Log("purpleBuddyTypingPaused", "WARNING: there is no conversation for account =" << purple_account_get_username(account) << " " << who);
 		return;
 	}
   
