@@ -29,6 +29,9 @@
 #include "request.h"
 #include "adhoccommandhandler.h"
 #include "../abstractconfiginterfacehandler.h"
+#include "gloox/dataform.h"
+
+using namespace gloox;
 
 class AbstractUser;
 
@@ -58,7 +61,27 @@ class AdhocAdmin : public AdhocCommandHandler, public AbstractConfigInterfaceHan
 		bool handleIq(const IQ &iq);
 		const std::string & getInitiator() { return m_from; }
 
+		
+
 	private:
+		AdhocTag *generateUserForm(const std::string &sessionId);
+		AdhocTag *handleUserForm1(Tag *tag, const DataForm &form);
+		AdhocTag *handleUserForm2(Tag *tag, const DataForm &form);
+
+		AdhocTag *generateSendMessageForm(const std::string &sessionId);
+		AdhocTag *handleSendMessageForm(Tag *tag, const DataForm &form);
+
+		AdhocTag *generateRegisterUserForm(const std::string &sessionId);
+		AdhocTag *handleRegisterUserForm(Tag *tag, const DataForm &form);
+
+		AdhocTag *generateUnregisterUserForm(const std::string &sessionId);
+		AdhocTag *handleUnregisterUserForm(Tag *tag, const DataForm &form);
+
+		AdhocTag *generateListUsersForm(const std::string &sessionId);
+		AdhocTag *handleListUsersForm(Tag *tag, const DataForm &form);
+		
+		AdhocTag *handleExecutionInit(Tag *tag, const DataForm &form);
+
 		std::string m_from;				// full jid
 		AbstractUser *m_user;					// User class
 		int m_state;					// current executing state
