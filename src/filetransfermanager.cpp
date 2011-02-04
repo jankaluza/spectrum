@@ -331,7 +331,7 @@ void FileTransferManager::sendFile(const std::string &jid, const std::string &fr
             return;
         }
 		std::cout << "requesting filetransfer " << jid <<" " << file <<" as " << name << " " << info.st_size << "\n";
-        std::string sid = m_sip->requestFT(jid, name, info.st_size, EmptyString, EmptyString, EmptyString, EmptyString, SIProfileFT::FTTypeAll, from);
+        std::string sid = m_sip->requestFT(jid, name, info.st_size, EmptyString, EmptyString, EmptyString, EmptyString, SIProfileFT::FTTypeS5B, from);
         m_info[sid].filename = file;
         m_info[sid].size = info.st_size;
         f.close();
