@@ -198,23 +198,30 @@ void GlooxVCardHandler::userInfoArrived(PurpleConnection *gc, const std::string 
 				if(icon!=NULL) {
 					Log("VCard", "found icon");
 					const gchar * data = (gchar*)purple_buddy_icon_get_data(icon, &len);
-					if (data!=NULL){
-						Log("VCard", "making avatar " << len);
-						std::string avatarData((char *)data,len);
-						base64encode((unsigned char *)data, len, avatarData);
-						photo->addChild( new Tag("BINVAL", avatarData));
-						const gchar *ext = (gchar*)purple_buddy_icon_get_extension(icon);
-						if (ext) {
-							std::string extension(ext);
-							if (extension != "icon") {
-								if (extension == "jpg") {
-									extension = "jpeg";
+					// Sometimes libpurple returns really broken pointers here
+					// They weren't able to do anything with that and I don't know what to do too,
+					// so it's better to hack through it by not trying to forward really broken things...
+					if (len < 300000) {
+						if (data){
+							Log("VCard", "making avatar " << len);
+							std::string avatarData((char *)data,len);
+							base64encode((unsigned char *)data, len, avatarData);
+							photo->addChild( new Tag("BINVAL", avatarData));
+							const gchar *ext = (gchar*)purple_buddy_icon_get_extension(icon);
+							if (ext) {
+								std::string extension(ext);
+								if (extension != "icon") {
+									if (extension == "jpg") {
+										extension = "jpeg";
+									}
+									photo->addChild( new Tag("TYPE", "image/" + extension) );
 								}
-								photo->addChild( new Tag("TYPE", "image/" + extension) );
 							}
+							Log("VCard", "avatar made");
 						}
-						Log("VCard", "avatar made");
-	// 					std::cout << photo->xml() << "\n";
+					}
+					else {
+						Log("VCard", "not sending avatar, image data corrupted or avatar too big (bigger than 300 KB)");
 					}
 				}
 			}
