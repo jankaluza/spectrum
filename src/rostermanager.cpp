@@ -264,7 +264,7 @@ void SpectrumRosterManager::handleBuddyRemoved(AbstractSpectrumBuddy *s_buddy) {
 		// in SpectrumBuddy.
 		AbstractSpectrumBuddy *s_buddy_1 = getRosterItem(s_buddy->getName());
 		// this should be always true, but it's not bad to be defensive here.
-		if (s_buddy_1 != s_buddy) {
+		if (s_buddy_1 && s_buddy_1 != s_buddy) {
 			s_buddy_1->handleBuddyRemoved(s_buddy->getBuddy());
 			// this should be always false, but if it's not, we have to remove
 			// this buddy from local roster
