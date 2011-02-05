@@ -34,7 +34,6 @@
 using namespace gloox;
 
 class AbstractUser;
-
 extern LogClass Log_;
 
 typedef enum {	ADHOC_ADMIN_INIT = 0,
@@ -47,6 +46,27 @@ typedef enum {	ADHOC_ADMIN_INIT = 0,
 				ADHOC_ADMIN_LIST_USERS,
 				} AdhocAdminState;
 
+enum {
+	SORT_BY_JID,
+	SORT_BY_UIN,
+	SORT_BY_BUDDIES,
+};
+
+struct SortData {
+	std::string data;
+	int iKey;
+	std::string sKey;
+};
+
+struct ListData {
+	std::list<SortData> output;
+	bool only_vip;
+	bool show_jid;
+	bool show_uin;
+	bool show_buddies;
+	int sort_by;
+	unsigned int users_per_page;
+};
 /*
  * AdhocCommandHandler for Administration node
  */
@@ -86,6 +106,7 @@ class AdhocAdmin : public AdhocCommandHandler, public AbstractConfigInterfaceHan
 		AbstractUser *m_user;					// User class
 		int m_state;					// current executing state
 		std::string m_language;
+		ListData m_listUsersData;
 };
 
 #endif

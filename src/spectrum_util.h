@@ -51,6 +51,13 @@ template <class T> std::string stringOf(T object) {
 	return (os.str());
 }
 
+template <class T> T fromString(const std::string &str) {
+	T i;
+	std::istringstream os(str);
+	os >> i;
+	return i;
+}
+
 using namespace gloox;
 
 /* Replace all instances of from with to in string str in-place */

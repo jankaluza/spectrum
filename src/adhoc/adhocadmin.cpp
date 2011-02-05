@@ -30,28 +30,6 @@
 #include "registerhandler.h"
 #include "adhochandler.h"
 
-enum {
-	SORT_BY_JID,
-	SORT_BY_UIN,
-	SORT_BY_BUDDIES,
-};
-
-struct SortData {
-	std::string data;
-	int iKey;
-	std::string sKey;
-};
-
-struct ListData {
-	std::list<SortData> output;
-	bool only_vip;
-	bool show_jid;
-	bool show_uin;
-	bool show_buddies;
-	int sort_by;
-	unsigned int users_per_page;
-};
-
 static bool compareSDataASC(SortData &a, SortData &b) {
 	return strcmp(a.sKey.c_str(), b.sKey.c_str()) < 0;
 }
@@ -278,14 +256,10 @@ static void userToCSV(gpointer key, gpointer v, gpointer data) {
 	ListData *d = (ListData *) data;
 	User *user = (User *) v;
 
-	if (d->users_per_page == 0)
-		return;
-
 	if (d->only_vip && !user->isVIP())
 		return;
 
 	SortData output;
-	d->users_per_page--;
 
 	if (d->show_jid) {
 		output.data += user->jid() + ";";
@@ -313,58 +287,67 @@ static void userToCSV(gpointer key, gpointer v, gpointer data) {
 }
 
 AdhocTag *AdhocAdmin::handleListUsersForm(Tag *tag, const DataForm &form) {
-	if (!form.hasField("users_vip") || !form.hasField("show_jid") || !form.hasField("show_uin")
-		|| !form.hasField("show_buddies") || !form.hasField("show_sort_by") || !form.hasField("show_sort_order")
-		|| !form.hasField("show_max_per_page")
-	) {
-		return NULL;
-	}
-
 	// Prepare data struct which will be passed to userToCSV function
-	ListData data;
-	data.only_vip = form.field("users_vip")->value() == "1";
-	data.show_jid = form.field("show_jid")->value() == "1";
-	data.show_uin = form.field("show_uin")->value() == "1";
-	data.show_buddies = form.field("show_buddies")->value() == "1";
-	if (form.field("show_sort_by")->value() == "show_jid")
-		data.sort_by = SORT_BY_JID;
-	else if (form.field("show_sort_by")->value() == "show_uin")
-		data.sort_by = SORT_BY_UIN;
-	else if (form.field("show_sort_by")->value() == "show_buddies")
-		data.sort_by = SORT_BY_BUDDIES;
-	// TODO: don't hardcode this one
-	data.users_per_page = 100;
-	bool sort_asc = form.field("show_sort_order")->value() == "asc";
+	
+	ListData &data = m_listUsersData;
+	if (data.output.size() == 0) {
+		if (!form.hasField("users_vip") || !form.hasField("show_jid") || !form.hasField("show_uin")
+			|| !form.hasField("show_buddies") || !form.hasField("show_sort_by") || !form.hasField("show_sort_order")
+			|| !form.hasField("show_max_per_page")
+		) {
+			return NULL;
+		}
 
-	// generate list of CSV strings per user
-	GHashTable *users = Transport::instance()->userManager()->getUsersTable();
-	g_hash_table_foreach(users, userToCSV, &data);
+		data.only_vip = form.field("users_vip")->value() == "1";
+		data.show_jid = form.field("show_jid")->value() == "1";
+		data.show_uin = form.field("show_uin")->value() == "1";
+		data.show_buddies = form.field("show_buddies")->value() == "1";
+		if (form.field("show_sort_by")->value() == "show_jid")
+			data.sort_by = SORT_BY_JID;
+		else if (form.field("show_sort_by")->value() == "show_uin")
+			data.sort_by = SORT_BY_UIN;
+		else if (form.field("show_sort_by")->value() == "show_buddies")
+			data.sort_by = SORT_BY_BUDDIES;
+		// TODO: don't hardcode this one
+		data.users_per_page = fromString<unsigned int>(form.field("show_max_per_page")->value());
+		bool sort_asc = form.field("show_sort_order")->value() == "asc";
+
+		// generate list of CSV strings per user
+		GHashTable *users = Transport::instance()->userManager()->getUsersTable();
+		g_hash_table_foreach(users, userToCSV, &data);
+
+		// Sort data according to string/integer key
+		if (data.sort_by == SORT_BY_BUDDIES) {
+			if (sort_asc)
+				data.output.sort(compareIDataASC);
+			else
+				data.output.sort(compareIDataDESC);
+		}
+		else {
+			if (sort_asc)
+				data.output.sort(compareSDataASC);
+			else
+				data.output.sort(compareSDataDESC);
+		}
+	}
 
 	// create header of CSV output
 	std::string output = std::string(data.show_jid ? "JID;" : "") +
 						(data.show_uin ? "UIN;" : "") + (data.show_buddies ? "Number of buddies;" : "") + "\n";
 
-	// Sort data according to string/integer key
-	if (data.sort_by == SORT_BY_BUDDIES) {
-		if (sort_asc)
-			data.output.sort(compareIDataASC);
-		else
-			data.output.sort(compareIDataDESC);
-	}
-	else {
-		if (sort_asc)
-			data.output.sort(compareSDataASC);
-		else
-			data.output.sort(compareSDataDESC);
-	}
-
+	unsigned int users_per_page = data.users_per_page;
 	// generate CSV from sorted list of strings
-	for (std::list<SortData>::iterator it = data.output.begin(); it != data.output.end(); it++) {
+	// put only users_per_page items maximally
+	std::list<SortData>::iterator it = data.output.begin();
+	for ( ; it != data.output.end() && users_per_page != 0; it++, users_per_page--) {
 		output += (*it).data;
 	}
 
+	data.output.erase(data.output.begin(), it);
+
 	// fire it :)
-	AdhocTag *adhocTag = new AdhocTag(tag->findAttribute("sessionid"), "transport_admin", "completed");
+	// if there are still some items left, state is "executing"
+	AdhocTag *adhocTag = new AdhocTag(tag->findAttribute("sessionid"), "transport_admin", data.output.size() == 0 ? "completed" : "executing");
 	adhocTag->addTextMulti("CSV:", "csv", output);
 	return adhocTag;
 }
