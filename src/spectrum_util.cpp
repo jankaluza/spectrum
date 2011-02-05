@@ -120,6 +120,11 @@ void process_mem_usage(double& vm_usage, double& resident_set) {
 	// 'file' stat seems to give the most reliable results
 	//
 	ifstream stat_stream("/proc/self/stat",ios_base::in);
+	if (!stat_stream.is_open()) {
+		vm_usage = 0;
+		resident_set = 0;
+		return;
+	}
 
 	// dummy vars for leading entries in stat that we don't care about
 	//
