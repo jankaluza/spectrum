@@ -133,7 +133,6 @@ void process_mem_usage(double& vm_usage, double& resident_set) {
 	vm_usage = (double) ki->ki_size/1024;
 	resident_set = (double) (ki->ki_rssize*pagesize)/1024;
 	kvm_close(kd);
-	free(err);
 }
 #else /* BSD */
 void process_mem_usage(double& vm_usage, double& resident_set) {
