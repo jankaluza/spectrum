@@ -27,7 +27,11 @@
 #include <algorithm>
 #include "protocols/abstractprotocol.h"
 #include "transport.h"
-
+#include <sys/param.h>
+#ifdef BSD
+#include <sys/types.h>
+#include <sys/sysctl.h>
+#endif
 
 using namespace gloox;
 
@@ -109,6 +113,35 @@ const std::string generateUUID() {
 }
 
 #ifndef WIN32
+#ifdef BSD
+void process_mem_usage(double& vm_usage, double& resident_set) {
+	int mib[4];
+	size_t size;
+	mib[0] = CTL_KERN;
+	mib[1] = KERN_PROC;
+	mib[2] = KERN_PROC_PID;
+	mib[3] = getpid();
+	struct kinfo_proc proc;
+
+	size = sizeof(struct kinfo_proc);
+
+	if (sysctl((int*)mib, 4, &proc, &size, NULL, 0) == -1) {
+		vm_usage = 0;
+		resident_set = 0;
+		return;
+	}
+
+	// sysctl stores 0 in the size if we can't find the process information.
+	// Set errno to ESRCH which will be translated in NoSuchProcess later on.
+	if (size == 0) {
+		vm_usage = 0;
+		resident_set = 0;
+		return;
+	}
+	resident_set = (double) ptoa(kp.ki_rssize)
+	vm_usage = (double) kp.ki_size;
+}
+#else /* BSD */
 void process_mem_usage(double& vm_usage, double& resident_set) {
 	using std::ios_base;
 	using std::ifstream;
@@ -147,7 +180,8 @@ void process_mem_usage(double& vm_usage, double& resident_set) {
 	vm_usage     = vsize / 1024.0;
 	resident_set = rss * page_size_kb;
 }
-#endif
+#endif /* else BSD */
+#endif /* WIN32 */
 
 std::vector<std::string> &split(const std::string &s, char delim, std::vector<std::string> &elems) {
     std::stringstream ss(s);
