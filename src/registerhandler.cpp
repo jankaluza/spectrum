@@ -68,6 +68,11 @@ GlooxRegisterHandler::GlooxRegisterHandler() : IqHandler() {
 GlooxRegisterHandler::~GlooxRegisterHandler(){
 }
 
+bool GlooxRegisterHandler::isFieldEnabled(const std::string &name) {
+	std::list<std::string> const &fields = CONFIG().reg_extra_fields;
+	return (std::find(fields.begin(), fields.end(), name) != fields.end());
+}
+
 bool GlooxRegisterHandler::registerUser(const UserRow &row) {
 	// TODO: move this check to sql()->addUser(...) and let it return bool
 	UserRow res = Transport::instance()->sql()->getUserByJid(row.jid);
@@ -207,15 +212,17 @@ bool GlooxRegisterHandler::handleIq(const Tag *iqTag) {
 			field->addChild(option);
 		}
 
-		field = new Tag("field");
-		field->addAttribute("type", "text-single");
-		field->addAttribute("var", "encoding");
-		field->addAttribute("label", tr(_language, _("Encoding")));
-		if (res.id!=-1)
-			field->addChild( new Tag("value", res.encoding) );
-		else
-			field->addChild( new Tag("value", Transport::instance()->getConfiguration().encoding) );
-		x->addChild(field);
+		if (isFieldEnabled("encoding")) {
+			field = new Tag("field");
+			field->addAttribute("type", "text-single");
+			field->addAttribute("var", "encoding");
+			field->addAttribute("label", tr(_language, _("Encoding")));
+			if (res.id!=-1)
+				field->addChild( new Tag("value", res.encoding) );
+			else
+				field->addChild( new Tag("value", Transport::instance()->getConfiguration().encoding) );
+			x->addChild(field);
+		}
 
 		if (res.id != -1) {
 			field = new Tag("field");
@@ -241,7 +248,7 @@ bool GlooxRegisterHandler::handleIq(const Tag *iqTag) {
 		std::string username("");
 		std::string password("");
 		std::string language("");
-		std::string encoding("");
+		std::string encoding(CONFIG().encoding);
 
 		UserRow res = Transport::instance()->sql()->getUserByJid(from.bare());
 		

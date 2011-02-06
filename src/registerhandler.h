@@ -65,6 +65,8 @@ class GlooxRegisterHandler : public IqHandler {
 		bool handleIq (const Tag *iqTag);
 		void handleIqID (const IQ &iq, int context);
 
+		static bool isFieldEnabled(const std::string &name);
+
 	private:
 		void sendError(int code, const std::string &error, const Tag *iqTag);
 
