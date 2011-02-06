@@ -121,13 +121,14 @@ const std::string generateUUID() {
 void process_mem_usage(double& vm_usage, double& resident_set) {
 	kvm_t *kd;
 	struct kinfo_proc *ki;
-	int pagesize,cnt,size;
+	int pagesize,cnt;
+	size_t size;
 
 	size = sizeof(pagesize);
-	sysctlbyname("hw.pagesize",&pagesize,&size,NULL,0);
+	sysctlbyname("hw.pagesize", &pagesize, &size, NULL, 0);
 
-	kd = kvm_open(getbootfile(),"/dev/null",NULL,O_RDONLY,err);
-	ki = kvm_getprocs(kd,KERN_PROC_PID,pid,&cnt);
+	kd = kvm_open(getbootfile(), "/dev/null", NULL, O_RDONLY, NULL);
+	ki = kvm_getprocs(kd,KERN_PROC_PID,getpid(),&cnt);
 
 	vm_usage = (double) ki->ki_size/1024;
 	resident_set = (double) (ki->ki_rssize*pagesize)/1024;
