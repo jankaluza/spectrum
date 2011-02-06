@@ -29,13 +29,9 @@
 #include "transport.h"
 #include <sys/param.h>
 #ifdef BSD
-#include <fcntl.h>
-#include <kvm.h>
-#include <paths.h>
-#include <sys/param.h>
+#include <sys/types.h>
 #include <sys/sysctl.h>
-#include <sys/user.h>
-#endif /* BSD */
+#endif
 
 using namespace gloox;
 
@@ -119,20 +115,38 @@ const std::string generateUUID() {
 #ifndef WIN32
 #ifdef BSD
 void process_mem_usage(double& vm_usage, double& resident_set) {
-	kvm_t *kd;
-	struct kinfo_proc *ki;
+	int mib[4];
+	size_t size;
+	mib[0] = CTL_KERN;
+	mib[1] = KERN_PROC;
+	mib[2] = KERN_PROC_PID;
+	mib[3] = getpid();
+	struct kinfo_proc proc;
+
+	size = sizeof(struct kinfo_proc);
+
+	if (sysctl((int*)mib, 4, &proc, &size, NULL, 0) == -1) {
+		vm_usage = 0;
+		resident_set = 0;
+		return;
+	}
+
+	// sysctl stores 0 in the size if we can't find the process information.
+	// Set errno to ESRCH which will be translated in NoSuchProcess later on.
+	if (size == 0) {
+		vm_usage = 0;
+		resident_set = 0;
+		return;
+	}
+
 	int pagesize,cnt;
 	size_t size;
 
 	size = sizeof(pagesize);
 	sysctlbyname("hw.pagesize", &pagesize, &size, NULL, 0);
 
-	kd = kvm_open(getbootfile(), "/dev/null", NULL, O_RDONLY, NULL);
-	ki = kvm_getprocs(kd,KERN_PROC_PID,getpid(),&cnt);
-
-	vm_usage = (double) ki->ki_size/1024;
-	resident_set = (double) (ki->ki_rssize*pagesize)/1024;
-	kvm_close(kd);
+	resident_set = (double) (proc.ki_rssize * pagesize / 1024);
+	vm_usage = (double) proc.ki_size;
 }
 #else /* BSD */
 void process_mem_usage(double& vm_usage, double& resident_set) {
