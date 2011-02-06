@@ -30,8 +30,12 @@
 #include <sys/param.h>
 #ifdef BSD
 #include <sys/types.h>
+#include <sys/types.h>
 #include <sys/sysctl.h>
-#endif
+#include <sys/param.h>
+#include <sys/user.h>
+#include <sys/proc.h>
+#endif /* BSD */
 
 using namespace gloox;
 
@@ -138,8 +142,8 @@ void process_mem_usage(double& vm_usage, double& resident_set) {
 		resident_set = 0;
 		return;
 	}
-	resident_set = (double) ptoa(kp.ki_rssize)
-	vm_usage = (double) kp.ki_size;
+	resident_set = (double) ptoa(proc.ki_rssize);
+	vm_usage = (double) proc.ki_size;
 }
 #else /* BSD */
 void process_mem_usage(double& vm_usage, double& resident_set) {
