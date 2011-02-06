@@ -1,4 +1,4 @@
-#!/usr/bin/python -Wignore::DeprecationWarning
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
 # spectrumctl can be used to control your spectrum-instances. Valid actions are
@@ -21,10 +21,12 @@
 # You should have received a copy of the GNU General Public License along with
 # this program; if not, see <http://www.gnu.org/licenses/>.
 
-import os, sys
+import os, sys, warnings
 from spectrum import env, spectrum_group
 from spectrum.doc import doc
 from optparse import *
+
+warnings.simplefilter("ignore", DeprecationWarning)
 
 cmds = [ x.name for x in doc.cmds ]
 description='''spectrumctl can be used to control your spectrum-instances.
