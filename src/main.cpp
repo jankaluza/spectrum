@@ -1240,8 +1240,8 @@ void GlooxMessageHandler::purpleConnectionError(PurpleConnection *gc,PurpleConne
 			}
 			else {
 				user->disconnected();
-				Log(user->jid(), "Reconnecting after 5 seconds");
-				purple_timeout_add_seconds(5, &reconnect, g_strdup(user->jid().c_str()));
+				Log(user->jid(), "Reconnecting after 1 second");
+				purple_timeout_add_seconds(1, &reconnect, g_strdup(user->jid().c_str()));
 			}
 		}
 	}

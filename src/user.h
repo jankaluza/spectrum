@@ -37,6 +37,7 @@
 class FiletransferRepeater;
 
 class RosterRow;
+class SpectrumTimer;
 
 using namespace gloox;
 
@@ -108,6 +109,7 @@ class User : public AbstractUser, public SpectrumRosterManager, public SpectrumM
 		int m_glooxPresenceType;
 		std::string m_statusMessage;
 		std::list <Tag *> m_autoConnectRooms;
+		SpectrumTimer *m_reconnectTimer;
 };
 
 #endif

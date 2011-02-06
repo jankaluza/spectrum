@@ -35,10 +35,17 @@
 #include "spectrumbuddy.h"
 #include "transport.h"
 #include "gloox/sha.h"
+#include "spectrumtimer.h"
 
 #ifdef WITH_IMAGEMAGICK
 #include "Magick++.h"
 #endif
+
+static gboolean reconnectTimerTimeout(gpointer data) {
+	User *user = (User *) data;
+	Transport::instance()->userManager()->removeUserTimer(user);
+	return false;
+}
 
 User::User(JID jid, const std::string &username, const std::string &password, const std::string &userKey, long id, const std::string &encoding, const std::string &language, bool vip) : SpectrumRosterManager(this), SpectrumMessageHandler(this), SettingsManager(this) {
 	m_jid = jid.bare();
@@ -68,6 +75,8 @@ User::User(JID jid, const std::string &username, const std::string &password, co
 		replace(newUsername, "$username", m_username.c_str());
 		m_username = newUsername;
 	}
+
+	m_reconnectTimer = new SpectrumTimer(6000, &reconnectTimerTimeout, this);
 
 	setSettings(Transport::instance()->sql()->getSettings(m_userID));
 
@@ -309,6 +318,8 @@ void User::disconnected() {
 	m_account = NULL;
 	m_readyForConnect = true;
 	m_reconnectCount += 1;
+	m_reconnectTimer->start();
+	sendUnavailablePresenceToAll();
 }
 
 /*
@@ -317,6 +328,7 @@ void User::disconnected() {
 void User::connected() {
 	m_connected = true;
 	m_reconnectCount = 0;
+	m_reconnectTimer->stop();
 	Transport::instance()->protocol()->onConnected(this);
 
 	std::cout << "CONNECTED\n";
@@ -694,6 +706,7 @@ User::~User(){
 	Log("User Destructor", m_jid << " " << m_account << " " << (m_account ? purple_account_get_username(m_account) : "") );
 	Transport::instance()->protocol()->onDestroy(this);
 	g_free(m_lang);
+	delete m_reconnectTimer;
 
 	sendUnavailablePresenceToAll();
 
