@@ -31,6 +31,10 @@
 #ifdef BSD
 #include <sys/types.h>
 #include <sys/sysctl.h>
+#include <sys/param.h>
+#include <sys/sysctl.h>
+#include <sys/user.h>
+
 #endif
 
 using namespace gloox;
@@ -140,7 +144,6 @@ void process_mem_usage(double& vm_usage, double& resident_set) {
 	}
 
 	int pagesize,cnt;
-	size_t size;
 
 	size = sizeof(pagesize);
 	sysctlbyname("hw.pagesize", &pagesize, &size, NULL, 0);
