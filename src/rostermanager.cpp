@@ -158,6 +158,7 @@ void SpectrumRosterManager::sendPresenceToAll(const std::string &to) {
 void SpectrumRosterManager::removeFromLocalRoster(const std::string &uin) {
 	std::string preparedUin(uin);
 	Transport::instance()->protocol()->prepareUsername(preparedUin, m_user->account());
+	m_subscribeCache.erase(uin);
 	if (!g_hash_table_lookup(m_roster, preparedUin.c_str()))
 		return;
 	g_hash_table_remove(m_roster, preparedUin.c_str());
@@ -651,6 +652,12 @@ void SpectrumRosterManager::handleRosterResponse(Tag *iq) {
 			std::cout << "item is null!\n";
 			return;
 		}
+
+		// ignore buddy removing
+		if (item->findAttribute("subscription") == "remove") {
+			return;
+		}
+
 		std::string remote_user = purpleUsername(JID(item->findAttribute("jid")).username());
 		AbstractSpectrumBuddy *s_buddy = getRosterItem(remote_user);
 		if (s_buddy == NULL) {
