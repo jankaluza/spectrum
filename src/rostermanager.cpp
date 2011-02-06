@@ -587,6 +587,8 @@ void SpectrumRosterManager::handleSubscription(const Subscription &subscription)
 				purple_blist_add_buddy(buddy, NULL, NULL ,NULL);
 				purple_account_add_buddy(m_user->account(), buddy);
 				m_loadingFromDB = false;
+				SpectrumRosterManager::sendPresence(subscription.to().bare(), subscription.from().bare(), "subscribe");
+				SpectrumRosterManager::sendPresence(subscription.to().bare(), subscription.from().bare(), "subscribed");
 			}
 			return;
 		} else if (subscription.subtype() == Subscription::Unsubscribe || subscription.subtype() == Subscription::Unsubscribed) {
@@ -614,6 +616,7 @@ void SpectrumRosterManager::handleSubscription(const Subscription &subscription)
 				purple_blist_remove_buddy(buddy);
 			} else {
 				// this buddy is not in legacy network roster, so there is nothing to remove...
+				Transport::instance()->sql()->removeBuddy(m_user->storageId(), remote_user, 0);
 			}
 
 			removeFromLocalRoster(remote_user);

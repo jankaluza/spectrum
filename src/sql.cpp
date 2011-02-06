@@ -727,6 +727,17 @@ void SQLClass::updateUser(const UserRow &user) {
 }
 
 void SQLClass::removeBuddy(long userId, const std::string &uin, long buddy_id) {
+	if (buddy_id == 0) {
+		Poco::UInt64 id = 0;
+		try {
+			*m_sess << "SELECT id FROM " + p->configuration().sqlPrefix + "buddies WHERE user_id=? AND uin=?", use(userId), use(uin), into(id), now;
+		}
+		catch (Poco::Exception e) {
+			Log("SQL ERROR", e.displayText());
+		}
+		if (id != 0)
+			buddy_id = id;
+	}
 	*m_stmt_removeBuddy << (Poco::Int32) userId << uin;
 	*m_stmt_removeBuddySettings << (Poco::Int32) buddy_id;
 	m_stmt_removeBuddy->execute();
