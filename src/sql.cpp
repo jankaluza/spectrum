@@ -400,9 +400,9 @@ void SQLClass::createStatements() {
 	
 	if (p->configuration().sqlType == "sqlite") {
 		createStatement(&m_stmt_addBuddy, "issssi", "INSERT INTO " + p->configuration().sqlPrefix + "buddies (user_id, uin, subscription, groups, nickname, flags) VALUES (?, ?, ?, ?, ?, ?)");
-		createStatement(&m_stmt_updateBuddy, "ssiis", "UPDATE " + p->configuration().sqlPrefix + "buddies SET groups=?, nickname=?, flags=? WHERE user_id=? AND uin=?");
+		createStatement(&m_stmt_updateBuddy, "ssisis", "UPDATE " + p->configuration().sqlPrefix + "buddies SET groups=?, nickname=?, flags=?, subscription=? WHERE user_id=? AND uin=?");
 	} else
-		createStatement(&m_stmt_addBuddy, "issssiss", "INSERT INTO " + p->configuration().sqlPrefix + "buddies (user_id, uin, subscription, groups, nickname, flags) VALUES (?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE groups=?, nickname=?");
+		createStatement(&m_stmt_addBuddy, "issssisss", "INSERT INTO " + p->configuration().sqlPrefix + "buddies (user_id, uin, subscription, groups, nickname, flags) VALUES (?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE groups=?, nickname=?, subscription=?");
 
 	createStatement(&m_stmt_updateBuddySubscription, "sis", "UPDATE " + p->configuration().sqlPrefix + "buddies SET subscription=? WHERE user_id=? AND uin=?");
 	createStatement(&m_stmt_getUserByJid, "s|isssssb", "SELECT id, jid, uin, password, encoding, language, vip FROM " + p->configuration().sqlPrefix + "users WHERE jid=?");
@@ -766,7 +766,7 @@ long SQLClass::addBuddy(long userId, const std::string &uin, const std::string &
 	p->protocol()->prepareUsername(u);
 	*m_stmt_addBuddy << (Poco::Int32) userId << u << subscription << group << nickname << (Poco::Int32) flags;
 	if (p->configuration().sqlType == "mysql") {
-		*m_stmt_addBuddy << group << nickname;
+		*m_stmt_addBuddy << group << nickname << subscription;
 	}
 
 	try {
@@ -775,7 +775,8 @@ long SQLClass::addBuddy(long userId, const std::string &uin, const std::string &
 #ifdef WITH_SQLITE
 	/* SQLite doesn't support "ON DUPLICATE UPDATE". */
 	catch (Poco::Data::SQLite::ConstraintViolationException e) {
-		*m_stmt_updateBuddy << group << nickname << (Poco::Int32) flags << (Poco::Int32) userId << uin;
+		std::cout << "UPDATE" << subscription << "\n";
+		*m_stmt_updateBuddy << group << nickname << (Poco::Int32) flags << subscription << (Poco::Int32) userId << uin;
 		try {
 			m_stmt_updateBuddy->executeNoCheck();
 		}
