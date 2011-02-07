@@ -53,15 +53,10 @@ static gpointer sendFileCallback(gpointer data) {
 }
 
 SendFile::SendFile(Bytestream *stream, int size, const std::string &filename, User *user, FiletransferRepeater *manager) {
-    m_stream = stream;
     m_size = size;
 	m_filename = filename;
 	m_user = user;
-	m_stream->registerBytestreamDataHandler (this);
 	m_parent = manager;
-	if (!m_stream->connect()) {
-		// TODO:
-	}
     m_file.open(m_filename.c_str(), std::ios_base::out | std::ios_base::binary );
     if (!m_file) {
         // TODO:
@@ -74,20 +69,18 @@ SendFile::~SendFile() {
 }
 
 bool SendFile::send() {
-	if (m_stream->isOpen()) {
-		lockMutex();
-		std::string data;
-		int size = m_parent->getDataToSend(data);
-		
-		if (size != 0) {
-			if (m_file.is_open()) {
-				m_file.write(data.c_str(), size);
-			}
+	lockMutex();
+	std::string data;
+	int size = m_parent->getDataToSend(data);
+	if (size != 0) {
+		if (m_file.is_open()) {
+			m_file.write(data.c_str(), size);
 		}
-		unlockMutex();
-		m_stream->recv(200);
 	}
-	if (shouldStop() || !m_stream->isOpen()) {
+	else
+		wait();
+	unlockMutex();
+	if (shouldStop()) {
 		m_file.close();
 		return false;
 	}
@@ -95,7 +88,7 @@ bool SendFile::send() {
 }
 
 void SendFile::dispose() {
-	Transport::instance()->disposeBytestream(m_stream);
+
 }
 
 void SendFile::handleBytestreamData(gloox::Bytestream *s5b, const std::string &data) {
@@ -416,8 +409,12 @@ void FiletransferRepeater::fileSendStart() {
 void FiletransferRepeater::fileRecvStart() {
 	Log("FiletransferRepeater::fileRecvStart", "accepting FT, data:" << m_from.full() << " " << m_to.full());
 	// We have to say to libpurple that we are ready to receive first data...
-	if (m_resender && m_xfer)
+	if (m_resender && m_xfer) {
 		m_readyTimer->start();
+	}
+	else {
+		Log("FiletransferRepeater::fileRecvStart", "WARNING: UI filetransfer is not started " << m_resender << " " << m_xfer);
+	}
 }
 
 std::string FiletransferRepeater::requestFT() {
@@ -435,7 +432,7 @@ void FiletransferRepeater::handleFTReceiveBytestream(Bytestream *bs, const std::
 	}
 }
 
-void FiletransferRepeater::handleFTSendBytestream(Bytestream *bs, const std::string &filename) {
+void FiletransferRepeater::handleFTSendBytestream(Bytestream *bs, const std::string &filename, User *user) {
 	if (!m_xfer) {
 		Log("FiletransferRepeater::handleFTSendBytestream", "no xfer");
 		return;
@@ -444,7 +441,6 @@ void FiletransferRepeater::handleFTSendBytestream(Bytestream *bs, const std::str
 	if (filename.empty())
 		m_resender = new SendFileStraight(bs, 0, this);
 	else {
-		User *user = Transport::instance()->userManager()->getUserByJID(bs->initiator().bare());
 		m_resender = new SendFile(bs, 0, filename, user, this);
 	}
 }

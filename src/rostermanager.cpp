@@ -373,6 +373,8 @@ void SpectrumRosterManager::sendNewBuddies() {
 
 			// send roster push if buddies are different or subscription is not both
 			if (differs || s_buddy->getSubscription() != "both") {
+// 				std::string group = m_xmppRoster[name].groups.size() == 0 ? "Buddies" : m_xmppRoster[name].groups.front();
+// 				std::cout << s_buddy->getSubscription() << " " << group << " " << s_buddy->getGroup() << " " << m_xmppRoster[name].nickname <<  " " << alias << "\n";
 				m_rosterPushes[m_rosterPushesContext++] = s_buddy;
 				SpectrumRosterManager::sendRosterPush(m_user->jid(), jid, "both", alias, s_buddy->getGroup(), this, m_rosterPushesContext);
 

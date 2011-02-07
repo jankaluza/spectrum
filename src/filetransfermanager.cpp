@@ -285,7 +285,12 @@ void FileTransferManager::handleXferFileReceiveRequest(PurpleXfer *xfer) {
 			}
 		}
 		else {
-			purple_xfer_request_accepted(xfer, std::string(Transport::instance()->getConfiguration().filetransferCache+"/"+remote_user+"-"+Transport::instance()->getId()+"-"+filename).c_str());
+			std::string directory = Transport::instance()->getConfiguration().filetransferCache + "/" + generateUUID();
+			purple_build_dir(directory.c_str(), 0755);
+			filename = directory + "/" + filename;
+			FiletransferRepeater *repeater = (FiletransferRepeater *) xfer->ui_data;
+			repeater->handleFTSendBytestream(NULL, filename, user);
+			purple_xfer_request_accepted(xfer, filename.c_str());
 		}
 	}
 }
@@ -300,7 +305,7 @@ void FileTransferManager::handleXferFileReceiveComplete(PurpleXfer *xfer) {
 			if (user->isConnected()) {
 				// filename is in form "/full/path/to/file/HASH/file.tld" where "/full/path/to/file/"
 				// has to be replaced by filetransferWeb.
-				std::vector <std::string> dirs = split(filename, '/');
+				std::vector <std::string> dirs = split(localname, '/');
 				std::string url = Transport::instance()->getConfiguration().filetransferWeb;
 				std::string basename = dirs.back();
 				dirs.pop_back();

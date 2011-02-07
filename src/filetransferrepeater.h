@@ -160,7 +160,7 @@ class FiletransferRepeater {
 		void handleFTReceiveBytestream(Bytestream *bs, const std::string &filename = "");
 
 		// Called when Gloox has opened bytestream to send file over XMPP.
-		void handleFTSendBytestream(Bytestream *bs, const std::string &filename = "");
+		void handleFTSendBytestream(Bytestream *bs, const std::string &filename = "", User *user = NULL);
 
 		// Called by resender thread when it has new data.
 		// Returns true if FiletransferRepeater doesn't want more data for now, thread will sleep
