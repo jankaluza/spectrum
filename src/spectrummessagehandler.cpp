@@ -225,11 +225,7 @@ void SpectrumMessageHandler::handleMessage(const Message& msg) {
 		conv = m_conversations[key]->getConv();
 	}
 
-	// If there are only resources with the same priorities, send responses to bare jid
-	if (m_user->hasSamePriorities())
-		m_conversations[key]->setResource("");
-	else
-		m_conversations[key]->setResource(msg.from().resource());
+	m_conversations[key]->setResource(msg.from().resource());
 
 	m_currentBody = msg.body();
 	Log("SpectrumMessageHandler::handleMessage", "username " << username << ", key " << key << ", PurpleConversation: "
