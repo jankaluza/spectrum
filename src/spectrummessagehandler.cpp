@@ -292,9 +292,16 @@ void SpectrumMessageHandler::handleMessage(const Message& msg) {
 }
 
 void SpectrumMessageHandler::removeConversationResource(const std::string &resource) {
-	for (std::map<std::string, AbstractConversation *>::iterator u = m_conversations.begin(); u != m_conversations.end() ; u++) {
-		if ((*u).second->getResource() == resource) {
+	if (resource.empty()) {
+		for (std::map<std::string, AbstractConversation *>::iterator u = m_conversations.begin(); u != m_conversations.end() ; u++) {
 			(*u).second->setResource("");
+		}
+	}
+	else {
+		for (std::map<std::string, AbstractConversation *>::iterator u = m_conversations.begin(); u != m_conversations.end() ; u++) {
+			if ((*u).second->getResource() == resource) {
+				(*u).second->setResource("");
+			}
 		}
 	}
 }

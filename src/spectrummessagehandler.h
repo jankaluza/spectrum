@@ -56,7 +56,7 @@ class SpectrumMessageHandler {
 		bool isOpenedConversation(const std::string &name);
 
 		// Removes resource from conversations. New messages will not be sent to this resource anymore.
-		void removeConversationResource(const std::string &resource);
+		void removeConversationResource(const std::string &resource = "");
 
 		// Returns true if there is any groupchat conversation opened.
 		bool hasOpenedMUC();

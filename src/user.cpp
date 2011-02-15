@@ -447,6 +447,10 @@ void User::receivedPresence(const Presence &stanza) {
 
 	// this presence is for the transport
 	if (stanza.to().username() == ""  || (Transport::instance()->protocol()->tempAccountsAllowed())) {
+
+		// unbound resource on every presence change
+		removeConversationResource();
+
 		if (stanza.presence() == Presence::Unavailable) {
 			// disconnect from legacy network if we are connected
 			if (stanza.to().username() == "") {
