@@ -223,6 +223,7 @@ void SpectrumBuddy::changeGroup(std::list<std::string> &groups) {
 void SpectrumBuddy::changeAlias(const std::string &alias) {
 	if (alias != getAlias()) {
 		purple_blist_alias_buddy(m_buddy, alias.c_str());
+		purple_blist_server_alias_buddy(m_buddy, alias.c_str());
 		serv_alias_buddy(m_buddy);
 	}
 }
