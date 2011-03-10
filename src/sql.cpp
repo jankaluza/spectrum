@@ -905,7 +905,8 @@ GHashTable *SQLClass::getBuddies(long userId, PurpleAccount *account) {
 				// create buddy
 				buddy = purple_buddy_new(account, buddyUins[k].c_str(), buddyNicknames[k].c_str());
 				purple_blist_add_buddy(buddy, contact, g, NULL);
-				Log("ADDING BUDDY", buddyIds[k] << " " << buddyUins[k] << " subscription: " << subscription << " " << buddy);
+				purple_blist_server_alias_buddy(buddy, buddyNicknames[k].c_str());
+				Log("ADDING BUDDY", buddyIds[k] << " " << buddyUins[k] << " " << buddyNicknames[k] << " subscription: " << subscription << " " << buddy);
 
 				// add settings
 				GHashTable *settings = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, (GDestroyNotify) purple_value_destroy);
