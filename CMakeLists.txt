@@ -184,3 +184,45 @@ INSTALL(FILES
     )
 
 endif (NOT WITHOUT_SPECTRUMCTL)
+
+
+message("Supported features")
+message("--------------------------------")
+
+if(CMAKE_BUILD_TYPE MATCHES Debug)
+	message("Debugging symbols:           yes")
+else(CMAKE_BUILD_TYPE MATCHES Debug)
+	message("Debugging symbols:           no (run cmake with -DCMAKE_BUILD_TYPE=Debug option)")
+endif(CMAKE_BUILD_TYPE MATCHES Debug)
+
+IF(NOT GETTEXT_MSGFMT_EXECUTABLE)
+	message("Translations:                yes")
+ELSE(NOT GETTEXT_MSGFMT_EXECUTABLE)
+	message("Translations:                no (install msgfmt from gettext package)")
+endif(NOT GETTEXT_MSGFMT_EXECUTABLE)
+
+if(Magick_LIBRARY AND Magick_INCLUDE_DIR)
+	message("Avatars resizing:            yes")
+else(Magick_LIBRARY AND Magick_INCLUDE_DIR)
+	message("Avatars resizing:            no (install Magick++)")
+endif(Magick_LIBRARY AND Magick_INCLUDE_DIR)
+
+IF(EVENT_INCLUDE_DIRS AND EVENT_LIBRARIES)
+SET(HAVE_EVENT TRUE)
+	message("libev (epoll, kpoll, ...):   yes")
+ELSE(EVENT_INCLUDE_DIRS AND EVENT_LIBRARIES)
+	message("libev (epoll, kpoll, ...):   no (install libev)")
+ENDIF(EVENT_INCLUDE_DIRS AND EVENT_LIBRARIES)
+
+if(POCO_SQLITE)
+	message("SQLite3:                     yes")
+else(POCO_SQLITE)
+	message("SQLite3:                     no (install libPocoSQLite/libPocoDataSQLite)")
+endif(POCO_SQLITE)
+if(POCO_MYSQL)
+	message("MySQL:                       yes")
+else(POCO_MYSQL)
+	message("MySQL:                       no (install libPocoMySQL/libPocoDataMySQL)")
+endif(POCO_MYSQL)
+
+message("--------------------------------")

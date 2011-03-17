@@ -25,23 +25,22 @@
 #include "win32/win32dep.h"
 #endif
 #ifdef WITH_LIBEVENT
-#include "libev/event.h"
-#include "libev/ev.h"
+#include "ev.h"
 #endif
 
 static struct ev_loop *loop;
 
 typedef struct _PurpleIOClosure {
+	// This has to be first member of this struct because of casting
+#ifdef WITH_LIBEVENT
 	struct ev_io io;
+#endif
 	PurpleInputFunction function;
 	guint result;
 	gpointer data;
 #ifdef WITH_LIBEVENT
 	GSourceFunc function2;
-	struct timeval timeout;
-	struct event evfifo;
-	struct ev_timer mytimer;
-
+	struct ev_timer timer;
 #endif
 } PurpleIOClosure;
 
@@ -135,23 +134,19 @@ static unsigned long id = 0;
 static void event_io_destroy(gpointer data)
 {
 	PurpleIOClosure *closure = (PurpleIOClosure* )data;
-	event_del(&closure->evfifo);
 	ev_io_stop(loop, &closure->io);
-	ev_timer_stop(loop, &closure->mytimer);
+	ev_timer_stop(loop, &closure->timer);
 	g_free(data);
 }
 
 static void event_timer_invoke(struct ev_loop *l, struct ev_timer *w, int event) {
-	PurpleIOClosure *closure = (PurpleIOClosure *)
-		(((char *)w) - offsetof (PurpleIOClosure, mytimer));
+	PurpleIOClosure *closure = (PurpleIOClosure *) (((char *)w) - offsetof (PurpleIOClosure, timer));
 
 	if (closure->function2(closure->data))
 		ev_timer_again(l, w);
 }
 
 static void event_io_invoke(struct ev_loop *l, struct ev_io *w, int event) {
-// static void event_io_invoke(int fd, short event, void *data)
-// {
 	PurpleIOClosure *closure = (PurpleIOClosure* )w;
 	PurpleInputCondition purple_cond = (PurpleInputCondition)0;
 	int tmp = 0;
@@ -164,16 +159,6 @@ static void event_io_invoke(struct ev_loop *l, struct ev_io *w, int event) {
 	{
 		tmp |= PURPLE_INPUT_WRITE;
 		purple_cond = (PurpleInputCondition)tmp;
-	}
-	if (event & EV_TIMEOUT)
-	{
-// 		tmp |= PURPLE_INPUT_WRITE;
-// 		purple_cond = (PurpleInputCondition)tmp;
-		if (closure->function2(closure->data))
-			evtimer_add(&closure->evfifo, &closure->timeout);
-// 		else
-// 			event_io_destroy(data);
-		return;
 	}
 
 	closure->function(closure->data, w->fd, purple_cond);
@@ -194,8 +179,6 @@ static guint event_input_add(gint fd,
 								gpointer data)
 {
 	PurpleIOClosure *closure = g_new0(PurpleIOClosure, 1);
-	GIOChannel *channel;
-	GIOCondition cond = (GIOCondition)0;
 	closure->function = function;
 	closure->data = data;
 
@@ -209,16 +192,11 @@ static guint event_input_add(gint fd,
 		tmp |= EV_WRITE;
 	}
 
-// 	event_set(&closure->evfifo, fd, tmp, event_io_invoke, closure);
-// 	event_add(&closure->evfifo, NULL);
-
 	ev_io_init(&closure->io, event_io_invoke, fd, tmp);
 	ev_io_start(loop, &closure->io);
 
-	
 	int *f = (int *) g_malloc(sizeof(int));
-	*f = id;
-	id++;
+	*f = id++;
 	g_hash_table_replace(events, f, closure);
 	
 	return *f;
@@ -229,16 +207,12 @@ static guint event_timeout_add (guint interval, GSourceFunc function, gpointer d
 	PurpleIOClosure *closure = g_new0(PurpleIOClosure, 1);
 	closure->function2 = function;
 	closure->data = data;
-	
-// 	evtimer_set(&closure->evfifo, event_io_invoke, closure);
-// 	evtimer_add(&closure->evfifo, &timeout);
-	ev_timer_init (&closure->mytimer, event_timer_invoke, (double)(interval) / 1000, 0.);
-	ev_timer_start (loop, &closure->mytimer);
-	closure->timeout = timeout;
+
+	ev_timer_init (&closure->timer, event_timer_invoke, (double)(interval) / 1000, 0.);
+	ev_timer_start (loop, &closure->timer);
 	
 	guint *f = (guint *) g_malloc(sizeof(guint));
-	*f = id;
-	id++;
+	*f = id++;
 	g_hash_table_replace(events, f, closure);
 	return *f;
 }
@@ -263,17 +237,10 @@ static PurpleEventLoopUiOps libEventLoopOps =
 
 #endif /* WITH_LIBEVENT*/
 
-static void cb(int severity, const char *msg) {
-	std::cout << msg;
-}
-
 PurpleEventLoopUiOps * getEventLoopUiOps(){
 	if (CONFIG().eventloop == "glib")
 		return &eventLoopOps;
 #ifdef WITH_LIBEVENT
-// 		event_set_log_callback(cb);
-		setenv("EVENT_NOEPOLL", "1",  1);
-	std::cout << "LIBEVENT USES" << event_get_method() << "\n";
 	events = g_hash_table_new_full(g_int_hash, g_int_equal, g_free, NULL);
 	return &libEventLoopOps;
 #endif

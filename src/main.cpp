@@ -74,7 +74,7 @@
 #include <gloox/chatstate.h>
 
 #ifdef WITH_LIBEVENT
-#include "libev/ev.h"
+#include "ev.h"
 #endif
 
 static gboolean nodaemon = FALSE;
@@ -1008,16 +1008,17 @@ GlooxMessageHandler::GlooxMessageHandler(const std::string &config) : MessageHan
 	if (m_configuration.logAreas & LOG_AREA_PURPLE)
 		j->logInstance().registerLogHandler(LogLevelDebug, LogAreaXmlIncoming | LogAreaXmlOutgoing, &Log_);
 	m_loop = NULL;
-	struct ev_loop *loop;
+#ifdef WITH_LIBEVENT
+	m_evLoop = NULL;
+#endif
+
 	if (CONFIG().eventloop == "glib") {
 		m_loop = g_main_loop_new(NULL, FALSE);
 	}
 #ifdef WITH_LIBEVENT
 	else {
-// 		struct event_base *base = (struct event_base *) event_init();
-		loop = ev_default_loop (0);
-		setLoop(loop);
-// 		std::cout << event_base_get_method(base) << "\n";
+		m_evLoop = ev_default_loop (0);
+		setLoop(m_evLoop);
 	}
 #endif
 
@@ -1107,7 +1108,7 @@ GlooxMessageHandler::GlooxMessageHandler(const std::string &config) : MessageHan
 		}
 #ifdef WITH_LIBEVENT
 		else {
-			 ev_loop (loop, 0);
+			 ev_loop(m_evLoop, 0);
 		}
 #endif
 	}
@@ -1123,7 +1124,7 @@ GlooxMessageHandler::~GlooxMessageHandler(){
 	}
 #ifdef WITH_LIBEVENT
 	else {
-// 		event_loopexit(NULL);
+// 		stop m_evLoop somehow...
 	}
 #endif
 	

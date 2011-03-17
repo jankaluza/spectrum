@@ -64,6 +64,10 @@
 #include "request.h"
 #include "ft.h"
 
+#ifdef WITH_LIBEVENT
+#include "ev.h"
+#endif
+
 #ifndef WIN32
 #include <libintl.h>
 #include <locale.h>
@@ -240,6 +244,9 @@ private:
 	static GlooxMessageHandler* m_pInstance;
 	Transport *m_transport;
 	GMainLoop *m_loop;
+#ifdef WITH_LIBEVENT
+	struct ev_loop *m_evLoop;
+#endif
 	std::string m_config;
 	unsigned int m_reconnectCount;
 	guint m_socketId;
