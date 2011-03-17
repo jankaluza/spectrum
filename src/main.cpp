@@ -1573,7 +1573,10 @@ void GlooxMessageHandler::handleSubscription(const Subscription &stanza) {
 	else if (stanza.subtype() == Subscription::Unsubscribe) {
 		Tag *tag = new Tag("presence");
 		tag->addAttribute("to", stanza.from().bare());
-		tag->addAttribute("from", stanza.to().username() + "@" + Transport::instance()->jid());
+		if (stanza.to().username().empty())
+			tag->addAttribute("from", Transport::instance()->jid());
+		else
+			tag->addAttribute("from", stanza.to().username() + "@" + Transport::instance()->jid());
 		tag->addAttribute( "type", "unsubscribed" );
 		Transport::instance()->send( tag );
 	}

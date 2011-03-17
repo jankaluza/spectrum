@@ -36,10 +36,10 @@ SpectrumBuddy::~SpectrumBuddy() {
 
 std::string SpectrumBuddy::getAlias() {
 	std::string alias;
-	if (purple_buddy_get_server_alias(m_buddy))
-		alias = (std::string) purple_buddy_get_server_alias(m_buddy);
-	else
+	if (purple_buddy_get_alias(m_buddy))
 		alias = (std::string) purple_buddy_get_alias(m_buddy);
+	else
+		alias = (std::string) purple_buddy_get_server_alias(m_buddy);
 	return alias;
 }
 
@@ -223,6 +223,7 @@ void SpectrumBuddy::changeGroup(std::list<std::string> &groups) {
 void SpectrumBuddy::changeAlias(const std::string &alias) {
 	if (alias != getAlias()) {
 		purple_blist_alias_buddy(m_buddy, alias.c_str());
+		purple_blist_server_alias_buddy(m_buddy, alias.c_str());
 		serv_alias_buddy(m_buddy);
 	}
 }

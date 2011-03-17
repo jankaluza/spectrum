@@ -292,6 +292,7 @@ class spectrum:
 				return 0 # "running."
 			except OSError, err:
 			# except OSError as err: #python3
+				import errno
 				if err.errno == errno.ESRCH:
 					return 1 # "not running but pid file exists."
 				else:

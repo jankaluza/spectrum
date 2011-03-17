@@ -116,6 +116,7 @@ SpectrumRosterManager::SpectrumRosterManager(User *user) : RosterStorage(user) {
 SpectrumRosterManager::~SpectrumRosterManager() {
 	g_hash_table_destroy(m_roster);
 	delete m_syncTimer;
+	delete m_presenceTimer;
 }
 
 bool SpectrumRosterManager::isInRoster(const std::string &name, const std::string &subscription) {
@@ -457,7 +458,7 @@ void SpectrumRosterManager::handlePresence(const Presence &stanza) {
 authRequest *SpectrumRosterManager::handleAuthorizationRequest(PurpleAccount *account, const char *remote_user, const char *id, const char *alias, const char *message, gboolean on_list, PurpleAccountRequestAuthorizationCb authorize_cb, PurpleAccountRequestAuthorizationCb deny_cb, void *user_data) {
 	std::string name(remote_user);
 
-	if (m_user->getSetting<bool>("reject_authorizations")) {
+	if (m_user->getSetting<bool>("reject_authorizations") && getRosterItem(remote_user) == NULL) {
 		Log(m_user->jid(), "purpleAuthorization rejected: " << name << " on_list:" << on_list);
 		deny_cb(user_data);
 		return NULL;
