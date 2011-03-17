@@ -1,3 +1,32 @@
+version 1.4.8 (2011-03-XX):
+	General:
+	* Close socket when filetransfer is finished. Fixes filetransfer
+	  for tkabber.
+	* Cancel remote filetransfers when XMPP user disconnets.
+	* Escape status message before sending it to legacy network.
+	* Update buddies in database after remote-roster change.
+	* Send status code 210 when nickname changes in Multi user chat.
+	* Fixed bug when chatstates weren't forwarded to XMPP in some cases.
+	* Disable not working IBB filetransfer method.
+	* Don't forward avatars bigger than 300KB to XMPP.
+	* Added support for memory usage in statistics on *BSD.
+	* Send unavailable presences from all buddies when Spectrum is not able
+	  to reconnect XMPP user in 10 seconds because of network error.
+	* filetransfer_force_cache option now works as expected.
+	* Added [registration] extra_fields config variable to disable/enable
+	  'encoding' field in registration form.
+	* Added support for newest Poco libraries.
+	* Epoll eventloop is now supported again using libev library
+	  (libevent is not used anymore).
+	* Fixed nickname updating using remote-roster.
+
+	ICQ:
+	* Emails are allowed in registration form.
+
+	IRC:
+	* Fixed regression with broken private messages.
+	* Fixed Nickserv identification without irc-helper plugin.
+
 version 1.4.7 (2011-01-22):
 	General:
 	* Fixed 100% cpu usage when Spectrum can't connect Jabber server.
