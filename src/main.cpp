@@ -74,7 +74,7 @@
 #include <gloox/chatstate.h>
 
 #ifdef WITH_LIBEVENT
-#include <event.h>
+#include "libev/ev.h"
 #endif
 
 static gboolean nodaemon = FALSE;
@@ -1008,12 +1008,15 @@ GlooxMessageHandler::GlooxMessageHandler(const std::string &config) : MessageHan
 	if (m_configuration.logAreas & LOG_AREA_PURPLE)
 		j->logInstance().registerLogHandler(LogLevelDebug, LogAreaXmlIncoming | LogAreaXmlOutgoing, &Log_);
 	m_loop = NULL;
+	struct ev_loop *loop;
 	if (CONFIG().eventloop == "glib") {
 		m_loop = g_main_loop_new(NULL, FALSE);
 	}
 #ifdef WITH_LIBEVENT
 	else {
-		struct event_base *base = (struct event_base *) event_init();
+// 		struct event_base *base = (struct event_base *) event_init();
+		loop = ev_default_loop (0);
+		setLoop(loop);
 // 		std::cout << event_base_get_method(base) << "\n";
 	}
 #endif
@@ -1104,7 +1107,7 @@ GlooxMessageHandler::GlooxMessageHandler(const std::string &config) : MessageHan
 		}
 #ifdef WITH_LIBEVENT
 		else {
-			event_loop(0);
+			 ev_loop (loop, 0);
 		}
 #endif
 	}
@@ -1120,7 +1123,7 @@ GlooxMessageHandler::~GlooxMessageHandler(){
 	}
 #ifdef WITH_LIBEVENT
 	else {
-		event_loopexit(NULL);
+// 		event_loopexit(NULL);
 	}
 #endif
 	
@@ -1992,6 +1995,7 @@ bool GlooxMessageHandler::initPurple(){
 		purple_debug_set_ui_ops(&debugUiOps);
 
 	purple_core_set_ui_ops(&coreUiOps);
+	
 	purple_eventloop_set_ui_ops(getEventLoopUiOps());
 
 	ret = purple_core_init(PURPLE_UI);

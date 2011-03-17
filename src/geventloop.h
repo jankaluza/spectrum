@@ -24,10 +24,12 @@
 #include <glib.h>
 #include "purple.h"
 #include "eventloop.h"
+#include "libev/ev.h"
 
 #define READ_COND  (G_IO_IN | G_IO_HUP | G_IO_ERR)
 #define WRITE_COND (G_IO_OUT | G_IO_HUP | G_IO_ERR | G_IO_NVAL)
 
-PurpleEventLoopUiOps * getEventLoopUiOps(void);
+PurpleEventLoopUiOps * getEventLoopUiOps();
+void setLoop(struct ev_loop *loop = NULL);
 
 #endif
