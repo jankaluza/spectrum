@@ -302,6 +302,9 @@ void User::connect() {
 				purple_account_set_status(m_account, purple_status_type_get_id(statusType), TRUE, NULL);
 			}
 		}
+		else {
+			purple_account_connect(m_account);
+		}
 	}
 
 	SpectrumRosterManager::sendPresence(Transport::instance()->jid(), m_jid, "unavailable", tr(getLang(), _("Connecting")));
@@ -575,10 +578,10 @@ void User::forwardStatus(int presence, const std::string &stanzaStatus) {
 			break;
 		}
 		case Presence::Away: {
-			if (purple_account_get_status_type_with_primitive(m_account, PURPLE_STATUS_AWAY))
-				PurplePresenceType = PURPLE_STATUS_AWAY;
-			else
+			if (m_account && !purple_account_get_status_type_with_primitive(m_account, PURPLE_STATUS_AWAY))
 				PurplePresenceType = PURPLE_STATUS_EXTENDED_AWAY;
+			else
+				PurplePresenceType = PURPLE_STATUS_AWAY;
 			break;
 		}
 		case Presence::DND: {
@@ -586,10 +589,10 @@ void User::forwardStatus(int presence, const std::string &stanzaStatus) {
 			break;
 		}
 		case Presence::XA: {
-			if (purple_account_get_status_type_with_primitive(m_account, PURPLE_STATUS_EXTENDED_AWAY))
-				PurplePresenceType = PURPLE_STATUS_EXTENDED_AWAY;
-			else
+			if (m_account && !purple_account_get_status_type_with_primitive(m_account, PURPLE_STATUS_EXTENDED_AWAY))
 				PurplePresenceType = PURPLE_STATUS_AWAY;
+			else
+				PurplePresenceType = PURPLE_STATUS_EXTENDED_AWAY;
 			break;
 		}
 		default:
