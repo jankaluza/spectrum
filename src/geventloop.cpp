@@ -141,9 +141,9 @@ static void event_io_destroy(gpointer data)
 
 static void event_timer_invoke(struct ev_loop *l, struct ev_timer *w, int event) {
 	PurpleIOClosure *closure = (PurpleIOClosure *) (((char *)w) - offsetof (PurpleIOClosure, timer));
-
-	if (closure->function2(closure->data))
-		ev_timer_again(l, w);
+	if (!closure->function2(closure->data)) {
+		ev_timer_stop(l, w);
+	}
 }
 
 static void event_io_invoke(struct ev_loop *l, struct ev_io *w, int event) {
@@ -208,7 +208,7 @@ static guint event_timeout_add (guint interval, GSourceFunc function, gpointer d
 	closure->function2 = function;
 	closure->data = data;
 
-	ev_timer_init (&closure->timer, event_timer_invoke, (double)(interval) / 1000, 0.);
+	ev_timer_init (&closure->timer, event_timer_invoke, (double)(interval) / 1000, (double)(interval) / 1000);
 	ev_timer_start (loop, &closure->timer);
 	
 	guint *f = (guint *) g_malloc(sizeof(guint));
