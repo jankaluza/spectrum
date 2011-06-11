@@ -1,4 +1,4 @@
-version 1.4.8 (2011-03-XX):
+version 1.4.8 (2011-06-11):
 	General:
 	* Close socket when filetransfer is finished. Fixes filetransfer
 	  for tkabber.
@@ -21,6 +21,7 @@ version 1.4.8 (2011-03-XX):
 	* Fixed nickname updating using remote-roster.
 
 	ICQ:
+	* Fixed login after ICQ protocol change.
 	* Emails are allowed in registration form.
 
 	IRC:
