@@ -223,12 +223,14 @@ Tag *ICQProtocol::getVCardTag(User *user, GList *vcardEntries) {
 }
 
 void ICQProtocol::onPurpleAccountCreated(PurpleAccount *account) {
-	purple_account_set_string(account, "server", "login.icq.com");
+// 	purple_account_set_string(account, "server", "slogin.icq.com");
+// 	purple_account_set_bool(account, "use_clientlogin", 0);
+// 	purple_account_set_bool(account, "use_ssl", 0);
 
-	if (purple_version_check(2, 7, 7) != NULL) {
-		purple_account_set_bool(account, "use_clientlogin", 0);
-		purple_account_set_bool(account, "use_ssl", 0);
-	}
+// 	if (purple_version_check(2, 7, 7) != NULL) {
+// 		purple_account_set_bool(account, "use_clientlogin", 1);
+// 		purple_account_set_bool(account, "use_ssl", 0);
+// 	}
 
 }
 

@@ -76,7 +76,7 @@ User::User(JID jid, const std::string &username, const std::string &password, co
 		m_username = newUsername;
 	}
 
-	m_reconnectTimer = new SpectrumTimer(6000, &reconnectTimerTimeout, this);
+	m_reconnectTimer = new SpectrumTimer(15000, &reconnectTimerTimeout, this);
 
 	setSettings(Transport::instance()->sql()->getSettings(m_userID));
 
@@ -709,6 +709,7 @@ void User::handleVCard(const VCard* vcard) {
 User::~User(){
 	Log("User Destructor", m_jid << " " << m_account << " " << (m_account ? purple_account_get_username(m_account) : "") );
 	Transport::instance()->protocol()->onDestroy(this);
+	SpectrumRosterManager::sendPresence(Transport::instance()->jid(), m_jid, "unavailable", tr(getLang(), _("Disconnected")));
 	g_free(m_lang);
 	delete m_reconnectTimer;
 
