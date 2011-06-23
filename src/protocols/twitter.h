@@ -45,6 +45,7 @@ class TwitterProtocol : AbstractProtocol
 		void onDestroy(User *user);
 		void onPurpleAccountCreated(PurpleAccount *account);
 		void onUserCreated(User *user);
+		void onXMPPMessageSent(User *user, const char *msg);
 	private:
 		std::list<std::string> m_transportFeatures;
 		std::list<std::string> m_buddyFeatures;

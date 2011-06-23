@@ -1445,6 +1445,7 @@ void GlooxMessageHandler::purpleConversationWriteIM(PurpleConversation *conv, co
 		if (user->isConnected()) {
 			m_stats->messageFromLegacy();
 			user->handleWriteIM(conv, who, message, flags, mtime);
+			Transport::instance()->protocol()->onXMPPMessageSent(user, message);
 		}
 		else {
 			Log(user->jid(), "purpleConversationWriteIM called for unconnected user..." << message);
