@@ -85,6 +85,7 @@ struct Configuration {
 	std::string sqlDb;				// Database name.
 	std::string sqlPrefix;			// Prefix for database tables.
 	std::string sqlType;			// Type of database.
+	std::string sqlCryptKey;
 	
 	std::string hash; 				// Version hash used for caps.
 	

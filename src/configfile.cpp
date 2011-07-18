@@ -392,6 +392,7 @@ Configuration ConfigFile::getConfiguration() {
 	LOAD_REQUIRED_STRING_DEFAULT(configuration.sqlPassword, "database", "password", configuration.sqlType == "sqlite" ? "optional" : "");
 	LOAD_REQUIRED_STRING_DEFAULT(configuration.sqlUser, "database", "user", configuration.sqlType == "sqlite" ? "optional" : "");
 	LOAD_REQUIRED_STRING_DEFAULT(configuration.sqlPrefix, "database", "prefix", configuration.sqlType == "sqlite" ? "" : "required");
+	LOAD_REQUIRED_STRING_DEFAULT(configuration.sqlCryptKey, "database", "useless_encryption_key", "");
 	loadString(configuration.sqlVIP, "database", "vip_statement", "");
 	LOAD_REQUIRED_STRING(configuration.userDir, "purple", "userdir");
 

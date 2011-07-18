@@ -28,6 +28,7 @@
 #include "transport.h"
 #include "usermanager.h"
 #include <sys/time.h>
+#include "gloox/base64.h"
 
 #define SQLITE_DB_VERSION 3
 #define MYSQL_DB_VERSION 2
@@ -429,8 +430,39 @@ void SQLClass::createStatements() {
 		createStatement(&m_stmt_setUserOnline, "bi", "UPDATE " + p->configuration().sqlPrefix + "users SET online=?, last_login=NOW()  WHERE id=?");
 }
 
+static std::string encryptMe(const std::string &password, std::string &key) {
+	std::string encrypted;
+	encrypted.resize(password.size());
+	for (int i = 0; i < password.size(); i++) {
+		char c = password[i];
+		char keychar = key[i % key.size()];
+		c += keychar;
+		encrypted[i] = c;
+	}
+	encrypted = gloox::Base64::encode64(encrypted);
+	return encrypted;
+}
+
+static std::string decryptMe(std::string &encrypted, std::string &key) {
+	encrypted = gloox::Base64::decode64(encrypted);
+	std::string password;
+	password.resize(encrypted.size());
+	for (int i = 0; i < encrypted.size(); i++) {
+		char c = encrypted[i];
+		char keychar = key[i % key.size()];
+		c -= keychar;
+		password[i] = c;
+	}
+
+	return password;
+}
+
 void SQLClass::addUser(const UserRow &user) {
-	*m_stmt_addUser << user.jid << user.uin << user.password << user.language << user.encoding << user.vip;
+	std::string encrypted = user.password;
+	if (!p->configuration().sqlCryptKey.empty())
+		encrypted = encryptMe(user.password, p->configuration().sqlCryptKey);
+
+	*m_stmt_addUser << user.jid << user.uin << encrypted << user.language << user.encoding << user.vip;
 	m_stmt_addUser->execute();
 }
 
@@ -722,7 +754,11 @@ long SQLClass::getRegisteredUsersRosterCount(){
 }
 
 void SQLClass::updateUser(const UserRow &user) {
-	*m_stmt_updateUserPassword << user.password << user.language << user.encoding << user.vip << user.jid;
+	std::string encrypted = user.password;
+	if (!p->configuration().sqlCryptKey.empty())
+		encrypted = encryptMe(user.password, p->configuration().sqlCryptKey);
+
+	*m_stmt_updateUserPassword << encrypted << user.language << user.encoding << user.vip << user.jid;
 	m_stmt_updateUserPassword->execute();
 }
 
@@ -823,6 +859,10 @@ UserRow SQLClass::getUserByJid(const std::string &jid){
 // 		*m_sess <<  "SELECT COUNT(jid) as is_vip FROM platby.users WHERE jid='" + jid + "' and expire>NOW();",
 // 														into(user.vip), now;
 	}
+
+	if (!p->configuration().sqlCryptKey.empty())
+		user.password = decryptMe(user.password, p->configuration().sqlCryptKey);
+
 	return user;
 }
 
