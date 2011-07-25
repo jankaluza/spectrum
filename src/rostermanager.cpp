@@ -110,7 +110,7 @@ SpectrumRosterManager::SpectrumRosterManager(User *user) : RosterStorage(user) {
 	m_roster = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
 	m_loadingFromDB = false;
 	m_rosterPushesContext = 0;
-	m_supportRosterIQ = false;
+	m_supportRosterIQ = CONFIG().forceRemoteRoster;
 }
 
 SpectrumRosterManager::~SpectrumRosterManager() {

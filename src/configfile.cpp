@@ -340,6 +340,7 @@ Configuration ConfigFile::getConfiguration() {
 	loadBoolean(configuration.VIPEnabled, "service", "vip_mode", false);
 	loadBoolean(configuration.useProxy, "service", "use_proxy", false);
 	loadBoolean(configuration.require_tls, "service", "require_tls", true);
+	loadBoolean(configuration.forceRemoteRoster, "service", "force_remote_roster", false);
 	loadBoolean(configuration.filetransferForceDir, "service", "filetransfer_force_cache_storage", false);
 	loadStringList(configuration.allowedServers, "service", "allowed_servers");
 	loadStringList(configuration.admins, "service", "admins");
