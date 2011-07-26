@@ -177,6 +177,7 @@ class AbstractProtocol
 		virtual bool onNotifyUri(const char *uri) { return false; }
 		virtual void onRequestClose(void *handle) { }
 		virtual void onXMPPMessageReceived(User *user, const Message &msg) {}
+		virtual void onXMPPMessageSent(User *user, const char *msg) {}
 };
 
 #endif

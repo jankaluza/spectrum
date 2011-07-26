@@ -60,6 +60,7 @@ struct Configuration {
 	std::string language;			// Default language.
 	bool useProxy;					// True if transport has to use proxy to connect legacy network.
 	bool jid_escaping;				// True if jid escaping is enabled by default.
+	bool forceRemoteRoster;
 	bool require_tls;
 	bool filetransferForceDir;
 	std::string filetransfer_proxy_ip;
@@ -85,6 +86,7 @@ struct Configuration {
 	std::string sqlDb;				// Database name.
 	std::string sqlPrefix;			// Prefix for database tables.
 	std::string sqlType;			// Type of database.
+	std::string sqlCryptKey;
 	
 	std::string hash; 				// Version hash used for caps.
 	

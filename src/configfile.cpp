@@ -340,6 +340,7 @@ Configuration ConfigFile::getConfiguration() {
 	loadBoolean(configuration.VIPEnabled, "service", "vip_mode", false);
 	loadBoolean(configuration.useProxy, "service", "use_proxy", false);
 	loadBoolean(configuration.require_tls, "service", "require_tls", true);
+	loadBoolean(configuration.forceRemoteRoster, "service", "force_remote_roster", false);
 	loadBoolean(configuration.filetransferForceDir, "service", "filetransfer_force_cache_storage", false);
 	loadStringList(configuration.allowedServers, "service", "allowed_servers");
 	loadStringList(configuration.admins, "service", "admins");
@@ -392,6 +393,7 @@ Configuration ConfigFile::getConfiguration() {
 	LOAD_REQUIRED_STRING_DEFAULT(configuration.sqlPassword, "database", "password", configuration.sqlType == "sqlite" ? "optional" : "");
 	LOAD_REQUIRED_STRING_DEFAULT(configuration.sqlUser, "database", "user", configuration.sqlType == "sqlite" ? "optional" : "");
 	LOAD_REQUIRED_STRING_DEFAULT(configuration.sqlPrefix, "database", "prefix", configuration.sqlType == "sqlite" ? "" : "required");
+	LOAD_REQUIRED_STRING_DEFAULT(configuration.sqlCryptKey, "database", "useless_encryption_key", "");
 	loadString(configuration.sqlVIP, "database", "vip_statement", "");
 	LOAD_REQUIRED_STRING(configuration.userDir, "purple", "userdir");
 

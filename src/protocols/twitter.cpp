@@ -71,6 +71,16 @@ void TwitterProtocol::onDestroy(User *user) {
 	user->updateSetting<std::string>("twitter_last_msg_id", purple_account_get_string(account, "twitter_last_msg_id", ""));
 }
 
+void TwitterProtocol::onXMPPMessageSent(User *user, const char *msg) {
+	PurpleAccount *account = user->account();
+	if (account == NULL)
+		return;
+	user->updateSetting<std::string>("twitter_oauth_secret", purple_account_get_string(account, "twitter_oauth_secret", ""));
+	user->updateSetting<std::string>("twitter_oauth_token", purple_account_get_string(account, "twitter_oauth_token", ""));
+	user->updateSetting<std::string>("twitter_sent_msg_ids", purple_account_get_string(account, "twitter_sent_msg_ids", ""));
+	user->updateSetting<std::string>("twitter_last_msg_id", purple_account_get_string(account, "twitter_last_msg_id", ""));
+}
+
 void TwitterProtocol::onPurpleAccountCreated(PurpleAccount *account) {
 	User *user = (User *) account->ui_data;
 	purple_account_set_string(account, "twitter_oauth_secret", user->getSetting<std::string>("twitter_oauth_secret", "").c_str());

@@ -18,39 +18,25 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02111-1301  USA
  */
 
-#ifndef _HI_Twitter_PROTOCOL_H
-#define _HI_Twitter_PROTOCOL_H
+#ifndef _HI_XFIRE_PROTOCOL_H
+#define _HI_XFIRE_PROTOCOL_H
 
 #include "abstractprotocol.h"
 
-struct TwitterData {
-	GCallback ok_cb;
-	void *user_data;
-};
-
-class TwitterProtocol : AbstractProtocol
+class XFireProtocol : AbstractProtocol
 {
 	public:
-		TwitterProtocol();
-		~TwitterProtocol();
-		const std::string gatewayIdentity() { return "twitter"; }
-		const std::string protocol() { return "prpl-mbpurple-twitter"; }
+		XFireProtocol();
+		~XFireProtocol();
+		const std::string gatewayIdentity() { return "xfire"; }
+		const std::string protocol() { return "prpl-xfire"; }
 		std::list<std::string> transportFeatures();
 		std::list<std::string> buddyFeatures();
 		std::string text(const std::string &key);
-		bool onPurpleRequestInput(void *handle, User *user, const char *title, const char *primary,const char *secondary, const char *default_value,gboolean multiline, gboolean masked, gchar *hint,const char *ok_text, GCallback ok_cb,const char *cancel_text, GCallback cancel_cb, PurpleAccount *account, const char *who,PurpleConversation *conv, void *user_data);
-		bool onNotifyUri(const char *uri);
-		void onRequestClose(void *handle);
-		void onXMPPMessageReceived(User *user, const Message &msg);
-		void onDestroy(User *user);
-		void onPurpleAccountCreated(PurpleAccount *account);
-		void onUserCreated(User *user);
-		void onXMPPMessageSent(User *user, const char *msg);
+
 	private:
 		std::list<std::string> m_transportFeatures;
 		std::list<std::string> m_buddyFeatures;
-		std::string m_lastUri;
-		std::map <void *, TwitterData> m_callbacks;
 
 };
 
