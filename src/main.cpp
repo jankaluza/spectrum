@@ -77,6 +77,10 @@
 #include "ev.h"
 #endif
 
+#ifdef __linux__
+#include "malloc.h"
+#endif
+
 static gboolean nodaemon = FALSE;
 static gchar *logfile = NULL;
 static gchar *lock_file = NULL;
@@ -280,6 +284,10 @@ static void conv_chat_remove_users(PurpleConversation *conv, GList *users) {
  */
 static void signed_on(PurpleConnection *gc,gpointer unused) {
 	GlooxMessageHandler::instance()->signedOn(gc, unused);
+#ifdef __linux__
+	// force returning of memory chunks allocated by libxml2 to kernel
+	malloc_trim(0);
+#endif
 }
 
 /*
@@ -1421,7 +1429,10 @@ void * GlooxMessageHandler::purpleAuthorizeReceived(PurpleAccount *account, cons
 		else {
 			Log(user->jid(), "WARNING: purpleAuthorizeReceived for unconnected user from buddy = " << std::string(remote_user ? remote_user : "NULL"));
 		}
-	}
+	}/*
+ * Called when account is disconnecting and all requests will be closed and unreachable.
+ */
+
 	else {
 		Log("purpleAuthorizeReceived", "WARNING: there is no User for account =" << purple_account_get_username(account));
 	}

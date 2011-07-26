@@ -95,6 +95,7 @@ std::string SpectrumBuddy::getIconHash() {
 	if (icon) {
 		avatarHash = purple_buddy_icon_get_full_path(icon);
 		Log(getName(), "avatarHash");
+		purple_buddy_icon_unref(icon);
 	}
 
 	if (avatarHash) {

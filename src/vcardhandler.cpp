@@ -223,6 +223,7 @@ void GlooxVCardHandler::userInfoArrived(PurpleConnection *gc, const std::string 
 					else {
 						Log("VCard", "not sending avatar, image data corrupted or avatar too big (bigger than 300 KB)");
 					}
+					purple_buddy_icon_unref(icon);
 				}
 			}
 
