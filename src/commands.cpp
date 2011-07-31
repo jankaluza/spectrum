@@ -41,6 +41,13 @@ static void get_settings(gpointer key, gpointer v, gpointer data) {
 	}
 }
 
+static PurpleCmdRet resend_presences_command_cb(PurpleConversation *conv, const char *cmd, char **args, char **error, void *data) {
+	User *user = (User *) GlooxMessageHandler::instance()->userManager()->getUserByAccount(purple_conversation_get_account(conv));
+	if (!user)
+		return PURPLE_CMD_RET_OK;
+	user->sendPresenceToAll(user->jid());
+	return PURPLE_CMD_RET_OK;
+}
 
 // static PurpleCmdRet settings_command_cb(PurpleConversation *conv, const char *cmd, char **args, char **error, void *data) {
 // 	GString *s = NULL;
@@ -140,6 +147,7 @@ static PurpleCmdRet help_command_cb(PurpleConversation *conv, const char *cmd, c
 
 void purple_commands_init() {
 	purple_cmd_register("help", "w", PURPLE_CMD_P_DEFAULT, (PurpleCmdFlag) (PURPLE_CMD_FLAG_CHAT | PURPLE_CMD_FLAG_IM | PURPLE_CMD_FLAG_ALLOW_WRONG_ARGS), NULL, help_command_cb, _("help &lt;command&gt;:  Help on a specific command."), NULL);
+	purple_cmd_register("resend_presences", "", PURPLE_CMD_P_DEFAULT, (PurpleCmdFlag) (PURPLE_CMD_FLAG_CHAT | PURPLE_CMD_FLAG_IM | PURPLE_CMD_FLAG_ALLOW_WRONG_ARGS), NULL, resend_presences_command_cb, _("Resends presences."), NULL);
 // 	purple_cmd_register("settings", "www", PURPLE_CMD_P_DEFAULT, (PurpleCmdFlag) (PURPLE_CMD_FLAG_CHAT | PURPLE_CMD_FLAG_IM), NULL, settings_command_cb, _("settings set &lt;command&gt; settings list:  Configure transport."), NULL);
 // 	purple_cmd_register("settings", "w", PURPLE_CMD_P_DEFAULT, (PurpleCmdFlag) (PURPLE_CMD_FLAG_CHAT | PURPLE_CMD_FLAG_IM), NULL, settings_command_cb, _("settings set &lt;command&gt; settings list:  Configure transport."), NULL);
 }
