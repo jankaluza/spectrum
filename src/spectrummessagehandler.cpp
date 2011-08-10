@@ -232,7 +232,7 @@ void SpectrumMessageHandler::handleMessage(const Message& msg) {
 			<< conv << ", SpectrumConversation: " << m_conversations[key] << ", resource was set to " << msg.from().resource());
 	
 	// Handles commands (TODO: move me to commands.cpp)
-	if (m_currentBody.find("/") == 0) {
+	if (m_currentBody.find("/") == 0 && Transport::instance()->getConfiguration().enable_commands) {
 		bool handled = true;
 		PurpleCmdStatus status;
 		char *error = NULL;

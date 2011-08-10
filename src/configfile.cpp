@@ -335,6 +335,7 @@ Configuration ConfigFile::getConfiguration() {
 	loadString(configuration.language, "service", "language", "en");
 	loadString(configuration.encoding, "service", "encoding", "");
 	loadString(configuration.eventloop, "service", "eventloop", "glib");
+	loadBoolean(configuration.enable_commands, "service", "enable_commands", true);
 	loadBoolean(configuration.jid_escaping, "service", "jid_escaping", true);
 	loadBoolean(configuration.onlyForVIP, "service", "only_for_vip", false);
 	loadBoolean(configuration.VIPEnabled, "service", "vip_mode", false);
