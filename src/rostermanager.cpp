@@ -450,7 +450,7 @@ void SpectrumRosterManager::handlePresence(const Presence &stanza) {
 	if (stanza.subtype() == Presence::Probe && stanza.to().username() != "") {
 		std::string name = purpleUsername(stanza.to().username());
 // 		std::for_each( name.begin(), name.end(), replaceJidCharacters() );
-		sendPresence(name);
+		sendPresence(name, stanza.from().resource());
 	}
 	delete stanzaTag;
 }
