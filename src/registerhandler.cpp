@@ -99,7 +99,13 @@ bool GlooxRegisterHandler::unregisterUser(const std::string &barejid) {
 	PurpleAccount *account = NULL;
 
 	m_to = barejid;
-	SpectrumRosterManager::sendRosterPush(barejid, Transport::instance()->jid(), "remove", "", "", this, 1);
+	if (CONFIG().forceRemoteRoster) {
+		IQ iq(IQ::Result, m_to);
+		handleIqID(iq, 1);
+	}
+	else {
+		SpectrumRosterManager::sendRosterPush(barejid, Transport::instance()->jid(), "remove", "", "", this, 1);
+	}
 
 	return true;
 }
@@ -419,7 +425,7 @@ void GlooxRegisterHandler::handleIqID (const IQ &iq, int context){
 	else if (context == 1) {
 		PurpleAccount *account = NULL;
 		UserRow res = Transport::instance()->sql()->getUserByJid(m_to);
-		// This user is already registered
+		// This user is already unregistered
 		if (res.id == -1)
 			return;
 		User *user = Transport::instance()->userManager()->getUserByJID(m_to);
