@@ -21,6 +21,10 @@ UserManager *Transport::userManager() {
 	return GlooxMessageHandler::instance()->userManager();
 }
 
+void Transport::removeIDHandler(IqHandler *ih) {
+	GlooxMessageHandler::instance()->j->removeIDHandler(ih);
+}
+
 const std::string &Transport::hash() {
 	return GlooxMessageHandler::instance()->configuration().hash;
 }

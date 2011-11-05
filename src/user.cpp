@@ -258,6 +258,7 @@ void User::connect() {
 
 			case PURPLE_PREF_STRING:
 			case PURPLE_PREF_STRING_LIST:
+				std::cout << "setting " << key << v.str << "\n";
 				if (v.str)
 					purple_account_set_string(m_account, key.c_str(), v.str);
 				else

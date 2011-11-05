@@ -317,6 +317,7 @@ void ConfigFile::loadPurpleAccountSettings(Configuration &configuration) {
 		}
 		
 		if (!found && g_key_file_has_key(keyfile, "purple", keys[i], NULL)) {
+			std::cout << "setting " << keys[i] << " AAAAAAAAA\n";
 			PurpleAccountSettingValue v;
 			v.type = PURPLE_PREF_STRING;
 			std::string str;

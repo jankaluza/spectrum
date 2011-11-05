@@ -114,6 +114,7 @@ SpectrumRosterManager::SpectrumRosterManager(User *user) : RosterStorage(user) {
 }
 
 SpectrumRosterManager::~SpectrumRosterManager() {
+	Transport::instance()->removeIDHandler(this);
 	g_hash_table_destroy(m_roster);
 	delete m_syncTimer;
 	delete m_presenceTimer;
